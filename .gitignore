@@ -1,0 +1,15 @@
+*.class
+
+target/
+.vertx/
+metrics/
+*.log
+
+#IntelliJ
+.idea/
+#netbeans
+nbproject/
+#eclipse
+.project
+.settings/
+.classpath
