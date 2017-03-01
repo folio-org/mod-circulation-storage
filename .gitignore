@@ -5,6 +5,8 @@ target/
 metrics/
 *.log
 
+node_modules/
+
 #IntelliJ
 .idea/
 #netbeans
