@@ -12,6 +12,8 @@ FOLIO compatible persistent storage of loans.
 
 # Required
 
+- Java 8 JDK
+- Maven 3.3.9
 - PostgreSQL 9.6.1 (running and listening on the default port, logged in user must have admin rights)
 
 ## Optional
