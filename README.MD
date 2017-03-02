@@ -10,7 +10,13 @@ FOLIO compatible persistent storage of loans.
 
 # Prerequisites
 
-- Node 6.4 (for API linting)
+# Required
+
+- PostgreSQL 9.6.1 (running and listening on the default port, logged in user must have admin rights)
+
+## Optional
+
+- Node.js 6.4 (for API linting)
 - NPM 3.10 (for API linting)
 
 # Preparation
@@ -24,6 +30,11 @@ To initialise these please run `git submodule init && git submodule update` in t
 If these are not initialised, the inventory-storage module will fail to build correctly, and other operations may also fail.
 
 More information is available on the [developer site](http://dev.folio.org/doc/setup#update-git-submodules).
+
+## PostgreSQL
+
+Run the `setup-test-db.sh` script in the inventory-storage directory to setup Postgres with a database to be used in tests.
+This is only required to run tests against an external Postgres instance, the default is to use an embedded Postgres instance.
 
 # Common activities
 
