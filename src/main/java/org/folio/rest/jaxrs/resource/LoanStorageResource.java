@@ -236,6 +236,15 @@ public interface LoanStorageResource {
         }
 
         /**
+         * Not implemented yet
+         * 
+         */
+        public static LoanStorageResource.DeleteLoanStorageLoansByLoanIdResponse withNotImplemented() {
+            Response.ResponseBuilder responseBuilder = Response.status(501);
+            return new LoanStorageResource.DeleteLoanStorageLoansByLoanIdResponse(responseBuilder.build());
+        }
+
+        /**
          * Item deleted successfully
          * 
          */
@@ -328,6 +337,15 @@ public interface LoanStorageResource {
         }
 
         /**
+         * Not implemented yet
+         * 
+         */
+        public static LoanStorageResource.GetLoanStorageLoansByLoanIdResponse withNotImplemented() {
+            Response.ResponseBuilder responseBuilder = Response.status(501);
+            return new LoanStorageResource.GetLoanStorageLoansByLoanIdResponse(responseBuilder.build());
+        }
+
+        /**
          * Returns item with a given ID e.g. {
          *   "id": "cf23adf0-61ba-4887-bf82-956c4aae2260",
          *   "userId": "df7f4993-8c14-4a0f-ab63-93975ab01c76",
@@ -384,6 +402,15 @@ public interface LoanStorageResource {
 
         private GetLoanStorageLoansResponse(Response delegate) {
             super(delegate);
+        }
+
+        /**
+         * Not implemented yet
+         * 
+         */
+        public static LoanStorageResource.GetLoanStorageLoansResponse withNotImplemented() {
+            Response.ResponseBuilder responseBuilder = Response.status(501);
+            return new LoanStorageResource.GetLoanStorageLoansResponse(responseBuilder.build());
         }
 
         /**
@@ -546,6 +573,15 @@ public interface LoanStorageResource {
 
         private PutLoanStorageLoansByLoanIdResponse(Response delegate) {
             super(delegate);
+        }
+
+        /**
+         * Not implemented yet
+         * 
+         */
+        public static LoanStorageResource.PutLoanStorageLoansByLoanIdResponse withNotImplemented() {
+            Response.ResponseBuilder responseBuilder = Response.status(501);
+            return new LoanStorageResource.PutLoanStorageLoansByLoanIdResponse(responseBuilder.build());
         }
 
         /**

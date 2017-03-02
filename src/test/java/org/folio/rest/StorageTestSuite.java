@@ -126,11 +126,11 @@ public class StorageTestSuite {
       Response response = deleteAllFinished.get(5, TimeUnit.SECONDS);
 
       if(response.getStatusCode() != 204) {
-        System.out.println("WARNING!!!!! Delete all items preparation failed");
+        System.out.println("WARNING!!!!! Delete all resources preparation failed");
       }
     }
     catch(Exception e) {
-      System.out.println("WARNING!!!!! Unable to delete all items: " +
+      System.out.println("WARNING!!!!! Unable to delete all resources: " +
         e.getMessage());
     }
   }

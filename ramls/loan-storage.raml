@@ -32,6 +32,9 @@ resourceTypes:
         schemaItem: loan
     get:
       is: [pageable]
+      responses:
+        501:
+          description: "Not implemented yet"
     post:
     delete:
       responses:
@@ -48,3 +51,14 @@ resourceTypes:
           exampleItem: !include examples/loan.json
           schema: loan
       get:
+        responses:
+          501:
+            description: "Not implemented yet"
+      put:
+        responses:
+          501:
+            description: "Not implemented yet"
+      delete:
+        responses:
+          501:
+            description: "Not implemented yet"
