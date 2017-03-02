@@ -5,6 +5,7 @@ import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -18,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.notNullValue;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 public class LoanStorageTest {
@@ -64,6 +66,38 @@ public class LoanStorageTest {
 
     assertThat("id does not match",
       loan.getString("id"), is(id.toString()));
+
+    assertThat("user id does not match",
+      loan.getString("userId"), is(userId.toString()));
+
+    assertThat("item id does not match",
+      loan.getString("itemId"), is(itemId.toString()));
+  }
+
+  @Test
+  public void canCreateALoanWithoutAnId() throws MalformedURLException,
+    InterruptedException, ExecutionException, TimeoutException {
+
+    UUID itemId = UUID.randomUUID();
+    UUID userId = UUID.randomUUID();
+
+    JsonObject loanRequest = loan(null, itemId, userId);
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+
+    client.post(loanStorageUrl(), loanRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to create loan: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    JsonObject loan = response.getJson();
+
+    String newId = loan.getString("id");
+
+    Assert.assertThat(newId, is(notNullValue()));
 
     assertThat("user id does not match",
       loan.getString("userId"), is(userId.toString()));
@@ -143,8 +177,14 @@ public class LoanStorageTest {
   }
 
   private JsonObject loan(UUID id, UUID itemId, UUID userId) {
-    return new JsonObject()
-      .put("id", id.toString())
+
+    JsonObject loanRequest = new JsonObject();
+
+    if(id != null) {
+      loanRequest.put("id", id.toString());
+    }
+
+    return loanRequest
       .put("userId", userId.toString())
       .put("itemId", itemId.toString());
   }
