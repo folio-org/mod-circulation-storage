@@ -1,5 +1,6 @@
 package org.folio.rest;
 
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.JsonResponse;
@@ -50,7 +51,7 @@ public class LoanStorageTest {
     UUID itemId = UUID.randomUUID();
     UUID userId = UUID.randomUUID();
 
-    JsonObject loanRequest = loan(id, itemId, userId);
+    JsonObject loanRequest = loanRequest(id, itemId, userId);
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
@@ -76,12 +77,14 @@ public class LoanStorageTest {
 
   @Test
   public void canCreateALoanWithoutAnId() throws MalformedURLException,
-    InterruptedException, ExecutionException, TimeoutException {
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
     UUID itemId = UUID.randomUUID();
     UUID userId = UUID.randomUUID();
 
-    JsonObject loanRequest = loan(null, itemId, userId);
+    JsonObject loanRequest = loanRequest(null, itemId, userId);
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
@@ -108,13 +111,15 @@ public class LoanStorageTest {
 
   @Test
   public void canGetALoanById() throws MalformedURLException,
-    InterruptedException, ExecutionException, TimeoutException {
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
     UUID userId = UUID.randomUUID();
 
-    JsonObject loanRequest = loan(id, itemId, userId);
+    JsonObject loanRequest = loanRequest(id, itemId, userId);
 
     createLoan(loanRequest);
 
@@ -137,11 +142,61 @@ public class LoanStorageTest {
 
   @Test
   public void loanNotFoundForUnknownId() throws MalformedURLException,
-    InterruptedException, ExecutionException, TimeoutException {
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
     JsonResponse getResponse = getById(UUID.randomUUID());
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+  }
+
+  @Test
+  public void canPageLoans()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    createLoan(loanRequest());
+    createLoan(loanRequest());
+    createLoan(loanRequest());
+    createLoan(loanRequest());
+    createLoan(loanRequest());
+    createLoan(loanRequest());
+    createLoan(loanRequest());
+
+    CompletableFuture<JsonResponse> firstPageCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> secondPageCompleted = new CompletableFuture();
+
+    client.get(loanStorageUrl() + "?limit=4", StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(firstPageCompleted));
+
+    client.get(loanStorageUrl() + "?limit=4&offset=4", StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(secondPageCompleted));
+
+    JsonResponse firstPageResponse = firstPageCompleted.get(5, TimeUnit.SECONDS);
+    JsonResponse secondPageResponse = secondPageCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to get first page of loans: %s",
+      firstPageResponse.getBody()),
+      firstPageResponse.getStatusCode(), is(200));
+
+    assertThat(String.format("Failed to get second page of loans: %s",
+      secondPageResponse.getBody()),
+      secondPageResponse.getStatusCode(), is(200));
+
+    JsonObject firstPage = firstPageResponse.getJson();
+    JsonObject secondPage = secondPageResponse.getJson();
+
+    JsonArray firstPageLoans = firstPage.getJsonArray("loans");
+    JsonArray secondPageLoans = secondPage.getJsonArray("loans");
+
+    assertThat(firstPageLoans.size(), is(4));
+    assertThat(firstPage.getInteger("totalRecords"), is(7));
+
+    assertThat(secondPageLoans.size(), is(3));
+    assertThat(secondPage.getInteger("totalRecords"), is(7));
   }
 
   private JsonResponse getById(UUID id)
@@ -157,7 +212,6 @@ public class LoanStorageTest {
 
     return getCompleted.get(5, TimeUnit.SECONDS);
   }
-
 
   private JsonResponse createLoan(JsonObject loanRequest)
     throws MalformedURLException, InterruptedException,
@@ -176,7 +230,11 @@ public class LoanStorageTest {
     return response;
   }
 
-  private JsonObject loan(UUID id, UUID itemId, UUID userId) {
+  private JsonObject loanRequest() {
+    return loanRequest(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
+  }
+
+  private JsonObject loanRequest(UUID id, UUID itemId, UUID userId) {
 
     JsonObject loanRequest = new JsonObject();
 
