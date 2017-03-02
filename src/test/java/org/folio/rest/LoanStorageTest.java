@@ -39,6 +39,7 @@ public class LoanStorageTest {
 
     StorageTestSuite.checkForMismatchedIDs("loan");
   }
+
   @Test
   public void canCreateALoan() throws MalformedURLException,
     InterruptedException, ExecutionException, TimeoutException {
@@ -47,10 +48,7 @@ public class LoanStorageTest {
     UUID itemId = UUID.randomUUID();
     UUID userId = UUID.randomUUID();
 
-    JsonObject loanRequest = new JsonObject()
-      .put("id", id.toString())
-      .put("userId", userId.toString())
-      .put("itemId", itemId.toString());
+    JsonObject loanRequest = loan(id, itemId, userId);
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
@@ -72,6 +70,83 @@ public class LoanStorageTest {
 
     assertThat("item id does not match",
       loan.getString("itemId"), is(itemId.toString()));
+  }
+
+  @Test
+  public void canGetALoanById() throws MalformedURLException,
+    InterruptedException, ExecutionException, TimeoutException {
+
+    UUID id = UUID.randomUUID();
+    UUID itemId = UUID.randomUUID();
+    UUID userId = UUID.randomUUID();
+
+    JsonObject loanRequest = loan(id, itemId, userId);
+
+    createLoan(loanRequest);
+
+    JsonResponse getResponse = getById(id);
+
+    assertThat(String.format("Failed to get loan: %s", getResponse.getBody()),
+      getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject loan = getResponse.getJson();
+
+    assertThat("id does not match",
+      loan.getString("id"), is(id.toString()));
+
+    assertThat("user id does not match",
+      loan.getString("userId"), is(userId.toString()));
+
+    assertThat("item id does not match",
+      loan.getString("itemId"), is(itemId.toString()));
+  }
+
+  @Test
+  public void loanNotFoundForUnknownId() throws MalformedURLException,
+    InterruptedException, ExecutionException, TimeoutException {
+
+    JsonResponse getResponse = getById(UUID.randomUUID());
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+  }
+
+  private JsonResponse getById(UUID id)
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    URL getInstanceUrl = loanStorageUrl(String.format("/%s", id));
+
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture();
+
+    client.get(getInstanceUrl, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(getCompleted));
+
+    return getCompleted.get(5, TimeUnit.SECONDS);
+  }
+
+
+  private JsonResponse createLoan(JsonObject loanRequest)
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+
+    client.post(loanStorageUrl(), loanRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to create loan: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    return response;
+  }
+
+  private JsonObject loan(UUID id, UUID itemId, UUID userId) {
+    return new JsonObject()
+      .put("id", id.toString())
+      .put("userId", userId.toString())
+      .put("itemId", itemId.toString());
   }
 
   private static URL loanStorageUrl() throws MalformedURLException {
