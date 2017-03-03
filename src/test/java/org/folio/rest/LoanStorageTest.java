@@ -2,10 +2,7 @@ package org.folio.rest;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.folio.rest.support.HttpClient;
-import org.folio.rest.support.IndividualResource;
-import org.folio.rest.support.JsonResponse;
-import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.*;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -352,6 +349,36 @@ public class LoanStorageTest {
       ResponseHandler.json(getCompleted));
 
     return getCompleted.get(5, TimeUnit.SECONDS);
+  }
+
+  @Test
+  public void canDeleteALoan()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID id = UUID.randomUUID();
+
+    createLoan(loanRequest(id, UUID.randomUUID(), UUID.randomUUID(), LocalDate.now()));
+
+    CompletableFuture<TextResponse> deleteCompleted = new CompletableFuture();
+
+    client.delete(loanStorageUrl(String.format("/%s", id)),
+      StorageTestSuite.TENANT_ID, ResponseHandler.text(deleteCompleted));
+
+    TextResponse deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture();
+
+    client.get(loanStorageUrl(String.format("/%s", id)),
+      StorageTestSuite.TENANT_ID, ResponseHandler.empty(getCompleted));
+
+    Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
 
   private IndividualResource createLoan(JsonObject loanRequest)

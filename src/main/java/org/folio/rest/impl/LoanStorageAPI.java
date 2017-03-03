@@ -271,9 +271,48 @@ public class LoanStorageAPI implements LoanStorageResource {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) throws Exception {
 
-    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-      LoanStorageResource.DeleteLoanStorageLoansByLoanIdResponse
-        .withNotImplemented()));
+    String tenantId = okapiHeaders.get(TENANT_HEADER);
+
+    try {
+      PostgresClient postgresClient =
+        PostgresClient.getInstance(
+          vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
+
+      Criteria a = new Criteria();
+
+      a.addField("'id'");
+      a.setOperation("=");
+      a.setValue(loanId);
+
+      Criterion criterion = new Criterion(a);
+
+      vertxContext.runOnContext(v -> {
+        try {
+          postgresClient.delete("loan", criterion,
+            reply -> {
+              if(reply.succeeded()) {
+                asyncResultHandler.handle(
+                  Future.succeededFuture(
+                    DeleteLoanStorageLoansByLoanIdResponse
+                      .withNoContent()));
+              }
+              else {
+                asyncResultHandler.handle(Future.succeededFuture(
+                  DeleteLoanStorageLoansByLoanIdResponse
+                    .withPlainInternalServerError(reply.cause().getMessage())));
+              }
+            });
+        } catch (Exception e) {
+          asyncResultHandler.handle(Future.succeededFuture(
+            DeleteLoanStorageLoansByLoanIdResponse
+              .withPlainInternalServerError(e.getMessage())));
+        }
+      });
+    } catch (Exception e) {
+      asyncResultHandler.handle(Future.succeededFuture(
+        DeleteLoanStorageLoansByLoanIdResponse
+          .withPlainInternalServerError(e.getMessage())));
+    }
   }
 
   @Override
