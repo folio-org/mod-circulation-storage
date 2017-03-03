@@ -1,7 +1,7 @@
 {
   "host" : "localhost",
   "port" : 5432,
-  "database" : "test",
-  "username" : "loan_storage_admin",
+  "database" : "loan_test",
+  "username" : "loan_test_admin",
   "password" : "admin"
 }

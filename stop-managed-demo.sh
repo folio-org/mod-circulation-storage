@@ -2,3 +2,4 @@
 
 ./delete-tenant.sh
 
+./destroy-demo-db.sh

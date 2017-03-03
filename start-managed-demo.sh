@@ -7,3 +7,6 @@ curl -w '\n' -X GET -D -   \
      "${okapi_proxy_address}/_/env" || exit 1
 
 ./create-tenant.sh
+
+./setup-demo-db.sh
+
