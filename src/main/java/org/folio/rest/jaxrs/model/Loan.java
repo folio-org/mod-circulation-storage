@@ -19,7 +19,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "id",
     "userId",
     "itemId",
-    "loanDate"
+    "loanDate",
+    "returnDate"
 })
 public class Loan {
 
@@ -50,6 +51,9 @@ public class Loan {
     @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$")
     @NotNull
     private String loanDate;
+    @JsonProperty("returnDate")
+    @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$")
+    private String returnDate;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -162,6 +166,31 @@ public class Loan {
 
     public Loan withLoanDate(String loanDate) {
         this.loanDate = loanDate;
+        return this;
+    }
+
+    /**
+     * 
+     * @return
+     *     The returnDate
+     */
+    @JsonProperty("returnDate")
+    public String getReturnDate() {
+        return returnDate;
+    }
+
+    /**
+     * 
+     * @param returnDate
+     *     The returnDate
+     */
+    @JsonProperty("returnDate")
+    public void setReturnDate(String returnDate) {
+        this.returnDate = returnDate;
+    }
+
+    public Loan withReturnDate(String returnDate) {
+        this.returnDate = returnDate;
         return this;
     }
 

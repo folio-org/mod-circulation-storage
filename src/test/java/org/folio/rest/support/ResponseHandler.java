@@ -2,9 +2,7 @@ package org.folio.rest.support;
 
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClientResponse;
-import io.vertx.core.json.JsonObject;
 
-import java.beans.ExceptionListener;
 import java.util.concurrent.CompletableFuture;
 
 public class ResponseHandler {

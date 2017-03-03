@@ -3,6 +3,7 @@ package org.folio.rest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.folio.rest.support.HttpClient;
+import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
 import org.junit.After;
@@ -120,6 +121,47 @@ public class LoanStorageTest {
   }
 
   @Test
+  public void canCreateALoanAtASpecificLocation()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    UUID id = UUID.randomUUID();
+    UUID itemId = UUID.randomUUID();
+    UUID userId = UUID.randomUUID();
+
+    JsonObject loanRequest = loanRequest(id, itemId, userId,
+      LocalDate.of(2017, 02, 27));
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+
+    client.put(loanStorageUrl(String.format("/%s", id.toString())), loanRequest,
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to create loan: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    JsonResponse getResponse = getById(id);
+
+    assertThat(String.format("Failed to get loan: %s", getResponse.getBody()),
+      getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject loan = getResponse.getJson();
+
+    assertThat("id does not match",
+      loan.getString("id"), is(id.toString()));
+
+    assertThat("user id does not match",
+      loan.getString("userId"), is(userId.toString()));
+
+    assertThat("item id does not match",
+      loan.getString("itemId"), is(itemId.toString()));
+  }
+
+  @Test
   public void cannotCreateALoanWithInvalidLoanDate()
     throws MalformedURLException,
     InterruptedException,
@@ -221,6 +263,36 @@ public class LoanStorageTest {
   }
 
   @Test
+  public void canCompleteALoanByReturningTheItem()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    LocalDate loanDate = LocalDate.of(2017, 03, 01);
+
+    IndividualResource loan = createLoan(loanRequest(loanDate));
+
+    JsonObject returnedLoan = loan.copyJson();
+
+    returnedLoan.put("returnDate", LocalDate.of(2017, 03, 05).toString());
+
+    CompletableFuture<JsonResponse> putCompleted = new CompletableFuture();
+
+    client.put(loanStorageUrl(String.format("/%s", loan.getId())), returnedLoan,
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(putCompleted));
+
+    JsonResponse putResponse = putCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to update loan: %s", putResponse.getBody()),
+      putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    JsonResponse updatedLoan = getById(UUID.fromString(loan.getId()));
+
+    assertThat(updatedLoan.getJson().getString("returnDate"), is("2017-03-05"));
+  }
+
+  @Test
   public void canPageLoans()
     throws InterruptedException,
     MalformedURLException,
@@ -282,7 +354,7 @@ public class LoanStorageTest {
     return getCompleted.get(5, TimeUnit.SECONDS);
   }
 
-  private JsonResponse createLoan(JsonObject loanRequest)
+  private IndividualResource createLoan(JsonObject loanRequest)
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -298,12 +370,17 @@ public class LoanStorageTest {
     assertThat(String.format("Failed to create loan: %s", response.getBody()),
       response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    return response;
+    return new IndividualResource(response);
   }
 
   private JsonObject loanRequest() {
     return loanRequest(UUID.randomUUID(), UUID.randomUUID(),
       UUID.randomUUID(), LocalDate.now());
+  }
+
+  private JsonObject loanRequest(LocalDate loanDate) {
+    return loanRequest(UUID.randomUUID(), UUID.randomUUID(),
+      UUID.randomUUID(), loanDate);
   }
 
   private JsonObject loanRequest(
