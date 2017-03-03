@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Generated;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -17,7 +18,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "id",
     "userId",
-    "itemId"
+    "itemId",
+    "loanDate"
 })
 public class Loan {
 
@@ -39,6 +41,15 @@ public class Loan {
     @JsonProperty("itemId")
     @NotNull
     private String itemId;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("loanDate")
+    @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$")
+    @NotNull
+    private String loanDate;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -122,6 +133,35 @@ public class Loan {
 
     public Loan withItemId(String itemId) {
         this.itemId = itemId;
+        return this;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     * @return
+     *     The loanDate
+     */
+    @JsonProperty("loanDate")
+    public String getLoanDate() {
+        return loanDate;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     * @param loanDate
+     *     The loanDate
+     */
+    @JsonProperty("loanDate")
+    public void setLoanDate(String loanDate) {
+        this.loanDate = loanDate;
+    }
+
+    public Loan withLoanDate(String loanDate) {
+        this.loanDate = loanDate;
         return this;
     }
 

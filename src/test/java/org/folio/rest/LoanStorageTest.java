@@ -13,12 +13,14 @@ import org.junit.Test;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.LocalDate;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
@@ -38,20 +40,26 @@ public class LoanStorageTest {
   }
   @After
   public void checkIdsAfterEach()
-    throws InterruptedException, ExecutionException, TimeoutException {
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
     StorageTestSuite.checkForMismatchedIDs("loan");
   }
 
   @Test
-  public void canCreateALoan() throws MalformedURLException,
-    InterruptedException, ExecutionException, TimeoutException {
+  public void canCreateALoan()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
     UUID userId = UUID.randomUUID();
 
-    JsonObject loanRequest = loanRequest(id, itemId, userId);
+    JsonObject loanRequest = loanRequest(id, itemId, userId,
+      LocalDate.of(2017, 02, 27));
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
@@ -76,7 +84,8 @@ public class LoanStorageTest {
   }
 
   @Test
-  public void canCreateALoanWithoutAnId() throws MalformedURLException,
+  public void canCreateALoanWithoutAnId()
+    throws MalformedURLException,
     InterruptedException,
     ExecutionException,
     TimeoutException {
@@ -84,7 +93,8 @@ public class LoanStorageTest {
     UUID itemId = UUID.randomUUID();
     UUID userId = UUID.randomUUID();
 
-    JsonObject loanRequest = loanRequest(null, itemId, userId);
+    JsonObject loanRequest = loanRequest(null, itemId, userId,
+      LocalDate.of(2017, 03, 20));
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
@@ -110,7 +120,65 @@ public class LoanStorageTest {
   }
 
   @Test
-  public void canGetALoanById() throws MalformedURLException,
+  public void cannotCreateALoanWithInvalidLoanDate()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    UUID id = UUID.randomUUID();
+
+    JsonObject loanRequest = new JsonObject();
+
+      loanRequest.put("id", id.toString())
+      .put("userId", UUID.randomUUID().toString())
+      .put("itemId", UUID.randomUUID().toString())
+      .put("loanDate", "2017");
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+
+    client.post(loanStorageUrl(), loanRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Creating the loan should fail: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+
+    assertThat(response.getBody(), containsString("loanDate  must match"));
+  }
+
+  @Test
+  public void cannotCreateALoanWithoutRequiredFields()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    UUID id = UUID.randomUUID();
+
+    JsonObject loanRequest = new JsonObject();
+
+    loanRequest.put("id", id.toString());
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+
+    client.post(loanStorageUrl(), loanRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Creating the loan should fail: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+
+    assertThat(response.getBody(), containsString("loanDate  may not be null"));
+    assertThat(response.getBody(), containsString("itemId  may not be null"));
+    assertThat(response.getBody(), containsString("userId  may not be null"));
+  }
+
+  @Test
+  public void canGetALoanById()
+    throws MalformedURLException,
     InterruptedException,
     ExecutionException,
     TimeoutException {
@@ -119,7 +187,7 @@ public class LoanStorageTest {
     UUID itemId = UUID.randomUUID();
     UUID userId = UUID.randomUUID();
 
-    JsonObject loanRequest = loanRequest(id, itemId, userId);
+    JsonObject loanRequest = loanRequest(id, itemId, userId, LocalDate.now());
 
     createLoan(loanRequest);
 
@@ -141,7 +209,8 @@ public class LoanStorageTest {
   }
 
   @Test
-  public void loanNotFoundForUnknownId() throws MalformedURLException,
+  public void loanNotFoundForUnknownId()
+    throws MalformedURLException,
     InterruptedException,
     ExecutionException,
     TimeoutException {
@@ -214,8 +283,10 @@ public class LoanStorageTest {
   }
 
   private JsonResponse createLoan(JsonObject loanRequest)
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
@@ -231,10 +302,15 @@ public class LoanStorageTest {
   }
 
   private JsonObject loanRequest() {
-    return loanRequest(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
+    return loanRequest(UUID.randomUUID(), UUID.randomUUID(),
+      UUID.randomUUID(), LocalDate.now());
   }
 
-  private JsonObject loanRequest(UUID id, UUID itemId, UUID userId) {
+  private JsonObject loanRequest(
+    UUID id,
+    UUID itemId,
+    UUID userId,
+    LocalDate loanDate) {
 
     JsonObject loanRequest = new JsonObject();
 
@@ -244,7 +320,8 @@ public class LoanStorageTest {
 
     return loanRequest
       .put("userId", userId.toString())
-      .put("itemId", itemId.toString());
+      .put("itemId", itemId.toString())
+      .put("loanDate", loanDate.toString());
   }
 
   private static URL loanStorageUrl() throws MalformedURLException {
