@@ -8,5 +8,7 @@ curl -w '\n' -X GET -D -   \
 
 ./create-tenant.sh
 
+./set-demo-okapi-environment-variables.sh
+
 ./setup-demo-db.sh
 

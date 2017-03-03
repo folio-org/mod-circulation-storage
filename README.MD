@@ -20,6 +20,7 @@ FOLIO compatible persistent storage of loans.
 
 - Node.js 6.4 (for API linting)
 - NPM 3.10 (for API linting)
+- Python 3.6.0 (for convenient additions to some of the scripts)
 
 # Preparation
 
