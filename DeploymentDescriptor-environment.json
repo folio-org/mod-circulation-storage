@@ -1,0 +1,6 @@
+{
+  "srvcId" : "loan-storage",
+  "descriptor" : {
+    "exec" : "java -jar ../mod-loan-storage/target/loan-storage-fat.jar -Dhttp.port=%p"
+  }
+}
