@@ -10,4 +10,7 @@ cd database-setup
 
 ./destroy-db.sh loan_demo demo_tenant_loan_storage loan_demo_admin ${host} ${port} ${executing_user} ${executing_password}
 
+# Drop the tenant based role as well, because deactivation no longer calls the Tenant API
+./drop-role.sh demo_tenant_loan_storage
+
 cd ..
