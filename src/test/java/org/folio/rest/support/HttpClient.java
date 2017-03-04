@@ -40,7 +40,12 @@ public class HttpClient {
     }
 
     if(body != null) {
-      request.end(Json.encodePrettily(body));
+      String encodedBody = Json.encodePrettily(body);
+
+      System.out.println(String.format("POST %s, Request: %s",
+        url.toString(), encodedBody));
+
+      request.end(encodedBody);
     }
     else {
       request.end();

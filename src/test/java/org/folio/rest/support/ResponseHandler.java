@@ -30,6 +30,8 @@ public class ResponseHandler {
           int statusCode = response.statusCode();
           String body = BufferHelper.stringFromBuffer(buffer);
 
+          System.out.println(String.format("Response: %s", body));
+
           completed.complete(new JsonResponse(statusCode, body));
 
         } catch(Exception e) {
