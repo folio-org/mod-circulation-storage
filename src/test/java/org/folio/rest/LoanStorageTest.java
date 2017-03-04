@@ -375,6 +375,59 @@ public class LoanStorageTest {
   }
 
   @Test
+  public void canSearchByUserId()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    UUID firstUserId = UUID.randomUUID();
+    UUID secondUserId = UUID.randomUUID();
+
+    String queryTemplate = loanStorageUrl() + "?query=userId=\"%s\"";
+
+    createLoan(loanRequest().put("userId", firstUserId.toString()));
+    createLoan(loanRequest().put("userId", firstUserId.toString()));
+    createLoan(loanRequest().put("userId", firstUserId.toString()));
+    createLoan(loanRequest().put("userId", firstUserId.toString()));
+    createLoan(loanRequest().put("userId", secondUserId.toString()));
+    createLoan(loanRequest().put("userId", secondUserId.toString()));
+    createLoan(loanRequest().put("userId", secondUserId.toString()));
+
+    CompletableFuture<JsonResponse> firstUserSearchCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> secondUserSeatchCompleted = new CompletableFuture();
+
+    client.get(String.format(queryTemplate, firstUserId), StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(firstUserSearchCompleted));
+
+    client.get(String.format(queryTemplate, secondUserId), StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(secondUserSeatchCompleted));
+
+    JsonResponse firstPageResponse = firstUserSearchCompleted.get(5, TimeUnit.SECONDS);
+    JsonResponse secondPageResponse = secondUserSeatchCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to get loans for first user: %s",
+      firstPageResponse.getBody()),
+      firstPageResponse.getStatusCode(), is(200));
+
+    assertThat(String.format("Failed to get loans for second user: %s",
+      secondPageResponse.getBody()),
+      secondPageResponse.getStatusCode(), is(200));
+
+    JsonObject firstPage = firstPageResponse.getJson();
+    JsonObject secondPage = secondPageResponse.getJson();
+
+    JsonArray firstPageLoans = firstPage.getJsonArray("loans");
+    JsonArray secondPageLoans = secondPage.getJsonArray("loans");
+
+    assertThat(firstPageLoans.size(), is(4));
+    assertThat(firstPage.getInteger("totalRecords"), is(4));
+
+    assertThat(secondPageLoans.size(), is(3));
+    assertThat(secondPage.getInteger("totalRecords"), is(3));
+  }
+
+  @Test
   public void canDeleteALoan()
     throws InterruptedException,
     MalformedURLException,
