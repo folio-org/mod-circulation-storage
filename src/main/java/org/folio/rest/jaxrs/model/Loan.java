@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Generated;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -48,11 +47,9 @@ public class Loan {
      * 
      */
     @JsonProperty("loanDate")
-    @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$")
     @NotNull
     private String loanDate;
     @JsonProperty("returnDate")
-    @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$")
     private String returnDate;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();

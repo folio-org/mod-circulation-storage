@@ -44,3 +44,11 @@ This is only required to run tests against an external Postgres instance, the de
 ## Checking the RAML and JSON.Schema definitions
 
 run `./lint.sh` to validate the RAML and JSON.Schema descriptions of the API (requires node.js and NPM) 
+
+# Frequently Asked Questions
+
+## Dates and times
+
+A loan has the date and time when and item was leant to a user and when it was returned. The module expects them to be represented in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-3).
+
+At the moment, the JSON.schema for loan does provide validation for these (it will eventually use the date-time format included in the standard when this is supported by the RAML module builder).

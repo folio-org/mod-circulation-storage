@@ -4,6 +4,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.Loans;
 import org.folio.rest.jaxrs.resource.LoanStorageResource;
@@ -15,6 +16,7 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
+import org.joda.time.DateTime;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
 import javax.validation.constraints.Max;
@@ -23,9 +25,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.core.Response;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class LoanStorageAPI implements LoanStorageResource {
 
@@ -136,6 +136,18 @@ public class LoanStorageAPI implements LoanStorageResource {
     Context vertxContext) throws Exception {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
+
+    ImmutablePair<Boolean, String> validationResult = validateLoan(entity);
+
+    if(validationResult.getLeft() == false) {
+      asyncResultHandler.handle(
+        io.vertx.core.Future.succeededFuture(
+          LoanStorageResource.PostLoanStorageLoansResponse
+            .withPlainBadRequest(
+              validationResult.getRight())));
+
+      return;
+    }
 
     try {
       PostgresClient postgresClient =
@@ -325,6 +337,18 @@ public class LoanStorageAPI implements LoanStorageResource {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
+    ImmutablePair<Boolean, String> validationResult = validateLoan(entity);
+
+    if(validationResult.getLeft() == false) {
+      asyncResultHandler.handle(
+        io.vertx.core.Future.succeededFuture(
+          LoanStorageResource.PostLoanStorageLoansResponse
+            .withPlainBadRequest(
+              validationResult.getRight())));
+
+      return;
+    }
+
     try {
       PostgresClient postgresClient =
         PostgresClient.getInstance(
@@ -431,5 +455,33 @@ public class LoanStorageAPI implements LoanStorageResource {
         PutLoanStorageLoansByLoanIdResponse
           .withPlainInternalServerError(e.getMessage())));
     }
+  }
+
+  private ImmutablePair<Boolean, String> validateLoan(Loan loan) {
+
+    Boolean valid = true;
+    StringJoiner messages = new StringJoiner("\n");
+
+    //ISO8601 is less strict than RFC3339 so will not catch some issues
+    try {
+      DateTime.parse(loan.getLoanDate());
+    }
+    catch(Exception e) {
+      valid = false;
+      messages.add("loan date must be a date time (in RFC3339 format)");
+    }
+
+    if(loan.getReturnDate() != null) {
+      //ISO8601 is less strict than RFC3339 so will not catch some issues
+      try {
+        DateTime.parse(loan.getReturnDate());
+      }
+      catch(Exception e) {
+        valid = false;
+        messages.add("return date must be a date time (in RFC3339 format)");
+      }
+    }
+
+    return new ImmutablePair<>(valid, messages.toString());
   }
 }

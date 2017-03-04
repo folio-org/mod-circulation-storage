@@ -105,7 +105,7 @@ public interface LoanStorageResource {
      *       "id": "cf23adf0-61ba-4887-bf82-956c4aae2260",
      *       "userId": "df7f4993-8c14-4a0f-ab63-93975ab01c76",
      *       "itemId": "cb20f34f-b773-462f-a091-b233cc96b9e6",
-     *       "loanDate": "2017-03-01"
+     *       "loanDate": "2017-03-01T23:11:00-01:00"
      *     }
      *     
      */
@@ -206,7 +206,7 @@ public interface LoanStorageResource {
      *       "id": "cf23adf0-61ba-4887-bf82-956c4aae2260",
      *       "userId": "df7f4993-8c14-4a0f-ab63-93975ab01c76",
      *       "itemId": "cb20f34f-b773-462f-a091-b233cc96b9e6",
-     *       "loanDate": "2017-03-01"
+     *       "loanDate": "2017-03-01T23:11:00-01:00"
      *     }
      *     
      */
@@ -352,7 +352,7 @@ public interface LoanStorageResource {
          *   "id": "cf23adf0-61ba-4887-bf82-956c4aae2260",
          *   "userId": "df7f4993-8c14-4a0f-ab63-93975ab01c76",
          *   "itemId": "cb20f34f-b773-462f-a091-b233cc96b9e6",
-         *   "loanDate": "2017-03-01"
+         *   "loanDate": "2017-03-01T23:11:00-01:00"
          * }
          * 
          * 
@@ -361,7 +361,7 @@ public interface LoanStorageResource {
          *       "id": "cf23adf0-61ba-4887-bf82-956c4aae2260",
          *       "userId": "df7f4993-8c14-4a0f-ab63-93975ab01c76",
          *       "itemId": "cb20f34f-b773-462f-a091-b233cc96b9e6",
-         *       "loanDate": "2017-03-01"
+         *       "loanDate": "2017-03-01T23:11:00-01:00"
          *     }
          *     
          */
@@ -424,13 +424,14 @@ public interface LoanStorageResource {
          *     "id": "cf23adf0-61ba-4887-bf82-956c4aae2260",
          *     "userId": "df7f4993-8c14-4a0f-ab63-93975ab01c76",
          *     "itemId": "cb20f34f-b773-462f-a091-b233cc96b9e6",
-         *     "loanDate": "2017-03-01"
+         *     "loanDate": "2017-03-01T22:34:11-4:00"
          *   },
          *   {
          *     "id": "1d09af65-aeaa-499c-80cb-d52847b75a60",
          *     "userId": "15054e48-03e8-4ed5-810b-7192b86accab",
          *     "itemId": "94838fa2-288a-45c2-ad19-9102f5645127",
-         *     "loanDate": "2017-01-14"
+         *     "loanDate": "2017-01-14T19:14:36-01:00",
+         *     "returnDate": "2017-01-16T09:15:23-01:00"
          *   }
          * ],
          * "totalRecords": 2
@@ -444,13 +445,14 @@ public interface LoanStorageResource {
          *         "id": "cf23adf0-61ba-4887-bf82-956c4aae2260",
          *         "userId": "df7f4993-8c14-4a0f-ab63-93975ab01c76",
          *         "itemId": "cb20f34f-b773-462f-a091-b233cc96b9e6",
-         *         "loanDate": "2017-03-01"
+         *         "loanDate": "2017-03-01T22:34:11-4:00"
          *       },
          *       {
          *         "id": "1d09af65-aeaa-499c-80cb-d52847b75a60",
          *         "userId": "15054e48-03e8-4ed5-810b-7192b86accab",
          *         "itemId": "94838fa2-288a-45c2-ad19-9102f5645127",
-         *         "loanDate": "2017-01-14"
+         *         "loanDate": "2017-01-14T19:14:36-01:00",
+         *         "returnDate": "2017-01-16T09:15:23-01:00"
          *       }
          *     ],
          *     "totalRecords": 2
@@ -515,7 +517,7 @@ public interface LoanStorageResource {
          *   "id": "cf23adf0-61ba-4887-bf82-956c4aae2260",
          *   "userId": "df7f4993-8c14-4a0f-ab63-93975ab01c76",
          *   "itemId": "cb20f34f-b773-462f-a091-b233cc96b9e6",
-         *   "loanDate": "2017-03-01"
+         *   "loanDate": "2017-03-01T23:11:00-01:00"
          * }
          * 
          * 
@@ -526,7 +528,7 @@ public interface LoanStorageResource {
          *       "id": "cf23adf0-61ba-4887-bf82-956c4aae2260",
          *       "userId": "df7f4993-8c14-4a0f-ab63-93975ab01c76",
          *       "itemId": "cb20f34f-b773-462f-a091-b233cc96b9e6",
-         *       "loanDate": "2017-03-01"
+         *       "loanDate": "2017-03-01T23:11:00-01:00"
          *     }
          *     
          */
