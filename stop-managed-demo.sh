@@ -22,5 +22,3 @@ then
 else
   echo "Install Python3 to remove environment variables from Okapi automatically"
 fi
-
-./destroy-demo-db.sh
