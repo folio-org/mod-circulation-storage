@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 
+./destroy-test-db.sh
+
 ./setup-test-db.sh
 
 mvn -q test -Dorg.folio.loan.storage.test.database=external
 
 test_results=$?
 
-if [ $external_test_results != 0 ]; then
+if [ $test_results != 0 ]; then
   echo '--------------------------------------'
   echo 'BUILD FAILED'
   echo '--------------------------------------'

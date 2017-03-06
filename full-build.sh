@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+./destroy-test-db.sh
+
 ./setup-test-db.sh
 
 mvn -q test \
