@@ -6,6 +6,8 @@ import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.json.Json;
 
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import java.net.URL;
 
 public class HttpClient {
@@ -60,7 +62,8 @@ public class HttpClient {
   }
 
   public void get(URL url,
-           Handler<HttpClientResponse> responseHandler) {
+           Handler<HttpClientResponse> responseHandler)
+    throws UnsupportedEncodingException {
 
     get(url, null, responseHandler);
   }
@@ -87,6 +90,17 @@ public class HttpClient {
                    Handler<HttpClientResponse> responseHandler) {
 
     get(url.toString(), tenantId, responseHandler);
+  }
+
+  public void get(URL url,
+                  String query,
+                  String tenantId,
+                  Handler<HttpClientResponse> responseHandler)
+    throws MalformedURLException {
+
+    get(new URL(url.getProtocol(), url.getHost(), url.getPort(),
+        url.getPath() + "?" + query),
+      tenantId, responseHandler);
   }
 
   public void get(String url,

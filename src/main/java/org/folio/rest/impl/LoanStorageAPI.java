@@ -79,6 +79,8 @@ public class LoanStorageAPI implements LoanStorageResource {
           PostgresClient postgresClient = PostgresClient.getInstance(
             vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
+          System.out.println("CQL Query: " + query);
+
           String[] fieldList = {"*"};
 
           CQL2PgJSON cql2pgJson = new CQL2PgJSON("loan.jsonb");

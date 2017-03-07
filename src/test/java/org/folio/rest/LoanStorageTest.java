@@ -8,9 +8,11 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.format.ISODateTimeFormat;
 import org.junit.*;
 
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -56,7 +58,7 @@ public class LoanStorageTest {
     UUID userId = UUID.randomUUID();
 
     JsonObject loanRequest = loanRequest(id, itemId, userId,
-      new DateTime(2017, 2, 27, 10, 23, 43, DateTimeZone.UTC));
+      new DateTime(2017, 2, 27, 10, 23, 43, DateTimeZone.UTC), "Open");
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
@@ -81,6 +83,9 @@ public class LoanStorageTest {
 
     assertThat("loan date does not match",
       loan.getString("loanDate"), is("2017-02-27T10:23:43.000Z"));
+
+    assertThat("status is not open",
+      loan.getJsonObject("status").getString("name"), is("Open"));
   }
 
   @Test
@@ -94,7 +99,7 @@ public class LoanStorageTest {
     UUID userId = UUID.randomUUID();
 
     JsonObject loanRequest = loanRequest(null, itemId, userId,
-      new DateTime(2017, 3, 20, 7, 21, 45, DateTimeZone.UTC));
+      new DateTime(2017, 3, 20, 7, 21, 45, DateTimeZone.UTC), "Open");
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
@@ -120,6 +125,9 @@ public class LoanStorageTest {
 
     assertThat("loan date does not match",
       loan.getString("loanDate"), is("2017-03-20T07:21:45.000Z"));
+
+    assertThat("status is not open",
+      loan.getJsonObject("status").getString("name"), is("Open"));
   }
 
   @Test
@@ -127,14 +135,15 @@ public class LoanStorageTest {
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
-    TimeoutException {
+    TimeoutException,
+    UnsupportedEncodingException {
 
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
     UUID userId = UUID.randomUUID();
 
     JsonObject loanRequest = loanRequest(id, itemId, userId,
-      new DateTime(2017, 2, 27, 21, 14, 43, DateTimeZone.UTC));
+      new DateTime(2017, 2, 27, 21, 14, 43, DateTimeZone.UTC), "Open");
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
@@ -164,6 +173,9 @@ public class LoanStorageTest {
 
     assertThat("loan date does not match",
       loan.getString("loanDate"), is("2017-02-27T21:14:43.000Z"));
+
+    assertThat("status is not open",
+      loan.getJsonObject("status").getString("name"), is("Open"));
   }
 
   @Test
@@ -205,14 +217,15 @@ public class LoanStorageTest {
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
-    TimeoutException {
+    TimeoutException,
+    UnsupportedEncodingException {
 
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
     UUID userId = UUID.randomUUID();
 
     JsonObject loanRequest = loanRequest(id, itemId, userId,
-      new DateTime(2016, 10, 15, 8, 26, 53, DateTimeZone.UTC));
+      new DateTime(2016, 10, 15, 8, 26, 53, DateTimeZone.UTC), "Open");
 
     createLoan(loanRequest);
 
@@ -234,6 +247,9 @@ public class LoanStorageTest {
 
     assertThat("loan date does not match",
       loan.getString("loanDate"), is("2016-10-15T08:26:53.000Z"));
+
+    assertThat("status is not open",
+      loan.getJsonObject("status").getString("name"), is("Open"));
   }
 
   @Test
@@ -241,7 +257,8 @@ public class LoanStorageTest {
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
-    TimeoutException {
+    TimeoutException,
+    UnsupportedEncodingException {
 
     JsonResponse getResponse = getById(UUID.randomUUID());
 
@@ -253,7 +270,8 @@ public class LoanStorageTest {
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
-    ExecutionException {
+    ExecutionException,
+    UnsupportedEncodingException {
 
     DateTime loanDate = new DateTime(2017, 3, 1, 13, 25, 46, 232, DateTimeZone.UTC);
 
@@ -261,8 +279,9 @@ public class LoanStorageTest {
 
     JsonObject returnedLoan = loan.copyJson();
 
-    returnedLoan.put("returnDate",
-      new DateTime(2017, 3, 5, 14, 23, 41, DateTimeZone.UTC)
+    returnedLoan
+      .put("status", new JsonObject().put("name", "Closed"))
+      .put("returnDate", new DateTime(2017, 3, 5, 14, 23, 41, DateTimeZone.UTC)
       .toString(ISODateTimeFormat.dateTime()));
 
     CompletableFuture<JsonResponse> putCompleted = new CompletableFuture();
@@ -275,10 +294,15 @@ public class LoanStorageTest {
     assertThat(String.format("Failed to update loan: %s", putResponse.getBody()),
       putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-    JsonResponse updatedLoan = getById(UUID.fromString(loan.getId()));
+    JsonResponse updatedLoanResponse = getById(UUID.fromString(loan.getId()));
 
-    assertThat(updatedLoan.getJson().getString("returnDate"),
+    JsonObject updatedLoan = updatedLoanResponse.getJson();
+
+    assertThat(updatedLoan.getString("returnDate"),
       is("2017-03-05T14:23:41.000Z"));
+
+    assertThat("status is not closed",
+      updatedLoan.getJsonObject("status").getString("name"), is("Closed"));
   }
 
   @Test
@@ -313,11 +337,43 @@ public class LoanStorageTest {
   }
 
   @Test
-  public void canPageLoans()
+  @Ignore("Should conditional field validation be done in a storage module?")
+  public void returnDateIsMandatoryForClosedLoans()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
     ExecutionException {
+
+    DateTime loanDate = new DateTime(2017, 3, 1, 13, 25, 46, 232, DateTimeZone.UTC);
+
+    IndividualResource loan = createLoan(loanRequest(loanDate));
+
+    JsonObject returnedLoan = loan.copyJson();
+
+    returnedLoan
+      .put("status", new JsonObject().put("name", "Closed"));
+
+    CompletableFuture<TextResponse> putCompleted = new CompletableFuture();
+
+    client.put(loanStorageUrl(String.format("/%s", loan.getId())), returnedLoan,
+      StorageTestSuite.TENANT_ID, ResponseHandler.text(putCompleted));
+
+    TextResponse response = putCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Should have failed to update loan: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+
+    assertThat(response.getBody(),
+      containsString("return date is mandatory to close a loan"));
+  }
+
+  @Test
+  public void canPageLoans()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
 
     createLoan(loanRequest());
     createLoan(loanRequest());
@@ -360,26 +416,13 @@ public class LoanStorageTest {
     assertThat(secondPage.getInteger("totalRecords"), is(7));
   }
 
-  private JsonResponse getById(UUID id)
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
-
-    URL getInstanceUrl = loanStorageUrl(String.format("/%s", id));
-
-    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture();
-
-    client.get(getInstanceUrl, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(getCompleted));
-
-    return getCompleted.get(5, TimeUnit.SECONDS);
-  }
-
   @Test
   public void canSearchByUserId()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
-    TimeoutException {
+    TimeoutException,
+    UnsupportedEncodingException {
 
     UUID firstUserId = UUID.randomUUID();
     UUID secondUserId = UUID.randomUUID();
@@ -428,16 +471,69 @@ public class LoanStorageTest {
   }
 
   @Test
+  public void canFilterByLoanStatus()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    UnsupportedEncodingException {
+
+    UUID userId = UUID.randomUUID();
+
+    String queryTemplate = "query=userId=\"%s\"+and+status.name=\"%s\"";
+
+    createLoan(loanRequest(userId, "Open"));
+    createLoan(loanRequest(userId, "Open"));
+    createLoan(loanRequest(userId, "Closed"));
+    createLoan(loanRequest(userId, "Closed"));
+    createLoan(loanRequest(userId, "Closed"));
+    createLoan(loanRequest(userId, "Closed"));
+
+    CompletableFuture<JsonResponse> openSearchComppleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> closedSearchCompleted = new CompletableFuture();
+
+    client.get(loanStorageUrl(), String.format(queryTemplate, userId, "Open"),
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(openSearchComppleted));
+
+    client.get(loanStorageUrl(), String.format(queryTemplate, userId, "Closed"),
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(closedSearchCompleted));
+
+    JsonResponse openLoansResponse = openSearchComppleted.get(5, TimeUnit.SECONDS);
+    JsonResponse closedLoansResponse = closedSearchCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to get open loans: %s",
+      openLoansResponse.getBody()),
+      openLoansResponse.getStatusCode(), is(200));
+
+    assertThat(String.format("Failed to get closed loans: %s",
+      closedLoansResponse.getBody()),
+      closedLoansResponse.getStatusCode(), is(200));
+
+    JsonObject openLoans = openLoansResponse.getJson();
+    JsonObject closedLoans = closedLoansResponse.getJson();
+
+    JsonArray firstPageLoans = openLoans.getJsonArray("loans");
+    JsonArray secondPageLoans = closedLoans.getJsonArray("loans");
+
+    assertThat(firstPageLoans.size(), is(2));
+    assertThat(openLoans.getInteger("totalRecords"), is(2));
+
+    assertThat(secondPageLoans.size(), is(4));
+    assertThat(closedLoans.getInteger("totalRecords"), is(4));
+  }
+
+  @Test
   public void canDeleteALoan()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
-    ExecutionException {
+    ExecutionException,
+    UnsupportedEncodingException {
 
     UUID id = UUID.randomUUID();
 
     createLoan(loanRequest(id, UUID.randomUUID(), UUID.randomUUID(),
-      DateTime.now()));
+      DateTime.now(), "Open"));
 
     CompletableFuture<TextResponse> deleteCompleted = new CompletableFuture();
 
@@ -456,6 +552,23 @@ public class LoanStorageTest {
     Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+  }
+
+  private JsonResponse getById(UUID id)
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    UnsupportedEncodingException {
+
+    URL getInstanceUrl = loanStorageUrl(String.format("/%s", id));
+
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture();
+
+    client.get(getInstanceUrl, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(getCompleted));
+
+    return getCompleted.get(5, TimeUnit.SECONDS);
   }
 
   private IndividualResource createLoan(JsonObject loanRequest)
@@ -480,19 +593,27 @@ public class LoanStorageTest {
   private JsonObject loanRequest() {
     return loanRequest(UUID.randomUUID(), UUID.randomUUID(),
       UUID.randomUUID(), DateTime.parse("2017-03-06T16:04:43.000+02:00",
-        ISODateTimeFormat.dateTime()));
+        ISODateTimeFormat.dateTime()), "Open");
+  }
+
+  private JsonObject loanRequest(UUID userId, String statusName) {
+    Random random = new Random();
+
+    return loanRequest(UUID.randomUUID(), UUID.randomUUID(),
+      userId, DateTime.now().minusDays(random.nextInt(10)), statusName);
   }
 
   private JsonObject loanRequest(DateTime loanDate) {
     return loanRequest(UUID.randomUUID(), UUID.randomUUID(),
-      UUID.randomUUID(), loanDate);
+      UUID.randomUUID(), loanDate, "Open");
   }
 
   private JsonObject loanRequest(
     UUID id,
     UUID itemId,
     UUID userId,
-    DateTime loanDate) {
+    DateTime loanDate,
+    String statusName) {
 
     JsonObject loanRequest = new JsonObject();
 
@@ -500,10 +621,18 @@ public class LoanStorageTest {
       loanRequest.put("id", id.toString());
     }
 
-    return loanRequest
+    loanRequest
       .put("userId", userId.toString())
       .put("itemId", itemId.toString())
-      .put("loanDate", loanDate.toString(ISODateTimeFormat.dateTime()));
+      .put("loanDate", loanDate.toString(ISODateTimeFormat.dateTime()))
+      .put("status", new JsonObject().put("name", statusName));
+
+    if(statusName == "Closed") {
+      loanRequest.put("returnDate",
+        loanDate.plusDays(1).plusHours(4).toString(ISODateTimeFormat.dateTime()));
+    }
+
+    return loanRequest;
   }
 
   private static URL loanStorageUrl() throws MalformedURLException {

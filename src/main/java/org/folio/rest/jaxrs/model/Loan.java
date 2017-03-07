@@ -4,6 +4,7 @@ package org.folio.rest.jaxrs.model;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Generated;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
@@ -18,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "id",
     "userId",
     "itemId",
+    "status",
     "loanDate",
     "returnDate"
 })
@@ -41,6 +43,9 @@ public class Loan {
     @JsonProperty("itemId")
     @NotNull
     private String itemId;
+    @JsonProperty("status")
+    @Valid
+    private Status status;
     /**
      * 
      * (Required)
@@ -134,6 +139,31 @@ public class Loan {
 
     public Loan withItemId(String itemId) {
         this.itemId = itemId;
+        return this;
+    }
+
+    /**
+     * 
+     * @return
+     *     The status
+     */
+    @JsonProperty("status")
+    public Status getStatus() {
+        return status;
+    }
+
+    /**
+     * 
+     * @param status
+     *     The status
+     */
+    @JsonProperty("status")
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+    public Loan withStatus(Status status) {
+        this.status = status;
         return this;
     }
 
