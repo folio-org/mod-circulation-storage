@@ -37,6 +37,7 @@ public class LoanStorageTest {
 
     StorageTestSuite.deleteAll(loanStorageUrl());
   }
+
   @After
   public void checkIdsAfterEach()
     throws InterruptedException,
