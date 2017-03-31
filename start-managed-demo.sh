@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-storage=${1:-"external"}
-okapi_proxy_address=${2:-http://localhost:9130}
+build=${1:-"build"}
+storage=${2:-"external"}
+okapi_proxy_address=${3:-http://localhost:9130}
 
 tenant_id="demo_tenant"
 
@@ -9,8 +10,15 @@ echo "Check if Okapi is contactable"
 curl -w '\n' -X GET -D -   \
      "${okapi_proxy_address}/_/env" || exit 1
 
-echo "Package loan storage module"
-mvn package -q -Dmaven.test.skip=true || exit 1
+if [ "${build}" = "build" ]; then
+  echo "Package loan storage module"
+  mvn package -q -Dmaven.test.skip=true || exit 1
+elif [ "${build}" = "no-build" ]; then
+  echo "Skipping building of loan storage module"
+else
+  echo "Unknown build directive: ${build}"
+  exit 1
+fi
 
 ./create-tenant.sh
 
