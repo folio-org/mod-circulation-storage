@@ -37,14 +37,13 @@
       "id": "_tenant",
       "version": "1.0",
       "interfaceType": "system",
-      "routingEntries": [
+      "handlers": [
         {
-          "methods": [
-            "POST",
-            "DELETE"
-          ],
-          "path": "/_/tenant",
-          "type": "request-response"
+          "methods": ["POST"],
+          "pathPattern": "/_/tenant"
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/_/tenant"
         }
       ]
     }
