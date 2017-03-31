@@ -8,22 +8,28 @@
       "handlers": [
         {
           "methods": ["GET"],
-          "pathPattern": "/loan-storage/loans"
+          "pathPattern": "/loan-storage/loans",
+          "permissionsRequired": ["loan-storage.loans.collection.get"]
         }, {
           "methods": ["GET"],
-          "pathPattern": "/loan-storage/loans/{id}"
+          "pathPattern": "/loan-storage/loans/{id}",
+          "permissionsRequired": ["loan-storage.loans.item.get"]
         }, {
           "methods": ["POST"],
-          "pathPattern": "/loan-storage/loans"
+          "pathPattern": "/loan-storage/loans",
+          "permissionsRequired": ["loan-storage.loans.item.post"]
         }, {
           "methods": ["PUT"],
-          "pathPattern": "/loan-storage/loans/{id}"
+          "pathPattern": "/loan-storage/loans/{id}",
+          "permissionsRequired": ["loan-storage.loans.item.put"]
         }, {
           "methods": ["DELETE"],
-          "pathPattern": "/loan-storage/loans/{id}"
+          "pathPattern": "/loan-storage/loans/{id}",
+          "permissionsRequired": ["loan-storage.loans.item.delete"]
         }, {
           "methods": ["DELETE"],
-          "pathPattern": "/loan-storage/loans"
+          "pathPattern": "/loan-storage/loans",
+          "permissionsRequired": ["loan-storage.loans.collection.delete"]
         }
       ]
     },
