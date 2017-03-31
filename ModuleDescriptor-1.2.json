@@ -1,0 +1,46 @@
+{
+  "id": "loan-storage",
+  "name": "Loan Storage Module",
+  "provides": [
+    {
+      "id": "loan-storage",
+      "version": "0.1",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/loan-storage/loans"
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/loan-storage/loans/{id}"
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/loan-storage/loans"
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/loan-storage/loans/{id}"
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/loan-storage/loans/{id}"
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/loan-storage/loans"
+        }
+      ]
+    },
+    {
+      "id": "_tenant",
+      "version": "1.0",
+      "interfaceType": "system",
+      "routingEntries": [
+        {
+          "methods": [
+            "POST",
+            "DELETE"
+          ],
+          "path": "/_/tenant",
+          "type": "request-response"
+        }
+      ]
+    }
+  ]
+}
