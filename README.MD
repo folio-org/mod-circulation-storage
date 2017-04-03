@@ -43,7 +43,7 @@ This is only required to run tests against an external Postgres instance, the de
 
 ## Checking the RAML and JSON.Schema definitions
 
-run `./lint.sh` to validate the RAML and JSON.Schema descriptions of the API (requires node.js and NPM) 
+run `./lint.sh` to validate the RAML and JSON.Schema descriptions of the API (requires node.js and NPM)
 
 # Frequently Asked Questions
 
