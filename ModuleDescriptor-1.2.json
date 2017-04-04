@@ -50,6 +50,36 @@
   ],
   "permissionSets": [
     {
+      "permissionName": "loan-storage.loans.collection.get",
+      "displayName": "loan storage - get loan collection",
+      "description": "get loan collection from storage"
+    },
+    {
+      "permissionName": "loan-storage.loans.collection.delete",
+      "displayName": "loan storage - delete entire loan collection",
+      "description": "delete entire loan collection from storage"
+    },
+    {
+      "permissionName": "loan-storage.loans.item.get",
+      "displayName": "loan storage - get individual loan",
+      "description": "get individual loan from storage"
+    },
+    {
+      "permissionName": "loan-storage.loans.item.post",
+      "displayName": "loan storage - create individual loan",
+      "description": "create individual loan in storage"
+    },
+    {
+      "permissionName": "loan-storage.loans.item.put",
+      "displayName": "loan storage - modify loan",
+      "description": "modify loan in storage"
+    },
+    {
+      "permissionName": "loan-storage.loans.item.delete",
+      "displayName": "loan storage - delete individual loan",
+      "description": "delete individual loan from storage"
+    },
+    {
       "permissionName": "loan-storage.all",
       "displayName": "Loan storage module - all permissions",
       "description": "Entire set of permissions needed to use the loan storage module",
