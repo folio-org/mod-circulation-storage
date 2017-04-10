@@ -5,12 +5,12 @@
 ./setup-test-db.sh
 
 mvn -q test \
-    -Dorg.folio.loan.storage.test.database=external
+    -Dorg.folio.circulation.storage.test.database=external
 
 external_test_results=$?
 
 mvn -q test \
-    -Dorg.folio.loan.storage.test.database=embedded
+    -Dorg.folio.circulation.storage.test.database=embedded
 
 embedded_test_results=$?
 
