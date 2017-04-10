@@ -11,7 +11,7 @@ curl -w '\n' -X GET -D -   \
      "${okapi_proxy_address}/_/env" || exit 1
 
 if [ "${build}" = "build" ]; then
-  echo "Package loan storage module"
+  echo "Package circulation storage module"
   mvn package -q -Dmaven.test.skip=true || exit 1
 elif [ "${build}" = "no-build" ]; then
   echo "Skipping building of loan storage module"
@@ -23,7 +23,7 @@ fi
 ./create-tenant.sh
 
 if [ "${storage}" = "external" ]; then
-  echo "Running Inventory Storage module using external PostgreSQL storage"
+  echo "Running circulation storage module using external PostgreSQL storage"
 
   ./set-demo-okapi-environment-variables.sh
 
@@ -32,7 +32,7 @@ if [ "${storage}" = "external" ]; then
   deployment_descriptor="DeploymentDescriptor-environment.json"
 
 elif [ "${storage}" = "embedded" ]; then
-  echo "Running Inventory Storage module using embedded PostgreSQL storage"
+  echo "Running circulation storage module using embedded PostgreSQL storage"
 
   deployment_descriptor="DeploymentDescriptor.json"
 

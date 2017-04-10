@@ -1,6 +1,6 @@
 {
   "srvcId" : "loan-storage",
   "descriptor" : {
-    "exec" : "java -jar ../mod-loan-storage/target/loan-storage-fat.jar -Dhttp.port=%p embed_postgres=true"
+    "exec" : "java -jar ../mod-loan-storage/target/circulation-storage-fat.jar -Dhttp.port=%p embed_postgres=true"
   }
 }

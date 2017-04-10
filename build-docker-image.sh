@@ -2,5 +2,5 @@
 
 mvn package -Dmaven.test.skip=true
 
-docker build -t mod-loan-storage .
+docker build -t mod-circulation-storage .
 
