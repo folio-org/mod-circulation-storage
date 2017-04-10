@@ -1,6 +1,6 @@
 {
-  "id": "loan-storage",
-  "name": "Loan Storage Module",
+  "id": "circulation-storage",
+  "name": "Circulation Storage Module",
   "provides": [
     {
       "id": "loan-storage",
