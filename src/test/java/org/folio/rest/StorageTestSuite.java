@@ -52,7 +52,7 @@ public class StorageTestSuite {
     vertx = Vertx.vertx();
 
     String useExternalDatabase = System.getProperty(
-      "org.folio.loan.storage.test.database",
+      "org.folio.circulation.storage.test.database",
       "embedded");
 
     switch(useExternalDatabase) {
@@ -62,7 +62,7 @@ public class StorageTestSuite {
 
       case "external":
         String postgresConfigPath = System.getProperty(
-          "org.folio.inventory.storage.test.config",
+          "org.folio.circulation.storage.test.config",
           "/postgres-conf-local.json");
 
         PostgresClient.setConfigFilePath(postgresConfigPath);
@@ -75,7 +75,7 @@ public class StorageTestSuite {
         break;
       default:
         String message = "No understood database choice made." +
-          "Please set org.folio.inventory.storage.test.config" +
+          "Please set org.folio.circulation.storage.test.config" +
           "to 'external', 'environment' or 'embedded'";
 
         throw new Exception(message);
