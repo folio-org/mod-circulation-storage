@@ -46,7 +46,7 @@ public class LoanStorageAPI implements LoanStorageResource {
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
         postgresClient.mutate(String.format("TRUNCATE TABLE %s_%s.loan",
-          tenantId, "loan_storage"),
+          tenantId, "circulation_storage"),
           reply -> {
             asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
               LoanStorageResource.DeleteLoanStorageLoansResponse

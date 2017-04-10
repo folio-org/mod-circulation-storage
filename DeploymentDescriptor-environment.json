@@ -1,7 +1,7 @@
 {
   "srvcId" : "loan-storage",
   "descriptor" : {
-    "exec" : "java -jar ../mod-loan-storage/target/loan-storage-fat.jar -Dhttp.port=%p",
+    "exec" : "java -jar ../mod-loan-storage/target/circulation-storage-fat.jar -Dhttp.port=%p",
     "env": [
       { "name" : "db.username", "value" : "loan_demo_admin" },
       { "name" : "db.password", "value" : "admin" },
