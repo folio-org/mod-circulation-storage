@@ -1,6 +1,6 @@
 {
-  "id": "loan-storage",
-  "name": "Loan Storage Module",
+  "id": "circulation-storage",
+  "name": "Circulation Storage Module",
   "provides": [
     {
       "id": "loan-storage",
@@ -9,27 +9,27 @@
         {
           "methods": ["GET"],
           "pathPattern": "/loan-storage/loans",
-          "permissionsRequired": ["loan-storage.loans.collection.get"]
+          "permissionsRequired": ["circulation-storage.loans.collection.get"]
         }, {
           "methods": ["GET"],
           "pathPattern": "/loan-storage/loans/{id}",
-          "permissionsRequired": ["loan-storage.loans.item.get"]
+          "permissionsRequired": ["circulation-storage.loans.item.get"]
         }, {
           "methods": ["POST"],
           "pathPattern": "/loan-storage/loans",
-          "permissionsRequired": ["loan-storage.loans.item.post"]
+          "permissionsRequired": ["circulation-storage.loans.item.post"]
         }, {
           "methods": ["PUT"],
           "pathPattern": "/loan-storage/loans/{id}",
-          "permissionsRequired": ["loan-storage.loans.item.put"]
+          "permissionsRequired": ["circulation-storage.loans.item.put"]
         }, {
           "methods": ["DELETE"],
           "pathPattern": "/loan-storage/loans/{id}",
-          "permissionsRequired": ["loan-storage.loans.item.delete"]
+          "permissionsRequired": ["circulation-storage.loans.item.delete"]
         }, {
           "methods": ["DELETE"],
           "pathPattern": "/loan-storage/loans",
-          "permissionsRequired": ["loan-storage.loans.collection.delete"]
+          "permissionsRequired": ["circulation-storage.loans.collection.delete"]
         }
       ]
     },
@@ -50,46 +50,46 @@
   ],
   "permissionSets": [
     {
-      "permissionName": "loan-storage.loans.collection.get",
-      "displayName": "loan storage - get loan collection",
-      "description": "get loan collection from storage"
+      "permissionName": "circulation-storage.loans.collection.get",
+      "displayName": "Circulation storage - get loan collection",
+      "description": "Get loan collection from storage"
     },
     {
-      "permissionName": "loan-storage.loans.collection.delete",
-      "displayName": "loan storage - delete entire loan collection",
-      "description": "delete entire loan collection from storage"
+      "permissionName": "circulation-storage.loans.collection.delete",
+      "displayName": "Circulation storage - delete entire loan collection",
+      "description": "Delete entire loan collection from storage"
     },
     {
-      "permissionName": "loan-storage.loans.item.get",
-      "displayName": "loan storage - get individual loan",
-      "description": "get individual loan from storage"
+      "permissionName": "circulation-storage.loans.item.get",
+      "displayName": "Circulation storage - get individual loan",
+      "description": "Get individual loan from storage"
     },
     {
-      "permissionName": "loan-storage.loans.item.post",
-      "displayName": "loan storage - create individual loan",
-      "description": "create individual loan in storage"
+      "permissionName": "circulation-storage.loans.item.post",
+      "displayName": "Circulation storage - create individual loan",
+      "description": "Create individual loan in storage"
     },
     {
-      "permissionName": "loan-storage.loans.item.put",
-      "displayName": "loan storage - modify loan",
-      "description": "modify loan in storage"
+      "permissionName": "circulation-storage.loans.item.put",
+      "displayName": "Circulation storage - modify loan",
+      "description": "Modify loan in storage"
     },
     {
-      "permissionName": "loan-storage.loans.item.delete",
-      "displayName": "loan storage - delete individual loan",
-      "description": "delete individual loan from storage"
+      "permissionName": "circulation-storage.loans.item.delete",
+      "displayName": "Circulation storage - delete individual loan",
+      "description": "Delete individual loan from storage"
     },
     {
-      "permissionName": "loan-storage.all",
-      "displayName": "Loan storage module - all permissions",
-      "description": "Entire set of permissions needed to use the loan storage module",
+      "permissionName": "circulation-storage.all",
+      "displayName": "Circulation storage module - all permissions",
+      "description": "Entire set of permissions needed to use the Circulation storage module",
       "subPermissions": [
-        "loan-storage.loans.collection.get",
-        "loan-storage.loans.item.get",
-        "loan-storage.loans.item.post",
-        "loan-storage.loans.item.put",
-        "loan-storage.loans.item.delete",
-        "loan-storage.loans.collection.delete"
+        "circulation-storage.loans.collection.get",
+        "circulation-storage.loans.item.get",
+        "circulation-storage.loans.item.post",
+        "circulation-storage.loans.item.put",
+        "circulation-storage.loans.item.delete",
+        "circulation-storage.loans.collection.delete"
       ]
     }
   ]

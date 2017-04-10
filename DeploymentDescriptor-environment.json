@@ -1,5 +1,5 @@
 {
-  "srvcId" : "loan-storage",
+  "srvcId" : "circulation-storage",
   "descriptor" : {
     "exec" : "java -jar ../mod-loan-storage/target/circulation-storage-fat.jar -Dhttp.port=%p",
     "env": [
