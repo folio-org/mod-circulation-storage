@@ -57,4 +57,7 @@ At the moment, the JSON.schema for loan does provide validation for these (it wi
 
 Other [modules](http://dev.folio.org/source-code/#server-side).
 
+See project [CIRCSTORE](https://issues.folio.org/browse/CIRCSTORE)
+at the [FOLIO issue tracker](http://dev.folio.org/community/guide-issues).
+
 Other FOLIO Developer documentation is at [dev.folio.org](http://dev.folio.org/)
