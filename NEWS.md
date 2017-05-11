@@ -1,3 +1,8 @@
+## 2.0.0 Unreleased
+
+* Upgrade to RAML Module Builder 11.0.0
+* Upgrade to cql2pgjson 1.1.0
+
 ## 1.0.3 2017-04-19
 
 * Fix incorrect version number
