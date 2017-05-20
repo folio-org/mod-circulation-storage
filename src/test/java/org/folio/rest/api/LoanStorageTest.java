@@ -555,6 +555,57 @@ public class LoanStorageTest {
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
 
+  @Test
+  public void cannotProvideAdditionalPropertiesInLoan()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID id = UUID.randomUUID();
+
+    JsonObject requestWithAdditionalProperty = loanRequest(id,
+      UUID.randomUUID(), UUID.randomUUID(), DateTime.now(), "Open");
+
+    requestWithAdditionalProperty.put("somethingAdditional", "foo");
+
+    CompletableFuture<TextResponse> createCompleted = new CompletableFuture();
+
+    client.post(loanStorageUrl(), requestWithAdditionalProperty, StorageTestSuite.TENANT_ID,
+      ResponseHandler.text(createCompleted));
+
+    TextResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+    assertThat(response.getBody(), containsString("Json content error Unrecognized field"));
+  }
+
+  @Test
+  public void cannotProvideAdditionalPropertiesInLoanStatus()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID id = UUID.randomUUID();
+
+    JsonObject requestWithAdditionalProperty = loanRequest(id,
+      UUID.randomUUID(), UUID.randomUUID(), DateTime.now(), "Open");
+
+    requestWithAdditionalProperty.getJsonObject("status")
+      .put("somethingAdditional", "foo");
+
+    CompletableFuture<TextResponse> createCompleted = new CompletableFuture();
+
+    client.post(loanStorageUrl(), requestWithAdditionalProperty, StorageTestSuite.TENANT_ID,
+      ResponseHandler.text(createCompleted));
+
+    TextResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+    assertThat(response.getBody(), containsString("Json content error Unrecognized field"));
+  }
+
   private JsonResponse getById(UUID id)
     throws MalformedURLException,
     InterruptedException,
