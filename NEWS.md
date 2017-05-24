@@ -2,6 +2,7 @@
 
 * Upgrade to RAML Module Builder 11.0.0
 * Upgrade to cql2pgjson 1.1.0
+* Disallow additional properties in loan requests
 
 ## 1.0.3 2017-04-19
 
