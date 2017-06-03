@@ -19,6 +19,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
+import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
@@ -608,15 +610,15 @@ public class LoanStorageTest {
 
     requestWithAdditionalProperty.put("somethingAdditional", "foo");
 
-    CompletableFuture<TextResponse> createCompleted = new CompletableFuture();
+    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture();
 
     client.post(loanStorageUrl(), requestWithAdditionalProperty, StorageTestSuite.TENANT_ID,
-      ResponseHandler.text(createCompleted));
+      ResponseHandler.jsonErrors(createCompleted));
 
-    TextResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+    JsonErrorResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-    assertThat(response.getBody(), containsString("Json content error Unrecognized field"));
+    assertThat(response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
+    assertThat(response.getErrors(), hasSoleMessgeContaining("Unrecognized field"));
   }
 
   @Test
@@ -634,15 +636,15 @@ public class LoanStorageTest {
     requestWithAdditionalProperty.getJsonObject("status")
       .put("somethingAdditional", "foo");
 
-    CompletableFuture<TextResponse> createCompleted = new CompletableFuture();
+    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture();
 
     client.post(loanStorageUrl(), requestWithAdditionalProperty, StorageTestSuite.TENANT_ID,
-      ResponseHandler.text(createCompleted));
+      ResponseHandler.jsonErrors(createCompleted));
 
-    TextResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+    JsonErrorResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-    assertThat(response.getBody(), containsString("Json content error Unrecognized field"));
+    assertThat(response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
+    assertThat(response.getErrors(), hasSoleMessgeContaining("Unrecognized field"));
   }
 
   private JsonResponse getById(UUID id)
