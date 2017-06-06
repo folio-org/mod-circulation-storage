@@ -41,6 +41,24 @@ public class ResponseHandler {
     };
   }
 
+  public static Handler<HttpClientResponse> jsonErrors(
+    CompletableFuture<JsonErrorResponse> completed) {
+
+    return response -> {
+      response.bodyHandler(buffer -> {
+        try {
+          int statusCode = response.statusCode();
+          String body = BufferHelper.stringFromBuffer(buffer);
+
+          completed.complete(new JsonErrorResponse(statusCode, body));
+
+        } catch (Exception e) {
+          completed.completeExceptionally(e);
+        }
+      });
+    };
+  }
+
   public static Handler<HttpClientResponse> text(
     CompletableFuture<TextResponse> completed) {
 

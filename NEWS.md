@@ -1,7 +1,8 @@
 ## 2.0.0 Unreleased
 
-* Upgrade to RAML Module Builder 11.0.0
-* Upgrade to cql2pgjson 1.1.0
+* Upgrade to RAML Module Builder 12.1.2
+* Disallow additional properties in loan requests
+* Provides loan-storage interface version 2.0
 
 ## 1.0.3 2017-04-19
 

@@ -19,6 +19,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
+import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
@@ -177,6 +179,45 @@ public class LoanStorageTest {
 
     assertThat("status is not open",
       loan.getJsonObject("status").getString("name"), is("Open"));
+  }
+
+  @Test
+  public void canCreateALoanWithoutStatus()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    UnsupportedEncodingException {
+
+    UUID id = UUID.randomUUID();
+
+    JsonObject loanRequest = new JsonObject();
+
+    loanRequest.put("id", id.toString())
+      .put("userId", UUID.randomUUID().toString())
+      .put("itemId", UUID.randomUUID().toString())
+      .put("loanDate", new DateTime(2017, 3, 5, 14, 23, 41, DateTimeZone.UTC)
+        .toString(ISODateTimeFormat.dateTime()));
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+
+    client.put(loanStorageUrl(String.format("/%s", id.toString())), loanRequest,
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to create loan: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    JsonResponse getResponse = getById(id);
+
+    assertThat(String.format("Failed to get loan: %s", getResponse.getBody()),
+      getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject loan = getResponse.getJson();
+
+    assertThat("id does not match",
+      loan.getString("id"), is(id.toString()));
   }
 
   @Test
@@ -553,6 +594,57 @@ public class LoanStorageTest {
     Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+  }
+
+  @Test
+  public void cannotProvideAdditionalPropertiesInLoan()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID id = UUID.randomUUID();
+
+    JsonObject requestWithAdditionalProperty = loanRequest(id,
+      UUID.randomUUID(), UUID.randomUUID(), DateTime.now(), "Open");
+
+    requestWithAdditionalProperty.put("somethingAdditional", "foo");
+
+    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture();
+
+    client.post(loanStorageUrl(), requestWithAdditionalProperty, StorageTestSuite.TENANT_ID,
+      ResponseHandler.jsonErrors(createCompleted));
+
+    JsonErrorResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
+    assertThat(response.getErrors(), hasSoleMessgeContaining("Unrecognized field"));
+  }
+
+  @Test
+  public void cannotProvideAdditionalPropertiesInLoanStatus()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID id = UUID.randomUUID();
+
+    JsonObject requestWithAdditionalProperty = loanRequest(id,
+      UUID.randomUUID(), UUID.randomUUID(), DateTime.now(), "Open");
+
+    requestWithAdditionalProperty.getJsonObject("status")
+      .put("somethingAdditional", "foo");
+
+    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture();
+
+    client.post(loanStorageUrl(), requestWithAdditionalProperty, StorageTestSuite.TENANT_ID,
+      ResponseHandler.jsonErrors(createCompleted));
+
+    JsonErrorResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
+    assertThat(response.getErrors(), hasSoleMessgeContaining("Unrecognized field"));
   }
 
   private JsonResponse getById(UUID id)

@@ -17,7 +17,8 @@
         "name": {
           "type": "string"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "loanDate": {
       "type": "string"
@@ -26,6 +27,7 @@
       "type": "string"
     }
   },
+  "additionalProperties": false,
   "required": [
     "userId",
     "itemId",
