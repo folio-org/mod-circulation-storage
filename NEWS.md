@@ -1,4 +1,4 @@
-## 2.0.0 Unreleased
+## 2.0.0 2017-06-07
 
 * Upgrade to RAML Module Builder 12.1.2
 * Disallow additional properties in loan requests
