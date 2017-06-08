@@ -1,0 +1,70 @@
+#%RAML 0.8
+title: Loan Policy Storage
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost:9130
+
+documentation:
+  - title: Loan Policy Storage API
+    content: <b>Storage for loan policies</b>
+
+schemas:
+ - loan-policy.json: !include schema/loan-policy.json
+ - period.json: !include schema/period.json
+ - loan-policies: !include schema/loan-policies.json
+
+traits:
+ - secured: !include ../raml-util/traits/auth.raml
+ - language: !include ../raml-util/traits/language.raml
+ - pageable: !include ../raml-util/traits/pageable.raml
+ - searchable: !include ../raml-util/traits/searchable.raml
+
+resourceTypes:
+ - collection: !include ../raml-util/rtypes/collection.raml
+ - collection-item: !include ../raml-util/rtypes/item-collection.raml
+
+/loan-policy-storage:
+  /loan-policies:
+    displayName: Loan Policies
+    type:
+      collection:
+        exampleCollection: !include examples/loan-policies.json
+        exampleItem: !include examples/loan-policy.json
+        schemaCollection: loan-policies
+        schemaItem: loan-policy.json
+    get:
+      responses:
+        501:
+          description: "Not implemented yet"
+    post:
+      responses:
+        501:
+          description: "Not implemented yet"
+    delete:
+      responses:
+        204:
+          description: "All loans deleted"
+        500:
+          description: "Internal server error, e.g. due to misconfiguration"
+          body:
+            text/plain:
+              example: "Internal server error, contact administrator"
+        501:
+          description: "Not implemented yet"
+    /{loanPolicyId}:
+      type:
+        collection-item:
+          exampleItem: !include examples/loan-policy.json
+          schema: loan-policy.json
+      get:
+        responses:
+          501:
+            description: "Not implemented yet"
+      put:
+        responses:
+          501:
+            description: "Not implemented yet"
+      delete:
+        responses:
+          501:
+            description: "Not implemented yet"
