@@ -17,10 +17,12 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static org.folio.rest.support.periodJsonObjectMatcher.matchesPeriod;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.notNullValue;
 
-public class LoanPolicyStorageTest {
+public class LoanPoliciesApiTest {
 
   private static HttpClient client = new HttpClient(StorageTestSuite.getVertx());
 
@@ -34,12 +36,10 @@ public class LoanPolicyStorageTest {
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
-    JsonObject loanPolicyRequest = new LoanPolicyRequestBuilder()
-      .loanable()
-      .create();
+    JsonObject loanPolicyRequest = new LoanPolicyRequestBuilder().create();
 
     client.post(loanPolicyStorageUrl(),
-      loanPolicyRequest,
+      loanPolicyRequest, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createCompleted));
 
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
@@ -49,7 +49,30 @@ public class LoanPolicyStorageTest {
 
     JsonObject representation = response.getJson();
 
+    assertThat(representation.getString("id"), is(notNullValue()));
+    assertThat(representation.getString("description"), is("An example loan policy"));
+    assertThat(representation.getString("name"), is("Example Loan Policy"));
     assertThat(representation.getBoolean("loanable"), is(true));
+    assertThat(representation.getBoolean("renewable"), is(true));
+
+    assertThat(representation.containsKey("loansPolicy"), is(true));
+
+    JsonObject loansPolicy = representation.getJsonObject("loansPolicy");
+
+    assertThat(loansPolicy.getString("profileId"), is("ROLLING"));
+    assertThat(loansPolicy.getJsonObject("period"), matchesPeriod(1, "MONTH"));
+    assertThat(loansPolicy.getString("closedLibraryDueDateManagementId"), is("KEEP_CURRENT_DATE"));
+    assertThat(loansPolicy.getJsonObject("existingRequestsPeriod"), matchesPeriod(1, "WEEK"));
+    assertThat(loansPolicy.getJsonObject("gracePeriod"), matchesPeriod(7, "DAYS"));
+
+    assertThat(representation.containsKey("renewalsPolicy"), is(true));
+
+    JsonObject renewalsPolicy = representation.getJsonObject("renewalsPolicy");
+
+    assertThat(renewalsPolicy.getBoolean("unlimited"), is(true));
+    assertThat(renewalsPolicy.getString("renewFromId"), is("CURRENT_DUE_DATE"));
+    assertThat(renewalsPolicy.getBoolean("differentPeriod"), is(true));
+    assertThat(renewalsPolicy.getJsonObject("period"), matchesPeriod(30, "DAYS"));
   }
 
   private static URL loanPolicyStorageUrl() throws MalformedURLException {
@@ -59,7 +82,7 @@ public class LoanPolicyStorageTest {
   private static URL loanPolicyStorageUrl(String subPath)
     throws MalformedURLException {
 
-    return StorageTestSuite.storageUrl("/loan-policy-storage/loans-policies" + subPath);
+    return StorageTestSuite.storageUrl("/loan-policy-storage/loan-policies" + subPath);
   }
 
 }

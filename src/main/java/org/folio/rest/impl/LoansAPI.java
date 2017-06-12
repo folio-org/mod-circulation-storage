@@ -27,7 +27,7 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.core.Response;
 import java.util.*;
 
-public class LoanAPI implements LoanStorageResource {
+public class LoansAPI implements LoanStorageResource {
 
   private static final String TENANT_HEADER = "x-okapi-tenant";
 

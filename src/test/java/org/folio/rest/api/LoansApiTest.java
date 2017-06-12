@@ -26,7 +26,7 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
-public class LoanStorageTest {
+public class LoansApiTest {
 
   private static HttpClient client = new HttpClient(StorageTestSuite.getVertx());
 
