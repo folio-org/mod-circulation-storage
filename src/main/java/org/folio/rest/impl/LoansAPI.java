@@ -27,9 +27,12 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.core.Response;
 import java.util.*;
 
+import static org.folio.rest.impl.Headers.TENANT_HEADER;
+
 public class LoansAPI implements LoanStorageResource {
 
-  private static final String TENANT_HEADER = "x-okapi-tenant";
+  private final String LOAN_TABLE = "loan";
+  private final Class<Loan> LOAN_CLASS = Loan.class;
 
   @Override
   public void deleteLoanStorageLoans(
@@ -88,7 +91,7 @@ public class LoansAPI implements LoanStorageResource {
             .setLimit(new Limit(limit))
             .setOffset(new Offset(offset));
 
-          postgresClient.get("loan", Loan.class, fieldList, cql,
+          postgresClient.get(LOAN_TABLE, LOAN_CLASS, fieldList, cql,
             true, false, reply -> {
               try {
                 if(reply.succeeded()) {
@@ -163,7 +166,7 @@ public class LoansAPI implements LoanStorageResource {
             entity.setId(UUID.randomUUID().toString());
           }
 
-          postgresClient.save("loan", entity.getId(), entity,
+          postgresClient.save(LOAN_TABLE, entity.getId(), entity,
             reply -> {
               try {
                 if(reply.succeeded()) {
@@ -179,7 +182,7 @@ public class LoansAPI implements LoanStorageResource {
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(
                       LoanStorageResource.PostLoanStorageLoansResponse
-                        .withPlainBadRequest("ID must both be a UUID")));
+                        .withPlainInternalServerError(reply.cause().toString())));
                 }
               } catch (Exception e) {
                 e.printStackTrace();
@@ -228,7 +231,7 @@ public class LoansAPI implements LoanStorageResource {
 
       vertxContext.runOnContext(v -> {
         try {
-          postgresClient.get("loan", Loan.class, criterion, true, false,
+          postgresClient.get(LOAN_TABLE, LOAN_CLASS, criterion, true, false,
             reply -> {
               try {
                 if (reply.succeeded()) {
@@ -302,7 +305,7 @@ public class LoansAPI implements LoanStorageResource {
 
       vertxContext.runOnContext(v -> {
         try {
-          postgresClient.delete("loan", criterion,
+          postgresClient.delete(LOAN_TABLE, criterion,
             reply -> {
               if(reply.succeeded()) {
                 asyncResultHandler.handle(
@@ -366,14 +369,14 @@ public class LoansAPI implements LoanStorageResource {
 
       vertxContext.runOnContext(v -> {
         try {
-          postgresClient.get("loan", Loan.class, criterion, true, false,
+          postgresClient.get(LOAN_TABLE, LOAN_CLASS, criterion, true, false,
             reply -> {
               if(reply.succeeded()) {
                 List<Loan> loanList = (List<Loan>) reply.result()[0];
 
                 if (loanList.size() == 1) {
                   try {
-                    postgresClient.update("loan", entity, criterion,
+                    postgresClient.update(LOAN_TABLE, entity, criterion,
                       true,
                       update -> {
                         try {
@@ -408,7 +411,7 @@ public class LoansAPI implements LoanStorageResource {
                 }
                 else {
                   try {
-                    postgresClient.save("loan", entity.getId(), entity,
+                    postgresClient.save(LOAN_TABLE, entity.getId(), entity,
                       save -> {
                         try {
                           if(save.succeeded()) {

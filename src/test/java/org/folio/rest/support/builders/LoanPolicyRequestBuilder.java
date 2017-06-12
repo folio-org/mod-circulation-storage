@@ -6,14 +6,23 @@ import java.util.UUID;
 
 public class LoanPolicyRequestBuilder {
 
-  public LoanPolicyRequestBuilder() {
+  private final UUID id;
 
+  public LoanPolicyRequestBuilder() {
+    this(UUID.randomUUID());
+  }
+
+  private LoanPolicyRequestBuilder(UUID id) {
+    this.id = id;
   }
 
   public JsonObject create() {
     JsonObject request = new JsonObject();
 
-    request.put("id", UUID.randomUUID().toString());
+    if(id != null) {
+      request.put("id", id.toString());
+    }
+    
     request.put("name", "Example Loan Policy");
     request.put("description", "An example loan policy");
     request.put("loanable", true);
@@ -49,5 +58,13 @@ public class LoanPolicyRequestBuilder {
     period.put("intervalId", intervalId);
 
     return period;
+  }
+
+  public LoanPolicyRequestBuilder withId(UUID id) {
+    return new LoanPolicyRequestBuilder(id);
+  }
+
+  public LoanPolicyRequestBuilder withNoId() {
+    return new LoanPolicyRequestBuilder(null);
   }
 }
