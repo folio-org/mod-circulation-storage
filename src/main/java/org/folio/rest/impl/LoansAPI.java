@@ -19,21 +19,22 @@ import org.folio.rest.tools.utils.TenantTool;
 import org.joda.time.DateTime;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.core.Response;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.StringJoiner;
+import java.util.UUID;
 
-public class LoanStorageAPI implements LoanStorageResource {
+import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
-  private static final String TENANT_HEADER = "x-okapi-tenant";
+public class LoansAPI implements LoanStorageResource {
+
+  private final String LOAN_TABLE = "loan";
+  private final Class<Loan> LOAN_CLASS = Loan.class;
 
   @Override
   public void deleteLoanStorageLoans(
-    @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+    String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) throws Exception {
@@ -63,10 +64,10 @@ public class LoanStorageAPI implements LoanStorageResource {
 
   @Override
   public void getLoanStorageLoans(
-    @DefaultValue("0") @Min(0L) @Max(1000L) int offset,
-    @DefaultValue("10") @Min(1L) @Max(100L) int limit,
+    int offset,
+    int limit,
     String query,
-    @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+    String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) throws Exception {
@@ -88,7 +89,7 @@ public class LoanStorageAPI implements LoanStorageResource {
             .setLimit(new Limit(limit))
             .setOffset(new Offset(offset));
 
-          postgresClient.get("loan", Loan.class, fieldList, cql,
+          postgresClient.get(LOAN_TABLE, LOAN_CLASS, fieldList, cql,
             true, false, reply -> {
               try {
                 if(reply.succeeded()) {
@@ -131,7 +132,7 @@ public class LoanStorageAPI implements LoanStorageResource {
 
   @Override
   public void postLoanStorageLoans(
-    @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+    String lang,
     Loan entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
@@ -163,7 +164,7 @@ public class LoanStorageAPI implements LoanStorageResource {
             entity.setId(UUID.randomUUID().toString());
           }
 
-          postgresClient.save("loan", entity.getId(), entity,
+          postgresClient.save(LOAN_TABLE, entity.getId(), entity,
             reply -> {
               try {
                 if(reply.succeeded()) {
@@ -179,7 +180,7 @@ public class LoanStorageAPI implements LoanStorageResource {
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(
                       LoanStorageResource.PostLoanStorageLoansResponse
-                        .withPlainBadRequest("ID must both be a UUID")));
+                        .withPlainInternalServerError(reply.cause().toString())));
                 }
               } catch (Exception e) {
                 e.printStackTrace();
@@ -206,8 +207,8 @@ public class LoanStorageAPI implements LoanStorageResource {
 
   @Override
   public void getLoanStorageLoansByLoanId(
-    @NotNull String loanId,
-    @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+    String loanId,
+    String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) throws Exception {
@@ -228,7 +229,7 @@ public class LoanStorageAPI implements LoanStorageResource {
 
       vertxContext.runOnContext(v -> {
         try {
-          postgresClient.get("loan", Loan.class, criterion, true, false,
+          postgresClient.get(LOAN_TABLE, LOAN_CLASS, criterion, true, false,
             reply -> {
               try {
                 if (reply.succeeded()) {
@@ -279,8 +280,8 @@ public class LoanStorageAPI implements LoanStorageResource {
 
   @Override
   public void deleteLoanStorageLoansByLoanId(
-    @NotNull String loanId,
-    @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+    String loanId,
+    String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) throws Exception {
@@ -302,7 +303,7 @@ public class LoanStorageAPI implements LoanStorageResource {
 
       vertxContext.runOnContext(v -> {
         try {
-          postgresClient.delete("loan", criterion,
+          postgresClient.delete(LOAN_TABLE, criterion,
             reply -> {
               if(reply.succeeded()) {
                 asyncResultHandler.handle(
@@ -331,8 +332,8 @@ public class LoanStorageAPI implements LoanStorageResource {
 
   @Override
   public void putLoanStorageLoansByLoanId(
-    @NotNull String loanId,
-    @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+    String loanId,
+    String lang,
     Loan entity, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) throws Exception {
@@ -366,14 +367,14 @@ public class LoanStorageAPI implements LoanStorageResource {
 
       vertxContext.runOnContext(v -> {
         try {
-          postgresClient.get("loan", Loan.class, criterion, true, false,
+          postgresClient.get(LOAN_TABLE, LOAN_CLASS, criterion, true, false,
             reply -> {
               if(reply.succeeded()) {
                 List<Loan> loanList = (List<Loan>) reply.result()[0];
 
                 if (loanList.size() == 1) {
                   try {
-                    postgresClient.update("loan", entity, criterion,
+                    postgresClient.update(LOAN_TABLE, entity, criterion,
                       true,
                       update -> {
                         try {
@@ -408,7 +409,7 @@ public class LoanStorageAPI implements LoanStorageResource {
                 }
                 else {
                   try {
-                    postgresClient.save("loan", entity.getId(), entity,
+                    postgresClient.save(LOAN_TABLE, entity.getId(), entity,
                       save -> {
                         try {
                           if(save.succeeded()) {

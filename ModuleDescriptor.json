@@ -34,6 +34,37 @@
       ]
     },
     {
+      "id": "loan-policy-storage",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/loan-policy-storage/loan-policies",
+          "permissionsRequired": ["circulation-storage.loan-policies.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/loan-policy-storage/loan-policies/{id}",
+          "permissionsRequired": ["circulation-storage.loan-policies.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/loan-policy-storage/loan-policies",
+          "permissionsRequired": ["circulation-storage.loan-policies.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/loan-policy-storage/loan-policies/{id}",
+          "permissionsRequired": ["circulation-storage.loan-policies.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/loan-policy-storage/loan-policies/{id}",
+          "permissionsRequired": ["circulation-storage.loan-policies.item.delete"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/loan-policy-storage/loan-policies",
+          "permissionsRequired": ["circulation-storage.loan-policies.collection.delete"]
+        }
+      ]
+    },
+    {
       "id": "_tenant",
       "version": "1.0",
       "interfaceType": "system",
@@ -80,16 +111,52 @@
       "description": "Delete individual loan from storage"
     },
     {
+      "permissionName": "circulation-storage.loan-policies.collection.get",
+      "displayName": "Circulation storage - get loan policy collection",
+      "description": "Get loan policy collection from storage"
+    },
+    {
+      "permissionName": "circulation-storage.loan-policies.collection.delete",
+      "displayName": "Circulation storage - delete entire loan collection",
+      "description": "Delete entire loan collection from storage"
+    },
+    {
+      "permissionName": "circulation-storage.loan-policies.item.get",
+      "displayName": "Circulation storage - get individual loan policy",
+      "description": "Get individual loan policy from storage"
+    },
+    {
+      "permissionName": "circulation-storage.loan-policies.item.post",
+      "displayName": "Circulation storage - create individual loan policy",
+      "description": "Create individual loan policy in storage"
+    },
+    {
+      "permissionName": "circulation-storage.loan-policies.item.put",
+      "displayName": "Circulation storage - modify loan policy",
+      "description": "Modify loan policy in storage"
+    },
+    {
+      "permissionName": "circulation-storage.loan-policies.item.delete",
+      "displayName": "Circulation storage - delete individual loan policy",
+      "description": "Delete individual loan policy from storage"
+    },
+    {
       "permissionName": "circulation-storage.all",
       "displayName": "Circulation storage module - all permissions",
-      "description": "Entire set of permissions needed to use the Circulation storage module",
+      "description": "Entire set of permissions needed to use the circulation storage module",
       "subPermissions": [
         "circulation-storage.loans.collection.get",
         "circulation-storage.loans.item.get",
         "circulation-storage.loans.item.post",
         "circulation-storage.loans.item.put",
         "circulation-storage.loans.item.delete",
-        "circulation-storage.loans.collection.delete"
+        "circulation-storage.loans.collection.delete",
+        "circulation-storage.loan-policies.collection.get",
+        "circulation-storage.loan-policies.item.get",
+        "circulation-storage.loan-policies.item.post",
+        "circulation-storage.loan-policies.item.put",
+        "circulation-storage.loan-policies.item.delete",
+        "circulation-storage.loan-policies.collection.delete"
       ]
     }
   ]
