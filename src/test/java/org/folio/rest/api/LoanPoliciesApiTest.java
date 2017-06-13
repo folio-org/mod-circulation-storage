@@ -372,6 +372,41 @@ public class LoanPoliciesApiTest {
     MatcherAssert.assertThat(secondPage.getInteger("totalRecords"), is(7));
   }
 
+  @Test
+  public void canDeleteALoanPolicy()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    UUID id = UUID.randomUUID();
+
+    createLoanPolicy(new LoanPolicyRequestBuilder().withId(id).create());
+
+    client.delete(loanPolicyStorageUrl(String.format("/%s", id.toString())),
+      StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse createResponse = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to delete loan policy: %s", createResponse.getBody()),
+      createResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
+
+    client.get(loanPolicyStorageUrl(String.format("/%s", id.toString())),
+      StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(getCompleted));
+
+    JsonResponse getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Found a deleted loan policy: %s", getResponse.getBody()),
+      getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+  }
+
   private static URL loanPolicyStorageUrl() throws MalformedURLException {
     return loanPolicyStorageUrl("");
   }

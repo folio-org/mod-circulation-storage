@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
 public class LoanPoliciesAPI implements LoanPolicyStorageResource {
@@ -276,7 +275,48 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) throws Exception {
 
-    asyncResultHandler.handle(succeededFuture(Response.status(501).build()));
+    String tenantId = okapiHeaders.get(TENANT_HEADER);
+
+    try {
+      PostgresClient postgresClient =
+        PostgresClient.getInstance(
+          vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
+
+      Criteria a = new Criteria();
+
+      a.addField("'id'");
+      a.setOperation("=");
+      a.setValue(loanPolicyId);
+
+      Criterion criterion = new Criterion(a);
+
+      vertxContext.runOnContext(v -> {
+        try {
+          postgresClient.delete(LOAN_POLICY_TABLE, criterion,
+            reply -> {
+              if(reply.succeeded()) {
+                asyncResultHandler.handle(
+                  Future.succeededFuture(
+                    DeleteLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
+                      .withNoContent()));
+              }
+              else {
+                asyncResultHandler.handle(Future.succeededFuture(
+                  DeleteLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
+                    .withPlainInternalServerError(reply.cause().getMessage())));
+              }
+            });
+        } catch (Exception e) {
+          asyncResultHandler.handle(Future.succeededFuture(
+            DeleteLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
+              .withPlainInternalServerError(e.getMessage())));
+        }
+      });
+    } catch (Exception e) {
+      asyncResultHandler.handle(Future.succeededFuture(
+        DeleteLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
+          .withPlainInternalServerError(e.getMessage())));
+    }
   }
 
   @Override
