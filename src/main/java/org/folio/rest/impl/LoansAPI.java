@@ -19,11 +19,6 @@ import org.folio.rest.tools.utils.TenantTool;
 import org.joda.time.DateTime;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +34,7 @@ public class LoansAPI implements LoanStorageResource {
 
   @Override
   public void deleteLoanStorageLoans(
-    @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+    String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) throws Exception {
@@ -69,10 +64,10 @@ public class LoansAPI implements LoanStorageResource {
 
   @Override
   public void getLoanStorageLoans(
-    @DefaultValue("0") @Min(0L) @Max(1000L) int offset,
-    @DefaultValue("10") @Min(1L) @Max(100L) int limit,
+    int offset,
+    int limit,
     String query,
-    @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+    String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) throws Exception {
@@ -137,7 +132,7 @@ public class LoansAPI implements LoanStorageResource {
 
   @Override
   public void postLoanStorageLoans(
-    @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+    String lang,
     Loan entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
@@ -212,8 +207,8 @@ public class LoansAPI implements LoanStorageResource {
 
   @Override
   public void getLoanStorageLoansByLoanId(
-    @NotNull String loanId,
-    @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+    String loanId,
+    String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) throws Exception {
@@ -285,8 +280,8 @@ public class LoansAPI implements LoanStorageResource {
 
   @Override
   public void deleteLoanStorageLoansByLoanId(
-    @NotNull String loanId,
-    @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+    String loanId,
+    String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) throws Exception {
@@ -337,8 +332,8 @@ public class LoansAPI implements LoanStorageResource {
 
   @Override
   public void putLoanStorageLoansByLoanId(
-    @NotNull String loanId,
-    @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+    String loanId,
+    String lang,
     Loan entity, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) throws Exception {
