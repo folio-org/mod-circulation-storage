@@ -9,4 +9,10 @@ CREATE TABLE myuniversity_mymodule.loan (
   jsonb JSONB NOT NULL
 );
 
+CREATE TABLE myuniversity_mymodule.loan_policy (
+  _id UUID PRIMARY KEY,
+  jsonb JSONB NOT NULL
+);
+
 GRANT ALL ON myuniversity_mymodule.loan TO myuniversity_mymodule;
+GRANT ALL ON myuniversity_mymodule.loan_policy TO myuniversity_mymodule;

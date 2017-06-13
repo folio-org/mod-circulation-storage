@@ -1,0 +1,32 @@
+{
+  "id" : "",
+  "name" : "",
+  "description" : "",
+  "loanable" : true,
+  "loansPolicy" : {
+    "profileId" : "",
+    "period" : {
+      "duration" : 0,
+      "intervalId" : ""
+    },
+    "closedLibraryDueDateManagementId" : "",
+    "existingRequestsPeriod" : {
+      "duration" : 0,
+      "intervalId" : ""
+    },
+    "gracePeriod" : {
+      "duration" : 0,
+      "intervalId" : ""
+    }
+  },
+  "renewable" : true,
+  "renewalsPolicy" : {
+    "unlimited" : true,
+    "renewFromId" : "",
+    "differentPeriod" : true,
+    "period" : {
+      "duration" : 0,
+      "intervalId" : ""
+    }
+  }
+}

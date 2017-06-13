@@ -29,7 +29,8 @@ import static org.junit.Assert.assertThat;
 @RunWith(Suite.class)
 
 @Suite.SuiteClasses({
-  LoanStorageTest.class
+  LoansApiTest.class,
+  LoanPoliciesApiTest.class
 })
 public class StorageTestSuite {
 
