@@ -295,7 +295,7 @@ public class LoansApiTest {
   }
 
   @Test
-  public void loanNotFoundForUnknownId()
+  public void cannotGetALoanForUnknownId()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,

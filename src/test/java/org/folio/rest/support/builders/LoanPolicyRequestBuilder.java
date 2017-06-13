@@ -22,7 +22,7 @@ public class LoanPolicyRequestBuilder {
     if(id != null) {
       request.put("id", id.toString());
     }
-    
+
     request.put("name", "Example Loan Policy");
     request.put("description", "An example loan policy");
     request.put("loanable", true);

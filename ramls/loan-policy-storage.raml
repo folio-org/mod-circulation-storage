@@ -33,6 +33,7 @@ resourceTypes:
         schemaCollection: loan-policies
         schemaItem: loan-policy.json
     get:
+      is: [pageable]
       responses:
         501:
           description: "Not implemented yet"

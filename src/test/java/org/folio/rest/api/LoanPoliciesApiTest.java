@@ -1,11 +1,15 @@
 package org.folio.rest.api;
 
 
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.LoanPolicyRequestBuilder;
+import org.hamcrest.junit.MatcherAssert;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.UnsupportedEncodingException;
@@ -26,6 +30,25 @@ import static org.hamcrest.core.IsNull.notNullValue;
 public class LoanPoliciesApiTest {
 
   private static HttpClient client = new HttpClient(StorageTestSuite.getVertx());
+
+  @Before
+  public void beforeEach()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    StorageTestSuite.deleteAll(loanPolicyStorageUrl());
+  }
+
+  @After
+  public void checkIdsAfterEach()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    StorageTestSuite.checkForMismatchedIDs("loan_policy");
+  }
 
   @Test
   public void canCreateALoanPolicy()
@@ -116,22 +139,9 @@ public class LoanPoliciesApiTest {
     ExecutionException,
     UnsupportedEncodingException {
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
-
     UUID id = UUID.randomUUID();
 
-    JsonObject loanPolicyRequest = new LoanPolicyRequestBuilder()
-      .withId(id)
-      .create();
-
-    client.post(loanPolicyStorageUrl(),
-      loanPolicyRequest, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(createCompleted));
-
-    JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(String.format("Failed to create loan policy: %s", postResponse.getBody()),
-      postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    createLoanPolicy(new LoanPolicyRequestBuilder().withId(id).create());
 
     JsonResponse getResponse = getById(id);
 
@@ -179,6 +189,55 @@ public class LoanPoliciesApiTest {
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
 
+  @Test
+  public void canPageLoanPolicies()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
+
+    createLoanPolicy(new LoanPolicyRequestBuilder().create());
+    createLoanPolicy(new LoanPolicyRequestBuilder().create());
+    createLoanPolicy(new LoanPolicyRequestBuilder().create());
+    createLoanPolicy(new LoanPolicyRequestBuilder().create());
+    createLoanPolicy(new LoanPolicyRequestBuilder().create());
+    createLoanPolicy(new LoanPolicyRequestBuilder().create());
+    createLoanPolicy(new LoanPolicyRequestBuilder().create());
+
+    CompletableFuture<JsonResponse> firstPageCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> secondPageCompleted = new CompletableFuture();
+
+    client.get(loanPolicyStorageUrl() + "?limit=4", StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(firstPageCompleted));
+
+    client.get(loanPolicyStorageUrl() + "?limit=4&offset=4", StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(secondPageCompleted));
+
+    JsonResponse firstPageResponse = firstPageCompleted.get(5, TimeUnit.SECONDS);
+    JsonResponse secondPageResponse = secondPageCompleted.get(5, TimeUnit.SECONDS);
+
+    MatcherAssert.assertThat(String.format("Failed to get first page of loan policies: %s",
+      firstPageResponse.getBody()),
+      firstPageResponse.getStatusCode(), is(200));
+
+    MatcherAssert.assertThat(String.format("Failed to get second page of loans policies: %s",
+      secondPageResponse.getBody()),
+      secondPageResponse.getStatusCode(), is(200));
+
+    JsonObject firstPage = firstPageResponse.getJson();
+    JsonObject secondPage = secondPageResponse.getJson();
+
+    JsonArray firstPageLoans = firstPage.getJsonArray("loanPolicies");
+    JsonArray secondPageLoans = secondPage.getJsonArray("loanPolicies");
+
+    MatcherAssert.assertThat(firstPageLoans.size(), is(4));
+    MatcherAssert.assertThat(firstPage.getInteger("totalRecords"), is(7));
+
+    MatcherAssert.assertThat(secondPageLoans.size(), is(3));
+    MatcherAssert.assertThat(secondPage.getInteger("totalRecords"), is(7));
+  }
+
   private static URL loanPolicyStorageUrl() throws MalformedURLException {
     return loanPolicyStorageUrl("");
   }
@@ -187,6 +246,24 @@ public class LoanPoliciesApiTest {
     throws MalformedURLException {
 
     return StorageTestSuite.storageUrl("/loan-policy-storage/loan-policies" + subPath);
+  }
+
+  private void createLoanPolicy(JsonObject loanPolicyRequest)
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    client.post(loanPolicyStorageUrl(),
+      loanPolicyRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to create loan policy: %s", postResponse.getBody()),
+      postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
   }
 
   private JsonResponse getById(UUID id)
@@ -205,5 +282,4 @@ public class LoanPoliciesApiTest {
 
     return getCompleted.get(5, TimeUnit.SECONDS);
   }
-
 }
