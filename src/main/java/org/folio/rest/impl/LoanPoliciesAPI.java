@@ -283,11 +283,119 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
   @Validate
   public void putLoanPolicyStorageLoanPoliciesByLoanPolicyId(
     String loanPolicyId,
-    String lang, LoanPolicy entity,
+    String lang,
+    LoanPolicy entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) throws Exception {
 
-    asyncResultHandler.handle(succeededFuture(Response.status(501).build()));
+    String tenantId = okapiHeaders.get(TENANT_HEADER);
+
+    try {
+      PostgresClient postgresClient =
+        PostgresClient.getInstance(
+          vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
+
+      Criteria a = new Criteria();
+
+      a.addField("'id'");
+      a.setOperation("=");
+      a.setValue(loanPolicyId);
+
+      Criterion criterion = new Criterion(a);
+
+      vertxContext.runOnContext(v -> {
+        try {
+          postgresClient.get(LOAN_POLICY_TABLE, LOAN_POLICY_CLASS, criterion, true, false,
+            reply -> {
+              if(reply.succeeded()) {
+                List<LoanPolicy> loanPolicyList = (List<LoanPolicy>) reply.result()[0];
+
+                if (loanPolicyList.size() == 1) {
+                  try {
+                    postgresClient.update(LOAN_POLICY_TABLE, entity, criterion,
+                      true,
+                      update -> {
+                        try {
+                          if(update.succeeded()) {
+                            OutStream stream = new OutStream();
+                            stream.setData(entity);
+
+                            asyncResultHandler.handle(
+                              Future.succeededFuture(
+                                PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
+                                  .withNoContent()));
+                          }
+                          else {
+                            asyncResultHandler.handle(
+                              Future.succeededFuture(
+                                PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
+                                  .withPlainInternalServerError(
+                                    update.cause().getMessage())));
+                          }
+                        } catch (Exception e) {
+                          asyncResultHandler.handle(
+                            Future.succeededFuture(
+                              PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
+                                .withPlainInternalServerError(e.getMessage())));
+                        }
+                      });
+                  } catch (Exception e) {
+                    asyncResultHandler.handle(Future.succeededFuture(
+                      PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
+                        .withPlainInternalServerError(e.getMessage())));
+                  }
+                }
+                else {
+                  try {
+                    postgresClient.save(LOAN_POLICY_TABLE, entity.getId(), entity,
+                      save -> {
+                        try {
+                          if(save.succeeded()) {
+                            OutStream stream = new OutStream();
+                            stream.setData(entity);
+
+                            asyncResultHandler.handle(
+                              Future.succeededFuture(
+                                PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
+                                  .withNoContent()));
+                          }
+                          else {
+                            asyncResultHandler.handle(
+                              Future.succeededFuture(
+                                PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
+                                  .withPlainInternalServerError(
+                                    save.cause().getMessage())));
+                          }
+                        } catch (Exception e) {
+                          asyncResultHandler.handle(
+                            Future.succeededFuture(
+                              PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
+                                .withPlainInternalServerError(e.getMessage())));
+                        }
+                      });
+                  } catch (Exception e) {
+                    asyncResultHandler.handle(Future.succeededFuture(
+                      PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
+                        .withPlainInternalServerError(e.getMessage())));
+                  }
+                }
+              } else {
+                asyncResultHandler.handle(Future.succeededFuture(
+                  PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
+                    .withPlainInternalServerError(reply.cause().getMessage())));
+              }
+            });
+        } catch (Exception e) {
+          asyncResultHandler.handle(Future.succeededFuture(
+            PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
+              .withPlainInternalServerError(e.getMessage())));
+        }
+      });
+    } catch (Exception e) {
+      asyncResultHandler.handle(Future.succeededFuture(
+        PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
+          .withPlainInternalServerError(e.getMessage())));
+    }
   }
 }

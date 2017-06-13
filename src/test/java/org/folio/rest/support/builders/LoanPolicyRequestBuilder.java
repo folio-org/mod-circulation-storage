@@ -7,13 +7,17 @@ import java.util.UUID;
 public class LoanPolicyRequestBuilder {
 
   private final UUID id;
+  private final String name;
+  private final String description;
 
   public LoanPolicyRequestBuilder() {
-    this(UUID.randomUUID());
+    this(UUID.randomUUID(), "Example Loan Policy", "An example loan policy");
   }
 
-  private LoanPolicyRequestBuilder(UUID id) {
+  private LoanPolicyRequestBuilder(UUID id, String name, String description) {
     this.id = id;
+    this.name = name;
+    this.description = description;
   }
 
   public JsonObject create() {
@@ -23,8 +27,8 @@ public class LoanPolicyRequestBuilder {
       request.put("id", id.toString());
     }
 
-    request.put("name", "Example Loan Policy");
-    request.put("description", "An example loan policy");
+    request.put("name", this.name);
+    request.put("description", this.description);
     request.put("loanable", true);
 
     JsonObject loansPolicy = new JsonObject();
@@ -51,6 +55,22 @@ public class LoanPolicyRequestBuilder {
     return request;
   }
 
+  public LoanPolicyRequestBuilder withId(UUID id) {
+    return new LoanPolicyRequestBuilder(id, this.name, this.description);
+  }
+
+  public LoanPolicyRequestBuilder withNoId() {
+    return new LoanPolicyRequestBuilder(null, this.name, this.description);
+  }
+
+  public LoanPolicyRequestBuilder withName(String name) {
+    return new LoanPolicyRequestBuilder(this.id, name, this.description);
+  }
+
+  public LoanPolicyRequestBuilder withDescription(String description) {
+    return new LoanPolicyRequestBuilder(this.id, this.name, description);
+  }
+
   private JsonObject createPeriod(Integer duration, String intervalId) {
     JsonObject period = new JsonObject();
 
@@ -60,11 +80,4 @@ public class LoanPolicyRequestBuilder {
     return period;
   }
 
-  public LoanPolicyRequestBuilder withId(UUID id) {
-    return new LoanPolicyRequestBuilder(id);
-  }
-
-  public LoanPolicyRequestBuilder withNoId() {
-    return new LoanPolicyRequestBuilder(null);
-  }
 }

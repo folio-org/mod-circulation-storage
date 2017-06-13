@@ -64,6 +64,8 @@ public class LoanPoliciesApiTest {
 
     JsonObject loanPolicyRequest = new LoanPolicyRequestBuilder()
       .withId(id)
+      .withName("Example Loan Policy")
+      .withDescription("An example loan policy")
       .create();
 
     client.post(loanPolicyStorageUrl(),
@@ -78,8 +80,8 @@ public class LoanPoliciesApiTest {
     JsonObject representation = response.getJson();
 
     assertThat(representation.getString("id"), is(id.toString()));
-    assertThat(representation.getString("description"), is("An example loan policy"));
     assertThat(representation.getString("name"), is("Example Loan Policy"));
+    assertThat(representation.getString("description"), is("An example loan policy"));
     assertThat(representation.getBoolean("loanable"), is(true));
     assertThat(representation.getBoolean("renewable"), is(true));
 
@@ -129,6 +131,70 @@ public class LoanPoliciesApiTest {
     JsonObject representation = response.getJson();
 
     assertThat(representation.getString("id"), is(notNullValue()));
+  }
+
+  @Test
+  public void canCreateALoanPolicyAtASpecificLocation()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    UUID id = UUID.randomUUID();
+
+    JsonObject loanPolicyRequest = new LoanPolicyRequestBuilder()
+      .withId(id)
+      .create();
+
+    client.put(loanPolicyStorageUrl(String.format("/%s", id.toString())),
+      loanPolicyRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse createResponse = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to create loan policy: %s", createResponse.getBody()),
+      createResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
+
+    client.get(loanPolicyStorageUrl(String.format("/%s", id.toString())),
+      StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(getCompleted));
+
+    JsonResponse getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to get updated loan policy: %s", getResponse.getBody()),
+      getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject representation = getResponse.getJson();
+
+    assertThat(representation.getString("id"), is(id.toString()));
+    assertThat(representation.getString("description"), is("An example loan policy"));
+    assertThat(representation.getString("name"), is("Example Loan Policy"));
+    assertThat(representation.getBoolean("loanable"), is(true));
+    assertThat(representation.getBoolean("renewable"), is(true));
+
+    assertThat(representation.containsKey("loansPolicy"), is(true));
+
+    JsonObject loansPolicy = representation.getJsonObject("loansPolicy");
+
+    assertThat(loansPolicy.getString("profileId"), is("ROLLING"));
+    assertThat(loansPolicy.getJsonObject("period"), matchesPeriod(1, "MONTH"));
+    assertThat(loansPolicy.getString("closedLibraryDueDateManagementId"), is("KEEP_CURRENT_DATE"));
+    assertThat(loansPolicy.getJsonObject("existingRequestsPeriod"), matchesPeriod(1, "WEEK"));
+    assertThat(loansPolicy.getJsonObject("gracePeriod"), matchesPeriod(7, "DAYS"));
+
+    assertThat(representation.containsKey("renewalsPolicy"), is(true));
+
+    JsonObject renewalsPolicy = representation.getJsonObject("renewalsPolicy");
+
+    assertThat(renewalsPolicy.getBoolean("unlimited"), is(true));
+    assertThat(renewalsPolicy.getString("renewFromId"), is("CURRENT_DUE_DATE"));
+    assertThat(renewalsPolicy.getBoolean("differentPeriod"), is(true));
+    assertThat(renewalsPolicy.getJsonObject("period"), matchesPeriod(30, "DAYS"));
   }
 
   @Test
@@ -187,6 +253,74 @@ public class LoanPoliciesApiTest {
     JsonResponse getResponse = getById(UUID.randomUUID());
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+  }
+
+  @Test
+  public void canUpdateAnExistingLoanPolicyByReplacingItsRepresentation()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
+
+    UUID id = UUID.randomUUID();
+
+    createLoanPolicy(new LoanPolicyRequestBuilder().withId(id).create());
+
+    CompletableFuture<JsonResponse> updateCompleted = new CompletableFuture<>();
+
+    JsonObject loanPolicyRequest = new LoanPolicyRequestBuilder()
+      .withId(id)
+      .withName("A Different Name")
+      .withDescription("A different description")
+      .create();
+
+    client.put(loanPolicyStorageUrl(String.format("/%s", id.toString())),
+      loanPolicyRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(updateCompleted));
+
+    JsonResponse updateResponse = updateCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to update loan policy: %s", updateResponse.getBody()),
+      updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
+
+    client.get(loanPolicyStorageUrl(String.format("/%s", id.toString())),
+      StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(getCompleted));
+
+    JsonResponse getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to get updated loan policy: %s", getResponse.getBody()),
+      getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject representation = getResponse.getJson();
+
+    assertThat(representation.getString("id"), is(id.toString()));
+    assertThat(representation.getString("name"), is("A Different Name"));
+    assertThat(representation.getString("description"), is("A different description"));
+    assertThat(representation.getBoolean("loanable"), is(true));
+    assertThat(representation.getBoolean("renewable"), is(true));
+
+    assertThat(representation.containsKey("loansPolicy"), is(true));
+
+    JsonObject loansPolicy = representation.getJsonObject("loansPolicy");
+
+    assertThat(loansPolicy.getString("profileId"), is("ROLLING"));
+    assertThat(loansPolicy.getJsonObject("period"), matchesPeriod(1, "MONTH"));
+    assertThat(loansPolicy.getString("closedLibraryDueDateManagementId"), is("KEEP_CURRENT_DATE"));
+    assertThat(loansPolicy.getJsonObject("existingRequestsPeriod"), matchesPeriod(1, "WEEK"));
+    assertThat(loansPolicy.getJsonObject("gracePeriod"), matchesPeriod(7, "DAYS"));
+
+    assertThat(representation.containsKey("renewalsPolicy"), is(true));
+
+    JsonObject renewalsPolicy = representation.getJsonObject("renewalsPolicy");
+
+    assertThat(renewalsPolicy.getBoolean("unlimited"), is(true));
+    assertThat(renewalsPolicy.getString("renewFromId"), is("CURRENT_DUE_DATE"));
+    assertThat(renewalsPolicy.getBoolean("differentPeriod"), is(true));
+    assertThat(renewalsPolicy.getJsonObject("period"), matchesPeriod(30, "DAYS"));
   }
 
   @Test
