@@ -11,10 +11,10 @@
     "description": {
       "type": "string"
     },
-    "loanable" : {
+    "loanable": {
       "type": "boolean"
     },
-    "loansPolicy" : {
+    "loansPolicy": {
       "type": "object",
       "properties": {
         "profileId": {
@@ -22,18 +22,18 @@
         },
         "period": {
           "type": "object",
-          "$ref" : "period.json"
+          "$ref": "period.json"
         },
         "closedLibraryDueDateManagementId": {
           "type": "string"
         },
         "existingRequestsPeriod": {
           "type": "object",
-          "$ref" : "period.json"
+          "$ref": "period.json"
         },
         "gracePeriod": {
           "type": "object",
-          "$ref" : "period.json"
+          "$ref": "period.json"
         }
       }
     },
@@ -57,11 +57,14 @@
         },
         "period": {
           "type": "object",
-          "$ref" : "period.json"
+          "$ref": "period.json"
         }
       }
     }
   },
   "additionalProperties": false,
-  "required": ["loanable", "renewable"]
+  "required": [
+    "loanable",
+    "renewable"
+  ]
 }
