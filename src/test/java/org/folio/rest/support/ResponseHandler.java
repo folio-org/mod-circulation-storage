@@ -2,10 +2,14 @@ package org.folio.rest.support;
 
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 import java.util.concurrent.CompletableFuture;
 
 public class ResponseHandler {
+  private static final Logger log = LoggerFactory.getLogger(ResponseHandler.class);
+
   public static Handler<HttpClientResponse> empty(
     CompletableFuture<Response> completed) {
 
@@ -30,7 +34,7 @@ public class ResponseHandler {
           int statusCode = response.statusCode();
           String body = BufferHelper.stringFromBuffer(buffer);
 
-          System.out.println(String.format("Response: %s", body));
+          log.debug(String.format("Response: %s", body));
 
           completed.complete(new JsonResponse(statusCode, body));
 

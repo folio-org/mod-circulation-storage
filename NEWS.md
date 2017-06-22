@@ -1,6 +1,9 @@
 ## 2.1.0 Unreleased
 
 * Provides initial loan policies collection resource
+* CIRCSTORE-8 Implement a Loan Rules web service endpoint
+* Upgrade to RAML Module Builder 12.1.3 to make it run under Windows
+* UTF-8 in maven: project.build.sourceEncoding, project.reporting.outputEncoding
 
 ## 2.0.0 2017-06-07
 
