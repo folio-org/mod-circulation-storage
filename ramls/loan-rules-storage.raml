@@ -36,10 +36,8 @@ traits:
       application/json:
         schema: loan-rules
     responses:
-      200:
-        body:
-          text/plain:
-            example: "Loan rules have been saved."
+      204:
+        description: "Loan rules have been saved."
       500:
         description: "Internal server error"
         body:

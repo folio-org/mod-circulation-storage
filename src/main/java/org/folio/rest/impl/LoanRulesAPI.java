@@ -95,7 +95,7 @@ public class LoanRulesAPI implements LoanRulesStorageResource {
                   return;
                 }
                 asyncResultHandler.handle(Future.succeededFuture(
-                    PutLoanRulesStorageResponse.withPlainOK("Loan rules have been saved.")));
+                    PutLoanRulesStorageResponse.withNoContent()));
               } catch (Exception e) {
                 internalErrorPut(asyncResultHandler, e);
               }

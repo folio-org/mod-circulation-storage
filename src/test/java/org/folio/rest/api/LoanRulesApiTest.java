@@ -72,9 +72,9 @@ public class LoanRulesApiTest {
   }
 
   /** @return the message of the put response, asserts an HTTP_OK=200 response */
-  private String put200(LoanRules loanRules) throws Exception {
+  private String put204(LoanRules loanRules) throws Exception {
     JsonResponse response = putResponse(loanRules);
-    assertThat(response.getBody(), response.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(response.getBody(), response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
     return response.getBody();
   }
 
@@ -87,7 +87,7 @@ public class LoanRulesApiTest {
   }
 
   public void putAndGet(LoanRules loanRules) throws Exception {
-    put200(loanRules);
+    put204(loanRules);
     JsonObject json = get();
     assertThat(json.getString("loanRulesAsTextFile"), is(loanRules.getLoanRulesAsTextFile()));
   }
