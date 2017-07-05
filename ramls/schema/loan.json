@@ -25,12 +25,16 @@
     },
     "returnDate": {
       "type": "string"
+    },
+    "action": {
+      "type": "string"
     }
   },
   "additionalProperties": false,
   "required": [
     "userId",
     "itemId",
-    "loanDate"
+    "loanDate",
+    "action"
   ]
 }

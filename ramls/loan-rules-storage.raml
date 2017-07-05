@@ -1,0 +1,45 @@
+#%RAML 0.8
+title: Loan Rules Storage
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost:9130
+
+documentation:
+  - title: Loan Rules Storage API
+    content: <b>Storage for loan rules</b>
+
+schemas:
+  - loan-rules: !include schema/loan-rules.json
+
+traits:
+  - secured: !include ../raml-util/traits/auth.raml
+  - validate: !include ../raml-util/traits/validation.raml
+
+/loan-rules-storage:
+  get:
+    description: Get the loan rules
+    is: [secured]
+    responses:
+      200:
+        body:
+          application/json:
+            schema: loan-rules
+      500:
+        description: "Internal server error"
+        body:
+          text/plain:
+            example: "Internal server error"
+  put:
+    description: Set the loan rules
+    is: [secured]
+    body:
+      application/json:
+        schema: loan-rules
+    responses:
+      204:
+        description: "Loan rules have been saved."
+      500:
+        description: "Internal server error"
+        body:
+          text/plain:
+            example: "Internal server error"

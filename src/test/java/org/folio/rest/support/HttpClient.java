@@ -5,12 +5,15 @@ import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.json.Json;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
 public class HttpClient {
+  private static final Logger log = LoggerFactory.getLogger(HttpClient.class);
 
   private static final String TENANT_HEADER = "X-Okapi-Tenant";
 
@@ -44,7 +47,7 @@ public class HttpClient {
     if(body != null) {
       String encodedBody = Json.encodePrettily(body);
 
-      System.out.println(String.format("POST %s, Request: %s",
+      log.debug(String.format("POST %s, Request: %s",
         url.toString(), encodedBody));
 
       request.end(encodedBody);
