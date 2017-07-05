@@ -41,13 +41,11 @@ public class LoanRulesApiTest {
   }
 
   private LoanRules exampleLoanRules() {
-    return loanRules("fallback-policy: no-circulation");
-    //return loanRules("fallback-policy: no-circulation\npriority: t, a, b, c, s, m, g\nm book cd dvd: in-house\n");
+    return loanRules("fallback-policy: no-circulation\npriority: t, a, b, c, s, m, g\nm book cd dvd: in-house\n");
   }
 
   private LoanRules exampleLoanRules2() {
-    return loanRules("priority: t, a, b, c, s, m, g");
-    //return loanRules("fallback-policy: no-circulation\npriority: t, a, b, c, s, m, g\nm book cd dvd: general-loan\n");
+    return loanRules("fallback-policy: no-circulation\npriority: t, a, b, c, s, m, g\nm book cd dvd: general-loan\n");
   }
 
   private JsonResponse getResponse() throws Exception {
