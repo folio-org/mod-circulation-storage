@@ -621,13 +621,9 @@ public class LoansApiTest {
 
     JsonResponse j = getCompleted.get(5, TimeUnit.SECONDS);
 
-    boolean gt = j.getJson().getInteger("totalRecords") > 25;
-    //assertThat("loan history count is too low", gt, is(true));
-
     UUID userId = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
     UUID id = UUID.randomUUID();
-    String queryTemplate = "query=userId=\"%s\"+and+action=\"%s\"";
 
     JsonObject j1 = new JsonObject()
     .put("id", id.toString())

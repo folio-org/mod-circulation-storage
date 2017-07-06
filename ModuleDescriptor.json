@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "loan-storage",
-      "version": "2.0",
+      "version": "3.0",
       "handlers": [
         {
           "methods": ["GET"],
@@ -30,6 +30,10 @@
           "methods": ["DELETE"],
           "pathPattern": "/loan-storage/loans",
           "permissionsRequired": ["circulation-storage.loans.collection.delete"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/loan-storage/loan-history",
+          "permissionsRequired": ["circulation-storage.loans-history.collection.get"]
         }
       ]
     },
@@ -141,6 +145,11 @@
       "description": "Delete individual loan policy from storage"
     },
     {
+      "permissionName": "circulation-storage.loans-history.collection.get",
+      "displayName": "Circulation storage - get loan history collection",
+      "description": "Get loan history collection from storage"
+    },
+    {
       "permissionName": "circulation-storage.all",
       "displayName": "Circulation storage module - all permissions",
       "description": "Entire set of permissions needed to use the circulation storage module",
@@ -151,6 +160,7 @@
         "circulation-storage.loans.item.put",
         "circulation-storage.loans.item.delete",
         "circulation-storage.loans.collection.delete",
+        "circulation-storage.loans-history.collection.get",
         "circulation-storage.loan-policies.collection.get",
         "circulation-storage.loan-policies.item.get",
         "circulation-storage.loan-policies.item.post",
