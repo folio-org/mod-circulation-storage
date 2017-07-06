@@ -1,4 +1,4 @@
-## 2.1.0 Unreleased
+## 2.1.0 2017-07-06
 
 * Provides initial loan policies collection resource
 
