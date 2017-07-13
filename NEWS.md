@@ -1,4 +1,6 @@
-## 2.2.1 Unreleased
+## 3.0.0 Unreleased
+
+* Store Loan Actions History for a Loan (CIRCSTORE-12)
 
 ## 2.2.0 2017-07-13
 

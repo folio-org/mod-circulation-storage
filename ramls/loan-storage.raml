@@ -1,6 +1,6 @@
 #%RAML 0.8
 title: Loan Storage
-version: v2.0
+version: v3.0
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost:9130
 
@@ -11,16 +11,21 @@ documentation:
 schemas:
   - loan.json: !include schema/loan.json
   - loans: !include schema/loans.json
+  - errors: !include ../raml-util/schemas/errors.schema
+  - error.schema: !include ../raml-util/schemas/error.schema
+  - parameters.schema: !include ../raml-util/schemas/parameters.schema
 
 traits:
   - secured: !include ../raml-util/traits/auth.raml
   - language: !include ../raml-util/traits/language.raml
   - pageable: !include ../raml-util/traits/pageable.raml
   - searchable: !include ../raml-util/traits/searchable.raml
+  - validate: !include ../raml-util/traits/validation.raml
 
 resourceTypes:
   - collection: !include ../raml-util/rtypes/collection.raml
   - collection-item: !include ../raml-util/rtypes/item-collection.raml
+  - get-only: !include ../raml-util/rtypes/get-only.raml
 
 /loan-storage:
   /loans:
@@ -40,6 +45,7 @@ resourceTypes:
         501:
           description: "Not implemented yet"
     post:
+      is: [validate]
     delete:
       responses:
         204:
@@ -59,6 +65,7 @@ resourceTypes:
           501:
             description: "Not implemented yet"
       put:
+        is: [validate]
         responses:
           501:
             description: "Not implemented yet"
@@ -66,3 +73,15 @@ resourceTypes:
         responses:
           501:
             description: "Not implemented yet"
+  /loan-history:
+    displayName: Loan-history
+    type:
+      get-only:
+        exampleCollection: !include examples/loans.json
+        schema: loans
+    get:
+      is: [
+        pageable,
+        searchable: {description: "by title (using CQL)",
+                        example: "userId=\"cf23adf0-61ba-4887-bf82-956c4aae2260\""}
+        ]
