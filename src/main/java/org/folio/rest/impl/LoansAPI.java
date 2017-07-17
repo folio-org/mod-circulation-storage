@@ -1,36 +1,50 @@
 package org.folio.rest.impl;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
+import static org.folio.rest.impl.Headers.TENANT_HEADER;
+
+import java.util.List;
+import java.util.Map;
+import java.util.StringJoiner;
+import java.util.UUID;
+
+import javax.ws.rs.core.Response;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.Loans;
 import org.folio.rest.jaxrs.resource.LoanStorageResource;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.joda.time.DateTime;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
-import javax.ws.rs.core.Response;
-import java.util.List;
-import java.util.Map;
-import java.util.StringJoiner;
-import java.util.UUID;
-
-import static org.folio.rest.impl.Headers.TENANT_HEADER;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 public class LoansAPI implements LoanStorageResource {
 
+  private static final Logger log = LoggerFactory.getLogger(LoansAPI.class);
+
   private final String LOAN_TABLE = "loan";
+  private final String LOAN_HISTORY_TABLE = "loan_history_table";
+
   private final Class<Loan> LOAN_CLASS = Loan.class;
+
+  public LoansAPI(Vertx vertx, String tenantId) {
+    PostgresClient.getInstance(vertx, tenantId).setIdField("_id");
+  }
 
   @Override
   public void deleteLoanStorageLoans(
@@ -62,6 +76,7 @@ public class LoansAPI implements LoanStorageResource {
     });
   }
 
+  @Validate
   @Override
   public void getLoanStorageLoans(
     int offset,
@@ -205,6 +220,7 @@ public class LoansAPI implements LoanStorageResource {
     }
   }
 
+  @Validate
   @Override
   public void getLoanStorageLoansByLoanId(
     String loanId,
@@ -486,5 +502,71 @@ public class LoansAPI implements LoanStorageResource {
     }
 
     return new ImmutablePair<>(valid, messages.toString());
+  }
+
+  @Validate
+  @Override
+  public void getLoanStorageLoanHistory(int offset, int limit, String query, String lang,
+      Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+      Context vertxContext) throws Exception {
+
+    String tenantId = okapiHeaders.get(TENANT_HEADER);
+
+    try {
+      vertxContext.runOnContext(v -> {
+        try {
+          PostgresClient postgresClient = PostgresClient.getInstance(
+            vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
+
+          System.out.println("CQL Query: " + query);
+
+          String[] fieldList = {"*"};
+
+          CQL2PgJSON cql2pgJson = new CQL2PgJSON(LOAN_HISTORY_TABLE+".jsonb");
+          CQLWrapper cql = new CQLWrapper(cql2pgJson, query)
+            .setLimit(new Limit(limit))
+            .setOffset(new Offset(offset));
+
+          postgresClient.get(LOAN_HISTORY_TABLE, LOAN_CLASS, fieldList, cql,
+            true, false, reply -> {
+              try {
+                if(reply.succeeded()) {
+                  List<Loan> loans = (List<Loan>) reply.result()[0];
+
+                  Loans pagedLoans = new Loans();
+                  pagedLoans.setLoans(loans);
+                  pagedLoans.setTotalRecords((Integer)reply.result()[1]);
+
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                    GetLoanStorageLoanHistoryResponse.
+                      withJsonOK(pagedLoans)));
+                }
+                else {
+                  log.error(reply.cause().getMessage(), reply.cause());
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                    GetLoanStorageLoanHistoryResponse.
+                      withPlainInternalServerError(reply.cause().getMessage())));
+                }
+              } catch (Exception e) {
+                log.error(e.getMessage(), e);
+                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                  GetLoanStorageLoanHistoryResponse.
+                    withPlainInternalServerError(e.getMessage())));
+              }
+            });
+        } catch (Exception e) {
+          log.error(e.getMessage(), e);
+          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+            GetLoanStorageLoanHistoryResponse.
+              withPlainInternalServerError(e.getMessage())));
+        }
+      });
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+        GetLoanStorageLoanHistoryResponse.
+          withPlainInternalServerError(e.getMessage())));
+    }
+
   }
 }

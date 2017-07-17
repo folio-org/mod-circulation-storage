@@ -3,8 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>circulation-storage</artifactId>
   <groupId>org.folio</groupId>
-  <version>2.1.0-SNAPSHOT</version>
-
+  <version>3.0.0-SNAPSHOT</version>
   <licenses>
     <license>
       <name>Apache License 2.0</name>
@@ -29,7 +28,7 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>domain-models-runtime</artifactId>
-      <version>12.1.2</version>
+      <version>12.1.4</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -48,6 +47,8 @@
   <properties>
     <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
     <ramlfiles_util_path>${basedir}/raml-util</ramlfiles_util_path>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
   </properties>
 
   <build>
@@ -228,6 +229,7 @@
           </execution>
         </executions>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
@@ -242,6 +244,44 @@
           </includes>
         </configuration>
       </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>2.5.3</version>
+        <configuration>
+          <preparationGoals>clean verify</preparationGoals>
+          <tagNameFormat>v@{project.version}</tagNameFormat>
+          <pushChanges>false</pushChanges>
+          <localCheckout>true</localCheckout>
+        </configuration>
+      </plugin>
+
     </plugins>
   </build>
+
+  <distributionManagement>
+    <repository>
+      <id>folio-nexus</id>
+      <name>FOLIO Release Repository</name>
+      <url>https://repository.folio.org/repository/maven-releases/</url>
+      <uniqueVersion>false</uniqueVersion>
+      <layout>default</layout>
+    </repository>
+    <snapshotRepository>
+      <id>folio-nexus</id>
+      <name>FOLIO Snapshot Repository</name>
+      <uniqueVersion>true</uniqueVersion>
+      <url>https://repository.folio.org/repository/maven-snapshots/</url>
+      <layout>default</layout>
+    </snapshotRepository>
+  </distributionManagement>
+
+  <scm>
+    <url>https://github.com/folio-org/mod-circulation-storage</url>
+    <connection>scm:git:git://github.com/folio-org/mod-circulation-storage.git</connection>
+    <developerConnection>scm:git:git@github.com:folio-org/mod-circulation-storage.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
+
 </project>

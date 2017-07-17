@@ -1,12 +1,11 @@
 package org.folio.rest.api;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import org.folio.rest.support.*;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.format.ISODateTimeFormat;
-import org.junit.*;
+import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
+import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
@@ -19,12 +18,24 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
-import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNull.notNullValue;
-import static org.hamcrest.junit.MatcherAssert.assertThat;
+import org.folio.rest.support.HttpClient;
+import org.folio.rest.support.IndividualResource;
+import org.folio.rest.support.JsonErrorResponse;
+import org.folio.rest.support.JsonResponse;
+import org.folio.rest.support.Response;
+import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.TextResponse;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.ISODateTimeFormat;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 public class LoansApiTest {
 
@@ -196,6 +207,7 @@ public class LoansApiTest {
     loanRequest.put("id", id.toString())
       .put("userId", UUID.randomUUID().toString())
       .put("itemId", UUID.randomUUID().toString())
+      .put("action", "checkedout")
       .put("loanDate", new DateTime(2017, 3, 5, 14, 23, 41, DateTimeZone.UTC)
         .toString(ISODateTimeFormat.dateTime()));
 
@@ -221,6 +233,34 @@ public class LoansApiTest {
   }
 
   @Test
+  public void cannotCreateALoanWithoutAction()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    UUID id = UUID.randomUUID();
+
+    JsonObject loanRequest = new JsonObject();
+
+    loanRequest.put("id", id.toString())
+      .put("userId", UUID.randomUUID().toString())
+      .put("itemId", UUID.randomUUID().toString())
+      .put("loanDate", "foo")
+      .put("returnDate", "bar");
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+
+    client.post(loanStorageUrl(), loanRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Creating the loan should fail: %s", response.getBody()),
+      response.getStatusCode(), is(422));
+  }
+
+  @Test
   public void cannotCreateALoanWithInvalidDates()
     throws MalformedURLException,
     InterruptedException,
@@ -235,6 +275,7 @@ public class LoansApiTest {
       .put("userId", UUID.randomUUID().toString())
       .put("itemId", UUID.randomUUID().toString())
       .put("loanDate", "foo")
+      .put("action", "checkedout")
       .put("returnDate", "bar");
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
@@ -565,6 +606,102 @@ public class LoansApiTest {
   }
 
   @Test
+  public void loanHistoryQuery()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    UnsupportedEncodingException {
+
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture();
+
+    URL url = StorageTestSuite.storageUrl("/loan-storage/loan-history");
+
+    client.get(url, StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
+
+    JsonResponse j = getCompleted.get(5, TimeUnit.SECONDS);
+
+    UUID userId = UUID.randomUUID();
+    UUID itemId = UUID.randomUUID();
+    UUID id = UUID.randomUUID();
+
+    JsonObject j1 = new JsonObject()
+    .put("id", id.toString())
+    .put("userId", userId.toString())
+    .put("itemId", itemId.toString())
+    .put("action", "checkedout")
+    .put("loanDate", DateTime.parse("2017-03-06T16:04:43.000+02:00",
+      ISODateTimeFormat.dateTime()).toString())
+    .put("status", new JsonObject().put("name", "Closed"));
+
+    JsonObject j2 = new JsonObject()
+    .put("id", id.toString())
+    .put("userId", userId.toString())
+    .put("itemId", itemId.toString())
+    .put("action", "renewal")
+    .put("loanDate", DateTime.parse("2017-03-06T16:05:43.000+02:00",
+      ISODateTimeFormat.dateTime()).toString())
+    .put("status", new JsonObject().put("name", "Opened"));
+
+    JsonObject j3 = new JsonObject()
+    .put("id", id.toString())
+    .put("userId", userId.toString())
+    .put("itemId", itemId.toString())
+    .put("action", "checkedin")
+    .put("loanDate", DateTime.parse("2017-03-06T16:06:43.000+02:00",
+      ISODateTimeFormat.dateTime()).toString())
+    .put("status", new JsonObject().put("name", "Closed"));
+
+    CompletableFuture<JsonResponse> create = new CompletableFuture();
+    CompletableFuture<JsonResponse> update1 = new CompletableFuture();
+    CompletableFuture<JsonResponse> update2 = new CompletableFuture();
+    CompletableFuture<TextResponse> delete = new CompletableFuture();
+
+    ///////////////post loan//////////////////////
+    client.post(loanStorageUrl(), j1, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(create));
+
+    JsonResponse response1 = create.get(5, TimeUnit.SECONDS);
+
+    //////////////update loan/////////////////////
+    client.put(loanStorageUrl("/"+id.toString()), j2, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(update1));
+
+    JsonResponse response2 = update1.get(5, TimeUnit.SECONDS);
+
+    ///////////update again///////////////////////
+    client.put(loanStorageUrl("/"+id.toString()), j3, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(update2));
+
+    JsonResponse response3 = update2.get(5, TimeUnit.SECONDS);
+
+    ///////////delete loan//////////////////////////
+    client.delete(loanStorageUrl("/"+id.toString()), StorageTestSuite.TENANT_ID,
+      ResponseHandler.text(delete));
+
+    TextResponse response4 = delete.get(5, TimeUnit.SECONDS);
+
+    CompletableFuture<JsonResponse> getCompleted2 = new CompletableFuture();
+    CompletableFuture<JsonResponse> getCompleted3 = new CompletableFuture();
+
+    client.get(url + "?query=id="+id.toString(),
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted2));
+
+    JsonResponse finalRes = getCompleted2.get(5, TimeUnit.SECONDS);
+
+    client.get(url + "?query=userId="+userId.toString(),
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted3));
+
+    JsonResponse finalRes2 = getCompleted3.get(5, TimeUnit.SECONDS);
+
+    assertThat("Incorrect number of entries in loan history for id: " + id.toString(),
+      finalRes.getJson().getJsonArray("loans").size(), is(4));
+
+    assertThat("Incorrect number of entries in loan history for userId: " + userId.toString(),
+      finalRes2.getJson().getJsonArray("loans").size(), is(4));
+  }
+
+  @Test
   public void canDeleteALoan()
     throws InterruptedException,
     MalformedURLException,
@@ -717,6 +854,7 @@ public class LoansApiTest {
     loanRequest
       .put("userId", userId.toString())
       .put("itemId", itemId.toString())
+      .put("action", "checkedout")
       .put("loanDate", loanDate.toString(ISODateTimeFormat.dateTime()))
       .put("status", new JsonObject().put("name", statusName));
 
