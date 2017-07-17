@@ -7,13 +7,14 @@
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "fixed-due-date-schedules.json"
+        "$ref": "fixed-due-date-schedule.json"
       }
     },
     "totalRecords": {
       "type": "integer"
     }
   },
+  "additionalProperties": false,
   "required": [
     "fixedDueDateSchedules",
     "totalRecords"

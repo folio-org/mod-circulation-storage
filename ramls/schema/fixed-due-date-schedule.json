@@ -19,5 +19,6 @@
         "$ref": "schedule.json"
       }
     }
-  }
+  },
+  "additionalProperties": false
 }
