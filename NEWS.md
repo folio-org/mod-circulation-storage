@@ -1,4 +1,7 @@
-## 3.0.1 Unreleased
+## 3.1.0 Unreleased
+
+* Adds `dueDate` property to loan (using the date-time format)
+* Provides loan-storage interface 3.1
 
 * CIRCSTORE-15 add default sorting to loan action history in case no sorting requested (upgrades to RMB 13.0.1)
 
