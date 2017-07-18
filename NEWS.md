@@ -4,7 +4,7 @@
 
 * Store loan action history for a Loan (CIRCSTORE-12)
 * Introduces /loan-history endpoint for the set of historic versions of loans
-* Adds required property action to loan
+* Adds required property `action` to loan
 * Provides loan-storage interface 3.0
 
 ## 2.2.0 2017-07-13
