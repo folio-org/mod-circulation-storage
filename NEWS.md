@@ -1,6 +1,13 @@
-## 3.0.0 Unreleased
+## 3.0.1 Unreleased
 
-* Store Loan Actions History for a Loan (CIRCSTORE-12)
+* CIRCSTORE-15 add default sorting to loan action history in case no sorting requested (upgrades to RMB 13.0.1)
+
+## 3.0.0 2017-07-17
+
+* Store loan action history for a Loan (CIRCSTORE-12)
+* Introduces /loan-history endpoint for the set of historic versions of loans
+* Adds required property `action` to loan
+* Provides loan-storage interface 3.0
 
 ## 2.2.0 2017-07-13
 

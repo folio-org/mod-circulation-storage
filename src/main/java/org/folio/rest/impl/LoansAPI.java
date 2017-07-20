@@ -518,16 +518,30 @@ public class LoansAPI implements LoanStorageResource {
           PostgresClient postgresClient = PostgresClient.getInstance(
             vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-          System.out.println("CQL Query: " + query);
-
           String[] fieldList = {"*"};
+          CQLWrapper cql = null;
+          String adjustedQuery = null;
+          if(query != null){
+            //a bit of a hack, assume that <space>sortBy<space>
+            //is a sort request that is received as part of the cql , and hence pass
+            //the cql as is. If no sorting is requested, sort by created_date column
+            //in the loan history table which represents the date the entry was created
+            //aka the date an action was made on the loan
+            CQL2PgJSON cql2pgJson = new CQL2PgJSON(LOAN_HISTORY_TABLE+".jsonb");
+            if(!query.contains(" sortBy ")){
+              cql = new CQLWrapper(cql2pgJson, query);
+              adjustedQuery = cql.toString() + " order by created_date desc ";
+              adjustedQuery = adjustedQuery + new Limit(limit).toString() + " " +new Offset(offset).toString();
+            } else{
+              cql = new CQLWrapper(cql2pgJson, query)
+                  .setLimit(new Limit(limit))
+                  .setOffset(new Offset(offset));
+              adjustedQuery = cql.toString();
+            }
+            System.out.println("CQL Query: " + cql.toString());
+          }
 
-          CQL2PgJSON cql2pgJson = new CQL2PgJSON(LOAN_HISTORY_TABLE+".jsonb");
-          CQLWrapper cql = new CQLWrapper(cql2pgJson, query)
-            .setLimit(new Limit(limit))
-            .setOffset(new Offset(offset));
-
-          postgresClient.get(LOAN_HISTORY_TABLE, LOAN_CLASS, fieldList, cql,
+          postgresClient.get(LOAN_HISTORY_TABLE, LOAN_CLASS, fieldList, adjustedQuery,
             true, false, reply -> {
               try {
                 if(reply.succeeded()) {
