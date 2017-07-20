@@ -1,5 +1,7 @@
 ## 3.0.1 Unreleased
 
+* CIRCSTORE-15 add default sorting to loan action history in case no sorting requested (upgrades to RMB 13.0.1)
+
 ## 3.0.0 2017-07-17
 
 * Store loan action history for a Loan (CIRCSTORE-12)

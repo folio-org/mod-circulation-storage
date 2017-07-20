@@ -11,6 +11,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -683,22 +684,40 @@ public class LoansApiTest {
 
     CompletableFuture<JsonResponse> getCompleted2 = new CompletableFuture();
     CompletableFuture<JsonResponse> getCompleted3 = new CompletableFuture();
+    CompletableFuture<JsonResponse> getCompleted4 = new CompletableFuture();
 
     client.get(url + "?query=id="+id.toString(),
       StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted2));
 
     JsonResponse finalRes = getCompleted2.get(5, TimeUnit.SECONDS);
 
-    client.get(url + "?query=userId="+userId.toString(),
+    //System.out.println("--->" + finalRes.getJson().encodePrettily());
+
+    client.get(url + "?query="+URLEncoder.encode("userId="+userId.toString(), "UTF8"),
       StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted3));
 
     JsonResponse finalRes2 = getCompleted3.get(5, TimeUnit.SECONDS);
 
+    //System.out.println("--->" + finalRes2.getJson().encodePrettily());
+
+    client.get(url + "?query=" + URLEncoder.encode("userId="+userId.toString()+" sortBy action", "UTF8"),
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted4));
+
+    JsonResponse finalRes4 = getCompleted4.get(5, TimeUnit.SECONDS);
+
+    //System.out.println("--->" + finalRes4.getJson().encodePrettily());
+
     assertThat("Incorrect number of entries in loan history for id: " + id.toString(),
       finalRes.getJson().getJsonArray("loans").size(), is(4));
 
+    assertThat("Incorrect value oof first loan in res set - should be deleted " + id.toString(),
+      finalRes.getJson().getJsonArray("loans").getJsonObject(0).getString("action"), is("deleted"));
+
     assertThat("Incorrect number of entries in loan history for userId: " + userId.toString(),
       finalRes2.getJson().getJsonArray("loans").size(), is(4));
+
+    assertThat("Incorrect value oof first loan in res set - should be checkedin " + id.toString(),
+      finalRes4.getJson().getJsonArray("loans").getJsonObject(0).getString("action"), is("checkedin"));
   }
 
   @Test
