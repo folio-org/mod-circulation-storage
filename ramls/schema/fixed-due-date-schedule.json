@@ -1,8 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
+  "description": "A set of date ranges for materials checkout and their associated due dates.",
   "properties": {
     "id": {
+      "description": "Unique ID (generated UUID)",
       "type": "string"
     },
     "name": {
