@@ -1,5 +1,5 @@
 {
-  "id": "circulation-storage",
+  "id": "circulation-storage-3.1.0-SNAPSHOT",
   "name": "Circulation Storage Module",
   "provides": [
     {
