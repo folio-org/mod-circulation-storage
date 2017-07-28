@@ -1,11 +1,11 @@
 ## 3.1.0 Unreleased
 
 * Adds `dueDate` property to loan (using the date-time format)
+* Adds `renewalCount` property to loan
 * Provides loan-storage interface 3.1
 * CIRCSTORE-15 add default sorting to loan action history in case no sorting requested (upgrades to RMB 13.0.1)
 * Include implementation version in `id` in Module Descriptor
-* Add `dueDate` 
-
+  
 ## 3.0.0 2017-07-17
 
 * Store loan action history for a Loan (CIRCSTORE-12)

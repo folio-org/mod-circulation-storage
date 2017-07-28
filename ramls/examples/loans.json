@@ -5,11 +5,12 @@
       "userId": "df7f4993-8c14-4a0f-ab63-93975ab01c76",
       "itemId": "cb20f34f-b773-462f-a091-b233cc96b9e6",
       "loanDate": "2017-03-01T22:34:11-04:00",
-      "dueDate": "2017-03-15T22:34:11-04:00",
+      "dueDate": "2017-04-15T22:34:11-04:00",
       "status": {
         "name": "Open"
       },
-      "action": "checkedout"
+      "action": "renewed",
+      "renewalCount": 1
     },
     {
       "id": "1d09af65-aeaa-499c-80cb-d52847b75a60",
