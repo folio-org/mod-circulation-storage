@@ -5,6 +5,7 @@ import io.vertx.core.json.JsonObject;
 import org.folio.rest.support.*;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.Period;
 import org.joda.time.format.ISODateTimeFormat;
 import org.junit.*;
 
@@ -394,6 +395,55 @@ public class LoansApiTest {
 
     assertThat("status is not closed",
       updatedLoan.getJsonObject("status").getString("name"), is("Closed"));
+  }
+
+  @Test
+  public void canRenewALoan()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
+
+    DateTime loanDate = new DateTime(2017, 3, 1, 13, 25, 46, DateTimeZone.UTC);
+
+    IndividualResource loan = createLoan(loanRequest(loanDate));
+
+    JsonObject returnedLoan = loan.copyJson();
+
+    returnedLoan
+      .put("dueDate", new DateTime(2017, 3, 30, 13, 25, 46, DateTimeZone.UTC)
+        .toString(ISODateTimeFormat.dateTime()))
+      .put("action", "renewed")
+      .put("renewalCount", 1);
+
+    CompletableFuture<JsonResponse> putCompleted = new CompletableFuture();
+
+    client.put(loanStorageUrl(String.format("/%s", loan.getId())), returnedLoan,
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(putCompleted));
+
+    JsonResponse putResponse = putCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to update loan: %s", putResponse.getBody()),
+      putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    JsonResponse updatedLoanResponse = getById(UUID.fromString(loan.getId()));
+
+    JsonObject updatedLoan = updatedLoanResponse.getJson();
+
+    //The RAML-Module-Builder converts all date-time formatted strings to UTC
+    //and presents the offset as +0000 (which is ISO8601 compatible, but not RFC3339)
+    assertThat(updatedLoan.getString("dueDate"),
+      is("2017-03-30T13:25:46.000+0000"));
+
+    assertThat("status is not open",
+      updatedLoan.getJsonObject("status").getString("name"), is("Open"));
+
+    assertThat("action is not renewed",
+      updatedLoan.getString("action"), is("renewed"));
+
+    assertThat("renewal count is not 1",
+      updatedLoan.getInteger("renewalCount"), is(1));
   }
 
   @Test
@@ -861,7 +911,7 @@ public class LoansApiTest {
 
   private JsonObject loanRequest(DateTime loanDate) {
     return loanRequest(UUID.randomUUID(), UUID.randomUUID(),
-      UUID.randomUUID(), loanDate, "Open", null);
+      UUID.randomUUID(), loanDate, "Open", loanDate.plus(Period.days(14)));
   }
 
   private JsonObject loanRequest(
@@ -869,7 +919,8 @@ public class LoansApiTest {
     UUID itemId,
     UUID userId,
     DateTime loanDate,
-    String statusName, DateTime dueDate) {
+    String statusName,
+    DateTime dueDate) {
 
     JsonObject loanRequest = new JsonObject();
 
