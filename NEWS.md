@@ -1,3 +1,8 @@
+## 3.2.0 Unreleased
+
+* Introduces initial loan requests endpoint
+* Provides request-storage interface 1.0
+
 ## 3.1.0 2017-08-01
 
 * Adds `dueDate` property to loan (using the date-time format)

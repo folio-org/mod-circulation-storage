@@ -1,0 +1,70 @@
+#%RAML 0.8
+title: Request Storage
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost:9130
+
+documentation:
+  - title: Request Storage API
+    content: <b>Storage for loan policies</b>
+
+schemas:
+  - request.json: !include schema/request.json
+  - requests: !include schema/requests.json
+
+traits:
+  - secured: !include ../raml-util/traits/auth.raml
+  - language: !include ../raml-util/traits/language.raml
+  - pageable: !include ../raml-util/traits/pageable.raml
+  - searchable: !include ../raml-util/traits/searchable.raml
+
+resourceTypes:
+  - collection: !include ../raml-util/rtypes/collection.raml
+  - collection-item: !include ../raml-util/rtypes/item-collection.raml
+
+/request-storage:
+  /requests:
+    displayName: Requests
+    type:
+      collection:
+        exampleCollection: !include examples/requests.json
+        exampleItem: !include examples/request.json
+        schemaCollection: requests
+        schemaItem: request.json
+    get:
+      is: [pageable]
+      responses:
+        501:
+          description: "Not implemented yet"
+    post:
+      responses:
+        501:
+          description: "Not implemented yet"
+    delete:
+      responses:
+        204:
+          description: "All requests deleted"
+        500:
+          description: "Internal server error, e.g. due to misconfiguration"
+          body:
+            text/plain:
+              example: "Internal server error, contact administrator"
+        501:
+          description: "Not implemented yet"
+    /{requestId}:
+      type:
+        collection-item:
+          exampleItem: !include examples/request.json
+          schema: request.json
+      get:
+        responses:
+          501:
+            description: "Not implemented yet"
+      put:
+        responses:
+          501:
+            description: "Not implemented yet"
+      delete:
+        responses:
+          501:
+            description: "Not implemented yet"

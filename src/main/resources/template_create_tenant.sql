@@ -20,6 +20,12 @@ CREATE TABLE myuniversity_mymodule.loan_rules (
   _id UUID PRIMARY KEY,
   jsonb JSONB NOT NULL
 );
+
+CREATE TABLE myuniversity_mymodule.request (
+  _id UUID PRIMARY KEY,
+  jsonb JSONB NOT NULL
+);
+
 INSERT INTO myuniversity_mymodule.loan_rules
   SELECT id, jsonb_build_object('id', id, 'loanRulesAsTextFile', '')
   FROM (SELECT gen_random_uuid() AS id) AS alias;
