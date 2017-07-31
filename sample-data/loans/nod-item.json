@@ -7,5 +7,6 @@
   "action": "checkedout",
   "status": {
     "name": "Open"
-  }
+  },
+  "renewalCount": 1
 }

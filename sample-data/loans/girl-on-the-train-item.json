@@ -8,5 +8,6 @@
   "action": "checkedin",
   "status": {
     "name": "Closed"
-  }
+  },
+  "renewalCount": 0
 }
