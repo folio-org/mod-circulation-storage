@@ -1,5 +1,5 @@
 {
-  "srvcId" : "circulation-storage-3.1.0",
+  "srvcId" : "circulation-storage-3.1.1-SNAPSHOT",
   "descriptor" : {
     "exec" : "java -jar ../mod-circulation-storage/target/circulation-storage-fat.jar -Dhttp.port=%p",
     "env": [
