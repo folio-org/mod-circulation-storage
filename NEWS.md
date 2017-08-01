@@ -1,4 +1,4 @@
-## 3.1.0 Unreleased
+## 3.1.0 2017-08-01
 
 * Adds `dueDate` property to loan (using the date-time format)
 * Adds `renewalCount` property to loan
