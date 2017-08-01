@@ -380,7 +380,7 @@ public class LoanPoliciesApiTest {
     ExecutionException,
     UnsupportedEncodingException {
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> deleteCompleted = new CompletableFuture<>();
 
     UUID id = UUID.randomUUID();
 
@@ -388,20 +388,14 @@ public class LoanPoliciesApiTest {
 
     client.delete(loanPolicyStorageUrl(String.format("/%s", id.toString())),
       StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(createCompleted));
+      ResponseHandler.json(deleteCompleted));
 
-    JsonResponse createResponse = createCompleted.get(5, TimeUnit.SECONDS);
+    JsonResponse createResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Failed to delete loan policy: %s", createResponse.getBody()),
       createResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
-
-    client.get(loanPolicyStorageUrl(String.format("/%s", id.toString())),
-      StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(getCompleted));
-
-    JsonResponse getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+    JsonResponse getResponse = getById(id);
 
     assertThat(String.format("Found a deleted loan policy: %s", getResponse.getBody()),
       getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));

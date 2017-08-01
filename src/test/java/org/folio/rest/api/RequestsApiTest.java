@@ -190,6 +190,35 @@ public class RequestsApiTest {
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
 
+  @Test
+  public void canDeleteALoanPolicy()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    UUID id = UUID.randomUUID();
+
+    createRequest(new RequestRequestBuilder().withId(id).create());
+
+    client.delete(requestStorageUrl(String.format("/%s", id.toString())),
+      StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse createResponse = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to delete request: %s", createResponse.getBody()),
+      createResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    JsonResponse getResponse = getById(id);
+
+    assertThat(String.format("Found a deleted request: %s", getResponse.getBody()),
+      getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+  }
+
   private static URL requestStorageUrl() throws MalformedURLException {
     return requestStorageUrl("");
   }
@@ -198,6 +227,24 @@ public class RequestsApiTest {
     throws MalformedURLException {
 
     return StorageTestSuite.storageUrl("/request-storage/requests" + subPath);
+  }
+
+  private void createRequest(JsonObject requestRequest)
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    client.post(requestStorageUrl(),
+      requestRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to create loan policy: %s", postResponse.getBody()),
+      postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
   }
 
   private JsonResponse getById(UUID id)

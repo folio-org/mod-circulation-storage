@@ -199,7 +199,6 @@ public class RequestsAPI implements RequestStorageResource {
           GetRequestStorageRequestsByRequestIdResponse.
           withPlainInternalServerError(e.getMessage())));
     }
-
   }
 
   @Override
@@ -210,8 +209,48 @@ public class RequestsAPI implements RequestStorageResource {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) throws Exception {
 
-    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-      DeleteRequestStorageRequestsByRequestIdResponse.withNotImplemented()));
+    String tenantId = okapiHeaders.get(TENANT_HEADER);
+
+    try {
+      PostgresClient postgresClient =
+        PostgresClient.getInstance(
+          vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
+
+      Criteria a = new Criteria();
+
+      a.addField("'id'");
+      a.setOperation("=");
+      a.setValue(requestId);
+
+      Criterion criterion = new Criterion(a);
+
+      vertxContext.runOnContext(v -> {
+        try {
+          postgresClient.delete(REQUEST_TABLE, criterion,
+            reply -> {
+              if(reply.succeeded()) {
+                asyncResultHandler.handle(
+                  Future.succeededFuture(
+                    DeleteRequestStorageRequestsByRequestIdResponse
+                      .withNoContent()));
+              }
+              else {
+                asyncResultHandler.handle(Future.succeededFuture(
+                  DeleteRequestStorageRequestsByRequestIdResponse
+                    .withPlainInternalServerError(reply.cause().getMessage())));
+              }
+            });
+        } catch (Exception e) {
+          asyncResultHandler.handle(Future.succeededFuture(
+            DeleteRequestStorageRequestsByRequestIdResponse
+              .withPlainInternalServerError(e.getMessage())));
+        }
+      });
+    } catch (Exception e) {
+      asyncResultHandler.handle(Future.succeededFuture(
+        DeleteRequestStorageRequestsByRequestIdResponse
+          .withPlainInternalServerError(e.getMessage())));
+    }
   }
 
   @Override
