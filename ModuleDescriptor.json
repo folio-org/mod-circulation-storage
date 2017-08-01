@@ -84,6 +84,37 @@
       ]
     },
     {
+      "id": "request-storage",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/request-storage/requests",
+          "permissionsRequired": ["circulation-storage.requests.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/request-storage/requests/{id}",
+          "permissionsRequired": ["circulation-storage.requests.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/request-storage/requests",
+          "permissionsRequired": ["circulation-storage.requests.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/request-storage/requests/{id}",
+          "permissionsRequired": ["circulation-storage.requests.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/request-storage/requests/{id}",
+          "permissionsRequired": ["circulation-storage.requests.item.delete"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/request-storage/requests",
+          "permissionsRequired": ["circulation-storage.requests.collection.delete"]
+        }
+      ]
+    },
+    {
       "id": "_tenant",
       "version": "1.0",
       "interfaceType": "system",
@@ -175,6 +206,36 @@
       "description": "Get loan history collection from storage"
     },
     {
+      "permissionName": "circulation-storage.requests.collection.get",
+      "displayName": "Circulation storage - get request collection",
+      "description": "Get request collection from storage"
+    },
+    {
+      "permissionName": "circulation-storage.requests.collection.delete",
+      "displayName": "Circulation storage - delete entire request collection",
+      "description": "Delete entire request collection from storage"
+    },
+    {
+      "permissionName": "circulation-storage.requests.item.get",
+      "displayName": "Circulation storage - get individual request",
+      "description": "Get individual request from storage"
+    },
+    {
+      "permissionName": "circulation-storage.requests.item.post",
+      "displayName": "Circulation storage - create individual request",
+      "description": "Create individual request in storage"
+    },
+    {
+      "permissionName": "circulation-storage.requests.item.put",
+      "displayName": "Circulation storage - modify request",
+      "description": "Modify request in storage"
+    },
+    {
+      "permissionName": "circulation-storage.requests.item.delete",
+      "displayName": "Circulation storage - delete individual request",
+      "description": "Delete individual request from storage"
+    },
+    {
       "permissionName": "circulation-storage.all",
       "displayName": "Circulation storage module - all permissions",
       "description": "Entire set of permissions needed to use the circulation storage module",
@@ -193,7 +254,13 @@
         "circulation-storage.loan-policies.item.post",
         "circulation-storage.loan-policies.item.put",
         "circulation-storage.loan-policies.item.delete",
-        "circulation-storage.loan-policies.collection.delete"
+        "circulation-storage.loan-policies.collection.delete",
+        "circulation-storage.requests.collection.get",
+        "circulation-storage.requests.item.get",
+        "circulation-storage.requests.item.post",
+        "circulation-storage.requests.item.put",
+        "circulation-storage.requests.item.delete",
+        "circulation-storage.requests.collection.delete"
       ]
     }
   ]
