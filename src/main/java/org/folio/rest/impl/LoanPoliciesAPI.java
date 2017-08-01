@@ -69,60 +69,60 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) throws Exception {
 
-    String tenantId = okapiHeaders.get(TENANT_HEADER);
+      String tenantId = okapiHeaders.get(TENANT_HEADER);
 
-    try {
-      vertxContext.runOnContext(v -> {
-        try {
-          PostgresClient postgresClient = PostgresClient.getInstance(
-            vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
+      try {
+        vertxContext.runOnContext(v -> {
+          try {
+            PostgresClient postgresClient = PostgresClient.getInstance(
+              vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-          String[] fieldList = {"*"};
+            String[] fieldList = {"*"};
 
-          CQL2PgJSON cql2pgJson = new CQL2PgJSON("loan_policy.jsonb");
-          CQLWrapper cql = new CQLWrapper(cql2pgJson, null)
-            .setLimit(new Limit(limit))
-            .setOffset(new Offset(offset));
+            CQL2PgJSON cql2pgJson = new CQL2PgJSON("loan_policy.jsonb");
+            CQLWrapper cql = new CQLWrapper(cql2pgJson, null)
+              .setLimit(new Limit(limit))
+              .setOffset(new Offset(offset));
 
-          postgresClient.get(LOAN_POLICY_TABLE, LOAN_POLICY_CLASS, fieldList, cql,
-            true, false, reply -> {
-              try {
-                if(reply.succeeded()) {
-                  List<LoanPolicy> loanPolicies = (List<LoanPolicy>) reply.result()[0];
+            postgresClient.get(LOAN_POLICY_TABLE, LOAN_POLICY_CLASS, fieldList, cql,
+              true, false, reply -> {
+                try {
+                  if(reply.succeeded()) {
+                    List<LoanPolicy> loanPolicies = (List<LoanPolicy>) reply.result()[0];
 
-                  LoanPolicies pagedLoans = new LoanPolicies();
-                  pagedLoans.setLoanPolicies(loanPolicies);
-                  pagedLoans.setTotalRecords((Integer)reply.result()[1]);
+                    LoanPolicies pagedLoans = new LoanPolicies();
+                    pagedLoans.setLoanPolicies(loanPolicies);
+                    pagedLoans.setTotalRecords((Integer)reply.result()[1]);
 
+                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                      LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
+                        withJsonOK(pagedLoans)));
+                  }
+                  else {
+                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                      LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
+                        withPlainInternalServerError(reply.cause().getMessage())));
+                  }
+                } catch (Exception e) {
+                  e.printStackTrace();
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                     LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
-                      withJsonOK(pagedLoans)));
+                      withPlainInternalServerError(e.getMessage())));
                 }
-                else {
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                    LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
-                      withPlainInternalServerError(reply.cause().getMessage())));
-                }
-              } catch (Exception e) {
-                e.printStackTrace();
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                  LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
-                    withPlainInternalServerError(e.getMessage())));
-              }
-            });
-        } catch (Exception e) {
-          e.printStackTrace();
-          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
-              withPlainInternalServerError(e.getMessage())));
-        }
-      });
-    } catch (Exception e) {
-      e.printStackTrace();
-      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-        LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
-          withPlainInternalServerError(e.getMessage())));
-    }
+              });
+          } catch (Exception e) {
+            e.printStackTrace();
+            asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+              LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
+                withPlainInternalServerError(e.getMessage())));
+          }
+        });
+      } catch (Exception e) {
+        e.printStackTrace();
+        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+          LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
+            withPlainInternalServerError(e.getMessage())));
+      }
   }
 
   @Override

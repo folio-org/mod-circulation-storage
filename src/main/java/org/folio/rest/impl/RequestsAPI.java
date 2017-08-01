@@ -5,13 +5,18 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import org.folio.rest.jaxrs.model.Request;
+import org.folio.rest.jaxrs.model.Requests;
 import org.folio.rest.jaxrs.resource.LoanPolicyStorageResource;
 import org.folio.rest.jaxrs.resource.RequestStorageResource;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
+import org.folio.rest.persist.Criteria.Limit;
+import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
+import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
 import javax.ws.rs.core.Response;
 import java.util.List;
@@ -62,8 +67,59 @@ public class RequestsAPI implements RequestStorageResource {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) throws Exception {
 
-    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-      GetRequestStorageRequestsResponse.withNotImplemented()));
+    String tenantId = okapiHeaders.get(TENANT_HEADER);
+
+    try {
+      vertxContext.runOnContext(v -> {
+        try {
+          PostgresClient postgresClient = PostgresClient.getInstance(
+            vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
+
+          String[] fieldList = {"*"};
+
+          CQL2PgJSON cql2pgJson = new CQL2PgJSON(String.format("%s.jsonb", REQUEST_TABLE));
+          CQLWrapper cql = new CQLWrapper(cql2pgJson, null)
+            .setLimit(new Limit(limit))
+            .setOffset(new Offset(offset));
+
+          postgresClient.get(REQUEST_TABLE, Request.class, fieldList, cql,
+            true, false, reply -> {
+              try {
+                if(reply.succeeded()) {
+                  List<Request> requests = (List<Request>) reply.result()[0];
+
+                  Requests pagedRequests = new Requests();
+                  pagedRequests.setRequests(requests);
+                  pagedRequests.setTotalRecords((Integer)reply.result()[1]);
+
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                    GetRequestStorageRequestsResponse.withJsonOK(pagedRequests)));
+                }
+                else {
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                    LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
+                      withPlainInternalServerError(reply.cause().getMessage())));
+                }
+              } catch (Exception e) {
+                e.printStackTrace();
+                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                  LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
+                    withPlainInternalServerError(e.getMessage())));
+              }
+            });
+        } catch (Exception e) {
+          e.printStackTrace();
+          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+            LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
+              withPlainInternalServerError(e.getMessage())));
+        }
+      });
+    } catch (Exception e) {
+      e.printStackTrace();
+      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+        LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
+          withPlainInternalServerError(e.getMessage())));
+    }
   }
 
   @Override

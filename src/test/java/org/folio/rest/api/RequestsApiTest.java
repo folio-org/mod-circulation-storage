@@ -1,10 +1,12 @@
 package org.folio.rest.api;
 
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.RequestRequestBuilder;
+import org.hamcrest.junit.MatcherAssert;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -188,6 +190,55 @@ public class RequestsApiTest {
     JsonResponse getResponse = getById(UUID.randomUUID());
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+  }
+
+  @Test
+  public void canPageLoanPolicies()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
+
+    createRequest(new RequestRequestBuilder().create());
+    createRequest(new RequestRequestBuilder().create());
+    createRequest(new RequestRequestBuilder().create());
+    createRequest(new RequestRequestBuilder().create());
+    createRequest(new RequestRequestBuilder().create());
+    createRequest(new RequestRequestBuilder().create());
+    createRequest(new RequestRequestBuilder().create());
+
+    CompletableFuture<JsonResponse> firstPageCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> secondPageCompleted = new CompletableFuture();
+
+    client.get(requestStorageUrl() + "?limit=4", StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(firstPageCompleted));
+
+    client.get(requestStorageUrl() + "?limit=4&offset=4", StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(secondPageCompleted));
+
+    JsonResponse firstPageResponse = firstPageCompleted.get(5, TimeUnit.SECONDS);
+    JsonResponse secondPageResponse = secondPageCompleted.get(5, TimeUnit.SECONDS);
+
+    MatcherAssert.assertThat(String.format("Failed to get first page of requests: %s",
+      firstPageResponse.getBody()),
+      firstPageResponse.getStatusCode(), is(200));
+
+    MatcherAssert.assertThat(String.format("Failed to get second page of requests: %s",
+      secondPageResponse.getBody()),
+      secondPageResponse.getStatusCode(), is(200));
+
+    JsonObject firstPage = firstPageResponse.getJson();
+    JsonObject secondPage = secondPageResponse.getJson();
+
+    JsonArray firstPageRequests = firstPage.getJsonArray("requests");
+    JsonArray secondPageRequests = secondPage.getJsonArray("requests");
+
+    MatcherAssert.assertThat(firstPageRequests.size(), is(4));
+    MatcherAssert.assertThat(firstPage.getInteger("totalRecords"), is(7));
+
+    MatcherAssert.assertThat(secondPageRequests.size(), is(3));
+    MatcherAssert.assertThat(secondPage.getInteger("totalRecords"), is(7));
   }
 
   @Test
