@@ -317,7 +317,113 @@ public class RequestsAPI implements RequestStorageResource {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) throws Exception {
 
-    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-      PutRequestStorageRequestsByRequestIdResponse.withNotImplemented()));
+    String tenantId = okapiHeaders.get(TENANT_HEADER);
+
+    try {
+      PostgresClient postgresClient =
+        PostgresClient.getInstance(
+          vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
+
+      Criteria a = new Criteria();
+
+      a.addField("'id'");
+      a.setOperation("=");
+      a.setValue(requestId);
+
+      Criterion criterion = new Criterion(a);
+
+      vertxContext.runOnContext(v -> {
+        try {
+          postgresClient.get(REQUEST_TABLE, Request.class, criterion, true, false,
+            reply -> {
+              if(reply.succeeded()) {
+                List<Request> requestList = (List<Request>) reply.result()[0];
+
+                if (requestList.size() == 1) {
+                  try {
+                    postgresClient.update(REQUEST_TABLE, entity, criterion,
+                      true,
+                      update -> {
+                        try {
+                          if(update.succeeded()) {
+                            OutStream stream = new OutStream();
+                            stream.setData(entity);
+
+                            asyncResultHandler.handle(
+                              Future.succeededFuture(
+                                PutRequestStorageRequestsByRequestIdResponse
+                                  .withNoContent()));
+                          }
+                          else {
+                            asyncResultHandler.handle(
+                              Future.succeededFuture(
+                                PutRequestStorageRequestsByRequestIdResponse
+                                  .withPlainInternalServerError(
+                                    update.cause().getMessage())));
+                          }
+                        } catch (Exception e) {
+                          asyncResultHandler.handle(
+                            Future.succeededFuture(
+                              PutRequestStorageRequestsByRequestIdResponse
+                                .withPlainInternalServerError(e.getMessage())));
+                        }
+                      });
+                  } catch (Exception e) {
+                    asyncResultHandler.handle(Future.succeededFuture(
+                      PutRequestStorageRequestsByRequestIdResponse
+                        .withPlainInternalServerError(e.getMessage())));
+                  }
+                }
+                else {
+                  try {
+                    postgresClient.save(REQUEST_TABLE, entity.getId(), entity,
+                      save -> {
+                        try {
+                          if(save.succeeded()) {
+                            OutStream stream = new OutStream();
+                            stream.setData(entity);
+
+                            asyncResultHandler.handle(
+                              Future.succeededFuture(
+                                PutRequestStorageRequestsByRequestIdResponse
+                                  .withNoContent()));
+                          }
+                          else {
+                            asyncResultHandler.handle(
+                              Future.succeededFuture(
+                                PutRequestStorageRequestsByRequestIdResponse
+                                  .withPlainInternalServerError(
+                                    save.cause().getMessage())));
+                          }
+                        } catch (Exception e) {
+                          asyncResultHandler.handle(
+                            Future.succeededFuture(
+                              PutRequestStorageRequestsByRequestIdResponse
+                                .withPlainInternalServerError(e.getMessage())));
+                        }
+                      });
+                  } catch (Exception e) {
+                    asyncResultHandler.handle(Future.succeededFuture(
+                      PutRequestStorageRequestsByRequestIdResponse
+                        .withPlainInternalServerError(e.getMessage())));
+                  }
+                }
+              } else {
+                asyncResultHandler.handle(Future.succeededFuture(
+                  PutRequestStorageRequestsByRequestIdResponse
+                    .withPlainInternalServerError(reply.cause().getMessage())));
+              }
+            });
+        } catch (Exception e) {
+          asyncResultHandler.handle(Future.succeededFuture(
+            PutRequestStorageRequestsByRequestIdResponse
+              .withPlainInternalServerError(e.getMessage())));
+        }
+      });
+    } catch (Exception e) {
+      asyncResultHandler.handle(Future.succeededFuture(
+        PutRequestStorageRequestsByRequestIdResponse
+          .withPlainInternalServerError(e.getMessage())));
+    }
   }
 }

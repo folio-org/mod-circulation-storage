@@ -5,6 +5,7 @@ import io.vertx.core.json.JsonObject;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.TextResponse;
 import org.folio.rest.support.builders.RequestRequestBuilder;
 import org.hamcrest.junit.MatcherAssert;
 import org.joda.time.DateTime;
@@ -128,14 +129,13 @@ public class RequestsApiTest {
   }
 
   @Test
-  public void canGetARequestById()
+  public void canCreateARequestAtASpecificLocation()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
     ExecutionException,
     UnsupportedEncodingException {
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
@@ -153,14 +153,123 @@ public class RequestsApiTest {
       .withHoldShelfExpiration(new LocalDate(2017, 8, 31))
       .create();
 
-    client.post(requestStorageUrl(),
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    client.put(requestStorageUrl(String.format("/%s", id)),
       requestRequest, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(createCompleted) );
+      ResponseHandler.json(createCompleted));
 
-    JsonResponse createResponse = createCompleted.get(5, TimeUnit.SECONDS);
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(String.format("Failed to create request: %s", createResponse.getBody()),
-      createResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    assertThat(String.format("Failed to create request: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    JsonResponse getResponse = getById(id);
+
+    assertThat(String.format("Failed to get request: %s", getResponse.getBody()),
+      getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject representation = getResponse.getJson();
+
+    assertThat(representation.getString("id"), is(id.toString()));
+    assertThat(representation.getString("requestType"), is("Recall"));
+    assertThat(representation.getString("requestDate"), is(equivalentTo(requestDate)));
+    assertThat(representation.getString("itemId"), is(itemId.toString()));
+    assertThat(representation.getString("requesterId"), is(requesterId.toString()));
+    assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
+    assertThat(representation.getString("requestExpirationDate"), is("2017-07-30"));
+    assertThat(representation.getString("holdShelfExpirationDate"), is("2017-08-31"));
+  }
+
+  @Test
+  public void canUpdateAnExistingRequestAtASpecificLocation()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
+
+    UUID id = UUID.randomUUID();
+    UUID itemId = UUID.randomUUID();
+    UUID requesterId = UUID.randomUUID();
+    DateTime requestDate = new DateTime(2017, 7, 22, 10, 22, 54, DateTimeZone.UTC);
+
+    JsonObject createRequestRequest = new RequestRequestBuilder()
+      .recall()
+      .withId(id)
+      .withRequestDate(requestDate)
+      .withItemId(itemId)
+      .withRequesterId(requesterId)
+      .fulfilToHoldShelf()
+      .create();
+
+    createRequest(createRequestRequest);
+
+    JsonResponse getAfterCreateResponse = getById(id);
+
+    assertThat(String.format("Failed to get request: %s", getAfterCreateResponse.getBody()),
+      getAfterCreateResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    CompletableFuture<TextResponse> updateCompleted = new CompletableFuture<>();
+
+    UUID newRequesterId = UUID.randomUUID();
+
+    JsonObject updateRequestRequest = getAfterCreateResponse.getJson()
+      .copy()
+      .put("requesterId", newRequesterId.toString())
+      .put("requestExpirationDate", new LocalDate(2017, 7, 30)
+        .toString("yyyy-MM-dd"))
+      .put("holdShelfExpirationDate", new LocalDate(2017, 8, 31)
+        .toString("yyyy-MM-dd"));
+
+    client.put(requestStorageUrl(String.format("/%s", id)),
+      updateRequestRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.text(updateCompleted));
+
+    TextResponse response = updateCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to update request: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    JsonResponse getAfterUpdateResponse = getById(id);
+
+    JsonObject representation = getAfterUpdateResponse.getJson();
+
+    assertThat(representation.getString("id"), is(id.toString()));
+    assertThat(representation.getString("requestType"), is("Recall"));
+    assertThat(representation.getString("requestDate"), is(equivalentTo(requestDate)));
+    assertThat(representation.getString("itemId"), is(itemId.toString()));
+    assertThat(representation.getString("requesterId"), is(newRequesterId.toString()));
+    assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
+    assertThat(representation.getString("requestExpirationDate"), is("2017-07-30"));
+    assertThat(representation.getString("holdShelfExpirationDate"), is("2017-08-31"));
+  }
+
+  @Test
+  public void canGetARequestById()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
+
+    UUID id = UUID.randomUUID();
+    UUID itemId = UUID.randomUUID();
+    UUID requesterId = UUID.randomUUID();
+    DateTime requestDate = new DateTime(2017, 7, 22, 10, 22, 54, DateTimeZone.UTC);
+
+    JsonObject requestRequest = new RequestRequestBuilder()
+      .recall()
+      .withId(id)
+      .withRequestDate(requestDate)
+      .withItemId(itemId)
+      .withRequesterId(requesterId)
+      .fulfilToHoldShelf()
+      .withRequestExpiration(new LocalDate(2017, 7, 30))
+      .withHoldShelfExpiration(new LocalDate(2017, 8, 31))
+      .create();
+
+    createRequest(requestRequest);
 
     JsonResponse getResponse = getById(id);
 

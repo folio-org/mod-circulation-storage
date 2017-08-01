@@ -255,8 +255,8 @@ public class LoanPoliciesApiTest {
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
 
-  @Test
-  public void canUpdateAnExistingLoanPolicyByReplacingItsRepresentation()
+    @Test
+    public void canUpdateAnExistingLoanPolicyByReplacingItsRepresentation()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
