@@ -2,7 +2,7 @@
 
 loan_storage_address=${1:-http://localhost:9130/loan-storage/loans}
 loan_policy_storage_address=${2:-http://localhost:9130/loan-policy-storage/loan-policies}
-request_storage_address=${3:-http://localhost:9130/loan-policy-storage/loan-policies}
+request_storage_address=${3:-http://localhost:9130/request-storage/requests}
 tenant=${4:-demo_tenant}
 
 for f in ./loans/*.json; do
