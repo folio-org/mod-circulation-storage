@@ -1,32 +1,53 @@
 package org.folio.rest.api;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import org.folio.rest.support.*;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.Period;
-import org.joda.time.format.ISODateTimeFormat;
-import org.junit.*;
+import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
+import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNot.not;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.hamcrest.core.IsNull.nullValue;
+import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
-import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNull.notNullValue;
-import static org.hamcrest.junit.MatcherAssert.assertThat;
+import org.folio.rest.jaxrs.model.MetaData;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.support.HttpClient;
+import org.folio.rest.support.IndividualResource;
+import org.folio.rest.support.JsonErrorResponse;
+import org.folio.rest.support.JsonResponse;
+import org.folio.rest.support.Response;
+import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.TextResponse;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.Period;
+import org.joda.time.format.ISODateTimeFormat;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 public class LoansApiTest {
 
@@ -767,7 +788,7 @@ public class LoansApiTest {
     assertThat("Incorrect number of entries in loan history for id: " + id.toString(),
       finalRes.getJson().getJsonArray("loans").size(), is(4));
 
-    assertThat("Incorrect value oof first loan in res set - should be deleted " + id.toString(),
+    assertThat("Incorrect value of first loan in res set - should be deleted " + id.toString(),
       finalRes.getJson().getJsonArray("loans").getJsonObject(0).getString("action"), is("deleted"));
 
     assertThat("Incorrect number of entries in loan history for userId: " + userId.toString(),
@@ -775,6 +796,117 @@ public class LoansApiTest {
 
     assertThat("Incorrect value oof first loan in res set - should be checkedin " + id.toString(),
       finalRes4.getJson().getJsonArray("loans").getJsonObject(0).getString("action"), is("checkedin"));
+  }
+
+  @Test
+  public void metaDataPopulated()
+    throws Exception {
+
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture();
+
+    URL url = StorageTestSuite.storageUrl("/loan-storage/loan-history");
+
+    UUID userId = UUID.randomUUID();
+    UUID itemId = UUID.randomUUID();
+    UUID id1 = UUID.randomUUID();
+    UUID id2 = UUID.randomUUID();
+    UUID id3 = UUID.randomUUID();
+
+    JsonObject j1 = new JsonObject()
+    .put("id", id1.toString())
+    .put("userId", userId.toString())
+    .put("itemId", itemId.toString())
+    .put("action", "checkedout")
+    .put("loanDate", DateTime.parse("2017-03-06T16:04:43.000+02:00",
+      ISODateTimeFormat.dateTime()).toString())
+    .put("status", new JsonObject().put("name", "Closed"));
+
+    JsonObject j2 = new JsonObject()
+    .put("id", id2.toString())
+    .put("userId", userId.toString())
+    .put("itemId", itemId.toString())
+    .put("action", "renewal")
+    .put("loanDate", DateTime.parse("2017-03-06T16:05:43.000+02:00",
+      ISODateTimeFormat.dateTime()).toString())
+    .put("status", new JsonObject().put("name", "Opened"));
+
+    JsonObject j3 = new JsonObject()
+    .put("id", id3.toString())
+    .put("userId", userId.toString())
+    .put("itemId", itemId.toString())
+    .put("action", "renewal")
+    .put("loanDate", DateTime.parse("2017-03-06T16:05:43.000+02:00",
+      ISODateTimeFormat.dateTime()).toString())
+    .put("status", new JsonObject().put("name", "Opened"));
+    MetaData md = new MetaData();
+    md.setCreatedByUserId("af23adf0-61ba-4887-bf82-956c4aae2260");
+    md.setUpdatedByUserId("af23adf0-61ba-4887-bf82-956c4aae2260");
+
+    TimeZone tz = TimeZone.getTimeZone("UTC");
+    DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS+0000");
+    df.setTimeZone(tz);
+    Date d = new Date();
+    String nowAsISO = df.format(d);
+
+    md.setCreatedDate(d);
+    md.setUpdatedDate(d);
+    j3.put("metaData", new JsonObject(PostgresClient.pojo2json(md)));
+
+    CompletableFuture<JsonResponse> create1 = new CompletableFuture();
+    CompletableFuture<JsonResponse> get1    = new CompletableFuture();
+    CompletableFuture<JsonResponse> create2 = new CompletableFuture();
+    CompletableFuture<JsonResponse> get2    = new CompletableFuture();
+    CompletableFuture<JsonResponse> create3 = new CompletableFuture();
+    CompletableFuture<JsonResponse> get3    = new CompletableFuture();
+
+    Map<String, String> header = new HashMap<>();
+    header.put(HttpClient.OKAPI_USERID_HEADER, "af23adf0-61ba-4887-bf82-956c4aae2260");
+
+    ///////////////post loan//////////////////////
+    client.post(loanStorageUrl(), j1, StorageTestSuite.TENANT_ID, header,
+      ResponseHandler.json(create1));
+
+    JsonResponse response1 = create1.get(5, TimeUnit.SECONDS);
+
+    //////////////get loan/////////////////////
+    client.get(loanStorageUrl("/"+id1.toString()), StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(get1));
+
+    JsonResponse response2 = get1.get(5, TimeUnit.SECONDS);
+
+    assertThat("MetaData section not populated correctly " + id1.toString(),
+      response2.getJson().getJsonObject("metaData").getString("createdByUserId"), is("af23adf0-61ba-4887-bf82-956c4aae2260"));
+
+    ///////////////post loan//////////////////////
+    client.post(loanStorageUrl(), j2, StorageTestSuite.TENANT_ID, null,
+      ResponseHandler.json(create2));
+
+    JsonResponse response3 = create2.get(5, TimeUnit.SECONDS);
+
+    //////////////get loan/////////////////////
+    client.get(loanStorageUrl("/"+id2.toString()), StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(get2));
+
+    JsonResponse response4 = get2.get(5, TimeUnit.SECONDS);
+
+    assertThat("MetaData section not populated correctly " + id2.toString(),
+      response4.getJson().getJsonObject("metaData"), is(nullValue()));
+
+    ///////////////post loan//////////////////////
+    client.post(loanStorageUrl(), j3, StorageTestSuite.TENANT_ID, header,
+      ResponseHandler.json(create3));
+
+    JsonResponse response5 = create3.get(5, TimeUnit.SECONDS);
+
+    //////////////get loan/////////////////////
+    client.get(loanStorageUrl("/"+id3.toString()), StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(get3));
+
+    JsonResponse response6 = get3.get(5, TimeUnit.SECONDS);
+
+    // server should overwrite the field so should not be equal to what was passed in
+    assertThat("MetaData section not populated correctly " + id3.toString(),
+      response6.getJson().getJsonObject("metaData").getString("createdDate"), not(nowAsISO));
   }
 
   @Test

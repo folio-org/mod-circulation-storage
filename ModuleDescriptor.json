@@ -1,10 +1,10 @@
 {
-  "id": "circulation-storage-3.1.1-SNAPSHOT",
+  "id": "circulation-storage-4.0.0-SNAPSHOT",
   "name": "Circulation Storage Module",
   "provides": [
     {
       "id": "loan-storage",
-      "version": "3.1",
+      "version": "4.0",
       "handlers": [
         {
           "methods": ["GET"],

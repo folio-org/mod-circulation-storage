@@ -47,6 +47,10 @@
     "renewalCount": {
       "description": "Count of how many times a loan has been renewed (incremented by the client)",
       "type": "integer"
+    },
+    "metaData": {
+      "type": "object",
+      "$ref": "metadata.schema"
     }
   },
   "additionalProperties": false,
