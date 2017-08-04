@@ -1,6 +1,9 @@
-## 3.2.0 Unreleased
+## 3.2.0 Unreleased 
 
-* Introduces initial loan requests endpoint
+* Adds `metadata` property to loan (for created and updated information)
+* Introduces initial loan requests endpoint (CIRCSTORE-14)
+* CIRCSTORE-16 operator_id is missing in loan_history_table
+* Provides loan-storage interface 3.2
 * Provides request-storage interface 1.0
 
 ## 3.1.0 2017-08-01
