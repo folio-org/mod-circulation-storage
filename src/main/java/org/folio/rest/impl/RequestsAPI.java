@@ -4,10 +4,10 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.LoanPolicies;
-import org.folio.rest.jaxrs.model.LoanPolicy;
+import org.folio.rest.jaxrs.model.Request;
+import org.folio.rest.jaxrs.model.Requests;
 import org.folio.rest.jaxrs.resource.LoanPolicyStorageResource;
+import org.folio.rest.jaxrs.resource.RequestStorageResource;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
@@ -25,15 +25,14 @@ import java.util.UUID;
 
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
-public class LoanPoliciesAPI implements LoanPolicyStorageResource {
+public class RequestsAPI implements RequestStorageResource {
 
-  private final String LOAN_POLICY_TABLE = "loan_policy";
-  private final Class<LoanPolicy> LOAN_POLICY_CLASS = LoanPolicy.class;
+  private final String REQUEST_TABLE = "request";
 
   @Override
-  @Validate
-  public void deleteLoanPolicyStorageLoanPolicies(
-    String lang, Map<String, String> okapiHeaders,
+  public void deleteRequestStorageRequests(
+    String lang,
+    Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) throws Exception {
 
@@ -45,23 +44,22 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
         postgresClient.mutate(String.format("TRUNCATE TABLE %s_%s.%s",
-          tenantId, "circulation_storage", LOAN_POLICY_TABLE),
+          tenantId, "circulation_storage", REQUEST_TABLE),
           reply -> {
             asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-              LoanPolicyStorageResource.DeleteLoanPolicyStorageLoanPoliciesResponse
-                .noContent().build()));
+              DeleteRequestStorageRequestsResponse.withNoContent()));
           });
       }
       catch(Exception e) {
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-          LoanPolicyStorageResource.DeleteLoanPolicyStorageLoanPoliciesResponse
+          DeleteRequestStorageRequestsResponse
             .withPlainInternalServerError(e.getMessage())));
       }
     });
   }
 
   @Override
-  public void getLoanPolicyStorageLoanPolicies(
+  public void getRequestStorageRequests(
     int offset,
     int limit,
     String lang,
@@ -69,66 +67,65 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) throws Exception {
 
-      String tenantId = okapiHeaders.get(TENANT_HEADER);
+    String tenantId = okapiHeaders.get(TENANT_HEADER);
 
-      try {
-        vertxContext.runOnContext(v -> {
-          try {
-            PostgresClient postgresClient = PostgresClient.getInstance(
-              vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
+    try {
+      vertxContext.runOnContext(v -> {
+        try {
+          PostgresClient postgresClient = PostgresClient.getInstance(
+            vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-            String[] fieldList = {"*"};
+          String[] fieldList = {"*"};
 
-            CQL2PgJSON cql2pgJson = new CQL2PgJSON("loan_policy.jsonb");
-            CQLWrapper cql = new CQLWrapper(cql2pgJson, null)
-              .setLimit(new Limit(limit))
-              .setOffset(new Offset(offset));
+          CQL2PgJSON cql2pgJson = new CQL2PgJSON(String.format("%s.jsonb", REQUEST_TABLE));
+          CQLWrapper cql = new CQLWrapper(cql2pgJson, null)
+            .setLimit(new Limit(limit))
+            .setOffset(new Offset(offset));
 
-            postgresClient.get(LOAN_POLICY_TABLE, LOAN_POLICY_CLASS, fieldList, cql,
-              true, false, reply -> {
-                try {
-                  if(reply.succeeded()) {
-                    List<LoanPolicy> loanPolicies = (List<LoanPolicy>) reply.result()[0];
+          postgresClient.get(REQUEST_TABLE, Request.class, fieldList, cql,
+            true, false, reply -> {
+              try {
+                if(reply.succeeded()) {
+                  List<Request> requests = (List<Request>) reply.result()[0];
 
-                    LoanPolicies pagedLoans = new LoanPolicies();
-                    pagedLoans.setLoanPolicies(loanPolicies);
-                    pagedLoans.setTotalRecords((Integer)reply.result()[1]);
+                  Requests pagedRequests = new Requests();
+                  pagedRequests.setRequests(requests);
+                  pagedRequests.setTotalRecords((Integer)reply.result()[1]);
 
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                      LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
-                        withJsonOK(pagedLoans)));
-                  }
-                  else {
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                      LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
-                        withPlainInternalServerError(reply.cause().getMessage())));
-                  }
-                } catch (Exception e) {
-                  e.printStackTrace();
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                    GetRequestStorageRequestsResponse.withJsonOK(pagedRequests)));
+                }
+                else {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                     LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
-                      withPlainInternalServerError(e.getMessage())));
+                      withPlainInternalServerError(reply.cause().getMessage())));
                 }
-              });
-          } catch (Exception e) {
-            e.printStackTrace();
-            asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-              LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
-                withPlainInternalServerError(e.getMessage())));
-          }
-        });
-      } catch (Exception e) {
-        e.printStackTrace();
-        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-          LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
-            withPlainInternalServerError(e.getMessage())));
-      }
+              } catch (Exception e) {
+                e.printStackTrace();
+                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                  LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
+                    withPlainInternalServerError(e.getMessage())));
+              }
+            });
+        } catch (Exception e) {
+          e.printStackTrace();
+          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+            LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
+              withPlainInternalServerError(e.getMessage())));
+        }
+      });
+    } catch (Exception e) {
+      e.printStackTrace();
+      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+        LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
+          withPlainInternalServerError(e.getMessage())));
+    }
   }
 
   @Override
-  @Validate
-  public void postLoanPolicyStorageLoanPolicies(
-    String lang, LoanPolicy entity,
+  public void postRequestStorageRequests(
+    String lang,
+    Request entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) throws Exception {
@@ -146,7 +143,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
             entity.setId(UUID.randomUUID().toString());
           }
 
-          postgresClient.save("loan_policy", entity.getId(), entity,
+          postgresClient.save(REQUEST_TABLE, entity.getId(), entity,
             reply -> {
               try {
                 if(reply.succeeded()) {
@@ -155,27 +152,27 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
 
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(
-                      LoanPolicyStorageResource.PostLoanPolicyStorageLoanPoliciesResponse
+                      PostRequestStorageRequestsResponse
                         .withJsonCreated(reply.result(), stream)));
                 }
                 else {
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(
-                      LoanPolicyStorageResource.PostLoanPolicyStorageLoanPoliciesResponse
+                      PostRequestStorageRequestsResponse
                         .withPlainInternalServerError(reply.cause().toString())));
                 }
               } catch (Exception e) {
                 e.printStackTrace();
                 asyncResultHandler.handle(
                   io.vertx.core.Future.succeededFuture(
-                    LoanPolicyStorageResource.PostLoanPolicyStorageLoanPoliciesResponse
+                    PostRequestStorageRequestsResponse
                       .withPlainInternalServerError(e.getMessage())));
               }
             });
         } catch (Exception e) {
           e.printStackTrace();
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            LoanPolicyStorageResource.PostLoanPolicyStorageLoanPoliciesResponse
+            PostRequestStorageRequestsResponse
               .withPlainInternalServerError(e.getMessage())));
         }
       });
@@ -188,9 +185,8 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
   }
 
   @Override
-  @Validate
-  public void getLoanPolicyStorageLoanPoliciesByLoanPolicyId(
-    String loanPolicyId,
+  public void getRequestStorageRequestsByRequestId(
+    String requestId,
     String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
@@ -206,125 +202,65 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
 
       a.addField("'id'");
       a.setOperation("=");
-      a.setValue(loanPolicyId);
+      a.setValue(requestId);
 
       Criterion criterion = new Criterion(a);
 
       vertxContext.runOnContext(v -> {
         try {
-          postgresClient.get(LOAN_POLICY_TABLE, LOAN_POLICY_CLASS, criterion, true, false,
+          postgresClient.get(REQUEST_TABLE, Request.class, criterion, true, false,
             reply -> {
               try {
                 if (reply.succeeded()) {
-                  List<LoanPolicy> loanPolicies = (List<LoanPolicy>) reply.result()[0];
+                  List<Request> requests = (List<Request>) reply.result()[0];
 
-                  if (loanPolicies.size() == 1) {
-                    LoanPolicy loanPolicy = loanPolicies.get(0);
+                  if (requests.size() == 1) {
+                    Request request = requests.get(0);
 
                     asyncResultHandler.handle(
                       io.vertx.core.Future.succeededFuture(
-                        LoanPolicyStorageResource.
-                          GetLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse.
-                          withJsonOK(loanPolicy)));
+                        GetRequestStorageRequestsByRequestIdResponse.
+                          withJsonOK(request)));
                   }
                   else {
                     asyncResultHandler.handle(
                       Future.succeededFuture(
-                        LoanPolicyStorageResource.
-                          GetLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse.
+                        GetRequestStorageRequestsByRequestIdResponse.
                           withPlainNotFound("Not Found")));
                   }
                 } else {
                   asyncResultHandler.handle(
                     Future.succeededFuture(
-                      LoanPolicyStorageResource.
-                        GetLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse.
+                        GetRequestStorageRequestsByRequestIdResponse.
                         withPlainInternalServerError(reply.cause().getMessage())));
 
                 }
               } catch (Exception e) {
                 e.printStackTrace();
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                  LoanPolicyStorageResource.
-                    GetLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse.
+                  GetRequestStorageRequestsByRequestIdResponse.
                     withPlainInternalServerError(e.getMessage())));
               }
             });
         } catch (Exception e) {
           e.printStackTrace();
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            LoanPolicyStorageResource.
-              GetLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse.
+            GetRequestStorageRequestsByRequestIdResponse.
               withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
       e.printStackTrace();
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-        LoanPolicyStorageResource.
-          GetLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse.
+          GetRequestStorageRequestsByRequestIdResponse.
           withPlainInternalServerError(e.getMessage())));
     }
   }
 
   @Override
-  @Validate
-  public void deleteLoanPolicyStorageLoanPoliciesByLoanPolicyId(
-    String loanPolicyId,
-    String lang, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
-
-    String tenantId = okapiHeaders.get(TENANT_HEADER);
-
-    try {
-      PostgresClient postgresClient =
-        PostgresClient.getInstance(
-          vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
-
-      Criteria a = new Criteria();
-
-      a.addField("'id'");
-      a.setOperation("=");
-      a.setValue(loanPolicyId);
-
-      Criterion criterion = new Criterion(a);
-
-      vertxContext.runOnContext(v -> {
-        try {
-          postgresClient.delete(LOAN_POLICY_TABLE, criterion,
-            reply -> {
-              if(reply.succeeded()) {
-                asyncResultHandler.handle(
-                  Future.succeededFuture(
-                    DeleteLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
-                      .withNoContent()));
-              }
-              else {
-                asyncResultHandler.handle(Future.succeededFuture(
-                  DeleteLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
-                    .withPlainInternalServerError(reply.cause().getMessage())));
-              }
-            });
-        } catch (Exception e) {
-          asyncResultHandler.handle(Future.succeededFuture(
-            DeleteLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
-              .withPlainInternalServerError(e.getMessage())));
-        }
-      });
-    } catch (Exception e) {
-      asyncResultHandler.handle(Future.succeededFuture(
-        DeleteLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
-          .withPlainInternalServerError(e.getMessage())));
-    }
-  }
-
-  @Override
-  @Validate
-  public void putLoanPolicyStorageLoanPoliciesByLoanPolicyId(
-    String loanPolicyId,
+  public void deleteRequestStorageRequestsByRequestId(
+    String requestId,
     String lang,
-    LoanPolicy entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) throws Exception {
@@ -340,20 +276,72 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
 
       a.addField("'id'");
       a.setOperation("=");
-      a.setValue(loanPolicyId);
+      a.setValue(requestId);
 
       Criterion criterion = new Criterion(a);
 
       vertxContext.runOnContext(v -> {
         try {
-          postgresClient.get(LOAN_POLICY_TABLE, LOAN_POLICY_CLASS, criterion, true, false,
+          postgresClient.delete(REQUEST_TABLE, criterion,
             reply -> {
               if(reply.succeeded()) {
-                List<LoanPolicy> loanPolicyList = (List<LoanPolicy>) reply.result()[0];
+                asyncResultHandler.handle(
+                  Future.succeededFuture(
+                    DeleteRequestStorageRequestsByRequestIdResponse
+                      .withNoContent()));
+              }
+              else {
+                asyncResultHandler.handle(Future.succeededFuture(
+                  DeleteRequestStorageRequestsByRequestIdResponse
+                    .withPlainInternalServerError(reply.cause().getMessage())));
+              }
+            });
+        } catch (Exception e) {
+          asyncResultHandler.handle(Future.succeededFuture(
+            DeleteRequestStorageRequestsByRequestIdResponse
+              .withPlainInternalServerError(e.getMessage())));
+        }
+      });
+    } catch (Exception e) {
+      asyncResultHandler.handle(Future.succeededFuture(
+        DeleteRequestStorageRequestsByRequestIdResponse
+          .withPlainInternalServerError(e.getMessage())));
+    }
+  }
 
-                if (loanPolicyList.size() == 1) {
+  @Override
+  public void putRequestStorageRequestsByRequestId(
+    String requestId,
+    String lang, Request entity,
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) throws Exception {
+
+    String tenantId = okapiHeaders.get(TENANT_HEADER);
+
+    try {
+      PostgresClient postgresClient =
+        PostgresClient.getInstance(
+          vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
+
+      Criteria a = new Criteria();
+
+      a.addField("'id'");
+      a.setOperation("=");
+      a.setValue(requestId);
+
+      Criterion criterion = new Criterion(a);
+
+      vertxContext.runOnContext(v -> {
+        try {
+          postgresClient.get(REQUEST_TABLE, Request.class, criterion, true, false,
+            reply -> {
+              if(reply.succeeded()) {
+                List<Request> requestList = (List<Request>) reply.result()[0];
+
+                if (requestList.size() == 1) {
                   try {
-                    postgresClient.update(LOAN_POLICY_TABLE, entity, criterion,
+                    postgresClient.update(REQUEST_TABLE, entity, criterion,
                       true,
                       update -> {
                         try {
@@ -363,32 +351,32 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
 
                             asyncResultHandler.handle(
                               Future.succeededFuture(
-                                PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
+                                PutRequestStorageRequestsByRequestIdResponse
                                   .withNoContent()));
                           }
                           else {
                             asyncResultHandler.handle(
                               Future.succeededFuture(
-                                PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
+                                PutRequestStorageRequestsByRequestIdResponse
                                   .withPlainInternalServerError(
                                     update.cause().getMessage())));
                           }
                         } catch (Exception e) {
                           asyncResultHandler.handle(
                             Future.succeededFuture(
-                              PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
+                              PutRequestStorageRequestsByRequestIdResponse
                                 .withPlainInternalServerError(e.getMessage())));
                         }
                       });
                   } catch (Exception e) {
                     asyncResultHandler.handle(Future.succeededFuture(
-                      PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
+                      PutRequestStorageRequestsByRequestIdResponse
                         .withPlainInternalServerError(e.getMessage())));
                   }
                 }
                 else {
                   try {
-                    postgresClient.save(LOAN_POLICY_TABLE, entity.getId(), entity,
+                    postgresClient.save(REQUEST_TABLE, entity.getId(), entity,
                       save -> {
                         try {
                           if(save.succeeded()) {
@@ -397,44 +385,44 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
 
                             asyncResultHandler.handle(
                               Future.succeededFuture(
-                                PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
+                                PutRequestStorageRequestsByRequestIdResponse
                                   .withNoContent()));
                           }
                           else {
                             asyncResultHandler.handle(
                               Future.succeededFuture(
-                                PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
+                                PutRequestStorageRequestsByRequestIdResponse
                                   .withPlainInternalServerError(
                                     save.cause().getMessage())));
                           }
                         } catch (Exception e) {
                           asyncResultHandler.handle(
                             Future.succeededFuture(
-                              PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
+                              PutRequestStorageRequestsByRequestIdResponse
                                 .withPlainInternalServerError(e.getMessage())));
                         }
                       });
                   } catch (Exception e) {
                     asyncResultHandler.handle(Future.succeededFuture(
-                      PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
+                      PutRequestStorageRequestsByRequestIdResponse
                         .withPlainInternalServerError(e.getMessage())));
                   }
                 }
               } else {
                 asyncResultHandler.handle(Future.succeededFuture(
-                  PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
+                  PutRequestStorageRequestsByRequestIdResponse
                     .withPlainInternalServerError(reply.cause().getMessage())));
               }
             });
         } catch (Exception e) {
           asyncResultHandler.handle(Future.succeededFuture(
-            PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
+            PutRequestStorageRequestsByRequestIdResponse
               .withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
-        PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
+        PutRequestStorageRequestsByRequestIdResponse
           .withPlainInternalServerError(e.getMessage())));
     }
   }
