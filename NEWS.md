@@ -1,3 +1,7 @@
+## 3.2.0 2017-08-04
+
+* CIRCSTORE-16 operator_id is missing in loan_history_table
+
 ## 3.1.0 2017-08-01
 
 * Adds `dueDate` property to loan (using the date-time format)
