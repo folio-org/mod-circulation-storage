@@ -1,0 +1,6 @@
+{
+  "srvcId" : "circulation-storage-3.2.0-SNAPSHOT",
+  "descriptor" : {
+    "exec" : "java -jar ../mod-circulation-storage/target/circulation-storage-fat.jar -Dhttp.port=%p embed_postgres=true"
+  }
+}
