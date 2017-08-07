@@ -1,10 +1,5 @@
 package org.folio.rest.support;
 
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Map;
-
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClientRequest;
@@ -13,11 +8,16 @@ import io.vertx.core.json.Json;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Map;
+
 public class HttpClient {
   private static final Logger log = LoggerFactory.getLogger(HttpClient.class);
 
   private static final String TENANT_HEADER = "X-Okapi-Tenant";
-  public static final String  OKAPI_USERID_HEADER = "X-Okapi-User-Id";
+  public static final String USERID_HEADER = "X-Okapi-User-Id";
 
   private final io.vertx.core.http.HttpClient client;
 
@@ -26,24 +26,25 @@ public class HttpClient {
   }
 
   public void post(URL url,
-            Object body,
-            Handler<HttpClientResponse> responseHandler) {
+                   Object body,
+                   Handler<HttpClientResponse> responseHandler) {
 
     post(url, body, null, null, responseHandler);
   }
 
   public void post(URL url,
-      Object body,
-      String tenantId,
-      Handler<HttpClientResponse> responseHandler) {
+                   Object body,
+                   String tenantId,
+                   Handler<HttpClientResponse> responseHandler) {
 
     post(url, body, tenantId, null, responseHandler);
   }
 
   public void post(URL url,
-            Object body,
-            String tenantId, Map<String, String> headers,
-            Handler<HttpClientResponse> responseHandler) {
+                   Object body,
+                   String tenantId,
+                   String userId,
+                   Handler<HttpClientResponse> responseHandler) {
 
     HttpClientRequest request = client.postAbs(url.toString(), responseHandler);
 
@@ -54,8 +55,8 @@ public class HttpClient {
       request.headers().add(TENANT_HEADER, tenantId);
     }
 
-    if(headers != null){
-      headers.forEach((k,v)->request.headers().add(k , v));
+    if(userId != null) {
+      request.headers().add(USERID_HEADER, userId);
     }
 
     if(body != null) {
@@ -89,14 +90,12 @@ public class HttpClient {
   }
 
   public void put(URL url,
-      Object body,
-      String tenantId,
-      Handler<HttpClientResponse> responseHandler) {
+                  Object body,
+                  String tenantId,
+                  Handler<HttpClientResponse> responseHandler) {
 
     put(url, body, tenantId, null, responseHandler);
-
   }
-
 
   public void put(URL url,
                   Object body,
@@ -120,8 +119,8 @@ public class HttpClient {
   }
 
   public void get(URL url,
-                   String tenantId,
-                   Handler<HttpClientResponse> responseHandler) {
+                  String tenantId,
+                  Handler<HttpClientResponse> responseHandler) {
 
     get(url.toString(), tenantId, responseHandler);
   }
@@ -138,8 +137,8 @@ public class HttpClient {
   }
 
   public void get(String url,
-           String tenantId,
-           Handler<HttpClientResponse> responseHandler) {
+                  String tenantId,
+                  Handler<HttpClientResponse> responseHandler) {
 
     HttpClientRequest request = client.getAbs(url, responseHandler);
 
@@ -153,16 +152,16 @@ public class HttpClient {
   }
 
   public void delete(URL url,
-              String tenantId,
-              Handler<HttpClientResponse> responseHandler) {
+                     String tenantId,
+                     Handler<HttpClientResponse> responseHandler) {
 
     delete(url.toString(), tenantId, responseHandler);
   }
 
 
   public void delete(String url,
-              String tenantId,
-              Handler<HttpClientResponse> responseHandler) {
+                     String tenantId,
+                     Handler<HttpClientResponse> responseHandler) {
 
     HttpClientRequest request = client.deleteAbs(url, responseHandler);
 

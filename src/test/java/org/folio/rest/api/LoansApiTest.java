@@ -1,13 +1,15 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
-import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNot.not;
-import static org.hamcrest.core.IsNull.notNullValue;
-import static org.hamcrest.core.IsNull.nullValue;
-import static org.hamcrest.junit.MatcherAssert.assertThat;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import org.folio.rest.jaxrs.model.MetaData;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.support.*;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.Period;
+import org.joda.time.format.ISODateTimeFormat;
+import org.junit.*;
 
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
@@ -17,8 +19,6 @@ import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -27,27 +27,14 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.folio.rest.jaxrs.model.MetaData;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.support.HttpClient;
-import org.folio.rest.support.IndividualResource;
-import org.folio.rest.support.JsonErrorResponse;
-import org.folio.rest.support.JsonResponse;
-import org.folio.rest.support.Response;
-import org.folio.rest.support.ResponseHandler;
-import org.folio.rest.support.TextResponse;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.Period;
-import org.joda.time.format.ISODateTimeFormat;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
+import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
+import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNot.not;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.hamcrest.core.IsNull.nullValue;
+import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 public class LoansApiTest {
 
@@ -859,12 +846,9 @@ public class LoansApiTest {
     CompletableFuture<JsonResponse> create3 = new CompletableFuture();
     CompletableFuture<JsonResponse> get3    = new CompletableFuture();
 
-    Map<String, String> header = new HashMap<>();
-    header.put(HttpClient.OKAPI_USERID_HEADER, "af23adf0-61ba-4887-bf82-956c4aae2260");
-
     ///////////////post loan//////////////////////
-    client.post(loanStorageUrl(), j1, StorageTestSuite.TENANT_ID, header,
-      ResponseHandler.json(create1));
+    client.post(loanStorageUrl(), j1, StorageTestSuite.TENANT_ID,
+      "af23adf0-61ba-4887-bf82-956c4aae2260", ResponseHandler.json(create1));
 
     JsonResponse response1 = create1.get(5, TimeUnit.SECONDS);
 
@@ -893,8 +877,8 @@ public class LoansApiTest {
       response4.getJson().getJsonObject("metaData"), is(nullValue()));
 
     ///////////////post loan//////////////////////
-    client.post(loanStorageUrl(), j3, StorageTestSuite.TENANT_ID, header,
-      ResponseHandler.json(create3));
+    client.post(loanStorageUrl(), j3, StorageTestSuite.TENANT_ID,
+      "af23adf0-61ba-4887-bf82-956c4aae2260", ResponseHandler.json(create3));
 
     JsonResponse response5 = create3.get(5, TimeUnit.SECONDS);
 
