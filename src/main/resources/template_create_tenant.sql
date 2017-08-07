@@ -35,7 +35,7 @@ INSERT INTO myuniversity_mymodule.loan_rules
 -- auto populate the meta data schema
 
 -- on create of user record - pull creation date and creator into dedicated column - rmb makes auto-populates these fields in the md fields
-CREATE OR REPLACE FUNCTION set_md()
+CREATE OR REPLACE FUNCTION update_metadata_columns_trigger()
 RETURNS TRIGGER AS $$
 BEGIN
   NEW.creation_date = to_timestamp(NEW.jsonb->'metaData'->>'createdDate', 'YYYY-MM-DD"T"HH24:MI:SS.MS');
@@ -43,10 +43,10 @@ BEGIN
   RETURN NEW;
 END;
 $$ language 'plpgsql';
-CREATE TRIGGER set_md_trigger BEFORE INSERT ON myuniversity_mymodule.loan FOR EACH ROW EXECUTE PROCEDURE  set_md();
+
 
 -- on update populate md fields from the creation date and creator fields
-CREATE OR REPLACE FUNCTION set_md_json()
+CREATE OR REPLACE FUNCTION update_metadata_properties_in_json_trigger()
 RETURNS TRIGGER AS $$
 DECLARE
   createdDate timestamp WITH TIME ZONE;
@@ -59,7 +59,7 @@ BEGIN
   createdDate = NEW.creation_date;
   updatedDate = NEW.jsonb->'metaData'->>'updatedDate';
   updatedBy = NEW.jsonb->'metaData'->>'updatedByUserId';
-  
+
   if createdBy ISNULL then
     createdBy = 'undefined';
   end if;
@@ -77,8 +77,9 @@ RETURN NEW;
 
 END;
 $$ language 'plpgsql';
-CREATE TRIGGER set_md_json_trigger BEFORE UPDATE ON myuniversity_mymodule.loan FOR EACH ROW EXECUTE PROCEDURE set_md_json();
+
+CREATE TRIGGER update_loans_metadata_columns_trigger BEFORE INSERT ON myuniversity_mymodule.loan FOR EACH ROW EXECUTE PROCEDURE update_metadata_columns_trigger();
+CREATE TRIGGER update_loans_metadata_properties_in_json_trigger BEFORE UPDATE ON myuniversity_mymodule.loan FOR EACH ROW EXECUTE PROCEDURE update_metadata_properties_in_json_trigger();
 
 -- --- end auto populate meta data schema ------------
-  
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA myuniversity_mymodule TO myuniversity_mymodule;
