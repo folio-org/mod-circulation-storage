@@ -11,15 +11,17 @@ import io.vertx.core.logging.LoggerFactory;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Map;
+import java.util.UUID;
 
 public class HttpClient {
   private static final Logger log = LoggerFactory.getLogger(HttpClient.class);
 
   private static final String TENANT_HEADER = "X-Okapi-Tenant";
-  public static final String USERID_HEADER = "X-Okapi-User-Id";
+  private static final String USERID_HEADER = "X-Okapi-User-Id";
 
   private final io.vertx.core.http.HttpClient client;
+
+  private final String defaultUserId = UUID.randomUUID().toString();
 
   public HttpClient(Vertx vertx) {
     client = vertx.createHttpClient();
@@ -27,17 +29,10 @@ public class HttpClient {
 
   public void post(URL url,
                    Object body,
-                   Handler<HttpClientResponse> responseHandler) {
-
-    post(url, body, null, null, responseHandler);
-  }
-
-  public void post(URL url,
-                   Object body,
                    String tenantId,
                    Handler<HttpClientResponse> responseHandler) {
 
-    post(url, body, tenantId, null, responseHandler);
+    post(url, body, tenantId, defaultUserId, responseHandler);
   }
 
   public void post(URL url,
@@ -83,7 +78,7 @@ public class HttpClient {
   }
 
   public void get(URL url,
-           Handler<HttpClientResponse> responseHandler)
+                  Handler<HttpClientResponse> responseHandler)
     throws UnsupportedEncodingException {
 
     get(url, null, responseHandler);
@@ -94,12 +89,13 @@ public class HttpClient {
                   String tenantId,
                   Handler<HttpClientResponse> responseHandler) {
 
-    put(url, body, tenantId, null, responseHandler);
+    put(url, body, tenantId, defaultUserId, responseHandler);
   }
 
   public void put(URL url,
                   Object body,
-                  String tenantId, Map<String, String> headers,
+                  String tenantId,
+                  String userId,
                   Handler<HttpClientResponse> responseHandler) {
 
     HttpClientRequest request = client.putAbs(url.toString(), responseHandler);
@@ -107,12 +103,12 @@ public class HttpClient {
     request.headers().add("Accept","application/json, text/plain");
     request.headers().add("Content-type","application/json");
 
-    if(headers != null){
-      headers.forEach((k,v)->request.headers().add(k , v));
-    }
-
     if(tenantId != null) {
       request.headers().add(TENANT_HEADER, tenantId);
+    }
+
+    if(userId != null){
+      request.headers().add(USERID_HEADER, userId);
     }
 
     request.end(Json.encodePrettily(body));
@@ -148,6 +144,8 @@ public class HttpClient {
       request.headers().add(TENANT_HEADER, tenantId);
     }
 
+    request.headers().add(USERID_HEADER, defaultUserId);
+
     request.end();
   }
 
@@ -170,6 +168,8 @@ public class HttpClient {
     if(tenantId != null) {
       request.headers().add(TENANT_HEADER, tenantId);
     }
+
+    request.headers().add(USERID_HEADER, defaultUserId);
 
     request.end();
   }
