@@ -11,6 +11,7 @@ import org.hamcrest.junit.MatcherAssert;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.joda.time.Seconds;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -25,7 +26,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static org.folio.rest.support.TextDateTimeMatcher.withinSecondsAfter;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.equivalentTo;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
@@ -33,6 +36,7 @@ import static org.hamcrest.core.IsNull.notNullValue;
 public class RequestsApiTest {
 
   private static HttpClient client = new HttpClient(StorageTestSuite.getVertx());
+  private final String METADATA_PROPERTY = "metaData";
 
   @Before
   public void beforeEach()
@@ -98,6 +102,77 @@ public class RequestsApiTest {
     assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
     assertThat(representation.getString("requestExpirationDate"), is("2017-07-30"));
     assertThat(representation.getString("holdShelfExpirationDate"), is("2017-08-31"));
+  }
+
+  @Test
+  public void createdRequestHasCreationMetadata()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    String creatorId = UUID.randomUUID().toString();
+
+    DateTime requestMade = DateTime.now();
+
+    client.post(requestStorageUrl(),
+      new RequestRequestBuilder().create(), StorageTestSuite.TENANT_ID,
+      creatorId, ResponseHandler.json(createCompleted));
+
+    JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to create loan policy: %s", postResponse.getBody()),
+      postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    JsonResponse response = postResponse;
+
+    JsonObject createdRequest = response.getJson();
+
+    assertThat("Request should have metadata property",
+      createdRequest.containsKey(METADATA_PROPERTY), is(true));
+
+    JsonObject metadata = createdRequest.getJsonObject(METADATA_PROPERTY);
+
+    assertThat("Request should have created user",
+      metadata.getString("createdByUserId"), is(creatorId));
+
+    assertThat("Request should have created date close to when request was made",
+      metadata.getString("createdDate"),
+      is(withinSecondsAfter(Seconds.seconds(2), requestMade)));
+
+    //RAML-Module-Builder also populates updated information at creation time
+    assertThat("Request should have updated user",
+      metadata.getString("updatedByUserId"), is(creatorId));
+
+    assertThat("Request should have update date close to when request was made",
+      metadata.getString("updatedDate"),
+      is(withinSecondsAfter(Seconds.seconds(2), requestMade)));
+  }
+
+  @Test
+  public void createRequestWithoutUserHeaderCreatesNoMetadata()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    client.post(requestStorageUrl(),
+      new RequestRequestBuilder().create(), StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to create loan policy: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    JsonObject createdRequest = response.getJson();
+
+    assertThat("Request should not have metadata property",
+      createdRequest.containsKey("metadata"), is(false));
   }
 
   @Test
@@ -246,6 +321,128 @@ public class RequestsApiTest {
   }
 
   @Test
+  public void updatedRequestHasUpdatedMetadata()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
+
+    UUID id = UUID.randomUUID();
+
+    JsonObject request = new RequestRequestBuilder().withId(id).create();
+
+    JsonResponse createResponse = createRequest(request);
+
+    JsonObject createdMetadata = createResponse.getJson()
+      .getJsonObject(METADATA_PROPERTY);
+
+    CompletableFuture<TextResponse> updateCompleted = new CompletableFuture<>();
+
+    String updaterId = UUID.randomUUID().toString();
+
+    DateTime requestMade = DateTime.now();
+
+    client.put(requestStorageUrl(String.format("/%s", id)),
+      request, StorageTestSuite.TENANT_ID, updaterId,
+      ResponseHandler.text(updateCompleted));
+
+    TextResponse response = updateCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to update request: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    JsonResponse getAfterUpdateResponse = getById(id);
+
+    JsonObject updatedRequest = getAfterUpdateResponse.getJson();
+
+    assertThat("Request should have metadata property",
+      updatedRequest.containsKey(METADATA_PROPERTY), is(true));
+
+    JsonObject metadata = updatedRequest.getJsonObject(METADATA_PROPERTY);
+
+    assertThat("Request should have same created user",
+      metadata.getString("createdByUserId"),
+      is(createdMetadata.getString("createdByUserId")));
+
+    assertThat("Request should have same created date",
+      metadata.getString("createdDate"),
+      is(createdMetadata.getString("createdDate")));
+
+    assertThat("Request should have updated user",
+      metadata.getString("updatedByUserId"), is(updaterId));
+
+    assertThat("Request should have updated date close to when request was made",
+      metadata.getString("updatedDate"),
+      is(withinSecondsAfter(Seconds.seconds(2), requestMade)));
+
+    assertThat("Request should have updated date different to original updated date",
+      metadata.getString("updatedDate"), is(not(createdMetadata.getString("updatedDate"))));
+  }
+
+  @Test
+  public void updateRequestWithoutUserHeaderDoesSomething()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
+
+    UUID id = UUID.randomUUID();
+
+    JsonObject request = new RequestRequestBuilder().withId(id).create();
+
+    JsonResponse createResponse = createRequest(request);
+
+//    JsonObject createdMetadata = createResponse.getJson()
+//      .getJsonObject(METADATA_PROPERTY);
+
+    CompletableFuture<TextResponse> updateCompleted = new CompletableFuture<>();
+
+//    DateTime requestMade = DateTime.now();
+
+    client.put(requestStorageUrl(String.format("/%s", id)),
+      request, StorageTestSuite.TENANT_ID, null,
+      ResponseHandler.text(updateCompleted));
+
+    TextResponse response = updateCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat("No user header causes JSON to be null when saved",
+      response.getStatusCode(), is(500));
+
+//    assertThat(String.format("Failed to update request: %s", response.getBody()),
+//      response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+//
+//    JsonResponse getAfterUpdateResponse = getById(id);
+//
+//    JsonObject updatedRequest = getAfterUpdateResponse.getJson();
+//
+//    assertThat("Request should have metadata property",
+//      updatedRequest.containsKey(METADATA_PROPERTY), is(true));
+//
+//    JsonObject metadata = updatedRequest.getJsonObject(METADATA_PROPERTY);
+//
+//    assertThat("Request should have same created user",
+//      metadata.getString("createdByUserId"),
+//      is(createdMetadata.getString("createdByUserId")));
+//
+//    assertThat("Request should have same created date",
+//      metadata.getString("createdDate"),
+//      is(createdMetadata.getString("createdDate")));
+//
+//    assertThat("Request should have updated user",
+//      metadata.getString("updatedByUserId"),
+//      is(createdMetadata.getString("updatedByUserId")));
+//
+//    assertThat("Request should have updated date close to when request was made",
+//      metadata.getString("updatedDate"),
+//      is(withinSecondsAfter(Seconds.seconds(2), requestMade)));
+//
+//    assertThat("Request should have updated date different to original updated date",
+//      metadata.getString("updatedDate"), is(not(createdMetadata.getString("updatedDate"))));
+  }
+
+  @Test
   public void canGetARequestById()
     throws InterruptedException,
     MalformedURLException,
@@ -389,7 +586,7 @@ public class RequestsApiTest {
     return StorageTestSuite.storageUrl("/request-storage/requests" + subPath);
   }
 
-  private void createRequest(JsonObject requestRequest)
+  private JsonResponse createRequest(JsonObject requestRequest)
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -405,6 +602,8 @@ public class RequestsApiTest {
 
     assertThat(String.format("Failed to create loan policy: %s", postResponse.getBody()),
       postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    return postResponse;
   }
 
   private JsonResponse getById(UUID id)

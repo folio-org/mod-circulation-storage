@@ -25,7 +25,9 @@ CREATE TABLE myuniversity_mymodule.loan_rules (
 
 CREATE TABLE myuniversity_mymodule.request (
   _id UUID PRIMARY KEY,
-  jsonb JSONB NOT NULL
+  jsonb JSONB NOT NULL,
+  creation_date timestamp WITH TIME ZONE,
+  created_by text
 );
 
 INSERT INTO myuniversity_mymodule.loan_rules
@@ -44,6 +46,8 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+CREATE TRIGGER set_loans_metadata_columns_trigger BEFORE INSERT ON myuniversity_mymodule.loan FOR EACH ROW EXECUTE PROCEDURE update_metadata_columns_trigger();
+CREATE TRIGGER set_requests_metadata_columns_trigger BEFORE INSERT ON myuniversity_mymodule.request FOR EACH ROW EXECUTE PROCEDURE update_metadata_columns_trigger();
 
 -- on update populate md fields from the creation date and creator fields
 CREATE OR REPLACE FUNCTION update_metadata_properties_in_json_trigger()
@@ -78,8 +82,8 @@ RETURN NEW;
 END;
 $$ language 'plpgsql';
 
-CREATE TRIGGER update_loans_metadata_columns_trigger BEFORE INSERT ON myuniversity_mymodule.loan FOR EACH ROW EXECUTE PROCEDURE update_metadata_columns_trigger();
-CREATE TRIGGER update_loans_metadata_properties_in_json_trigger BEFORE UPDATE ON myuniversity_mymodule.loan FOR EACH ROW EXECUTE PROCEDURE update_metadata_properties_in_json_trigger();
+CREATE TRIGGER set_loans_metadata_properties_in_json_trigger BEFORE UPDATE ON myuniversity_mymodule.loan FOR EACH ROW EXECUTE PROCEDURE update_metadata_properties_in_json_trigger();
+CREATE TRIGGER set_requests_metadata_properties_in_json_trigger BEFORE UPDATE ON myuniversity_mymodule.request FOR EACH ROW EXECUTE PROCEDURE update_metadata_properties_in_json_trigger();
 
 -- --- end auto populate meta data schema ------------
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA myuniversity_mymodule TO myuniversity_mymodule;

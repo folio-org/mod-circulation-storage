@@ -41,6 +41,11 @@
       "description": "Date when an item returned to the hold shelf expires",
       "type": "string",
       "pattern": "[0-9]{4}-[0-9]{2}-[0-9]{2}"
+    },
+    "metaData": {
+      "description": "Metadata about creation and changes to requests, provided by the server (client should not provide)",
+      "type": "object",
+      "$ref": "metadata.schema"
     }
   },
   "additionalProperties": false,

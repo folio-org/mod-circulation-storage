@@ -111,7 +111,15 @@ public class HttpClient {
       request.headers().add(USERID_HEADER, userId);
     }
 
-    request.end(Json.encodePrettily(body));
+    String encodedBody = Json.encodePrettily(body);
+
+    System.out.println(String.format("PUT %s, Request: %s",
+      url.toString(), encodedBody));
+
+    log.debug(String.format("PUT %s, Request: %s",
+      url.toString(), encodedBody));
+
+    request.end(encodedBody);
   }
 
   public void get(URL url,
