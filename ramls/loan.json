@@ -51,7 +51,7 @@
     "metaData": {
       "description": "Metadata about creation and changes to loan, provided by the server (client should not provide)",
       "type": "object",
-      "$ref": "metadata.schema"
+      "$ref": "raml-util/schemas/metadata.schema"
     }
   },
   "additionalProperties": false,
