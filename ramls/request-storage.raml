@@ -9,22 +9,22 @@ documentation:
     content: <b>Storage for loan policies</b>
 
 schemas:
-  - request.json: !include schema/request.json
-  - requests: !include schema/requests.json
-  - errors: !include ../raml-util/schemas/errors.schema
-  - error.schema: !include ../raml-util/schemas/error.schema
-  - parameters.schema: !include ../raml-util/schemas/parameters.schema
-  - metadata.schema: !include ../raml-util/schemas/metadata.schema
+  - request.json: !include request.json
+  - requests: !include requests.json
+  - errors: !include raml-util/schemas/errors.schema
+  - error.schema: !include raml-util/schemas/error.schema
+  - parameters.schema: !include raml-util/schemas/parameters.schema
+  - raml-util/schemas/metadata.schema: !include raml-util/schemas/metadata.schema
 
 traits:
-  - secured: !include ../raml-util/traits/auth.raml
-  - language: !include ../raml-util/traits/language.raml
-  - pageable: !include ../raml-util/traits/pageable.raml
-  - searchable: !include ../raml-util/traits/searchable.raml
+  - secured: !include raml-util/traits/auth.raml
+  - language: !include raml-util/traits/language.raml
+  - pageable: !include raml-util/traits/pageable.raml
+  - searchable: !include raml-util/traits/searchable.raml
 
 resourceTypes:
-  - collection: !include ../raml-util/rtypes/collection.raml
-  - collection-item: !include ../raml-util/rtypes/item-collection.raml
+  - collection: !include raml-util/rtypes/collection.raml
+  - collection-item: !include raml-util/rtypes/item-collection.raml
 
 /request-storage:
   /requests:
