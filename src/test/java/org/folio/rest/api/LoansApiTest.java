@@ -69,10 +69,12 @@ public class LoansApiTest {
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
     UUID userId = UUID.randomUUID();
+    UUID proxyUserId = UUID.randomUUID();
 
     JsonObject loanRequest = loanRequest(id, itemId, userId,
       new DateTime(2017, 6, 27, 10, 23, 43, DateTimeZone.UTC),
-      "Open", new DateTime(2017, 7, 27, 10, 23, 43, DateTimeZone.UTC));
+      "Open", new DateTime(2017, 7, 27, 10, 23, 43, DateTimeZone.UTC),
+      proxyUserId);
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
@@ -91,6 +93,9 @@ public class LoansApiTest {
 
     assertThat("user id does not match",
       loan.getString("userId"), is(userId.toString()));
+
+    assertThat("proxy user id does not match",
+      loan.getString("proxyUserId"), is(proxyUserId.toString()));
 
     assertThat("item id does not match",
       loan.getString("itemId"), is(itemId.toString()));
@@ -116,10 +121,11 @@ public class LoansApiTest {
 
     UUID itemId = UUID.randomUUID();
     UUID userId = UUID.randomUUID();
+    UUID proxyUserId = UUID.randomUUID();
 
     JsonObject loanRequest = loanRequest(null, itemId, userId,
       new DateTime(2017, 3, 20, 7, 21, 45, DateTimeZone.UTC), "Open",
-      new DateTime(2017, 4, 20, 7, 21, 45, DateTimeZone.UTC));
+      new DateTime(2017, 4, 20, 7, 21, 45, DateTimeZone.UTC), proxyUserId);
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
@@ -139,6 +145,9 @@ public class LoansApiTest {
 
     assertThat("user id does not match",
       loan.getString("userId"), is(userId.toString()));
+
+    assertThat("proxy user id does not match",
+      loan.getString("proxyUserId"), is(proxyUserId.toString()));
 
     assertThat("item id does not match",
       loan.getString("itemId"), is(itemId.toString()));
@@ -166,10 +175,11 @@ public class LoansApiTest {
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
     UUID userId = UUID.randomUUID();
+    UUID proxyUserId = UUID.randomUUID();
 
     JsonObject loanRequest = loanRequest(id, itemId, userId,
       new DateTime(2017, 2, 27, 21, 14, 43, DateTimeZone.UTC), "Open",
-      new DateTime(2017, 3, 29, 21, 14, 43, DateTimeZone.UTC));
+      new DateTime(2017, 3, 29, 21, 14, 43, DateTimeZone.UTC), proxyUserId);
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
@@ -193,6 +203,9 @@ public class LoansApiTest {
 
     assertThat("user id does not match",
       loan.getString("userId"), is(userId.toString()));
+
+    assertThat("proxy user id does not match",
+      loan.getString("proxyUserId"), is(proxyUserId.toString()));
 
     assertThat("item id does not match",
       loan.getString("itemId"), is(itemId.toString()));
@@ -323,9 +336,11 @@ public class LoansApiTest {
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
     UUID userId = UUID.randomUUID();
+    UUID proxyUserId = UUID.randomUUID();
 
     JsonObject loanRequest = loanRequest(id, itemId, userId,
-      new DateTime(2016, 10, 15, 8, 26, 53, DateTimeZone.UTC), "Open", null);
+      new DateTime(2016, 10, 15, 8, 26, 53, DateTimeZone.UTC), "Open", null,
+      proxyUserId);
 
     createLoan(loanRequest);
 
@@ -341,6 +356,9 @@ public class LoansApiTest {
 
     assertThat("user id does not match",
       loan.getString("userId"), is(userId.toString()));
+
+    assertThat("proxy user id does not match",
+      loan.getString("proxyUserId"), is(proxyUserId.toString()));
 
     assertThat("item id does not match",
       loan.getString("itemId"), is(itemId.toString()));
@@ -904,7 +922,7 @@ public class LoansApiTest {
     UUID id = UUID.randomUUID();
 
     createLoan(loanRequest(id, UUID.randomUUID(), UUID.randomUUID(),
-      DateTime.now(), "Open", null));
+      DateTime.now(), "Open", null, null));
 
     CompletableFuture<TextResponse> deleteCompleted = new CompletableFuture();
 
@@ -935,14 +953,14 @@ public class LoansApiTest {
     UUID id = UUID.randomUUID();
 
     JsonObject requestWithAdditionalProperty = loanRequest(id,
-      UUID.randomUUID(), UUID.randomUUID(), DateTime.now(), "Open", null);
+      UUID.randomUUID(), UUID.randomUUID(), DateTime.now(), "Open", null, null);
 
     requestWithAdditionalProperty.put("somethingAdditional", "foo");
 
     CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture();
 
-    client.post(loanStorageUrl(), requestWithAdditionalProperty, StorageTestSuite.TENANT_ID,
-      ResponseHandler.jsonErrors(createCompleted));
+    client.post(loanStorageUrl(), requestWithAdditionalProperty,
+      StorageTestSuite.TENANT_ID, ResponseHandler.jsonErrors(createCompleted));
 
     JsonErrorResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
@@ -960,15 +978,15 @@ public class LoansApiTest {
     UUID id = UUID.randomUUID();
 
     JsonObject requestWithAdditionalProperty = loanRequest(id,
-      UUID.randomUUID(), UUID.randomUUID(), DateTime.now(), "Open", null);
+      UUID.randomUUID(), UUID.randomUUID(), DateTime.now(), "Open", null, null);
 
     requestWithAdditionalProperty.getJsonObject("status")
       .put("somethingAdditional", "foo");
 
     CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture();
 
-    client.post(loanStorageUrl(), requestWithAdditionalProperty, StorageTestSuite.TENANT_ID,
-      ResponseHandler.jsonErrors(createCompleted));
+    client.post(loanStorageUrl(), requestWithAdditionalProperty,
+      StorageTestSuite.TENANT_ID, ResponseHandler.jsonErrors(createCompleted));
 
     JsonErrorResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
@@ -1015,19 +1033,20 @@ public class LoansApiTest {
   private JsonObject loanRequest() {
     return loanRequest(UUID.randomUUID(), UUID.randomUUID(),
       UUID.randomUUID(), DateTime.parse("2017-03-06T16:04:43.000+02:00",
-        ISODateTimeFormat.dateTime()), "Open", null);
+        ISODateTimeFormat.dateTime()), "Open", null, null);
   }
 
   private JsonObject loanRequest(UUID userId, String statusName) {
     Random random = new Random();
 
     return loanRequest(UUID.randomUUID(), UUID.randomUUID(),
-      userId, DateTime.now().minusDays(random.nextInt(10)), statusName, null);
+      userId, DateTime.now().minusDays(random.nextInt(10)), statusName, null,
+      null);
   }
 
   private JsonObject loanRequest(DateTime loanDate) {
     return loanRequest(UUID.randomUUID(), UUID.randomUUID(),
-      UUID.randomUUID(), loanDate, "Open", loanDate.plus(Period.days(14)));
+      UUID.randomUUID(), loanDate, "Open", loanDate.plus(Period.days(14)), null);
   }
 
   private JsonObject loanRequest(
@@ -1036,7 +1055,7 @@ public class LoansApiTest {
     UUID userId,
     DateTime loanDate,
     String statusName,
-    DateTime dueDate) {
+    DateTime dueDate, UUID proxyUserId) {
 
     JsonObject loanRequest = new JsonObject();
 
@@ -1050,6 +1069,10 @@ public class LoansApiTest {
       .put("action", "checkedout")
       .put("loanDate", loanDate.toString(ISODateTimeFormat.dateTime()))
       .put("status", new JsonObject().put("name", statusName));
+
+    if(proxyUserId != null) {
+      loanRequest.put("proxyUserId", proxyUserId.toString());
+    }
 
     if(statusName == "Closed") {
       loanRequest.put("returnDate",
