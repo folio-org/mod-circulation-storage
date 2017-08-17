@@ -1,6 +1,6 @@
-## 3.2.0 Unreleased 
+## 3.2.0 2017-08-17 
 
-* Adds `metadata` property to loan (for created and updated information)
+* Adds `metaData` property to loan (for created and updated information)
 * Introduces initial loan requests endpoint (CIRCSTORE-14)
 * CIRCSTORE-16 operator_id is missing in loan_history_table
 * Introduces proxy user ID for a loan (CIRCSTORE-20)
