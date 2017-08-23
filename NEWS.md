@@ -1,5 +1,9 @@
 ## 3.2.1 Unreleased
 
+* Add "Publish Module Descriptor" step to Jenkinsfile (FOLIO-728)
+* Remove old Descriptors (towards FOLIO-701)
+* Move loan-policy.json and period.json to ramls/raml-util (CIRC-11)
+
 ## 3.2.0 2017-08-17 
 
 * Adds `metaData` property to loan (for created and updated information)
