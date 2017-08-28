@@ -2,12 +2,12 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
   "properties": {
-    "loanPolicies": {
-      "id": "loanPolicies",
+    "requests": {
+      "id": "requests",
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "loan-policy.json"
+        "$ref": "request.json"
       }
     },
     "totalRecords": {
@@ -15,7 +15,7 @@
     }
   },
   "required": [
-    "loanPolicies",
+    "requests",
     "totalRecords"
   ]
 }

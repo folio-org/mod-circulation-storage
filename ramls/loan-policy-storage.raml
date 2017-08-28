@@ -9,19 +9,19 @@ documentation:
     content: <b>Storage for loan policies</b>
 
 schemas:
-  - loan-policy.json: !include schema/loan-policy.json
-  - period.json: !include schema/period.json
-  - loan-policies: !include schema/loan-policies.json
+  - raml-util/schemas/mod-circulation/loan-policy.json: !include raml-util/schemas/mod-circulation/loan-policy.json
+  - raml-util/schemas/mod-circulation/period.json: !include raml-util/schemas/mod-circulation/period.json
+  - loan-policies: !include loan-policies.json
 
 traits:
-  - secured: !include ../raml-util/traits/auth.raml
-  - language: !include ../raml-util/traits/language.raml
-  - pageable: !include ../raml-util/traits/pageable.raml
-  - searchable: !include ../raml-util/traits/searchable.raml
+  - secured: !include raml-util/traits/auth.raml
+  - language: !include raml-util/traits/language.raml
+  - pageable: !include raml-util/traits/pageable.raml
+  - searchable: !include raml-util/traits/searchable.raml
 
 resourceTypes:
-  - collection: !include ../raml-util/rtypes/collection.raml
-  - collection-item: !include ../raml-util/rtypes/item-collection.raml
+  - collection: !include raml-util/rtypes/collection.raml
+  - collection-item: !include raml-util/rtypes/item-collection.raml
 
 /loan-policy-storage:
   /loan-policies:
@@ -31,7 +31,7 @@ resourceTypes:
         exampleCollection: !include examples/loan-policies.json
         exampleItem: !include examples/loan-policy.json
         schemaCollection: loan-policies
-        schemaItem: loan-policy.json
+        schemaItem: raml-util/schemas/mod-circulation/loan-policy.json
     get:
       is: [pageable]
       responses:
@@ -56,7 +56,7 @@ resourceTypes:
       type:
         collection-item:
           exampleItem: !include examples/loan-policy.json
-          schema: loan-policy.json
+          schema: raml-util/schemas/mod-circulation/loan-policy.json
       get:
         responses:
           501:

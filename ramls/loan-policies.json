@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "loanPolicies": {
+      "id": "loanPolicies",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "raml-util/schemas/mod-circulation/loan-policy.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "loanPolicies",
+    "totalRecords"
+  ]
+}

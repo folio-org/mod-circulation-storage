@@ -9,12 +9,12 @@ documentation:
     content: <b>Storage for loan rules</b>
 
 schemas:
-  - loan-rules: !include schema/loan-rules.json
-  - errors: !include ../raml-util/schemas/errors.schema
+  - loan-rules: !include loan-rules.json
+  - errors: !include raml-util/schemas/errors.schema
 
 traits:
-  - secured: !include ../raml-util/traits/auth.raml
-  - validate: !include ../raml-util/traits/validation.raml
+  - secured: !include raml-util/traits/auth.raml
+  - validate: !include raml-util/traits/validation.raml
 
 /loan-rules-storage:
   get:

@@ -1,42 +1,40 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
-import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNull.notNullValue;
-import static org.hamcrest.junit.MatcherAssert.assertThat;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import org.folio.rest.jaxrs.model.MetaData;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.support.*;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.Period;
+import org.joda.time.format.ISODateTimeFormat;
+import org.junit.*;
 
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Random;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.folio.rest.support.HttpClient;
-import org.folio.rest.support.IndividualResource;
-import org.folio.rest.support.JsonErrorResponse;
-import org.folio.rest.support.JsonResponse;
-import org.folio.rest.support.Response;
-import org.folio.rest.support.ResponseHandler;
-import org.folio.rest.support.TextResponse;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.format.ISODateTimeFormat;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
+import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
+import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNot.not;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.hamcrest.core.IsNull.nullValue;
+import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 public class LoansApiTest {
 
@@ -71,9 +69,12 @@ public class LoansApiTest {
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
     UUID userId = UUID.randomUUID();
+    UUID proxyUserId = UUID.randomUUID();
 
     JsonObject loanRequest = loanRequest(id, itemId, userId,
-      new DateTime(2017, 2, 27, 10, 23, 43, DateTimeZone.UTC), "Open");
+      new DateTime(2017, 6, 27, 10, 23, 43, DateTimeZone.UTC),
+      "Open", new DateTime(2017, 7, 27, 10, 23, 43, DateTimeZone.UTC),
+      proxyUserId);
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
@@ -93,14 +94,22 @@ public class LoansApiTest {
     assertThat("user id does not match",
       loan.getString("userId"), is(userId.toString()));
 
+    assertThat("proxy user id does not match",
+      loan.getString("proxyUserId"), is(proxyUserId.toString()));
+
     assertThat("item id does not match",
       loan.getString("itemId"), is(itemId.toString()));
 
     assertThat("loan date does not match",
-      loan.getString("loanDate"), is("2017-02-27T10:23:43.000Z"));
+      loan.getString("loanDate"), is("2017-06-27T10:23:43.000Z"));
 
     assertThat("status is not open",
       loan.getJsonObject("status").getString("name"), is("Open"));
+
+    //The RAML-Module-Builder converts all date-time formatted strings to UTC
+    //and presents the offset as +0000 (which is ISO8601 compatible, but not RFC3339)
+    assertThat("due date does not match",
+      loan.getString("dueDate"), is("2017-07-27T10:23:43.000+0000"));
   }
 
   @Test
@@ -112,9 +121,11 @@ public class LoansApiTest {
 
     UUID itemId = UUID.randomUUID();
     UUID userId = UUID.randomUUID();
+    UUID proxyUserId = UUID.randomUUID();
 
     JsonObject loanRequest = loanRequest(null, itemId, userId,
-      new DateTime(2017, 3, 20, 7, 21, 45, DateTimeZone.UTC), "Open");
+      new DateTime(2017, 3, 20, 7, 21, 45, DateTimeZone.UTC), "Open",
+      new DateTime(2017, 4, 20, 7, 21, 45, DateTimeZone.UTC), proxyUserId);
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
@@ -135,6 +146,9 @@ public class LoansApiTest {
     assertThat("user id does not match",
       loan.getString("userId"), is(userId.toString()));
 
+    assertThat("proxy user id does not match",
+      loan.getString("proxyUserId"), is(proxyUserId.toString()));
+
     assertThat("item id does not match",
       loan.getString("itemId"), is(itemId.toString()));
 
@@ -143,6 +157,11 @@ public class LoansApiTest {
 
     assertThat("status is not open",
       loan.getJsonObject("status").getString("name"), is("Open"));
+
+    //The RAML-Module-Builder converts all date-time formatted strings to UTC
+    //and presents the offset as +0000 (which is ISO8601 compatible, but not RFC3339)
+    assertThat("due date does not match",
+      loan.getString("dueDate"), is("2017-04-20T07:21:45.000+0000"));
   }
 
   @Test
@@ -156,9 +175,11 @@ public class LoansApiTest {
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
     UUID userId = UUID.randomUUID();
+    UUID proxyUserId = UUID.randomUUID();
 
     JsonObject loanRequest = loanRequest(id, itemId, userId,
-      new DateTime(2017, 2, 27, 21, 14, 43, DateTimeZone.UTC), "Open");
+      new DateTime(2017, 2, 27, 21, 14, 43, DateTimeZone.UTC), "Open",
+      new DateTime(2017, 3, 29, 21, 14, 43, DateTimeZone.UTC), proxyUserId);
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
@@ -183,6 +204,9 @@ public class LoansApiTest {
     assertThat("user id does not match",
       loan.getString("userId"), is(userId.toString()));
 
+    assertThat("proxy user id does not match",
+      loan.getString("proxyUserId"), is(proxyUserId.toString()));
+
     assertThat("item id does not match",
       loan.getString("itemId"), is(itemId.toString()));
 
@@ -191,10 +215,15 @@ public class LoansApiTest {
 
     assertThat("status is not open",
       loan.getJsonObject("status").getString("name"), is("Open"));
+
+    //The RAML-Module-Builder converts all date-time formatted strings to UTC
+    //and presents the offset as +0000 (which is ISO8601 compatible, but not RFC3339)
+    assertThat("due date does not match",
+      loan.getString("dueDate"), is("2017-03-29T21:14:43.000+0000"));
   }
 
   @Test
-  public void canCreateALoanWithoutStatus()
+  public void canCreateALoanWitOnlyRequiredProperties()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -307,9 +336,11 @@ public class LoansApiTest {
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
     UUID userId = UUID.randomUUID();
+    UUID proxyUserId = UUID.randomUUID();
 
     JsonObject loanRequest = loanRequest(id, itemId, userId,
-      new DateTime(2016, 10, 15, 8, 26, 53, DateTimeZone.UTC), "Open");
+      new DateTime(2016, 10, 15, 8, 26, 53, DateTimeZone.UTC), "Open", null,
+      proxyUserId);
 
     createLoan(loanRequest);
 
@@ -325,6 +356,9 @@ public class LoansApiTest {
 
     assertThat("user id does not match",
       loan.getString("userId"), is(userId.toString()));
+
+    assertThat("proxy user id does not match",
+      loan.getString("proxyUserId"), is(proxyUserId.toString()));
 
     assertThat("item id does not match",
       loan.getString("itemId"), is(itemId.toString()));
@@ -387,6 +421,55 @@ public class LoansApiTest {
 
     assertThat("status is not closed",
       updatedLoan.getJsonObject("status").getString("name"), is("Closed"));
+  }
+
+  @Test
+  public void canRenewALoan()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
+
+    DateTime loanDate = new DateTime(2017, 3, 1, 13, 25, 46, DateTimeZone.UTC);
+
+    IndividualResource loan = createLoan(loanRequest(loanDate));
+
+    JsonObject returnedLoan = loan.copyJson();
+
+    returnedLoan
+      .put("dueDate", new DateTime(2017, 3, 30, 13, 25, 46, DateTimeZone.UTC)
+        .toString(ISODateTimeFormat.dateTime()))
+      .put("action", "renewed")
+      .put("renewalCount", 1);
+
+    CompletableFuture<JsonResponse> putCompleted = new CompletableFuture();
+
+    client.put(loanStorageUrl(String.format("/%s", loan.getId())), returnedLoan,
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(putCompleted));
+
+    JsonResponse putResponse = putCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to update loan: %s", putResponse.getBody()),
+      putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    JsonResponse updatedLoanResponse = getById(UUID.fromString(loan.getId()));
+
+    JsonObject updatedLoan = updatedLoanResponse.getJson();
+
+    //The RAML-Module-Builder converts all date-time formatted strings to UTC
+    //and presents the offset as +0000 (which is ISO8601 compatible, but not RFC3339)
+    assertThat(updatedLoan.getString("dueDate"),
+      is("2017-03-30T13:25:46.000+0000"));
+
+    assertThat("status is not open",
+      updatedLoan.getJsonObject("status").getString("name"), is("Open"));
+
+    assertThat("action is not renewed",
+      updatedLoan.getString("action"), is("renewed"));
+
+    assertThat("renewal count is not 1",
+      updatedLoan.getInteger("renewalCount"), is(1));
   }
 
   @Test
@@ -710,7 +793,7 @@ public class LoansApiTest {
     assertThat("Incorrect number of entries in loan history for id: " + id.toString(),
       finalRes.getJson().getJsonArray("loans").size(), is(4));
 
-    assertThat("Incorrect value oof first loan in res set - should be deleted " + id.toString(),
+    assertThat("Incorrect value of first loan in res set - should be deleted " + id.toString(),
       finalRes.getJson().getJsonArray("loans").getJsonObject(0).getString("action"), is("deleted"));
 
     assertThat("Incorrect number of entries in loan history for userId: " + userId.toString(),
@@ -718,6 +801,114 @@ public class LoansApiTest {
 
     assertThat("Incorrect value oof first loan in res set - should be checkedin " + id.toString(),
       finalRes4.getJson().getJsonArray("loans").getJsonObject(0).getString("action"), is("checkedin"));
+  }
+
+  @Test
+  public void metaDataPopulated()
+    throws Exception {
+
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture();
+
+    URL url = StorageTestSuite.storageUrl("/loan-storage/loan-history");
+
+    UUID userId = UUID.randomUUID();
+    UUID itemId = UUID.randomUUID();
+    UUID id1 = UUID.randomUUID();
+    UUID id2 = UUID.randomUUID();
+    UUID id3 = UUID.randomUUID();
+
+    JsonObject j1 = new JsonObject()
+    .put("id", id1.toString())
+    .put("userId", userId.toString())
+    .put("itemId", itemId.toString())
+    .put("action", "checkedout")
+    .put("loanDate", DateTime.parse("2017-03-06T16:04:43.000+02:00",
+      ISODateTimeFormat.dateTime()).toString())
+    .put("status", new JsonObject().put("name", "Closed"));
+
+    JsonObject j2 = new JsonObject()
+    .put("id", id2.toString())
+    .put("userId", userId.toString())
+    .put("itemId", itemId.toString())
+    .put("action", "renewal")
+    .put("loanDate", DateTime.parse("2017-03-06T16:05:43.000+02:00",
+      ISODateTimeFormat.dateTime()).toString())
+    .put("status", new JsonObject().put("name", "Opened"));
+
+    JsonObject j3 = new JsonObject()
+    .put("id", id3.toString())
+    .put("userId", userId.toString())
+    .put("itemId", itemId.toString())
+    .put("action", "renewal")
+    .put("loanDate", DateTime.parse("2017-03-06T16:05:43.000+02:00",
+      ISODateTimeFormat.dateTime()).toString())
+    .put("status", new JsonObject().put("name", "Opened"));
+    MetaData md = new MetaData();
+    md.setCreatedByUserId("af23adf0-61ba-4887-bf82-956c4aae2260");
+    md.setUpdatedByUserId("af23adf0-61ba-4887-bf82-956c4aae2260");
+
+    TimeZone tz = TimeZone.getTimeZone("UTC");
+    DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS+0000");
+    df.setTimeZone(tz);
+    Date d = new Date();
+    String nowAsISO = df.format(d);
+
+    md.setCreatedDate(d);
+    md.setUpdatedDate(d);
+    j3.put("metaData", new JsonObject(PostgresClient.pojo2json(md)));
+
+    CompletableFuture<JsonResponse> create1 = new CompletableFuture();
+    CompletableFuture<JsonResponse> get1    = new CompletableFuture();
+    CompletableFuture<JsonResponse> create2 = new CompletableFuture();
+    CompletableFuture<JsonResponse> get2    = new CompletableFuture();
+    CompletableFuture<JsonResponse> create3 = new CompletableFuture();
+    CompletableFuture<JsonResponse> get3    = new CompletableFuture();
+
+    ///////////////post loan//////////////////////
+    client.post(loanStorageUrl(), j1, StorageTestSuite.TENANT_ID,
+      "af23adf0-61ba-4887-bf82-956c4aae2260", ResponseHandler.json(create1));
+
+    JsonResponse response1 = create1.get(5, TimeUnit.SECONDS);
+
+    //////////////get loan/////////////////////
+    client.get(loanStorageUrl("/"+id1.toString()), StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(get1));
+
+    JsonResponse response2 = get1.get(5, TimeUnit.SECONDS);
+
+    assertThat("MetaData section not populated correctly " + id1.toString(),
+      response2.getJson().getJsonObject("metaData").getString("createdByUserId"), is("af23adf0-61ba-4887-bf82-956c4aae2260"));
+
+    ///////////////post loan//////////////////////
+    client.post(loanStorageUrl(), j2, StorageTestSuite.TENANT_ID, null,
+      ResponseHandler.json(create2));
+
+    JsonResponse response3 = create2.get(5, TimeUnit.SECONDS);
+
+    //////////////get loan/////////////////////
+    client.get(loanStorageUrl("/"+id2.toString()), StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(get2));
+
+    JsonResponse response4 = get2.get(5, TimeUnit.SECONDS);
+
+    assertThat("MetaData section not populated correctly " + id2.toString(),
+      response4.getJson().getJsonObject("metaData"), is(nullValue()));
+
+    ///////////////post loan//////////////////////
+    client.post(loanStorageUrl(), j3, StorageTestSuite.TENANT_ID,
+      "af23adf0-61ba-4887-bf82-956c4aae2260", ResponseHandler.json(create3));
+
+    JsonResponse response5 = create3.get(5, TimeUnit.SECONDS);
+
+    //////////////get loan/////////////////////
+    client.get(loanStorageUrl("/"+id3.toString()), StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(get3));
+
+    JsonResponse response6 = get3.get(5, TimeUnit.SECONDS);
+
+    // server should overwrite the field so should not be equal to what was passed in
+    assertThat("MetaData section not populated correctly " + id3.toString(),
+      response6.getJson().getJsonObject("metaData").getString("createdDate"), not(nowAsISO));
   }
 
   @Test
@@ -731,7 +922,7 @@ public class LoansApiTest {
     UUID id = UUID.randomUUID();
 
     createLoan(loanRequest(id, UUID.randomUUID(), UUID.randomUUID(),
-      DateTime.now(), "Open"));
+      DateTime.now(), "Open", null, null));
 
     CompletableFuture<TextResponse> deleteCompleted = new CompletableFuture();
 
@@ -762,14 +953,14 @@ public class LoansApiTest {
     UUID id = UUID.randomUUID();
 
     JsonObject requestWithAdditionalProperty = loanRequest(id,
-      UUID.randomUUID(), UUID.randomUUID(), DateTime.now(), "Open");
+      UUID.randomUUID(), UUID.randomUUID(), DateTime.now(), "Open", null, null);
 
     requestWithAdditionalProperty.put("somethingAdditional", "foo");
 
     CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture();
 
-    client.post(loanStorageUrl(), requestWithAdditionalProperty, StorageTestSuite.TENANT_ID,
-      ResponseHandler.jsonErrors(createCompleted));
+    client.post(loanStorageUrl(), requestWithAdditionalProperty,
+      StorageTestSuite.TENANT_ID, ResponseHandler.jsonErrors(createCompleted));
 
     JsonErrorResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
@@ -787,15 +978,15 @@ public class LoansApiTest {
     UUID id = UUID.randomUUID();
 
     JsonObject requestWithAdditionalProperty = loanRequest(id,
-      UUID.randomUUID(), UUID.randomUUID(), DateTime.now(), "Open");
+      UUID.randomUUID(), UUID.randomUUID(), DateTime.now(), "Open", null, null);
 
     requestWithAdditionalProperty.getJsonObject("status")
       .put("somethingAdditional", "foo");
 
     CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture();
 
-    client.post(loanStorageUrl(), requestWithAdditionalProperty, StorageTestSuite.TENANT_ID,
-      ResponseHandler.jsonErrors(createCompleted));
+    client.post(loanStorageUrl(), requestWithAdditionalProperty,
+      StorageTestSuite.TENANT_ID, ResponseHandler.jsonErrors(createCompleted));
 
     JsonErrorResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
@@ -842,19 +1033,20 @@ public class LoansApiTest {
   private JsonObject loanRequest() {
     return loanRequest(UUID.randomUUID(), UUID.randomUUID(),
       UUID.randomUUID(), DateTime.parse("2017-03-06T16:04:43.000+02:00",
-        ISODateTimeFormat.dateTime()), "Open");
+        ISODateTimeFormat.dateTime()), "Open", null, null);
   }
 
   private JsonObject loanRequest(UUID userId, String statusName) {
     Random random = new Random();
 
     return loanRequest(UUID.randomUUID(), UUID.randomUUID(),
-      userId, DateTime.now().minusDays(random.nextInt(10)), statusName);
+      userId, DateTime.now().minusDays(random.nextInt(10)), statusName, null,
+      null);
   }
 
   private JsonObject loanRequest(DateTime loanDate) {
     return loanRequest(UUID.randomUUID(), UUID.randomUUID(),
-      UUID.randomUUID(), loanDate, "Open");
+      UUID.randomUUID(), loanDate, "Open", loanDate.plus(Period.days(14)), null);
   }
 
   private JsonObject loanRequest(
@@ -862,7 +1054,8 @@ public class LoansApiTest {
     UUID itemId,
     UUID userId,
     DateTime loanDate,
-    String statusName) {
+    String statusName,
+    DateTime dueDate, UUID proxyUserId) {
 
     JsonObject loanRequest = new JsonObject();
 
@@ -877,9 +1070,17 @@ public class LoansApiTest {
       .put("loanDate", loanDate.toString(ISODateTimeFormat.dateTime()))
       .put("status", new JsonObject().put("name", statusName));
 
+    if(proxyUserId != null) {
+      loanRequest.put("proxyUserId", proxyUserId.toString());
+    }
+
     if(statusName == "Closed") {
       loanRequest.put("returnDate",
         loanDate.plusDays(1).plusHours(4).toString(ISODateTimeFormat.dateTime()));
+    }
+
+    if(dueDate != null) {
+      loanRequest.put("dueDate", dueDate.toString(ISODateTimeFormat.dateTime()));
     }
 
     return loanRequest;

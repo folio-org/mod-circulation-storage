@@ -1,7 +1,26 @@
-## 3.0.1 Unreleased
+## 3.2.1 Unreleased
 
+* Add "Publish Module Descriptor" step to Jenkinsfile (FOLIO-728)
+* Remove old Descriptors (towards FOLIO-701)
+* Move loan-policy.json and period.json to ramls/raml-util (CIRC-11)
+
+## 3.2.0 2017-08-17 
+
+* Adds `metaData` property to loan (for created and updated information)
+* Introduces initial loan requests endpoint (CIRCSTORE-14)
+* CIRCSTORE-16 operator_id is missing in loan_history_table
+* Introduces proxy user ID for a loan (CIRCSTORE-20)
+* Provides loan-storage interface 3.2
+* Provides request-storage interface 1.0
+
+## 3.1.0 2017-08-01
+
+* Adds `dueDate` property to loan (using the date-time format)
+* Adds `renewalCount` property to loan
+* Provides loan-storage interface 3.1
 * CIRCSTORE-15 add default sorting to loan action history in case no sorting requested (upgrades to RMB 13.0.1)
-
+* Include implementation version in `id` in Module Descriptor
+  
 ## 3.0.0 2017-07-17
 
 * Store loan action history for a Loan (CIRCSTORE-12)
