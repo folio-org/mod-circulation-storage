@@ -29,12 +29,12 @@ if [ "${storage}" = "external" ]; then
 
   ./setup-demo-db.sh
 
-  deployment_descriptor="DeploymentDescriptor-environment.json"
+  deployment_descriptor="target/DeploymentDescriptor-environment.json"
 
 elif [ "${storage}" = "embedded" ]; then
   echo "Running circulation storage module using embedded PostgreSQL storage"
 
-  deployment_descriptor="DeploymentDescriptor.json"
+  deployment_descriptor="target/DeploymentDescriptor.json"
 
 else
   echo "Unknown storage mechanism: ${storage}"
