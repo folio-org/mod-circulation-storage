@@ -499,7 +499,7 @@ public class RequestsApiTest {
   }
 
   @Test
-  public void canPageLoanPolicies()
+  public void canPageRequests()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -530,7 +530,7 @@ public class RequestsApiTest {
       firstPageResponse.getBody()),
       firstPageResponse.getStatusCode(), is(200));
 
-    MatcherAssert.assertThat(String.format("Failed to get second page of requests: %s",
+    assertThat(String.format("Failed to get second page of requests: %s",
       secondPageResponse.getBody()),
       secondPageResponse.getStatusCode(), is(200));
 
@@ -540,15 +540,51 @@ public class RequestsApiTest {
     JsonArray firstPageRequests = firstPage.getJsonArray("requests");
     JsonArray secondPageRequests = secondPage.getJsonArray("requests");
 
-    MatcherAssert.assertThat(firstPageRequests.size(), is(4));
-    MatcherAssert.assertThat(firstPage.getInteger("totalRecords"), is(7));
+    assertThat(firstPageRequests.size(), is(4));
+    assertThat(firstPage.getInteger("totalRecords"), is(7));
 
-    MatcherAssert.assertThat(secondPageRequests.size(), is(3));
-    MatcherAssert.assertThat(secondPage.getInteger("totalRecords"), is(7));
+    assertThat(secondPageRequests.size(), is(3));
+    assertThat(secondPage.getInteger("totalRecords"), is(7));
   }
 
   @Test
-  public void canDeleteALoanPolicy()
+  public void canSearchForRequestsByRequesterId()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    UnsupportedEncodingException {
+
+    UUID firstRequester = UUID.randomUUID();
+    UUID secondRequester = UUID.randomUUID();
+
+    createRequest(new RequestRequestBuilder().withRequesterId(firstRequester).create());
+    createRequest(new RequestRequestBuilder().withRequesterId(firstRequester).create());
+    createRequest(new RequestRequestBuilder().withRequesterId(secondRequester).create());
+    createRequest(new RequestRequestBuilder().withRequesterId(firstRequester).create());
+    createRequest(new RequestRequestBuilder().withRequesterId(firstRequester).create());
+    createRequest(new RequestRequestBuilder().withRequesterId(secondRequester).create());
+    createRequest(new RequestRequestBuilder().withRequesterId(secondRequester).create());
+
+    CompletableFuture<JsonResponse> getRequestsCompleted = new CompletableFuture<>();
+
+    client.get(requestStorageUrl() + String.format("?query=requesterId=%s", secondRequester),
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(getRequestsCompleted));
+
+    JsonResponse getRequestsResponse = getRequestsCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to get requests: %s",
+      getRequestsResponse.getBody()),
+      getRequestsResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject wrappedRequests = getRequestsResponse.getJson();
+
+    assertThat(wrappedRequests.getJsonArray("requests").size(), is(3));
+    assertThat(wrappedRequests.getInteger("totalRecords"), is(3));
+  }
+
+  @Test
+  public void canDeleteARequest()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,

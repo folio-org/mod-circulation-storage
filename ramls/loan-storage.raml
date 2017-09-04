@@ -39,8 +39,8 @@ resourceTypes:
         schemaItem: loan.json
     get:
       is: [pageable,
-        searchable: {description: "by title (using CQL)",
-                        example: "userId=\"cf23adf0-61ba-4887-bf82-956c4aae2260\""},
+        searchable: {description: "searchable using CQL",
+                        example: "requesterId=\"cf23adf0-61ba-4887-bf82-956c4aae2260\""},
         ]
       responses:
         501:

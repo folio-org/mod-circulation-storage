@@ -1,5 +1,7 @@
-## 3.2.1 Unreleased
+## 3.3.0 Unreleased
 
+* Allows requests to be searched and sorted via CQL (CIRCSTORE-22)
+* Provides request-storage interface 1.1
 * Add "Publish Module Descriptor" step to Jenkinsfile (FOLIO-728)
 * Remove old Descriptors (towards FOLIO-701)
 * Move loan-policy.json and period.json to ramls/raml-util (CIRC-11)

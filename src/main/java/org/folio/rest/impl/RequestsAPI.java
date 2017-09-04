@@ -62,6 +62,7 @@ public class RequestsAPI implements RequestStorageResource {
   public void getRequestStorageRequests(
     int offset,
     int limit,
+    String query,
     String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
@@ -78,7 +79,7 @@ public class RequestsAPI implements RequestStorageResource {
           String[] fieldList = {"*"};
 
           CQL2PgJSON cql2pgJson = new CQL2PgJSON(String.format("%s.jsonb", REQUEST_TABLE));
-          CQLWrapper cql = new CQLWrapper(cql2pgJson, null)
+          CQLWrapper cql = new CQLWrapper(cql2pgJson, query)
             .setLimit(new Limit(limit))
             .setOffset(new Offset(offset));
 
