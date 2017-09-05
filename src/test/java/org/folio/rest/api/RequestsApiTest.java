@@ -108,6 +108,52 @@ public class RequestsApiTest {
   }
 
   @Test
+  public void canCreateARequestWithOnlyRequiredProperties()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    UUID id = UUID.randomUUID();
+    UUID itemId = UUID.randomUUID();
+    UUID requesterId = UUID.randomUUID();
+    DateTime requestDate = new DateTime(2017, 7, 22, 10, 22, 54, DateTimeZone.UTC);
+
+    JsonObject requestRequest = new RequestRequestBuilder()
+      .recall()
+      .withId(id)
+      .withRequestDate(requestDate)
+      .withItemId(itemId)
+      .withRequesterId(requesterId)
+      .fulfilToHoldShelf()
+      .create();
+
+    client.post(requestStorageUrl(),
+      requestRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to create request: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    JsonObject representation = response.getJson();
+
+    assertThat(representation.getString("id"), is(id.toString()));
+    assertThat(representation.getString("requestType"), is("Recall"));
+    assertThat(representation.getString("requestDate"), is(equivalentTo(requestDate)));
+    assertThat(representation.getString("itemId"), is(itemId.toString()));
+    assertThat(representation.getString("requesterId"), is(requesterId.toString()));
+    assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
+    assertThat(representation.containsKey("requestExpirationDate"), is(false));
+    assertThat(representation.containsKey("holdShelfExpirationDate"), is(false));
+    assertThat(representation.containsKey("item"), is(false));
+  }
+
+  @Test
   public void createdRequestHasCreationMetadata()
     throws InterruptedException,
     MalformedURLException,

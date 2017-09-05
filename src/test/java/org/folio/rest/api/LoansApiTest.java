@@ -223,7 +223,7 @@ public class LoansApiTest {
   }
 
   @Test
-  public void canCreateALoanWitOnlyRequiredProperties()
+  public void canCreateALoanWithOnlyRequiredProperties()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
