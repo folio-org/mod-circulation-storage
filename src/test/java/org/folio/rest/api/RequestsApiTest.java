@@ -26,7 +26,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.folio.rest.support.TextDateTimeMatcher.withinSecondsAfter;
+import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.equivalentTo;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
