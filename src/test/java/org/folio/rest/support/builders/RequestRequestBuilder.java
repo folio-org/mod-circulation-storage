@@ -16,7 +16,7 @@ public class RequestRequestBuilder {
   private final DateTime requestDate;
   private final UUID itemId;
   private final UUID requesterId;
-  private final String fulilmentPreference;
+  private final String fulfilmentPreference;
   private final LocalDate requestExpirationDate;
   private final LocalDate holdShelfExpirationDate;
   private final ItemSummary itemSummary;
@@ -39,7 +39,7 @@ public class RequestRequestBuilder {
     DateTime requestDate,
     UUID itemId,
     UUID requesterId,
-    String fulilmentPreference,
+    String fulfilmentPreference,
     LocalDate requestExpirationDate, LocalDate holdShelfExpirationDate,
     ItemSummary itemSummary) {
 
@@ -48,7 +48,7 @@ public class RequestRequestBuilder {
     this.requestDate = requestDate;
     this.itemId = itemId;
     this.requesterId = requesterId;
-    this.fulilmentPreference = fulilmentPreference;
+    this.fulfilmentPreference = fulfilmentPreference;
     this.requestExpirationDate = requestExpirationDate;
     this.holdShelfExpirationDate = holdShelfExpirationDate;
     this.itemSummary = itemSummary;
@@ -65,7 +65,7 @@ public class RequestRequestBuilder {
     request.put("requestDate", formatDateTime(this.requestDate));
     request.put("itemId", this.itemId.toString());
     request.put("requesterId", this.requesterId.toString());
-    request.put("fulfilmentPreference", this.fulilmentPreference);
+    request.put("fulfilmentPreference", this.fulfilmentPreference);
 
     if(requestExpirationDate != null) {
       request.put("requestExpirationDate",
@@ -93,7 +93,7 @@ public class RequestRequestBuilder {
       this.requestDate,
       this.itemId,
       this.requesterId,
-      this.fulilmentPreference,
+      this.fulfilmentPreference,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
       this.itemSummary);
@@ -106,7 +106,7 @@ public class RequestRequestBuilder {
       this.requestDate,
       this.itemId,
       this.requesterId,
-      this.fulilmentPreference,
+      this.fulfilmentPreference,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
       this.itemSummary);
@@ -119,7 +119,7 @@ public class RequestRequestBuilder {
       this.requestDate,
       this.itemId,
       this.requesterId,
-      this.fulilmentPreference,
+      this.fulfilmentPreference,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
       this.itemSummary);
@@ -132,7 +132,7 @@ public class RequestRequestBuilder {
       requestDate,
       this.itemId,
       this.requesterId,
-      this.fulilmentPreference,
+      this.fulfilmentPreference,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
       this.itemSummary);
@@ -145,7 +145,7 @@ public class RequestRequestBuilder {
       this.requestDate,
       itemId,
       this.requesterId,
-      this.fulilmentPreference,
+      this.fulfilmentPreference,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
       this.itemSummary);
@@ -158,7 +158,7 @@ public class RequestRequestBuilder {
       this.requestDate,
       this.itemId,
       requesterId,
-      this.fulilmentPreference,
+      this.fulfilmentPreference,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
       this.itemSummary);
@@ -184,7 +184,7 @@ public class RequestRequestBuilder {
       this.requestDate,
       this.itemId,
       this.requesterId,
-      this.fulilmentPreference,
+      this.fulfilmentPreference,
       requestExpiration,
       this.holdShelfExpirationDate,
       this.itemSummary);
@@ -197,7 +197,7 @@ public class RequestRequestBuilder {
       this.requestDate,
       this.itemId,
       this.requesterId,
-      this.fulilmentPreference,
+      this.fulfilmentPreference,
       this.requestExpirationDate,
       holdShelfExpiration,
       this.itemSummary);
@@ -210,7 +210,7 @@ public class RequestRequestBuilder {
       this.requestDate,
       this.itemId,
       this.requesterId,
-      this.fulilmentPreference,
+      this.fulfilmentPreference,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
       new ItemSummary(title, barcode));
