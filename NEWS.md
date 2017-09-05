@@ -1,6 +1,7 @@
 ## 3.3.0 Unreleased
 
 * Allows requests to be searched and sorted via CQL (CIRCSTORE-22)
+* Allows snapshot of item metadata to be stored with a request (CIRCSTORE-23)
 * Provides request-storage interface 1.1
 * Add "Publish Module Descriptor" step to Jenkinsfile (FOLIO-728)
 * Remove old Descriptors (towards FOLIO-701)

@@ -81,6 +81,7 @@ public class RequestsApiTest {
       .fulfilToHoldShelf()
       .withRequestExpiration(new LocalDate(2017, 7, 30))
       .withHoldShelfExpiration(new LocalDate(2017, 8, 31))
+      .withItem("Nod", "565578437802")
       .create();
 
     client.post(requestStorageUrl(),
@@ -102,6 +103,8 @@ public class RequestsApiTest {
     assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
     assertThat(representation.getString("requestExpirationDate"), is("2017-07-30"));
     assertThat(representation.getString("holdShelfExpirationDate"), is("2017-08-31"));
+    assertThat(representation.getJsonObject("item").getString("title"), is("Nod"));
+    assertThat(representation.getJsonObject("item").getString("barcode"), is("565578437802"));
   }
 
   @Test
@@ -226,6 +229,7 @@ public class RequestsApiTest {
       .fulfilToHoldShelf()
       .withRequestExpiration(new LocalDate(2017, 7, 30))
       .withHoldShelfExpiration(new LocalDate(2017, 8, 31))
+      .withItem("Nod", "565578437802")
       .create();
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
@@ -254,6 +258,8 @@ public class RequestsApiTest {
     assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
     assertThat(representation.getString("requestExpirationDate"), is("2017-07-30"));
     assertThat(representation.getString("holdShelfExpirationDate"), is("2017-08-31"));
+    assertThat(representation.getJsonObject("item").getString("title"), is("Nod"));
+    assertThat(representation.getJsonObject("item").getString("barcode"), is("565578437802"));
   }
 
   @Test
@@ -276,6 +282,7 @@ public class RequestsApiTest {
       .withItemId(itemId)
       .withRequesterId(requesterId)
       .fulfilToHoldShelf()
+      .withItem("Nod", "565578437802")
       .create();
 
     createRequest(createRequestRequest);
@@ -318,6 +325,8 @@ public class RequestsApiTest {
     assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
     assertThat(representation.getString("requestExpirationDate"), is("2017-07-30"));
     assertThat(representation.getString("holdShelfExpirationDate"), is("2017-08-31"));
+    assertThat(representation.getJsonObject("item").getString("title"), is("Nod"));
+    assertThat(representation.getJsonObject("item").getString("barcode"), is("565578437802"));
   }
 
   @Test

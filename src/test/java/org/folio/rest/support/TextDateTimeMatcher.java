@@ -7,7 +7,7 @@ import org.joda.time.DateTime;
 import org.joda.time.Seconds;
 
 public class TextDateTimeMatcher {
-  public static Matcher<String> isEquivalentTo(DateTime expected) {
+  public static Matcher<String> isEquivwalentTo(DateTime expected) {
     return new TypeSafeMatcher<String>() {
       @Override
       public void describeTo(Description description) {

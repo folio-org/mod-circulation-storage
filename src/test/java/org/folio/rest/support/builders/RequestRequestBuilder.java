@@ -19,6 +19,7 @@ public class RequestRequestBuilder {
   private final String fulilmentPreference;
   private final LocalDate requestExpirationDate;
   private final LocalDate holdShelfExpirationDate;
+  private final ItemSummary itemSummary;
 
   public RequestRequestBuilder() {
     this(UUID.randomUUID(),
@@ -27,6 +28,7 @@ public class RequestRequestBuilder {
       UUID.randomUUID(),
       UUID.randomUUID(),
       "Hold Shelf",
+      null,
       null,
       null);
   }
@@ -38,7 +40,8 @@ public class RequestRequestBuilder {
     UUID itemId,
     UUID requesterId,
     String fulilmentPreference,
-    LocalDate requestExpirationDate, LocalDate holdShelfExpirationDate) {
+    LocalDate requestExpirationDate, LocalDate holdShelfExpirationDate,
+    ItemSummary itemSummary) {
 
     this.id = id;
     this.requestType = requestType;
@@ -48,6 +51,7 @@ public class RequestRequestBuilder {
     this.fulilmentPreference = fulilmentPreference;
     this.requestExpirationDate = requestExpirationDate;
     this.holdShelfExpirationDate = holdShelfExpirationDate;
+    this.itemSummary = itemSummary;
   }
 
   public JsonObject create() {
@@ -73,9 +77,14 @@ public class RequestRequestBuilder {
         formatDateOnly(this.holdShelfExpirationDate));
     }
 
+    if(itemSummary != null) {
+      request.put("item", new JsonObject()
+          .put("title", itemSummary.title)
+          .put("barcode", itemSummary.barcode));
+    }
+
     return request;
   }
-
 
   public RequestRequestBuilder recall() {
     return new RequestRequestBuilder(
@@ -86,7 +95,8 @@ public class RequestRequestBuilder {
       this.requesterId,
       this.fulilmentPreference,
       this.requestExpirationDate,
-      this.holdShelfExpirationDate);
+      this.holdShelfExpirationDate,
+      this.itemSummary);
   }
 
   public RequestRequestBuilder withId(UUID newId) {
@@ -98,7 +108,8 @@ public class RequestRequestBuilder {
       this.requesterId,
       this.fulilmentPreference,
       this.requestExpirationDate,
-      this.holdShelfExpirationDate);
+      this.holdShelfExpirationDate,
+      this.itemSummary);
   }
 
   public RequestRequestBuilder withNoId() {
@@ -110,7 +121,8 @@ public class RequestRequestBuilder {
       this.requesterId,
       this.fulilmentPreference,
       this.requestExpirationDate,
-      this.holdShelfExpirationDate);
+      this.holdShelfExpirationDate,
+      this.itemSummary);
   }
 
   public RequestRequestBuilder withRequestDate(DateTime requestDate) {
@@ -122,7 +134,8 @@ public class RequestRequestBuilder {
       this.requesterId,
       this.fulilmentPreference,
       this.requestExpirationDate,
-      this.holdShelfExpirationDate);
+      this.holdShelfExpirationDate,
+      this.itemSummary);
   }
 
   public RequestRequestBuilder withItemId(UUID itemId) {
@@ -134,7 +147,8 @@ public class RequestRequestBuilder {
       this.requesterId,
       this.fulilmentPreference,
       this.requestExpirationDate,
-      this.holdShelfExpirationDate);
+      this.holdShelfExpirationDate,
+      this.itemSummary);
   }
 
   public RequestRequestBuilder withRequesterId(UUID requesterId) {
@@ -146,7 +160,8 @@ public class RequestRequestBuilder {
       requesterId,
       this.fulilmentPreference,
       this.requestExpirationDate,
-      this.holdShelfExpirationDate);
+      this.holdShelfExpirationDate,
+      this.itemSummary);
   }
 
   public RequestRequestBuilder fulfilToHoldShelf() {
@@ -158,7 +173,8 @@ public class RequestRequestBuilder {
       this.requesterId,
       "Hold Shelf",
       this.requestExpirationDate,
-      this.holdShelfExpirationDate);
+      this.holdShelfExpirationDate,
+      this.itemSummary);
   }
 
   public RequestRequestBuilder withRequestExpiration(LocalDate requestExpiration) {
@@ -170,7 +186,8 @@ public class RequestRequestBuilder {
       this.requesterId,
       this.fulilmentPreference,
       requestExpiration,
-      this.holdShelfExpirationDate);
+      this.holdShelfExpirationDate,
+      this.itemSummary);
   }
 
   public RequestRequestBuilder withHoldShelfExpiration(LocalDate holdShelfExpiration) {
@@ -182,7 +199,21 @@ public class RequestRequestBuilder {
       this.requesterId,
       this.fulilmentPreference,
       this.requestExpirationDate,
-      holdShelfExpiration);
+      holdShelfExpiration,
+      this.itemSummary);
+  }
+
+  public RequestRequestBuilder withItem(String title, String barcode) {
+    return new RequestRequestBuilder(
+      this.id,
+      this.requestType,
+      this.requestDate,
+      this.itemId,
+      this.requesterId,
+      this.fulilmentPreference,
+      this.requestExpirationDate,
+      this.holdShelfExpirationDate,
+      new ItemSummary(title, barcode));
   }
 
   private String formatDateTime(DateTime requestDate) {
@@ -191,5 +222,15 @@ public class RequestRequestBuilder {
 
   private String formatDateOnly(LocalDate date) {
     return date.toString(DateTimeFormat.forPattern("yyyy-MM-dd"));
+  }
+
+  private class ItemSummary {
+    public final String title;
+    public final String barcode;
+
+    public ItemSummary(String title, String barcode) {
+      this.title = title;
+      this.barcode = barcode;
+    }
   }
 }
