@@ -1,6 +1,6 @@
 {
   "srvcId" : "${artifactId}-${version}",
   "descriptor" : {
-    "exec" : "java -jar ../mod-circulation-storage/target/circulation-storage-fat.jar -Dhttp.port=%p embed_postgres=true"
+    "exec" : "java -jar ../mod-circulation-storage/target/mod-circulation-storage-fat.jar -Dhttp.port=%p embed_postgres=true"
   }
 }

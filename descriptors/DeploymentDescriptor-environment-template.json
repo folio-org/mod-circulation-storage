@@ -1,7 +1,7 @@
 {
   "srvcId" : "${artifactId}-${version}",
   "descriptor" : {
-    "exec" : "java -jar ../mod-circulation-storage/target/circulation-storage-fat.jar -Dhttp.port=%p",
+    "exec" : "java -jar ../mod-circulation-storage/target/mod-circulation-storage-fat.jar -Dhttp.port=%p",
     "env": [
       { "name" : "db.username", "value" : "loan_demo_admin" },
       { "name" : "db.password", "value" : "admin" },
