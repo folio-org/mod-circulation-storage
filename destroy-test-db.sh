@@ -7,8 +7,8 @@ executing_password=${4:-}
 
 cd database-setup
 
-./destroy-db.sh loan_test test_tenant_circulation_storage loan_test_admin ${host} ${port} ${executing_user} ${executing_password}
+./destroy-db.sh loan_test test_tenant_mod_circulation_storage loan_test_admin ${host} ${port} ${executing_user} ${executing_password}
 
-./drop-role.sh test_tenant_circulation_storage
+./drop-role.sh test_tenant_mod_circulation_storage
 
 cd ..
