@@ -167,7 +167,7 @@ public class StorageTestSuite {
 
     String sql = String.format("SELECT null FROM %s_%s.%s" +
         " WHERE CAST(_id AS VARCHAR(50)) != jsonb->>'id'",
-      tenantId, "circulation_storage", tableName);
+      tenantId, "mod_circulation_storage", tableName);
 
     dbClient.select(sql, result -> {
       if(result.succeeded()) {

@@ -44,7 +44,7 @@ public class RequestsAPI implements RequestStorageResource {
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
         postgresClient.mutate(String.format("TRUNCATE TABLE %s_%s.%s",
-          tenantId, "circulation_storage", REQUEST_TABLE),
+          tenantId, "mod_circulation_storage", REQUEST_TABLE),
           reply -> {
             asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
               DeleteRequestStorageRequestsResponse.withNoContent()));

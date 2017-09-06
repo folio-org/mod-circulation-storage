@@ -8,9 +8,9 @@ executing_password=${5:-}
 
 cd database-setup
 
-./destroy-db.sh loan_demo demo_tenant_circulation_storage loan_demo_admin ${host} ${port} ${executing_user} ${executing_password}
+./destroy-db.sh loan_demo demo_tenant_mod_circulation_storage loan_demo_admin ${host} ${port} ${executing_user} ${executing_password}
 
 # Drop the tenant based role as well, because deactivation no longer calls the Tenant API
-./drop-role.sh demo_tenant_circulation_storage
+./drop-role.sh demo_tenant_mod_circulation_storage
 
 cd ..
