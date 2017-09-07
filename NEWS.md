@@ -5,6 +5,8 @@
 * Provides request-storage interface 1.1
 * Add "Publish Module Descriptor" step to Jenkinsfile (FOLIO-728)
 * Remove old Descriptors (towards FOLIO-701)
+* Generates Descriptors at build time from templates in ./descriptors (FOLIO-701)
+* Adds mod- prefix to names of the built artifacts (FOLIO-813)
 * Move loan-policy.json and period.json to ramls/raml-util (CIRC-11)
 
 ## 3.2.0 2017-08-17 
