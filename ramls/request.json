@@ -39,7 +39,8 @@
           "description": "barcode of the item",
           "type": "string"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "requester": {
       "description": "Copy of some requesting patron metadata (used for searching and sorting)",
@@ -61,7 +62,8 @@
           "description": "barcode of the patron",
           "type": "string"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "fulfilmentPreference": {
       "description": "How should the request be fulfilled (whether the item should be kept on the hold shelf for collection or delivered to the requester)",
