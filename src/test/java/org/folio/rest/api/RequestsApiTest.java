@@ -82,6 +82,7 @@ public class RequestsApiTest {
       .withRequestExpiration(new LocalDate(2017, 7, 30))
       .withHoldShelfExpiration(new LocalDate(2017, 8, 31))
       .withItem("Nod", "565578437802")
+      .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
       .create();
 
     client.post(requestStorageUrl(),
@@ -103,8 +104,16 @@ public class RequestsApiTest {
     assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
     assertThat(representation.getString("requestExpirationDate"), is("2017-07-30"));
     assertThat(representation.getString("holdShelfExpirationDate"), is("2017-08-31"));
+
+    assertThat(representation.containsKey("item"), is(true));
     assertThat(representation.getJsonObject("item").getString("title"), is("Nod"));
     assertThat(representation.getJsonObject("item").getString("barcode"), is("565578437802"));
+
+    assertThat(representation.containsKey("requester"), is(true));
+    assertThat(representation.getJsonObject("requester").getString("lastName"), is("Jones"));
+    assertThat(representation.getJsonObject("requester").getString("firstName"), is("Stuart"));
+    assertThat(representation.getJsonObject("requester").getString("middleName"), is("Anthony"));
+    assertThat(representation.getJsonObject("requester").getString("barcode"), is("6837502674015"));
   }
 
   @Test
@@ -151,6 +160,7 @@ public class RequestsApiTest {
     assertThat(representation.containsKey("requestExpirationDate"), is(false));
     assertThat(representation.containsKey("holdShelfExpirationDate"), is(false));
     assertThat(representation.containsKey("item"), is(false));
+    assertThat(representation.containsKey("requester"), is(false));
   }
 
   @Test
@@ -276,6 +286,7 @@ public class RequestsApiTest {
       .withRequestExpiration(new LocalDate(2017, 7, 30))
       .withHoldShelfExpiration(new LocalDate(2017, 8, 31))
       .withItem("Nod", "565578437802")
+      .withRequester("Smith", "Jessica", "721076398251")
       .create();
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
@@ -304,8 +315,16 @@ public class RequestsApiTest {
     assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
     assertThat(representation.getString("requestExpirationDate"), is("2017-07-30"));
     assertThat(representation.getString("holdShelfExpirationDate"), is("2017-08-31"));
+
+    assertThat(representation.containsKey("item"), is(true));
     assertThat(representation.getJsonObject("item").getString("title"), is("Nod"));
     assertThat(representation.getJsonObject("item").getString("barcode"), is("565578437802"));
+
+    assertThat(representation.containsKey("requester"), is(true));
+    assertThat(representation.getJsonObject("requester").getString("lastName"), is("Smith"));
+    assertThat(representation.getJsonObject("requester").getString("firstName"), is("Jessica"));
+    assertThat(representation.getJsonObject("requester").containsKey("middleName"), is(false));
+    assertThat(representation.getJsonObject("requester").getString("barcode"), is("721076398251"));
   }
 
   @Test
@@ -329,6 +348,7 @@ public class RequestsApiTest {
       .withRequesterId(requesterId)
       .fulfilToHoldShelf()
       .withItem("Nod", "565578437802")
+      .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
       .create();
 
     createRequest(createRequestRequest);
@@ -345,6 +365,10 @@ public class RequestsApiTest {
     JsonObject updateRequestRequest = getAfterCreateResponse.getJson()
       .copy()
       .put("requesterId", newRequesterId.toString())
+      .put("requester", new JsonObject()
+        .put("lastName", "Smith")
+        .put("firstName", "Jessica")
+        .put("barcode", "721076398251"))
       .put("requestExpirationDate", new LocalDate(2017, 7, 30)
         .toString("yyyy-MM-dd"))
       .put("holdShelfExpirationDate", new LocalDate(2017, 8, 31)
@@ -371,8 +395,16 @@ public class RequestsApiTest {
     assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
     assertThat(representation.getString("requestExpirationDate"), is("2017-07-30"));
     assertThat(representation.getString("holdShelfExpirationDate"), is("2017-08-31"));
+
+    assertThat(representation.containsKey("item"), is(true));
     assertThat(representation.getJsonObject("item").getString("title"), is("Nod"));
     assertThat(representation.getJsonObject("item").getString("barcode"), is("565578437802"));
+
+    assertThat(representation.containsKey("requester"), is(true));
+    assertThat(representation.getJsonObject("requester").getString("lastName"), is("Smith"));
+    assertThat(representation.getJsonObject("requester").getString("firstName"), is("Jessica"));
+    assertThat(representation.getJsonObject("requester").containsKey("middleName"), is(false));
+    assertThat(representation.getJsonObject("requester").getString("barcode"), is("721076398251"));
   }
 
   @Test
@@ -519,6 +551,8 @@ public class RequestsApiTest {
       .fulfilToHoldShelf()
       .withRequestExpiration(new LocalDate(2017, 7, 30))
       .withHoldShelfExpiration(new LocalDate(2017, 8, 31))
+      .withItem("Nod", "565578437802")
+      .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
       .create();
 
     createRequest(requestRequest);
@@ -538,6 +572,16 @@ public class RequestsApiTest {
     assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
     assertThat(representation.getString("requestExpirationDate"), is("2017-07-30"));
     assertThat(representation.getString("holdShelfExpirationDate"), is("2017-08-31"));
+
+    assertThat(representation.containsKey("item"), is(true));
+    assertThat(representation.getJsonObject("item").getString("title"), is("Nod"));
+    assertThat(representation.getJsonObject("item").getString("barcode"), is("565578437802"));
+
+    assertThat(representation.containsKey("requester"), is(true));
+    assertThat(representation.getJsonObject("requester").getString("lastName"), is("Jones"));
+    assertThat(representation.getJsonObject("requester").getString("firstName"), is("Stuart"));
+    assertThat(representation.getJsonObject("requester").getString("middleName"), is("Anthony"));
+    assertThat(representation.getJsonObject("requester").getString("barcode"), is("6837502674015"));
   }
 
   @Test

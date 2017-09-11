@@ -20,6 +20,7 @@ public class RequestRequestBuilder {
   private final LocalDate requestExpirationDate;
   private final LocalDate holdShelfExpirationDate;
   private final ItemSummary itemSummary;
+  private final PatronSummary requesterSummary;
 
   public RequestRequestBuilder() {
     this(UUID.randomUUID(),
@@ -28,6 +29,7 @@ public class RequestRequestBuilder {
       UUID.randomUUID(),
       UUID.randomUUID(),
       "Hold Shelf",
+      null,
       null,
       null,
       null);
@@ -40,8 +42,10 @@ public class RequestRequestBuilder {
     UUID itemId,
     UUID requesterId,
     String fulfilmentPreference,
-    LocalDate requestExpirationDate, LocalDate holdShelfExpirationDate,
-    ItemSummary itemSummary) {
+    LocalDate requestExpirationDate,
+    LocalDate holdShelfExpirationDate,
+    ItemSummary itemSummary,
+    PatronSummary requesterSummary) {
 
     this.id = id;
     this.requestType = requestType;
@@ -52,6 +56,7 @@ public class RequestRequestBuilder {
     this.requestExpirationDate = requestExpirationDate;
     this.holdShelfExpirationDate = holdShelfExpirationDate;
     this.itemSummary = itemSummary;
+    this.requesterSummary = requesterSummary;
   }
 
   public JsonObject create() {
@@ -83,6 +88,20 @@ public class RequestRequestBuilder {
           .put("barcode", itemSummary.barcode));
     }
 
+    if(requesterSummary != null) {
+      JsonObject requester = new JsonObject()
+        .put("lastName", requesterSummary.lastName)
+        .put("firstName", requesterSummary.firstName);
+
+      if(requesterSummary.middleName != null) {
+        requester.put("middleName", requesterSummary.middleName);
+      }
+
+      requester.put("barcode", requesterSummary.barcode);
+
+      request.put("requester", requester);
+    }
+
     return request;
   }
 
@@ -96,7 +115,8 @@ public class RequestRequestBuilder {
       this.fulfilmentPreference,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
-      this.itemSummary);
+      this.itemSummary,
+      this.requesterSummary);
   }
 
   public RequestRequestBuilder withId(UUID newId) {
@@ -109,7 +129,8 @@ public class RequestRequestBuilder {
       this.fulfilmentPreference,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
-      this.itemSummary);
+      this.itemSummary,
+      this.requesterSummary);
   }
 
   public RequestRequestBuilder withNoId() {
@@ -122,7 +143,8 @@ public class RequestRequestBuilder {
       this.fulfilmentPreference,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
-      this.itemSummary);
+      this.itemSummary,
+      this.requesterSummary);
   }
 
   public RequestRequestBuilder withRequestDate(DateTime requestDate) {
@@ -135,7 +157,8 @@ public class RequestRequestBuilder {
       this.fulfilmentPreference,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
-      this.itemSummary);
+      this.itemSummary,
+      this.requesterSummary);
   }
 
   public RequestRequestBuilder withItemId(UUID itemId) {
@@ -148,7 +171,8 @@ public class RequestRequestBuilder {
       this.fulfilmentPreference,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
-      this.itemSummary);
+      this.itemSummary,
+      this.requesterSummary);
   }
 
   public RequestRequestBuilder withRequesterId(UUID requesterId) {
@@ -161,7 +185,8 @@ public class RequestRequestBuilder {
       this.fulfilmentPreference,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
-      this.itemSummary);
+      this.itemSummary,
+      this.requesterSummary);
   }
 
   public RequestRequestBuilder fulfilToHoldShelf() {
@@ -174,7 +199,8 @@ public class RequestRequestBuilder {
       "Hold Shelf",
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
-      this.itemSummary);
+      this.itemSummary,
+      this.requesterSummary);
   }
 
   public RequestRequestBuilder withRequestExpiration(LocalDate requestExpiration) {
@@ -187,7 +213,8 @@ public class RequestRequestBuilder {
       this.fulfilmentPreference,
       requestExpiration,
       this.holdShelfExpirationDate,
-      this.itemSummary);
+      this.itemSummary,
+      this.requesterSummary);
   }
 
   public RequestRequestBuilder withHoldShelfExpiration(LocalDate holdShelfExpiration) {
@@ -200,7 +227,8 @@ public class RequestRequestBuilder {
       this.fulfilmentPreference,
       this.requestExpirationDate,
       holdShelfExpiration,
-      this.itemSummary);
+      this.itemSummary,
+      this.requesterSummary);
   }
 
   public RequestRequestBuilder withItem(String title, String barcode) {
@@ -213,7 +241,36 @@ public class RequestRequestBuilder {
       this.fulfilmentPreference,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
-      new ItemSummary(title, barcode));
+      new ItemSummary(title, barcode),
+      this.requesterSummary);
+  }
+
+  public RequestRequestBuilder withRequester(String lastName, String firstName, String middleName, String barcode) {
+    return new RequestRequestBuilder(
+      this.id,
+      this.requestType,
+      this.requestDate,
+      this.itemId,
+      this.requesterId,
+      this.fulfilmentPreference,
+      this.requestExpirationDate,
+      this.holdShelfExpirationDate,
+      this.itemSummary,
+      new PatronSummary(lastName, firstName, middleName, barcode));
+  }
+
+  public RequestRequestBuilder withRequester(String lastName, String firstName, String barcode) {
+    return new RequestRequestBuilder(
+      this.id,
+      this.requestType,
+      this.requestDate,
+      this.itemId,
+      this.requesterId,
+      this.fulfilmentPreference,
+      this.requestExpirationDate,
+      this.holdShelfExpirationDate,
+      this.itemSummary,
+      new PatronSummary(lastName, firstName, null, barcode));
   }
 
   private String formatDateTime(DateTime requestDate) {
@@ -230,6 +287,20 @@ public class RequestRequestBuilder {
 
     public ItemSummary(String title, String barcode) {
       this.title = title;
+      this.barcode = barcode;
+    }
+  }
+
+  private class PatronSummary {
+    public final String lastName;
+    public final String firstName;
+    public final String middleName;
+    public final String barcode;
+
+    public PatronSummary(String lastName, String firstName, String middleName, String barcode) {
+      this.lastName = lastName;
+      this.firstName = firstName;
+      this.middleName = middleName;
       this.barcode = barcode;
     }
   }
