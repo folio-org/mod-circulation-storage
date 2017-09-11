@@ -16,7 +16,17 @@
       "itemId": "3e5d5433-a271-499c-94f4-5f3e4652e537",
       "fulfilmentPreference": "Delivery",
       "requestExpirationDate": "2017-08-31",
-      "holdShelfExpirationDate": "2017-09-01"
+      "holdShelfExpirationDate": "2017-09-01",
+      "item": {
+        "title": "Interesting Times",
+        "barcode": "269394016504"
+      },
+      "requester": {
+        "lastName": "Jones",
+        "firstName": "Julia",
+        "middleName": "Dominique",
+        "barcode": "673059465870"
+      }
     }
   ],
   "totalRecords": 2
