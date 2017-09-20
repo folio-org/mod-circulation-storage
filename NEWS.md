@@ -9,7 +9,7 @@
 * Adds mod- prefix to names of the built artifacts (FOLIO-813)
 * Move loan-policy.json and period.json to ramls/raml-util (CIRC-11)
 
-## 3.2.0 2017-08-17 
+## 3.2.0 2017-08-17
 
 * Adds `metaData` property to loan (for created and updated information)
 * Introduces initial loan requests endpoint (CIRCSTORE-14)
@@ -25,7 +25,7 @@
 * Provides loan-storage interface 3.1
 * CIRCSTORE-15 add default sorting to loan action history in case no sorting requested (upgrades to RMB 13.0.1)
 * Include implementation version in `id` in Module Descriptor
-  
+
 ## 3.0.0 2017-07-17
 
 * Store loan action history for a Loan (CIRCSTORE-12)
