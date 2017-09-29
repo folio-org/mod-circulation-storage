@@ -13,6 +13,11 @@ CREATE TABLE myuniversity_mymodule.loan (
   created_by text
 );
 
+-- Only allow one open loan per item
+CREATE UNIQUE INDEX only_one_open_loan_per_item
+  ON myuniversity_mymodule.loan( (jsonb->>'itemId') )
+  WHERE (jsonb->'status'->>'name') = 'Open';
+
 CREATE TABLE myuniversity_mymodule.loan_policy (
   _id UUID PRIMARY KEY,
   jsonb JSONB NOT NULL

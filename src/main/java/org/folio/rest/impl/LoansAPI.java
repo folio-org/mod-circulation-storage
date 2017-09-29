@@ -1,5 +1,6 @@
 package org.folio.rest.impl;
 
+import com.github.mauricio.async.db.postgresql.exceptions.GenericDatabaseException;
 import io.vertx.core.*;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -16,6 +17,7 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
+import org.folio.rest.tools.utils.ValidationHelper;
 import org.joda.time.DateTime;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
@@ -183,10 +185,22 @@ public class LoansAPI implements LoanStorageResource {
                         .withJsonCreated(reply.result(), stream)));
                 }
                 else {
-                  asyncResultHandler.handle(
-                    io.vertx.core.Future.succeededFuture(
-                      LoanStorageResource.PostLoanStorageLoansResponse
-                        .withPlainInternalServerError(reply.cause().toString())));
+                  if(reply.cause() instanceof GenericDatabaseException &&
+                    ((GenericDatabaseException) reply.cause()).errorMessage().message()
+                      .contains("only_one_open_loan_per_item")) {
+
+                    asyncResultHandler.handle(
+                      io.vertx.core.Future.succeededFuture(LoanStorageResource.PostLoanStorageLoansResponse
+                      .withJsonUnprocessableEntity(ValidationHelper.createValidationErrorMessage(
+                        "itemId", entity.getItemId(),
+                        "Cannot have more than one open loan for the same item"))));
+                  }
+                  else {
+                    asyncResultHandler.handle(
+                      io.vertx.core.Future.succeededFuture(
+                        LoanStorageResource.PostLoanStorageLoansResponse
+                          .withPlainInternalServerError(reply.cause().toString())));
+                  }
                 }
               } catch (Exception e) {
                 e.printStackTrace();
@@ -395,11 +409,24 @@ public class LoansAPI implements LoanStorageResource {
                                   .withNoContent()));
                           }
                           else {
-                            asyncResultHandler.handle(
-                              Future.succeededFuture(
-                                PutLoanStorageLoansByLoanIdResponse
-                                  .withPlainInternalServerError(
-                                    update.cause().getMessage())));
+                            if(update.cause() instanceof GenericDatabaseException &&
+                              ((GenericDatabaseException) update.cause()).errorMessage()
+                                .message().contains("only_one_open_loan_per_item")) {
+
+                              asyncResultHandler.handle(
+                                io.vertx.core.Future.succeededFuture(
+                                  LoanStorageResource.PutLoanStorageLoansByLoanIdResponse
+                                  .withJsonUnprocessableEntity(
+                                    ValidationHelper.createValidationErrorMessage(
+                                    "itemId", entity.getItemId(),
+                                    "Cannot have more than one open loan for the same item"))));
+                            }
+                            else {
+                              asyncResultHandler.handle(
+                                io.vertx.core.Future.succeededFuture(
+                                  LoanStorageResource.PutLoanStorageLoansByLoanIdResponse
+                                    .withPlainInternalServerError(update.cause().toString())));
+                            }
                           }
                         } catch (Exception e) {
                           asyncResultHandler.handle(
@@ -429,11 +456,24 @@ public class LoansAPI implements LoanStorageResource {
                                   .withNoContent()));
                           }
                           else {
-                            asyncResultHandler.handle(
-                              Future.succeededFuture(
-                                PutLoanStorageLoansByLoanIdResponse
-                                  .withPlainInternalServerError(
-                                    save.cause().getMessage())));
+                            if(save.cause() instanceof GenericDatabaseException &&
+                              ((GenericDatabaseException) save.cause()).errorMessage()
+                                .message().contains("only_one_open_loan_per_item")) {
+
+                              asyncResultHandler.handle(
+                                io.vertx.core.Future.succeededFuture(
+                                  LoanStorageResource.PutLoanStorageLoansByLoanIdResponse
+                                  .withJsonUnprocessableEntity(
+                                    ValidationHelper.createValidationErrorMessage(
+                                    "itemId", entity.getItemId(),
+                                    "Cannot have more than one open loan for the same item"))));
+                            }
+                            else {
+                              asyncResultHandler.handle(
+                                io.vertx.core.Future.succeededFuture(
+                                  LoanStorageResource.PostLoanStorageLoansResponse
+                                    .withPlainInternalServerError(save.cause().toString())));
+                            }
                           }
                         } catch (Exception e) {
                           asyncResultHandler.handle(

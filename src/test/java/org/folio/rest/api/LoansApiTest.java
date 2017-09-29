@@ -308,7 +308,7 @@ public class LoansApiTest {
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Creating the loan should fail: %s", response.getBody()),
-      response.getStatusCode(), is(422));
+      response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
   }
 
   @Test
@@ -339,6 +339,209 @@ public class LoansApiTest {
 
     assertThat(response.getBody(),
       containsString("return date must be a date time (in RFC3339 format)"));
+  }
+
+  @Test
+  public void cannotCreateMultipleOpenLoansForSameItem()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID itemId = UUID.randomUUID();
+
+    JsonObject firstLoanRequest = new LoanRequestBuilder()
+      .withItemId(itemId)
+      .withStatus("Open")
+      .create();
+
+    createLoan(firstLoanRequest);
+
+    JsonObject secondLoanRequest = new LoanRequestBuilder()
+      .withItemId(itemId)
+      .withStatus("Open")
+      .create();
+
+    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture<>();
+
+    client.post(loanStorageUrl(), secondLoanRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.jsonErrors(createCompleted));
+
+    JsonErrorResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Creating the loan should fail: %s", response.getBody()),
+      response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
+
+    assertThat(response.getErrors(),
+      hasSoleMessgeContaining("Cannot have more than one open loan for the same item"));
+  }
+
+  @Test
+  public void cannotCreateMultipleOpenLoansAtSpecificLocationForSameItem()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID itemId = UUID.randomUUID();
+
+    JsonObject firstLoanRequest = new LoanRequestBuilder()
+      .withItemId(itemId)
+      .withStatus("Open")
+      .create();
+
+    createLoan(firstLoanRequest);
+
+    UUID secondLoanId = UUID.randomUUID();
+
+    JsonObject secondLoanRequest = new LoanRequestBuilder()
+      .withId(secondLoanId)
+      .withItemId(itemId)
+      .withStatus("Open")
+      .create();
+
+    CompletableFuture<JsonErrorResponse> secondCreateCompleted = new CompletableFuture<>();
+
+    client.put(loanStorageUrl(String.format("/%s", secondLoanId.toString())), secondLoanRequest,
+      StorageTestSuite.TENANT_ID, ResponseHandler.jsonErrors(secondCreateCompleted));
+
+    JsonErrorResponse response = secondCreateCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Creating the loan should fail: %s", response.getBody()),
+      response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
+
+    assertThat(response.getErrors(),
+      hasSoleMessgeContaining("Cannot have more than one open loan for the same item"));
+  }
+
+  @Test
+  public void canCreateOpenLoanWhenClosedLoansForSameItem()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID itemId = UUID.randomUUID();
+
+    JsonObject closedLoanRequest = new LoanRequestBuilder()
+      .withItemId(itemId)
+      .withStatus("Closed")
+      .create();
+
+    createLoan(closedLoanRequest);
+
+    JsonObject openLoanRequest = new LoanRequestBuilder()
+      .withItemId(itemId)
+      .withStatus("Open")
+      .create();
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    client.post(loanStorageUrl(), openLoanRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Creating the loan should succeed: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+  }
+
+  @Test
+  public void canCreateMultipleOpenLoansForDifferentItems()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID firstItemId = UUID.randomUUID();
+    UUID secondItemId = UUID.randomUUID();
+
+    JsonObject firstLoanRequest = new LoanRequestBuilder()
+      .withItemId(firstItemId)
+      .withStatus("Open")
+      .create();
+
+    createLoan(firstLoanRequest);
+
+    JsonObject secondLoanRequest = new LoanRequestBuilder()
+      .withItemId(secondItemId)
+      .withStatus("Open")
+      .create();
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    client.post(loanStorageUrl(), secondLoanRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Creating the loan should succeed: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+  }
+
+  @Test
+  public void canCreateMultipleClosedLoansForSameItem()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID itemId = UUID.randomUUID();
+
+    JsonObject firstLoanRequest = new LoanRequestBuilder()
+      .withItemId(itemId)
+      .withStatus("Closed")
+      .create();
+
+    createLoan(firstLoanRequest);
+
+    JsonObject secondLoanRequest = new LoanRequestBuilder()
+      .withItemId(itemId)
+      .withStatus("Closed")
+      .create();
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    client.post(loanStorageUrl(), secondLoanRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Creating the loan should succeed: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+  }
+
+  @Test
+  public void canCreateClosedLoanWhenOpenLoanForDifferentItem()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID firstItemId = UUID.randomUUID();
+    UUID secondItemId = UUID.randomUUID();
+
+    JsonObject firstLoanRequest = new LoanRequestBuilder()
+      .withItemId(firstItemId)
+      .withStatus("Open")
+      .create();
+
+    createLoan(firstLoanRequest);
+
+    JsonObject secondLoanRequest = new LoanRequestBuilder()
+      .withItemId(secondItemId)
+      .withStatus("Closed")
+      .create();
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    client.post(loanStorageUrl(), secondLoanRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Creating the loan should succeed: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
   }
 
   @Test
@@ -498,6 +701,46 @@ public class LoansApiTest {
 
     assertThat("renewal count is not 1",
       updatedLoan.getInteger("renewalCount"), is(1));
+  }
+
+  @Test
+  public void cannotReopenLoanWhenOpenLoanForSameItem()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID itemId = UUID.randomUUID();
+
+    JsonObject openLoanRequest = new LoanRequestBuilder()
+      .withItemId(itemId)
+      .withStatus("Open")
+      .create();
+
+    createLoan(openLoanRequest);
+
+    JsonObject closedLoanRequest = new LoanRequestBuilder()
+      .withItemId(itemId)
+      .withStatus("Closed")
+      .create();
+
+    IndividualResource closedLoan = createLoan(closedLoanRequest);
+
+    JsonObject reopenLoanRequest = closedLoan.copyJson()
+      .put("status", new JsonObject().put("name", "Open"));
+
+    CompletableFuture<JsonErrorResponse> reopenRequestCompleted = new CompletableFuture<>();
+
+    client.put(loanStorageUrl(String.format("/%s", closedLoan.getId())), reopenLoanRequest,
+      StorageTestSuite.TENANT_ID, ResponseHandler.jsonErrors(reopenRequestCompleted));
+
+    JsonErrorResponse response = reopenRequestCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Re-opening the loan should fail: %s", response.getBody()),
+      response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
+
+    assertThat(response.getErrors(),
+      hasSoleMessgeContaining("Cannot have more than one open loan for the same item"));
   }
 
   @Test

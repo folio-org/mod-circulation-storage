@@ -1,4 +1,6 @@
-## 3.3.1 Unreleased
+## 4.0.0 Unreleased
+
+* Allow only one open loan per item (CIRCSTORE-19)
 
 ## 3.3.0 2017-10-11
 
