@@ -1,6 +1,8 @@
 ## 4.0.0 Unreleased
 
-* Allow only one open loan per item (CIRCSTORE-19)
+* Allow only one open loan per item (CIRCSTORE-19) - see readme for further details 
+(note that this constraint is expressed as a major change in implementation version
+yet the interface version remains the same)
 
 ## 3.3.0 2017-10-11
 
