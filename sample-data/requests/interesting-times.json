@@ -5,5 +5,15 @@
   "requesterId": "9a6ed769-15b4-4555-bbe1-2987c1e6e014",
   "itemId": "bb5a6689-c008-4c96-8f8f-b666850ee12d",
   "fulfilmentPreference": "Hold Shelf",
-  "holdShelfExpirationDate": "2017-01-20"
+  "holdShelfExpirationDate": "2017-01-20",
+  "item": {
+    "title": "Interesting Times",
+    "barcode": "326547658598"
+  },
+  "requester": {
+    "lastName": "Gemma",
+    "firstName": "Jones",
+    "middleName": "Sarah",
+    "barcode": "610328563954"
+  }
 }
