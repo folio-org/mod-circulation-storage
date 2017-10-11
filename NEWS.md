@@ -2,10 +2,11 @@
 
 * Allows requests to be searched and sorted via CQL (CIRCSTORE-22)
 * Allows snapshot of item metadata to be stored with a request (CIRCSTORE-23)
+* Allows snapshot of requesting patron metadata to be stored with a request (CIRCSTORE-24)
 * Provides request-storage interface 1.1
 * Add "Publish Module Descriptor" step to Jenkinsfile (FOLIO-728)
 * Remove old Descriptors (towards FOLIO-701)
-* Generates Descriptors at build time from templates in ./descriptors (FOLIO-701)
+* Generates Descriptors at build time from templates in ./descriptors (FOLIO-701, CIRCSTORE-21)
 * Adds mod- prefix to names of the built artifacts (FOLIO-813)
 * Move loan-policy.json and period.json to ramls/raml-util (CIRC-11)
 
