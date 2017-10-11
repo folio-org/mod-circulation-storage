@@ -1,4 +1,4 @@
-## 3.3.0 Unreleased
+## 3.3.0 2017-10-11
 
 * Allows requests to be searched and sorted via CQL (CIRCSTORE-22)
 * Allows snapshot of item metadata to be stored with a request (CIRCSTORE-23)
