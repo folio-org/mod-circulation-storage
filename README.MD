@@ -7,7 +7,20 @@ Version 2.0. See the file "[LICENSE](LICENSE)" for more information.
 
 # Goal
 
-FOLIO compatible persistent storage of loans.
+FOLIO compatible persistent storage of loans and requests.
+
+# Implementation Specific Behaviours
+
+As a FOLIO interface is limited to describing the protocol (HTTP endpoints and 
+the structure of expected requests and responses) between the client and server 
+there are behaviors which go beyond this definition and are implementation specific,
+some of which are noted below.
+
+## Only one Open Loan per Item 
+
+This implementation introduces the constraint that only one loan can be open for a
+given item. Requests (either POST or PUT) which could result in two loans with the
+same `itemId` and the `status` of `Open` should be rejected with a error (422) response
 
 # Prerequisites
 

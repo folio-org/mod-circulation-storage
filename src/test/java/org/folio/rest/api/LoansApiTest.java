@@ -5,6 +5,7 @@ import io.vertx.core.json.JsonObject;
 import org.folio.rest.jaxrs.model.MetaData;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.*;
+import org.folio.rest.support.builders.LoanRequestBuilder;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Period;
@@ -19,7 +20,6 @@ import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Random;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -71,10 +71,16 @@ public class LoansApiTest {
     UUID userId = UUID.randomUUID();
     UUID proxyUserId = UUID.randomUUID();
 
-    JsonObject loanRequest = loanRequest(id, itemId, userId,
-      new DateTime(2017, 6, 27, 10, 23, 43, DateTimeZone.UTC),
-      "Open", new DateTime(2017, 7, 27, 10, 23, 43, DateTimeZone.UTC),
-      proxyUserId);
+    JsonObject loanRequest = new LoanRequestBuilder()
+      .withId(id)
+      .withItemId(itemId)
+      .withUserId(userId)
+      .withProxyUserId(proxyUserId)
+      .withLoanDate(new DateTime(2017, 6, 27, 10, 23, 43, DateTimeZone.UTC))
+      .withStatus("Open")
+      .withAction("checkedout")
+      .withdueDate(new DateTime(2017, 7, 27, 10, 23, 43, DateTimeZone.UTC))
+      .create();
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
@@ -106,6 +112,9 @@ public class LoansApiTest {
     assertThat("status is not open",
       loan.getJsonObject("status").getString("name"), is("Open"));
 
+    assertThat("action is not checked out",
+      loan.getString("action"), is("checkedout"));
+
     //The RAML-Module-Builder converts all date-time formatted strings to UTC
     //and presents the offset as +0000 (which is ISO8601 compatible, but not RFC3339)
     assertThat("due date does not match",
@@ -123,9 +132,16 @@ public class LoansApiTest {
     UUID userId = UUID.randomUUID();
     UUID proxyUserId = UUID.randomUUID();
 
-    JsonObject loanRequest = loanRequest(null, itemId, userId,
-      new DateTime(2017, 3, 20, 7, 21, 45, DateTimeZone.UTC), "Open",
-      new DateTime(2017, 4, 20, 7, 21, 45, DateTimeZone.UTC), proxyUserId);
+    JsonObject loanRequest = new LoanRequestBuilder()
+      .withNoId()
+      .withItemId(itemId)
+      .withUserId(userId)
+      .withProxyUserId(proxyUserId)
+      .withLoanDate(new DateTime(2017, 3, 20, 7, 21, 45, DateTimeZone.UTC))
+      .withStatus("Open")
+      .withAction("checkedout")
+      .withdueDate(new DateTime(2017, 4, 20, 7, 21, 45, DateTimeZone.UTC))
+      .create();
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
@@ -158,6 +174,9 @@ public class LoansApiTest {
     assertThat("status is not open",
       loan.getJsonObject("status").getString("name"), is("Open"));
 
+    assertThat("action is not checked out",
+      loan.getString("action"), is("checkedout"));
+
     //The RAML-Module-Builder converts all date-time formatted strings to UTC
     //and presents the offset as +0000 (which is ISO8601 compatible, but not RFC3339)
     assertThat("due date does not match",
@@ -177,9 +196,16 @@ public class LoansApiTest {
     UUID userId = UUID.randomUUID();
     UUID proxyUserId = UUID.randomUUID();
 
-    JsonObject loanRequest = loanRequest(id, itemId, userId,
-      new DateTime(2017, 2, 27, 21, 14, 43, DateTimeZone.UTC), "Open",
-      new DateTime(2017, 3, 29, 21, 14, 43, DateTimeZone.UTC), proxyUserId);
+    JsonObject loanRequest = new LoanRequestBuilder()
+      .withId(id)
+      .withItemId(itemId)
+      .withUserId(userId)
+      .withProxyUserId(proxyUserId)
+      .withLoanDate(new DateTime(2017, 2, 27, 21, 14, 43, DateTimeZone.UTC))
+      .withStatus("Open")
+      .withAction("checkedout")
+      .withdueDate(new DateTime(2017, 3, 29, 21, 14, 43, DateTimeZone.UTC))
+      .create();
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
@@ -216,6 +242,9 @@ public class LoansApiTest {
     assertThat("status is not open",
       loan.getJsonObject("status").getString("name"), is("Open"));
 
+    assertThat("action is not checked out",
+      loan.getString("action"), is("checkedout"));
+
     //The RAML-Module-Builder converts all date-time formatted strings to UTC
     //and presents the offset as +0000 (which is ISO8601 compatible, but not RFC3339)
     assertThat("due date does not match",
@@ -232,14 +261,12 @@ public class LoansApiTest {
 
     UUID id = UUID.randomUUID();
 
-    JsonObject loanRequest = new JsonObject();
-
-    loanRequest.put("id", id.toString())
-      .put("userId", UUID.randomUUID().toString())
-      .put("itemId", UUID.randomUUID().toString())
-      .put("action", "checkedout")
-      .put("loanDate", new DateTime(2017, 3, 5, 14, 23, 41, DateTimeZone.UTC)
-        .toString(ISODateTimeFormat.dateTime()));
+    JsonObject loanRequest = new LoanRequestBuilder()
+      .withId(id)
+      .withNoStatus() //Status is currently optional, as it is defaulted to Open
+      .withLoanDate(new DateTime(2017, 3, 5, 14, 23, 41, DateTimeZone.UTC))
+      .withAction("checkedout")
+      .create();
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
@@ -269,15 +296,9 @@ public class LoansApiTest {
     ExecutionException,
     TimeoutException {
 
-    UUID id = UUID.randomUUID();
+    JsonObject loanRequest = new LoanRequestBuilder().create();
 
-    JsonObject loanRequest = new JsonObject();
-
-    loanRequest.put("id", id.toString())
-      .put("userId", UUID.randomUUID().toString())
-      .put("itemId", UUID.randomUUID().toString())
-      .put("loanDate", "foo")
-      .put("returnDate", "bar");
+    loanRequest.remove("action");
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
@@ -287,7 +308,7 @@ public class LoansApiTest {
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Creating the loan should fail: %s", response.getBody()),
-      response.getStatusCode(), is(422));
+      response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
   }
 
   @Test
@@ -297,15 +318,10 @@ public class LoansApiTest {
     ExecutionException,
     TimeoutException {
 
-    UUID id = UUID.randomUUID();
+    JsonObject loanRequest = new LoanRequestBuilder().create();
 
-    JsonObject loanRequest = new JsonObject();
-
-    loanRequest.put("id", id.toString())
-      .put("userId", UUID.randomUUID().toString())
-      .put("itemId", UUID.randomUUID().toString())
+    loanRequest
       .put("loanDate", "foo")
-      .put("action", "checkedout")
       .put("returnDate", "bar");
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
@@ -326,6 +342,209 @@ public class LoansApiTest {
   }
 
   @Test
+  public void cannotCreateMultipleOpenLoansForSameItem()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID itemId = UUID.randomUUID();
+
+    JsonObject firstLoanRequest = new LoanRequestBuilder()
+      .withItemId(itemId)
+      .withStatus("Open")
+      .create();
+
+    createLoan(firstLoanRequest);
+
+    JsonObject secondLoanRequest = new LoanRequestBuilder()
+      .withItemId(itemId)
+      .withStatus("Open")
+      .create();
+
+    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture<>();
+
+    client.post(loanStorageUrl(), secondLoanRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.jsonErrors(createCompleted));
+
+    JsonErrorResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Creating the loan should fail: %s", response.getBody()),
+      response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
+
+    assertThat(response.getErrors(),
+      hasSoleMessgeContaining("Cannot have more than one open loan for the same item"));
+  }
+
+  @Test
+  public void cannotCreateMultipleOpenLoansAtSpecificLocationForSameItem()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID itemId = UUID.randomUUID();
+
+    JsonObject firstLoanRequest = new LoanRequestBuilder()
+      .withItemId(itemId)
+      .withStatus("Open")
+      .create();
+
+    createLoan(firstLoanRequest);
+
+    UUID secondLoanId = UUID.randomUUID();
+
+    JsonObject secondLoanRequest = new LoanRequestBuilder()
+      .withId(secondLoanId)
+      .withItemId(itemId)
+      .withStatus("Open")
+      .create();
+
+    CompletableFuture<JsonErrorResponse> secondCreateCompleted = new CompletableFuture<>();
+
+    client.put(loanStorageUrl(String.format("/%s", secondLoanId.toString())), secondLoanRequest,
+      StorageTestSuite.TENANT_ID, ResponseHandler.jsonErrors(secondCreateCompleted));
+
+    JsonErrorResponse response = secondCreateCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Creating the loan should fail: %s", response.getBody()),
+      response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
+
+    assertThat(response.getErrors(),
+      hasSoleMessgeContaining("Cannot have more than one open loan for the same item"));
+  }
+
+  @Test
+  public void canCreateOpenLoanWhenClosedLoansForSameItem()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID itemId = UUID.randomUUID();
+
+    JsonObject closedLoanRequest = new LoanRequestBuilder()
+      .withItemId(itemId)
+      .withStatus("Closed")
+      .create();
+
+    createLoan(closedLoanRequest);
+
+    JsonObject openLoanRequest = new LoanRequestBuilder()
+      .withItemId(itemId)
+      .withStatus("Open")
+      .create();
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    client.post(loanStorageUrl(), openLoanRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Creating the loan should succeed: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+  }
+
+  @Test
+  public void canCreateMultipleOpenLoansForDifferentItems()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID firstItemId = UUID.randomUUID();
+    UUID secondItemId = UUID.randomUUID();
+
+    JsonObject firstLoanRequest = new LoanRequestBuilder()
+      .withItemId(firstItemId)
+      .withStatus("Open")
+      .create();
+
+    createLoan(firstLoanRequest);
+
+    JsonObject secondLoanRequest = new LoanRequestBuilder()
+      .withItemId(secondItemId)
+      .withStatus("Open")
+      .create();
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    client.post(loanStorageUrl(), secondLoanRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Creating the loan should succeed: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+  }
+
+  @Test
+  public void canCreateMultipleClosedLoansForSameItem()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID itemId = UUID.randomUUID();
+
+    JsonObject firstLoanRequest = new LoanRequestBuilder()
+      .withItemId(itemId)
+      .withStatus("Closed")
+      .create();
+
+    createLoan(firstLoanRequest);
+
+    JsonObject secondLoanRequest = new LoanRequestBuilder()
+      .withItemId(itemId)
+      .withStatus("Closed")
+      .create();
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    client.post(loanStorageUrl(), secondLoanRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Creating the loan should succeed: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+  }
+
+  @Test
+  public void canCreateClosedLoanWhenOpenLoanForDifferentItem()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID firstItemId = UUID.randomUUID();
+    UUID secondItemId = UUID.randomUUID();
+
+    JsonObject firstLoanRequest = new LoanRequestBuilder()
+      .withItemId(firstItemId)
+      .withStatus("Open")
+      .create();
+
+    createLoan(firstLoanRequest);
+
+    JsonObject secondLoanRequest = new LoanRequestBuilder()
+      .withItemId(secondItemId)
+      .withStatus("Closed")
+      .create();
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    client.post(loanStorageUrl(), secondLoanRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Creating the loan should succeed: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+  }
+
+  @Test
   public void canGetALoanById()
     throws MalformedURLException,
     InterruptedException,
@@ -338,9 +557,15 @@ public class LoansApiTest {
     UUID userId = UUID.randomUUID();
     UUID proxyUserId = UUID.randomUUID();
 
-    JsonObject loanRequest = loanRequest(id, itemId, userId,
-      new DateTime(2016, 10, 15, 8, 26, 53, DateTimeZone.UTC), "Open", null,
-      proxyUserId);
+    JsonObject loanRequest = new LoanRequestBuilder()
+      .withId(id)
+      .withItemId(itemId)
+      .withUserId(userId)
+      .withProxyUserId(proxyUserId)
+      .withLoanDate(new DateTime(2016, 10, 15, 8, 26, 53, DateTimeZone.UTC))
+      .withStatus("Open")
+      .withAction("checkedout")
+      .create();
 
     createLoan(loanRequest);
 
@@ -393,7 +618,10 @@ public class LoansApiTest {
 
     DateTime loanDate = new DateTime(2017, 3, 1, 13, 25, 46, 232, DateTimeZone.UTC);
 
-    IndividualResource loan = createLoan(loanRequest(loanDate));
+    IndividualResource loan = createLoan(new LoanRequestBuilder()
+      .withLoanDate(loanDate)
+      .withdueDate(loanDate.plus(Period.days(14)))
+      .create());
 
     JsonObject returnedLoan = loan.copyJson();
 
@@ -433,7 +661,10 @@ public class LoansApiTest {
 
     DateTime loanDate = new DateTime(2017, 3, 1, 13, 25, 46, DateTimeZone.UTC);
 
-    IndividualResource loan = createLoan(loanRequest(loanDate));
+    IndividualResource loan = createLoan(new LoanRequestBuilder()
+      .withLoanDate(loanDate)
+      .withdueDate(loanDate.plus(Period.days(14)))
+      .create());
 
     JsonObject returnedLoan = loan.copyJson();
 
@@ -470,6 +701,46 @@ public class LoansApiTest {
 
     assertThat("renewal count is not 1",
       updatedLoan.getInteger("renewalCount"), is(1));
+  }
+
+  @Test
+  public void cannotReopenLoanWhenOpenLoanForSameItem()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID itemId = UUID.randomUUID();
+
+    JsonObject openLoanRequest = new LoanRequestBuilder()
+      .withItemId(itemId)
+      .withStatus("Open")
+      .create();
+
+    createLoan(openLoanRequest);
+
+    JsonObject closedLoanRequest = new LoanRequestBuilder()
+      .withItemId(itemId)
+      .withStatus("Closed")
+      .create();
+
+    IndividualResource closedLoan = createLoan(closedLoanRequest);
+
+    JsonObject reopenLoanRequest = closedLoan.copyJson()
+      .put("status", new JsonObject().put("name", "Open"));
+
+    CompletableFuture<JsonErrorResponse> reopenRequestCompleted = new CompletableFuture<>();
+
+    client.put(loanStorageUrl(String.format("/%s", closedLoan.getId())), reopenLoanRequest,
+      StorageTestSuite.TENANT_ID, ResponseHandler.jsonErrors(reopenRequestCompleted));
+
+    JsonErrorResponse response = reopenRequestCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Re-opening the loan should fail: %s", response.getBody()),
+      response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
+
+    assertThat(response.getErrors(),
+      hasSoleMessgeContaining("Cannot have more than one open loan for the same item"));
   }
 
   @Test
@@ -513,7 +784,10 @@ public class LoansApiTest {
 
     DateTime loanDate = new DateTime(2017, 3, 1, 13, 25, 46, 232, DateTimeZone.UTC);
 
-    IndividualResource loan = createLoan(loanRequest(loanDate));
+    IndividualResource loan = createLoan(new LoanRequestBuilder()
+      .withLoanDate(loanDate)
+      .withdueDate(loanDate.plus(Period.days(14)))
+      .create());
 
     JsonObject returnedLoan = loan.copyJson();
 
@@ -596,13 +870,14 @@ public class LoansApiTest {
 
     String queryTemplate = loanStorageUrl() + "?query=userId=\"%s\"";
 
-    createLoan(loanRequest().put("userId", firstUserId.toString()));
-    createLoan(loanRequest().put("userId", firstUserId.toString()));
-    createLoan(loanRequest().put("userId", firstUserId.toString()));
-    createLoan(loanRequest().put("userId", firstUserId.toString()));
-    createLoan(loanRequest().put("userId", secondUserId.toString()));
-    createLoan(loanRequest().put("userId", secondUserId.toString()));
-    createLoan(loanRequest().put("userId", secondUserId.toString()));
+    createLoan(new LoanRequestBuilder().withUserId(firstUserId).create());
+    createLoan(new LoanRequestBuilder().withUserId(firstUserId).create());
+    createLoan(new LoanRequestBuilder().withUserId(firstUserId).create());
+    createLoan(new LoanRequestBuilder().withUserId(firstUserId).create());
+
+    createLoan(new LoanRequestBuilder().withUserId(secondUserId).create());
+    createLoan(new LoanRequestBuilder().withUserId(secondUserId).create());
+    createLoan(new LoanRequestBuilder().withUserId(secondUserId).create());
 
     CompletableFuture<JsonResponse> firstUserSearchCompleted = new CompletableFuture();
     CompletableFuture<JsonResponse> secondUserSeatchCompleted = new CompletableFuture();
@@ -921,8 +1196,7 @@ public class LoansApiTest {
 
     UUID id = UUID.randomUUID();
 
-    createLoan(loanRequest(id, UUID.randomUUID(), UUID.randomUUID(),
-      DateTime.now(), "Open", null, null));
+    createLoan(new LoanRequestBuilder().withId(id).create());
 
     CompletableFuture<TextResponse> deleteCompleted = new CompletableFuture();
 
@@ -952,8 +1226,9 @@ public class LoansApiTest {
 
     UUID id = UUID.randomUUID();
 
-    JsonObject requestWithAdditionalProperty = loanRequest(id,
-      UUID.randomUUID(), UUID.randomUUID(), DateTime.now(), "Open", null, null);
+    JsonObject requestWithAdditionalProperty = new LoanRequestBuilder()
+      .withId(id)
+      .create();
 
     requestWithAdditionalProperty.put("somethingAdditional", "foo");
 
@@ -977,8 +1252,9 @@ public class LoansApiTest {
 
     UUID id = UUID.randomUUID();
 
-    JsonObject requestWithAdditionalProperty = loanRequest(id,
-      UUID.randomUUID(), UUID.randomUUID(), DateTime.now(), "Open", null, null);
+    JsonObject requestWithAdditionalProperty = new LoanRequestBuilder()
+      .withId(id)
+      .create();
 
     requestWithAdditionalProperty.getJsonObject("status")
       .put("somethingAdditional", "foo");
@@ -1031,59 +1307,14 @@ public class LoansApiTest {
   }
 
   private JsonObject loanRequest() {
-    return loanRequest(UUID.randomUUID(), UUID.randomUUID(),
-      UUID.randomUUID(), DateTime.parse("2017-03-06T16:04:43.000+02:00",
-        ISODateTimeFormat.dateTime()), "Open", null, null);
+    return new LoanRequestBuilder().create();
   }
 
   private JsonObject loanRequest(UUID userId, String statusName) {
-    Random random = new Random();
-
-    return loanRequest(UUID.randomUUID(), UUID.randomUUID(),
-      userId, DateTime.now().minusDays(random.nextInt(10)), statusName, null,
-      null);
-  }
-
-  private JsonObject loanRequest(DateTime loanDate) {
-    return loanRequest(UUID.randomUUID(), UUID.randomUUID(),
-      UUID.randomUUID(), loanDate, "Open", loanDate.plus(Period.days(14)), null);
-  }
-
-  private JsonObject loanRequest(
-    UUID id,
-    UUID itemId,
-    UUID userId,
-    DateTime loanDate,
-    String statusName,
-    DateTime dueDate, UUID proxyUserId) {
-
-    JsonObject loanRequest = new JsonObject();
-
-    if(id != null) {
-      loanRequest.put("id", id.toString());
-    }
-
-    loanRequest
-      .put("userId", userId.toString())
-      .put("itemId", itemId.toString())
-      .put("action", "checkedout")
-      .put("loanDate", loanDate.toString(ISODateTimeFormat.dateTime()))
-      .put("status", new JsonObject().put("name", statusName));
-
-    if(proxyUserId != null) {
-      loanRequest.put("proxyUserId", proxyUserId.toString());
-    }
-
-    if(statusName == "Closed") {
-      loanRequest.put("returnDate",
-        loanDate.plusDays(1).plusHours(4).toString(ISODateTimeFormat.dateTime()));
-    }
-
-    if(dueDate != null) {
-      loanRequest.put("dueDate", dueDate.toString(ISODateTimeFormat.dateTime()));
-    }
-
-    return loanRequest;
+    return new LoanRequestBuilder()
+      .withUserId(userId)
+      .withStatus(statusName)
+      .create();
   }
 
   private static URL loanStorageUrl() throws MalformedURLException {
