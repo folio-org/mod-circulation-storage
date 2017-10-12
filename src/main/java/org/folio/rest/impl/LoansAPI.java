@@ -6,6 +6,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.folio.rest.annotations.Validate;
+import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.Loans;
 import org.folio.rest.jaxrs.resource.LoanStorageResource;
@@ -191,9 +192,7 @@ public class LoansAPI implements LoanStorageResource {
 
                     asyncResultHandler.handle(
                       io.vertx.core.Future.succeededFuture(LoanStorageResource.PostLoanStorageLoansResponse
-                      .withJsonUnprocessableEntity(ValidationHelper.createValidationErrorMessage(
-                        "itemId", entity.getItemId(),
-                        "Cannot have more than one open loan for the same item"))));
+                      .withJsonUnprocessableEntity(moreThanOnceOpenLoanError(entity))));
                   }
                   else {
                     asyncResultHandler.handle(
@@ -417,9 +416,7 @@ public class LoansAPI implements LoanStorageResource {
                                 io.vertx.core.Future.succeededFuture(
                                   LoanStorageResource.PutLoanStorageLoansByLoanIdResponse
                                   .withJsonUnprocessableEntity(
-                                    ValidationHelper.createValidationErrorMessage(
-                                    "itemId", entity.getItemId(),
-                                    "Cannot have more than one open loan for the same item"))));
+                                    moreThanOnceOpenLoanError(entity))));
                             }
                             else {
                               asyncResultHandler.handle(
@@ -464,9 +461,7 @@ public class LoansAPI implements LoanStorageResource {
                                 io.vertx.core.Future.succeededFuture(
                                   LoanStorageResource.PutLoanStorageLoansByLoanIdResponse
                                   .withJsonUnprocessableEntity(
-                                    ValidationHelper.createValidationErrorMessage(
-                                    "itemId", entity.getItemId(),
-                                    "Cannot have more than one open loan for the same item"))));
+                                    moreThanOnceOpenLoanError(entity))));
                             }
                             else {
                               asyncResultHandler.handle(
@@ -612,6 +607,11 @@ public class LoansAPI implements LoanStorageResource {
         GetLoanStorageLoanHistoryResponse.
           withPlainInternalServerError(e.getMessage())));
     }
+  }
 
+  private Errors moreThanOnceOpenLoanError(Loan entity) {
+    return ValidationHelper.createValidationErrorMessage(
+      "itemId", entity.getItemId(),
+      "Cannot have more than one open loan for the same item");
   }
 }
