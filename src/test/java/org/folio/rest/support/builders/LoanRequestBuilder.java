@@ -15,6 +15,7 @@ public class LoanRequestBuilder {
   private final UUID proxyUserId;
   private final DateTime loanDate;
   private final String statusName;
+  private final String itemStatus;
   private final DateTime dueDate;
   private final String action;
 
@@ -26,7 +27,9 @@ public class LoanRequestBuilder {
       new DateTime(2017, 7, 15, 9, 35, 27, DateTimeZone.UTC),
       "Open",
       null,
-      "checkedout");
+      "checkedout",
+      null
+    );
   }
 
   private LoanRequestBuilder(
@@ -36,8 +39,9 @@ public class LoanRequestBuilder {
     UUID proxyUserId,
     DateTime loanDate,
     String statusName,
-    DateTime dueDate,
-    String action) {
+    String itemStatus,
+    String action,
+    DateTime dueDate) {
 
     this.id = id;
     this.itemId = itemId;
@@ -45,6 +49,7 @@ public class LoanRequestBuilder {
     this.proxyUserId = proxyUserId;
     this.loanDate = loanDate;
     this.statusName = statusName;
+    this.itemStatus = itemStatus;
     this.dueDate = dueDate;
     this.action = action;
   }
@@ -62,6 +67,10 @@ public class LoanRequestBuilder {
       .put("itemId", itemId.toString())
       .put("loanDate", loanDate.toString(ISODateTimeFormat.dateTime()))
       .put("action", action);
+
+    if(itemStatus != null) {
+      request.put("itemStatus", itemStatus);
+    }
 
     if(proxyUserId != null) {
       request.put("proxyUserId", proxyUserId.toString());
@@ -91,8 +100,10 @@ public class LoanRequestBuilder {
       this.proxyUserId,
       this.loanDate,
       this.statusName,
-      this.dueDate,
-      this.action);
+      this.itemStatus,
+      this.action,
+      this.dueDate
+    );
   }
 
   public LoanRequestBuilder withNoId() {
@@ -107,8 +118,10 @@ public class LoanRequestBuilder {
       this.proxyUserId,
       this.loanDate,
       this.statusName,
-      this.dueDate,
-      this.action);
+      this.itemStatus,
+      this.action,
+      this.dueDate
+    );
   }
 
   public LoanRequestBuilder withUserId(UUID userId) {
@@ -119,8 +132,10 @@ public class LoanRequestBuilder {
       this.proxyUserId,
       this.loanDate,
       this.statusName,
-      this.dueDate,
-      this.action);
+      this.itemStatus,
+      this.action,
+      this.dueDate
+    );
   }
 
   public LoanRequestBuilder withProxyUserId(UUID proxyUserId) {
@@ -131,8 +146,10 @@ public class LoanRequestBuilder {
       proxyUserId,
       this.loanDate,
       this.statusName,
-      this.dueDate,
-      this.action);
+      this.itemStatus,
+      this.action,
+      this.dueDate
+    );
   }
 
   public LoanRequestBuilder withLoanDate(DateTime loanDate) {
@@ -143,8 +160,10 @@ public class LoanRequestBuilder {
       this.proxyUserId,
       loanDate,
       this.statusName,
-      this.dueDate,
-      this.action);
+      this.itemStatus,
+      this.action,
+      this.dueDate
+    );
   }
 
   public LoanRequestBuilder withStatus(String statusName) {
@@ -155,8 +174,24 @@ public class LoanRequestBuilder {
       this.proxyUserId,
       this.loanDate,
       statusName,
-      this.dueDate,
-      this.action);
+      this.itemStatus,
+      this.action,
+      this.dueDate
+    );
+  }
+
+  public LoanRequestBuilder withItemStatus(String itemStatus) {
+    return new LoanRequestBuilder(
+      this.id,
+      this.itemId,
+      this.userId,
+      this.proxyUserId,
+      this.loanDate,
+      statusName,
+      itemStatus,
+      this.action,
+      this.dueDate
+    );
   }
 
   public LoanRequestBuilder withAction(String action) {
@@ -167,8 +202,10 @@ public class LoanRequestBuilder {
       this.proxyUserId,
       this.loanDate,
       this.statusName,
-      this.dueDate,
-      action);
+      this.itemStatus,
+      action,
+      this.dueDate
+    );
   }
 
   public LoanRequestBuilder withdueDate(DateTime dueDate) {
@@ -179,20 +216,18 @@ public class LoanRequestBuilder {
       this.proxyUserId,
       this.loanDate,
       this.statusName,
-      dueDate,
-      this.action);
+      this.itemStatus,
+      this.action,
+      dueDate
+    );
   }
 
   public LoanRequestBuilder withNoStatus() {
-    return new LoanRequestBuilder(
-      this.id,
-      this.itemId,
-      this.userId,
-      this.proxyUserId,
-      this.loanDate,
-      null,
-      this.dueDate,
-      this.action);
+    return withStatus(null);
+  }
+
+  public LoanRequestBuilder withNoItemStatus() {
+    return withItemStatus(null);
   }
 
   private String formatDateTime(DateTime requestDate) {

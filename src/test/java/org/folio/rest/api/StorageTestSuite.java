@@ -32,7 +32,8 @@ import static org.junit.Assert.assertThat;
   LoansApiTest.class,
   LoanRulesApiTest.class,
   LoanPoliciesApiTest.class,
-  RequestsApiTest.class
+  RequestsApiTest.class,
+  LoansApiHistoryTest.class,
 })
 public class StorageTestSuite {
 

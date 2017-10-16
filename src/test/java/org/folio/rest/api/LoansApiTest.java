@@ -16,7 +16,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -37,7 +36,6 @@ import static org.hamcrest.core.IsNull.nullValue;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 public class LoansApiTest {
-
   private static HttpClient client = new HttpClient(StorageTestSuite.getVertx());
 
   @Before
@@ -79,6 +77,7 @@ public class LoansApiTest {
       .withLoanDate(new DateTime(2017, 6, 27, 10, 23, 43, DateTimeZone.UTC))
       .withStatus("Open")
       .withAction("checkedout")
+      .withItemStatus("Checked out")
       .withdueDate(new DateTime(2017, 7, 27, 10, 23, 43, DateTimeZone.UTC))
       .create();
 
@@ -115,6 +114,9 @@ public class LoansApiTest {
     assertThat("action is not checked out",
       loan.getString("action"), is("checkedout"));
 
+    assertThat("item status is not checked out",
+      loan.getString("itemStatus"), is("Checked out"));
+
     //The RAML-Module-Builder converts all date-time formatted strings to UTC
     //and presents the offset as +0000 (which is ISO8601 compatible, but not RFC3339)
     assertThat("due date does not match",
@@ -140,6 +142,7 @@ public class LoansApiTest {
       .withLoanDate(new DateTime(2017, 3, 20, 7, 21, 45, DateTimeZone.UTC))
       .withStatus("Open")
       .withAction("checkedout")
+      .withItemStatus("Checked out")
       .withdueDate(new DateTime(2017, 4, 20, 7, 21, 45, DateTimeZone.UTC))
       .create();
 
@@ -177,6 +180,9 @@ public class LoansApiTest {
     assertThat("action is not checked out",
       loan.getString("action"), is("checkedout"));
 
+    assertThat("item status is not checked out",
+      loan.getString("itemStatus"), is("Checked out"));
+
     //The RAML-Module-Builder converts all date-time formatted strings to UTC
     //and presents the offset as +0000 (which is ISO8601 compatible, but not RFC3339)
     assertThat("due date does not match",
@@ -204,6 +210,7 @@ public class LoansApiTest {
       .withLoanDate(new DateTime(2017, 2, 27, 21, 14, 43, DateTimeZone.UTC))
       .withStatus("Open")
       .withAction("checkedout")
+      .withItemStatus("Checked out")
       .withdueDate(new DateTime(2017, 3, 29, 21, 14, 43, DateTimeZone.UTC))
       .create();
 
@@ -264,6 +271,7 @@ public class LoansApiTest {
     JsonObject loanRequest = new LoanRequestBuilder()
       .withId(id)
       .withNoStatus() //Status is currently optional, as it is defaulted to Open
+      .withNoItemStatus() //Item status is currently optional
       .withLoanDate(new DateTime(2017, 3, 5, 14, 23, 41, DateTimeZone.UTC))
       .withAction("checkedout")
       .create();
@@ -565,6 +573,7 @@ public class LoansApiTest {
       .withLoanDate(new DateTime(2016, 10, 15, 8, 26, 53, DateTimeZone.UTC))
       .withStatus("Open")
       .withAction("checkedout")
+      .withItemStatus("Checked out")
       .create();
 
     createLoan(loanRequest);
@@ -590,6 +599,9 @@ public class LoansApiTest {
 
     assertThat("loan date does not match",
       loan.getString("loanDate"), is("2016-10-15T08:26:53.000Z"));
+
+    assertThat("item status is not checked out",
+      loan.getString("itemStatus"), is("Checked out"));
 
     assertThat("status is not open",
       loan.getJsonObject("status").getString("name"), is("Open"));
@@ -627,6 +639,8 @@ public class LoansApiTest {
 
     returnedLoan
       .put("status", new JsonObject().put("name", "Closed"))
+      .put("action", "checkedin")
+      .put("itemStatus", "Available")
       .put("returnDate", new DateTime(2017, 3, 5, 14, 23, 41, DateTimeZone.UTC)
       .toString(ISODateTimeFormat.dateTime()));
 
@@ -649,6 +663,12 @@ public class LoansApiTest {
 
     assertThat("status is not closed",
       updatedLoan.getJsonObject("status").getString("name"), is("Closed"));
+
+    assertThat("item status is not available",
+      updatedLoan.getString("itemStatus"), is("Available"));
+
+    assertThat("action is not checkedin",
+      updatedLoan.getString("action"), is("checkedin"));
   }
 
   @Test
@@ -672,6 +692,7 @@ public class LoansApiTest {
       .put("dueDate", new DateTime(2017, 3, 30, 13, 25, 46, DateTimeZone.UTC)
         .toString(ISODateTimeFormat.dateTime()))
       .put("action", "renewed")
+      .put("itemStatus", "Checked out")
       .put("renewalCount", 1);
 
     CompletableFuture<JsonResponse> putCompleted = new CompletableFuture();
@@ -701,6 +722,9 @@ public class LoansApiTest {
 
     assertThat("renewal count is not 1",
       updatedLoan.getInteger("renewalCount"), is(1));
+
+    assertThat("item status is not checked out",
+      updatedLoan.getString("itemStatus"), is("Checked out"));
   }
 
   @Test
@@ -962,120 +986,6 @@ public class LoansApiTest {
 
     assertThat(secondPageLoans.size(), is(4));
     assertThat(closedLoans.getInteger("totalRecords"), is(4));
-  }
-
-  @Test
-  public void loanHistoryQuery()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    UnsupportedEncodingException {
-
-    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture();
-
-    URL url = StorageTestSuite.storageUrl("/loan-storage/loan-history");
-
-    client.get(url, StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
-
-    JsonResponse j = getCompleted.get(5, TimeUnit.SECONDS);
-
-    UUID userId = UUID.randomUUID();
-    UUID itemId = UUID.randomUUID();
-    UUID id = UUID.randomUUID();
-
-    JsonObject j1 = new JsonObject()
-    .put("id", id.toString())
-    .put("userId", userId.toString())
-    .put("itemId", itemId.toString())
-    .put("action", "checkedout")
-    .put("loanDate", DateTime.parse("2017-03-06T16:04:43.000+02:00",
-      ISODateTimeFormat.dateTime()).toString())
-    .put("status", new JsonObject().put("name", "Closed"));
-
-    JsonObject j2 = new JsonObject()
-    .put("id", id.toString())
-    .put("userId", userId.toString())
-    .put("itemId", itemId.toString())
-    .put("action", "renewal")
-    .put("loanDate", DateTime.parse("2017-03-06T16:05:43.000+02:00",
-      ISODateTimeFormat.dateTime()).toString())
-    .put("status", new JsonObject().put("name", "Opened"));
-
-    JsonObject j3 = new JsonObject()
-    .put("id", id.toString())
-    .put("userId", userId.toString())
-    .put("itemId", itemId.toString())
-    .put("action", "checkedin")
-    .put("loanDate", DateTime.parse("2017-03-06T16:06:43.000+02:00",
-      ISODateTimeFormat.dateTime()).toString())
-    .put("status", new JsonObject().put("name", "Closed"));
-
-    CompletableFuture<JsonResponse> create = new CompletableFuture();
-    CompletableFuture<JsonResponse> update1 = new CompletableFuture();
-    CompletableFuture<JsonResponse> update2 = new CompletableFuture();
-    CompletableFuture<TextResponse> delete = new CompletableFuture();
-
-    ///////////////post loan//////////////////////
-    client.post(loanStorageUrl(), j1, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(create));
-
-    JsonResponse response1 = create.get(5, TimeUnit.SECONDS);
-
-    //////////////update loan/////////////////////
-    client.put(loanStorageUrl("/"+id.toString()), j2, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(update1));
-
-    JsonResponse response2 = update1.get(5, TimeUnit.SECONDS);
-
-    ///////////update again///////////////////////
-    client.put(loanStorageUrl("/"+id.toString()), j3, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(update2));
-
-    JsonResponse response3 = update2.get(5, TimeUnit.SECONDS);
-
-    ///////////delete loan//////////////////////////
-    client.delete(loanStorageUrl("/"+id.toString()), StorageTestSuite.TENANT_ID,
-      ResponseHandler.text(delete));
-
-    TextResponse response4 = delete.get(5, TimeUnit.SECONDS);
-
-    CompletableFuture<JsonResponse> getCompleted2 = new CompletableFuture();
-    CompletableFuture<JsonResponse> getCompleted3 = new CompletableFuture();
-    CompletableFuture<JsonResponse> getCompleted4 = new CompletableFuture();
-
-    client.get(url + "?query=id="+id.toString(),
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted2));
-
-    JsonResponse finalRes = getCompleted2.get(5, TimeUnit.SECONDS);
-
-    //System.out.println("--->" + finalRes.getJson().encodePrettily());
-
-    client.get(url + "?query="+URLEncoder.encode("userId="+userId.toString(), "UTF8"),
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted3));
-
-    JsonResponse finalRes2 = getCompleted3.get(5, TimeUnit.SECONDS);
-
-    //System.out.println("--->" + finalRes2.getJson().encodePrettily());
-
-    client.get(url + "?query=" + URLEncoder.encode("userId="+userId.toString()+" sortBy action", "UTF8"),
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted4));
-
-    JsonResponse finalRes4 = getCompleted4.get(5, TimeUnit.SECONDS);
-
-    //System.out.println("--->" + finalRes4.getJson().encodePrettily());
-
-    assertThat("Incorrect number of entries in loan history for id: " + id.toString(),
-      finalRes.getJson().getJsonArray("loans").size(), is(4));
-
-    assertThat("Incorrect value of first loan in res set - should be deleted " + id.toString(),
-      finalRes.getJson().getJsonArray("loans").getJsonObject(0).getString("action"), is("deleted"));
-
-    assertThat("Incorrect number of entries in loan history for userId: " + userId.toString(),
-      finalRes2.getJson().getJsonArray("loans").size(), is(4));
-
-    assertThat("Incorrect value oof first loan in res set - should be checkedin " + id.toString(),
-      finalRes4.getJson().getJsonArray("loans").getJsonObject(0).getString("action"), is("checkedin"));
   }
 
   @Test
