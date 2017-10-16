@@ -80,6 +80,37 @@
           "methods": ["DELETE"],
           "pathPattern": "/loan-policy-storage/loan-policies",
           "permissionsRequired": ["circulation-storage.loan-policies.collection.delete"]
+        },
+      ]
+    },
+    {
+      "id": "fixed-due-date-schedules-storage",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/fixed-due-date-schedule-storage/fixed-due-date-schedules",
+          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/fixed-due-date-schedule-storage/fixed-due-date-schedules/{id}",
+          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/fixed-due-date-schedule-storage/fixed-due-date-schedules",
+          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/fixed-due-date-schedule-storage/fixed-due-date-schedules/{id}",
+          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/fixed-due-date-schedule-storage/fixed-due-date-schedules/{id}",
+          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.item.delete"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/fixed-due-date-schedule-storage/fixed-due-date-schedules",
+          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.collection.delete"]
         }
       ]
     },
@@ -177,8 +208,8 @@
     },
     {
       "permissionName": "circulation-storage.loan-policies.collection.delete",
-      "displayName": "Circulation storage - delete entire loan collection",
-      "description": "Delete entire loan collection from storage"
+      "displayName": "Circulation storage - delete entire loan policy collection",
+      "description": "Delete entire loan policy collection from storage"
     },
     {
       "permissionName": "circulation-storage.loan-policies.item.get",
@@ -199,6 +230,36 @@
       "permissionName": "circulation-storage.loan-policies.item.delete",
       "displayName": "Circulation storage - delete individual loan policy",
       "description": "Delete individual loan policy from storage"
+    },
+    {
+      "permissionName": "circulation-storage.fixed-due-date-schedules.collection.get",
+      "displayName": "Circulation storage - get fixed due date schedule collection",
+      "description": "Get fixed due date schedule collection from storage"
+    },
+    {
+      "permissionName": "circulation-storage.fixed-due-date-schedules.collection.delete",
+      "displayName": "Circulation storage - delete entire fixed due date schedule collection",
+      "description": "Delete entire fixed due date schedule collection from storage"
+    },
+    {
+      "permissionName": "circulation-storage.fixed-due-date-schedules.item.get",
+      "displayName": "Circulation storage - get individual fixed due date schedule",
+      "description": "Get individual fixed due date schedule from storage"
+    },
+    {
+      "permissionName": "circulation-storage.fixed-due-date-schedules.item.post",
+      "displayName": "Circulation storage - create individual fixed due date schedule",
+      "description": "Create individual fixed due date schedule in storage"
+    },
+    {
+      "permissionName": "circulation-storage.fixed-due-date-schedules.item.put",
+      "displayName": "Circulation storage - modify fixed due date schedule",
+      "description": "Modify fixed due date schedule in storage"
+    },
+    {
+      "permissionName": "circulation-storage.fixed-due-date-schedules.item.delete",
+      "displayName": "Circulation storage - delete individual fixed due date schedule",
+      "description": "Delete individual fixed due date schedule from storage"
     },
     {
       "permissionName": "circulation-storage.loans-history.collection.get",
@@ -255,6 +316,12 @@
         "circulation-storage.loan-policies.item.put",
         "circulation-storage.loan-policies.item.delete",
         "circulation-storage.loan-policies.collection.delete",
+        "circulation-storage.fixed-due-date-schedules.collection.get",
+        "circulation-storage.fixed-due-date-schedules.item.get",
+        "circulation-storage.fixed-due-date-schedules.item.post",
+        "circulation-storage.fixed-due-date-schedules.item.put",
+        "circulation-storage.fixed-due-date-schedules.item.delete",
+        "circulation-storage.fixed-due-date-schedules.collection.delete",
         "circulation-storage.requests.collection.get",
         "circulation-storage.requests.item.get",
         "circulation-storage.requests.item.post",
