@@ -35,6 +35,15 @@ CREATE TABLE myuniversity_mymodule.request (
   created_by text
 );
 
+CREATE TABLE myuniversity_mymodule.fixed_due_date_schedule (
+  _id UUID PRIMARY KEY,
+  jsonb JSONB NOT NULL
+);
+
+CREATE UNIQUE INDEX myuniversity_mymodule_fixed_due_date_schedule_unique_name
+  ON myuniversity_mymodule.fixed_due_date_schedule( (jsonb->>'name') );
+
+
 INSERT INTO myuniversity_mymodule.loan_rules
   SELECT id, jsonb_build_object('id', id, 'loanRulesAsTextFile', '')
   FROM (SELECT gen_random_uuid() AS id) AS alias;

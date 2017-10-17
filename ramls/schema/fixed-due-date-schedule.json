@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "description": "A set of date ranges for materials checkout and their associated due dates.",
+  "properties": {
+    "id": {
+      "description": "Unique ID (generated UUID)",
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "schedules": {
+      "id": "schedules",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "schedule.json"
+      }
+    },
+    "metaData": {
+      "$ref": "raml-util/schemas/metadata.schema",
+      "readonly": true
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "additionalProperties": false
+}

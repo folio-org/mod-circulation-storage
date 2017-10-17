@@ -1,0 +1,34 @@
+{
+  "fixedDueDateSchedules": [
+    {
+      "id": "d9cd0bed-1b49-4b5e-a7bd-064b8d177231",
+      "name": "Fall Semester Due Date Schedule",
+      "description": "An example fixed due date schedule",
+      "schedules": [
+        {
+          "from": "2017-08-18",
+          "to": "2017-12-14",
+          "due": "2018-01-25"
+        },
+        {
+          "from": "2018-08-17",
+          "to": "2018-12-15",
+          "due": "2018-01-23"
+        }
+      ]
+    },
+    {
+      "id": "0df935eb-f3f4-4741-9ac6-33c500174b96",
+      "name": "Winter Intersession 2017 Due Date Schedule",
+      "description": "Another example fixed due date schedule",
+      "schedules": [
+        {
+          "from": "2017-12-06",
+          "to": "2018-01-17",
+          "due": "2018-01-28"
+        }
+      ]
+    }
+  ],
+  "totalRecords": 2
+}

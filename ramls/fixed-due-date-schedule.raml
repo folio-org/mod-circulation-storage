@@ -1,0 +1,81 @@
+#%RAML 0.8
+title: Fixed Due Date Schedule
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost:9130
+
+documentation:
+  - title: Fixed Due Date Schedule Storage API
+    content: <b>Storage for fixed due date schedules</b>
+
+schemas:
+  - fixed-due-date-schedule.json: !include schema/fixed-due-date-schedule.json
+  - schedule.json: !include schema/schedule.json
+  - fixed-due-date-schedules: !include schema/fixed-due-date-schedules.json
+  - raml-util/schemas/metadata.schema: !include raml-util/schemas/metadata.schema
+  - errors: !include raml-util/schemas/errors.schema
+  - error.schema: !include raml-util/schemas/error.schema
+  - parameters.schema: !include raml-util/schemas/parameters.schema
+  
+traits:
+  - secured: !include raml-util/traits/auth.raml
+  - language: !include raml-util/traits/language.raml
+  - pageable: !include raml-util/traits/pageable.raml
+  - searchable: !include raml-util/traits/searchable.raml
+  - validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  - collection: !include raml-util/rtypes/collection.raml
+  - collection-item: !include raml-util/rtypes/item-collection.raml
+
+/fixed-due-date-schedule-storage:
+  /fixed-due-date-schedules:
+    displayName: Fixed Due Date Schedules
+    type:
+      collection:
+        exampleCollection: !include examples/fixed-due-date-schedules.json
+        exampleItem: !include examples/fixed-due-date-schedule.json
+        schemaCollection: fixed-due-date-schedules
+        schemaItem: fixed-due-date-schedule.json
+    get:
+      is: [
+        validate,
+        pageable,
+        searchable: {description: "with valid searchable fields", example: "name=semester"}
+        ]
+      responses:
+        501:
+          description: "Not implemented yet"
+    post:
+      is: [validate]
+      responses:
+        501:
+          description: "Not implemented yet"
+    delete:
+      responses:
+        204:
+          description: "All fixed due date schedules deleted"
+        500:
+          description: "Internal server error, e.g. due to misconfiguration"
+          body:
+            text/plain:
+              example: "Internal server error, contact administrator"
+        501:
+          description: "Not implemented yet"
+    /{fixedDueDateScheduleId}:
+      type:
+        collection-item:
+          exampleItem: !include examples/fixed-due-date-schedule.json
+          schema: fixed-due-date-schedule.json
+      get:
+        responses:
+          501:
+            description: "Not implemented yet"
+      put:
+        responses:
+          501:
+            description: "Not implemented yet"
+      delete:
+        responses:
+          501:
+            description: "Not implemented yet"

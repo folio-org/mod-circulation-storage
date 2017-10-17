@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "fixedDueDateSchedules": {
+      "id": "fixedDueDateSchedules",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "fixed-due-date-schedule.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "fixedDueDateSchedules",
+    "totalRecords"
+  ]
+}
