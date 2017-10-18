@@ -82,13 +82,25 @@ public class FixedDueDateApiTest {
     //update the fixed due date with a valid schedule
     CompletableFuture<Response> updateCompleted = new CompletableFuture<>();
     representation.put(SCHEDULE_SECTION,
-      new JsonArray().add(createSchedule("2017-01-01", "2017-03-03", "2017-02-02")));
+      new JsonArray().add(createSchedule("2017-01-01", "2017-03-03", "2017-04-04")));
     client.put(dueDateURL("/"+representation.getString("id")),
       representation, StorageTestSuite.TENANT_ID,
       ResponseHandler.empty(updateCompleted));
     Response updateResponse = updateCompleted.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create due date: %s", representation.encodePrettily()),
       updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    ////////////////////////////////////////////////
+
+    //update the fixed due date with a valid schedule
+    CompletableFuture<Response> updateBad3Completed = new CompletableFuture<>();
+    representation.put(SCHEDULE_SECTION,
+      new JsonArray().add(createSchedule("2017-01-01", "2017-03-03", "2017-02-02")));
+    client.put(dueDateURL("/"+representation.getString("id")),
+      representation, StorageTestSuite.TENANT_ID,
+      ResponseHandler.empty(updateBad3Completed));
+    Response updateBad3Response = updateBad3Completed.get(5, TimeUnit.SECONDS);
+    assertThat(String.format("Failed to create due date: %s", representation.encodePrettily()),
+      updateBad3Response.getStatusCode(), is(422));
     ////////////////////////////////////////////////
 
     //update the fixed due date with an in-valid schedule
@@ -137,8 +149,21 @@ public class FixedDueDateApiTest {
       ResponseHandler.json(updateCompleted2));
     JsonResponse updateCompleted2Response = updateCompleted2.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create due date: %s", fixDueDate3.encodePrettily()),
-      updateCompleted2Response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-    String newId = updateCompleted2Response.getJson().getString("id");
+      updateCompleted2Response.getStatusCode(), is(422));
+    ////////////////////////////////////////////
+
+    //create fixed due date without id, server generated
+    CompletableFuture<JsonResponse> updateGoodCompleted = new CompletableFuture<>();
+    JsonObject fixDueDate7 = createFixedDueDate(null, "semester", "desc");
+    fixDueDate7.put(SCHEDULE_SECTION,
+      new JsonArray().add(createSchedule("2017-01-01", "2017-04-04", "2017-05-12")));
+    client.post(dueDateURL(),
+      fixDueDate7, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(updateGoodCompleted));
+    JsonResponse updateCompleted5Response = updateGoodCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(String.format("Failed to create due date: %s", fixDueDate7.encodePrettily()),
+      updateCompleted5Response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    String newId = updateCompleted5Response.getJson().getString("id");
     ////////////////////////////////////////////
 
     //create duplicate name due date
@@ -218,6 +243,43 @@ public class FixedDueDateApiTest {
     Response delCompleted4Response = delCompleted.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create due date: %s", dueDateURL("/"+newId2)),
       delCompleted4Response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    //// get by bad id ///////////////////////
+    CompletableFuture<TextResponse> getCompleted5 = new CompletableFuture<>();
+    client.get(dueDateURL("/12345"), StorageTestSuite.TENANT_ID,
+      ResponseHandler.text(getCompleted5));
+    TextResponse getCompleted5Response = getCompleted5.get(5, TimeUnit.SECONDS);
+    assertThat(String.format("Failed to create due date: %s", getCompleted5Response.getBody()),
+      getCompleted5Response.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+    System.out.println(dueDateURL("/12345") + " " + getCompleted5Response.getBody());
+
+    //// delete by bad id ///////////////////////
+    CompletableFuture<TextResponse> delCompleted5 = new CompletableFuture<>();
+    client.delete(dueDateURL("/12345"), StorageTestSuite.TENANT_ID,
+      ResponseHandler.text(delCompleted5));
+    TextResponse delCompleted5Response = delCompleted5.get(5, TimeUnit.SECONDS);
+    assertThat(String.format("Failed to create due date: %s", delCompleted5Response.getBody()),
+      delCompleted5Response.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+    System.out.println(dueDateURL("/12345") + " " + delCompleted5Response.getBody());
+
+    //update by bad id
+    CompletableFuture<TextResponse> updateBadCompleted4 = new CompletableFuture<>();
+    JsonObject updateDueDate5 = createFixedDueDate("12345", "semester", "desc3");
+    client.put(dueDateURL("/12345"),
+      updateDueDate5, StorageTestSuite.TENANT_ID,
+      ResponseHandler.text(updateBadCompleted4));
+    TextResponse updateBadCompleted4Response = updateBadCompleted4.get(5, TimeUnit.SECONDS);
+    assertThat(String.format("Failed to create due date: %s", updateDueDate5.encodePrettily()),
+      updateBadCompleted4Response.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+
+    //// get , should have 2 records ///////////////////////
+    CompletableFuture<JsonResponse> get2Completed = new CompletableFuture<>();
+    client.get(dueDateURL(), StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(get2Completed));
+    JsonResponse get2CompletedResponse = get2Completed.get(5, TimeUnit.SECONDS);
+    assertThat(String.format("Failed to create due date: %s", get2CompletedResponse.getJson().encodePrettily()),
+      get2CompletedResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(get2CompletedResponse.getJson().getJsonArray("fixedDueDateSchedules").size(), is(2));
   }
 
   private static URL dueDateURL() throws MalformedURLException {
