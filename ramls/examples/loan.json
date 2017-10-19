@@ -9,5 +9,6 @@
     "name": "Open"
   },
   "action": "checkedout",
+  "itemStatus": "Checked out",
   "renewalCount": 0
 }
