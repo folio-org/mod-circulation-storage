@@ -2,7 +2,6 @@ package org.folio.rest.impl;
 
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -42,8 +41,7 @@ import io.vertx.core.logging.LoggerFactory;
 public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageResource {
 
   private static final Logger       log            = LoggerFactory.getLogger(FixedDueDateSchedulesAPI.class);
-  private static final String       SCHEMA_NAME    = "apidocs/raml/schema/fixed-due-date-schedule.json";
-  private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+  private static final String       SCHEMA_NAME    = "apidocs/raml/fixed-due-date-schedule.json";
 
   private static String             schema      =  null;
 
@@ -535,9 +533,9 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
       //String from, String to, String due
       int size = schedules.size();
       for (int i = 0; i < size; i++) {
-        Date dueDate = dateFormat.parse(schedules.get(i).getDue());
-        Date fromDate = dateFormat.parse(schedules.get(i).getFrom());
-        Date toDate = dateFormat.parse(schedules.get(i).getTo());
+        Date dueDate = schedules.get(i).getDue();
+        Date fromDate = schedules.get(i).getFrom();
+        Date toDate = schedules.get(i).getTo();
 
         if(!fromDate.before(dueDate) || !fromDate.before(toDate) || !toDate.before(dueDate)){
           log.info(

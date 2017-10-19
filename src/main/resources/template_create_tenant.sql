@@ -41,7 +41,7 @@ CREATE TABLE myuniversity_mymodule.fixed_due_date_schedule (
 );
 
 CREATE UNIQUE INDEX myuniversity_mymodule_fixed_due_date_schedule_unique_name
-  ON myuniversity_mymodule.fixed_due_date_schedule( (jsonb->>'name') );
+  ON myuniversity_mymodule.fixed_due_date_schedule( lower((jsonb->>'name')) );
 
 
 INSERT INTO myuniversity_mymodule.loan_rules
