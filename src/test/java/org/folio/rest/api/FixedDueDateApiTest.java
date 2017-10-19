@@ -280,6 +280,25 @@ public class FixedDueDateApiTest {
     assertThat(String.format("Failed to create due date: %s", get2CompletedResponse.getJson().encodePrettily()),
       get2CompletedResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     assertThat(get2CompletedResponse.getJson().getJsonArray("fixedDueDateSchedules").size(), is(2));
+
+    ///// delete all items ////////////////////////////////
+    CompletableFuture<Response> delAllCompleted = new CompletableFuture<>();
+    client.delete(dueDateURL(), StorageTestSuite.TENANT_ID,
+      ResponseHandler.empty(delAllCompleted));
+    Response delAllCompleted4Response = delAllCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(String.format("Failed to create due date: %s", dueDateURL()),
+      delAllCompleted4Response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    //////////////////////////////////////////////////////
+
+    //// get , should have 0 records ///////////////////////
+    CompletableFuture<JsonResponse> get3Completed = new CompletableFuture<>();
+    client.get(dueDateURL(), StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(get3Completed));
+    JsonResponse get3CompletedResponse = get3Completed.get(5, TimeUnit.SECONDS);
+    assertThat(String.format("Failed to create due date: %s", get3CompletedResponse.getJson().encodePrettily()),
+      get3CompletedResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(get3CompletedResponse.getJson().getJsonArray("fixedDueDateSchedules").size(), is(0));
+
   }
 
   private static URL dueDateURL() throws MalformedURLException {
