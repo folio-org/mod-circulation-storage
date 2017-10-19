@@ -54,7 +54,6 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
     if(schema == null){
       initCQLValidation();
     }
-    PostgresClient.getInstance(vertx, tenantId).setIdField("_id");
   }
 
   private void initCQLValidation() {
