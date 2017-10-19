@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "description": "A date range and associated due date, connected with the parent FixedDueDateSchedule.",
+  "properties": {
+    "from": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The start of a date range during which materials checked out will be assigned the due date in the 'due' field. Should conform to the ISO8601 date format, YYYY-MM-DD."
+    },
+    "to": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The end of a date range during which materials checked out will be assigned the due date in the 'due' field. Should conform to the ISO8601 date format, YYYY-MM-DD."
+    },
+    "due": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The due date for materials checked out in the date range between the 'from' and 'to' dates. Should conform to the ISO8601 date format, YYYY-MM-DD."
+    }
+  },
+  "required": [
+    "from",
+    "to",
+    "due"
+  ],
+  "additionalProperties": false
+}
