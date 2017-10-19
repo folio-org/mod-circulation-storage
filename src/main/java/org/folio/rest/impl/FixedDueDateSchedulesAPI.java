@@ -42,11 +42,9 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
 
   private static final Logger       log            = LoggerFactory.getLogger(FixedDueDateSchedulesAPI.class);
   private static final String       SCHEMA_NAME    = "apidocs/raml/fixed-due-date-schedule.json";
+  private static final String       FIXED_SCHEDULE_TABLE  = "fixed_due_date_schedule";
 
   private static String             schema      =  null;
-
-  private final String FIXED_SCHEDULE_TABLE     = "fixed_due_date_schedule";
-
   private final Class<FixedDueDateSchedule> DUE_DATE_SCHEDULE_CLASS = FixedDueDateSchedule.class;
 
 
@@ -56,9 +54,9 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
     }
   }
 
-  private void initCQLValidation() {
+  private static void initCQLValidation() {
     try {
-      schema = IOUtils.toString(getClass().getClassLoader().getResourceAsStream(SCHEMA_NAME), "UTF-8");
+      schema = IOUtils.toString(FixedDueDateSchedulesAPI.class.getClassLoader().getResourceAsStream(SCHEMA_NAME), "UTF-8");
     } catch (Exception e) {
       log.error("unable to load schema - " +SCHEMA_NAME+ ", validation of query fields will not be active");
     }
