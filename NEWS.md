@@ -1,3 +1,7 @@
+## 4.1.0 Unreleased
+
+* Expose new Fixed Due Date end point (CIRCSTORE-9)
+
 ## 4.0.0 Unreleased
 
 * Allow only one open loan per item (CIRCSTORE-19) - see readme for further details 

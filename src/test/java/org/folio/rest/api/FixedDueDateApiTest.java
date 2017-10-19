@@ -141,7 +141,7 @@ public class FixedDueDateApiTest {
 
     //create fixed due date without id, server generated
     CompletableFuture<JsonResponse> updateCompleted2 = new CompletableFuture<>();
-    JsonObject fixDueDate3 = createFixedDueDate(null, "semester", "desc");
+    JsonObject fixDueDate3 = createFixedDueDate(null, "Semester", "desc");
     fixDueDate3.put(SCHEDULE_SECTION,
       new JsonArray().add(createSchedule("2017-01-01", "2017-04-04", "2017-02-12")));
     client.post(dueDateURL(),
@@ -154,7 +154,7 @@ public class FixedDueDateApiTest {
 
     //create fixed due date without id, server generated
     CompletableFuture<JsonResponse> updateGoodCompleted = new CompletableFuture<>();
-    JsonObject fixDueDate7 = createFixedDueDate(null, "semester", "desc");
+    JsonObject fixDueDate7 = createFixedDueDate(null, "Semester", "desc");
     fixDueDate7.put(SCHEDULE_SECTION,
       new JsonArray().add(createSchedule("2017-01-01", "2017-04-04", "2017-05-12")));
     client.post(dueDateURL(),
@@ -168,7 +168,7 @@ public class FixedDueDateApiTest {
 
     //create duplicate name due date
     CompletableFuture<JsonResponse> updateCompleted3 = new CompletableFuture<>();
-    JsonObject fixDueDate4 = createFixedDueDate(null, "semester", "desc2");
+    JsonObject fixDueDate4 = createFixedDueDate(null, "Semester", "desc2");
     client.post(dueDateURL(),
       fixDueDate4, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(updateCompleted3));
@@ -190,7 +190,7 @@ public class FixedDueDateApiTest {
     String newId2 = createdCompleted3Response.getJson().getString("id");
 
     CompletableFuture<JsonResponse> updateCompleted4 = new CompletableFuture<>();
-    JsonObject fixDueDate5 = createFixedDueDate(newId2, "semester", "desc2");
+    JsonObject fixDueDate5 = createFixedDueDate(newId2, "Semester", "desc2");
     client.put(dueDateURL("/"+newId2),
       fixDueDate5, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(updateCompleted4));
@@ -264,7 +264,7 @@ public class FixedDueDateApiTest {
 
     //update by bad id
     CompletableFuture<TextResponse> updateBadCompleted4 = new CompletableFuture<>();
-    JsonObject updateDueDate5 = createFixedDueDate("12345", "semester", "desc3");
+    JsonObject updateDueDate5 = createFixedDueDate("12345", "Semester", "desc3");
     client.put(dueDateURL("/12345"),
       updateDueDate5, StorageTestSuite.TENANT_ID,
       ResponseHandler.text(updateBadCompleted4));

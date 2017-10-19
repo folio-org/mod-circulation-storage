@@ -115,6 +115,37 @@
       ]
     },
     {
+      "id": "fixed-due-date-schedules-storage",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/fixed-due-date-schedule-storage/fixed-due-date-schedules",
+          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/fixed-due-date-schedule-storage/fixed-due-date-schedules/{id}",
+          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/fixed-due-date-schedule-storage/fixed-due-date-schedules",
+          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/fixed-due-date-schedule-storage/fixed-due-date-schedules/{id}",
+          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/fixed-due-date-schedule-storage/fixed-due-date-schedules/{id}",
+          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.item.delete"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/fixed-due-date-schedule-storage/fixed-due-date-schedules",
+          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.collection.delete"]
+        }
+      ]
+    },
+    {
       "id": "_tenant",
       "version": "1.0",
       "interfaceType": "system",
@@ -235,6 +266,36 @@
       "displayName": "Circulation storage - delete individual request",
       "description": "Delete individual request from storage"
     },
+     {
+      "permissionName": "circulation-storage.fixed-due-date-schedules.collection.get",
+      "displayName": "Circulation storage - get fixed due date collection",
+      "description": "Get fixed due date collection from storage"
+    },
+    {
+      "permissionName": "circulation-storage.fixed-due-date-schedules.item.get",
+      "displayName": "Circulation storage - get individual fixed due date",
+      "description": "Get individual fixed due date from storage"
+    },
+    {
+      "permissionName": "circulation-storage.fixed-due-date-schedules.item.post",
+      "displayName": "Circulation storage - create individual fixed due date",
+      "description": "Create individual fixed due date from storage"
+    },
+    {
+      "permissionName": "circulation-storage.fixed-due-date-schedules.item.put",
+      "displayName": "Circulation storage - modify individual fixed due date",
+      "description": "Modify individual fixed due date from storage"
+    },
+    {
+      "permissionName": "circulation-storage.fixed-due-date-schedules.item.delete",
+      "displayName": "Circulation storage - delete individual fixed due date",
+      "description": "Delete individual fixed due date from storage"
+    },
+    {
+      "permissionName": "circulation-storage.fixed-due-date-schedules.collection.delete",
+      "displayName": "Circulation storage - delete collection of fixed due date",
+      "description": "Delete collection of fixed due date from storage"
+    },
     {
       "permissionName": "circulation-storage.all",
       "displayName": "Circulation storage module - all permissions",
@@ -260,7 +321,13 @@
         "circulation-storage.requests.item.post",
         "circulation-storage.requests.item.put",
         "circulation-storage.requests.item.delete",
-        "circulation-storage.requests.collection.delete"
+        "circulation-storage.requests.collection.delete",
+        "circulation-storage.fixed-due-date-schedules.collection.delete",
+        "circulation-storage.fixed-due-date-schedules.item.delete",
+        "circulation-storage.fixed-due-date-schedules.item.put",
+        "circulation-storage.fixed-due-date-schedules.item.post",
+        "circulation-storage.fixed-due-date-schedules.item.get",
+        "circulation-storage.fixed-due-date-schedules.collection.get"
       ]
     }
   ]
