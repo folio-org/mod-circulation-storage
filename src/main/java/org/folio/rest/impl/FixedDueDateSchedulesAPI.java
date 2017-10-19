@@ -57,11 +57,10 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
   }
 
   private void initCQLValidation() {
-    String path = SCHEMA_NAME;
     try {
-      schema = IOUtils.toString(getClass().getClassLoader().getResourceAsStream(path), "UTF-8");
+      schema = IOUtils.toString(getClass().getClassLoader().getResourceAsStream(SCHEMA_NAME), "UTF-8");
     } catch (Exception e) {
-      log.error("unable to load schema - " +path+ ", validation of query fields will not be active");
+      log.error("unable to load schema - " +SCHEMA_NAME+ ", validation of query fields will not be active");
     }
   }
 
