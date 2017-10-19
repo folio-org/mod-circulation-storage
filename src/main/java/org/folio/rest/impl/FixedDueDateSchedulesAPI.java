@@ -146,9 +146,9 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
           });
         }
         catch(CQLQueryValidationException e1){
-          int start = e1.getMessage().indexOf("'");
-          int end = e1.getMessage().lastIndexOf("'");
           String field = e1.getMessage();
+          int start = field.indexOf('\'');
+          int end = field.lastIndexOf('\'');
           if(start != -1 && end != -1){
             field = field.substring(start+1, end);
           }
