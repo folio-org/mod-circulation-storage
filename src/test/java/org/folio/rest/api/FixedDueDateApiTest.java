@@ -211,45 +211,6 @@ public class FixedDueDateApiTest {
       updateCompleted4Response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
     ////////////////////////////////////////////
 
-    /////////sort alpha numeric desc / asc /////
-    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
-    URL url1 = dueDateURL("?query=name=*"+URLEncoder.encode(" sortBy name/sort.descending", "UTF-8"));
-    System.out.println(url1.toString());
-    client.get(url1, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(getCompleted));
-    JsonResponse getResponse = getCompleted.get(5, TimeUnit.SECONDS);
-    assertThat(String.format("Failed to create due date: %s", getResponse.getJson().encodePrettily()),
-      getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-
-    JsonArray descendingResults = getResponse.getJson().getJsonArray("fixedDueDateSchedules");
-
-    System.out.println("Descending Results");
-    System.out.println(descendingResults);
-
-    assertThat(descendingResults.size(), is(3));
-    assertThat(descendingResults.getJsonObject(0).getString("name"), is("semester2"));
-
-    CompletableFuture<JsonResponse> getCompleted2 = new CompletableFuture<>();
-    URL url2 = dueDateURL("?query=name=*"+URLEncoder.encode(" sortBy name/sort.ascending", "UTF-8"));
-    System.out.println(url2.toString());
-    client.get(url2, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(getCompleted2));
-    JsonResponse getResponse2 = getCompleted2.get(5, TimeUnit.SECONDS);
-    assertThat(String.format("Failed to create due date: %s", getResponse2.getJson().encodePrettily()),
-      getResponse2.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-
-    JsonArray ascendingResults = getResponse2.getJson().getJsonArray("fixedDueDateSchedules");
-
-    System.out.println("Ascending Results");
-
-    JsonArrayHelper.toList(ascendingResults).stream()
-      .map(result -> result.getString("name"))
-      .forEachOrdered(System.out::println);
-
-    assertThat(ascendingResults.size(), is(3));
-    assertThat(ascendingResults.getJsonObject(0).getString("name"), is("quarterly"));
-    /////////////////////////////////////////////////////////
-
     //get with bad cql - should be validated server side
     CompletableFuture<JsonResponse> getCQLCompleted2 = new CompletableFuture<>();
     URL url3 = dueDateURL("?query=name=fielddoesntexist=hi");
@@ -334,6 +295,7 @@ public class FixedDueDateApiTest {
     assertThat(get3CompletedResponse.getJson().getJsonArray("fixedDueDateSchedules").size(), is(0));
   }
 
+  //Fails on Mac OS due to differences in UTF-8 collation libraries
   @Test
   public void canSortByNameAscending()
     throws InterruptedException,
