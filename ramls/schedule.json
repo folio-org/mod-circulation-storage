@@ -6,17 +6,17 @@
     "from": {
       "type": "string",
       "format": "date-time",
-      "description": "The start of a date range during which materials checked out will be assigned the due date in the 'due' field. Should conform to the ISO8601 date format, YYYY-MM-DD."
+      "description": "The start of a date range during which materials checked out will be assigned the due date in the 'due' field. Conforms to the ISO 8601 date and time format."
     },
     "to": {
       "type": "string",
       "format": "date-time",
-      "description": "The end of a date range during which materials checked out will be assigned the due date in the 'due' field. Should conform to the ISO8601 date format, YYYY-MM-DD."
+      "description": "The end of a date range during which materials checked out will be assigned the due date in the 'due' field. Conforms to the ISO 8601 date and time format."
     },
     "due": {
       "type": "string",
       "format": "date-time",
-      "description": "The due date for materials checked out in the date range between the 'from' and 'to' dates. Should conform to the ISO8601 date format, YYYY-MM-DD."
+      "description": "The due date for materials checked out in the date range between the 'from' and 'to' dates. Conforms to the ISO 8601 date and time format."
     }
   },
   "required": [
