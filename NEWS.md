@@ -1,9 +1,6 @@
-## 4.1.0 Unreleased
-
-* Expose new Fixed Due Date end point (CIRCSTORE-9)
-
 ## 4.0.0 Unreleased
 
+* Expose new fixed due date schedule end point (`/fixed-due-date-schedule-storage/fixed-due-date-schedules`, CIRCSTORE-9)
 * Allow only one open loan per item (CIRCSTORE-19) - see readme for further details 
 (note that this constraint is expressed as a major change in implementation version
 yet the interface version remains the same)
