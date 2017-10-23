@@ -17,6 +17,7 @@ public class RequestRequestBuilder {
   private final UUID itemId;
   private final UUID requesterId;
   private final String fulfilmentPreference;
+  private final UUID deliveryAddressTypeId;
   private final LocalDate requestExpirationDate;
   private final LocalDate holdShelfExpirationDate;
   private final ItemSummary itemSummary;
@@ -32,6 +33,7 @@ public class RequestRequestBuilder {
       null,
       null,
       null,
+      null,
       null);
   }
 
@@ -42,6 +44,7 @@ public class RequestRequestBuilder {
     UUID itemId,
     UUID requesterId,
     String fulfilmentPreference,
+    UUID deliveryAddressTypeId,
     LocalDate requestExpirationDate,
     LocalDate holdShelfExpirationDate,
     ItemSummary itemSummary,
@@ -53,6 +56,7 @@ public class RequestRequestBuilder {
     this.itemId = itemId;
     this.requesterId = requesterId;
     this.fulfilmentPreference = fulfilmentPreference;
+    this.deliveryAddressTypeId = deliveryAddressTypeId;
     this.requestExpirationDate = requestExpirationDate;
     this.holdShelfExpirationDate = holdShelfExpirationDate;
     this.itemSummary = itemSummary;
@@ -71,6 +75,10 @@ public class RequestRequestBuilder {
     request.put("itemId", this.itemId.toString());
     request.put("requesterId", this.requesterId.toString());
     request.put("fulfilmentPreference", this.fulfilmentPreference);
+
+    if(deliveryAddressTypeId != null) {
+      request.put("deliveryAddressTypeId", this.deliveryAddressTypeId.toString());
+    }
 
     if(requestExpirationDate != null) {
       request.put("requestExpirationDate",
@@ -113,6 +121,7 @@ public class RequestRequestBuilder {
       this.itemId,
       this.requesterId,
       this.fulfilmentPreference,
+      this.deliveryAddressTypeId,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
       this.itemSummary,
@@ -127,6 +136,7 @@ public class RequestRequestBuilder {
       this.itemId,
       this.requesterId,
       this.fulfilmentPreference,
+      this.deliveryAddressTypeId,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
       this.itemSummary,
@@ -141,6 +151,7 @@ public class RequestRequestBuilder {
       this.itemId,
       this.requesterId,
       this.fulfilmentPreference,
+      this.deliveryAddressTypeId,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
       this.itemSummary,
@@ -155,6 +166,7 @@ public class RequestRequestBuilder {
       this.itemId,
       this.requesterId,
       this.fulfilmentPreference,
+      this.deliveryAddressTypeId,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
       this.itemSummary,
@@ -169,6 +181,7 @@ public class RequestRequestBuilder {
       itemId,
       this.requesterId,
       this.fulfilmentPreference,
+      this.deliveryAddressTypeId,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
       this.itemSummary,
@@ -183,20 +196,31 @@ public class RequestRequestBuilder {
       this.itemId,
       requesterId,
       this.fulfilmentPreference,
+      this.deliveryAddressTypeId,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
       this.itemSummary,
       this.requesterSummary);
   }
 
-  public RequestRequestBuilder fulfilToHoldShelf() {
+  public RequestRequestBuilder toHoldShelf() {
+    return withFulfilmentPreference("Hold Shelf");
+  }
+
+  public RequestRequestBuilder deliverToAddress(UUID addressTypeId) {
+    return withFulfilmentPreference("Delivery")
+      .withDeliveryAddressType(addressTypeId);
+  }
+
+  public RequestRequestBuilder withFulfilmentPreference(String fulfilmentPreference) {
     return new RequestRequestBuilder(
       this.id,
       this.requestType,
       this.requestDate,
       this.itemId,
       this.requesterId,
-      "Hold Shelf",
+      fulfilmentPreference,
+      this.deliveryAddressTypeId,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
       this.itemSummary,
@@ -211,6 +235,7 @@ public class RequestRequestBuilder {
       this.itemId,
       this.requesterId,
       this.fulfilmentPreference,
+      this.deliveryAddressTypeId,
       requestExpiration,
       this.holdShelfExpirationDate,
       this.itemSummary,
@@ -225,6 +250,7 @@ public class RequestRequestBuilder {
       this.itemId,
       this.requesterId,
       this.fulfilmentPreference,
+      this.deliveryAddressTypeId,
       this.requestExpirationDate,
       holdShelfExpiration,
       this.itemSummary,
@@ -239,7 +265,7 @@ public class RequestRequestBuilder {
       this.itemId,
       this.requesterId,
       this.fulfilmentPreference,
-      this.requestExpirationDate,
+      this.deliveryAddressTypeId, this.requestExpirationDate,
       this.holdShelfExpirationDate,
       new ItemSummary(title, barcode),
       this.requesterSummary);
@@ -253,6 +279,7 @@ public class RequestRequestBuilder {
       this.itemId,
       this.requesterId,
       this.fulfilmentPreference,
+      this.deliveryAddressTypeId,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
       this.itemSummary,
@@ -267,10 +294,26 @@ public class RequestRequestBuilder {
       this.itemId,
       this.requesterId,
       this.fulfilmentPreference,
+      this.deliveryAddressTypeId,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
       this.itemSummary,
       new PatronSummary(lastName, firstName, null, barcode));
+  }
+
+  public RequestRequestBuilder withDeliveryAddressType(UUID deliverAddressType) {
+    return new RequestRequestBuilder(
+      this.id,
+      this.requestType,
+      this.requestDate,
+      this.itemId,
+      this.requesterId,
+      this.fulfilmentPreference,
+      deliverAddressType,
+      this.requestExpirationDate,
+      this.holdShelfExpirationDate,
+      this.itemSummary,
+      this.requesterSummary);
   }
 
   private String formatDateTime(DateTime requestDate) {

@@ -4,9 +4,12 @@
 * Allow only one open loan per item (CIRCSTORE-19) - see readme for further details 
 (note that this constraint is expressed as a major change in implementation version
 yet the interface version remains the same)
-* Adds `itemStatus` property to loan, in order for it to be included in the action history (CIRCSTORE-27)
+* Adds `deliveryAddressTypeId` property to a request for fulfillment to an address (CIRCSTORE-30)
+* Adds `itemStatus` property to a loan, in order for it to be included in the action history (CIRCSTORE-27)
 * Adds `itemStatus` property to loan history, when provided in requests for loan (CIRCSTORE-27)
-* Provides loan-storage interface 3.3
+* Provides loan-storage interface 3.3 (CIRCSTORE-27)
+* Provides request-storage interface 1.2 (CIRCSTORE-30)
+* Provides fixed-due-date-schedules-storage interface 1.0 (CIRCSTORE-9)
 
 ## 3.3.0 2017-10-11
 
