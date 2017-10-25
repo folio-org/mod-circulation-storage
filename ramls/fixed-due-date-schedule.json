@@ -5,7 +5,8 @@
   "properties": {
     "id": {
       "description": "Unique ID (generated UUID)",
-      "type": "string"
+      "type": "string",
+      "pattern": "^[a-f0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
     },
     "name": {
       "type": "string"

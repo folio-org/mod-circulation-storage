@@ -1,12 +1,7 @@
 package org.folio.rest.api;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import org.folio.rest.support.*;
-import org.hamcrest.junit.MatcherAssert;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
@@ -20,8 +15,20 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
+import org.folio.rest.support.HttpClient;
+import org.folio.rest.support.IndividualResource;
+import org.folio.rest.support.JsonArrayHelper;
+import org.folio.rest.support.JsonResponse;
+import org.folio.rest.support.Response;
+import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.TextResponse;
+import org.hamcrest.junit.MatcherAssert;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 /**
  * @author shale
@@ -30,7 +37,7 @@ import static org.hamcrest.core.Is.is;
 public class FixedDueDateApiTest {
 
   private static final String TABLE_NAME = "fixed_due_date_schedule";
-  private static final String SCHEDULE_SECTION = "schedules";
+  protected static final String SCHEDULE_SECTION = "schedules";
   private static HttpClient client = new HttpClient(StorageTestSuite.getVertx());
 
   @Before
@@ -39,7 +46,7 @@ public class FixedDueDateApiTest {
     ExecutionException,
     TimeoutException,
     MalformedURLException {
-
+    System.out.println("attempting full delete FixedDueDateApiTest.....");
     StorageTestSuite.deleteAll(dueDateURL());
   }
 
@@ -165,8 +172,8 @@ public class FixedDueDateApiTest {
     assertThat(String.format("Failed to create due date: %s", fixDueDate7.encodePrettily()),
       updateCompleted5Response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     String newId = updateCompleted5Response.getJson().getString("id");
-    ////////////////////////////////////////////
 
+    ////////////////////////////////////////////
     //create duplicate name due date
     CompletableFuture<JsonResponse> updateCompleted3 = new CompletableFuture<>();
     JsonObject fixDueDate4 = createFixedDueDate(null, "Semester", "desc2");
@@ -187,8 +194,8 @@ public class FixedDueDateApiTest {
     JsonResponse updateBadCompleted3Response = updateBadCompleted5.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create due date: %s", fixBadDueDate5.encodePrettily()),
       updateBadCompleted3Response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-    ////////////////////////////////////////////
 
+    ////////////////////////////////////////////
     //create and then update with a duplicate name due date
     CompletableFuture<JsonResponse> createCompleted3 = new CompletableFuture<>();
     JsonObject fixDueDate6 = createFixedDueDate(null, "semester2", "desc2");
@@ -209,8 +216,8 @@ public class FixedDueDateApiTest {
     JsonResponse updateCompleted4Response = updateCompleted4.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create due date: %s", fixDueDate5.encodePrettily()),
       updateCompleted4Response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-    ////////////////////////////////////////////
 
+    ////////////////////////////////////////////
     //get with bad cql - should be validated server side
     CompletableFuture<JsonResponse> getCQLCompleted2 = new CompletableFuture<>();
     URL url3 = dueDateURL("?query=name=fielddoesntexist=hi");
@@ -265,7 +272,7 @@ public class FixedDueDateApiTest {
       ResponseHandler.text(updateBadCompleted4));
     TextResponse updateBadCompleted4Response = updateBadCompleted4.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create due date: %s", updateDueDate5.encodePrettily()),
-      updateBadCompleted4Response.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+      updateBadCompleted4Response.getStatusCode(), is(422));
 
     //// get , should have 2 records ///////////////////////
     CompletableFuture<JsonResponse> get2Completed = new CompletableFuture<>();
@@ -372,17 +379,17 @@ public class FixedDueDateApiTest {
     assertThat(results.get(0).getString("name"), is("semester2"));
   }
 
-  private static URL dueDateURL() throws MalformedURLException {
+  protected static URL dueDateURL() throws MalformedURLException {
     return dueDateURL("");
   }
 
-  private static URL dueDateURL(String subPath)
+  protected static URL dueDateURL(String subPath)
     throws MalformedURLException {
 
     return StorageTestSuite.storageUrl("/fixed-due-date-schedule-storage/fixed-due-date-schedules" + subPath);
   }
 
-  private JsonObject createSchedule(String from, String to, String due){
+  protected static JsonObject createSchedule(String from, String to, String due){
     JsonObject jo = new JsonObject();
     if(from != null){
       jo.put("from", from);
@@ -396,7 +403,7 @@ public class FixedDueDateApiTest {
     return jo;
   }
 
-  private JsonObject createFixedDueDate(String id, String name, String desc){
+  protected static JsonObject createFixedDueDate(String id, String name, String desc){
     JsonObject jo = new JsonObject();
     if(id != null){
       jo.put("id", id);
@@ -410,7 +417,7 @@ public class FixedDueDateApiTest {
     return jo;
   }
 
-  private JsonObject createFixedDueDate(String name) {
+  protected static JsonObject createFixedDueDate(String name) {
     return createFixedDueDate(UUID.randomUUID().toString(), name, "");
   }
 
@@ -427,7 +434,7 @@ public class FixedDueDateApiTest {
 
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
-    MatcherAssert.assertThat(String.format("Failed to create loan: %s", response.getBody()),
+    MatcherAssert.assertThat(String.format("Failed to create fixed due date: %s", response.getBody()),
       response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     return new IndividualResource(response);

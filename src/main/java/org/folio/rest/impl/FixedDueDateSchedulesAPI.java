@@ -80,7 +80,7 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
             TenantTool.calculateTenantId(tenantId));
 
         postgresClient.mutate(
-            String.format("TRUNCATE TABLE %s_%s.%s", tenantId, PomReader.INSTANCE.getModuleName(), FIXED_SCHEDULE_TABLE), reply -> {
+            String.format("TRUNCATE TABLE %s_%s.%s CASCADE", tenantId, PomReader.INSTANCE.getModuleName(), FIXED_SCHEDULE_TABLE), reply -> {
               asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                   FixedDueDateScheduleStorageResource.DeleteFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
                       .noContent().build()));
@@ -354,6 +354,11 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
                   DeleteFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
                       .withPlainNotFound(PgExceptionUtil.badRequestMessage(reply.cause()))));
               }
+              else if(iStillReferenced(reply.cause())){
+                asyncResultHandler.handle(Future.succeededFuture(
+                  DeleteFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
+                      .withPlainBadRequest(PgExceptionUtil.badRequestMessage(reply.cause()))));
+              }
               else{
                 asyncResultHandler.handle(Future.succeededFuture(
                   DeleteFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
@@ -556,6 +561,13 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
 
   private boolean isBadId(Throwable e){
     if(e != null && e.getMessage().contains("invalid input syntax for type numeric")){
+      return true;
+    }
+    return false;
+  }
+
+  private boolean iStillReferenced(Throwable e){
+    if(e != null && e.getMessage().contains("violates foreign key constraint")){
       return true;
     }
     return false;
