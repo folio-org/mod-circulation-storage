@@ -165,7 +165,7 @@ public class LoanPoliciesApiTest {
     assertThat(String.format("Failed to create loan policy: %s", lpHierarchyResponse.getBody()),
       lpHierarchyResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    ///validation, fk to fixedDueDateScheduleId required
+    ///validation, fk to fixedDueDateScheduleId required once profileid = fixed
     CompletableFuture<JsonResponse> createpdateV2Completed = new CompletableFuture<>();
     JsonObject loanPolicyRequest8 = new LoanPolicyRequestBuilder()
         .withId(id)
@@ -191,14 +191,24 @@ public class LoanPoliciesApiTest {
       updateResponse.getStatusCode(), is(500));
     ////////////////////////////////////////////////////////
 
+    //delete loan policy //////////////////
+    System.out.println("Running: DELETE " + loanPolicyStorageUrl("/"+id));
+    CompletableFuture<Response> delCompleted2 = new CompletableFuture<>();
+    client.delete(loanPolicyStorageUrl("/"+id), StorageTestSuite.TENANT_ID,
+      ResponseHandler.empty(delCompleted2));
+    Response delCompleted4Response = delCompleted2.get(5, TimeUnit.SECONDS);
+    assertThat(String.format("Failed to delete due date: %s", loanPolicyStorageUrl("/"+id)),
+      delCompleted4Response.getStatusCode(), is(204));
+    ///////////////////////////////////////
+
     //// try to delete the fdd - not allowed since referenced by loan policy ///////////////////////
 /*    System.out.println("Running: DELETE " + FixedDueDateApiTest.dueDateURL("/"+fddId.toString()));
-    CompletableFuture<TextResponse> delCompleted2 = new CompletableFuture<>();
+    CompletableFuture<Response> delCompleted3 = new CompletableFuture<>();
     client.delete(FixedDueDateApiTest.dueDateURL("/"+fddId.toString()), StorageTestSuite.TENANT_ID,
-      ResponseHandler.text(delCompleted2));
-    TextResponse delCompleted4Response = delCompleted2.get(5, TimeUnit.SECONDS);
+      ResponseHandler.empty(delCompleted3));
+    Response delCompleted5Response = delCompleted3.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to delete due date: %s", FixedDueDateApiTest.dueDateURL("/"+fddId.toString())),
-      delCompleted4Response.getStatusCode(), is(400));*/
+      delCompleted5Response.getStatusCode(), is(400));*/
     //////////////////////////////////////////////////////////////////////////////////////////
 
     //// try to delete all fdds (uses cascade so will succeed) ///////////////////////
