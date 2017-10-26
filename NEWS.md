@@ -7,6 +7,7 @@ yet the interface version remains the same)
 * Adds `itemStatus` property to loan, in order for it to be included in the action history (CIRCSTORE-27)
 * Adds `itemStatus` property to loan history, when provided in requests for loan (CIRCSTORE-27)
 * Provides loan-storage interface 3.3
+* Add relationship between loan policies and fixed due date schedules (CIRCSTORE-29)
 
 ## 3.3.0 2017-10-11
 
