@@ -37,7 +37,7 @@ CREATE TABLE myuniversity_mymodule.loan_policy (
 CREATE OR REPLACE FUNCTION update_fixedduedate_references()
 RETURNS TRIGGER AS $$
 BEGIN
-  NEW.fixedDueDateScheduleId = NEW.jsonb->>'fixedDueDateScheduleId';
+  NEW.fixedDueDateScheduleId = NEW.jsonb->'loansPolicy'->>'fixedDueDateScheduleId';
   NEW.alternateFixedDueDateScheduleId = NEW.jsonb->'renewalsPolicy'->>'alternateFixedDueDateScheduleId';
   RETURN NEW;
 END;

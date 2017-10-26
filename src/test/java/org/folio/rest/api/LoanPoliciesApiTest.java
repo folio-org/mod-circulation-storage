@@ -80,15 +80,15 @@ public class LoanPoliciesApiTest {
     assertThat(representation.getString("id"), is(fddId.toString()));
     ////////////////////////////////////////////////////////////
 
-    UUID id = UUID.randomUUID();
+    UUID id1 = UUID.randomUUID();
 
     //////////// create loan policy with foreign key to fdd
     JsonObject loanPolicyRequest = new LoanPolicyRequestBuilder()
-      .withId(id)
+      .withId(id1)
       .withName("Example Loan Policy")
       .withDescription("An example loan policy")
       .create();
-    loanPolicyRequest.put("fixedDueDateScheduleId", fddId.toString());
+    loanPolicyRequest.getJsonObject("loansPolicy").put("fixedDueDateScheduleId", fddId.toString());
     CompletableFuture<JsonResponse> createLPCompleted = new CompletableFuture<>();
     client.post(loanPolicyStorageUrl(),
       loanPolicyRequest, StorageTestSuite.TENANT_ID,
@@ -101,12 +101,12 @@ public class LoanPoliciesApiTest {
     ////////////validation error - renewable = true + different period = true + fixed -> needs fk
     CompletableFuture<JsonResponse> createpdateV1Completed = new CompletableFuture<>();
     JsonObject loanPolicyRequest3 = new LoanPolicyRequestBuilder()
-        .withId(id)
+        .withId(id1)
         .withName("Example Loan Policy")
         .withDescription("An example loan policy")
         .create();
     loanPolicyRequest3.getJsonObject("loansPolicy").put("profileId", "Fixed");
-    client.put(loanPolicyStorageUrl("/"+id), loanPolicyRequest3, StorageTestSuite.TENANT_ID,
+    client.put(loanPolicyStorageUrl("/"+id1), loanPolicyRequest3, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createpdateV1Completed));
     JsonResponse updateV1response = createpdateV1Completed.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create due date: %s", updateV1response.getBody()),
@@ -114,13 +114,14 @@ public class LoanPoliciesApiTest {
     //////////////////////////////////////////////////////////////
 
     ///////////non-existent foreign key
-    id = UUID.randomUUID();
+    UUID id2 = UUID.randomUUID();
     JsonObject badLoanPolicyRequest = new LoanPolicyRequestBuilder()
-        .withId(id)
+        .withId(id2)
         .withName("Example Loan Policy")
         .withDescription("An example loan policy")
         .create();
-    badLoanPolicyRequest.put("fixedDueDateScheduleId", "cb201cd6-296c-4457-9ac4-617d9584e27b");
+    badLoanPolicyRequest.getJsonObject("loansPolicy")
+      .put("fixedDueDateScheduleId", "cb201cd6-296c-4457-9ac4-617d9584e27b");
     CompletableFuture<JsonResponse> createBadLPCompleted = new CompletableFuture<>();
     client.post(loanPolicyStorageUrl(),
       badLoanPolicyRequest, StorageTestSuite.TENANT_ID,
@@ -131,13 +132,14 @@ public class LoanPoliciesApiTest {
     //////////////////////////////////////////
 
     ///////////bad foreign key
-    id = UUID.randomUUID();
+    id2 = UUID.randomUUID();
     JsonObject bad2LoanPolicyRequest = new LoanPolicyRequestBuilder()
-        .withId(id)
+        .withId(id2)
         .withName("Example Loan Policy")
         .withDescription("An example loan policy")
         .create();
-    bad2LoanPolicyRequest.put("fixedDueDateScheduleId", "1234567890");
+    bad2LoanPolicyRequest.getJsonObject("loansPolicy")
+      .put("fixedDueDateScheduleId", "1234567890");
     CompletableFuture<JsonResponse> createBadLP2Completed = new CompletableFuture<>();
     client.post(loanPolicyStorageUrl(),
       bad2LoanPolicyRequest, StorageTestSuite.TENANT_ID,
@@ -147,11 +149,11 @@ public class LoanPoliciesApiTest {
       badlpResponse2.getStatusCode(), is(500));
     //////////////////////////////////////////
 
-    id = UUID.randomUUID();
+    id2 = UUID.randomUUID();
 
     //////////// create loan policy with fk to jsonb->'renewalsPolicy'->>'alternateFixedDueDateScheduleId'
     JsonObject loanPolicyRequest4 = new LoanPolicyRequestBuilder()
-      .withId(id)
+      .withId(id2)
       .withName("Example Loan Policy")
       .withDescription("An example loan policy")
       .create();
@@ -168,13 +170,13 @@ public class LoanPoliciesApiTest {
     ///validation, fk to fixedDueDateScheduleId required once profileid = fixed
     CompletableFuture<JsonResponse> createpdateV2Completed = new CompletableFuture<>();
     JsonObject loanPolicyRequest8 = new LoanPolicyRequestBuilder()
-        .withId(id)
+        .withId(id2)
         .withName("Example Loan Policy")
         .withDescription("An example loan policy")
         .create();
     loanPolicyRequest8.getJsonObject("loansPolicy").put("profileId", "Fixed");
     loanPolicyRequest8.put("renewable", false);
-    client.put(loanPolicyStorageUrl("/"+id), loanPolicyRequest8, StorageTestSuite.TENANT_ID,
+    client.put(loanPolicyStorageUrl("/"+id2), loanPolicyRequest8, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createpdateV2Completed));
     JsonResponse updateV2response = createpdateV2Completed.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create due date: %s", updateV2response.getBody()),
@@ -183,7 +185,7 @@ public class LoanPoliciesApiTest {
     //update alternateFixedDueDateScheduleId with a bad (non existent) id
     CompletableFuture<Response> updateCompleted = new CompletableFuture<>();
     renewalsPolicy.put("alternateFixedDueDateScheduleId", "ab201cd6-296c-4457-9ac4-617d9584e27b");
-    client.put(loanPolicyStorageUrl("/"+id),
+    client.put(loanPolicyStorageUrl("/"+id2),
       loanPolicyRequest4, StorageTestSuite.TENANT_ID,
       ResponseHandler.empty(updateCompleted));
     Response updateResponse = updateCompleted.get(5, TimeUnit.SECONDS);
@@ -192,23 +194,33 @@ public class LoanPoliciesApiTest {
     ////////////////////////////////////////////////////////
 
     //delete loan policy //////////////////
-    System.out.println("Running: DELETE " + loanPolicyStorageUrl("/"+id));
+    System.out.println("Running: DELETE " + loanPolicyStorageUrl("/"+id2));
     CompletableFuture<Response> delCompleted2 = new CompletableFuture<>();
-    client.delete(loanPolicyStorageUrl("/"+id), StorageTestSuite.TENANT_ID,
+    client.delete(loanPolicyStorageUrl("/"+id2), StorageTestSuite.TENANT_ID,
       ResponseHandler.empty(delCompleted2));
     Response delCompleted4Response = delCompleted2.get(5, TimeUnit.SECONDS);
-    assertThat(String.format("Failed to delete due date: %s", loanPolicyStorageUrl("/"+id)),
+    assertThat(String.format("Failed to delete due date: %s", loanPolicyStorageUrl("/"+id2)),
       delCompleted4Response.getStatusCode(), is(204));
     ///////////////////////////////////////
 
+    //delete loan policy //////////////////
+    System.out.println("Running: DELETE " + loanPolicyStorageUrl("/"+id1));
+    CompletableFuture<Response> delCompleted9 = new CompletableFuture<>();
+    client.delete(loanPolicyStorageUrl("/"+id1), StorageTestSuite.TENANT_ID,
+      ResponseHandler.empty(delCompleted9));
+    Response delCompleted5Response = delCompleted9.get(5, TimeUnit.SECONDS);
+    assertThat(String.format("Failed to delete due date: %s", loanPolicyStorageUrl("/"+id1)),
+      delCompleted5Response.getStatusCode(), is(204));
+    ///////////////////////////////////////
+
     //// try to delete the fdd - not allowed since referenced by loan policy ///////////////////////
-/*    System.out.println("Running: DELETE " + FixedDueDateApiTest.dueDateURL("/"+fddId.toString()));
+    System.out.println("Running: DELETE " + FixedDueDateApiTest.dueDateURL("/"+fddId.toString()));
     CompletableFuture<Response> delCompleted3 = new CompletableFuture<>();
     client.delete(FixedDueDateApiTest.dueDateURL("/"+fddId.toString()), StorageTestSuite.TENANT_ID,
       ResponseHandler.empty(delCompleted3));
-    Response delCompleted5Response = delCompleted3.get(5, TimeUnit.SECONDS);
+    Response delCompleted6Response = delCompleted3.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to delete due date: %s", FixedDueDateApiTest.dueDateURL("/"+fddId.toString())),
-      delCompleted5Response.getStatusCode(), is(400));*/
+      delCompleted6Response.getStatusCode(), is(204));
     //////////////////////////////////////////////////////////////////////////////////////////
 
     //// try to delete all fdds (uses cascade so will succeed) ///////////////////////
@@ -218,7 +230,7 @@ public class LoanPoliciesApiTest {
       ResponseHandler.empty(delAllCompleted));
     Response delAllCompleted4Response = delAllCompleted.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to delete due date: %s", FixedDueDateApiTest.dueDateURL()),
-      delAllCompleted4Response.getStatusCode(), is(204));
+      delAllCompleted4Response.getStatusCode(), is(500));
     //////////////////////////////////////////////////////////////////////////////////////////
 
     }

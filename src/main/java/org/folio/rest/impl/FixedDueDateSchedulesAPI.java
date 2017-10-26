@@ -80,10 +80,18 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
             TenantTool.calculateTenantId(tenantId));
 
         postgresClient.mutate(
-            String.format("TRUNCATE TABLE %s_%s.%s CASCADE", tenantId, PomReader.INSTANCE.getModuleName(), FIXED_SCHEDULE_TABLE), reply -> {
-              asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                  FixedDueDateScheduleStorageResource.DeleteFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
-                      .noContent().build()));
+            String.format("TRUNCATE TABLE %s_%s.%s", tenantId, PomReader.INSTANCE.getModuleName(), FIXED_SCHEDULE_TABLE), reply -> {
+                if(reply.succeeded()){
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                    FixedDueDateScheduleStorageResource.DeleteFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
+                        .noContent().build()));
+                }
+                else{
+                  log.error(reply.cause());
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                      FixedDueDateScheduleStorageResource.DeleteFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
+                          .withPlainInternalServerError(reply.cause().getMessage())));
+                }
             });
       } catch (Exception e) {
         log.error(e);
