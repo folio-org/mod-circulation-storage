@@ -32,10 +32,10 @@ import io.vertx.ext.sql.ResultSet;
 @Suite.SuiteClasses({
   LoansApiTest.class,
   LoanRulesApiTest.class,
+  FixedDueDateApiTest.class,
   LoanPoliciesApiTest.class,
   RequestsApiTest.class,
-  LoansApiHistoryTest.class,
-  FixedDueDateApiTest.class
+  LoansApiHistoryTest.class
 })
 public class StorageTestSuite {
 

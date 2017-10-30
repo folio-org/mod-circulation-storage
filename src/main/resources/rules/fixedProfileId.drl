@@ -1,0 +1,32 @@
+package rules
+
+import org.folio.rest.jaxrs.model.LoanPolicy;
+
+rule "Mixed objects Rule 2"
+
+no-loop
+//if loanable 
+when
+  error : Error()
+  m1 : LoanPolicy(
+            (
+            m1.getLoanable() == true && 
+            eval( m1.getLoansPolicy().getProfileId().equalsIgnoreCase( "Fixed" ) ) && 
+            m1.getLoansPolicy().getFixedDueDateScheduleId() == null
+            )
+            ||
+            (
+            m1.getLoanable() != true && 
+            m1.getLoansPolicy().getFixedDueDateScheduleId() == null
+            )
+       )
+then
+  error.setMessage("Fixed due date cannot be null if loanable is " + m1.getLoanable() + " and profile is of type fixed");
+  Parameter param = new Parameter();
+  param.setKey("fixedDueDateScheduleId");
+  param.setValue(""+m1.getLoansPolicy().getFixedDueDateScheduleId());
+  java.util.List<Parameter> p = new java.util.ArrayList<>();
+  p.add(param);
+  error.setParameters(p);
+  throw new java.lang.Exception("Loanable = true, profileId = fixed , but fixed due date is null");
+end

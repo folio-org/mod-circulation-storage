@@ -1,0 +1,40 @@
+package rules
+
+import org.folio.rest.jaxrs.model.LoanPolicy;
+import org.folio.rest.jaxrs.model.Error;
+import org.folio.rest.jaxrs.model.Parameter;
+
+rule "Mixed objects Rule"
+
+no-loop
+//if renewable
+when
+  error : Error()
+  m1 : LoanPolicy(
+            (
+            m1.getRenewable()  == true && 
+            m1.getRenewalsPolicy().getDifferentPeriod() == true && 
+            eval( m1.getLoansPolicy().getProfileId().equalsIgnoreCase( "Fixed" ) ) && 
+            m1.getRenewalsPolicy().getAlternateFixedDueDateScheduleId() == null
+            )
+            
+            ||
+            
+            (
+            m1.getRenewable()  != true || 
+            m1.getRenewalsPolicy().getDifferentPeriod() != true
+            && m1.getRenewalsPolicy().getAlternateFixedDueDateScheduleId() != null
+            )
+       )
+then
+  error.setMessage("Alternate fixed due date cannot be " +  m1.getRenewalsPolicy().getAlternateFixedDueDateScheduleId() + 
+  " if renewable is "+m1.getRenewable()+", different period is "+m1.getRenewalsPolicy().getDifferentPeriod()
+  +" and profile is " + m1.getLoansPolicy().getProfileId());
+  Parameter param = new Parameter();
+  param.setKey("alternateFixedDueDateScheduleId");
+  param.setValue(""+m1.getRenewalsPolicy().getAlternateFixedDueDateScheduleId());
+  java.util.List<Parameter> p = new java.util.ArrayList<>();
+  p.add(param);
+  error.setParameters(p);
+  throw new java.lang.Exception("getRenewable = true, DifferentPeriod = true , and Profile is fixed, but AlternateFixedDueDateScheduleId is null");
+end

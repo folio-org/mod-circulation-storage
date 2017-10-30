@@ -18,10 +18,33 @@ CREATE UNIQUE INDEX only_one_open_loan_per_item
   ON myuniversity_mymodule.loan( (jsonb->>'itemId') )
   WHERE (jsonb->'status'->>'name') = 'Open';
 
-CREATE TABLE myuniversity_mymodule.loan_policy (
+  
+CREATE TABLE myuniversity_mymodule.fixed_due_date_schedule (
   _id UUID PRIMARY KEY,
   jsonb JSONB NOT NULL
 );
+
+CREATE UNIQUE INDEX myuniversity_mymodule_fixed_due_date_schedule_unique_name
+  ON myuniversity_mymodule.fixed_due_date_schedule( lower((jsonb->>'name')) );
+  
+CREATE TABLE myuniversity_mymodule.loan_policy (
+  _id UUID PRIMARY KEY,
+  jsonb JSONB NOT NULL,
+  fixedDueDateScheduleId UUID REFERENCES myuniversity_mymodule.fixed_due_date_schedule,
+  alternateFixedDueDateScheduleId UUID REFERENCES myuniversity_mymodule.fixed_due_date_schedule
+);
+
+CREATE OR REPLACE FUNCTION update_fixedduedate_references()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.fixedDueDateScheduleId = NEW.jsonb->'loansPolicy'->>'fixedDueDateScheduleId';
+  NEW.alternateFixedDueDateScheduleId = NEW.jsonb->'renewalsPolicy'->>'alternateFixedDueDateScheduleId';
+  RETURN NEW;
+END;
+$$ language 'plpgsql';
+CREATE TRIGGER update_fdd_references
+  BEFORE INSERT OR UPDATE ON myuniversity_mymodule.loan_policy
+  FOR EACH ROW EXECUTE PROCEDURE update_fixedduedate_references();
 
 CREATE TABLE myuniversity_mymodule.loan_rules (
   _id UUID PRIMARY KEY,
@@ -34,15 +57,6 @@ CREATE TABLE myuniversity_mymodule.request (
   creation_date timestamp WITH TIME ZONE,
   created_by text
 );
-
-CREATE TABLE myuniversity_mymodule.fixed_due_date_schedule (
-  _id UUID PRIMARY KEY,
-  jsonb JSONB NOT NULL
-);
-
-CREATE UNIQUE INDEX myuniversity_mymodule_fixed_due_date_schedule_unique_name
-  ON myuniversity_mymodule.fixed_due_date_schedule( lower((jsonb->>'name')) );
-
 
 INSERT INTO myuniversity_mymodule.loan_rules
   SELECT id, jsonb_build_object('id', id, 'loanRulesAsTextFile', '')
