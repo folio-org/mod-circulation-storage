@@ -18,7 +18,7 @@
       "format": "date-time"
     },
     "requesterId": {
-      "description": "ID of the user who made the request",
+      "description": "ID of the requesting patron (user)",
       "type": "string",
       "pattern": "^[a-f0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
     },
@@ -47,19 +47,19 @@
       "type": "object",
       "properties": {
         "firstName": {
-          "description": "first name of the patron",
+          "description": "first name of the requesting patron",
           "type": "string"
         },
         "lastName": {
-          "description": "last name of the patron",
+          "description": "last name of the requesting patron",
           "type": "string"
         },
         "middleName": {
-          "description": "middle name of the patron",
+          "description": "middle name of the requesting patron",
           "type": "string"
         },
         "barcode": {
-          "description": "barcode of the patron",
+          "description": "barcode of the requesting patron",
           "type": "string"
         }
       },
@@ -69,6 +69,11 @@
       "description": "How should the request be fulfilled (whether the item should be kept on the hold shelf for collection or delivered to the requester)",
       "type": "string",
       "enum": ["Hold Shelf", "Delivery"]
+    },
+    "deliveryAddressTypeId": {
+      "description": "Deliver to the address of this type, for the requesting patron",
+      "type": "string",
+      "pattern": "^[a-f0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
     },
     "requestExpirationDate": {
       "description": "Date when the request expires",

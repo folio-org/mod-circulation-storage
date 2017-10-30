@@ -74,11 +74,11 @@ public class RequestsApiTest {
 
     JsonObject requestRequest = new RequestRequestBuilder()
       .recall()
+      .toHoldShelf()
       .withId(id)
       .withRequestDate(requestDate)
       .withItemId(itemId)
       .withRequesterId(requesterId)
-      .fulfilToHoldShelf()
       .withRequestExpiration(new LocalDate(2017, 7, 30))
       .withHoldShelfExpiration(new LocalDate(2017, 8, 31))
       .withItem("Nod", "565578437802")
@@ -117,6 +117,43 @@ public class RequestsApiTest {
   }
 
   @Test
+  public void canCreateARequestToBeFulfilledByDeliverToAnAddress()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    UUID id = UUID.randomUUID();
+    UUID deliveryAddressTypeId = UUID.randomUUID();
+
+    JsonObject requestRequest = new RequestRequestBuilder()
+      .recall()
+      .deliverToAddress(deliveryAddressTypeId)
+      .withId(id)
+      .create();
+
+    client.post(requestStorageUrl(),
+      requestRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to create request: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    JsonObject representation = response.getJson();
+
+    assertThat(representation.getString("id"), is(id.toString()));
+    assertThat(representation.getString("requestType"), is("Recall"));
+    assertThat(representation.getString("fulfilmentPreference"), is("Delivery"));
+    assertThat(representation.getString("deliveryAddressTypeId"),
+      is(deliveryAddressTypeId.toString()));
+  }
+
+  @Test
   public void canCreateARequestWithOnlyRequiredProperties()
     throws InterruptedException,
     MalformedURLException,
@@ -137,7 +174,7 @@ public class RequestsApiTest {
       .withRequestDate(requestDate)
       .withItemId(itemId)
       .withRequesterId(requesterId)
-      .fulfilToHoldShelf()
+      .toHoldShelf()
       .create();
 
     client.post(requestStorageUrl(),
@@ -282,7 +319,7 @@ public class RequestsApiTest {
       .withRequestDate(requestDate)
       .withItemId(itemId)
       .withRequesterId(requesterId)
-      .fulfilToHoldShelf()
+      .toHoldShelf()
       .withRequestExpiration(new LocalDate(2017, 7, 30))
       .withHoldShelfExpiration(new LocalDate(2017, 8, 31))
       .withItem("Nod", "565578437802")
@@ -346,7 +383,7 @@ public class RequestsApiTest {
       .withRequestDate(requestDate)
       .withItemId(itemId)
       .withRequesterId(requesterId)
-      .fulfilToHoldShelf()
+      .toHoldShelf()
       .withItem("Nod", "565578437802")
       .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
       .create();
@@ -548,7 +585,7 @@ public class RequestsApiTest {
       .withRequestDate(requestDate)
       .withItemId(itemId)
       .withRequesterId(requesterId)
-      .fulfilToHoldShelf()
+      .toHoldShelf()
       .withRequestExpiration(new LocalDate(2017, 7, 30))
       .withHoldShelfExpiration(new LocalDate(2017, 8, 31))
       .withItem("Nod", "565578437802")

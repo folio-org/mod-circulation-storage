@@ -11,6 +11,7 @@
         "name": "Open"
       },
       "action": "renewed",
+      "itemStatus": "Checked out",
       "renewalCount": 1
     },
     {
@@ -23,7 +24,8 @@
       "status": {
         "name": "Closed"
       },
-      "action": "checkedin"
+      "action": "checkedin",
+      "itemStatus": "Available"
     }
   ],
   "totalRecords": 2
