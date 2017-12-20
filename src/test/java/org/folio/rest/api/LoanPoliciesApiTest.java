@@ -1,10 +1,17 @@
 package org.folio.rest.api;
 
 
-import static org.folio.rest.support.periodJsonObjectMatcher.matchesPeriod;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNull.notNullValue;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import org.folio.rest.support.HttpClient;
+import org.folio.rest.support.JsonResponse;
+import org.folio.rest.support.Response;
+import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.builders.LoanPolicyRequestBuilder;
+import org.hamcrest.junit.MatcherAssert;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
@@ -16,18 +23,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.folio.rest.support.HttpClient;
-import org.folio.rest.support.JsonResponse;
-import org.folio.rest.support.Response;
-import org.folio.rest.support.ResponseHandler;
-import org.folio.rest.support.builders.LoanPolicyRequestBuilder;
-import org.hamcrest.junit.MatcherAssert;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
+import static org.folio.rest.support.periodJsonObjectMatcher.matchesPeriod;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.notNullValue;
 
 public class LoanPoliciesApiTest {
 
@@ -230,7 +229,7 @@ public class LoanPoliciesApiTest {
       ResponseHandler.empty(delAllCompleted));
     Response delAllCompleted4Response = delAllCompleted.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to delete due date: %s", FixedDueDateApiTest.dueDateURL()),
-      delAllCompleted4Response.getStatusCode(), is(500));
+      delAllCompleted4Response.getStatusCode(), is(204));
     //////////////////////////////////////////////////////////////////////////////////////////
 
     }
@@ -586,7 +585,7 @@ public class LoanPoliciesApiTest {
       getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
 
-  private static URL loanPolicyStorageUrl() throws MalformedURLException {
+  static URL loanPolicyStorageUrl() throws MalformedURLException {
     return loanPolicyStorageUrl("");
   }
 
