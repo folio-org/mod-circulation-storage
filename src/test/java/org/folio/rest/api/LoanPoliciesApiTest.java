@@ -585,7 +585,7 @@ public class LoanPoliciesApiTest {
       getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
 
-  private static URL loanPolicyStorageUrl() throws MalformedURLException {
+  static URL loanPolicyStorageUrl() throws MalformedURLException {
     return loanPolicyStorageUrl("");
   }
 

@@ -1,7 +1,13 @@
 package org.folio.rest.api;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import org.folio.rest.support.*;
+import org.hamcrest.junit.MatcherAssert;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
@@ -15,20 +21,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.folio.rest.support.HttpClient;
-import org.folio.rest.support.IndividualResource;
-import org.folio.rest.support.JsonArrayHelper;
-import org.folio.rest.support.JsonResponse;
-import org.folio.rest.support.Response;
-import org.folio.rest.support.ResponseHandler;
-import org.folio.rest.support.TextResponse;
-import org.hamcrest.junit.MatcherAssert;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
+import static org.folio.rest.api.LoanPoliciesApiTest.loanPolicyStorageUrl;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 
 /**
  * @author shale
@@ -37,7 +32,7 @@ import io.vertx.core.json.JsonObject;
 public class FixedDueDateApiTest {
 
   private static final String TABLE_NAME = "fixed_due_date_schedule";
-  protected static final String SCHEDULE_SECTION = "schedules";
+  static final String SCHEDULE_SECTION = "schedules";
   private static HttpClient client = new HttpClient(StorageTestSuite.getVertx());
 
   @Before
@@ -46,7 +41,8 @@ public class FixedDueDateApiTest {
     ExecutionException,
     TimeoutException,
     MalformedURLException {
-    System.out.println("attempting full delete FixedDueDateApiTest.....");
+
+    StorageTestSuite.deleteAll(loanPolicyStorageUrl());
     StorageTestSuite.deleteAll(dueDateURL());
   }
 
@@ -239,9 +235,6 @@ public class FixedDueDateApiTest {
       getCompleted4Response.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     assertThat(getCompleted4Response.getJson().getString("name"), is("semester2"));
 
-    canSortByNameAscending();
-    canSortByNameDescending();
-
     //// delete by id ///////////////////////
     CompletableFuture<Response> delCompleted = new CompletableFuture<>();
     client.delete(dueDateURL("/"+newId2), StorageTestSuite.TENANT_ID,
@@ -289,13 +282,13 @@ public class FixedDueDateApiTest {
       get2CompletedResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     assertThat(get2CompletedResponse.getJson().getJsonArray("fixedDueDateSchedules").size(), is(2));
 
-    ///// delete all items ////////////////////////////////
+    //// try to delete all fdds (uses cascade so will succeed) ///////////////////////
     CompletableFuture<Response> delAllCompleted = new CompletableFuture<>();
     client.delete(dueDateURL(), StorageTestSuite.TENANT_ID,
       ResponseHandler.empty(delAllCompleted));
     Response delAllCompleted4Response = delAllCompleted.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to delete due date: %s", dueDateURL()),
-      delAllCompleted4Response.getStatusCode(), is(500));
+      delAllCompleted4Response.getStatusCode(), is(204));
     ////////////////////////////////////////////////////////
 
     //// get , should have 0 records ///////////////////////
@@ -305,21 +298,21 @@ public class FixedDueDateApiTest {
     JsonResponse get3CompletedResponse = get3Completed.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to get due date: %s", get3CompletedResponse.getJson().encodePrettily()),
       get3CompletedResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-    assertThat(get3CompletedResponse.getJson().getJsonArray("fixedDueDateSchedules").size(), is(2));
+    assertThat(get3CompletedResponse.getJson().getJsonArray("fixedDueDateSchedules").size(), is(0));
   }
 
-  //Fails on Mac OS due to differences in UTF-8 collation libraries
-
-  public void canSortByNameAscending()
+  @Ignore("Fails on Mac OS due to differences in UTF-8 collation libraries")
+  @Test
+  public void canSortDifferentCaseNamesAscending()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
     ExecutionException,
     UnsupportedEncodingException {
 
-    //createFixedDueDateSchedule(createFixedDueDate("quarterly"));
-    //createFixedDueDateSchedule(createFixedDueDate("Semester"));
-    //createFixedDueDateSchedule(createFixedDueDate("semester2"));
+    createFixedDueDateSchedule(createFixedDueDate("quarterly"));
+    createFixedDueDateSchedule(createFixedDueDate("Semester"));
+    createFixedDueDateSchedule(createFixedDueDate("semester2"));
 
     URL sortUrl = dueDateURL("?query=name=*"
       + URLEncoder.encode(" sortBy name/sort.ascending", "UTF-8"));
@@ -346,7 +339,45 @@ public class FixedDueDateApiTest {
     assertThat(results.get(0).getString("name"), is("quarterly"));
   }
 
+  @Test
+  public void canSortByNameAscending()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
 
+    createFixedDueDateSchedule(createFixedDueDate("quarterly"));
+    createFixedDueDateSchedule(createFixedDueDate("semester"));
+    createFixedDueDateSchedule(createFixedDueDate("semester2"));
+
+    URL sortUrl = dueDateURL("?query=name=*"
+      + URLEncoder.encode(" sortBy name/sort.ascending", "UTF-8"));
+
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
+
+    client.get(sortUrl, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(getCompleted));
+
+    JsonResponse getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to get fixed due date schedules: %s",
+      getResponse.getJson().encodePrettily()),
+      getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    List<JsonObject> results = JsonArrayHelper.toList(getResponse.getJson()
+      .getJsonArray("fixedDueDateSchedules"));
+
+    results.stream()
+      .map(result -> result.getString("name"))
+      .forEachOrdered(System.out::println);
+
+    assertThat(results.size(), is(3));
+    assertThat(results.get(0).getString("name"), is("quarterly"));
+    assertThat(results.get(2).getString("name"), is("semester2"));
+  }
+
+  @Test
   public void canSortByNameDescending()
     throws InterruptedException,
     MalformedURLException,
@@ -354,9 +385,9 @@ public class FixedDueDateApiTest {
     ExecutionException,
     UnsupportedEncodingException {
 
-    //createFixedDueDateSchedule(createFixedDueDate("quarterly"));
-    //createFixedDueDateSchedule(createFixedDueDate("Semester"));
-    //createFixedDueDateSchedule(createFixedDueDate("semester2"));
+    createFixedDueDateSchedule(createFixedDueDate("quarterly"));
+    createFixedDueDateSchedule(createFixedDueDate("semester"));
+    createFixedDueDateSchedule(createFixedDueDate("semester2"));
 
     URL sortUrl = dueDateURL("?query=name=*"
       + URLEncoder.encode(" sortBy name/sort.descending", "UTF-8"));
@@ -375,14 +406,9 @@ public class FixedDueDateApiTest {
     List<JsonObject> results = JsonArrayHelper.toList(getResponse.getJson()
       .getJsonArray("fixedDueDateSchedules"));
 
-    System.out.println("Ascending Results");
-
-    results.stream()
-      .map(result -> result.getString("name"))
-      .forEachOrdered(System.out::println);
-
     assertThat(results.size(), is(3));
     assertThat(results.get(0).getString("name"), is("semester2"));
+    assertThat(results.get(2).getString("name"), is("quarterly"));
   }
 
   protected static URL dueDateURL() throws MalformedURLException {
@@ -392,34 +418,48 @@ public class FixedDueDateApiTest {
   protected static URL dueDateURL(String subPath)
     throws MalformedURLException {
 
-    return StorageTestSuite.storageUrl("/fixed-due-date-schedule-storage/fixed-due-date-schedules" + subPath);
+    return StorageTestSuite.storageUrl(
+      "/fixed-due-date-schedule-storage/fixed-due-date-schedules" + subPath);
   }
 
-  protected static JsonObject createSchedule(String from, String to, String due){
+  protected static JsonObject createSchedule(
+    String from,
+    String to,
+    String due) {
+
     JsonObject jo = new JsonObject();
-    if(from != null){
+
+    if(from != null) {
       jo.put("from", from);
     }
-    if(to != null){
+    if(to != null) {
       jo.put("to", to);
     }
-    if(from != null){
+    if(from != null) {
       jo.put("due", due);
     }
     return jo;
   }
 
-  protected static JsonObject createFixedDueDate(String id, String name, String desc){
+  protected static JsonObject createFixedDueDate(
+    String id,
+    String name,
+    String desc) {
+
     JsonObject jo = new JsonObject();
-    if(id != null){
+
+    if(id != null) {
       jo.put("id", id);
     }
-    if(name != null){
+
+    if(name != null) {
       jo.put("name", name);
     }
-    if(desc != null){
+
+    if(desc != null) {
       jo.put("description", desc);
     }
+
     return jo;
   }
 
@@ -433,7 +473,7 @@ public class FixedDueDateApiTest {
     ExecutionException,
     TimeoutException {
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     client.post(dueDateURL(), request, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createCompleted));
