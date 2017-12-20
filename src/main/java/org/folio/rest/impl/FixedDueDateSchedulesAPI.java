@@ -1,14 +1,8 @@
 package org.folio.rest.impl;
 
-import static org.folio.rest.impl.Headers.TENANT_HEADER;
-
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.core.Response;
-
+import io.vertx.core.*;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.io.IOUtils;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Errors;
@@ -16,12 +10,12 @@ import org.folio.rest.jaxrs.model.FixedDueDateSchedule;
 import org.folio.rest.jaxrs.model.FixedDueDateSchedules;
 import org.folio.rest.jaxrs.model.Schedule;
 import org.folio.rest.jaxrs.resource.FixedDueDateScheduleStorageResource;
-import org.folio.rest.persist.PgExceptionUtil;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
+import org.folio.rest.persist.PgExceptionUtil;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLQueryValidationException;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.PomReader;
@@ -30,13 +24,13 @@ import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import javax.ws.rs.core.Response;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
 public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageResource {
 
@@ -80,10 +74,12 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
             TenantTool.calculateTenantId(tenantId));
 
         postgresClient.mutate(
-            String.format("TRUNCATE TABLE %s_%s.%s", tenantId, PomReader.INSTANCE.getModuleName(), FIXED_SCHEDULE_TABLE), reply -> {
+            String.format("DELETE FROM %s_%s.%s", tenantId,
+              PomReader.INSTANCE.getModuleName(), FIXED_SCHEDULE_TABLE), reply -> {
                 if(reply.succeeded()){
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                    FixedDueDateScheduleStorageResource.DeleteFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
+                    FixedDueDateScheduleStorageResource
+                      .DeleteFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
                         .noContent().build()));
                 }
                 else{
