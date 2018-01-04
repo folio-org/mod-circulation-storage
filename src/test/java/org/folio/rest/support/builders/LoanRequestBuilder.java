@@ -18,6 +18,7 @@ public class LoanRequestBuilder {
   private final String itemStatus;
   private final DateTime dueDate;
   private final String action;
+  private final UUID loanPolicyId;
 
   public LoanRequestBuilder() {
     this(UUID.randomUUID(),
@@ -28,8 +29,8 @@ public class LoanRequestBuilder {
       "Open",
       null,
       "checkedout",
-      null
-    );
+      null,
+      null);
   }
 
   private LoanRequestBuilder(
@@ -41,7 +42,8 @@ public class LoanRequestBuilder {
     String statusName,
     String itemStatus,
     String action,
-    DateTime dueDate) {
+    DateTime dueDate,
+    UUID loanPolicyId) {
 
     this.id = id;
     this.itemId = itemId;
@@ -52,6 +54,7 @@ public class LoanRequestBuilder {
     this.itemStatus = itemStatus;
     this.dueDate = dueDate;
     this.action = action;
+    this.loanPolicyId = loanPolicyId;
   }
 
   public JsonObject create() {
@@ -79,10 +82,14 @@ public class LoanRequestBuilder {
     if(statusName != null) {
       request.put("status", new JsonObject().put("name", statusName));
 
-      if(statusName == "Closed") {
+      if(statusName.equals("Closed")) {
         request.put("returnDate",
           loanDate.plusDays(1).plusHours(4).toString(ISODateTimeFormat.dateTime()));
       }
+    }
+
+    if(loanPolicyId != null) {
+      request.put("loanPolicyId", loanPolicyId.toString());
     }
 
     if(dueDate != null) {
@@ -102,8 +109,8 @@ public class LoanRequestBuilder {
       this.statusName,
       this.itemStatus,
       this.action,
-      this.dueDate
-    );
+      this.dueDate,
+      this.loanPolicyId);
   }
 
   public LoanRequestBuilder withNoId() {
@@ -120,8 +127,8 @@ public class LoanRequestBuilder {
       this.statusName,
       this.itemStatus,
       this.action,
-      this.dueDate
-    );
+      this.dueDate,
+      this.loanPolicyId);
   }
 
   public LoanRequestBuilder withUserId(UUID userId) {
@@ -134,8 +141,8 @@ public class LoanRequestBuilder {
       this.statusName,
       this.itemStatus,
       this.action,
-      this.dueDate
-    );
+      this.dueDate,
+      this.loanPolicyId);
   }
 
   public LoanRequestBuilder withProxyUserId(UUID proxyUserId) {
@@ -148,8 +155,8 @@ public class LoanRequestBuilder {
       this.statusName,
       this.itemStatus,
       this.action,
-      this.dueDate
-    );
+      this.dueDate,
+      this.loanPolicyId);
   }
 
   public LoanRequestBuilder withLoanDate(DateTime loanDate) {
@@ -162,8 +169,8 @@ public class LoanRequestBuilder {
       this.statusName,
       this.itemStatus,
       this.action,
-      this.dueDate
-    );
+      this.dueDate,
+      this.loanPolicyId);
   }
 
   public LoanRequestBuilder withStatus(String statusName) {
@@ -176,8 +183,8 @@ public class LoanRequestBuilder {
       statusName,
       this.itemStatus,
       this.action,
-      this.dueDate
-    );
+      this.dueDate,
+      this.loanPolicyId);
   }
 
   public LoanRequestBuilder withItemStatus(String itemStatus) {
@@ -190,8 +197,8 @@ public class LoanRequestBuilder {
       statusName,
       itemStatus,
       this.action,
-      this.dueDate
-    );
+      this.dueDate,
+      this.loanPolicyId);
   }
 
   public LoanRequestBuilder withAction(String action) {
@@ -204,8 +211,8 @@ public class LoanRequestBuilder {
       this.statusName,
       this.itemStatus,
       action,
-      this.dueDate
-    );
+      this.dueDate,
+      this.loanPolicyId);
   }
 
   public LoanRequestBuilder withdueDate(DateTime dueDate) {
@@ -218,8 +225,8 @@ public class LoanRequestBuilder {
       this.statusName,
       this.itemStatus,
       this.action,
-      dueDate
-    );
+      dueDate,
+      this.loanPolicyId);
   }
 
   public LoanRequestBuilder withNoStatus() {
@@ -232,5 +239,20 @@ public class LoanRequestBuilder {
 
   private String formatDateTime(DateTime requestDate) {
     return requestDate.toString(ISODateTimeFormat.dateTime());
+  }
+
+  public LoanRequestBuilder withLoanPolicyId(UUID loanPolicyId) {
+    return new LoanRequestBuilder(
+      this.id,
+      this.itemId,
+      this.userId,
+      this.proxyUserId,
+      this.loanDate,
+      this.statusName,
+      this.itemStatus,
+      this.action,
+      this.dueDate,
+      loanPolicyId
+    );
   }
 }

@@ -57,6 +57,10 @@
       "description": "Count of how many times a loan has been renewed (incremented by the client)",
       "type": "integer"
     },
+    "loanPolicyId": {
+      "description": "ID of last policy used in relation to this loan",
+      "type": "string"
+    },
     "metaData": {
       "description": "Metadata about creation and changes to loan, provided by the server (client should not provide)",
       "type": "object",
