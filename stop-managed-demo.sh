@@ -1,22 +1,18 @@
 #!/usr/bin/env bash
 
-instance_id=${1:-}
+tenant_id=${1:-demo_tenant}
 okapi_proxy_address=${2:-http://localhost:9130}
 
-tenant_id="demo_tenant"
-module_id="mod-circulation-storage-4.0.1-SNAPSHOT"
-
+echo "Un-registering Circulation Storage Module"
 ./okapi-registration/managed-deployment/unregister.sh \
-  ${module_id} \
   ${okapi_proxy_address} \
   ${tenant_id}
 
-./delete-tenant.sh
-
-  if  which python3
+if which python3
 then
   pip3 install requests
 
+  echo "Removing Okapi environment variables"
   python3 ./okapi-setup/environment/clear-environment-variables.py
 
 else
