@@ -34,7 +34,7 @@ same `itemId` and the `status` of `Open` should be rejected with a error (422) r
 
 - Node.js 6.4 (for API linting)
 - NPM 3.10 (for API linting)
-- Python 3.6.0 (for parts of the deployment scripts)
+- Python 3.6.0 (for un-registering module during managed deployment scripts)
 
 # Preparation
 
