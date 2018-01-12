@@ -68,6 +68,7 @@ public class LoansApiTest {
     UUID itemId = UUID.randomUUID();
     UUID userId = UUID.randomUUID();
     UUID proxyUserId = UUID.randomUUID();
+    UUID loanPolicyId = UUID.randomUUID();
 
     JsonObject loanRequest = new LoanRequestBuilder()
       .withId(id)
@@ -79,9 +80,10 @@ public class LoansApiTest {
       .withAction("checkedout")
       .withItemStatus("Checked out")
       .withdueDate(new DateTime(2017, 7, 27, 10, 23, 43, DateTimeZone.UTC))
+      .withLoanPolicyId(loanPolicyId)
       .create();
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     client.post(loanStorageUrl(), loanRequest, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createCompleted));
@@ -116,6 +118,9 @@ public class LoansApiTest {
 
     assertThat("item status is not checked out",
       loan.getString("itemStatus"), is("Checked out"));
+
+    assertThat("loan policy should be set",
+      loan.getString("loanPolicyId"), is(loanPolicyId.toString()));
 
     //The RAML-Module-Builder converts all date-time formatted strings to UTC
     //and presents the offset as +0000 (which is ISO8601 compatible, but not RFC3339)

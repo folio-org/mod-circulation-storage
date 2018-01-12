@@ -1,3 +1,8 @@
+## 4.1.0 Unreleased
+
+* Adds `loanPolicyId` property to a loan, to keep the last policy that was applied to this loan (CIRCSTORE-32)
+* Provides loan-storage interface 3.4 (CIRCSTORE-32)
+
 ## 4.0.0 2017-12-20
 
 * Expose new fixed due date schedule end point (`/fixed-due-date-schedule-storage/fixed-due-date-schedules`, CIRCSTORE-9)
