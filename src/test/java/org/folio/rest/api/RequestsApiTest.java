@@ -124,8 +124,6 @@ public class RequestsApiTest {
     ExecutionException,
     UnsupportedEncodingException {
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
-
     UUID id = UUID.randomUUID();
     UUID deliveryAddressTypeId = UUID.randomUUID();
 
@@ -134,6 +132,8 @@ public class RequestsApiTest {
       .deliverToAddress(deliveryAddressTypeId)
       .withId(id)
       .create();
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     client.post(requestStorageUrl(),
       requestRequest, StorageTestSuite.TENANT_ID,
@@ -150,6 +150,24 @@ public class RequestsApiTest {
     assertThat(representation.getString("requestType"), is("Recall"));
     assertThat(representation.getString("fulfilmentPreference"), is("Delivery"));
     assertThat(representation.getString("deliveryAddressTypeId"),
+      is(deliveryAddressTypeId.toString()));
+
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
+
+    client.get(requestStorageUrl() + String.format("/%s", representation.getString("id")),
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
+
+    JsonResponse getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to get request: %s", getResponse.getBody()),
+      getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject fetchedRepresentation = getResponse.getJson();
+
+    assertThat(fetchedRepresentation.getString("id"), is(id.toString()));
+    assertThat(fetchedRepresentation.getString("requestType"), is("Recall"));
+    assertThat(fetchedRepresentation.getString("fulfilmentPreference"), is("Delivery"));
+    assertThat(fetchedRepresentation.getString("deliveryAddressTypeId"),
       is(deliveryAddressTypeId.toString()));
   }
 
