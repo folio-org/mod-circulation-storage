@@ -117,7 +117,7 @@ public class RequestsApiTest {
   }
 
   @Test
-  public void canCreateARequestToBeFulfilledByDeliverToAnAddress()
+  public void canCreateARequestToBeFulfilledByDeliveryToAnAddress()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
