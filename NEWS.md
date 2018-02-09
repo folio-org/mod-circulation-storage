@@ -1,4 +1,4 @@
-## 4.1.0 Unreleased
+## 4.1.0 2018-02-09
 
 * Adds `loanPolicyId` property to a loan, to keep the last policy that was applied to this loan (CIRCSTORE-32)
 * Provides loan-storage interface 3.4 (CIRCSTORE-32)
