@@ -3,20 +3,17 @@ package org.folio.rest.api;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.folio.rest.support.HttpClient;
-import org.folio.rest.support.JsonResponse;
-import org.folio.rest.support.Response;
-import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.*;
 import org.folio.rest.support.builders.LoanPolicyRequestBuilder;
 import org.hamcrest.junit.MatcherAssert;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -29,27 +26,18 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
 
 public class LoanPoliciesApiTest {
-
   private static HttpClient client = new HttpClient(StorageTestSuite.getVertx());
 
   @Before
   public void beforeEach()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+    throws MalformedURLException {
+
     System.out.println("attempting full delete LoanPoliciesApiTest.....");
-
     StorageTestSuite.deleteAll(loanPolicyStorageUrl());
-
   }
 
   @After
-  public void checkIdsAfterEach()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
+  public void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("loan_policy");
   }
 
@@ -58,8 +46,7 @@ public class LoanPoliciesApiTest {
     InterruptedException,
     MalformedURLException,
     TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+    ExecutionException {
 
     UUID fddId = UUID.randomUUID();
 
@@ -239,8 +226,7 @@ public class LoanPoliciesApiTest {
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+    ExecutionException {
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
@@ -294,8 +280,7 @@ public class LoanPoliciesApiTest {
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+    ExecutionException {
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
@@ -322,8 +307,7 @@ public class LoanPoliciesApiTest {
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+    ExecutionException {
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
@@ -386,8 +370,7 @@ public class LoanPoliciesApiTest {
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+    ExecutionException {
 
     UUID id = UUID.randomUUID();
 
@@ -431,21 +414,156 @@ public class LoanPoliciesApiTest {
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
-    TimeoutException,
-    UnsupportedEncodingException {
+    TimeoutException {
 
     JsonResponse getResponse = getById(UUID.randomUUID());
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
 
-    @Test
-    public void canUpdateAnExistingLoanPolicyByReplacingItsRepresentation()
+  @Test
+  public void canGetAllPolicies()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    String firstPolicyId = createLoanPolicy(new LoanPolicyRequestBuilder().create()).getId();
+    String secondPolicyId = createLoanPolicy(new LoanPolicyRequestBuilder().create()).getId();
+    String thirdPolicyId = createLoanPolicy(new LoanPolicyRequestBuilder().create()).getId();
+    String fourthPolicyId = createLoanPolicy(new LoanPolicyRequestBuilder().create()).getId();
+
+    CompletableFuture<JsonResponse> getAllCompleted = new CompletableFuture<>();
+
+    client.get(loanPolicyStorageUrl(), StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(getAllCompleted));
+
+    JsonResponse getAllResponse = getAllCompleted.get(5, TimeUnit.SECONDS);
+
+    MatcherAssert.assertThat(String.format("Failed to get policies: %s",
+      getAllResponse.getBody()),
+      getAllResponse.getStatusCode(), is(200));
+
+    JsonObject firstPage = getAllResponse.getJson();
+
+    List<JsonObject> firstPolicyResults = JsonArrayHelper.toList(
+      firstPage.getJsonArray("loanPolicies"));
+
+    assertThat(firstPolicyResults.size(), is(4));
+    assertThat(firstPage.getInteger("totalRecords"), is(4));
+
+    assertThat(hasRecordWithId(firstPolicyResults, firstPolicyId), is(true));
+    assertThat(hasRecordWithId(firstPolicyResults, secondPolicyId), is(true));
+    assertThat(hasRecordWithId(firstPolicyResults, thirdPolicyId), is(true));
+    assertThat(hasRecordWithId(firstPolicyResults, fourthPolicyId), is(true));
+  }
+
+  @Test
+  public void canPageLoanPolicies()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
+    ExecutionException {
+
+    createLoanPolicy(new LoanPolicyRequestBuilder().create());
+    createLoanPolicy(new LoanPolicyRequestBuilder().create());
+    createLoanPolicy(new LoanPolicyRequestBuilder().create());
+    createLoanPolicy(new LoanPolicyRequestBuilder().create());
+    createLoanPolicy(new LoanPolicyRequestBuilder().create());
+    createLoanPolicy(new LoanPolicyRequestBuilder().create());
+    createLoanPolicy(new LoanPolicyRequestBuilder().create());
+
+    CompletableFuture<JsonResponse> firstPageCompleted = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> secondPageCompleted = new CompletableFuture<>();
+
+    client.get(loanPolicyStorageUrl() + "?limit=4", StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(firstPageCompleted));
+
+    client.get(loanPolicyStorageUrl() + "?limit=4&offset=4", StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(secondPageCompleted));
+
+    JsonResponse firstPageResponse = firstPageCompleted.get(5, TimeUnit.SECONDS);
+    JsonResponse secondPageResponse = secondPageCompleted.get(5, TimeUnit.SECONDS);
+
+    MatcherAssert.assertThat(String.format("Failed to get first page of loan policies: %s",
+      firstPageResponse.getBody()),
+      firstPageResponse.getStatusCode(), is(200));
+
+    MatcherAssert.assertThat(String.format("Failed to get second page of loans policies: %s",
+      secondPageResponse.getBody()),
+      secondPageResponse.getStatusCode(), is(200));
+
+    JsonObject firstPage = firstPageResponse.getJson();
+    JsonObject secondPage = secondPageResponse.getJson();
+
+    JsonArray firstPageLoans = firstPage.getJsonArray("loanPolicies");
+    JsonArray secondPageLoans = secondPage.getJsonArray("loanPolicies");
+
+    MatcherAssert.assertThat(firstPageLoans.size(), is(4));
+    MatcherAssert.assertThat(firstPage.getInteger("totalRecords"), is(7));
+
+    MatcherAssert.assertThat(secondPageLoans.size(), is(3));
+    MatcherAssert.assertThat(secondPage.getInteger("totalRecords"), is(7));
+  }
+
+  @Test
+  public void canSearchForLoanPolicyById()
+    throws MalformedURLException,
+    InterruptedException,
     ExecutionException,
-    UnsupportedEncodingException {
+    TimeoutException {
+
+    String firstPolicyId = createLoanPolicy(new LoanPolicyRequestBuilder().create()).getId();
+    String secondPolicyId = createLoanPolicy(new LoanPolicyRequestBuilder().create()).getId();
+
+    String queryTemplate = loanPolicyStorageUrl() + "?query=id=\"%s\"";
+
+    CompletableFuture<JsonResponse> searchForFirstPolicyCompleted = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> searchForSecondPolicyCompleted = new CompletableFuture<>();
+
+    client.get(String.format(queryTemplate, firstPolicyId),
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(searchForFirstPolicyCompleted));
+
+    client.get(String.format(queryTemplate, secondPolicyId),
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(searchForSecondPolicyCompleted));
+
+    JsonResponse firstPolicySearchResponse = searchForFirstPolicyCompleted.get(5, TimeUnit.SECONDS);
+    JsonResponse secondPolicySearchResponse = searchForSecondPolicyCompleted.get(5, TimeUnit.SECONDS);
+
+    MatcherAssert.assertThat(String.format("Failed to get policy by id: %s",
+      firstPolicySearchResponse.getBody()),
+      firstPolicySearchResponse.getStatusCode(), is(200));
+
+    MatcherAssert.assertThat(String.format("Failed to get policy by id: %s",
+      secondPolicySearchResponse.getBody()),
+      secondPolicySearchResponse.getStatusCode(), is(200));
+
+    JsonObject firstPage = firstPolicySearchResponse.getJson();
+    JsonObject secondPage = secondPolicySearchResponse.getJson();
+
+    List<JsonObject> firstPolicyResults = JsonArrayHelper.toList(
+      firstPage.getJsonArray("loanPolicies"));
+
+    List<JsonObject> secondPolicyResults = JsonArrayHelper.toList(
+      secondPage.getJsonArray("loanPolicies"));
+
+    assertThat(firstPolicyResults.size(), is(1));
+    assertThat(firstPage.getInteger("totalRecords"), is(1));
+
+    assertThat(hasRecordWithId(firstPolicyResults, firstPolicyId), is(true));
+
+    assertThat(secondPolicyResults.size(), is(1));
+    assertThat(secondPage.getInteger("totalRecords"), is(1));
+
+    assertThat(hasRecordWithId(firstPolicyResults, firstPolicyId), is(true));
+  }
+
+  @Test
+  public void canUpdateAnExistingLoanPolicyByReplacingItsRepresentation()
+  throws InterruptedException,
+  MalformedURLException,
+  TimeoutException,
+  ExecutionException {
 
     UUID id = UUID.randomUUID();
 
@@ -508,61 +626,11 @@ public class LoanPoliciesApiTest {
   }
 
   @Test
-  public void canPageLoanPolicies()
-    throws InterruptedException,
-    MalformedURLException,
-    TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
-
-    createLoanPolicy(new LoanPolicyRequestBuilder().create());
-    createLoanPolicy(new LoanPolicyRequestBuilder().create());
-    createLoanPolicy(new LoanPolicyRequestBuilder().create());
-    createLoanPolicy(new LoanPolicyRequestBuilder().create());
-    createLoanPolicy(new LoanPolicyRequestBuilder().create());
-    createLoanPolicy(new LoanPolicyRequestBuilder().create());
-    createLoanPolicy(new LoanPolicyRequestBuilder().create());
-
-    CompletableFuture<JsonResponse> firstPageCompleted = new CompletableFuture();
-    CompletableFuture<JsonResponse> secondPageCompleted = new CompletableFuture();
-
-    client.get(loanPolicyStorageUrl() + "?limit=4", StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(firstPageCompleted));
-
-    client.get(loanPolicyStorageUrl() + "?limit=4&offset=4", StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(secondPageCompleted));
-
-    JsonResponse firstPageResponse = firstPageCompleted.get(5, TimeUnit.SECONDS);
-    JsonResponse secondPageResponse = secondPageCompleted.get(5, TimeUnit.SECONDS);
-
-    MatcherAssert.assertThat(String.format("Failed to get first page of loan policies: %s",
-      firstPageResponse.getBody()),
-      firstPageResponse.getStatusCode(), is(200));
-
-    MatcherAssert.assertThat(String.format("Failed to get second page of loans policies: %s",
-      secondPageResponse.getBody()),
-      secondPageResponse.getStatusCode(), is(200));
-
-    JsonObject firstPage = firstPageResponse.getJson();
-    JsonObject secondPage = secondPageResponse.getJson();
-
-    JsonArray firstPageLoans = firstPage.getJsonArray("loanPolicies");
-    JsonArray secondPageLoans = secondPage.getJsonArray("loanPolicies");
-
-    MatcherAssert.assertThat(firstPageLoans.size(), is(4));
-    MatcherAssert.assertThat(firstPage.getInteger("totalRecords"), is(7));
-
-    MatcherAssert.assertThat(secondPageLoans.size(), is(3));
-    MatcherAssert.assertThat(secondPage.getInteger("totalRecords"), is(7));
-  }
-
-  @Test
   public void canDeleteALoanPolicy()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+    ExecutionException {
 
     CompletableFuture<JsonResponse> deleteCompleted = new CompletableFuture<>();
 
@@ -595,7 +663,7 @@ public class LoanPoliciesApiTest {
     return StorageTestSuite.storageUrl("/loan-policy-storage/loan-policies" + subPath);
   }
 
-  private void createLoanPolicy(JsonObject loanPolicyRequest)
+  private IndividualResource createLoanPolicy(JsonObject loanPolicyRequest)
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -611,22 +679,27 @@ public class LoanPoliciesApiTest {
 
     assertThat(String.format("Failed to create loan policy: %s", postResponse.getBody()),
       postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    return new IndividualResource(postResponse);
   }
 
   private JsonResponse getById(UUID id)
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
-    TimeoutException,
-    UnsupportedEncodingException {
+    TimeoutException {
 
     URL getInstanceUrl = loanPolicyStorageUrl(String.format("/%s", id));
 
-    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
 
     client.get(getInstanceUrl, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(getCompleted));
 
     return getCompleted.get(5, TimeUnit.SECONDS);
+  }
+
+  private boolean hasRecordWithId(List<JsonObject> records, String firstPolicyId) {
+    return records.stream().anyMatch(item -> item.getString("id").equals(firstPolicyId));
   }
 }

@@ -1,3 +1,8 @@
+## 4.2.0 Unreleased
+
+* Search loan policies using CQL (CIRCSTORE-37)
+* Provides loan-policy-storage interface 1.2 (CIRCSTORE-37)
+
 ## 4.1.0 2018-02-09
 
 * Adds `loanPolicyId` property to a loan, to keep the last policy that was applied to this loan (CIRCSTORE-32)

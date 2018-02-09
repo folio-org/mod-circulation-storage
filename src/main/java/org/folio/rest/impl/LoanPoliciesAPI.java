@@ -64,6 +64,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
   public void getLoanPolicyStorageLoanPolicies(
     int offset,
     int limit,
+    String query,
     String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
@@ -80,7 +81,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
             String[] fieldList = {"*"};
 
             CQL2PgJSON cql2pgJson = new CQL2PgJSON("loan_policy.jsonb");
-            CQLWrapper cql = new CQLWrapper(cql2pgJson, null)
+            CQLWrapper cql = new CQLWrapper(cql2pgJson, query)
               .setLimit(new Limit(limit))
               .setOffset(new Offset(offset));
 
