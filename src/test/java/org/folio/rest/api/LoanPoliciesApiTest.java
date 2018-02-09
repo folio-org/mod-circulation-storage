@@ -29,27 +29,18 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
 
 public class LoanPoliciesApiTest {
-
   private static HttpClient client = new HttpClient(StorageTestSuite.getVertx());
 
   @Before
   public void beforeEach()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+    throws MalformedURLException {
+
     System.out.println("attempting full delete LoanPoliciesApiTest.....");
-
     StorageTestSuite.deleteAll(loanPolicyStorageUrl());
-
   }
 
   @After
-  public void checkIdsAfterEach()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
+  public void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("loan_policy");
   }
 
@@ -58,8 +49,7 @@ public class LoanPoliciesApiTest {
     InterruptedException,
     MalformedURLException,
     TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+    ExecutionException {
 
     UUID fddId = UUID.randomUUID();
 
@@ -239,8 +229,7 @@ public class LoanPoliciesApiTest {
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+    ExecutionException {
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
@@ -294,8 +283,7 @@ public class LoanPoliciesApiTest {
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+    ExecutionException {
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
@@ -322,8 +310,7 @@ public class LoanPoliciesApiTest {
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+    ExecutionException {
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
@@ -386,8 +373,7 @@ public class LoanPoliciesApiTest {
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+    ExecutionException {
 
     UUID id = UUID.randomUUID();
 
@@ -431,21 +417,19 @@ public class LoanPoliciesApiTest {
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
-    TimeoutException,
-    UnsupportedEncodingException {
+    TimeoutException {
 
     JsonResponse getResponse = getById(UUID.randomUUID());
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
 
-    @Test
-    public void canUpdateAnExistingLoanPolicyByReplacingItsRepresentation()
-    throws InterruptedException,
-    MalformedURLException,
-    TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+  @Test
+  public void canUpdateAnExistingLoanPolicyByReplacingItsRepresentation()
+  throws InterruptedException,
+  MalformedURLException,
+  TimeoutException,
+  ExecutionException {
 
     UUID id = UUID.randomUUID();
 
@@ -512,8 +496,7 @@ public class LoanPoliciesApiTest {
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+    ExecutionException {
 
     createLoanPolicy(new LoanPolicyRequestBuilder().create());
     createLoanPolicy(new LoanPolicyRequestBuilder().create());
@@ -523,8 +506,8 @@ public class LoanPoliciesApiTest {
     createLoanPolicy(new LoanPolicyRequestBuilder().create());
     createLoanPolicy(new LoanPolicyRequestBuilder().create());
 
-    CompletableFuture<JsonResponse> firstPageCompleted = new CompletableFuture();
-    CompletableFuture<JsonResponse> secondPageCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> firstPageCompleted = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> secondPageCompleted = new CompletableFuture<>();
 
     client.get(loanPolicyStorageUrl() + "?limit=4", StorageTestSuite.TENANT_ID,
       ResponseHandler.json(firstPageCompleted));
@@ -561,8 +544,7 @@ public class LoanPoliciesApiTest {
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+    ExecutionException {
 
     CompletableFuture<JsonResponse> deleteCompleted = new CompletableFuture<>();
 
@@ -617,12 +599,11 @@ public class LoanPoliciesApiTest {
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
-    TimeoutException,
-    UnsupportedEncodingException {
+    TimeoutException {
 
     URL getInstanceUrl = loanPolicyStorageUrl(String.format("/%s", id));
 
-    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
 
     client.get(getInstanceUrl, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(getCompleted));
