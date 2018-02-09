@@ -6,7 +6,7 @@ import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
 
 public class periodJsonObjectMatcher {
-  public static Matcher matchesPeriod(Integer duration, String intervalId) {
+  public static Matcher<JsonObject> matchesPeriod(Integer duration, String intervalId) {
     return new TypeSafeMatcher<JsonObject>() {
       @Override
       public void describeTo(Description description) {

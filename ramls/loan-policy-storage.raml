@@ -1,6 +1,6 @@
 #%RAML 0.8
 title: Loan Policy Storage
-version: v1.1
+version: v1.2
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost:9130
 
@@ -33,7 +33,10 @@ resourceTypes:
         schemaCollection: loan-policies
         schemaItem: raml-util/schemas/mod-circulation/loan-policy.json
     get:
-      is: [pageable]
+      is: [pageable,
+        searchable: {description: "searchable using CQL",
+                        example: "id=\"cf23adf0-61ba-4887-bf82-956c4aae2260\""},
+        ]
       responses:
         501:
           description: "Not implemented yet"
