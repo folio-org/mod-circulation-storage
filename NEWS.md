@@ -1,4 +1,4 @@
-## 4.2.0 Unreleased
+## 4.2.0 2018-02-12
 
 * Search loan policies using CQL (CIRCSTORE-37)
 * Provides loan-policy-storage interface 1.2 (CIRCSTORE-37)
