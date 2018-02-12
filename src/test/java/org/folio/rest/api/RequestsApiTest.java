@@ -2,6 +2,8 @@ package org.folio.rest.api;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
@@ -15,8 +17,8 @@ import org.joda.time.Seconds;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -26,34 +28,28 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.equivalentTo;
+import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
 
+@RunWith(JUnitParamsRunner.class)
 public class RequestsApiTest {
-
   private static HttpClient client = new HttpClient(StorageTestSuite.getVertx());
   private final String METADATA_PROPERTY = "metaData";
 
   @Before
   public void beforeEach()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+    throws MalformedURLException {
 
     StorageTestSuite.deleteAll(requestStorageUrl());
   }
 
   @After
-  public void checkIdsAfterEach()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
+  public void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("request");
   }
 
@@ -62,8 +58,7 @@ public class RequestsApiTest {
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+    ExecutionException {
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
@@ -83,6 +78,7 @@ public class RequestsApiTest {
       .withHoldShelfExpiration(new LocalDate(2017, 8, 31))
       .withItem("Nod", "565578437802")
       .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
+      .withStatus("Open - Not yet filled")
       .create();
 
     client.post(requestStorageUrl(),
@@ -104,6 +100,7 @@ public class RequestsApiTest {
     assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
     assertThat(representation.getString("requestExpirationDate"), is("2017-07-30"));
     assertThat(representation.getString("holdShelfExpirationDate"), is("2017-08-31"));
+    assertThat(representation.getString("status"), is("Open - Not yet filled"));
 
     assertThat(representation.containsKey("item"), is(true));
     assertThat(representation.getJsonObject("item").getString("title"), is("Nod"));
@@ -117,12 +114,74 @@ public class RequestsApiTest {
   }
 
   @Test
+  @Parameters({
+    "Open - Not yet filled",
+    "Open - Awaiting pickup",
+    "Closed - Filled"
+  })
+  public void canCreateARequestWithValidStatus(String status)
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    JsonObject requestRequest = new RequestRequestBuilder()
+      .recall()
+      .toHoldShelf()
+      .withStatus(status)
+      .create();
+
+    client.post(requestStorageUrl(),
+      requestRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to create request: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    JsonObject representation = response.getJson();
+
+    assertThat(representation.getString("status"), is(status));
+  }
+
+  @Test
+  @Parameters({
+    "Non-existent status",
+    ""
+  })
+  public void cannotCreateARequestWithInvalidStatus(String status)
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    JsonObject requestRequest = new RequestRequestBuilder()
+      .withStatus(status)
+      .create();
+
+    client.post(requestStorageUrl(),
+      requestRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Should not create request: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+
+    assertThat(response.getBody(), containsString("Json content error"));
+  }
+
+  @Test
   public void canCreateARequestToBeFulfilledByDeliveryToAnAddress()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+    ExecutionException {
 
     UUID id = UUID.randomUUID();
     UUID deliveryAddressTypeId = UUID.randomUUID();
@@ -176,8 +235,7 @@ public class RequestsApiTest {
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+    ExecutionException {
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
@@ -240,9 +298,7 @@ public class RequestsApiTest {
     assertThat(String.format("Failed to create loan policy: %s", postResponse.getBody()),
       postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    JsonResponse response = postResponse;
-
-    JsonObject createdRequest = response.getJson();
+    JsonObject createdRequest = postResponse.getJson();
 
     assertThat("Request should have metadata property",
       createdRequest.containsKey(METADATA_PROPERTY), is(true));
@@ -294,8 +350,7 @@ public class RequestsApiTest {
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+    ExecutionException {
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
@@ -322,8 +377,7 @@ public class RequestsApiTest {
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+    ExecutionException {
 
 
     UUID id = UUID.randomUUID();
@@ -387,8 +441,7 @@ public class RequestsApiTest {
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+    ExecutionException {
 
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
@@ -467,8 +520,7 @@ public class RequestsApiTest {
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+    ExecutionException {
 
     UUID id = UUID.randomUUID();
 
@@ -527,8 +579,7 @@ public class RequestsApiTest {
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+    ExecutionException {
 
     UUID id = UUID.randomUUID();
 
@@ -589,8 +640,7 @@ public class RequestsApiTest {
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+    ExecutionException {
 
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
@@ -644,8 +694,7 @@ public class RequestsApiTest {
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
-    TimeoutException,
-    UnsupportedEncodingException {
+    TimeoutException {
 
     JsonResponse getResponse = getById(UUID.randomUUID());
 
@@ -657,8 +706,7 @@ public class RequestsApiTest {
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+    ExecutionException {
 
     createRequest(new RequestRequestBuilder().create());
     createRequest(new RequestRequestBuilder().create());
@@ -668,8 +716,8 @@ public class RequestsApiTest {
     createRequest(new RequestRequestBuilder().create());
     createRequest(new RequestRequestBuilder().create());
 
-    CompletableFuture<JsonResponse> firstPageCompleted = new CompletableFuture();
-    CompletableFuture<JsonResponse> secondPageCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> firstPageCompleted = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> secondPageCompleted = new CompletableFuture<>();
 
     client.get(requestStorageUrl() + "?limit=4", StorageTestSuite.TENANT_ID,
       ResponseHandler.json(firstPageCompleted));
@@ -706,8 +754,7 @@ public class RequestsApiTest {
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
-    TimeoutException,
-    UnsupportedEncodingException {
+    TimeoutException {
 
     UUID firstRequester = UUID.randomUUID();
     UUID secondRequester = UUID.randomUUID();
@@ -742,8 +789,7 @@ public class RequestsApiTest {
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+    ExecutionException {
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
@@ -800,12 +846,11 @@ public class RequestsApiTest {
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
-    TimeoutException,
-    UnsupportedEncodingException {
+    TimeoutException {
 
     URL getInstanceUrl = requestStorageUrl(String.format("/%s", id));
 
-    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
 
     client.get(getInstanceUrl, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(getCompleted));

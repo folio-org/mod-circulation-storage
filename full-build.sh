@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 
-./destroy-test-db.sh
-
-./setup-test-db.sh
+./clean.sh
 
 mvn -q test \
     -Dorg.folio.circulation.storage.test.database=external
