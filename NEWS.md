@@ -1,3 +1,8 @@
+## 4.3.0 Unreleased
+
+* Adds `status` property to requests (CIRCSTORE-37)
+* Provides request-storage interface 1.3 (CIRCSTORE-37)
+
 ## 4.2.0 2018-02-12
 
 * Search loan policies using CQL (CIRCSTORE-37)
