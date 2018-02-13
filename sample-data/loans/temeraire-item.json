@@ -4,10 +4,10 @@
   "itemId": "23fdb0bc-ab58-442a-b326-577a96204487",
   "loanDate": "2017-03-05T18:32:31Z",
   "dueDate": "2017-03-19T18:32:31Z",
-  "action": "checkedout",
-  "itemStatus": "Checked out",
+  "action": "checkedin",
+  "itemStatus": "Available",
   "status": {
-    "name": "Open"
+    "name": "Closed"
   },
   "renewalCount": 0
 }
