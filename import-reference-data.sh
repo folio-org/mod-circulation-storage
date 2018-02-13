@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-cd sample-data
+cd reference-data
 
 ./import.sh
 

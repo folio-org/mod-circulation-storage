@@ -2,6 +2,6 @@
 
 cd sample-data
 
-./import.sh
+./delete.sh
 
 cd ../

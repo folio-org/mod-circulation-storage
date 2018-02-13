@@ -1,14 +1,14 @@
 {
-  "id": "f1f7a710-84e6-4965-ab68-afec194d3cd3",
+  "id": "3bf0d1aa-6c19-4495-bd50-6b2decf9a131",
   "requestType": "Hold",
-  "requestDate": "2017-01-18T09:23:45Z",
+  "requestDate": "2018-02-11T14:45:23Z",
   "requesterId": "9a6ed769-15b4-4555-bbe1-2987c1e6e014",
-  "itemId": "bb5a6689-c008-4c96-8f8f-b666850ee12d",
+  "itemId": "23fdb0bc-ab58-442a-b326-577a96204487",
   "fulfilmentPreference": "Hold Shelf",
-  "holdShelfExpirationDate": "2017-01-20",
-  "status": "Open - Not yet filled",
+  "holdShelfExpirationDate": "2018-09-10",
+  "status": "Open - Awaiting pickup",
   "item": {
-    "title": "Interesting Times",
+    "title": "Temeraire",
     "barcode": "326547658598"
   },
   "requester": {
