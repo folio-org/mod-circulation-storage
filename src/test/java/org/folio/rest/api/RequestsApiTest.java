@@ -575,7 +575,7 @@ public class RequestsApiTest {
   }
 
   @Test
-  public void updateRequestWithoutUserHeaderDoesSomething()
+  public void updateRequestWithoutUserHeaderFails()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -585,14 +585,9 @@ public class RequestsApiTest {
 
     JsonObject request = new RequestRequestBuilder().withId(id).create();
 
-    JsonResponse createResponse = createRequest(request);
-
-//    JsonObject createdMetadata = createResponse.getJson()
-//      .getJsonObject(METADATA_PROPERTY);
+    createRequest(request);
 
     CompletableFuture<TextResponse> updateCompleted = new CompletableFuture<>();
-
-//    DateTime requestMade = DateTime.now();
 
     client.put(requestStorageUrl(String.format("/%s", id)),
       request, StorageTestSuite.TENANT_ID, null,
@@ -602,37 +597,6 @@ public class RequestsApiTest {
 
     assertThat("No user header causes JSON to be null when saved",
       response.getStatusCode(), is(500));
-
-//    assertThat(String.format("Failed to update request: %s", response.getBody()),
-//      response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-//
-//    JsonResponse getAfterUpdateResponse = getById(id);
-//
-//    JsonObject updatedRequest = getAfterUpdateResponse.getJson();
-//
-//    assertThat("Request should have metadata property",
-//      updatedRequest.containsKey(METADATA_PROPERTY), is(true));
-//
-//    JsonObject metadata = updatedRequest.getJsonObject(METADATA_PROPERTY);
-//
-//    assertThat("Request should have same created user",
-//      metadata.getString("createdByUserId"),
-//      is(createdMetadata.getString("createdByUserId")));
-//
-//    assertThat("Request should have same created date",
-//      metadata.getString("createdDate"),
-//      is(createdMetadata.getString("createdDate")));
-//
-//    assertThat("Request should have updated user",
-//      metadata.getString("updatedByUserId"),
-//      is(createdMetadata.getString("updatedByUserId")));
-//
-//    assertThat("Request should have updated date close to when request was made",
-//      metadata.getString("updatedDate"),
-//      is(withinSecondsAfter(Seconds.seconds(2), requestMade)));
-//
-//    assertThat("Request should have updated date different to original updated date",
-//      metadata.getString("updatedDate"), is(not(createdMetadata.getString("updatedDate"))));
   }
 
   @Test
