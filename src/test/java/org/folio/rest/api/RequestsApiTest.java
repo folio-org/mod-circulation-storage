@@ -516,6 +516,120 @@ public class RequestsApiTest {
   }
 
   @Test
+  @Parameters({
+    "Open - Awaiting pickup",
+    "Closed - Filled"
+  })
+  public void canUpdateARequestWithValidStatus(String status)
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID id = UUID.randomUUID();
+    UUID itemId = UUID.randomUUID();
+    UUID requesterId = UUID.randomUUID();
+    DateTime requestDate = new DateTime(2017, 7, 22, 10, 22, 54, DateTimeZone.UTC);
+
+    JsonObject createRequestRequest = new RequestRequestBuilder()
+      .recall()
+      .withId(id)
+      .withRequestDate(requestDate)
+      .withItemId(itemId)
+      .withRequesterId(requesterId)
+      .toHoldShelf()
+      .withItem("Nod", "565578437802")
+      .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
+      .withStatus("Open - Not yet filled")
+      .create();
+
+    createRequest(createRequestRequest);
+
+    JsonResponse getAfterCreateResponse = getById(id);
+
+    assertThat(String.format("Failed to get request: %s", getAfterCreateResponse.getBody()),
+      getAfterCreateResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    CompletableFuture<TextResponse> updateCompleted = new CompletableFuture<>();
+
+    JsonObject updateRequestRequest = getAfterCreateResponse.getJson()
+      .copy()
+      .put("status", status);
+
+    client.put(requestStorageUrl(String.format("/%s", id)),
+      updateRequestRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.text(updateCompleted));
+
+    TextResponse response = updateCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to update request: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    JsonResponse getAfterUpdateResponse = getById(id);
+
+    JsonObject representation = getAfterUpdateResponse.getJson();
+
+    assertThat(representation.getString("status"), is(status));
+  }
+
+  @Test
+  @Parameters({
+    "Non-existent status",
+    ""
+  })
+  public void cannotUpdateARequestWithInvalidStatus(String status)
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID id = UUID.randomUUID();
+    UUID itemId = UUID.randomUUID();
+    UUID requesterId = UUID.randomUUID();
+    DateTime requestDate = new DateTime(2017, 7, 22, 10, 22, 54, DateTimeZone.UTC);
+
+    JsonObject createRequestRequest = new RequestRequestBuilder()
+      .recall()
+      .withId(id)
+      .withRequestDate(requestDate)
+      .withItemId(itemId)
+      .withRequesterId(requesterId)
+      .toHoldShelf()
+      .withItem("Nod", "565578437802")
+      .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
+      .withStatus("Open - Not yet filled")
+      .create();
+
+    createRequest(createRequestRequest);
+
+    JsonResponse getAfterCreateResponse = getById(id);
+
+    assertThat(String.format("Failed to get request: %s", getAfterCreateResponse.getBody()),
+      getAfterCreateResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    CompletableFuture<TextResponse> updateCompleted = new CompletableFuture<>();
+
+    JsonObject updateRequestRequest = getAfterCreateResponse.getJson()
+      .copy()
+      .put("status", status);
+
+    client.put(requestStorageUrl(String.format("/%s", id)),
+      updateRequestRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.text(updateCompleted));
+
+    TextResponse response = updateCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Should fail to update request: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+
+    JsonResponse getAfterUpdateResponse = getById(id);
+
+    JsonObject representation = getAfterUpdateResponse.getJson();
+
+    assertThat(representation.getString("status"), is("Open - Not yet filled"));
+  }
+
+  @Test
   public void updatedRequestHasUpdatedMetadata()
     throws InterruptedException,
     MalformedURLException,
