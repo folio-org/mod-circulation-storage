@@ -25,9 +25,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
 
-public class LoanPoliciesApiTest {
-  private static HttpClient client = new HttpClient(StorageTestSuite.getVertx());
-
+public class LoanPoliciesApiTest extends ApiTests {
   @Before
   public void beforeEach()
     throws MalformedURLException {

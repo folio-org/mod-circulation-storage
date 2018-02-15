@@ -4,10 +4,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
-import org.folio.rest.support.HttpClient;
-import org.folio.rest.support.JsonResponse;
-import org.folio.rest.support.ResponseHandler;
-import org.folio.rest.support.TextResponse;
+import org.folio.rest.support.*;
 import org.folio.rest.support.builders.RequestRequestBuilder;
 import org.hamcrest.junit.MatcherAssert;
 import org.joda.time.DateTime;
@@ -19,28 +16,31 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
-import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_FILLED;
-import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_AWAITING_PICKUP;
-import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET_FILLED;
+import static org.folio.rest.support.builders.RequestRequestBuilder.*;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.equivalentTo;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
 
 @RunWith(JUnitParamsRunner.class)
-public class RequestsApiTest {
+public class RequestsApiTest extends ApiTests {
   private static HttpClient client = new HttpClient(StorageTestSuite.getVertx());
   private final String METADATA_PROPERTY = "metaData";
 
@@ -643,7 +643,7 @@ public class RequestsApiTest {
 
     JsonObject request = new RequestRequestBuilder().withId(id).create();
 
-    JsonResponse createResponse = createRequest(request);
+    IndividualResource createResponse = createRequest(request);
 
     JsonObject createdMetadata = createResponse.getJson()
       .getJsonObject(METADATA_PROPERTY);
@@ -866,6 +866,159 @@ public class RequestsApiTest {
   }
 
   @Test
+  public void canSearchForRequestsForAnItem()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    UUID itemId = UUID.randomUUID();
+    UUID otherItemId = UUID.randomUUID();
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId).create());
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId).create());
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(otherItemId).create());
+
+    CompletableFuture<JsonResponse> getRequestsCompleted = new CompletableFuture<>();
+
+    client.get(requestStorageUrl() + String.format("?query=itemId==%s", itemId),
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(getRequestsCompleted));
+
+    JsonResponse getRequestsResponse = getRequestsCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to get requests: %s",
+      getRequestsResponse.getBody()),
+      getRequestsResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject wrappedRequests = getRequestsResponse.getJson();
+
+    assertThat(wrappedRequests.getJsonArray("requests").size(), is(2));
+    assertThat(wrappedRequests.getInteger("totalRecords"), is(2));
+  }
+
+  @Test
+  public void canSearchForActiveRequestsForAnItem()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException, UnsupportedEncodingException {
+
+    UUID itemId = UUID.randomUUID();
+    UUID otherItemId = UUID.randomUUID();
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withStatus(OPEN_NOT_YET_FILLED).create());
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withStatus(OPEN_AWAITING_PICKUP).create());
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withStatus(CLOSED_FILLED).create());
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(otherItemId)
+      .withStatus(OPEN_NOT_YET_FILLED).create());
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(otherItemId)
+      .withStatus(OPEN_AWAITING_PICKUP).create());
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(otherItemId)
+      .withStatus(CLOSED_FILLED).create());
+
+    CompletableFuture<JsonResponse> getRequestsCompleted = new CompletableFuture<>();
+
+    String query = URLEncoder.encode(String.format("itemId==%s and status==(\"%s\" or \"%s\")",
+      itemId, OPEN_NOT_YET_FILLED, OPEN_AWAITING_PICKUP),
+      "UTF-8");
+
+    client.get(requestStorageUrl() + String.format("?query=%s", query),
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(getRequestsCompleted));
+
+    JsonResponse getRequestsResponse = getRequestsCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to get requests: %s",
+      getRequestsResponse.getBody()),
+      getRequestsResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject wrappedRequests = getRequestsResponse.getJson();
+
+    assertThat(wrappedRequests.getJsonArray("requests").size(), is(2));
+    assertThat(wrappedRequests.getInteger("totalRecords"), is(2));
+  }
+
+  @Test
+  public void canSortRequestsByAscendingRequestDate()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException, UnsupportedEncodingException {
+
+    UUID itemId = UUID.randomUUID();
+
+    createRequest(new RequestRequestBuilder()
+      .withRequestDate(new DateTime(2018, 02, 14, 15, 10, 54))
+      .withItemId(itemId).create()).getId();
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withRequestDate(new DateTime(2017, 11, 24, 12, 31, 27))
+      .create()).getId();
+
+    createRequest(new RequestRequestBuilder()
+      .withRequestDate(new DateTime(2018, 02, 04, 15, 10, 54))
+      .withItemId(itemId).create()).getId();
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withRequestDate(new DateTime(2018, 01, 12, 12, 31, 27))
+      .create()).getId();
+
+    CompletableFuture<JsonResponse> getRequestsCompleted = new CompletableFuture<>();
+
+    String query = URLEncoder.encode(
+      String.format("itemId==%s sortBy requestDate/sort.ascending", itemId),
+      "UTF-8");
+
+    client.get(requestStorageUrl() + String.format("?query=%s", query),
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(getRequestsCompleted));
+
+    JsonResponse getRequestsResponse = getRequestsCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to get requests: %s",
+      getRequestsResponse.getBody()),
+      getRequestsResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject wrappedRequests = getRequestsResponse.getJson();
+
+    List<JsonObject> requests = JsonArrayHelper
+      .toList(wrappedRequests.getJsonArray("requests"));
+
+    assertThat(requests.size(), is(4));
+    assertThat(wrappedRequests.getInteger("totalRecords"), is(4));
+
+    List<String> sortedRequestDates = requests.stream()
+      .map(request -> request.getString("requestDate"))
+      .collect(Collectors.toList());
+
+    assertThat(sortedRequestDates, contains(
+      "2017-11-24T12:31:27.000+0000",
+      "2018-01-12T12:31:27.000+0000",
+      "2018-02-04T15:10:54.000+0000",
+      "2018-02-14T15:10:54.000+0000"
+    ));
+  }
+
+  @Test
   public void canDeleteARequest()
     throws InterruptedException,
     MalformedURLException,
@@ -903,7 +1056,7 @@ public class RequestsApiTest {
     return StorageTestSuite.storageUrl("/request-storage/requests" + subPath);
   }
 
-  private JsonResponse createRequest(JsonObject requestRequest)
+  private IndividualResource createRequest(JsonObject requestRequest)
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -920,7 +1073,7 @@ public class RequestsApiTest {
     assertThat(String.format("Failed to create loan policy: %s", postResponse.getBody()),
       postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    return postResponse;
+    return new IndividualResource(postResponse);
   }
 
   private JsonResponse getById(UUID id)
@@ -938,5 +1091,4 @@ public class RequestsApiTest {
 
     return getCompleted.get(5, TimeUnit.SECONDS);
   }
-
 }

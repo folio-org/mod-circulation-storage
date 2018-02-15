@@ -1,15 +1,9 @@
 package org.folio.rest.api;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
+import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.sql.ResultSet;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HttpClient;
@@ -22,10 +16,15 @@ import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.sql.ResultSet;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 @RunWith(Suite.class)
 
@@ -38,11 +37,11 @@ import io.vertx.ext.sql.ResultSet;
   LoansApiHistoryTest.class
 })
 public class StorageTestSuite {
-
   public static final String TENANT_ID = "test_tenant";
 
   private static Vertx vertx;
   private static int port;
+  private static boolean initialised = false;
 
   public static URL storageUrl(String path) throws MalformedURLException {
     return new URL("http", "localhost", port, path);
@@ -98,16 +97,21 @@ public class StorageTestSuite {
     startVerticle(options);
 
     prepareTenant(TENANT_ID);
+
+    initialised = true;
   }
 
   @AfterClass
   public static void after()
-    throws InterruptedException, ExecutionException,
-    TimeoutException, MalformedURLException {
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    initialised = false;
 
     removeTenant(TENANT_ID);
 
-    CompletableFuture undeploymentComplete = new CompletableFuture<String>();
+    CompletableFuture<String> undeploymentComplete = new CompletableFuture<>();
 
     vertx.close(res -> {
       if(res.succeeded()) {
@@ -121,10 +125,14 @@ public class StorageTestSuite {
     undeploymentComplete.get(20, TimeUnit.SECONDS);
   }
 
+  public static boolean isNotInitialised() {
+    return !initialised;
+  }
+
   static void deleteAll(URL rootUrl) {
     HttpClient client = new HttpClient(getVertx());
 
-    CompletableFuture<Response> deleteAllFinished = new CompletableFuture();
+    CompletableFuture<Response> deleteAllFinished = new CompletableFuture<>();
 
     try {
       client.delete(rootUrl, TENANT_ID,
@@ -143,11 +151,8 @@ public class StorageTestSuite {
   }
 
   static void checkForMismatchedIDs(String table) {
-    String tenantId = TENANT_ID;
-
     try {
-      ResultSet results = getRecordsWithUnmatchedIds(
-        tenantId, table);
+      ResultSet results = getRecordsWithUnmatchedIds(TENANT_ID, table);
 
       Integer mismatchedRowCount = results.getNumRows();
 
@@ -155,7 +160,7 @@ public class StorageTestSuite {
     }
     catch(Exception e) {
       System.out.println(String.format(
-        "WARNING!!!!! Unable to determine mismatched ID rows"));
+        "WARNING!!!!! Unable to determine mismatched ID rows for %s", table));
     }
   }
 
@@ -166,7 +171,7 @@ public class StorageTestSuite {
     PostgresClient dbClient = PostgresClient.getInstance(
       getVertx(), tenantId);
 
-    CompletableFuture<ResultSet> selectCompleted = new CompletableFuture();
+    CompletableFuture<ResultSet> selectCompleted = new CompletableFuture<>();
 
     String sql = String.format("SELECT null FROM %s_%s.%s" +
         " WHERE CAST(_id AS VARCHAR(50)) != jsonb->>'id'",
@@ -187,7 +192,7 @@ public class StorageTestSuite {
   private static void startVerticle(DeploymentOptions options)
     throws InterruptedException, ExecutionException, TimeoutException {
 
-    CompletableFuture deploymentComplete = new CompletableFuture<String>();
+    CompletableFuture<String> deploymentComplete = new CompletableFuture<>();
 
     vertx.deployVerticle(RestVerticle.class.getName(), options, res -> {
       if(res.succeeded()) {
@@ -201,11 +206,8 @@ public class StorageTestSuite {
     deploymentComplete.get(20, TimeUnit.SECONDS);
   }
 
-  private static void prepareTenant(String tenantId)
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
-
-    CompletableFuture<TextResponse> tenantPrepared = new CompletableFuture();
+  private static void prepareTenant(String tenantId) {
+    CompletableFuture<TextResponse> tenantPrepared = new CompletableFuture<>();
 
     try {
       HttpClient client = new HttpClient(vertx);
@@ -228,11 +230,8 @@ public class StorageTestSuite {
     }
   }
 
-  private static void removeTenant(String tenantId)
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
-
-    CompletableFuture<TextResponse> tenantDeleted = new CompletableFuture();
+  private static void removeTenant(String tenantId) {
+    CompletableFuture<TextResponse> tenantDeleted = new CompletableFuture<>();
 
     try {
       HttpClient client = new HttpClient(vertx);

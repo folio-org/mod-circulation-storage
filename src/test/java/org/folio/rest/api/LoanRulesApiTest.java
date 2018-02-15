@@ -1,8 +1,13 @@
 package org.folio.rest.api;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNull.notNullValue;
+import io.vertx.core.json.JsonObject;
+import org.folio.rest.jaxrs.model.LoanRules;
+import org.folio.rest.support.ApiTests;
+import org.folio.rest.support.JsonResponse;
+import org.folio.rest.support.ResponseHandler;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
+import org.junit.runners.MethodSorters;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -10,20 +15,13 @@ import java.net.URL;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import org.folio.rest.jaxrs.model.LoanRules;
-import org.folio.rest.support.HttpClient;
-import org.folio.rest.support.JsonResponse;
-import org.folio.rest.support.ResponseHandler;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runners.MethodSorters;
-
-import io.vertx.core.json.JsonObject;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.notNullValue;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class LoanRulesApiTest {
+public class LoanRulesApiTest extends ApiTests {
   private static final int HTTP_VALIDATION_ERROR = 422;
-  private static HttpClient client = new HttpClient(StorageTestSuite.getVertx());
   private String uuid;
 
   private static URL loanRulesStorageUrl() throws MalformedURLException {

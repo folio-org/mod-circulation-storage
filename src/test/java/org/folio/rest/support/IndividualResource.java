@@ -17,4 +17,8 @@ public class IndividualResource {
   public JsonObject copyJson() {
     return response.getJson().copy();
   }
+
+  public JsonObject getJson() {
+    return response.getJson();
+  }
 }
