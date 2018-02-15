@@ -5,6 +5,11 @@ Copyright (C) 2017-2018 The Open Library Foundation
 This software is distributed under the terms of the Apache License,
 Version 2.0. See the file "[LICENSE](LICENSE)" for more information.
 
+# Documentation
+
+Further documentation about for example the API can be found in the 
+[Guide](doc/guide.md) file within the `/doc/` folder.
+
 # Goal
 
 FOLIO compatible persistent storage of loans and requests.
