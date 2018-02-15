@@ -28,6 +28,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_FILLED;
+import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_AWAITING_PICKUP;
+import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET_FILLED;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.equivalentTo;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -78,7 +81,7 @@ public class RequestsApiTest {
       .withHoldShelfExpiration(new LocalDate(2017, 8, 31))
       .withItem("Nod", "565578437802")
       .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
-      .withStatus("Open - Not yet filled")
+      .withStatus(OPEN_NOT_YET_FILLED)
       .create();
 
     client.post(requestStorageUrl(),
@@ -100,7 +103,7 @@ public class RequestsApiTest {
     assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
     assertThat(representation.getString("requestExpirationDate"), is("2017-07-30"));
     assertThat(representation.getString("holdShelfExpirationDate"), is("2017-08-31"));
-    assertThat(representation.getString("status"), is("Open - Not yet filled"));
+    assertThat(representation.getString("status"), is(OPEN_NOT_YET_FILLED));
 
     assertThat(representation.containsKey("item"), is(true));
     assertThat(representation.getJsonObject("item").getString("title"), is("Nod"));
@@ -115,9 +118,9 @@ public class RequestsApiTest {
 
   @Test
   @Parameters({
-    "Open - Not yet filled",
-    "Open - Awaiting pickup",
-    "Closed - Filled"
+    OPEN_NOT_YET_FILLED,
+    OPEN_AWAITING_PICKUP,
+    CLOSED_FILLED
   })
   public void canCreateARequestWithValidStatus(String status)
     throws InterruptedException,
@@ -516,6 +519,120 @@ public class RequestsApiTest {
   }
 
   @Test
+  @Parameters({
+    "Open - Awaiting pickup",
+    "Closed - Filled"
+  })
+  public void canUpdateARequestWithValidStatus(String status)
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID id = UUID.randomUUID();
+    UUID itemId = UUID.randomUUID();
+    UUID requesterId = UUID.randomUUID();
+    DateTime requestDate = new DateTime(2017, 7, 22, 10, 22, 54, DateTimeZone.UTC);
+
+    JsonObject createRequestRequest = new RequestRequestBuilder()
+      .recall()
+      .withId(id)
+      .withRequestDate(requestDate)
+      .withItemId(itemId)
+      .withRequesterId(requesterId)
+      .toHoldShelf()
+      .withItem("Nod", "565578437802")
+      .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
+      .withStatus("Open - Not yet filled")
+      .create();
+
+    createRequest(createRequestRequest);
+
+    JsonResponse getAfterCreateResponse = getById(id);
+
+    assertThat(String.format("Failed to get request: %s", getAfterCreateResponse.getBody()),
+      getAfterCreateResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    CompletableFuture<TextResponse> updateCompleted = new CompletableFuture<>();
+
+    JsonObject updateRequestRequest = getAfterCreateResponse.getJson()
+      .copy()
+      .put("status", status);
+
+    client.put(requestStorageUrl(String.format("/%s", id)),
+      updateRequestRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.text(updateCompleted));
+
+    TextResponse response = updateCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to update request: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    JsonResponse getAfterUpdateResponse = getById(id);
+
+    JsonObject representation = getAfterUpdateResponse.getJson();
+
+    assertThat(representation.getString("status"), is(status));
+  }
+
+  @Test
+  @Parameters({
+    "Non-existent status",
+    ""
+  })
+  public void cannotUpdateARequestWithInvalidStatus(String status)
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID id = UUID.randomUUID();
+    UUID itemId = UUID.randomUUID();
+    UUID requesterId = UUID.randomUUID();
+    DateTime requestDate = new DateTime(2017, 7, 22, 10, 22, 54, DateTimeZone.UTC);
+
+    JsonObject createRequestRequest = new RequestRequestBuilder()
+      .recall()
+      .withId(id)
+      .withRequestDate(requestDate)
+      .withItemId(itemId)
+      .withRequesterId(requesterId)
+      .toHoldShelf()
+      .withItem("Nod", "565578437802")
+      .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
+      .withStatus("Open - Not yet filled")
+      .create();
+
+    createRequest(createRequestRequest);
+
+    JsonResponse getAfterCreateResponse = getById(id);
+
+    assertThat(String.format("Failed to get request: %s", getAfterCreateResponse.getBody()),
+      getAfterCreateResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    CompletableFuture<TextResponse> updateCompleted = new CompletableFuture<>();
+
+    JsonObject updateRequestRequest = getAfterCreateResponse.getJson()
+      .copy()
+      .put("status", status);
+
+    client.put(requestStorageUrl(String.format("/%s", id)),
+      updateRequestRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.text(updateCompleted));
+
+    TextResponse response = updateCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Should fail to update request: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+
+    JsonResponse getAfterUpdateResponse = getById(id);
+
+    JsonObject representation = getAfterUpdateResponse.getJson();
+
+    assertThat(representation.getString("status"), is("Open - Not yet filled"));
+  }
+
+  @Test
   public void updatedRequestHasUpdatedMetadata()
     throws InterruptedException,
     MalformedURLException,
@@ -575,7 +692,7 @@ public class RequestsApiTest {
   }
 
   @Test
-  public void updateRequestWithoutUserHeaderDoesSomething()
+  public void updateRequestWithoutUserHeaderFails()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -585,14 +702,9 @@ public class RequestsApiTest {
 
     JsonObject request = new RequestRequestBuilder().withId(id).create();
 
-    JsonResponse createResponse = createRequest(request);
-
-//    JsonObject createdMetadata = createResponse.getJson()
-//      .getJsonObject(METADATA_PROPERTY);
+    createRequest(request);
 
     CompletableFuture<TextResponse> updateCompleted = new CompletableFuture<>();
-
-//    DateTime requestMade = DateTime.now();
 
     client.put(requestStorageUrl(String.format("/%s", id)),
       request, StorageTestSuite.TENANT_ID, null,
@@ -602,37 +714,6 @@ public class RequestsApiTest {
 
     assertThat("No user header causes JSON to be null when saved",
       response.getStatusCode(), is(500));
-
-//    assertThat(String.format("Failed to update request: %s", response.getBody()),
-//      response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-//
-//    JsonResponse getAfterUpdateResponse = getById(id);
-//
-//    JsonObject updatedRequest = getAfterUpdateResponse.getJson();
-//
-//    assertThat("Request should have metadata property",
-//      updatedRequest.containsKey(METADATA_PROPERTY), is(true));
-//
-//    JsonObject metadata = updatedRequest.getJsonObject(METADATA_PROPERTY);
-//
-//    assertThat("Request should have same created user",
-//      metadata.getString("createdByUserId"),
-//      is(createdMetadata.getString("createdByUserId")));
-//
-//    assertThat("Request should have same created date",
-//      metadata.getString("createdDate"),
-//      is(createdMetadata.getString("createdDate")));
-//
-//    assertThat("Request should have updated user",
-//      metadata.getString("updatedByUserId"),
-//      is(createdMetadata.getString("updatedByUserId")));
-//
-//    assertThat("Request should have updated date close to when request was made",
-//      metadata.getString("updatedDate"),
-//      is(withinSecondsAfter(Seconds.seconds(2), requestMade)));
-//
-//    assertThat("Request should have updated date different to original updated date",
-//      metadata.getString("updatedDate"), is(not(createdMetadata.getString("updatedDate"))));
   }
 
   @Test

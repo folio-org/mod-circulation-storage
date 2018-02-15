@@ -12,7 +12,6 @@ import org.joda.time.Period;
 import org.joda.time.format.ISODateTimeFormat;
 import org.junit.*;
 
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -40,20 +39,13 @@ public class LoansApiTest {
 
   @Before
   public void beforeEach()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+    throws MalformedURLException {
 
     StorageTestSuite.deleteAll(loanStorageUrl());
   }
 
   @After
-  public void checkIdsAfterEach()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
+  public void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("loan");
   }
 
@@ -151,7 +143,7 @@ public class LoansApiTest {
       .withdueDate(new DateTime(2017, 4, 20, 7, 21, 45, DateTimeZone.UTC))
       .create();
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     client.post(loanStorageUrl(), loanRequest, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createCompleted));
@@ -199,8 +191,7 @@ public class LoansApiTest {
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
-    TimeoutException,
-    UnsupportedEncodingException {
+    TimeoutException {
 
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
@@ -219,7 +210,7 @@ public class LoansApiTest {
       .withdueDate(new DateTime(2017, 3, 29, 21, 14, 43, DateTimeZone.UTC))
       .create();
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     client.put(loanStorageUrl(String.format("/%s", id.toString())), loanRequest,
       StorageTestSuite.TENANT_ID, ResponseHandler.json(createCompleted));
@@ -268,8 +259,7 @@ public class LoansApiTest {
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
-    TimeoutException,
-    UnsupportedEncodingException {
+    TimeoutException {
 
     UUID id = UUID.randomUUID();
 
@@ -281,7 +271,7 @@ public class LoansApiTest {
       .withAction("checkedout")
       .create();
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     client.put(loanStorageUrl(String.format("/%s", id.toString())), loanRequest,
       StorageTestSuite.TENANT_ID, ResponseHandler.json(createCompleted));
@@ -313,7 +303,7 @@ public class LoansApiTest {
 
     loanRequest.remove("action");
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     client.post(loanStorageUrl(), loanRequest, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createCompleted));
@@ -337,7 +327,7 @@ public class LoansApiTest {
       .put("loanDate", "foo")
       .put("returnDate", "bar");
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     client.post(loanStorageUrl(), loanRequest, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createCompleted));
@@ -562,8 +552,7 @@ public class LoansApiTest {
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
-    TimeoutException,
-    UnsupportedEncodingException {
+    TimeoutException {
 
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
@@ -617,8 +606,7 @@ public class LoansApiTest {
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
-    TimeoutException,
-    UnsupportedEncodingException {
+    TimeoutException {
 
     JsonResponse getResponse = getById(UUID.randomUUID());
 
@@ -630,8 +618,7 @@ public class LoansApiTest {
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+    ExecutionException {
 
     DateTime loanDate = new DateTime(2017, 3, 1, 13, 25, 46, 232, DateTimeZone.UTC);
 
@@ -649,7 +636,7 @@ public class LoansApiTest {
       .put("returnDate", new DateTime(2017, 3, 5, 14, 23, 41, DateTimeZone.UTC)
       .toString(ISODateTimeFormat.dateTime()));
 
-    CompletableFuture<JsonResponse> putCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> putCompleted = new CompletableFuture<>();
 
     client.put(loanStorageUrl(String.format("/%s", loan.getId())), returnedLoan,
       StorageTestSuite.TENANT_ID, ResponseHandler.json(putCompleted));
@@ -681,8 +668,7 @@ public class LoansApiTest {
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+    ExecutionException {
 
     DateTime loanDate = new DateTime(2017, 3, 1, 13, 25, 46, DateTimeZone.UTC);
 
@@ -700,7 +686,7 @@ public class LoansApiTest {
       .put("itemStatus", "Checked out")
       .put("renewalCount", 1);
 
-    CompletableFuture<JsonResponse> putCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> putCompleted = new CompletableFuture<>();
 
     client.put(loanStorageUrl(String.format("/%s", loan.getId())), returnedLoan,
       StorageTestSuite.TENANT_ID, ResponseHandler.json(putCompleted));
@@ -786,7 +772,7 @@ public class LoansApiTest {
     returnedLoan.put("loanDate", "bar");
     returnedLoan.put("returnDate", "foo");
 
-    CompletableFuture<TextResponse> putCompleted = new CompletableFuture();
+    CompletableFuture<TextResponse> putCompleted = new CompletableFuture<>();
 
     client.put(loanStorageUrl(String.format("/%s", loan.getId())), returnedLoan,
       StorageTestSuite.TENANT_ID, ResponseHandler.text(putCompleted));
@@ -823,7 +809,7 @@ public class LoansApiTest {
     returnedLoan
       .put("status", new JsonObject().put("name", "Closed"));
 
-    CompletableFuture<TextResponse> putCompleted = new CompletableFuture();
+    CompletableFuture<TextResponse> putCompleted = new CompletableFuture<>();
 
     client.put(loanStorageUrl(String.format("/%s", loan.getId())), returnedLoan,
       StorageTestSuite.TENANT_ID, ResponseHandler.text(putCompleted));
@@ -842,8 +828,7 @@ public class LoansApiTest {
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+    ExecutionException {
 
     createLoan(loanRequest());
     createLoan(loanRequest());
@@ -853,8 +838,8 @@ public class LoansApiTest {
     createLoan(loanRequest());
     createLoan(loanRequest());
 
-    CompletableFuture<JsonResponse> firstPageCompleted = new CompletableFuture();
-    CompletableFuture<JsonResponse> secondPageCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> firstPageCompleted = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> secondPageCompleted = new CompletableFuture<>();
 
     client.get(loanStorageUrl() + "?limit=4", StorageTestSuite.TENANT_ID,
       ResponseHandler.json(firstPageCompleted));
@@ -891,8 +876,7 @@ public class LoansApiTest {
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
-    TimeoutException,
-    UnsupportedEncodingException {
+    TimeoutException {
 
     UUID firstUserId = UUID.randomUUID();
     UUID secondUserId = UUID.randomUUID();
@@ -908,8 +892,8 @@ public class LoansApiTest {
     createLoan(new LoanRequestBuilder().withUserId(secondUserId).create());
     createLoan(new LoanRequestBuilder().withUserId(secondUserId).create());
 
-    CompletableFuture<JsonResponse> firstUserSearchCompleted = new CompletableFuture();
-    CompletableFuture<JsonResponse> secondUserSeatchCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> firstUserSearchCompleted = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> secondUserSeatchCompleted = new CompletableFuture<>();
 
     client.get(String.format(queryTemplate, firstUserId), StorageTestSuite.TENANT_ID,
       ResponseHandler.json(firstUserSearchCompleted));
@@ -946,8 +930,7 @@ public class LoansApiTest {
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
-    TimeoutException,
-    UnsupportedEncodingException {
+    TimeoutException {
 
     UUID userId = UUID.randomUUID();
 
@@ -960,8 +943,8 @@ public class LoansApiTest {
     createLoan(loanRequest(userId, "Closed"));
     createLoan(loanRequest(userId, "Closed"));
 
-    CompletableFuture<JsonResponse> openSearchComppleted = new CompletableFuture();
-    CompletableFuture<JsonResponse> closedSearchCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> openSearchComppleted = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> closedSearchCompleted = new CompletableFuture<>();
 
     client.get(loanStorageUrl(), String.format(queryTemplate, userId, "Open"),
       StorageTestSuite.TENANT_ID, ResponseHandler.json(openSearchComppleted));
@@ -996,10 +979,6 @@ public class LoansApiTest {
   @Test
   public void metaDataPopulated()
     throws Exception {
-
-    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture();
-
-    URL url = StorageTestSuite.storageUrl("/loan-storage/loan-history");
 
     UUID userId = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
@@ -1047,18 +1026,18 @@ public class LoansApiTest {
     md.setUpdatedDate(d);
     j3.put("metaData", new JsonObject(PostgresClient.pojo2json(md)));
 
-    CompletableFuture<JsonResponse> create1 = new CompletableFuture();
-    CompletableFuture<JsonResponse> get1    = new CompletableFuture();
-    CompletableFuture<JsonResponse> create2 = new CompletableFuture();
-    CompletableFuture<JsonResponse> get2    = new CompletableFuture();
-    CompletableFuture<JsonResponse> create3 = new CompletableFuture();
-    CompletableFuture<JsonResponse> get3    = new CompletableFuture();
+    CompletableFuture<JsonResponse> create1 = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> get1    = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> create2 = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> get2    = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> create3 = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> get3    = new CompletableFuture<>();
 
     ///////////////post loan//////////////////////
     client.post(loanStorageUrl(), j1, StorageTestSuite.TENANT_ID,
       "af23adf0-61ba-4887-bf82-956c4aae2260", ResponseHandler.json(create1));
 
-    JsonResponse response1 = create1.get(5, TimeUnit.SECONDS);
+    create1.get(5, TimeUnit.SECONDS);
 
     //////////////get loan/////////////////////
     client.get(loanStorageUrl("/"+id1.toString()), StorageTestSuite.TENANT_ID,
@@ -1073,7 +1052,7 @@ public class LoansApiTest {
     client.post(loanStorageUrl(), j2, StorageTestSuite.TENANT_ID, null,
       ResponseHandler.json(create2));
 
-    JsonResponse response3 = create2.get(5, TimeUnit.SECONDS);
+    create2.get(5, TimeUnit.SECONDS);
 
     //////////////get loan/////////////////////
     client.get(loanStorageUrl("/"+id2.toString()), StorageTestSuite.TENANT_ID,
@@ -1088,7 +1067,7 @@ public class LoansApiTest {
     client.post(loanStorageUrl(), j3, StorageTestSuite.TENANT_ID,
       "af23adf0-61ba-4887-bf82-956c4aae2260", ResponseHandler.json(create3));
 
-    JsonResponse response5 = create3.get(5, TimeUnit.SECONDS);
+    create3.get(5, TimeUnit.SECONDS);
 
     //////////////get loan/////////////////////
     client.get(loanStorageUrl("/"+id3.toString()), StorageTestSuite.TENANT_ID,
@@ -1106,14 +1085,13 @@ public class LoansApiTest {
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+    ExecutionException {
 
     UUID id = UUID.randomUUID();
 
     createLoan(new LoanRequestBuilder().withId(id).create());
 
-    CompletableFuture<TextResponse> deleteCompleted = new CompletableFuture();
+    CompletableFuture<TextResponse> deleteCompleted = new CompletableFuture<>();
 
     client.delete(loanStorageUrl(String.format("/%s", id)),
       StorageTestSuite.TENANT_ID, ResponseHandler.text(deleteCompleted));
@@ -1122,7 +1100,7 @@ public class LoansApiTest {
 
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-    CompletableFuture<Response> getCompleted = new CompletableFuture();
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
     client.get(loanStorageUrl(String.format("/%s", id)),
       StorageTestSuite.TENANT_ID, ResponseHandler.empty(getCompleted));
@@ -1147,7 +1125,7 @@ public class LoansApiTest {
 
     requestWithAdditionalProperty.put("somethingAdditional", "foo");
 
-    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture();
+    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture<>();
 
     client.post(loanStorageUrl(), requestWithAdditionalProperty,
       StorageTestSuite.TENANT_ID, ResponseHandler.jsonErrors(createCompleted));
@@ -1174,7 +1152,7 @@ public class LoansApiTest {
     requestWithAdditionalProperty.getJsonObject("status")
       .put("somethingAdditional", "foo");
 
-    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture();
+    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture<>();
 
     client.post(loanStorageUrl(), requestWithAdditionalProperty,
       StorageTestSuite.TENANT_ID, ResponseHandler.jsonErrors(createCompleted));
@@ -1189,12 +1167,11 @@ public class LoansApiTest {
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
-    TimeoutException,
-    UnsupportedEncodingException {
+    TimeoutException {
 
     URL getInstanceUrl = loanStorageUrl(String.format("/%s", id));
 
-    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
 
     client.get(getInstanceUrl, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(getCompleted));
@@ -1208,7 +1185,7 @@ public class LoansApiTest {
     ExecutionException,
     TimeoutException {
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     client.post(loanStorageUrl(), loanRequest, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createCompleted));
