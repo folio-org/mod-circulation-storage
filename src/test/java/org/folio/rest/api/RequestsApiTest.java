@@ -4,10 +4,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
-import org.folio.rest.support.HttpClient;
-import org.folio.rest.support.JsonResponse;
-import org.folio.rest.support.ResponseHandler;
-import org.folio.rest.support.TextResponse;
+import org.folio.rest.support.*;
 import org.folio.rest.support.builders.RequestRequestBuilder;
 import org.hamcrest.junit.MatcherAssert;
 import org.joda.time.DateTime;
@@ -40,7 +37,7 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
 
 @RunWith(JUnitParamsRunner.class)
-public class RequestsApiTest {
+public class RequestsApiTest extends ApiTests {
   private static HttpClient client = new HttpClient(StorageTestSuite.getVertx());
   private final String METADATA_PROPERTY = "metaData";
 
@@ -938,5 +935,4 @@ public class RequestsApiTest {
 
     return getCompleted.get(5, TimeUnit.SECONDS);
   }
-
 }

@@ -29,29 +29,20 @@ import static org.hamcrest.core.Is.is;
  * @author shale
  *
  */
-public class FixedDueDateApiTest {
-
+public class FixedDueDateApiTest extends ApiTests {
   private static final String TABLE_NAME = "fixed_due_date_schedule";
   static final String SCHEDULE_SECTION = "schedules";
-  private static HttpClient client = new HttpClient(StorageTestSuite.getVertx());
 
   @Before
   public void beforeEach()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+    throws MalformedURLException {
 
     StorageTestSuite.deleteAll(loanPolicyStorageUrl());
     StorageTestSuite.deleteAll(dueDateURL());
   }
 
   @After
-  public void checkIdsAfterEach()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
+  public void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs(TABLE_NAME);
   }
 
@@ -60,8 +51,7 @@ public class FixedDueDateApiTest {
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+    ExecutionException {
 
     //create simple empty fixed due date
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();

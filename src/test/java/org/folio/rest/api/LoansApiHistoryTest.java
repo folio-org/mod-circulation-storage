@@ -25,25 +25,16 @@ import java.util.concurrent.TimeoutException;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
-public class LoansApiHistoryTest {
-  private static HttpClient client = new HttpClient(StorageTestSuite.getVertx());
-
+public class LoansApiHistoryTest extends ApiTests {
   @Before
   public void beforeEach()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+    throws MalformedURLException {
 
     StorageTestSuite.deleteAll(loanStorageUrl());
   }
 
   @After
-  public void checkIdsAfterEach()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
+  public void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("loan");
   }
 
