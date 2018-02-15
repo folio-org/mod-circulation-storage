@@ -16,9 +16,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -860,6 +862,97 @@ public class RequestsApiTest extends ApiTests {
 
     assertThat(wrappedRequests.getJsonArray("requests").size(), is(3));
     assertThat(wrappedRequests.getInteger("totalRecords"), is(3));
+  }
+
+  @Test
+  public void canSearchForRequestsForAnItem()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    UUID itemId = UUID.randomUUID();
+    UUID otherItemId = UUID.randomUUID();
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId).create());
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId).create());
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(otherItemId).create());
+
+    CompletableFuture<JsonResponse> getRequestsCompleted = new CompletableFuture<>();
+
+    client.get(requestStorageUrl() + String.format("?query=itemId==%s", itemId),
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(getRequestsCompleted));
+
+    JsonResponse getRequestsResponse = getRequestsCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to get requests: %s",
+      getRequestsResponse.getBody()),
+      getRequestsResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject wrappedRequests = getRequestsResponse.getJson();
+
+    assertThat(wrappedRequests.getJsonArray("requests").size(), is(2));
+    assertThat(wrappedRequests.getInteger("totalRecords"), is(2));
+  }
+
+  @Test
+  public void canSearchForActiveRequestsForAnItem()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException, UnsupportedEncodingException {
+
+    UUID itemId = UUID.randomUUID();
+    UUID otherItemId = UUID.randomUUID();
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withStatus(OPEN_NOT_YET_FILLED).create());
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withStatus(OPEN_AWAITING_PICKUP).create());
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withStatus(CLOSED_FILLED).create());
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(otherItemId)
+      .withStatus(OPEN_NOT_YET_FILLED).create());
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(otherItemId)
+      .withStatus(OPEN_AWAITING_PICKUP).create());
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(otherItemId)
+      .withStatus(CLOSED_FILLED).create());
+
+    CompletableFuture<JsonResponse> getRequestsCompleted = new CompletableFuture<>();
+
+    String query = URLEncoder.encode(String.format("itemId==%s and status==(\"%s\" or \"%s\")",
+      itemId, OPEN_NOT_YET_FILLED, OPEN_AWAITING_PICKUP),
+      "UTF-8");
+
+    client.get(requestStorageUrl() + String.format("?query=%s", query),
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(getRequestsCompleted));
+
+    JsonResponse getRequestsResponse = getRequestsCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to get requests: %s",
+      getRequestsResponse.getBody()),
+      getRequestsResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject wrappedRequests = getRequestsResponse.getJson();
+
+    assertThat(wrappedRequests.getJsonArray("requests").size(), is(2));
+    assertThat(wrappedRequests.getInteger("totalRecords"), is(2));
   }
 
   @Test

@@ -4,6 +4,8 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.jaxrs.model.Requests;
 import org.folio.rest.jaxrs.resource.LoanPolicyStorageResource;
@@ -19,22 +21,24 @@ import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
 import javax.ws.rs.core.Response;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
 public class RequestsAPI implements RequestStorageResource {
-
-  private final String REQUEST_TABLE = "request";
+  private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+  private static final String REQUEST_TABLE = "request";
 
   @Override
   public void deleteRequestStorageRequests(
     String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -45,10 +49,8 @@ public class RequestsAPI implements RequestStorageResource {
 
         postgresClient.mutate(String.format("TRUNCATE TABLE %s_%s.%s",
           tenantId, "mod_circulation_storage", REQUEST_TABLE),
-          reply -> {
-            asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-              DeleteRequestStorageRequestsResponse.withNoContent()));
-          });
+          reply -> asyncResultHandler.handle(Future.succeededFuture(
+            DeleteRequestStorageRequestsResponse.withNoContent())));
       }
       catch(Exception e) {
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
@@ -66,7 +68,14 @@ public class RequestsAPI implements RequestStorageResource {
     String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
+
+    Consumer<Exception> exceptionHandler = e -> {
+      log.error("Getting requests failed", e);
+      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+        GetRequestStorageRequestsByRequestIdResponse.
+          withPlainInternalServerError(e.getMessage())));
+    };
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -82,6 +91,9 @@ public class RequestsAPI implements RequestStorageResource {
           CQLWrapper cql = new CQLWrapper(cql2pgJson, query)
             .setLimit(new Limit(limit))
             .setOffset(new Offset(offset));
+
+          log.error(String.format("CQL query: %s", query));
+          log.error(String.format("SQL generated from CQL: %s", cql.toString()));
 
           postgresClient.get(REQUEST_TABLE, Request.class, fieldList, cql,
             true, false, reply -> {
@@ -102,24 +114,15 @@ public class RequestsAPI implements RequestStorageResource {
                       withPlainInternalServerError(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
-                e.printStackTrace();
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                  LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
-                    withPlainInternalServerError(e.getMessage())));
+                exceptionHandler.accept(e);
               }
             });
         } catch (Exception e) {
-          e.printStackTrace();
-          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
-              withPlainInternalServerError(e.getMessage())));
+          exceptionHandler.accept(e);
         }
       });
     } catch (Exception e) {
-      e.printStackTrace();
-      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-        LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
-          withPlainInternalServerError(e.getMessage())));
+      exceptionHandler.accept(e);
     }
   }
 
@@ -129,7 +132,7 @@ public class RequestsAPI implements RequestStorageResource {
     Request entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -163,7 +166,6 @@ public class RequestsAPI implements RequestStorageResource {
                         .withPlainInternalServerError(reply.cause().toString())));
                 }
               } catch (Exception e) {
-                e.printStackTrace();
                 asyncResultHandler.handle(
                   io.vertx.core.Future.succeededFuture(
                     PostRequestStorageRequestsResponse
@@ -171,14 +173,12 @@ public class RequestsAPI implements RequestStorageResource {
               }
             });
         } catch (Exception e) {
-          e.printStackTrace();
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             PostRequestStorageRequestsResponse
               .withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      e.printStackTrace();
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         LoanPolicyStorageResource.PostLoanPolicyStorageLoanPoliciesResponse
           .withPlainInternalServerError(e.getMessage())));
@@ -191,7 +191,14 @@ public class RequestsAPI implements RequestStorageResource {
     String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
+
+    Consumer<Exception> exceptionHandler = e -> {
+      log.error("Getting request by ID failed", e);
+      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+        GetRequestStorageRequestsByRequestIdResponse.
+          withPlainInternalServerError(e.getMessage())));
+    };
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -237,24 +244,15 @@ public class RequestsAPI implements RequestStorageResource {
 
                 }
               } catch (Exception e) {
-                e.printStackTrace();
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                  GetRequestStorageRequestsByRequestIdResponse.
-                    withPlainInternalServerError(e.getMessage())));
+                exceptionHandler.accept(e);
               }
             });
         } catch (Exception e) {
-          e.printStackTrace();
-          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            GetRequestStorageRequestsByRequestIdResponse.
-              withPlainInternalServerError(e.getMessage())));
+          exceptionHandler.accept(e);
         }
       });
     } catch (Exception e) {
-      e.printStackTrace();
-      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-          GetRequestStorageRequestsByRequestIdResponse.
-          withPlainInternalServerError(e.getMessage())));
+      exceptionHandler.accept(e);
     }
   }
 
@@ -264,7 +262,7 @@ public class RequestsAPI implements RequestStorageResource {
     String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -316,7 +314,7 @@ public class RequestsAPI implements RequestStorageResource {
     String lang, Request entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
