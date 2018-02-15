@@ -28,6 +28,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_FILLED;
+import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_AWAITING_PICKUP;
+import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET_FILLED;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.equivalentTo;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -78,7 +81,7 @@ public class RequestsApiTest {
       .withHoldShelfExpiration(new LocalDate(2017, 8, 31))
       .withItem("Nod", "565578437802")
       .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
-      .withStatus("Open - Not yet filled")
+      .withStatus(OPEN_NOT_YET_FILLED)
       .create();
 
     client.post(requestStorageUrl(),
@@ -100,7 +103,7 @@ public class RequestsApiTest {
     assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
     assertThat(representation.getString("requestExpirationDate"), is("2017-07-30"));
     assertThat(representation.getString("holdShelfExpirationDate"), is("2017-08-31"));
-    assertThat(representation.getString("status"), is("Open - Not yet filled"));
+    assertThat(representation.getString("status"), is(OPEN_NOT_YET_FILLED));
 
     assertThat(representation.containsKey("item"), is(true));
     assertThat(representation.getJsonObject("item").getString("title"), is("Nod"));
@@ -115,9 +118,9 @@ public class RequestsApiTest {
 
   @Test
   @Parameters({
-    "Open - Not yet filled",
-    "Open - Awaiting pickup",
-    "Closed - Filled"
+    OPEN_NOT_YET_FILLED,
+    OPEN_AWAITING_PICKUP,
+    CLOSED_FILLED
   })
   public void canCreateARequestWithValidStatus(String status)
     throws InterruptedException,
