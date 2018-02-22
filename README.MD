@@ -12,7 +12,8 @@ Further documentation about for example the API can be found in the
 
 # Goal
 
-FOLIO compatible persistent storage of loans and requests.
+FOLIO compatible persistent storage of loans, loan policies, loan rules,
+requests, and fixed due date schedules
 
 # Implementation Specific Behaviours
 
