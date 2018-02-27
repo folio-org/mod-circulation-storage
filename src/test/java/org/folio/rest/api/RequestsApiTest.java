@@ -966,21 +966,21 @@ public class RequestsApiTest extends ApiTests {
     UUID itemId = UUID.randomUUID();
 
     createRequest(new RequestRequestBuilder()
-      .withRequestDate(new DateTime(2018, 02, 14, 15, 10, 54))
+      .withRequestDate(new DateTime(2018, 02, 14, 15, 10, 54, DateTimeZone.UTC))
       .withItemId(itemId).create()).getId();
 
     createRequest(new RequestRequestBuilder()
       .withItemId(itemId)
-      .withRequestDate(new DateTime(2017, 11, 24, 12, 31, 27))
+      .withRequestDate(new DateTime(2017, 11, 24, 12, 31, 27, DateTimeZone.UTC))
       .create()).getId();
 
     createRequest(new RequestRequestBuilder()
-      .withRequestDate(new DateTime(2018, 02, 04, 15, 10, 54))
+      .withRequestDate(new DateTime(2018, 02, 04, 15, 10, 54, DateTimeZone.UTC))
       .withItemId(itemId).create()).getId();
 
     createRequest(new RequestRequestBuilder()
       .withItemId(itemId)
-      .withRequestDate(new DateTime(2018, 01, 12, 12, 31, 27))
+      .withRequestDate(new DateTime(2018, 01, 12, 12, 31, 27, DateTimeZone.UTC))
       .create()).getId();
 
     CompletableFuture<JsonResponse> getRequestsCompleted = new CompletableFuture<>();
