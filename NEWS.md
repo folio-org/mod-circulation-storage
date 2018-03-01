@@ -1,5 +1,7 @@
-## 4.3.0 Unreleased
+## 4.3.1 Unreleased
 
+* Fixed due date schedules can now be created with the same `due` and `to` dates (CIRCSTORE-42)
+* Validation errors during creation or update of fixed due date schedules are returned in responses (CIRCSTORE-42)
 * Adds `status` property to requests (CIRCSTORE-37)
 * Provides request-storage interface 1.3 (CIRCSTORE-37)
 
