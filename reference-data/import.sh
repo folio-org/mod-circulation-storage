@@ -72,7 +72,6 @@ do
   for endpoint in $modEndpoints 
   do 
     if [ -d "${dir}/${endpoint}" ]; then
-      echo "ENDPOINT: $endpoint"
       if [[ "$endpoint" =~ ^loan-rules-storage$ ]]; then
         method=PUT
       else
@@ -82,7 +81,7 @@ do
       json=$(ls ${dir}/${endpoint}/*.json)
       for j in $json 
       do 
-        echo "curl $curlOpts -X $method -d @$j ${okapiUrl}/${endpoint}"
+        curl $curlOpts -X $method -d @$j ${okapiUrl}/${endpoint}
       done
     fi
   done
