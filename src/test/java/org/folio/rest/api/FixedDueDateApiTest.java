@@ -1,8 +1,13 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.api.LoanPoliciesApiTest.loanPolicyStorageUrl;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import org.folio.rest.support.*;
+import org.hamcrest.junit.MatcherAssert;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
@@ -16,21 +21,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.folio.rest.support.ApiTests;
-import org.folio.rest.support.IndividualResource;
-import org.folio.rest.support.JsonArrayHelper;
-import org.folio.rest.support.JsonResponse;
-import org.folio.rest.support.Response;
-import org.folio.rest.support.ResponseHandler;
-import org.folio.rest.support.TextResponse;
-import org.hamcrest.junit.MatcherAssert;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
+import static org.folio.rest.api.LoanPoliciesApiTest.loanPolicyStorageUrl;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 
 /**
  * @author shale
@@ -245,7 +238,8 @@ public class FixedDueDateApiTest extends ApiTests {
     client.get(url3, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(getCQLCompleted2));
     JsonResponse getCQLResponse2 = getCQLCompleted2.get(5, TimeUnit.SECONDS);
-    assertThat(String.format("Failed to create due date: %s", getCQLResponse2.getJson().encodePrettily()),
+
+    assertThat(String.format("Failed to get schedule: %s", getCQLResponse2.getJson().encodePrettily()),
       getCQLResponse2.getStatusCode(), is(422));
     //////////////////////////////////////////////////////////
 

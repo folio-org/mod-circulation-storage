@@ -1,3 +1,15 @@
+## 5.0.0 Unreleased
+
+* Upgrades RAML Module Builder to version 19.0.0 (RMB-130, ???)
+* Uses generated sources for generated code (RMB-130, ???)
+* Renames `metaData` property for loans to `metadata` (???)
+* Renames `metaData` property for requests to `metadata` (???)
+* Renames `metaData` property for fixed due date schedules to `metadata` (???)
+* Provides `loan-storage` interface 4.0 (???)
+* Provides `request-storage` interface 2.0 (???)
+* Provides `fixed-due-date-schedules-storage` interface 2.0 (CIRCSTORE-43)
+* Uses embedded PostgreSQL 10.1 during tests (???)
+
 ## 4.6.0 2018-04-18
 
 * Allows snapshot of proxying patron metadata to be stored with a request (CIRCSTORE-46)

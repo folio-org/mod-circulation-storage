@@ -212,7 +212,7 @@ public class StorageTestSuite {
     try {
       HttpClient client = new HttpClient(vertx);
 
-      client.post(storageUrl("/_/tenant"), tenantId,
+      client.post(storageUrl("/_/tenant"), null, tenantId,
         ResponseHandler.text(tenantPrepared));
 
       TextResponse response = tenantPrepared.get(10, TimeUnit.SECONDS);
@@ -220,8 +220,7 @@ public class StorageTestSuite {
       String failureMessage = String.format("Tenant preparation failed: %s: %s",
           response.getStatusCode(), response.getBody());
 
-      assertThat(failureMessage,
-        response.getStatusCode(), is(201));
+      assertThat(failureMessage, response.getStatusCode(), is(201));
 
     } catch(Exception e) {
       System.out.println("WARNING!!!!! Tenant preparation failed: "

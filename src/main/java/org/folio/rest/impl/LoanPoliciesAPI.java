@@ -89,11 +89,11 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
               true, false, reply -> {
                 try {
                   if(reply.succeeded()) {
-                    List<LoanPolicy> loanPolicies = (List<LoanPolicy>) reply.result()[0];
+                    List<LoanPolicy> loanPolicies = (List<LoanPolicy>) reply.result().getResults();
 
                     LoanPolicies pagedLoans = new LoanPolicies();
                     pagedLoans.setLoanPolicies(loanPolicies);
-                    pagedLoans.setTotalRecords((Integer)reply.result()[1]);
+                    pagedLoans.setTotalRecords((Integer)reply.result().getResultInfo().getTotalRecords());
 
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                       LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
@@ -217,7 +217,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
             reply -> {
               try {
                 if (reply.succeeded()) {
-                  List<LoanPolicy> loanPolicies = (List<LoanPolicy>) reply.result()[0];
+                  List<LoanPolicy> loanPolicies = (List<LoanPolicy>) reply.result().getResults();
 
                   if (loanPolicies.size() == 1) {
                     LoanPolicy loanPolicy = loanPolicies.get(0);
@@ -350,7 +350,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
           postgresClient.get(LOAN_POLICY_TABLE, LOAN_POLICY_CLASS, criterion, true, false,
             reply -> {
               if(reply.succeeded()) {
-                List<LoanPolicy> loanPolicyList = (List<LoanPolicy>) reply.result()[0];
+                List<LoanPolicy> loanPolicyList = (List<LoanPolicy>) reply.result().getResults();
 
                 if (loanPolicyList.size() == 1) {
                   try {

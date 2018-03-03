@@ -42,7 +42,7 @@ import static org.hamcrest.core.IsNull.notNullValue;
 @RunWith(JUnitParamsRunner.class)
 public class RequestsApiTest extends ApiTests {
   private static HttpClient client = new HttpClient(StorageTestSuite.getVertx());
-  private final String METADATA_PROPERTY = "metaData";
+  private final String METADATA_PROPERTY = "metadata";
 
   @Before
   public void beforeEach()
@@ -346,30 +346,6 @@ public class RequestsApiTest extends ApiTests {
     assertThat("Request should have update date close to when request was made",
       metadata.getString("updatedDate"),
       is(withinSecondsAfter(Seconds.seconds(2), requestMade)));
-  }
-
-  @Test
-  public void createRequestWithoutUserHeaderCreatesNoMetadata()
-    throws InterruptedException,
-    MalformedURLException,
-    TimeoutException,
-    ExecutionException {
-
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
-
-    client.post(requestStorageUrl(),
-      new RequestRequestBuilder().create(), StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(createCompleted));
-
-    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(String.format("Failed to create loan policy: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    JsonObject createdRequest = response.getJson();
-
-    assertThat("Request should not have metadata property",
-      createdRequest.containsKey("metadata"), is(false));
   }
 
   @Test

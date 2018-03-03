@@ -22,7 +22,7 @@
         "$ref": "schedule.json"
       }
     },
-    "metaData": {
+    "metadata": {
       "$ref": "raml-util/schemas/metadata.schema",
       "readonly": true
     }
