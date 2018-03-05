@@ -4,7 +4,7 @@
 # import mod-circulation-storage reference data
 #
 
-#set -x
+set -x
 
 type curl >/dev/null 2>&1 || { echo >&2 "$0: curl is required but it's not installed"; exit 1; }
 
@@ -55,18 +55,6 @@ tenant=${tenant:-demo_tenant}
 dataDirs=${dataDirs:-'.'}
 modEndpoints='loan-policy-storage/loan-policies loan-rules-storage'
 
-curlBaseOpts="-s -w '\n' --connect-timeout 10 \
- -H 'Content-type: application/json' \
- -H 'Accept: application/json' \
- -H 'X-Okapi-Tenant: $tenant'"
-
-if [ "$auth_required" = true ]; then
-  authOpt="-H 'X-Okapi-Token: $authToken'"
-  curlOpts="$curlBaseOpts $authOpt"
-else
-  curlOpts=$curlBaseOpts
-fi
-
 for dir in "${dataDirs[@]}"; 
 do
   for endpoint in $modEndpoints 
@@ -81,7 +69,20 @@ do
       json=$(ls ${dir}/${endpoint}/*.json)
       for j in $json 
       do 
-        curl $curlOpts -X $method -d @$j ${okapiUrl}/${endpoint}
+        if [ "$auth_required" = true ]; then
+           curl  --connect-timeout 10 -w '\n' \
+             -H 'Content-type: application/json' \
+             -H 'Accept: application/json' \
+             -H "X-Okapi-Tenant: $tenant" \
+             -H "X-Okapi-Token: $authToken" \
+             -X $method -d @$j ${okapiUrl}/${endpoint}
+        else 
+           curl  --connect-timeout 10 -w '\n' \
+             -H 'Content-type: application/json' \
+             -H 'Accept: application/json' \
+             -H "X-Okapi-Tenant: $tenant" \
+             -X $method -d @$j ${okapiUrl}/${endpoint}
+        fi
       done
     fi
   done
