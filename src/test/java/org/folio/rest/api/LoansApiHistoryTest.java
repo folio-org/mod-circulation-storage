@@ -59,7 +59,7 @@ public class LoansApiHistoryTest extends ApiTests {
       .withStatus("Open")
       .withAction("checkedout")
       .withItemStatus("Checked out")
-      .withdueDate(new DateTime(2017, 7, 27, 10, 23, 43, DateTimeZone.UTC))
+      .withDueDate(new DateTime(2017, 7, 27, 10, 23, 43, DateTimeZone.UTC))
       .create();
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();

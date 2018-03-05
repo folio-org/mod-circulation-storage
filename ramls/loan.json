@@ -45,6 +45,11 @@
       "description": "Date time when the item is returned and the loan ends (typically represented according to rfc3339 section-5.6. Has not had the date-time format validation applied as was not supported at point of introduction and would now be a breaking change)",
       "type": "string"
     },
+    "systemReturnDate" : {
+      "description": "Date time when the returned item is actually processed",
+      "type" : "string",
+      "format": "date-time"
+	},
     "action": {
       "description": "Last action performed on a loan (currently can be any value, values commonly used are checkedout and checkedin)",
       "type": "string"
