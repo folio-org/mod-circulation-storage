@@ -1,6 +1,7 @@
-## 4.3.0 Unreleased
+## 4.4.0 2018-03-06
 
-* Adds `status` property to requests (CIRCSTORE-37)
+* Adds systemReturnDate to loans (CIRC-80) 
+* Adds`status` property to requests (CIRCSTORE-37)
 * Provides request-storage interface 1.3 (CIRCSTORE-37)
 
 ## 4.2.0 2018-02-12
