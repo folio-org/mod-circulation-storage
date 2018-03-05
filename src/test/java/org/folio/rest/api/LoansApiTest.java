@@ -69,7 +69,7 @@ public class LoansApiTest extends ApiTests {
       .withStatus("Open")
       .withAction("checkedout")
       .withItemStatus("Checked out")
-      .withdueDate(new DateTime(2017, 7, 27, 10, 23, 43, DateTimeZone.UTC))
+      .withDueDate(new DateTime(2017, 7, 27, 10, 23, 43, DateTimeZone.UTC))
       .withLoanPolicyId(loanPolicyId)
       .create();
 
@@ -138,7 +138,7 @@ public class LoansApiTest extends ApiTests {
       .withStatus("Open")
       .withAction("checkedout")
       .withItemStatus("Checked out")
-      .withdueDate(new DateTime(2017, 4, 20, 7, 21, 45, DateTimeZone.UTC))
+      .withDueDate(new DateTime(2017, 4, 20, 7, 21, 45, DateTimeZone.UTC))
       .create();
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
@@ -185,6 +185,56 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
+  public void canCreateAClosedLoanWithReturnDates()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    UUID id = UUID.randomUUID();
+    UUID itemId = UUID.randomUUID();
+    UUID userId = UUID.randomUUID();
+    UUID proxyUserId = UUID.randomUUID();
+
+    DateTime loanDate = new DateTime(2017, 2, 27, 10, 23, 43, DateTimeZone.UTC);
+    DateTime dueDate = new DateTime(2017, 3, 29, 10, 23, 43, DateTimeZone.UTC);
+    DateTime returnDate = new DateTime(2017, 4, 1, 11, 35, 0, DateTimeZone.UTC);
+    DateTime systemReturnDate = new DateTime(2017, 4, 1, 12, 0, 0, DateTimeZone.UTC);
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    JsonObject loanRequest = new LoanRequestBuilder()
+      .withId(id)
+      .withUserId(userId)
+      .withProxyUserId(proxyUserId)
+      .withItemId(itemId)
+      .withLoanDate(loanDate)
+      .withDueDate(dueDate)
+      .withReturnDate(returnDate)
+      .withSystemReturnDate(systemReturnDate)
+      .withStatus("Closed")
+      .create();
+
+    client.post(loanStorageUrl(), loanRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to create loan: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    JsonObject loan = response.getJson();
+    
+    assertThat("return date does not match",
+      loan.getString("returnDate"), is("2017-04-01T11:35:00.000Z"));
+
+    //The RAML-Module-Builder converts all date-time formatted strings to UTC
+    //and presents the offset as +0000 (which is ISO8601 compatible, but not RFC3339)
+    assertThat("system return date does not match",
+      loan.getString("systemReturnDate"), is("2017-04-01T12:00:00.000+0000"));
+  }
+
+  @Test
   public void canCreateALoanAtASpecificLocation()
     throws MalformedURLException,
     InterruptedException,
@@ -205,7 +255,7 @@ public class LoansApiTest extends ApiTests {
       .withStatus("Open")
       .withAction("checkedout")
       .withItemStatus("Checked out")
-      .withdueDate(new DateTime(2017, 3, 29, 21, 14, 43, DateTimeZone.UTC))
+      .withDueDate(new DateTime(2017, 3, 29, 21, 14, 43, DateTimeZone.UTC))
       .create();
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
@@ -622,7 +672,7 @@ public class LoansApiTest extends ApiTests {
 
     IndividualResource loan = createLoan(new LoanRequestBuilder()
       .withLoanDate(loanDate)
-      .withdueDate(loanDate.plus(Period.days(14)))
+      .withDueDate(loanDate.plus(Period.days(14)))
       .create());
 
     JsonObject returnedLoan = loan.copyJson();
@@ -672,7 +722,7 @@ public class LoansApiTest extends ApiTests {
 
     IndividualResource loan = createLoan(new LoanRequestBuilder()
       .withLoanDate(loanDate)
-      .withdueDate(loanDate.plus(Period.days(14)))
+      .withDueDate(loanDate.plus(Period.days(14)))
       .create());
 
     JsonObject returnedLoan = loan.copyJson();
@@ -799,7 +849,7 @@ public class LoansApiTest extends ApiTests {
 
     IndividualResource loan = createLoan(new LoanRequestBuilder()
       .withLoanDate(loanDate)
-      .withdueDate(loanDate.plus(Period.days(14)))
+      .withDueDate(loanDate.plus(Period.days(14)))
       .create());
 
     JsonObject returnedLoan = loan.copyJson();
