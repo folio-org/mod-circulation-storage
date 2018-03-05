@@ -1,13 +1,8 @@
 package org.folio.rest.api;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import org.folio.rest.support.*;
-import org.hamcrest.junit.MatcherAssert;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import static org.folio.rest.api.LoanPoliciesApiTest.loanPolicyStorageUrl;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
@@ -21,9 +16,21 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.folio.rest.api.LoanPoliciesApiTest.loanPolicyStorageUrl;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
+import org.folio.rest.support.ApiTests;
+import org.folio.rest.support.IndividualResource;
+import org.folio.rest.support.JsonArrayHelper;
+import org.folio.rest.support.JsonResponse;
+import org.folio.rest.support.Response;
+import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.TextResponse;
+import org.hamcrest.junit.MatcherAssert;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 /**
  * @author shale
@@ -158,8 +165,34 @@ public class FixedDueDateApiTest extends ApiTests {
     assertThat(String.format("Failed to create due date: %s", fixDueDate7.encodePrettily()),
       updateCompleted5Response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     String newId = updateCompleted5Response.getJson().getString("id");
-
     ////////////////////////////////////////////
+
+    //update the fixed due date with a valid schedule
+    CompletableFuture<Response> updateBad4Completed = new CompletableFuture<>();
+    fixDueDate7 = updateCompleted5Response.getJson().put(SCHEDULE_SECTION,
+      new JsonArray().add(createSchedule("2017-01-01T10:00:00.000+0000",
+        "2017-01-01T10:00:00.000+0000", "2017-01-01T10:00:00.000+0000")));
+    client.put(dueDateURL("/"+newId),
+      fixDueDate7, StorageTestSuite.TENANT_ID,
+      ResponseHandler.empty(updateBad4Completed));
+    Response updateBad4Response = updateBad4Completed.get(5, TimeUnit.SECONDS);
+    assertThat(String.format("Failed to create due date: %s", fixDueDate7.encodePrettily()),
+      updateBad4Response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    ////////////////////////////////////////////////
+
+    //update the fixed due date with a valid schedule
+    CompletableFuture<Response> updateBad5Completed = new CompletableFuture<>();
+    fixDueDate7.put(SCHEDULE_SECTION,
+      new JsonArray().add(createSchedule("2017-01-01T10:00:00.000+0000",
+        "2017-02-02T10:00:00.000+0000", "2017-02-02T10:00:00.000+0000")));
+    client.put(dueDateURL("/"+newId),
+      fixDueDate7, StorageTestSuite.TENANT_ID,
+      ResponseHandler.empty(updateBad5Completed));
+    Response updateBad5Response = updateBad5Completed.get(5, TimeUnit.SECONDS);
+    assertThat(String.format("Failed to create due date: %s", fixDueDate7.encodePrettily()),
+      updateBad5Response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    ////////////////////////////////////////////////
+
     //create duplicate name due date
     CompletableFuture<JsonResponse> updateCompleted3 = new CompletableFuture<>();
     JsonObject fixDueDate4 = createFixedDueDate(null, "Semester", "desc2");

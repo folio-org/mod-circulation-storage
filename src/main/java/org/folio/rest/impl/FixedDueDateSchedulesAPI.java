@@ -1,8 +1,14 @@
 package org.folio.rest.impl;
 
-import io.vertx.core.*;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import static org.folio.rest.impl.Headers.TENANT_HEADER;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import javax.ws.rs.core.Response;
+
 import org.apache.commons.io.IOUtils;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Errors;
@@ -10,12 +16,12 @@ import org.folio.rest.jaxrs.model.FixedDueDateSchedule;
 import org.folio.rest.jaxrs.model.FixedDueDateSchedules;
 import org.folio.rest.jaxrs.model.Schedule;
 import org.folio.rest.jaxrs.resource.FixedDueDateScheduleStorageResource;
+import org.folio.rest.persist.PgExceptionUtil;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
-import org.folio.rest.persist.PgExceptionUtil;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLQueryValidationException;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.PomReader;
@@ -24,19 +30,20 @@ import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
-import javax.ws.rs.core.Response;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import static org.folio.rest.impl.Headers.TENANT_HEADER;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageResource {
 
-  private static final Logger       log            = LoggerFactory.getLogger(FixedDueDateSchedulesAPI.class);
-  private static final String       SCHEMA_NAME    = "apidocs/raml/fixed-due-date-schedule.json";
+  private static final Logger       log               = LoggerFactory.getLogger(FixedDueDateSchedulesAPI.class);
+  private static final String       SCHEMA_NAME       = "apidocs/raml/fixed-due-date-schedule.json";
   private static final String       FIXED_SCHEDULE_TABLE  = "fixed_due_date_schedule";
+  private static final String       INVALID_DATE_MSG  = "Unable to save fixed loan date. Date range not valid";
 
   private static String             schema      =  null;
   private final Class<FixedDueDateSchedule> DUE_DATE_SCHEDULE_CLASS = FixedDueDateSchedule.class;
@@ -188,10 +195,11 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
 
     try {
 
-      if(entity != null && !isDateRangeValid(entity.getSchedules())){
+      Errors errors = isDateRangeValid(entity.getSchedules());
+      if(entity != null && errors != null){
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
           FixedDueDateScheduleStorageResource.PostFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
-              .withJsonUnprocessableEntity(new Errors())));
+              .withJsonUnprocessableEntity(errors)));
         return;
       }
 
@@ -400,10 +408,11 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
 
     try {
 
-      if(entity != null && !isDateRangeValid(entity.getSchedules())){
+      Errors errors = isDateRangeValid(entity.getSchedules());
+      if(entity != null && errors != null){
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
           FixedDueDateScheduleStorageResource.PostFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
-              .withJsonUnprocessableEntity(new Errors())));
+              .withJsonUnprocessableEntity(errors)));
         return;
       }
 
@@ -533,7 +542,11 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
   }
 
-  private boolean isDateRangeValid(List<Schedule> schedules) {
+
+
+  private Errors isDateRangeValid(List<Schedule> schedules) {
+
+    Errors errors = null;
     try {
       //String from, String to, String due
       int size = schedules.size();
@@ -542,18 +555,29 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
         Date fromDate = schedules.get(i).getFrom();
         Date toDate = schedules.get(i).getTo();
 
-        if(!fromDate.before(dueDate) || !fromDate.before(toDate) || !toDate.before(dueDate)){
+        if(fromDate.compareTo(dueDate) > 0){
+          errors = ValidationHelper.createValidationErrorMessage("from", fromDate.toString(),
+            INVALID_DATE_MSG + " from date after due date");
+        }
+        else if(fromDate.compareTo(toDate) > 0){
+          errors = ValidationHelper.createValidationErrorMessage("from", fromDate.toString(),
+            INVALID_DATE_MSG + " from date after to date");
+        }
+        else if(toDate.compareTo(dueDate) > 0){
+          errors = ValidationHelper.createValidationErrorMessage("to", toDate.toString(),
+            INVALID_DATE_MSG + " to date after due date");
+        }
+        if(errors != null){
           log.info(
-            "Unable to save fixed loan date. Date range not valid. Due date: " + schedules.get(i).getDue()
+            INVALID_DATE_MSG + schedules.get(i).getDue()
             + " , from date: " + schedules.get(i).getFrom()
             + " , to date: " + schedules.get(i).getTo());
-          return false;
         }
       }
     } catch (Exception e) {
       log.error(e.getMessage(), e);
     }
-    return true;
+    return errors;
   }
 
   private boolean isUniqueViolation(Throwable e){
