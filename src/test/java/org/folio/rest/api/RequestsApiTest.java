@@ -1,20 +1,16 @@
 package org.folio.rest.api;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-import org.folio.rest.support.*;
-import org.folio.rest.support.builders.RequestRequestBuilder;
-import org.hamcrest.junit.MatcherAssert;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDate;
-import org.joda.time.Seconds;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_FILLED;
+import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_AWAITING_PICKUP;
+import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET_FILLED;
+import static org.folio.rest.support.matchers.TextDateTimeMatcher.equivalentTo;
+import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.notNullValue;
 
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
@@ -29,15 +25,28 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import static org.folio.rest.support.builders.RequestRequestBuilder.*;
-import static org.folio.rest.support.matchers.TextDateTimeMatcher.equivalentTo;
-import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNull.notNullValue;
+import org.folio.rest.support.ApiTests;
+import org.folio.rest.support.HttpClient;
+import org.folio.rest.support.IndividualResource;
+import org.folio.rest.support.JsonArrayHelper;
+import org.folio.rest.support.JsonResponse;
+import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.TextResponse;
+import org.folio.rest.support.builders.RequestRequestBuilder;
+import org.hamcrest.junit.MatcherAssert;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
+import org.joda.time.Seconds;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 
 @RunWith(JUnitParamsRunner.class)
 public class RequestsApiTest extends ApiTests {
@@ -863,6 +872,117 @@ public class RequestsApiTest extends ApiTests {
 
     assertThat(wrappedRequests.getJsonArray("requests").size(), is(3));
     assertThat(wrappedRequests.getInteger("totalRecords"), is(3));
+  }
+
+  @Test
+  public void createFailRequestsByUserProxyId()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    UUID requestId = UUID.randomUUID();
+
+    JsonObject j1 = new RequestRequestBuilder().withId(requestId).create();
+    j1.put("proxyUserId", "12345");
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    client.post(requestStorageUrl(),
+      j1, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to create request: %s", postResponse.getBody()),
+      postResponse.getStatusCode(), is(422));
+  }
+
+  @Test
+  public void updateFailRequestsByUserProxyId()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    UUID requestId = UUID.randomUUID();
+
+    JsonObject j1 = new RequestRequestBuilder().withId(requestId).create();
+    String userProxy1 = UUID.randomUUID().toString();
+    j1.put("proxyUserId", userProxy1);
+    createRequest(j1);
+
+    ///////////// try to update with a bad proxId ////////////////////
+    j1.put("proxyUserId", "12345");
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    client.put(requestStorageUrl("/"+requestId.toString()),
+      j1, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse putResponse = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to create request: %s", putResponse.getBody()),
+      putResponse.getStatusCode(), is(422));
+  }
+
+  @Test
+  public void canSearchRequestsByUserProxyId()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    UUID firstRequester = UUID.randomUUID();
+
+    JsonObject j1 = new RequestRequestBuilder().withRequesterId(firstRequester).create();
+    JsonObject j2 = new RequestRequestBuilder().withRequesterId(firstRequester).create();
+    JsonObject j3 = new RequestRequestBuilder().withRequesterId(firstRequester).create();
+
+    String userProxy1 = UUID.randomUUID().toString();
+    String userProxy2 = UUID.randomUUID().toString();
+    String userProxy3 = UUID.randomUUID().toString();
+
+    j1.put("proxyUserId", userProxy1);
+    j2.put("proxyUserId", userProxy2);
+    j3.put("proxyUserId", userProxy3);
+
+    createRequest(j1);
+    createRequest(j2);
+    createRequest(j3);
+
+    CompletableFuture<JsonResponse> getRequestsCompleted = new CompletableFuture<>();
+
+    client.get(requestStorageUrl() + String.format("?query=proxyUserId=%s", userProxy1),
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(getRequestsCompleted));
+
+    JsonResponse getRequestsResponse = getRequestsCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to get requests: %s",
+      getRequestsResponse.getBody()),
+      getRequestsResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject wrappedRequests = getRequestsResponse.getJson();
+
+    assertThat(wrappedRequests.getJsonArray("requests").size(), is(1));
+    assertThat(wrappedRequests.getInteger("totalRecords"), is(1));
+
+    CompletableFuture<JsonResponse> getRequestsCompleted2 = new CompletableFuture<>();
+
+    client.get(requestStorageUrl() + String.format("?query=proxyUserId<>%s", UUID.randomUUID().toString()),
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(getRequestsCompleted2));
+
+    JsonResponse getRequestsResponse2 = getRequestsCompleted2.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to get requests: %s",
+      getRequestsResponse2.getBody()),
+      getRequestsResponse2.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject wrappedRequests2 = getRequestsResponse2.getJson();
+
+    assertThat(wrappedRequests2.getJsonArray("requests").size(), is(3));
+    assertThat(wrappedRequests2.getInteger("totalRecords"), is(3));
   }
 
   @Test
