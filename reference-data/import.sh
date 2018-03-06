@@ -70,14 +70,14 @@ do
       for j in $json 
       do 
         if [ "$auth_required" = true ]; then
-           curl  --connect-timeout 10 -w '\n' \
+           curl -s -S --connect-timeout 10 -w '\n' \
              -H 'Content-type: application/json' \
              -H 'Accept: application/json, text/plain' \
              -H "X-Okapi-Tenant: $tenant" \
              -H "X-Okapi-Token: $authToken" \
              -X $method -d @$j ${okapiUrl}/${endpoint}
         else 
-           curl  --connect-timeout 10 -w '\n' \
+           curl -s -S --connect-timeout 10 -w '\n' \
              -H 'Content-type: application/json' \
              -H 'Accept: application/json, text/plain' \
              -H "X-Okapi-Tenant: $tenant" \
