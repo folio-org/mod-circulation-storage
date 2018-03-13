@@ -1,4 +1,4 @@
-## 4.5.0 Unreleased
+## 4.5.0 2018-03-13
 
 * Adds `systemReturnDate` to `loans` (CIRCSTORE-44) 
 * Adds `status` property to `requests` (CIRCSTORE-37)
