@@ -5,18 +5,18 @@ import org.folio.rest.jaxrs.model.LoanPolicy;
 rule "Mixed objects Rule 2"
 
 no-loop
-//if loanable 
+//if loanable
 when
   error : Error()
   m1 : LoanPolicy(
             (
-            m1.getLoanable() == true && 
-            eval( m1.getLoansPolicy().getProfileId().equalsIgnoreCase( "Fixed" ) ) && 
+            m1.getLoanable() == true &&
+            eval( m1.getLoansPolicy().getProfileId().equalsIgnoreCase( "Fixed" ) ) &&
             m1.getLoansPolicy().getFixedDueDateScheduleId() == null
             )
             ||
             (
-            m1.getLoanable() != true && 
+            m1.getLoanable() != true &&
             m1.getLoansPolicy().getFixedDueDateScheduleId() == null
             )
        )

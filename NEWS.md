@@ -1,8 +1,8 @@
 ## 4.5.0 2018-03-13
 
-* Adds `systemReturnDate` to `loans` (CIRCSTORE-44) 
+* Adds `systemReturnDate` to `loans` (CIRCSTORE-44)
 * Adds `status` property to `requests` (CIRCSTORE-37)
-* Adds `proxyUserId` to `requests` (CIRCSTORE-40) 
+* Adds `proxyUserId` to `requests` (CIRCSTORE-40)
 * Fixed due date schedules can now be created with the same `due` and `to` dates (CIRCSTORE-42)
 * Validation errors during creation or update of fixed due date schedules are returned in responses (CIRCSTORE-42)
 * Provides loan-storage interface 3.5 (CIRCSTORE-44)
@@ -21,7 +21,7 @@
 ## 4.0.0 2017-12-20
 
 * Expose new fixed due date schedule end point (`/fixed-due-date-schedule-storage/fixed-due-date-schedules`, CIRCSTORE-9)
-* Allow only one open loan per item (CIRCSTORE-19) - see readme for further details 
+* Allow only one open loan per item (CIRCSTORE-19) - see readme for further details
 (note that this constraint is expressed as a major change in implementation version
 yet the interface version remains the same)
 * Adds relationship between loan policies and fixed due date schedules (CIRCSTORE-29)

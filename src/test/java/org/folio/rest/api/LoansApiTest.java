@@ -224,7 +224,7 @@ public class LoansApiTest extends ApiTests {
       response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     JsonObject loan = response.getJson();
-    
+
     assertThat("return date does not match",
       loan.getString("returnDate"), is("2017-04-01T11:35:00.000Z"));
 

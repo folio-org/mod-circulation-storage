@@ -12,22 +12,22 @@ when
   error : Error()
   m1 : LoanPolicy(
             (
-            m1.getRenewable()  == true && 
-            m1.getRenewalsPolicy().getDifferentPeriod() == true && 
-            eval( m1.getLoansPolicy().getProfileId().equalsIgnoreCase( "Fixed" ) ) && 
+            m1.getRenewable()  == true &&
+            m1.getRenewalsPolicy().getDifferentPeriod() == true &&
+            eval( m1.getLoansPolicy().getProfileId().equalsIgnoreCase( "Fixed" ) ) &&
             m1.getRenewalsPolicy().getAlternateFixedDueDateScheduleId() == null
             )
-            
+
             ||
-            
+
             (
-            m1.getRenewable()  != true || 
+            m1.getRenewable()  != true ||
             m1.getRenewalsPolicy().getDifferentPeriod() != true
             && m1.getRenewalsPolicy().getAlternateFixedDueDateScheduleId() != null
             )
        )
 then
-  error.setMessage("Alternate fixed due date cannot be " +  m1.getRenewalsPolicy().getAlternateFixedDueDateScheduleId() + 
+  error.setMessage("Alternate fixed due date cannot be " +  m1.getRenewalsPolicy().getAlternateFixedDueDateScheduleId() +
   " if renewable is "+m1.getRenewable()+", different period is "+m1.getRenewalsPolicy().getDifferentPeriod()
   +" and profile is " + m1.getLoansPolicy().getProfileId());
   Parameter param = new Parameter();
