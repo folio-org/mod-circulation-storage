@@ -49,7 +49,7 @@
       "description": "Date time when the returned item is actually processed",
       "type" : "string",
       "format": "date-time"
-	},
+    },
     "action": {
       "description": "Last action performed on a loan (currently can be any value, values commonly used are checkedout and checkedin)",
       "type": "string"
