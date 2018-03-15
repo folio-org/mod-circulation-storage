@@ -14,16 +14,16 @@ requests, and fixed due date schedules
 
 ### Where the API code lives
 
-The implementation java files live in the 
-[`/src/main/java/org/folio/rest/impl`](src/main/java/org/folio/rest/impl) 
-package. These implement the actual 
-java interfaces, to be found in the 
+The implementation java files live in the
+[`/src/main/java/org/folio/rest/impl`](src/main/java/org/folio/rest/impl)
+package. These implement the actual
+java interfaces, to be found in the
 [`/src/main/java/org/folio/rest/jaxrs/resource`](src/main/java/org/folio/rest/jaxrs/resource)
 package, which are automatically generated from the `raml` files in
 [`/ramls/`](ramls).
 
 Corresponding API tests can be found in the
-[`/src/test/java/org/folio/rest/api`](src/test/java/org/folio/rest/api) 
+[`/src/test/java/org/folio/rest/api`](src/test/java/org/folio/rest/api)
 package.
 
 ### API documentation
@@ -34,12 +34,12 @@ The API documentation generated from the `*.raml` files can be found online at
 
 ## Implementation Specific Behaviours
 
-As a FOLIO interface is limited to describing the protocol (HTTP endpoints and 
-the structure of expected requests and responses) between the client and server 
+As a FOLIO interface is limited to describing the protocol (HTTP endpoints and
+the structure of expected requests and responses) between the client and server
 there are behaviors which go beyond this definition and are implementation specific,
 some of which are noted below.
 
-### Only one Open Loan per Item 
+### Only one Open Loan per Item
 
 This implementation introduces the constraint that only one loan can be open for a
 given item. Requests (either POST or PUT) which could result in two loans with the
