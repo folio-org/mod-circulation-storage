@@ -38,6 +38,9 @@ import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
+/**
+ * CRUD for fixed due date schedules.
+ */
 public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageResource {
 
   private static final Logger       log               = LoggerFactory.getLogger(FixedDueDateSchedulesAPI.class);
@@ -130,11 +133,12 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
           postgresClient.get(FIXED_SCHEDULE_TABLE, DUE_DATE_SCHEDULE_CLASS, fieldList, cql, true, false, reply -> {
             try {
               if (reply.succeeded()) {
-                List<FixedDueDateSchedule> dueDateSchedules = (List<FixedDueDateSchedule>) reply.result()[0];
+                @SuppressWarnings("unchecked")
+                List<FixedDueDateSchedule> dueDateSchedules = (List<FixedDueDateSchedule>) reply.result().getResults();
 
                 FixedDueDateSchedules pagedSchedules = new FixedDueDateSchedules();
                 pagedSchedules.setFixedDueDateSchedules(dueDateSchedules);
-                pagedSchedules.setTotalRecords((Integer) reply.result()[1]);
+                pagedSchedules.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
 
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                     FixedDueDateScheduleStorageResource.GetFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
@@ -285,7 +289,8 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
           postgresClient.get(FIXED_SCHEDULE_TABLE, DUE_DATE_SCHEDULE_CLASS, criterion, true, false, reply -> {
             try {
               if (reply.succeeded()) {
-                List<FixedDueDateSchedule> dueDateSchedules = (List<FixedDueDateSchedule>) reply.result()[0];
+                @SuppressWarnings({ "unchecked" })
+                List<FixedDueDateSchedule> dueDateSchedules = (List<FixedDueDateSchedule>) reply.result().getResults();
 
                 if (dueDateSchedules.size() == 1) {
                   FixedDueDateSchedule dueDateSchedule = dueDateSchedules.get(0);
@@ -431,7 +436,8 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
         try {
           postgresClient.get(FIXED_SCHEDULE_TABLE, DUE_DATE_SCHEDULE_CLASS, criterion, true, false, reply -> {
             if (reply.succeeded()) {
-              List<FixedDueDateSchedule> dueDateSchedules = (List<FixedDueDateSchedule>) reply.result()[0];
+              @SuppressWarnings("unchecked")
+              List<FixedDueDateSchedule> dueDateSchedules = (List<FixedDueDateSchedule>) reply.result().getResults();
 
               if (dueDateSchedules.size() == 1) {
                 try {

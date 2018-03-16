@@ -2,7 +2,7 @@ package org.folio.rest.api;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.folio.rest.jaxrs.model.MetaData;
+import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.*;
 import org.folio.rest.support.builders.LoanRequestBuilder;
@@ -1025,7 +1025,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void metaDataPopulated()
+  public void metadataPopulated()
     throws Exception {
 
     UUID userId = UUID.randomUUID();
@@ -1060,7 +1060,7 @@ public class LoansApiTest extends ApiTests {
     .put("loanDate", DateTime.parse("2017-03-06T16:05:43.000+02:00",
       ISODateTimeFormat.dateTime()).toString())
     .put("status", new JsonObject().put("name", "Opened"));
-    MetaData md = new MetaData();
+    Metadata md = new Metadata();
     md.setCreatedByUserId("af23adf0-61ba-4887-bf82-956c4aae2260");
     md.setUpdatedByUserId("af23adf0-61ba-4887-bf82-956c4aae2260");
 
@@ -1072,7 +1072,7 @@ public class LoansApiTest extends ApiTests {
 
     md.setCreatedDate(d);
     md.setUpdatedDate(d);
-    j3.put("metaData", new JsonObject(PostgresClient.pojo2json(md)));
+    j3.put("metadata", new JsonObject(PostgresClient.pojo2json(md)));
 
     CompletableFuture<JsonResponse> create1 = new CompletableFuture<>();
     CompletableFuture<JsonResponse> get1    = new CompletableFuture<>();
@@ -1093,8 +1093,8 @@ public class LoansApiTest extends ApiTests {
 
     JsonResponse response2 = get1.get(5, TimeUnit.SECONDS);
 
-    assertThat("MetaData section not populated correctly " + id1.toString(),
-      response2.getJson().getJsonObject("metaData").getString("createdByUserId"), is("af23adf0-61ba-4887-bf82-956c4aae2260"));
+    assertThat("Metadata section not populated correctly " + id1.toString(),
+      response2.getJson().getJsonObject("metadata").getString("createdByUserId"), is("af23adf0-61ba-4887-bf82-956c4aae2260"));
 
     ///////////////post loan//////////////////////
     client.post(loanStorageUrl(), j2, StorageTestSuite.TENANT_ID, null,
@@ -1108,8 +1108,8 @@ public class LoansApiTest extends ApiTests {
 
     JsonResponse response4 = get2.get(5, TimeUnit.SECONDS);
 
-    assertThat("MetaData section not populated correctly " + id2.toString(),
-      response4.getJson().getJsonObject("metaData"), is(nullValue()));
+    assertThat("Metadata section not populated correctly " + id2.toString(),
+      response4.getJson().getJsonObject("metadata"), is(nullValue()));
 
     ///////////////post loan//////////////////////
     client.post(loanStorageUrl(), j3, StorageTestSuite.TENANT_ID,
@@ -1124,8 +1124,8 @@ public class LoansApiTest extends ApiTests {
     JsonResponse response6 = get3.get(5, TimeUnit.SECONDS);
 
     // server should overwrite the field so should not be equal to what was passed in
-    assertThat("MetaData section not populated correctly " + id3.toString(),
-      response6.getJson().getJsonObject("metaData").getString("createdDate"), not(nowAsISO));
+    assertThat("Metadata section not populated correctly " + id3.toString(),
+      response6.getJson().getJsonObject("metadata").getString("createdDate"), not(nowAsISO));
   }
 
   @Test

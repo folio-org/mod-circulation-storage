@@ -46,7 +46,7 @@ public class LoanRulesAPI implements LoanRulesStorageResource {
                 }
 
                 @SuppressWarnings("unchecked")
-                List<LoanRules> loanRulesList = (List<LoanRules>) reply.result()[0];
+                List<LoanRules> loanRulesList = (List<LoanRules>) reply.result().getResults();
 
                 if (loanRulesList.size() != 1) {
                   internalErrorGet(asyncResultHandler, new IllegalStateException("loanRulesList.size() = "

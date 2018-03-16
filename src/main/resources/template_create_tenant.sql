@@ -68,8 +68,8 @@ INSERT INTO myuniversity_mymodule.loan_rules
 CREATE OR REPLACE FUNCTION update_metadata_columns_trigger()
 RETURNS TRIGGER AS $$
 BEGIN
-  NEW.creation_date = to_timestamp(NEW.jsonb->'metaData'->>'createdDate', 'YYYY-MM-DD"T"HH24:MI:SS.MS');
-  NEW.created_by = NEW.jsonb->'metaData'->>'createdByUserId';
+  NEW.creation_date = to_timestamp(NEW.jsonb->'metadata'->>'createdDate', 'YYYY-MM-DD"T"HH24:MI:SS.MS');
+  NEW.created_by = NEW.jsonb->'metadata'->>'createdByUserId';
   RETURN NEW;
 END;
 $$ language 'plpgsql';
@@ -89,8 +89,8 @@ DECLARE
 BEGIN
   createdBy = NEW.created_by;
   createdDate = NEW.creation_date;
-  updatedDate = NEW.jsonb->'metaData'->>'updatedDate';
-  updatedBy = NEW.jsonb->'metaData'->>'updatedByUserId';
+  updatedDate = NEW.jsonb->'metadata'->>'updatedDate';
+  updatedBy = NEW.jsonb->'metadata'->>'updatedByUserId';
 
   if createdBy ISNULL then
     createdBy = 'undefined';
@@ -103,7 +103,7 @@ BEGIN
 -- associated with this object - so only add the meta data if created date is not null -- created date being null may be a problem
 -- and should be handled at the app layer for now -- currently this protects against an exception in the db if no md is present in the json
     injectedId = '{"createdDate":"'||to_char(createdDate,'YYYY-MM-DD"T"HH24:MI:SS.MS')||'" , "createdByUserId":"'||createdBy||'", "updatedDate":"'||to_char(updatedDate,'YYYY-MM-DD"T"HH24:MI:SS.MSOF')||'" , "updatedByUserId":"'||updatedBy||'"}';
-    NEW.jsonb = jsonb_set(NEW.jsonb, '{metaData}' ,  injectedId::jsonb , false);
+    NEW.jsonb = jsonb_set(NEW.jsonb, '{metadata}' ,  injectedId::jsonb , false);
   end if;
 RETURN NEW;
 
