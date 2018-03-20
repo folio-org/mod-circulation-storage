@@ -20,12 +20,14 @@ public class RequestRequestBuilder {
   private final DateTime requestDate;
   private final UUID itemId;
   private final UUID requesterId;
+  private final UUID proxyId;
   private final String fulfilmentPreference;
   private final UUID deliveryAddressTypeId;
   private final LocalDate requestExpirationDate;
   private final LocalDate holdShelfExpirationDate;
   private final ItemSummary itemSummary;
   private final PatronSummary requesterSummary;
+  private final PatronSummary proxySummary;
   private final String status;
 
   public RequestRequestBuilder() {
@@ -34,7 +36,9 @@ public class RequestRequestBuilder {
       new DateTime(2017, 7, 15, 9, 35, 27, DateTimeZone.UTC),
       UUID.randomUUID(),
       UUID.randomUUID(),
+      null,
       "Hold Shelf",
+      null,
       null,
       null,
       null,
@@ -49,12 +53,14 @@ public class RequestRequestBuilder {
     DateTime requestDate,
     UUID itemId,
     UUID requesterId,
+    UUID proxyId,
     String fulfilmentPreference,
     UUID deliveryAddressTypeId,
     LocalDate requestExpirationDate,
     LocalDate holdShelfExpirationDate,
     ItemSummary itemSummary,
     PatronSummary requesterSummary,
+    PatronSummary proxySummary,
     String status) {
 
     this.id = id;
@@ -62,12 +68,14 @@ public class RequestRequestBuilder {
     this.requestDate = requestDate;
     this.itemId = itemId;
     this.requesterId = requesterId;
+    this.proxyId = proxyId;
     this.fulfilmentPreference = fulfilmentPreference;
     this.deliveryAddressTypeId = deliveryAddressTypeId;
     this.requestExpirationDate = requestExpirationDate;
     this.holdShelfExpirationDate = holdShelfExpirationDate;
     this.itemSummary = itemSummary;
     this.requesterSummary = requesterSummary;
+    this.proxySummary = proxySummary;
     this.status = status;
   }
 
@@ -86,6 +94,10 @@ public class RequestRequestBuilder {
 
     if(status != null) {
       request.put("status", status);
+    }
+
+    if(proxyId != null) {
+      request.put("proxyUserId", proxyId.toString());
     }
 
     if(deliveryAddressTypeId != null) {
@@ -122,9 +134,22 @@ public class RequestRequestBuilder {
       request.put("requester", requester);
     }
 
+    if(proxySummary != null) {
+      JsonObject proxy = new JsonObject()
+        .put("lastName", proxySummary.lastName)
+        .put("firstName", proxySummary.firstName);
+
+      if(proxySummary.middleName != null) {
+        proxy.put("middleName", proxySummary.middleName);
+      }
+
+      proxy.put("barcode", proxySummary.barcode);
+
+      request.put("proxy", proxy);
+    }
+
     return request;
   }
-
 
   public RequestRequestBuilder withRequestType(String requestType) {
     return new RequestRequestBuilder(
@@ -133,12 +158,14 @@ public class RequestRequestBuilder {
       this.requestDate,
       this.itemId,
       this.requesterId,
+      this.proxyId,
       this.fulfilmentPreference,
       this.deliveryAddressTypeId,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
       this.itemSummary,
       this.requesterSummary,
+      this.proxySummary,
       this.status);
   }
 
@@ -157,12 +184,14 @@ public class RequestRequestBuilder {
       this.requestDate,
       this.itemId,
       this.requesterId,
+      this.proxyId,
       this.fulfilmentPreference,
       this.deliveryAddressTypeId,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
       this.itemSummary,
       this.requesterSummary,
+      this.proxySummary,
       this.status);
   }
 
@@ -173,12 +202,14 @@ public class RequestRequestBuilder {
       this.requestDate,
       this.itemId,
       this.requesterId,
+      this.proxyId,
       this.fulfilmentPreference,
       this.deliveryAddressTypeId,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
       this.itemSummary,
       this.requesterSummary,
+      this.proxySummary,
       this.status);
   }
 
@@ -189,12 +220,14 @@ public class RequestRequestBuilder {
       requestDate,
       this.itemId,
       this.requesterId,
+      this.proxyId,
       this.fulfilmentPreference,
       this.deliveryAddressTypeId,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
       this.itemSummary,
       this.requesterSummary,
+      this.proxySummary,
       this.status);
   }
 
@@ -205,12 +238,14 @@ public class RequestRequestBuilder {
       this.requestDate,
       itemId,
       this.requesterId,
+      this.proxyId,
       this.fulfilmentPreference,
       this.deliveryAddressTypeId,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
       this.itemSummary,
       this.requesterSummary,
+      this.proxySummary,
       this.status);
   }
 
@@ -221,12 +256,14 @@ public class RequestRequestBuilder {
       this.requestDate,
       this.itemId,
       requesterId,
+      this.proxyId,
       this.fulfilmentPreference,
       this.deliveryAddressTypeId,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
       this.itemSummary,
       this.requesterSummary,
+      this.proxySummary,
       this.status);
   }
 
@@ -246,12 +283,14 @@ public class RequestRequestBuilder {
       this.requestDate,
       this.itemId,
       this.requesterId,
+      this.proxyId,
       fulfilmentPreference,
       this.deliveryAddressTypeId,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
       this.itemSummary,
       this.requesterSummary,
+      this.proxySummary,
       this.status);
   }
 
@@ -262,12 +301,14 @@ public class RequestRequestBuilder {
       this.requestDate,
       this.itemId,
       this.requesterId,
+      this.proxyId,
       this.fulfilmentPreference,
       this.deliveryAddressTypeId,
       requestExpiration,
       this.holdShelfExpirationDate,
       this.itemSummary,
       this.requesterSummary,
+      this.proxySummary,
       this.status);
   }
 
@@ -278,12 +319,14 @@ public class RequestRequestBuilder {
       this.requestDate,
       this.itemId,
       this.requesterId,
+      this.proxyId,
       this.fulfilmentPreference,
       this.deliveryAddressTypeId,
       this.requestExpirationDate,
       holdShelfExpiration,
       this.itemSummary,
       this.requesterSummary,
+      this.proxySummary,
       this.status);
   }
 
@@ -294,12 +337,14 @@ public class RequestRequestBuilder {
       this.requestDate,
       this.itemId,
       this.requesterId,
+      this.proxyId,
       this.fulfilmentPreference,
       this.deliveryAddressTypeId,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
       new ItemSummary(title, barcode),
       this.requesterSummary,
+      this.proxySummary,
       this.status);
   }
 
@@ -315,12 +360,14 @@ public class RequestRequestBuilder {
       this.requestDate,
       this.itemId,
       this.requesterId,
+      this.proxyId,
       this.fulfilmentPreference,
       this.deliveryAddressTypeId,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
       this.itemSummary,
       new PatronSummary(lastName, firstName, middleName, barcode),
+      this.proxySummary,
       this.status);
   }
 
@@ -335,11 +382,35 @@ public class RequestRequestBuilder {
       this.requestDate,
       this.itemId,
       this.requesterId,
+      this.proxyId,
       this.fulfilmentPreference,
       this.deliveryAddressTypeId,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
       this.itemSummary,
+      new PatronSummary(lastName, firstName, null, barcode),
+      this.proxySummary,
+      this.status);
+  }
+
+  public RequestRequestBuilder withProxy(
+    String lastName,
+    String firstName,
+    String barcode) {
+
+    return new RequestRequestBuilder(
+      this.id,
+      this.requestType,
+      this.requestDate,
+      this.itemId,
+      this.requesterId,
+      this.proxyId,
+      this.fulfilmentPreference,
+      this.deliveryAddressTypeId,
+      this.requestExpirationDate,
+      this.holdShelfExpirationDate,
+      this.itemSummary,
+      this.requesterSummary,
       new PatronSummary(lastName, firstName, null, barcode),
       this.status);
   }
@@ -351,12 +422,14 @@ public class RequestRequestBuilder {
       this.requestDate,
       this.itemId,
       this.requesterId,
+      this.proxyId,
       this.fulfilmentPreference,
       deliverAddressType,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
       this.itemSummary,
       this.requesterSummary,
+      this.proxySummary,
       this.status);
   }
 
@@ -367,12 +440,14 @@ public class RequestRequestBuilder {
       this.requestDate,
       this.itemId,
       this.requesterId,
+      this.proxyId,
       this.fulfilmentPreference,
       this.deliveryAddressTypeId,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
       this.itemSummary,
       this.requesterSummary,
+      this.proxySummary,
       status);
 
   }
@@ -383,6 +458,24 @@ public class RequestRequestBuilder {
 
   private String formatDateOnly(LocalDate date) {
     return date.toString(DateTimeFormat.forPattern("yyyy-MM-dd"));
+  }
+
+  public RequestRequestBuilder withProxyId(UUID proxyId) {
+    return new RequestRequestBuilder(
+      this.id,
+      this.requestType,
+      this.requestDate,
+      this.itemId,
+      this.requesterId,
+      proxyId,
+      this.fulfilmentPreference,
+      this.deliveryAddressTypeId,
+      this.requestExpirationDate,
+      this.holdShelfExpirationDate,
+      this.itemSummary,
+      this.requesterSummary,
+      this.proxySummary,
+      this.status);
   }
 
   private class ItemSummary {

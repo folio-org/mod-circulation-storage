@@ -79,6 +79,29 @@
       },
       "additionalProperties": false
     },
+    "proxy": {
+      "description": "Copy of some proxy patron metadata (used for searching and sorting)",
+      "type": "object",
+      "properties": {
+        "firstName": {
+          "description": "first name of the proxy patron",
+          "type": "string"
+        },
+        "lastName": {
+          "description": "last name of the proxy patron",
+          "type": "string"
+        },
+        "middleName": {
+          "description": "middle name of the proxy patron",
+          "type": "string"
+        },
+        "barcode": {
+          "description": "barcode of the proxy patron",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
     "fulfilmentPreference": {
       "description": "How should the request be fulfilled (whether the item should be kept on the hold shelf for collection or delivered to the requester)",
       "type": "string",
