@@ -1,3 +1,8 @@
+## 4.6.0 Unreleased
+
+* Allows snapshot of proxying patron metadata to be stored with a request (CIRCSTORE-46)
+* Provides request-storage interface 1.5 (CIRCSTORE-46)
+
 ## 4.5.0 2018-03-13
 
 * Adds `systemReturnDate` to `loans` (CIRCSTORE-44)

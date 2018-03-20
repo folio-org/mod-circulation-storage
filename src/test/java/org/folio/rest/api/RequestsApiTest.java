@@ -1,16 +1,20 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_FILLED;
-import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_AWAITING_PICKUP;
-import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET_FILLED;
-import static org.folio.rest.support.matchers.TextDateTimeMatcher.equivalentTo;
-import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNull.notNullValue;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+import org.folio.rest.support.*;
+import org.folio.rest.support.builders.RequestRequestBuilder;
+import org.hamcrest.junit.MatcherAssert;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
+import org.joda.time.Seconds;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
@@ -25,28 +29,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import org.folio.rest.support.ApiTests;
-import org.folio.rest.support.HttpClient;
-import org.folio.rest.support.IndividualResource;
-import org.folio.rest.support.JsonArrayHelper;
-import org.folio.rest.support.JsonResponse;
-import org.folio.rest.support.ResponseHandler;
-import org.folio.rest.support.TextResponse;
-import org.folio.rest.support.builders.RequestRequestBuilder;
-import org.hamcrest.junit.MatcherAssert;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDate;
-import org.joda.time.Seconds;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
+import static org.folio.rest.support.builders.RequestRequestBuilder.*;
+import static org.folio.rest.support.matchers.TextDateTimeMatcher.equivalentTo;
+import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.notNullValue;
 
 @RunWith(JUnitParamsRunner.class)
 public class RequestsApiTest extends ApiTests {
@@ -77,6 +68,7 @@ public class RequestsApiTest extends ApiTests {
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
     UUID requesterId = UUID.randomUUID();
+    UUID proxyId = UUID.randomUUID();
     DateTime requestDate = new DateTime(2017, 7, 22, 10, 22, 54, DateTimeZone.UTC);
 
     JsonObject requestRequest = new RequestRequestBuilder()
@@ -86,10 +78,12 @@ public class RequestsApiTest extends ApiTests {
       .withRequestDate(requestDate)
       .withItemId(itemId)
       .withRequesterId(requesterId)
+      .withProxyId(proxyId)
       .withRequestExpiration(new LocalDate(2017, 7, 30))
       .withHoldShelfExpiration(new LocalDate(2017, 8, 31))
       .withItem("Nod", "565578437802")
       .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
+      .withProxy("Stuart", "Rebecca", "6059539205")
       .withStatus(OPEN_NOT_YET_FILLED)
       .create();
 
@@ -109,6 +103,7 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getString("requestDate"), is(equivalentTo(requestDate)));
     assertThat(representation.getString("itemId"), is(itemId.toString()));
     assertThat(representation.getString("requesterId"), is(requesterId.toString()));
+    assertThat(representation.getString("proxyUserId"), is(proxyId.toString()));
     assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
     assertThat(representation.getString("requestExpirationDate"), is("2017-07-30"));
     assertThat(representation.getString("holdShelfExpirationDate"), is("2017-08-31"));
@@ -119,10 +114,30 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getJsonObject("item").getString("barcode"), is("565578437802"));
 
     assertThat(representation.containsKey("requester"), is(true));
-    assertThat(representation.getJsonObject("requester").getString("lastName"), is("Jones"));
-    assertThat(representation.getJsonObject("requester").getString("firstName"), is("Stuart"));
-    assertThat(representation.getJsonObject("requester").getString("middleName"), is("Anthony"));
-    assertThat(representation.getJsonObject("requester").getString("barcode"), is("6837502674015"));
+
+    final JsonObject requesterRepresentation = representation.getJsonObject("requester");
+
+    assertThat(requesterRepresentation.getString("lastName"), is("Jones"));
+    assertThat(requesterRepresentation.getString("firstName"), is("Stuart"));
+    assertThat(requesterRepresentation.getString("middleName"), is("Anthony"));
+    assertThat(requesterRepresentation.getString("barcode"), is("6837502674015"));
+
+    assertThat("has information taken from proxying user",
+      representation.containsKey("proxy"), is(true));
+
+    final JsonObject proxyRepresentation = representation.getJsonObject("proxy");
+
+    assertThat("last name is taken from proxying user",
+      proxyRepresentation.getString("lastName"), is("Stuart"));
+
+    assertThat("first name is taken from proxying user",
+      proxyRepresentation.getString("firstName"), is("Rebecca"));
+
+    assertThat("middle name is not taken from proxying user",
+      proxyRepresentation.containsKey("middleName"), is(false));
+
+    assertThat("barcode is taken from proxying user",
+      proxyRepresentation.getString("barcode"), is("6059539205"));
   }
 
   @Test
@@ -481,14 +496,20 @@ public class RequestsApiTest extends ApiTests {
     CompletableFuture<TextResponse> updateCompleted = new CompletableFuture<>();
 
     UUID newRequesterId = UUID.randomUUID();
+    UUID proxyId = UUID.randomUUID();
 
     JsonObject updateRequestRequest = getAfterCreateResponse.getJson()
       .copy()
       .put("requesterId", newRequesterId.toString())
+      .put("proxyUserId", proxyId.toString())
       .put("requester", new JsonObject()
         .put("lastName", "Smith")
         .put("firstName", "Jessica")
         .put("barcode", "721076398251"))
+      .put("proxy", new JsonObject()
+        .put("lastName", "Stuart")
+        .put("firstName", "Rebecca")
+        .put("barcode", "6059539205"))
       .put("requestExpirationDate", new LocalDate(2017, 7, 30)
         .toString("yyyy-MM-dd"))
       .put("holdShelfExpirationDate", new LocalDate(2017, 8, 31)
@@ -512,6 +533,7 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getString("requestDate"), is(equivalentTo(requestDate)));
     assertThat(representation.getString("itemId"), is(itemId.toString()));
     assertThat(representation.getString("requesterId"), is(newRequesterId.toString()));
+    assertThat(representation.getString("proxyUserId"), is(proxyId.toString()));
     assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
     assertThat(representation.getString("requestExpirationDate"), is("2017-07-30"));
     assertThat(representation.getString("holdShelfExpirationDate"), is("2017-08-31"));
@@ -521,10 +543,30 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getJsonObject("item").getString("barcode"), is("565578437802"));
 
     assertThat(representation.containsKey("requester"), is(true));
-    assertThat(representation.getJsonObject("requester").getString("lastName"), is("Smith"));
-    assertThat(representation.getJsonObject("requester").getString("firstName"), is("Jessica"));
-    assertThat(representation.getJsonObject("requester").containsKey("middleName"), is(false));
-    assertThat(representation.getJsonObject("requester").getString("barcode"), is("721076398251"));
+
+    final JsonObject requesterRepresentation = representation.getJsonObject("requester");
+
+    assertThat(requesterRepresentation.getString("lastName"), is("Smith"));
+    assertThat(requesterRepresentation.getString("firstName"), is("Jessica"));
+    assertThat(requesterRepresentation.containsKey("middleName"), is(false));
+    assertThat(requesterRepresentation.getString("barcode"), is("721076398251"));
+
+    assertThat("has information taken from proxying user",
+      representation.containsKey("proxy"), is(true));
+
+    final JsonObject proxyRepresentation = representation.getJsonObject("proxy");
+
+    assertThat("last name is taken from proxying user",
+      proxyRepresentation.getString("lastName"), is("Stuart"));
+
+    assertThat("first name is taken from proxying user",
+      proxyRepresentation.getString("firstName"), is("Rebecca"));
+
+    assertThat("middle name is not taken from proxying user",
+      proxyRepresentation.containsKey("middleName"), is(false));
+
+    assertThat("barcode is taken from proxying user",
+      proxyRepresentation.getString("barcode"), is("6059539205"));
   }
 
   @Test
