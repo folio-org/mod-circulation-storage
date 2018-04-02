@@ -258,10 +258,10 @@ public class LoanPoliciesApiTest extends ApiTests {
     JsonObject loansPolicy = representation.getJsonObject("loansPolicy");
 
     assertThat(loansPolicy.getString("profileId"), is("ROLLING"));
-    assertThat(loansPolicy.getJsonObject("period"), matchesPeriod(1, "MONTH"));
+    assertThat(loansPolicy.getJsonObject("period"), matchesPeriod(1, "Months"));
     assertThat(loansPolicy.getString("closedLibraryDueDateManagementId"), is("KEEP_CURRENT_DATE"));
-    assertThat(loansPolicy.getJsonObject("existingRequestsPeriod"), matchesPeriod(1, "WEEK"));
-    assertThat(loansPolicy.getJsonObject("gracePeriod"), matchesPeriod(7, "DAYS"));
+    assertThat(loansPolicy.getJsonObject("existingRequestsPeriod"), matchesPeriod(1, "Weeks"));
+    assertThat(loansPolicy.getJsonObject("gracePeriod"), matchesPeriod(7, "Days"));
 
     assertThat(representation.containsKey("renewalsPolicy"), is(true));
 
@@ -270,7 +270,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     assertThat(renewalsPolicy.getBoolean("unlimited"), is(true));
     assertThat(renewalsPolicy.getString("renewFromId"), is("CURRENT_DUE_DATE"));
     assertThat(renewalsPolicy.getBoolean("differentPeriod"), is(true));
-    assertThat(renewalsPolicy.getJsonObject("period"), matchesPeriod(30, "DAYS"));
+    assertThat(renewalsPolicy.getJsonObject("period"), matchesPeriod(30, "Days"));
   }
 
   @Test
@@ -348,10 +348,10 @@ public class LoanPoliciesApiTest extends ApiTests {
     JsonObject loansPolicy = representation.getJsonObject("loansPolicy");
 
     assertThat(loansPolicy.getString("profileId"), is("ROLLING"));
-    assertThat(loansPolicy.getJsonObject("period"), matchesPeriod(1, "MONTH"));
+    assertThat(loansPolicy.getJsonObject("period"), matchesPeriod(1, "Months"));
     assertThat(loansPolicy.getString("closedLibraryDueDateManagementId"), is("KEEP_CURRENT_DATE"));
-    assertThat(loansPolicy.getJsonObject("existingRequestsPeriod"), matchesPeriod(1, "WEEK"));
-    assertThat(loansPolicy.getJsonObject("gracePeriod"), matchesPeriod(7, "DAYS"));
+    assertThat(loansPolicy.getJsonObject("existingRequestsPeriod"), matchesPeriod(1, "Weeks"));
+    assertThat(loansPolicy.getJsonObject("gracePeriod"), matchesPeriod(7, "Days"));
 
     assertThat(representation.containsKey("renewalsPolicy"), is(true));
 
@@ -360,7 +360,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     assertThat(renewalsPolicy.getBoolean("unlimited"), is(true));
     assertThat(renewalsPolicy.getString("renewFromId"), is("CURRENT_DUE_DATE"));
     assertThat(renewalsPolicy.getBoolean("differentPeriod"), is(true));
-    assertThat(renewalsPolicy.getJsonObject("period"), matchesPeriod(30, "DAYS"));
+    assertThat(renewalsPolicy.getJsonObject("period"), matchesPeriod(30, "Days"));
   }
 
   @Test
@@ -392,10 +392,10 @@ public class LoanPoliciesApiTest extends ApiTests {
     JsonObject loansPolicy = representation.getJsonObject("loansPolicy");
 
     assertThat(loansPolicy.getString("profileId"), is("ROLLING"));
-    assertThat(loansPolicy.getJsonObject("period"), matchesPeriod(1, "MONTH"));
+    assertThat(loansPolicy.getJsonObject("period"), matchesPeriod(1, "Months"));
     assertThat(loansPolicy.getString("closedLibraryDueDateManagementId"), is("KEEP_CURRENT_DATE"));
-    assertThat(loansPolicy.getJsonObject("existingRequestsPeriod"), matchesPeriod(1, "WEEK"));
-    assertThat(loansPolicy.getJsonObject("gracePeriod"), matchesPeriod(7, "DAYS"));
+    assertThat(loansPolicy.getJsonObject("existingRequestsPeriod"), matchesPeriod(1, "Weeks"));
+    assertThat(loansPolicy.getJsonObject("gracePeriod"), matchesPeriod(7, "Days"));
 
     assertThat(representation.containsKey("renewalsPolicy"), is(true));
 
@@ -404,7 +404,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     assertThat(renewalsPolicy.getBoolean("unlimited"), is(true));
     assertThat(renewalsPolicy.getString("renewFromId"), is("CURRENT_DUE_DATE"));
     assertThat(renewalsPolicy.getBoolean("differentPeriod"), is(true));
-    assertThat(renewalsPolicy.getJsonObject("period"), matchesPeriod(30, "DAYS"));
+    assertThat(renewalsPolicy.getJsonObject("period"), matchesPeriod(30, "Days"));
   }
 
   @Test
@@ -608,10 +608,10 @@ public class LoanPoliciesApiTest extends ApiTests {
     JsonObject loansPolicy = representation.getJsonObject("loansPolicy");
 
     assertThat(loansPolicy.getString("profileId"), is("ROLLING"));
-    assertThat(loansPolicy.getJsonObject("period"), matchesPeriod(1, "MONTH"));
+    assertThat(loansPolicy.getJsonObject("period"), matchesPeriod(1, "Months"));
     assertThat(loansPolicy.getString("closedLibraryDueDateManagementId"), is("KEEP_CURRENT_DATE"));
-    assertThat(loansPolicy.getJsonObject("existingRequestsPeriod"), matchesPeriod(1, "WEEK"));
-    assertThat(loansPolicy.getJsonObject("gracePeriod"), matchesPeriod(7, "DAYS"));
+    assertThat(loansPolicy.getJsonObject("existingRequestsPeriod"), matchesPeriod(1, "Weeks"));
+    assertThat(loansPolicy.getJsonObject("gracePeriod"), matchesPeriod(7, "Days"));
 
     assertThat(representation.containsKey("renewalsPolicy"), is(true));
 
@@ -620,7 +620,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     assertThat(renewalsPolicy.getBoolean("unlimited"), is(true));
     assertThat(renewalsPolicy.getString("renewFromId"), is("CURRENT_DUE_DATE"));
     assertThat(renewalsPolicy.getBoolean("differentPeriod"), is(true));
-    assertThat(renewalsPolicy.getJsonObject("period"), matchesPeriod(30, "DAYS"));
+    assertThat(renewalsPolicy.getJsonObject("period"), matchesPeriod(30, "Days"));
   }
 
   @Test

@@ -5,7 +5,6 @@ import io.vertx.core.json.JsonObject;
 import java.util.UUID;
 
 public class LoanPolicyRequestBuilder {
-
   private final UUID id;
   private final String name;
   private final String description;
@@ -34,10 +33,10 @@ public class LoanPolicyRequestBuilder {
     JsonObject loansPolicy = new JsonObject();
 
     loansPolicy.put("profileId", "ROLLING");
-    loansPolicy.put("period", createPeriod(1, "MONTH"));
+    loansPolicy.put("period", createPeriod(1, "Months"));
     loansPolicy.put("closedLibraryDueDateManagementId", "KEEP_CURRENT_DATE");
-    loansPolicy.put("existingRequestsPeriod", createPeriod(1, "WEEK"));
-    loansPolicy.put("gracePeriod", createPeriod(7, "DAYS"));
+    loansPolicy.put("existingRequestsPeriod", createPeriod(1, "Weeks"));
+    loansPolicy.put("gracePeriod", createPeriod(7, "Days"));
 
     request.put("loansPolicy", loansPolicy);
 
@@ -48,7 +47,7 @@ public class LoanPolicyRequestBuilder {
     renewalsPolicy.put("unlimited", true);
     renewalsPolicy.put("renewFromId", "CURRENT_DUE_DATE");
     renewalsPolicy.put("differentPeriod", true);
-    renewalsPolicy.put("period", createPeriod(30, "DAYS"));
+    renewalsPolicy.put("period", createPeriod(30, "Days"));
 
     request.put("renewalsPolicy", renewalsPolicy);
 
