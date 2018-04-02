@@ -6,7 +6,7 @@
       "description": "An example loan policy",
       "loanable": true,
       "loansPolicy": {
-        "profileId": "ROLLING",
+        "profileId": "Rolling",
         "period": {
           "duration": 1,
           "intervalId": "Months"
