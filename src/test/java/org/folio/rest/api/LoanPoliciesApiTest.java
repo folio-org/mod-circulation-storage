@@ -257,7 +257,7 @@ public class LoanPoliciesApiTest extends ApiTests {
 
     JsonObject loansPolicy = representation.getJsonObject("loansPolicy");
 
-    assertThat(loansPolicy.getString("profileId"), is("ROLLING"));
+    assertThat(loansPolicy.getString("profileId"), is("Rolling"));
     assertThat(loansPolicy.getJsonObject("period"), matchesPeriod(1, "Months"));
     assertThat(loansPolicy.getString("closedLibraryDueDateManagementId"), is("KEEP_CURRENT_DATE"));
     assertThat(loansPolicy.getJsonObject("existingRequestsPeriod"), matchesPeriod(1, "Weeks"));
@@ -347,7 +347,7 @@ public class LoanPoliciesApiTest extends ApiTests {
 
     JsonObject loansPolicy = representation.getJsonObject("loansPolicy");
 
-    assertThat(loansPolicy.getString("profileId"), is("ROLLING"));
+    assertThat(loansPolicy.getString("profileId"), is("Rolling"));
     assertThat(loansPolicy.getJsonObject("period"), matchesPeriod(1, "Months"));
     assertThat(loansPolicy.getString("closedLibraryDueDateManagementId"), is("KEEP_CURRENT_DATE"));
     assertThat(loansPolicy.getJsonObject("existingRequestsPeriod"), matchesPeriod(1, "Weeks"));
@@ -391,7 +391,7 @@ public class LoanPoliciesApiTest extends ApiTests {
 
     JsonObject loansPolicy = representation.getJsonObject("loansPolicy");
 
-    assertThat(loansPolicy.getString("profileId"), is("ROLLING"));
+    assertThat(loansPolicy.getString("profileId"), is("Rolling"));
     assertThat(loansPolicy.getJsonObject("period"), matchesPeriod(1, "Months"));
     assertThat(loansPolicy.getString("closedLibraryDueDateManagementId"), is("KEEP_CURRENT_DATE"));
     assertThat(loansPolicy.getJsonObject("existingRequestsPeriod"), matchesPeriod(1, "Weeks"));
@@ -607,7 +607,7 @@ public class LoanPoliciesApiTest extends ApiTests {
 
     JsonObject loansPolicy = representation.getJsonObject("loansPolicy");
 
-    assertThat(loansPolicy.getString("profileId"), is("ROLLING"));
+    assertThat(loansPolicy.getString("profileId"), is("Rolling"));
     assertThat(loansPolicy.getJsonObject("period"), matchesPeriod(1, "Months"));
     assertThat(loansPolicy.getString("closedLibraryDueDateManagementId"), is("KEEP_CURRENT_DATE"));
     assertThat(loansPolicy.getJsonObject("existingRequestsPeriod"), matchesPeriod(1, "Weeks"));

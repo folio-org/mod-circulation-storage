@@ -32,7 +32,7 @@ public class LoanPolicyRequestBuilder {
 
     JsonObject loansPolicy = new JsonObject();
 
-    loansPolicy.put("profileId", "ROLLING");
+    loansPolicy.put("profileId", "Rolling");
     loansPolicy.put("period", createPeriod(1, "Months"));
     loansPolicy.put("closedLibraryDueDateManagementId", "KEEP_CURRENT_DATE");
     loansPolicy.put("existingRequestsPeriod", createPeriod(1, "Weeks"));
