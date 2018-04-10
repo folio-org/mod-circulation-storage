@@ -55,8 +55,6 @@ same `itemId` and the `status` of `Open` should be rejected with a error (422) r
 
 ### Optional
 
-- Node.js 6.4 (for API linting)
-- NPM 3.10 (for API linting)
 - Python 3.6.0 (for un-registering module during managed deployment scripts)
 
 ## Preparation
@@ -80,7 +78,7 @@ This is only required to run tests against an external Postgres instance, the de
 
 ### Checking the RAML and JSON.Schema definitions
 
-run `./lint.sh` to validate the RAML and JSON.Schema descriptions of the API (requires node.js and NPM)
+run `./scripts/lint-raml-cop.sh` to validate the RAML and JSON.Schema descriptions of the API.
 
 ## Frequently Asked Questions
 
