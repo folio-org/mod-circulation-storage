@@ -29,7 +29,7 @@ package.
 ### API documentation
 
 The API documentation generated from the `*.raml` files can be found online at
-[https://dev.folio.org/doc/api/](https://dev.folio.org/doc/api/)
+[https://dev.folio.org/reference/api/#mod-circulation-storage](https://dev.folio.org/reference/api/#mod-circulation-storage)
 
 
 ## Implementation Specific Behaviours
@@ -67,7 +67,7 @@ To initialise these please run `git submodule init && git submodule update` in t
 
 If these are not initialised, the inventory-storage module will fail to build correctly, and other operations may also fail.
 
-More information is available on the [developer site](http://dev.folio.org/doc/setup#update-git-submodules).
+More information is available on the [developer site](https://dev.folio.org/guides/developer-setup/#update-git-submodules).
 
 ### PostgreSQL
 
@@ -90,9 +90,9 @@ At the moment, the JSON.schema for loan does provide validation for these (it wi
 
 ## Additional Information
 
-Other [modules](http://dev.folio.org/source-code/#server-side).
+Other [modules](https://dev.folio.org/source-code/#server-side).
 
 See project [CIRCSTORE](https://issues.folio.org/browse/CIRCSTORE)
-at the [FOLIO issue tracker](http://dev.folio.org/community/guide-issues).
+at the [FOLIO issue tracker](https://dev.folio.org/guidelines/issue-tracker/).
 
-Other FOLIO Developer documentation is at [dev.folio.org](http://dev.folio.org/)
+Other FOLIO Developer documentation is at [dev.folio.org](https://dev.folio.org/)
