@@ -1,4 +1,4 @@
-## 4.6.0 Unreleased
+## 4.6.0 2018-04-18
 
 * Allows snapshot of proxying patron metadata to be stored with a request (CIRCSTORE-46)
 * Provides request-storage interface 1.5 (CIRCSTORE-46)
