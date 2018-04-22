@@ -37,6 +37,7 @@ import io.vertx.core.json.JsonObject;
  *
  */
 public class FixedDueDateApiTest extends ApiTests {
+  private static final String METADATA = "metadata";
   private static final String TABLE_NAME = "fixed_due_date_schedule";
   static final String SCHEDULE_SECTION = "schedules";
 
@@ -73,6 +74,8 @@ public class FixedDueDateApiTest extends ApiTests {
     JsonObject representation = response.getJson();
     assertThat(representation.getString("id"), is(id.toString()));
     ////////////////////////////////////
+
+    representation.remove(METADATA);
 
     //update the fixed due date with a valid schedule
     CompletableFuture<Response> updateCompleted = new CompletableFuture<>();
@@ -172,6 +175,7 @@ public class FixedDueDateApiTest extends ApiTests {
     fixDueDate7 = updateCompleted5Response.getJson().put(SCHEDULE_SECTION,
       new JsonArray().add(createSchedule("2017-01-01T10:00:00.000+0000",
         "2017-01-01T10:00:00.000+0000", "2017-01-01T10:00:00.000+0000")));
+    fixDueDate7.remove(METADATA);
     client.put(dueDateURL("/"+newId),
       fixDueDate7, StorageTestSuite.TENANT_ID,
       ResponseHandler.empty(updateBad4Completed));

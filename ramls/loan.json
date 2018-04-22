@@ -66,7 +66,7 @@
       "description": "ID of last policy used in relation to this loan",
       "type": "string"
     },
-    "metaData": {
+    "metadata": {
       "description": "Metadata about creation and changes to loan, provided by the server (client should not provide)",
       "type": "object",
       "$ref": "raml-util/schemas/metadata.schema"

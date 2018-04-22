@@ -102,11 +102,12 @@ public class LoansAPI implements LoanStorageResource {
             true, false, reply -> {
               try {
                 if(reply.succeeded()) {
-                  List<Loan> loans = (List<Loan>) reply.result()[0];
+                  @SuppressWarnings("unchecked")
+                  List<Loan> loans = (List<Loan>) reply.result().getResults();
 
                   Loans pagedLoans = new Loans();
                   pagedLoans.setLoans(loans);
-                  pagedLoans.setTotalRecords((Integer)reply.result()[1]);
+                  pagedLoans.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
 
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                     LoanStorageResource.GetLoanStorageLoansResponse.
@@ -251,7 +252,8 @@ public class LoansAPI implements LoanStorageResource {
             reply -> {
               try {
                 if (reply.succeeded()) {
-                  List<Loan> loans = (List<Loan>) reply.result()[0];
+                  @SuppressWarnings("unchecked")
+                  List<Loan> loans = (List<Loan>) reply.result().getResults();
 
                   if (loans.size() == 1) {
                     Loan loan = loans.get(0);
@@ -388,7 +390,8 @@ public class LoansAPI implements LoanStorageResource {
           postgresClient.get(LOAN_TABLE, LOAN_CLASS, criterion, true, false,
             reply -> {
               if(reply.succeeded()) {
-                List<Loan> loanList = (List<Loan>) reply.result()[0];
+                @SuppressWarnings("unchecked")
+                List<Loan> loanList = (List<Loan>) reply.result().getResults();
 
                 if (loanList.size() == 1) {
                   try {
@@ -566,11 +569,12 @@ public class LoansAPI implements LoanStorageResource {
             true, false, reply -> {
               try {
                 if(reply.succeeded()) {
-                  List<Loan> loans = (List<Loan>) reply.result()[0];
+                  @SuppressWarnings("unchecked")
+                  List<Loan> loans = (List<Loan>) reply.result().getResults();
 
                   Loans pagedLoans = new Loans();
                   pagedLoans.setLoans(loans);
-                  pagedLoans.setTotalRecords((Integer)reply.result()[1]);
+                  pagedLoans.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
 
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                     GetLoanStorageLoanHistoryResponse.

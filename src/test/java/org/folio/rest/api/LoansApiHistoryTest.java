@@ -62,7 +62,7 @@ public class LoansApiHistoryTest extends ApiTests {
       .withDueDate(new DateTime(2017, 7, 27, 10, 23, 43, DateTimeZone.UTC))
       .create();
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     client.post(loanStorageUrl(), loanRequest, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createCompleted));
@@ -72,7 +72,7 @@ public class LoansApiHistoryTest extends ApiTests {
     assertThat(String.format("Failed to create loan: %s", createResponse.getBody()),
       createResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
 
     client.get(loanStorageHistoryUrl("?query=id="+id.toString()),
       StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
@@ -126,7 +126,7 @@ public class LoansApiHistoryTest extends ApiTests {
 
     UUID id = UUID.randomUUID();
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     client.post(loanStorageUrl(), new LoanRequestBuilder().withId(id).create(),
       StorageTestSuite.TENANT_ID, ResponseHandler.json(createCompleted));
@@ -145,7 +145,7 @@ public class LoansApiHistoryTest extends ApiTests {
       .put("itemStatus", "Checked out")
       .put("renewalCount", 1);
 
-    CompletableFuture<JsonResponse> putCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> putCompleted = new CompletableFuture<>();
 
     client.put(loanStorageUrl(String.format("/%s", id)), updatedLoanRequest,
       StorageTestSuite.TENANT_ID, ResponseHandler.json(putCompleted));
@@ -155,7 +155,7 @@ public class LoansApiHistoryTest extends ApiTests {
     assertThat(String.format("Failed to update loan: %s", putResponse.getBody()),
       putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
 
     client.get(loanStorageHistoryUrl("?query=id="+id.toString()),
       StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
@@ -196,13 +196,13 @@ public class LoansApiHistoryTest extends ApiTests {
     TimeoutException,
     UnsupportedEncodingException {
 
-    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
 
     URL url = loanStorageHistoryUrl();
 
     client.get(url, StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
 
-    JsonResponse j = getCompleted.get(5, TimeUnit.SECONDS);
+    getCompleted.get(5, TimeUnit.SECONDS);
 
     UUID userId = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
@@ -235,38 +235,38 @@ public class LoansApiHistoryTest extends ApiTests {
         ISODateTimeFormat.dateTime()).toString())
       .put("status", new JsonObject().put("name", "Closed"));
 
-    CompletableFuture<JsonResponse> create = new CompletableFuture();
-    CompletableFuture<JsonResponse> update1 = new CompletableFuture();
-    CompletableFuture<JsonResponse> update2 = new CompletableFuture();
-    CompletableFuture<TextResponse> delete = new CompletableFuture();
+    CompletableFuture<JsonResponse> create = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> update1 = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> update2 = new CompletableFuture<>();
+    CompletableFuture<TextResponse> delete = new CompletableFuture<>();
 
     ///////////////post loan//////////////////////
     client.post(loanStorageUrl(), j1, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(create));
 
-    JsonResponse response1 = create.get(5, TimeUnit.SECONDS);
+    create.get(5, TimeUnit.SECONDS);
 
     //////////////update loan/////////////////////
     client.put(loanStorageUrl("/"+id.toString()), j2, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(update1));
 
-    JsonResponse response2 = update1.get(5, TimeUnit.SECONDS);
+    update1.get(5, TimeUnit.SECONDS);
 
     ///////////update again///////////////////////
     client.put(loanStorageUrl("/"+id.toString()), j3, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(update2));
 
-    JsonResponse response3 = update2.get(5, TimeUnit.SECONDS);
+    update2.get(5, TimeUnit.SECONDS);
 
     ///////////delete loan//////////////////////////
     client.delete(loanStorageUrl("/"+id.toString()), StorageTestSuite.TENANT_ID,
       ResponseHandler.text(delete));
 
-    TextResponse response4 = delete.get(5, TimeUnit.SECONDS);
+    delete.get(5, TimeUnit.SECONDS);
 
-    CompletableFuture<JsonResponse> getCompleted2 = new CompletableFuture();
-    CompletableFuture<JsonResponse> getCompleted3 = new CompletableFuture();
-    CompletableFuture<JsonResponse> getCompleted4 = new CompletableFuture();
+    CompletableFuture<JsonResponse> getCompleted2 = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> getCompleted3 = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> getCompleted4 = new CompletableFuture<>();
 
     client.get(url + "?query=id="+id.toString(),
       StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted2));
