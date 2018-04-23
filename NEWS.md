@@ -1,14 +1,14 @@
 ## 5.0.0 Unreleased
 
-* Upgrades RAML Module Builder to version 19.0.0 (RMB-130, ???)
-* Uses generated sources for generated code (RMB-130, ???)
-* Renames `metaData` property for loans to `metadata` (???)
-* Renames `metaData` property for requests to `metadata` (???)
-* Renames `metaData` property for fixed due date schedules to `metadata` (???)
-* Provides `loan-storage` interface 4.0 (???)
-* Provides `request-storage` interface 2.0 (???)
+* Upgrades RAML Module Builder to version 19.0.0 (CIRCSTORE-43, RMB-130)
+* Uses generated sources for generated code (CIRCSTORE-43, RMB-130)
+* Renames `metaData` property for loans to `metadata` (CIRCSTORE-43)
+* Renames `metaData` property for requests to `metadata` (CIRCSTORE-43)
+* Renames `metaData` property for fixed due date schedules to `metadata` (CIRCSTORE-43)
+* Provides `loan-storage` interface 4.0 (CIRCSTORE-43)
+* Provides `request-storage` interface 2.0 (CIRCSTORE-43)
 * Provides `fixed-due-date-schedules-storage` interface 2.0 (CIRCSTORE-43)
-* Uses embedded PostgreSQL 10.1 during tests (???)
+* Uses embedded PostgreSQL 10.1 during tests (CIRCSTORE-43, RMB-126)
 
 ## 4.6.0 2018-04-18
 
