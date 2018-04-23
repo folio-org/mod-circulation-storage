@@ -124,6 +124,7 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
           postgresClient.get(FIXED_SCHEDULE_TABLE, DUE_DATE_SCHEDULE_CLASS, fieldList, cql, true, false, reply -> {
             try {
               if (reply.succeeded()) {
+                @SuppressWarnings("unchecked")
                 List<FixedDueDateSchedule> dueDateSchedules = (List<FixedDueDateSchedule>) reply.result().getResults();
 
                 FixedDueDateSchedules pagedSchedules = new FixedDueDateSchedules();
@@ -279,6 +280,7 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
           postgresClient.get(FIXED_SCHEDULE_TABLE, DUE_DATE_SCHEDULE_CLASS, criterion, true, false, reply -> {
             try {
               if (reply.succeeded()) {
+                @SuppressWarnings({ "unchecked" })
                 List<FixedDueDateSchedule> dueDateSchedules = (List<FixedDueDateSchedule>) reply.result().getResults();
 
                 if (dueDateSchedules.size() == 1) {
@@ -425,6 +427,7 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
         try {
           postgresClient.get(FIXED_SCHEDULE_TABLE, DUE_DATE_SCHEDULE_CLASS, criterion, true, false, reply -> {
             if (reply.succeeded()) {
+              @SuppressWarnings("unchecked")
               List<FixedDueDateSchedule> dueDateSchedules = (List<FixedDueDateSchedule>) reply.result().getResults();
 
               if (dueDateSchedules.size() == 1) {

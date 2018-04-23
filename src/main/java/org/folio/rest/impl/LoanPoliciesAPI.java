@@ -89,6 +89,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
               true, false, reply -> {
                 try {
                   if(reply.succeeded()) {
+                    @SuppressWarnings("unchecked")
                     List<LoanPolicy> loanPolicies = (List<LoanPolicy>) reply.result().getResults();
 
                     LoanPolicies pagedLoans = new LoanPolicies();
@@ -217,6 +218,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
             reply -> {
               try {
                 if (reply.succeeded()) {
+                  @SuppressWarnings("unchecked")
                   List<LoanPolicy> loanPolicies = (List<LoanPolicy>) reply.result().getResults();
 
                   if (loanPolicies.size() == 1) {
@@ -350,6 +352,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
           postgresClient.get(LOAN_POLICY_TABLE, LOAN_POLICY_CLASS, criterion, true, false,
             reply -> {
               if(reply.succeeded()) {
+                @SuppressWarnings("unchecked")
                 List<LoanPolicy> loanPolicyList = (List<LoanPolicy>) reply.result().getResults();
 
                 if (loanPolicyList.size() == 1) {

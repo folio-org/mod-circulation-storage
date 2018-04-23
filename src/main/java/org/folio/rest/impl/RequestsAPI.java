@@ -99,11 +99,12 @@ public class RequestsAPI implements RequestStorageResource {
             true, false, reply -> {
               try {
                 if(reply.succeeded()) {
+                  @SuppressWarnings("unchecked")
                   List<Request> requests = (List<Request>) reply.result().getResults();
 
                   Requests pagedRequests = new Requests();
                   pagedRequests.setRequests(requests);
-                  pagedRequests.setTotalRecords((Integer)reply.result().getResultInfo().getTotalRecords());
+                  pagedRequests.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
 
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                     GetRequestStorageRequestsResponse.withJsonOK(pagedRequests)));

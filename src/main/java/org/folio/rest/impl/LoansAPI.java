@@ -107,6 +107,7 @@ public class LoansAPI implements LoanStorageResource {
             true, false, reply -> {
               try {
                 if(reply.succeeded()) {
+                  @SuppressWarnings("unchecked")
                   List<Loan> loans = (List<Loan>) reply.result().getResults();
 
                   Loans pagedLoans = new Loans();
@@ -256,6 +257,7 @@ public class LoansAPI implements LoanStorageResource {
             reply -> {
               try {
                 if (reply.succeeded()) {
+                  @SuppressWarnings("unchecked")
                   List<Loan> loans = (List<Loan>) reply.result().getResults();
 
                   if (loans.size() == 1) {
@@ -393,6 +395,7 @@ public class LoansAPI implements LoanStorageResource {
           postgresClient.get(LOAN_TABLE, LOAN_CLASS, criterion, true, false,
             reply -> {
               if(reply.succeeded()) {
+                @SuppressWarnings("unchecked")
                 List<Loan> loanList = (List<Loan>) reply.result().getResults();
 
                 if (loanList.size() == 1) {
@@ -568,6 +571,7 @@ public class LoansAPI implements LoanStorageResource {
             true, false, reply -> {
               try {
                 if(reply.succeeded()) {
+                  @SuppressWarnings("unchecked")
                   List<Loan> loans = (List<Loan>) reply.result().getResults();
 
                   Loans pagedLoans = new Loans();
