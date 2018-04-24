@@ -22,6 +22,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static java.net.HttpURLConnection.HTTP_CREATED;
+import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
+import static java.net.HttpURLConnection.HTTP_OK;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
@@ -196,13 +199,15 @@ public class LoansApiHistoryTest extends ApiTests {
     TimeoutException,
     UnsupportedEncodingException {
 
-    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
 
     URL url = loanStorageHistoryUrl();
 
     client.get(url, StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
 
     JsonResponse j = getCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(j.getStatusCode(), is(HTTP_OK));
 
     UUID userId = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
@@ -235,10 +240,10 @@ public class LoansApiHistoryTest extends ApiTests {
         ISODateTimeFormat.dateTime()).toString())
       .put("status", new JsonObject().put("name", "Closed"));
 
-    CompletableFuture<JsonResponse> create = new CompletableFuture();
-    CompletableFuture<JsonResponse> update1 = new CompletableFuture();
-    CompletableFuture<JsonResponse> update2 = new CompletableFuture();
-    CompletableFuture<TextResponse> delete = new CompletableFuture();
+    CompletableFuture<JsonResponse> create = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> update1 = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> update2 = new CompletableFuture<>();
+    CompletableFuture<TextResponse> delete = new CompletableFuture<>();
 
     ///////////////post loan//////////////////////
     client.post(loanStorageUrl(), j1, StorageTestSuite.TENANT_ID,
@@ -246,11 +251,15 @@ public class LoansApiHistoryTest extends ApiTests {
 
     JsonResponse response1 = create.get(5, TimeUnit.SECONDS);
 
+    assertThat(response1.getStatusCode(), is(HTTP_CREATED));
+
     //////////////update loan/////////////////////
     client.put(loanStorageUrl("/"+id.toString()), j2, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(update1));
 
     JsonResponse response2 = update1.get(5, TimeUnit.SECONDS);
+
+    assertThat(response2.getStatusCode(), is(HTTP_NO_CONTENT));
 
     ///////////update again///////////////////////
     client.put(loanStorageUrl("/"+id.toString()), j3, StorageTestSuite.TENANT_ID,
@@ -258,40 +267,48 @@ public class LoansApiHistoryTest extends ApiTests {
 
     JsonResponse response3 = update2.get(5, TimeUnit.SECONDS);
 
+    assertThat(response3.getStatusCode(), is(HTTP_NO_CONTENT));
+
     ///////////delete loan//////////////////////////
     client.delete(loanStorageUrl("/"+id.toString()), StorageTestSuite.TENANT_ID,
       ResponseHandler.text(delete));
 
     TextResponse response4 = delete.get(5, TimeUnit.SECONDS);
 
-    CompletableFuture<JsonResponse> getCompleted2 = new CompletableFuture();
-    CompletableFuture<JsonResponse> getCompleted3 = new CompletableFuture();
-    CompletableFuture<JsonResponse> getCompleted4 = new CompletableFuture();
+    assertThat(response4.getStatusCode(), is(HTTP_NO_CONTENT));
+
+    CompletableFuture<JsonResponse> getCompleted2 = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> getCompleted3 = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> getCompleted4 = new CompletableFuture<>();
 
     client.get(url + "?query=id="+id.toString(),
       StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted2));
 
     JsonResponse finalRes = getCompleted2.get(5, TimeUnit.SECONDS);
 
-    //System.out.println("--->" + finalRes.getJson().encodePrettily());
+    assertThat(finalRes.getStatusCode(), is(HTTP_OK));
 
     client.get(url + "?query="+ URLEncoder.encode("userId="+userId.toString(), "UTF8"),
       StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted3));
 
     JsonResponse finalRes2 = getCompleted3.get(5, TimeUnit.SECONDS);
 
-    //System.out.println("--->" + finalRes2.getJson().encodePrettily());
+    assertThat(finalRes2.getStatusCode(), is(HTTP_OK));
 
     client.get(url + "?query=" + URLEncoder.encode("userId="+userId.toString()+" sortBy action", "UTF8"),
       StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted4));
 
     JsonResponse finalRes4 = getCompleted4.get(5, TimeUnit.SECONDS);
 
-    //System.out.println("--->" + finalRes4.getJson().encodePrettily());
+    assertThat(finalRes4.getStatusCode(), is(HTTP_OK));
+
+    assertThat("Should have array property",
+      finalRes.getJson().containsKey("loans"), is(true));
 
     assertThat("Incorrect number of entries in loan history for id: " + id.toString(),
       finalRes.getJson().getJsonArray("loans").size(), is(4));
 
+    //Trigger used to have a special case for delete, it looks like standard audit implementation does not have this
     assertThat("Incorrect value of first loan in res set - should be deleted " + id.toString(),
       finalRes.getJson().getJsonArray("loans").getJsonObject(0).getString("action"), is("deleted"));
 

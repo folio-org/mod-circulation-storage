@@ -31,7 +31,7 @@ public class LoanRulesAPI implements LoanRulesStorageResource {
 
   @Override
   public void getLoanRulesStorage(Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     try {
       vertxContext.runOnContext(v -> {
         try {
@@ -46,7 +46,7 @@ public class LoanRulesAPI implements LoanRulesStorageResource {
                 }
 
                 @SuppressWarnings("unchecked")
-                List<LoanRules> loanRulesList = (List<LoanRules>) reply.result()[0];
+                List<LoanRules> loanRulesList = (List<LoanRules>) reply.result().getResults();
 
                 if (loanRulesList.size() != 1) {
                   internalErrorGet(asyncResultHandler, new IllegalStateException("loanRulesList.size() = "
@@ -79,7 +79,7 @@ public class LoanRulesAPI implements LoanRulesStorageResource {
 
   @Override
   public void putLoanRulesStorage(LoanRules entity, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     try {
       vertxContext.runOnContext(v -> {
         try {

@@ -23,7 +23,10 @@ import org.joda.time.DateTime;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
 import javax.ws.rs.core.Response;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.StringJoiner;
+import java.util.UUID;
 
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
@@ -31,10 +34,12 @@ public class LoansAPI implements LoanStorageResource {
 
   private static final Logger log = LoggerFactory.getLogger(LoansAPI.class);
 
-  private final String LOAN_TABLE = "loan";
-  private final String LOAN_HISTORY_TABLE = "loan_history_table";
+  private static final String LOAN_TABLE = "loan";
+  //TODO: Reinstate when can name audit tables
+//  private static final String LOAN_HISTORY_TABLE = "loan_history_table";
+  private static final String LOAN_HISTORY_TABLE = "audit_loan";
 
-  private final Class<Loan> LOAN_CLASS = Loan.class;
+  private static final Class<Loan> LOAN_CLASS = Loan.class;
 
   public LoansAPI(Vertx vertx, String tenantId) {
     PostgresClient.getInstance(vertx, tenantId).setIdField("_id");
@@ -45,7 +50,7 @@ public class LoansAPI implements LoanStorageResource {
     String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -79,7 +84,7 @@ public class LoansAPI implements LoanStorageResource {
     String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -89,7 +94,7 @@ public class LoansAPI implements LoanStorageResource {
           PostgresClient postgresClient = PostgresClient.getInstance(
             vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-          System.out.println("CQL Query: " + query);
+          log.info("CQL Query: " + query);
 
           String[] fieldList = {"*"};
 
@@ -102,11 +107,12 @@ public class LoansAPI implements LoanStorageResource {
             true, false, reply -> {
               try {
                 if(reply.succeeded()) {
-                  List<Loan> loans = (List<Loan>) reply.result()[0];
+                  @SuppressWarnings("unchecked")
+                  List<Loan> loans = (List<Loan>) reply.result().getResults();
 
                   Loans pagedLoans = new Loans();
                   pagedLoans.setLoans(loans);
-                  pagedLoans.setTotalRecords((Integer)reply.result()[1]);
+                  pagedLoans.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
 
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                     LoanStorageResource.GetLoanStorageLoansResponse.
@@ -145,7 +151,7 @@ public class LoansAPI implements LoanStorageResource {
     Loan entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -229,7 +235,7 @@ public class LoansAPI implements LoanStorageResource {
     String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -251,7 +257,8 @@ public class LoansAPI implements LoanStorageResource {
             reply -> {
               try {
                 if (reply.succeeded()) {
-                  List<Loan> loans = (List<Loan>) reply.result()[0];
+                  @SuppressWarnings("unchecked")
+                  List<Loan> loans = (List<Loan>) reply.result().getResults();
 
                   if (loans.size() == 1) {
                     Loan loan = loans.get(0);
@@ -302,7 +309,7 @@ public class LoansAPI implements LoanStorageResource {
     String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -354,7 +361,7 @@ public class LoansAPI implements LoanStorageResource {
     String lang,
     Loan entity, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -388,7 +395,8 @@ public class LoansAPI implements LoanStorageResource {
           postgresClient.get(LOAN_TABLE, LOAN_CLASS, criterion, true, false,
             reply -> {
               if(reply.succeeded()) {
-                List<Loan> loanList = (List<Loan>) reply.result()[0];
+                @SuppressWarnings("unchecked")
+                List<Loan> loanList = (List<Loan>) reply.result().getResults();
 
                 if (loanList.size() == 1) {
                   try {
@@ -406,10 +414,7 @@ public class LoansAPI implements LoanStorageResource {
                                   .withNoContent()));
                           }
                           else {
-                            if(update.cause() instanceof GenericDatabaseException &&
-                              ((GenericDatabaseException) update.cause()).errorMessage()
-                                .message().contains("only_one_open_loan_per_item")) {
-
+                            if(isMultipleOpenLoanError(update)) {
                               asyncResultHandler.handle(
                                 io.vertx.core.Future.succeededFuture(
                                   LoanStorageResource.PutLoanStorageLoansByLoanIdResponse
@@ -529,7 +534,7 @@ public class LoansAPI implements LoanStorageResource {
   @Override
   public void getLoanStorageLoanHistory(int offset, int limit, String query, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -566,11 +571,12 @@ public class LoansAPI implements LoanStorageResource {
             true, false, reply -> {
               try {
                 if(reply.succeeded()) {
-                  List<Loan> loans = (List<Loan>) reply.result()[0];
+                  @SuppressWarnings("unchecked")
+                  List<Loan> loans = (List<Loan>) reply.result().getResults();
 
                   Loans pagedLoans = new Loans();
                   pagedLoans.setLoans(loans);
-                  pagedLoans.setTotalRecords((Integer)reply.result()[1]);
+                  pagedLoans.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
 
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                     GetLoanStorageLoanHistoryResponse.
@@ -610,9 +616,9 @@ public class LoansAPI implements LoanStorageResource {
       "Cannot have more than one open loan for the same item");
   }
 
-  private boolean isMultipleOpenLoanError(AsyncResult<String> reply) {
+  private <T> boolean isMultipleOpenLoanError(AsyncResult<T> reply) {
     return reply.cause() instanceof GenericDatabaseException &&
       ((GenericDatabaseException) reply.cause()).errorMessage().message()
-        .contains("only_one_open_loan_per_item");
+        .contains("loan_itemid_idx_unique");
   }
 }

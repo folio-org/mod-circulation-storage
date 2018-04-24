@@ -99,11 +99,12 @@ public class RequestsAPI implements RequestStorageResource {
             true, false, reply -> {
               try {
                 if(reply.succeeded()) {
-                  List<Request> requests = (List<Request>) reply.result()[0];
+                  @SuppressWarnings("unchecked")
+                  List<Request> requests = (List<Request>) reply.result().getResults();
 
                   Requests pagedRequests = new Requests();
                   pagedRequests.setRequests(requests);
-                  pagedRequests.setTotalRecords((Integer)reply.result()[1]);
+                  pagedRequests.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
 
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                     GetRequestStorageRequestsResponse.withJsonOK(pagedRequests)));
@@ -220,7 +221,7 @@ public class RequestsAPI implements RequestStorageResource {
             reply -> {
               try {
                 if (reply.succeeded()) {
-                  List<Request> requests = (List<Request>) reply.result()[0];
+                  List<Request> requests = (List<Request>) reply.result().getResults();
 
                   if (requests.size() == 1) {
                     Request request = requests.get(0);
@@ -336,7 +337,7 @@ public class RequestsAPI implements RequestStorageResource {
           postgresClient.get(REQUEST_TABLE, Request.class, criterion, true, false,
             reply -> {
               if(reply.succeeded()) {
-                List<Request> requestList = (List<Request>) reply.result()[0];
+                List<Request> requestList = (List<Request>) reply.result().getResults();
 
                 if (requestList.size() == 1) {
                   try {
