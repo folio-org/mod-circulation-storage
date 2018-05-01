@@ -20,7 +20,7 @@
           "whereClause": "WHERE (jsonb->'status'->>'name') = 'Open'"
         }
       ],
-      "ginIndex": [
+      "index": [
         {
           "fieldName": "itemId",
           "tOps": "ADD",
@@ -32,7 +32,9 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
-        },
+        }
+      ],
+      "ginIndex": [
         {
           "fieldName": "id",
           "tOps": "ADD",
