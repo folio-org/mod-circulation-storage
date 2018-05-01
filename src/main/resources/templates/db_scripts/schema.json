@@ -32,9 +32,7 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
-        }
-      ],
-      "ginIndex": [
+        },
         {
           "fieldName": "id",
           "tOps": "ADD",
