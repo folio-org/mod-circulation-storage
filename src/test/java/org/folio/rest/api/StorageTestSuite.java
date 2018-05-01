@@ -215,7 +215,7 @@ public class StorageTestSuite {
       client.post(storageUrl("/_/tenant"), null, tenantId,
         ResponseHandler.text(tenantPrepared));
 
-      TextResponse response = tenantPrepared.get(10, TimeUnit.SECONDS);
+      TextResponse response = tenantPrepared.get(20, TimeUnit.SECONDS);
 
       String failureMessage = String.format("Tenant preparation failed: %s: %s",
           response.getStatusCode(), response.getBody());
@@ -238,7 +238,7 @@ public class StorageTestSuite {
       client.delete(storageUrl("/_/tenant"), tenantId,
         ResponseHandler.text(tenantDeleted));
 
-      TextResponse response = tenantDeleted.get(10, TimeUnit.SECONDS);
+      TextResponse response = tenantDeleted.get(20, TimeUnit.SECONDS);
 
       String failureMessage = String.format("Tenant cleanup failed: %s: %s",
         response.getStatusCode(), response.getBody());
