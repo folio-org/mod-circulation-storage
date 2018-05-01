@@ -51,7 +51,10 @@ same `itemId` and the `status` of `Open` should be rejected with a error (422) r
 
 - Java 8 JDK
 - Maven 3.3.9
-- PostgreSQL 9.6.1 (running and listening on the default port, logged in user must have admin rights)
+- PostgreSQL 9.6.1 (running and listening on the default port, logged in user must have admin rights), with the following extensions
+  - pgcrpyto
+  - unaccent
+  - pg_trgm
 
 ### Optional
 

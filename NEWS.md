@@ -1,10 +1,11 @@
-## 5.0.0 Unreleased
+## 5.0.1 2018-05-01
 
 * Upgrades RAML Module Builder to version 19.0.0 (CIRCSTORE-43, RMB-130)
 * Uses generated sources for generated code (CIRCSTORE-43, RMB-130)
 * Renames `metaData` property for loans to `metadata` (CIRCSTORE-43)
 * Renames `metaData` property for requests to `metadata` (CIRCSTORE-43)
 * Renames `metaData` property for fixed due date schedules to `metadata` (CIRCSTORE-43)
+* Only allows one loan rules definition at a time (CIRCSTORE-50)
 * Provides `loan-storage` interface 4.0 (CIRCSTORE-43)
 * Provides `request-storage` interface 2.0 (CIRCSTORE-43)
 * Provides `fixed-due-date-schedules-storage` interface 2.0 (CIRCSTORE-43)

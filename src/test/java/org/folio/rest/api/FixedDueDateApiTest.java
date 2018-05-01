@@ -66,6 +66,7 @@ public class FixedDueDateApiTest extends ApiTests {
     JsonObject representation = response.getJson();
     assertThat(representation.getString("id"), is(id.toString()));
     ////////////////////////////////////
+    representation.remove("metadata");
 
     //update the fixed due date with a valid schedule
     CompletableFuture<Response> updateCompleted = new CompletableFuture<>();
@@ -157,12 +158,14 @@ public class FixedDueDateApiTest extends ApiTests {
     JsonResponse updateCompleted5Response = updateGoodCompleted.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create due date: %s", fixDueDate7.encodePrettily()),
       updateCompleted5Response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-    String newId = updateCompleted5Response.getJson().getString("id");
+    fixDueDate7 = updateCompleted5Response.getJson();
+    fixDueDate7.remove("metadata");
+    String newId = fixDueDate7.getString("id");
     ////////////////////////////////////////////
 
     //update the fixed due date with a valid schedule
     CompletableFuture<Response> updateBad4Completed = new CompletableFuture<>();
-    fixDueDate7 = updateCompleted5Response.getJson().put(SCHEDULE_SECTION,
+    fixDueDate7.put(SCHEDULE_SECTION,
       new JsonArray().add(createSchedule("2017-01-01T10:00:00.000+0000",
         "2017-01-01T10:00:00.000+0000", "2017-01-01T10:00:00.000+0000")));
     client.put(dueDateURL("/"+newId),
