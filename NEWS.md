@@ -1,4 +1,4 @@
-## 5.0.1 Unreleased
+## 5.0.1 2018-05-01
 
 * Upgrades RAML Module Builder to version 19.0.0 (CIRCSTORE-43, RMB-130)
 * Uses generated sources for generated code (CIRCSTORE-43, RMB-130)
