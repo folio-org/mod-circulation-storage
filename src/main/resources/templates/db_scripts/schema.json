@@ -46,7 +46,27 @@
       "generateId": false,
       "pkColumnName": "_id",
       "withMetadata": true,
-      "withAuditing": false
+      "withAuditing": false,
+      "index": [
+        {
+          "fieldName": "itemId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "status",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "requestDate",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        }
+      ]
     },
     {
       "tableName": "fixed_due_date_schedule",
