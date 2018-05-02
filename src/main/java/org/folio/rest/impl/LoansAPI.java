@@ -94,14 +94,15 @@ public class LoansAPI implements LoanStorageResource {
           PostgresClient postgresClient = PostgresClient.getInstance(
             vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-          log.info("CQL Query: " + query);
-
           String[] fieldList = {"*"};
 
           CQL2PgJSON cql2pgJson = new CQL2PgJSON("loan.jsonb");
           CQLWrapper cql = new CQLWrapper(cql2pgJson, query)
             .setLimit(new Limit(limit))
             .setOffset(new Offset(offset));
+
+          log.info(String.format("CQL query: %s", query));
+          log.info(String.format("SQL generated from CQL: %s", cql.toString()));
 
           postgresClient.get(LOAN_TABLE, LOAN_CLASS, fieldList, cql,
             true, false, reply -> {

@@ -92,8 +92,8 @@ public class RequestsAPI implements RequestStorageResource {
             .setLimit(new Limit(limit))
             .setOffset(new Offset(offset));
 
-          log.error(String.format("CQL query: %s", query));
-          log.error(String.format("SQL generated from CQL: %s", cql.toString()));
+          log.info(String.format("CQL query: %s", query));
+          log.info(String.format("SQL generated from CQL: %s", cql.toString()));
 
           postgresClient.get(REQUEST_TABLE, Request.class, fieldList, cql,
             true, false, reply -> {
