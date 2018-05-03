@@ -36,6 +36,7 @@ public class LoansAPI implements LoanStorageResource {
   private static final Logger log = LoggerFactory.getLogger(LoansAPI.class);
 
   private static final String LOAN_TABLE = "loan";
+  private static final String ID_FIELD = "_id";
   //TODO: Reinstate when can name audit tables
 //  private static final String LOAN_HISTORY_TABLE = "loan_history_table";
   private static final String LOAN_HISTORY_TABLE = "audit_loan";
@@ -43,7 +44,7 @@ public class LoansAPI implements LoanStorageResource {
   private static final Class<Loan> LOAN_CLASS = Loan.class;
 
   public LoansAPI(Vertx vertx, String tenantId) {
-    PostgresClient.getInstance(vertx, tenantId).setIdField("_id");
+    PostgresClient.getInstance(vertx, tenantId).setIdField(ID_FIELD);
   }
 
   @Override
@@ -647,7 +648,7 @@ public class LoansAPI implements LoanStorageResource {
   private Criterion queryByIdentity(String loanId) {
     Criteria a = new Criteria();
 
-    a.addField("_id");
+    a.addField(ID_FIELD);
     a.setOperation("=");
     a.setValue("'" + loanId + "'");
     a.setJSONB(false);
