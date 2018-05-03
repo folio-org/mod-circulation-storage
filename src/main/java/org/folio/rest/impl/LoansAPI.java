@@ -261,13 +261,7 @@ public class LoansAPI implements LoanStorageResource {
       PostgresClient postgresClient = PostgresClient.getInstance(
         vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-      Criteria a = new Criteria();
-
-      a.addField("'id'");
-      a.setOperation("=");
-      a.setValue(loanId);
-
-      Criterion criterion = new Criterion(a);
+      Criterion criterion = queryByIdentity(loanId);
 
       vertxContext.runOnContext(v -> {
         try {
@@ -336,13 +330,7 @@ public class LoansAPI implements LoanStorageResource {
         PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-      Criteria a = new Criteria();
-
-      a.addField("'id'");
-      a.setOperation("=");
-      a.setValue(loanId);
-
-      Criterion criterion = new Criterion(a);
+      Criterion criterion = queryByIdentity(loanId);
 
       vertxContext.runOnContext(v -> {
         try {
@@ -410,13 +398,7 @@ public class LoansAPI implements LoanStorageResource {
         PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-      Criteria a = new Criteria();
-
-      a.addField("'id'");
-      a.setOperation("=");
-      a.setValue(loanId);
-
-      Criterion criterion = new Criterion(a);
+      Criterion criterion = queryByIdentity(loanId);
 
       vertxContext.runOnContext(v -> {
         try {
@@ -660,5 +642,15 @@ public class LoansAPI implements LoanStorageResource {
     return reply.cause() instanceof GenericDatabaseException &&
       ((GenericDatabaseException) reply.cause()).errorMessage().message()
         .contains("loan_itemid_idx_unique");
+  }
+
+  private Criterion queryByIdentity(String loanId) {
+    Criteria a = new Criteria();
+
+    a.addField("'id'");
+    a.setOperation("=");
+    a.setValue(loanId);
+
+    return new Criterion(a);
   }
 }
