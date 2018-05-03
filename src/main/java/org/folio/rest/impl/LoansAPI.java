@@ -647,9 +647,10 @@ public class LoansAPI implements LoanStorageResource {
   private Criterion queryByIdentity(String loanId) {
     Criteria a = new Criteria();
 
-    a.addField("'id'");
+    a.addField("_id");
     a.setOperation("=");
-    a.setValue(loanId);
+    a.setValue("'" + loanId + "'");
+    a.setJSONB(false);
 
     return new Criterion(a);
   }
