@@ -11,12 +11,12 @@ public class DatabaseIdentity {
     this.identityFieldName = identityFieldName;
   }
 
-  public Criterion queryByIdentity(String loanId) {
+  public Criterion queryBy(String identityToFind) {
     Criteria a = new Criteria();
 
     a.addField(identityFieldName);
     a.setOperation("=");
-    a.setValue("'" + loanId + "'");
+    a.setValue("'" + identityToFind + "'");
     a.setJSONB(false);
 
     return new Criterion(a);

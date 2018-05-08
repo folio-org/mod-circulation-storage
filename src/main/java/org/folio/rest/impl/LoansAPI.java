@@ -266,7 +266,7 @@ public class LoansAPI implements LoanStorageResource {
       PostgresClient postgresClient = PostgresClient.getInstance(
         vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-      Criterion criterion = DATABASE_IDENTITY.queryByIdentity(loanId);
+      Criterion criterion = DATABASE_IDENTITY.queryBy(loanId);
 
       vertxContext.runOnContext(v -> {
         try {
@@ -335,7 +335,7 @@ public class LoansAPI implements LoanStorageResource {
         PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-      Criterion criterion = DATABASE_IDENTITY.queryByIdentity(loanId);
+      Criterion criterion = DATABASE_IDENTITY.queryBy(loanId);
 
       vertxContext.runOnContext(v -> {
         try {
@@ -403,7 +403,7 @@ public class LoansAPI implements LoanStorageResource {
         PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-      Criterion criterion = DATABASE_IDENTITY.queryByIdentity(loanId);
+      Criterion criterion = DATABASE_IDENTITY.queryBy(loanId);
 
       vertxContext.runOnContext(v -> {
         try {
