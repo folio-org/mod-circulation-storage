@@ -1,7 +1,10 @@
 package org.folio.rest.impl;
 
 import com.github.mauricio.async.db.postgresql.exceptions.GenericDatabaseException;
-import io.vertx.core.*;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -23,6 +26,7 @@ import org.joda.time.DateTime;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
 import javax.ws.rs.core.Response;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -32,8 +36,7 @@ import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
 public class LoansAPI implements LoanStorageResource {
-
-  private static final Logger log = LoggerFactory.getLogger(LoansAPI.class);
+  private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
   private static final String LOAN_TABLE = "loan";
   private static final String IDENTITY_FIELD_NAME = "_id";
@@ -216,7 +219,7 @@ public class LoansAPI implements LoanStorageResource {
                       .withJsonCreated(reply.result(), stream)));
                 }
                 else {
-                  log.error("Failed to create a loans", reply.cause());
+                  log.error("Failed to create a loan", reply.cause());
                   if(isMultipleOpenLoanError(reply)) {
                     asyncResultHandler.handle(succeededFuture(
                       LoanStorageResource.PostLoanStorageLoansResponse
@@ -292,6 +295,7 @@ public class LoansAPI implements LoanStorageResource {
                           withPlainNotFound("Not Found")));
                   }
                 } else {
+                  log.error("Failed to get a loan", reply.cause());
                   asyncResultHandler.handle(
                     succeededFuture(
                       LoanStorageResource.GetLoanStorageLoansByLoanIdResponse.
@@ -349,13 +353,14 @@ public class LoansAPI implements LoanStorageResource {
                       .withNoContent()));
               }
               else {
+                log.error("Failed to delete a loan", reply.cause());
                 asyncResultHandler.handle(succeededFuture(
                   DeleteLoanStorageLoansByLoanIdResponse
                     .withPlainInternalServerError(reply.cause().getMessage())));
               }
             }
             catch(Exception e) {
-              log.error("Failed to handle database response when deleting a loans", e);
+              log.error("Failed to handle database response when deleting a loan", e);
               asyncResultHandler.handle(succeededFuture(
                 DeleteLoanStorageLoansByLoanIdResponse
                   .withPlainInternalServerError(e.getMessage())));

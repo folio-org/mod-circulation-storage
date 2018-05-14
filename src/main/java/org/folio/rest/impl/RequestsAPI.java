@@ -31,6 +31,7 @@ import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
 public class RequestsAPI implements RequestStorageResource {
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
   private static final String REQUEST_TABLE = "request";
 
   @Override
@@ -110,6 +111,7 @@ public class RequestsAPI implements RequestStorageResource {
                     GetRequestStorageRequestsResponse.withJsonOK(pagedRequests)));
                 }
                 else {
+                  log.error("Failed to get requests", reply.cause());
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                     LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
                       withPlainInternalServerError(reply.cause().getMessage())));
