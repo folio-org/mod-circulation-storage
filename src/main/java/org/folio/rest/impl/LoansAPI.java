@@ -47,8 +47,6 @@ public class LoansAPI implements LoanStorageResource {
 
   private static final Class<Loan> LOAN_CLASS = Loan.class;
 
-
-
   private static final DatabaseIdentity databaseIdentity = new DatabaseIdentity(
     IDENTITY_FIELD_NAME);
 
