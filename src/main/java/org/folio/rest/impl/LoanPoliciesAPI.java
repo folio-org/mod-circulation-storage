@@ -35,7 +35,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
   public void deleteLoanPolicyStorageLoanPolicies(
     String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -68,7 +68,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
     String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -133,7 +133,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
     String lang, LoanPolicy entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -196,7 +196,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
     String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -276,7 +276,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
     String loanPolicyId,
     String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -330,7 +330,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
     LoanPolicy entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
