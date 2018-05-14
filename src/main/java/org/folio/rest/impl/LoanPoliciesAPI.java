@@ -7,10 +7,10 @@ import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.folio.rest.annotations.Validate;
+import org.folio.rest.impl.support.DatabaseIdentity;
 import org.folio.rest.jaxrs.model.LoanPolicies;
 import org.folio.rest.jaxrs.model.LoanPolicy;
 import org.folio.rest.jaxrs.resource.LoanPolicyStorageResource;
-import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
@@ -32,7 +32,12 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
   private static final String LOAN_POLICY_TABLE = "loan_policy";
+  private static final String IDENTITY_FIELD_NAME = "_id";
+
   private static final Class<LoanPolicy> LOAN_POLICY_CLASS = LoanPolicy.class;
+
+  private static final DatabaseIdentity databaseIdentity = new DatabaseIdentity(
+    IDENTITY_FIELD_NAME);
 
   @Override
   @Validate
@@ -219,13 +224,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
       PostgresClient postgresClient = PostgresClient.getInstance(
         vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-      Criteria a = new Criteria();
-
-      a.addField("'id'");
-      a.setOperation("=");
-      a.setValue(loanPolicyId);
-
-      Criterion criterion = new Criterion(a);
+      Criterion criterion = databaseIdentity.queryBy(loanPolicyId);
 
       vertxContext.runOnContext(v -> {
         try {
@@ -301,13 +300,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
         PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-      Criteria a = new Criteria();
-
-      a.addField("'id'");
-      a.setOperation("=");
-      a.setValue(loanPolicyId);
-
-      Criterion criterion = new Criterion(a);
+      Criterion criterion = databaseIdentity.queryBy(loanPolicyId);
 
       vertxContext.runOnContext(v -> {
         try {
@@ -366,13 +359,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
         PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-      Criteria a = new Criteria();
-
-      a.addField("'id'");
-      a.setOperation("=");
-      a.setValue(loanPolicyId);
-
-      Criterion criterion = new Criterion(a);
+      Criterion criterion = databaseIdentity.queryBy(loanPolicyId);
 
       vertxContext.runOnContext(v -> {
         try {

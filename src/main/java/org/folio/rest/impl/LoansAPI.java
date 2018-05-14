@@ -40,17 +40,20 @@ public class LoansAPI implements LoanStorageResource {
 
   private static final String LOAN_TABLE = "loan";
   private static final String IDENTITY_FIELD_NAME = "_id";
+
   //TODO: Reinstate when can name audit tables
 //  private static final String LOAN_HISTORY_TABLE = "loan_history_table";
   private static final String LOAN_HISTORY_TABLE = "audit_loan";
 
   private static final Class<Loan> LOAN_CLASS = Loan.class;
 
-  private static final DatabaseIdentity DATABASE_IDENTITY = new DatabaseIdentity(
+
+
+  private static final DatabaseIdentity databaseIdentity = new DatabaseIdentity(
     IDENTITY_FIELD_NAME);
 
   public LoansAPI(Vertx vertx, String tenantId) {
-    DATABASE_IDENTITY.configurePostgresClient(
+    databaseIdentity.configurePostgresClient(
       PostgresClient.getInstance(vertx, tenantId));
   }
 
@@ -269,7 +272,7 @@ public class LoansAPI implements LoanStorageResource {
       PostgresClient postgresClient = PostgresClient.getInstance(
         vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-      Criterion criterion = DATABASE_IDENTITY.queryBy(loanId);
+      Criterion criterion = databaseIdentity.queryBy(loanId);
 
       vertxContext.runOnContext(v -> {
         try {
@@ -339,7 +342,7 @@ public class LoansAPI implements LoanStorageResource {
         PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-      Criterion criterion = DATABASE_IDENTITY.queryBy(loanId);
+      Criterion criterion = databaseIdentity.queryBy(loanId);
 
       vertxContext.runOnContext(v -> {
         try {
@@ -408,7 +411,7 @@ public class LoansAPI implements LoanStorageResource {
         PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-      Criterion criterion = DATABASE_IDENTITY.queryBy(loanId);
+      Criterion criterion = databaseIdentity.queryBy(loanId);
 
       vertxContext.runOnContext(v -> {
         try {
