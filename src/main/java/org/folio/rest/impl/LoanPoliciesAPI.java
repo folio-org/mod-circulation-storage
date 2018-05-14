@@ -27,8 +27,8 @@ import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
 public class LoanPoliciesAPI implements LoanPolicyStorageResource {
 
-  private final String LOAN_POLICY_TABLE = "loan_policy";
-  private final Class<LoanPolicy> LOAN_POLICY_CLASS = LoanPolicy.class;
+  private static final String LOAN_POLICY_TABLE = "loan_policy";
+  private static final Class<LoanPolicy> LOAN_POLICY_CLASS = LoanPolicy.class;
 
   @Override
   @Validate
