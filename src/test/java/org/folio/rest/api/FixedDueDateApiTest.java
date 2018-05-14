@@ -268,6 +268,8 @@ public class FixedDueDateApiTest extends ApiTests {
     client.get(dueDateURL("/12345"), StorageTestSuite.TENANT_ID,
       ResponseHandler.text(getCompleted5));
     TextResponse getCompleted5Response = getCompleted5.get(5, TimeUnit.SECONDS);
+
+    //TODO: Should potentially be bad request rather than not found
     assertThat(String.format("Failed to create due date: %s", getCompleted5Response.getBody()),
       getCompleted5Response.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
     System.out.println(dueDateURL("/12345") + " " + getCompleted5Response.getBody());
