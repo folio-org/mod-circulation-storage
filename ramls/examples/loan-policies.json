@@ -23,7 +23,8 @@
       },
       "renewable": true,
       "renewalsPolicy": {
-        "unlimited": true,
+        "unlimited": false,
+        "numberAllowed": 3,
         "renewFromId": "CURRENT_DUE_DATE",
         "differentPeriod": true,
         "period": {
