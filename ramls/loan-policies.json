@@ -7,7 +7,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "raml-util/schemas/mod-circulation/loan-policy.json"
+        "$ref": "loan-policy.json"
       }
     },
     "totalRecords": {
