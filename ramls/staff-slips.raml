@@ -1,0 +1,50 @@
+#%RAML 0.8
+title: Staff Slips
+version: v1.2
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost:9130
+
+documentation:
+  - title: Staff Slips Storage API
+    content: <b>Storage for staff slips</b>
+  
+schemas:
+  - staff-slips.json: !include staff-slips.json
+  - staff-slip.json: !include staff-slip.json
+  - raml-util/schemas/metadata.schema: !include raml-util/schemas/metadata.schema
+
+traits:
+  - secured: !include raml-util/traits/auth.raml
+  - language: !include raml-util/traits/language.raml
+  - pageable: !include raml-util/traits/pageable.raml
+  - searchable: !include raml-util/traits/searchable.raml
+
+resourceTypes:
+  - collection: !include raml-util/rtypes/collection.raml
+  - collection-item: !include raml-util/rtypes/item-collection.raml
+  
+/staff-slips-storage:
+  /staff-slips:
+    displayName: Staff Slips
+    type:
+      collection:
+        exampleCollection: !include examples/staff-slips.json
+        exampleItem: !include examples/staff-slip.json
+        schemaCollection: staff-slips.json
+        schemaItem: staff-slip.json
+    get:
+      responses:
+        501:
+          description: "Not implemented yet"
+    post:
+      responses:
+        501:
+          description: "Not implemented yet"
+    delete:
+      responses:
+        501:
+          description: "Not implemented yet"
+    put:
+      responses:
+        501:
+          description: "Not implemented yet" 

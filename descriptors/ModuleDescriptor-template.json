@@ -146,6 +146,16 @@
       ]
     },
     {
+      "id": "staff-slips-storage",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/staff-slips-storage/staff-slips"
+        }
+      ]
+    },
+    {
       "id": "_tenant",
       "version": "1.0",
       "interfaceType": "system",
