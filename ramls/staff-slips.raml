@@ -34,6 +34,10 @@ resourceTypes:
         schemaCollection: staff-slips.json
         schemaItem: staff-slip.json
     get:
+      is: [
+        pageable,
+        searchable: {description: "searchable using CQL", example: "requesterId=\"cf23adf0-61ba-4887-bf82-956c4aae2260\""},
+      ]
       responses:
         501:
           description: "Not implemented yet"
@@ -45,7 +49,3 @@ resourceTypes:
       responses:
         501:
           description: "Not implemented yet"
-    put:
-      responses:
-        501:
-          description: "Not implemented yet" 
