@@ -9,7 +9,7 @@ documentation:
     content: <b>Storage for staff slips</b>
   
 schemas:
-  - staff-slips.json: !include staff-slips.json
+  - staff-slips: !include staff-slips.json
   - staff-slip.json: !include staff-slip.json
   - raml-util/schemas/metadata.schema: !include raml-util/schemas/metadata.schema
 
@@ -31,7 +31,7 @@ resourceTypes:
       collection:
         exampleCollection: !include examples/staff-slips.json
         exampleItem: !include examples/staff-slip.json
-        schemaCollection: staff-slips.json
+        schemaCollection: staff-slips
         schemaItem: staff-slip.json
     get:
       is: [
@@ -47,5 +47,10 @@ resourceTypes:
           description: "Not implemented yet"
     delete:
       responses:
+        500:
+          description: "Internal server error, e.g. due to misconfiguration"
+          body:
+            text/plain:
+              example: "Internal server error, contact administrator"
         501:
           description: "Not implemented yet"

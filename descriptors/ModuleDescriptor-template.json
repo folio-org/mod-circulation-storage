@@ -152,6 +152,14 @@
         {
           "methods": ["GET"],
           "pathPattern": "/staff-slips-storage/staff-slips"
+        },
+        {
+          "methods": ["POST"],
+          "pathPattern": "/staff-slips-storage/staff-slips"
+        },
+        {
+          "methods": ["DELETE"],
+          "pathPattern": "/staff-slips-storage/staff-slips"
         }
       ]
     },
