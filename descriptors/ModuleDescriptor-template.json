@@ -160,6 +160,18 @@
         {
           "methods": ["DELETE"],
           "pathPattern": "/staff-slips-storage/staff-slips"
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/staff-slips-storage/staff-slips/{id}"
+        },
+        {
+          "methods": ["PUT"],
+          "pathPattern": "/staff-slips-storage/staff-slips/{id}"
+        },
+        {
+          "methods": ["DELETE"],
+          "pathPattern": "/staff-slips-storage/staff-slips/{id}"
         }
       ]
     },

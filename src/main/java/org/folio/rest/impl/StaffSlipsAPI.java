@@ -15,6 +15,8 @@ import org.folio.rest.jaxrs.model.StaffSlips;
 import org.folio.rest.jaxrs.resource.LoanStorageResource;
 import org.folio.rest.jaxrs.resource.StaffSlipsStorageResource;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.Criteria.Criteria;
+import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.cql.CQLWrapper;
@@ -34,34 +36,30 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 	private static final Class<StaffSlip> STAFF_SLIP_CLASS = StaffSlip.class;
 
 	@Override
-	public void deleteStaffSlipsStorageStaffSlips(
-			String lang, 
-			Map<String, String> okapiHeaders,
-			Handler<AsyncResult<Response>> asyncResultHandler, 
-			Context vertxContext) throws Exception {
-		
+	public void deleteStaffSlipsStorageStaffSlips(String lang, Map<String, String> okapiHeaders,
+			Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+
 		String tenantId = okapiHeaders.get(TENANT_HEADER);
-		
+
 		vertxContext.runOnContext(v -> {
-			
+
 			try {
-				
-				PostgresClient postgresClient = PostgresClient.getInstance(
-				  vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
-				
-			
-				postgresClient.mutate(String.format("TRUNCATE TABLE %s_%s.%s", 
-					tenantId, "mod_circulation_storage", STAFF_SLIP_TABLE), 
+
+				PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
+						TenantTool.calculateTenantId(tenantId));
+
+				postgresClient.mutate(
+						String.format("TRUNCATE TABLE %s_%s.%s", tenantId, "mod_circulation_storage", STAFF_SLIP_TABLE),
 						reply -> {
-							asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-								StaffSlipsStorageResource.DeleteStaffSlipsStorageStaffSlipsResponse
-									.noContent().build()));
+							asyncResultHandler.handle(Future
+									.succeededFuture(StaffSlipsStorageResource.DeleteStaffSlipsStorageStaffSlipsResponse
+											.noContent().build()));
 						});
-				
-			} catch(Exception e) {
-				asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-					StaffSlipsStorageResource.DeleteStaffSlipsStorageStaffSlipsResponse
-						.withPlainInternalServerError(e.getMessage())));
+
+			} catch (Exception e) {
+				asyncResultHandler.handle(
+						Future.succeededFuture(StaffSlipsStorageResource.DeleteStaffSlipsStorageStaffSlipsResponse
+								.withPlainInternalServerError(e.getMessage())));
 			}
 		});
 
@@ -80,7 +78,6 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 
 			String[] fieldList = { "*" };
 
-			// TODO: Handle query
 			CQL2PgJSON cql2pgJson = new CQL2PgJSON("staffslip.jsonb");
 			CQLWrapper cql = new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
 
@@ -92,27 +89,24 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 						@SuppressWarnings("unchecked")
 						List<StaffSlip> staffSlips = (List<StaffSlip>) reply.result().getResults();
 
-						// TODO: Handle total records
-						// TODO: Handle Paging
-
 						StaffSlips pagedStaffSlips = new StaffSlips();
 						pagedStaffSlips.setStaffSlips(staffSlips);
 						pagedStaffSlips.setTotalRecords((Integer) reply.result().getResultInfo().getTotalRecords());
 
-						asyncResultHandler.handle(io.vertx.core.Future
-								.succeededFuture(StaffSlipsStorageResource.GetStaffSlipsStorageStaffSlipsResponse
+						asyncResultHandler.handle(
+								Future.succeededFuture(StaffSlipsStorageResource.GetStaffSlipsStorageStaffSlipsResponse
 										.withJsonOK(pagedStaffSlips)));
 
 					} else {
-						asyncResultHandler.handle(io.vertx.core.Future
-								.succeededFuture(StaffSlipsStorageResource.GetStaffSlipsStorageStaffSlipsResponse
+						asyncResultHandler.handle(
+								Future.succeededFuture(StaffSlipsStorageResource.GetStaffSlipsStorageStaffSlipsResponse
 										.withPlainInternalServerError(reply.cause().getMessage())));
 					}
 
 				} catch (Exception e) {
 					e.printStackTrace();
-					asyncResultHandler.handle(io.vertx.core.Future
-							.succeededFuture(StaffSlipsStorageResource.GetStaffSlipsStorageStaffSlipsResponse
+					asyncResultHandler.handle(
+							Future.succeededFuture(StaffSlipsStorageResource.GetStaffSlipsStorageStaffSlipsResponse
 									.withPlainInternalServerError(e.getMessage())));
 				}
 
@@ -120,8 +114,8 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			asyncResultHandler.handle(io.vertx.core.Future
-					.succeededFuture(StaffSlipsStorageResource.GetStaffSlipsStorageStaffSlipsResponse
+			asyncResultHandler
+					.handle(Future.succeededFuture(StaffSlipsStorageResource.GetStaffSlipsStorageStaffSlipsResponse
 							.withPlainInternalServerError(e.getMessage())));
 		}
 
@@ -136,8 +130,8 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 		ImmutablePair<Boolean, String> validationResult = validateStaffSlip(entity);
 
 		if (validationResult.getLeft() == false) {
-			asyncResultHandler.handle(io.vertx.core.Future
-					.succeededFuture(StaffSlipsStorageResource.PostStaffSlipsStorageStaffSlipsResponse
+			asyncResultHandler
+					.handle(Future.succeededFuture(StaffSlipsStorageResource.PostStaffSlipsStorageStaffSlipsResponse
 							.withPlainBadRequest(validationResult.getRight())));
 
 			return;
@@ -154,8 +148,8 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 					if (entity.getId() == null) {
 						entity.setId(UUID.randomUUID().toString());
 					}
-					
-					if(entity.getActive() == null) {
+
+					if (entity.getActive() == null) {
 						entity.setActive(true);
 					}
 
@@ -166,18 +160,18 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 								OutStream stream = new OutStream();
 								stream.setData(entity);
 
-								asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+								asyncResultHandler.handle(Future.succeededFuture(
 										StaffSlipsStorageResource.PostStaffSlipsStorageStaffSlipsResponse
 												.withJsonCreated(reply.result(), stream)));
 
 							} else {
-								asyncResultHandler.handle(io.vertx.core.Future
-										.succeededFuture(LoanStorageResource.PostLoanStorageLoansResponse
+								asyncResultHandler
+										.handle(Future.succeededFuture(LoanStorageResource.PostLoanStorageLoansResponse
 												.withPlainInternalServerError(reply.cause().toString())));
 							}
 						} catch (Exception e) {
 							e.printStackTrace();
-							asyncResultHandler.handle(io.vertx.core.Future
+							asyncResultHandler.handle(Future
 									.succeededFuture(StaffSlipsStorageResource.PostStaffSlipsStorageStaffSlipsResponse
 											.withPlainInternalServerError(e.getMessage())));
 						}
@@ -185,8 +179,8 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 
 				} catch (Exception e) {
 					e.printStackTrace();
-					asyncResultHandler.handle(io.vertx.core.Future
-							.succeededFuture(StaffSlipsStorageResource.PostStaffSlipsStorageStaffSlipsResponse
+					asyncResultHandler.handle(
+							Future.succeededFuture(StaffSlipsStorageResource.PostStaffSlipsStorageStaffSlipsResponse
 									.withPlainInternalServerError(e.getMessage())));
 				}
 			});
@@ -194,6 +188,232 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 		} catch (Exception e) {
 			asyncResultHandler.handle(Future.succeededFuture(
 					PostStaffSlipsStorageStaffSlipsResponse.withPlainInternalServerError(e.getMessage())));
+		}
+
+	}
+
+	@Override
+	public void getStaffSlipsStorageStaffSlipsByStaffSlipId(String staffSlipId, String lang,
+			Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
+			throws Exception {
+
+		String tenantId = okapiHeaders.get(TENANT_HEADER);
+
+		try {
+
+			PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
+					TenantTool.calculateTenantId(tenantId));
+
+			Criteria a = new Criteria();
+
+			a.addField("'id'");
+			a.setOperation("=");
+			a.setValue(staffSlipId);
+
+			Criterion criterion = new Criterion(a);
+
+			vertxContext.runOnContext(v -> {
+				try {
+
+					postgresClient.get(STAFF_SLIP_TABLE, STAFF_SLIP_CLASS, criterion, true, false, reply -> {
+						if (reply.succeeded()) {
+
+							@SuppressWarnings("unchecked")
+							List<StaffSlip> staffSlips = (List<StaffSlip>) reply.result().getResults();
+
+							if (staffSlips.size() == 1) {
+								StaffSlip staffSlip = staffSlips.get(0);
+
+								asyncResultHandler.handle(Future.succeededFuture(
+										StaffSlipsStorageResource.GetStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+												.withJsonOK(staffSlip)));
+
+							} else {
+								asyncResultHandler.handle(Future.succeededFuture(
+										StaffSlipsStorageResource.GetStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+												.withPlainNotFound("Not Found")));
+							}
+
+						} else {
+							asyncResultHandler.handle(Future.succeededFuture(
+									StaffSlipsStorageResource.GetStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+											.withPlainInternalServerError(reply.cause().getMessage())));
+
+						}
+					});
+
+				} catch (Exception e) {
+					e.printStackTrace();
+					asyncResultHandler.handle(Future.succeededFuture(
+							StaffSlipsStorageResource.GetStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+									.withPlainInternalServerError(e.getMessage())));
+				}
+			});
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			asyncResultHandler.handle(
+					Future.succeededFuture(StaffSlipsStorageResource.GetStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+							.withPlainInternalServerError(e.getMessage())));
+		}
+
+	}
+
+	@Override
+	public void deleteStaffSlipsStorageStaffSlipsByStaffSlipId(String staffSlipId, String lang,
+			Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
+			throws Exception {
+
+		String tenantId = okapiHeaders.get(TENANT_HEADER);
+
+		try {
+
+			PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
+					TenantTool.calculateTenantId(tenantId));
+
+			Criteria c = new Criteria();
+
+			c.addField("'id'");
+			c.setOperation("=");
+			c.setValue(staffSlipId);
+
+			Criterion criterion = new Criterion(c);
+
+			vertxContext.runOnContext(v -> {
+				try {
+
+					postgresClient.delete(STAFF_SLIP_TABLE, criterion, reply -> {
+						if (reply.succeeded()) {
+
+							asyncResultHandler.handle(Future.succeededFuture(
+									DeleteStaffSlipsStorageStaffSlipsByStaffSlipIdResponse.withNoContent()));
+
+						} else {
+							asyncResultHandler.handle(Future.succeededFuture(
+									StaffSlipsStorageResource.DeleteStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+											.withPlainInternalServerError(reply.cause().getMessage())));
+						}
+					});
+
+				} catch (Exception e) {
+					asyncResultHandler.handle(Future.succeededFuture(
+							StaffSlipsStorageResource.DeleteStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+									.withPlainInternalServerError(e.getMessage())));
+				}
+			});
+
+		} catch (Exception e) {
+			asyncResultHandler.handle(Future
+					.succeededFuture(StaffSlipsStorageResource.DeleteStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+							.withPlainInternalServerError(e.getMessage())));
+		}
+
+	}
+
+	@Override
+	public void putStaffSlipsStorageStaffSlipsByStaffSlipId(String staffSlipId, String lang, StaffSlip entity,
+			Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
+			throws Exception {
+
+		String tenantId = okapiHeaders.get(TENANT_HEADER);
+
+		ImmutablePair<Boolean, String> validationResult = validateStaffSlip(entity);
+
+		if (validationResult.getLeft() == false) {
+			asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+					LoanStorageResource.PostLoanStorageLoansResponse.withPlainBadRequest(validationResult.getRight())));
+
+			return;
+		}
+
+		try {
+			PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
+					TenantTool.calculateTenantId(tenantId));
+
+			Criteria c = new Criteria();
+
+			c.addField("'id'");
+			c.setOperation("=");
+			c.setValue(staffSlipId);
+
+			Criterion criterion = new Criterion(c);
+
+			vertxContext.runOnContext(v -> {
+				try {
+					
+					postgresClient.get(STAFF_SLIP_TABLE, STAFF_SLIP_CLASS, criterion, true, false,
+						reply -> {
+							if(reply.succeeded()) {
+								
+								@SuppressWarnings("unchecked")
+								List<StaffSlip> staffSlips = (List<StaffSlip>) reply.result().getResults();
+								
+								if(staffSlips.size() == 1) {
+									
+									try {
+										
+										postgresClient.update(STAFF_SLIP_TABLE, entity, criterion, true,
+											update -> {
+												
+												try {
+													
+													if(update.succeeded()) {
+														
+														OutStream stream = new OutStream();
+														stream.setData(entity);
+														
+														asyncResultHandler.handle(
+															Future.succeededFuture(
+																PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+																	.withNoContent()));
+														
+													} else {
+														asyncResultHandler.handle(Future.succeededFuture(
+																StaffSlipsStorageResource.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+																		.withPlainInternalServerError(reply.cause().getMessage())));
+													}
+													
+												} catch (Exception e) {
+													asyncResultHandler.handle(Future.succeededFuture(
+															StaffSlipsStorageResource.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+																	.withPlainInternalServerError(e.getMessage())));
+												}
+												
+											});
+										
+										
+										} catch(Exception e) {
+											asyncResultHandler.handle(Future.succeededFuture(
+													StaffSlipsStorageResource.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+															.withPlainInternalServerError(e.getMessage())));
+									}
+									
+								} else {
+									try {
+										this.postStaffSlipsStorageStaffSlips(lang, entity, okapiHeaders, asyncResultHandler, vertxContext);
+									} catch (Exception e) {
+										// TODO Auto-generated catch block
+										e.printStackTrace();
+									}
+								}
+							} else {
+								asyncResultHandler.handle(Future.succeededFuture(
+										StaffSlipsStorageResource.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+												.withPlainInternalServerError(reply.cause().getMessage())));
+							}
+						});
+
+				} catch (Exception e) {
+					asyncResultHandler.handle(Future.succeededFuture(
+							StaffSlipsStorageResource.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+									.withPlainInternalServerError(e.getMessage())));
+				}
+			});
+
+		} catch (Exception e) {
+			asyncResultHandler.handle(
+					Future.succeededFuture(StaffSlipsStorageResource.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+							.withPlainInternalServerError(e.getMessage())));
 		}
 
 	}

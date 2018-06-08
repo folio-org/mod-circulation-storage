@@ -54,3 +54,20 @@ resourceTypes:
               example: "Internal server error, contact administrator"
         501:
           description: "Not implemented yet"
+    /{staffSlipId}:
+      type:
+        collection-item:
+          exampleItem: !include examples/staff-slip.json
+          schema: staff-slip.json
+      get:
+        responses:
+          501:
+            description: "Not implemented yet"
+      delete:
+        responses:
+          501:
+            description: "Not implemented yet"
+      put:
+        responses:
+          501:
+            description: "Not implemented yet"
