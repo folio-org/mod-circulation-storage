@@ -327,6 +327,36 @@
       "description": "Delete collection of fixed due date from storage"
     },
     {
+      "permissionName": "circulation-storage.staff-slips.collection.get",
+      "displayName": "Circulation storage - get staff slip collection from storage",
+      "description": "Get staff slip collection from storage"
+    },
+    {
+      "permissionName": "circulation-storage.staff-slips.collection.delete",
+      "displayName": "Circulation storage - delete entire staff slipp collection",
+      "description": "Delete entire staff slipp collection"
+    },
+    {
+      "permissionName": "circulation-storage.staff-slips.collection.post",
+      "displayName": "Circulation storage - create indavidual staff slip in storage",
+      "description": "Create indavidual staff slip in storage"
+    },
+    {
+      "permissionName": "circulation-storage.staff-slips.item.get",
+      "displayName": "Circulation storage - get indavidual staff slip from storage",
+      "description": "Get indavidual staff slip from storage"
+    },
+    {
+      "permissionName": "circulation-storage.staff-slips.item.delete",
+      "displayName": "Circulation storage - delete indavidual staff slip from storage",
+      "description": "Delete indavidual staff slip from storage"
+    },
+    {
+      "permissionName": "circulation-storage.staff-slips.item.put",
+      "displayName": "Circulation storage - modify indavidual staff slip in storage",
+      "description": "Modify indavidual staff slip in storage"
+    },
+    {
       "permissionName": "circulation-storage.all",
       "displayName": "Circulation storage module - all permissions",
       "description": "Entire set of permissions needed to use the circulation storage module",
@@ -357,7 +387,14 @@
         "circulation-storage.fixed-due-date-schedules.item.put",
         "circulation-storage.fixed-due-date-schedules.item.post",
         "circulation-storage.fixed-due-date-schedules.item.get",
-        "circulation-storage.fixed-due-date-schedules.collection.get"
+        "circulation-storage.fixed-due-date-schedules.collection.get",
+        "circulation-storage.staff-slips.item.delete",
+        "circulation-storage.staff-slips.collection.delete",
+        "circulation-storage.staff-slips.collection.get",
+        "circulation-storage.staff-slips.item.put",
+        "circulation-storage.staff-slips.collection.post",
+        "circulation-storage.staff-slips.item.get",
+        "circulation-storage.staff-slips.collection.get"        
       ]
     }
   ],
