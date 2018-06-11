@@ -28,12 +28,16 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 public class StaffSlipsAPI implements StaffSlipsStorageResource {
 
 	private static final String STAFF_SLIP_TABLE = "staff_slips";
 
 	private static final Class<StaffSlip> STAFF_SLIP_CLASS = StaffSlip.class;
+	
+	private static final Logger log = LoggerFactory.getLogger(STAFF_SLIP_CLASS);
 
 	@Override
 	public void deleteStaffSlipsStorageStaffSlips(String lang, Map<String, String> okapiHeaders,
@@ -104,7 +108,7 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 					}
 
 				} catch (Exception e) {
-					e.printStackTrace();
+					log.error(e.getMessage());
 					asyncResultHandler.handle(
 							Future.succeededFuture(StaffSlipsStorageResource.GetStaffSlipsStorageStaffSlipsResponse
 									.withPlainInternalServerError(e.getMessage())));
@@ -113,7 +117,7 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 			});
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error(e.getMessage());
 			asyncResultHandler
 					.handle(Future.succeededFuture(StaffSlipsStorageResource.GetStaffSlipsStorageStaffSlipsResponse
 							.withPlainInternalServerError(e.getMessage())));
@@ -129,7 +133,7 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 
 		ImmutablePair<Boolean, String> validationResult = validateStaffSlip(entity);
 
-		if (validationResult.getLeft() == false) {
+		if (validationResult.getLeft()) {
 			asyncResultHandler
 					.handle(Future.succeededFuture(StaffSlipsStorageResource.PostStaffSlipsStorageStaffSlipsResponse
 							.withPlainBadRequest(validationResult.getRight())));
@@ -192,7 +196,7 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 					});
 
 				} catch (Exception e) {
-					e.printStackTrace();
+					log.error(e.getMessage());
 					asyncResultHandler.handle(Future.succeededFuture(
 							StaffSlipsStorageResource.GetStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
 									.withPlainInternalServerError(e.getMessage())));
@@ -200,7 +204,7 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 			});
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error(e.getMessage());
 			asyncResultHandler.handle(
 					Future.succeededFuture(StaffSlipsStorageResource.GetStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
 							.withPlainInternalServerError(e.getMessage())));
@@ -268,7 +272,7 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 
 		ImmutablePair<Boolean, String> validationResult = validateStaffSlip(entity);
 
-		if (validationResult.getLeft() == false) {
+		if (validationResult.getLeft()) {
 			asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
 					LoanStorageResource.PostLoanStorageLoansResponse.withPlainBadRequest(validationResult.getRight())));
 
@@ -400,7 +404,7 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 												.withPlainInternalServerError(reply.cause().toString())));
 							}
 						} catch (Exception e) {
-							e.printStackTrace();
+							log.error(e.getMessage());
 							asyncResultHandler.handle(Future
 									.succeededFuture(StaffSlipsStorageResource.PostStaffSlipsStorageStaffSlipsResponse
 											.withPlainInternalServerError(e.getMessage())));
@@ -408,7 +412,7 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 					});
 
 				} catch (Exception e) {
-					e.printStackTrace();
+					log.error(e.getMessage());
 					asyncResultHandler.handle(
 							Future.succeededFuture(StaffSlipsStorageResource.PostStaffSlipsStorageStaffSlipsResponse
 									.withPlainInternalServerError(e.getMessage())));
