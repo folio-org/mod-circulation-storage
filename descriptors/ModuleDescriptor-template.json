@@ -151,27 +151,33 @@
       "handlers": [
         {
           "methods": ["GET"],
-          "pathPattern": "/staff-slips-storage/staff-slips"
+          "pathPattern": "/staff-slips-storage/staff-slips",
+          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.collection.get"]
         },
         {
           "methods": ["POST"],
-          "pathPattern": "/staff-slips-storage/staff-slips"
+          "pathPattern": "/staff-slips-storage/staff-slips",
+          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.item.create"]
         },
         {
           "methods": ["DELETE"],
-          "pathPattern": "/staff-slips-storage/staff-slips"
+          "pathPattern": "/staff-slips-storage/staff-slips",
+          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.collection.delete"]
         },
         {
           "methods": ["GET"],
-          "pathPattern": "/staff-slips-storage/staff-slips/{id}"
+          "pathPattern": "/staff-slips-storage/staff-slips/{id}",
+          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.item.get"]
         },
         {
           "methods": ["PUT"],
-          "pathPattern": "/staff-slips-storage/staff-slips/{id}"
+          "pathPattern": "/staff-slips-storage/staff-slips/{id}",
+          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.item.put"]
         },
         {
           "methods": ["DELETE"],
-          "pathPattern": "/staff-slips-storage/staff-slips/{id}"
+          "pathPattern": "/staff-slips-storage/staff-slips/{id}",
+          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.item.delete"]
         }
       ]
     },
