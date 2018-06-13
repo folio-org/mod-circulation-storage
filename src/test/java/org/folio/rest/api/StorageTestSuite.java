@@ -34,7 +34,8 @@ import static org.junit.Assert.assertThat;
   FixedDueDateApiTest.class,
   LoanPoliciesApiTest.class,
   RequestsApiTest.class,
-  LoansApiHistoryTest.class
+  LoansApiHistoryTest.class,
+  StaffSlipsApiTest.class
 })
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";
