@@ -1,3 +1,7 @@
+## 5.1.0 2018-06-15
+* Adds 'Closed - Cancelled' request status enum (CIRCSTORE-47)
+* Adds 'cancellationReason' and 'cancelledDate' properties to requests (CIRCSTORE-48)
+
 ## 5.0.1 2018-05-01
 
 * Upgrades RAML Module Builder to version 19.0.0 (CIRCSTORE-43, RMB-130)
