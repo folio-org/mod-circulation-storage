@@ -1,12 +1,14 @@
 package org.folio.rest.api;
 
-import static org.hamcrest.CoreMatchers.is;
+import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -14,19 +16,36 @@ import java.util.concurrent.TimeoutException;
 
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
+import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.StaffSlipRequestBuilder;
 import org.junit.Before;
 import org.junit.Test;
 
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 public class StaffSlipsApiTest extends ApiTests {
 	  
   private static final String TEST_STAFF_SLIP_1_NAME = "Test Staff Slip 1";
   private static final String TEST_STAFF_SLIP_1_DESCRIPTION = "Test Staff Slip 1 Description";
+  private static final String TEST_STAFF_SLIP_1_DESCRIPTION_ALTERNATE = "Test Staff Slip 1 Description Updated";
   private static final String TEST_STAFF_SLIP_1_Template = "Test Staff Slip 1 Template";
-	
+  
+  private static final String TEST_STAFF_SLIP_2_NAME = "Test Staff Slip 2";
+  private static final String TEST_STAFF_SLIP_2_DESCRIPTION = "Test Staff Slip 2 Description";
+  private static final String TEST_STAFF_SLIP_2_DESCRIPTION_ALTERNATE = "Test Staff Slip 2 Description Updated";
+  private static final String TEST_STAFF_SLIP_2_Template = "Test Staff Slip 2 Template";
+  
+  private static final String ID_KEY = "id";
+  private static final String ACTIVE_KEY = "active";
+  private static final String NAME_KEY = "name";
+  private static final String DESCRIPTON_KEY = "description";
+  private static final String TEMPLATE_KEY = "template";
+  
+  private static Logger logger = LoggerFactory.getLogger(StaffSlipsApiTest.class);
+
   @Before
   public void beforeEach()
     throws MalformedURLException {
@@ -42,35 +61,19 @@ public class StaffSlipsApiTest extends ApiTests {
     ExecutionException,
     TimeoutException {
 	  
-	  CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
-	  
-	  JsonObject creationRequest = new StaffSlipRequestBuilder()
-	    .withName(TEST_STAFF_SLIP_1_NAME)
-	    .withDescription(TEST_STAFF_SLIP_1_DESCRIPTION)
-	    .withTemplate(TEST_STAFF_SLIP_1_Template)
-	    .create();
-	  
-	  client.post(staffSlipsStorageUrl(), creationRequest, StorageTestSuite.TENANT_ID,
-		      ResponseHandler.json(createCompleted));
-	  
-	  JsonResponse creationResponse = createCompleted.get(5, TimeUnit.SECONDS);
+	  JsonResponse creationResponse = makeStaffSlip(new StaffSlipRequestBuilder()
+		.withName(TEST_STAFF_SLIP_1_NAME)
+		.withDescription(TEST_STAFF_SLIP_1_DESCRIPTION)
+		.withTemplate(TEST_STAFF_SLIP_1_Template)
+		.create());
 	  
 	  assertThat(creationResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 	  
-//	  assertThat(creationResponse.getJson().getString("id"), notNullValue());
-//	  assertThat(creationResponse.getJson().getBoolean("active"), is(true));
-//	  assertThat(creationResponse.getJson().getBoolean("name"), is(TEST_STAFF_SLIP_1_NAME));
-//	  assertThat(creationResponse.getJson().getBoolean("description"), is(TEST_STAFF_SLIP_1_DESCRIPTION));
-//	  assertThat(creationResponse.getJson().getBoolean("template"), is(TEST_STAFF_SLIP_1_Template));
-	  
-  }
-
-  @Test
-  public void canCreateAStaffSlipWithoutAnId()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+	  assertThat(creationResponse.getJson().getString(ID_KEY), notNullValue());
+	  assertThat(creationResponse.getJson().getBoolean(ACTIVE_KEY), is(true));
+	  assertThat(creationResponse.getJson().getString(NAME_KEY), is(TEST_STAFF_SLIP_1_NAME));
+	  assertThat(creationResponse.getJson().getString(DESCRIPTON_KEY), is(TEST_STAFF_SLIP_1_DESCRIPTION));
+	  assertThat(creationResponse.getJson().getString(TEMPLATE_KEY), is(TEST_STAFF_SLIP_1_Template));
 	  
   }
   
@@ -80,6 +83,12 @@ public class StaffSlipsApiTest extends ApiTests {
     InterruptedException,
     ExecutionException,
     TimeoutException {
+	  JsonResponse creationResponse = makeStaffSlip(new StaffSlipRequestBuilder()
+		.withName(null)
+		.create());
+	  
+	  assertThat(String.format("Creating the loan should fail: %s", creationResponse.getBody()),
+			  creationResponse.getStatusCode(), is(UNPROCESSABLE_ENTITY));
 	  
   }
   
@@ -90,6 +99,12 @@ public class StaffSlipsApiTest extends ApiTests {
     ExecutionException,
     TimeoutException {
 	  
+	  JsonResponse creationResponse = makeStaffSlip(new StaffSlipRequestBuilder()
+		.withActive(false)
+		.create());
+	  
+	  assertThat(creationResponse.getJson().getBoolean(ACTIVE_KEY), is(false));
+	  
   }
   
   @Test
@@ -98,6 +113,16 @@ public class StaffSlipsApiTest extends ApiTests {
     InterruptedException,
     ExecutionException,
     TimeoutException {
+	  
+	  makeStaffSlip(new StaffSlipRequestBuilder()
+		.withName(TEST_STAFF_SLIP_1_NAME)
+		.create());
+	  
+	  JsonResponse creationAttemptResponse = makeStaffSlip(new StaffSlipRequestBuilder()
+		.withName(TEST_STAFF_SLIP_1_NAME)
+		.create());
+	  
+	  assertThat(creationAttemptResponse.getStatusCode(), is(HttpURLConnection.HTTP_INTERNAL_ERROR));
 	  
   }
   
@@ -108,14 +133,19 @@ public class StaffSlipsApiTest extends ApiTests {
     ExecutionException,
     TimeoutException {
 	  
-  }
-  
-  @Test
-  public void canQueryStaffSlips()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+	  JsonResponse creationResponse = makeStaffSlip(new StaffSlipRequestBuilder().create());
+	  
+	  CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
+	  
+	  String slipId = creationResponse.getJson().getString("id");
+	  
+	  client.get(staffSlipsStorageUrl("/"+slipId), StorageTestSuite.TENANT_ID,
+			  ResponseHandler.json(getCompleted));
+	  
+	  JsonResponse getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+	  
+	  assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+	  assertThat(getResponse.getJson().getString(ID_KEY), is(slipId));
 	  
   }
   
@@ -126,6 +156,40 @@ public class StaffSlipsApiTest extends ApiTests {
     ExecutionException,
     TimeoutException {
 	  
+	  UUID slipId = UUID.randomUUID();
+	  	  
+	  JsonResponse creationResponse = makeStaffSlip(new StaffSlipRequestBuilder()
+	    .withId(slipId)
+		.withName(TEST_STAFF_SLIP_1_NAME)
+		.withDescription(TEST_STAFF_SLIP_1_DESCRIPTION)
+		.withTemplate(TEST_STAFF_SLIP_1_Template)
+		.create());
+		  
+	  assertThat(String.format("%s", creationResponse.getBody()),creationResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+	  
+	  CompletableFuture<Response> putCompleted = new CompletableFuture<>();
+	  
+	  JsonObject updatedSlip = new StaffSlipRequestBuilder()
+		.withId(slipId)
+	    .withName(TEST_STAFF_SLIP_1_NAME)
+		.withDescription(TEST_STAFF_SLIP_1_DESCRIPTION_ALTERNATE)
+		.create();
+	  	  
+	  client.put(staffSlipsStorageUrl("/"+slipId), updatedSlip, 
+			  StorageTestSuite.TENANT_ID, ResponseHandler.empty(putCompleted));
+	  
+	  Response putReponse = putCompleted.get(5, TimeUnit.SECONDS);
+	  
+	  CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
+	  
+	  client.get(staffSlipsStorageUrl("/"+slipId), StorageTestSuite.TENANT_ID, 
+	    ResponseHandler.json(getCompleted));
+	  
+	  JsonResponse getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+	  
+	  assertThat(putReponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+	  assertThat(getResponse.getJson().getString(DESCRIPTON_KEY), is(TEST_STAFF_SLIP_1_DESCRIPTION_ALTERNATE));
+	   
   }
   
   @Test
@@ -135,15 +199,39 @@ public class StaffSlipsApiTest extends ApiTests {
     ExecutionException,
     TimeoutException {
 	  
+	  UUID slipId = UUID.randomUUID();
+	  
+	  makeStaffSlip(new StaffSlipRequestBuilder()
+	    .withId(slipId)
+		.withName(TEST_STAFF_SLIP_1_NAME)
+		.withDescription(TEST_STAFF_SLIP_1_DESCRIPTION)
+		.withTemplate(TEST_STAFF_SLIP_1_Template)
+		.create());
+	  
+	  CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
+	  
+	  client.delete(staffSlipsStorageUrl("/"+slipId), StorageTestSuite.TENANT_ID, ResponseHandler.empty(deleteCompleted));
+	  
+	  Response deleteReponse = deleteCompleted.get(5, TimeUnit.SECONDS);
+	  
+	  CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
+	  
+	  client.get(staffSlipsStorageUrl("/"+slipId), StorageTestSuite.TENANT_ID, 
+	    ResponseHandler.json(getCompleted));
+	  
+	  JsonResponse getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+
+	  assertThat(deleteReponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+	  assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
   
-  @Test
-  public void canDeleteAllStaffSlips()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  private JsonResponse makeStaffSlip(JsonObject staffSlipJson) throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+	  CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 	  
+	  client.post(staffSlipsStorageUrl(), staffSlipJson, StorageTestSuite.TENANT_ID,
+		      ResponseHandler.json(createCompleted));
+	  
+	  return createCompleted.get(5, TimeUnit.SECONDS);
   }
   
   private URL staffSlipsStorageUrl() throws MalformedURLException {

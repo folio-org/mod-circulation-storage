@@ -133,7 +133,7 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 
 		ImmutablePair<Boolean, String> validationResult = validateStaffSlip(entity);
 
-		if (validationResult.getLeft()) {
+		if (!validationResult.getLeft()) {
 			asyncResultHandler
 					.handle(Future.succeededFuture(StaffSlipsStorageResource.PostStaffSlipsStorageStaffSlipsResponse
 							.withPlainBadRequest(validationResult.getRight())));
@@ -272,7 +272,7 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 
 		ImmutablePair<Boolean, String> validationResult = validateStaffSlip(entity);
 
-		if (validationResult.getLeft()) {
+		if (!validationResult.getLeft()) {
 			asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
 					LoanStorageResource.PostLoanStorageLoansResponse.withPlainBadRequest(validationResult.getRight())));
 

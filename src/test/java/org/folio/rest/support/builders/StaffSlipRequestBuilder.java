@@ -64,6 +64,15 @@ public class StaffSlipRequestBuilder {
 
     return request;
   }
+  
+  public StaffSlipRequestBuilder withId(UUID id) {
+	    return new StaffSlipRequestBuilder(
+	      id,
+	      this.name,
+	      this.description, 
+	      this.active,
+	      this.template);
+	  }
 
   public StaffSlipRequestBuilder withName(String name) {
 	    return new StaffSlipRequestBuilder(
