@@ -11,6 +11,9 @@ documentation:
 schemas:
   - staff-slips: !include staff-slips.json
   - staff-slip.json: !include staff-slip.json
+  - errors: !include raml-util/schemas/errors.schema
+  - error.schema: !include raml-util/schemas/error.schema
+  - parameters.schema: !include raml-util/schemas/parameters.schema
   - raml-util/schemas/metadata.schema: !include raml-util/schemas/metadata.schema
 
 traits:
@@ -34,9 +37,9 @@ resourceTypes:
         schemaCollection: staff-slips
         schemaItem: staff-slip.json
     get:
-      is: [
-        pageable,
-        searchable: {description: "searchable using CQL", example: "requesterId=\"cf23adf0-61ba-4887-bf82-956c4aae2260\""},
+      is: [pageable,
+        searchable: {description: "searchable using CQL", 
+          example: "id=\"6406fd34-9ae3-46f8-aca3-bf07455635ea\""},
       ]
       responses:
         501:
