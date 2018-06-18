@@ -121,27 +121,27 @@
         {
           "methods": ["GET"],
           "pathPattern": "/fixed-due-date-schedule-storage/fixed-due-date-schedules",
-          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.collection.get"]
+          "permissionsRequired": ["circulation-storage.staff-slips.collection.get"]
         }, {
           "methods": ["GET"],
           "pathPattern": "/fixed-due-date-schedule-storage/fixed-due-date-schedules/{id}",
-          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.item.get"]
+          "permissionsRequired": ["circulation-storage.staff-slips.item.get"]
         }, {
           "methods": ["POST"],
           "pathPattern": "/fixed-due-date-schedule-storage/fixed-due-date-schedules",
-          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.item.post"]
+          "permissionsRequired": ["circulation-storage.staff-slips.item.post"]
         }, {
           "methods": ["PUT"],
           "pathPattern": "/fixed-due-date-schedule-storage/fixed-due-date-schedules/{id}",
-          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.item.put"]
+          "permissionsRequired": ["circulation-storage.staff-slips.item.put"]
         }, {
           "methods": ["DELETE"],
           "pathPattern": "/fixed-due-date-schedule-storage/fixed-due-date-schedules/{id}",
-          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.item.delete"]
+          "permissionsRequired": ["circulation-storage.staff-slips.item.delete"]
         }, {
           "methods": ["DELETE"],
           "pathPattern": "/fixed-due-date-schedule-storage/fixed-due-date-schedules",
-          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.collection.delete"]
+          "permissionsRequired": ["circulation-storage.staff-slips.collection.delete"]
         }
       ]
     },
@@ -152,32 +152,32 @@
         {
           "methods": ["GET"],
           "pathPattern": "/staff-slips-storage/staff-slips",
-          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.collection.get"]
+          "permissionsRequired": ["circulation-storage.staff-slips.collection.get"]
         },
         {
           "methods": ["POST"],
           "pathPattern": "/staff-slips-storage/staff-slips",
-          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.item.create"]
+          "permissionsRequired": ["circulation-storage.staff-slips.item.create"]
         },
         {
           "methods": ["DELETE"],
           "pathPattern": "/staff-slips-storage/staff-slips",
-          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.collection.delete"]
+          "permissionsRequired": ["circulation-storage.staff-slips.collection.delete"]
         },
         {
           "methods": ["GET"],
           "pathPattern": "/staff-slips-storage/staff-slips/{id}",
-          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.item.get"]
+          "permissionsRequired": ["circulation-storage.staff-slips.item.get"]
         },
         {
           "methods": ["PUT"],
           "pathPattern": "/staff-slips-storage/staff-slips/{id}",
-          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.item.put"]
+          "permissionsRequired": ["circulation-storage.staff-slips.item.put"]
         },
         {
           "methods": ["DELETE"],
           "pathPattern": "/staff-slips-storage/staff-slips/{id}",
-          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.item.delete"]
+          "permissionsRequired": ["circulation-storage.staff-slips.item.delete"]
         }
       ]
     },
