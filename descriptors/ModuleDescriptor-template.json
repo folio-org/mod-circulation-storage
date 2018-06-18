@@ -397,10 +397,9 @@
         "circulation-storage.staff-slips.item.delete",
         "circulation-storage.staff-slips.collection.delete",
         "circulation-storage.staff-slips.collection.get",
-        "circulation-storage.staff-slips.item.put",
         "circulation-storage.staff-slips.collection.post",
-        "circulation-storage.staff-slips.item.get",
-        "circulation-storage.staff-slips.collection.get"        
+        "circulation-storage.staff-slips.item.put",
+        "circulation-storage.staff-slips.item.get"      
       ]
     }
   ],
