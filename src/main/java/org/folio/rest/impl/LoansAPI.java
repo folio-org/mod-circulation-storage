@@ -547,6 +547,7 @@ public class LoansAPI implements LoanStorageResource {
           String[] fieldList = {"*"};
           CQLWrapper cql = null;
           String adjustedQuery = null;
+          CQL2PgJSON cql2pgJson = new CQL2PgJSON(LOAN_HISTORY_TABLE+".jsonb");
           if(query != null){
             //a bit of a hack, assume that <space>sortBy<space>
             //is a sort request that is received as part of the cql , and hence pass
