@@ -566,9 +566,9 @@ public class LoansAPI implements LoanStorageResource {
             }
             System.out.println("CQL Query: " + cql.toString());
           } else {
-            int defaultLimit = 10;
             cql = new CQLWrapper(cql2pgJson, query)
-                  .setLimit(new Limit(defaultLimit));
+                  .setLimit(new Limit(limit))
+                  .setOffset(new Offset(offset));
             adjustedQuery = cql.toString();
           }
           
