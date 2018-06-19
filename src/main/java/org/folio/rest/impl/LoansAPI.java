@@ -565,8 +565,13 @@ public class LoansAPI implements LoanStorageResource {
               adjustedQuery = cql.toString();
             }
             System.out.println("CQL Query: " + cql.toString());
+          } else {
+            int defaultLimit = 10;
+            cql = new CQLWrapper(cql2pgJson, query)
+                  .setLimit(new Limit(defaultLimit));
+            adjustedQuery = cql.toString();
           }
-
+          
           postgresClient.get(LOAN_HISTORY_TABLE, LOAN_CLASS, fieldList, adjustedQuery,
             true, false, reply -> {
               try {
