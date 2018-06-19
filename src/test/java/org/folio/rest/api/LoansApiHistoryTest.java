@@ -246,6 +246,7 @@ public class LoansApiHistoryTest extends ApiTests {
     CompletableFuture<TextResponse> delete = new CompletableFuture<>();
     CompletableFuture<JsonResponse> getDefaultLimit = new CompletableFuture<>();
 
+    ///////////////get loan-history using default limit//////////////////////
     client.get(loanStorageHistoryUrl(), StorageTestSuite.TENANT_ID, 
     		ResponseHandler.json(getDefaultLimit));
     
