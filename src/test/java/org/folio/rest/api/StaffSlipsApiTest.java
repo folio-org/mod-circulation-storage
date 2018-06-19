@@ -23,8 +23,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 public class StaffSlipsApiTest extends ApiTests {
 
@@ -33,18 +31,11 @@ public class StaffSlipsApiTest extends ApiTests {
 	private static final String TEST_STAFF_SLIP_1_DESCRIPTION_ALTERNATE = "Test Staff Slip 1 Description Updated";
 	private static final String TEST_STAFF_SLIP_1_Template = "Test Staff Slip 1 Template";
 
-	private static final String TEST_STAFF_SLIP_2_NAME = "Test Staff Slip 2";
-	private static final String TEST_STAFF_SLIP_2_DESCRIPTION = "Test Staff Slip 2 Description";
-	private static final String TEST_STAFF_SLIP_2_DESCRIPTION_ALTERNATE = "Test Staff Slip 2 Description Updated";
-	private static final String TEST_STAFF_SLIP_2_Template = "Test Staff Slip 2 Template";
-
 	private static final String ID_KEY = "id";
 	private static final String ACTIVE_KEY = "active";
 	private static final String NAME_KEY = "name";
 	private static final String DESCRIPTON_KEY = "description";
 	private static final String TEMPLATE_KEY = "template";
-
-	private static Logger logger = LoggerFactory.getLogger(StaffSlipsApiTest.class);
 
 	@Before
 	public void beforeEach() throws MalformedURLException {
@@ -111,7 +102,7 @@ public class StaffSlipsApiTest extends ApiTests {
 
 		CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
 
-		String slipId = creationResponse.getJson().getString("id");
+		String slipId = creationResponse.getJson().getString(ID_KEY);
 
 		client.get(staffSlipsStorageUrl("/" + slipId), StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
 
@@ -119,6 +110,30 @@ public class StaffSlipsApiTest extends ApiTests {
 
 		assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
 		assertThat(getResponse.getJson().getString(ID_KEY), is(slipId));
+
+	}
+
+	@Test
+	public void canQueryStaffSlip()
+			throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+
+		JsonResponse creationResponse = makeStaffSlip(new StaffSlipRequestBuilder().create());
+
+		CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
+
+		String slipId = creationResponse.getJson().getString(ID_KEY);
+		String slipName = creationResponse.getJson().getString(NAME_KEY);
+
+		URL path = staffSlipsStorageUrl(String.format("?query=%s=\"%s\"", NAME_KEY, slipName));
+
+		System.out.println("\n\n" + path + "\n\n");
+
+		client.get(path, StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
+
+		JsonResponse getResponse = getCompleted.get(10, TimeUnit.SECONDS);
+
+		assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+		assertThat(getResponse.getJson().getString(NAME_KEY), is(slipName));
 
 	}
 
