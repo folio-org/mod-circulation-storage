@@ -22,6 +22,7 @@ import org.folio.rest.support.builders.StaffSlipRequestBuilder;
 import org.junit.Before;
 import org.junit.Test;
 
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 public class StaffSlipsApiTest extends ApiTests {
@@ -122,18 +123,18 @@ public class StaffSlipsApiTest extends ApiTests {
 		CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
 
 		String slipId = creationResponse.getJson().getString(ID_KEY);
-		String slipName = creationResponse.getJson().getString(NAME_KEY);
 
-		URL path = staffSlipsStorageUrl(String.format("?query=%s=\"%s\"", NAME_KEY, slipName));
-
-		System.out.println("\n\n" + path + "\n\n");
+		URL path = staffSlipsStorageUrl(String.format("?query=%s==\"%s\"", ID_KEY, slipId));
 
 		client.get(path, StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
 
 		JsonResponse getResponse = getCompleted.get(10, TimeUnit.SECONDS);
 
 		assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-		assertThat(getResponse.getJson().getString(NAME_KEY), is(slipName));
+
+		JsonArray slipsJsonArray = getResponse.getJson().getJsonArray("staffSlips");
+
+		assertThat(slipsJsonArray.getJsonObject(0).getString(ID_KEY), is(slipId));
 
 	}
 

@@ -80,7 +80,7 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 
 			String[] fieldList = { "*" };
 
-			CQL2PgJSON cql2pgJson = new CQL2PgJSON("staffslip.jsonb");
+			CQL2PgJSON cql2pgJson = new CQL2PgJSON(STAFF_SLIP_TABLE + ".jsonb");
 			CQLWrapper cql = new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
 
 			postgresClient.get(STAFF_SLIP_TABLE, STAFF_SLIP_CLASS, fieldList, cql, true, false, reply -> {
