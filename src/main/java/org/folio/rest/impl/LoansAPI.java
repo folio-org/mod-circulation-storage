@@ -554,7 +554,6 @@ public class LoansAPI implements LoanStorageResource {
             //the cql as is. If no sorting is requested, sort by created_date column
             //in the loan history table which represents the date the entry was created
             //aka the date an action was made on the loan
-            CQL2PgJSON cql2pgJson = new CQL2PgJSON(LOAN_HISTORY_TABLE+".jsonb");
             if(!query.contains(" sortBy ")){
               cql = new CQLWrapper(cql2pgJson, query);
               adjustedQuery = cql.toString() + " order by created_date desc ";
