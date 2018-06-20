@@ -1,3 +1,7 @@
+## 5.1.0 2018-06-20
+
+* Provides `staff-slips-storage` interface 1.0 (CIRCSTORE-52)
+
 ## 5.0.1 2018-05-01
 
 * Upgrades RAML Module Builder to version 19.0.0 (CIRCSTORE-43, RMB-130)
