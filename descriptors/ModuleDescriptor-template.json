@@ -121,27 +121,27 @@
         {
           "methods": ["GET"],
           "pathPattern": "/fixed-due-date-schedule-storage/fixed-due-date-schedules",
-          "permissionsRequired": ["circulation-storage.staff-slips.collection.get"]
+          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.collection.get"]
         }, {
           "methods": ["GET"],
           "pathPattern": "/fixed-due-date-schedule-storage/fixed-due-date-schedules/{id}",
-          "permissionsRequired": ["circulation-storage.staff-slips.item.get"]
+          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.item.get"]
         }, {
           "methods": ["POST"],
           "pathPattern": "/fixed-due-date-schedule-storage/fixed-due-date-schedules",
-          "permissionsRequired": ["circulation-storage.staff-slips.item.post"]
+          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.item.post"]
         }, {
           "methods": ["PUT"],
           "pathPattern": "/fixed-due-date-schedule-storage/fixed-due-date-schedules/{id}",
-          "permissionsRequired": ["circulation-storage.staff-slips.item.put"]
+          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.item.put"]
         }, {
           "methods": ["DELETE"],
           "pathPattern": "/fixed-due-date-schedule-storage/fixed-due-date-schedules/{id}",
-          "permissionsRequired": ["circulation-storage.staff-slips.item.delete"]
+          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.item.delete"]
         }, {
           "methods": ["DELETE"],
           "pathPattern": "/fixed-due-date-schedule-storage/fixed-due-date-schedules",
-          "permissionsRequired": ["circulation-storage.staff-slips.collection.delete"]
+          "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.collection.delete"]
         }
       ]
     },
@@ -157,7 +157,7 @@
         {
           "methods": ["POST"],
           "pathPattern": "/staff-slips-storage/staff-slips",
-          "permissionsRequired": ["circulation-storage.staff-slips.item.create"]
+          "permissionsRequired": ["circulation-storage.staff-slips.item.post"]
         },
         {
           "methods": ["DELETE"],
@@ -340,27 +340,27 @@
     {
       "permissionName": "circulation-storage.staff-slips.collection.delete",
       "displayName": "Circulation storage - delete entire staff slipp collection",
-      "description": "Delete entire staff slipp collection"
+      "description": "Delete entire staff slip collection"
     },
     {
       "permissionName": "circulation-storage.staff-slips.collection.post",
       "displayName": "Circulation storage - create indavidual staff slip in storage",
-      "description": "Create indavidual staff slip in storage"
+      "description": "Create individual staff slip in storage"
     },
     {
       "permissionName": "circulation-storage.staff-slips.item.get",
       "displayName": "Circulation storage - get indavidual staff slip from storage",
-      "description": "Get indavidual staff slip from storage"
+      "description": "Get individual staff slip from storage"
     },
     {
       "permissionName": "circulation-storage.staff-slips.item.delete",
       "displayName": "Circulation storage - delete indavidual staff slip from storage",
-      "description": "Delete indavidual staff slip from storage"
+      "description": "Delete individual staff slip from storage"
     },
     {
       "permissionName": "circulation-storage.staff-slips.item.put",
       "displayName": "Circulation storage - modify indavidual staff slip in storage",
-      "description": "Modify indavidual staff slip in storage"
+      "description": "Modify individual staff slip in storage"
     },
     {
       "permissionName": "circulation-storage.all",
@@ -397,7 +397,7 @@
         "circulation-storage.staff-slips.item.delete",
         "circulation-storage.staff-slips.collection.delete",
         "circulation-storage.staff-slips.collection.get",
-        "circulation-storage.staff-slips.collection.post",
+        "circulation-storage.staff-slips.item.post",
         "circulation-storage.staff-slips.item.put",
         "circulation-storage.staff-slips.item.get"      
       ]
