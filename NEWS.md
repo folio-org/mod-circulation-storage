@@ -1,3 +1,6 @@
+## 5.0.2 2018-06-20
+* For loan-history end-point: Allows limit/offset to set by default when query is null
+
 ## 5.0.1 2018-05-01
 
 * Upgrades RAML Module Builder to version 19.0.0 (CIRCSTORE-43, RMB-130)
