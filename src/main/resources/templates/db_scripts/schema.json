@@ -43,6 +43,20 @@
       ]
     },
     {
+      "tableName": "cancellation_reason",
+      "generateId": false,
+      "pkColumnName": "_id",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD",
+          "caseSensitive": false
+        }
+      ]
+    },
+    {
       "tableName": "loan_policy",
       "generateId": false,
       "pkColumnName": "_id",
