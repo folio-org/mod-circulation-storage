@@ -343,7 +343,7 @@
       "description": "Delete entire staff slip collection"
     },
     {
-      "permissionName": "circulation-storage.staff-slips.collection.post",
+      "permissionName": "circulation-storage.staff-slips.item.post",
       "displayName": "Circulation storage - create indavidual staff slip in storage",
       "description": "Create individual staff slip in storage"
     },
