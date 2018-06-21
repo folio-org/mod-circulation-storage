@@ -1,4 +1,4 @@
-## 5.1.0 2018-06-20
+## 5.1.0 Unreleased
 
 * Provides `staff-slips-storage` interface 1.0 (CIRCSTORE-52)
 
