@@ -247,6 +247,8 @@ public class CancellationReasonsApiTest extends ApiTests {
     JsonResponse response = getCancellationReasonCollection("description=*burnt");
     assertTrue(response.getJson().containsKey("totalRecords"));
     assertTrue(response.getJson().getInteger("totalRecords").equals(1));
+    assertEquals(response.getJson().getJsonArray("cancellationReasons")
+        .getJsonObject(0).getString("name"), "fire");
   }
   
   @Test
