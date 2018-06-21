@@ -424,7 +424,12 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 
 		if (staffSlip.getName() == null || staffSlip.getName().equals("")) {
 			valid = false;
-			messages.add("Name must be a valid string");
+			messages.add("Name is a required property");
+		}
+
+		if (staffSlip.getTemplate() == null || staffSlip.getTemplate().equals("")) {
+			valid = false;
+			messages.add("Template is a required property");
 		}
 
 		return new ImmutablePair<>(valid, messages.toString());
