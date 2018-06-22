@@ -85,6 +85,7 @@ public class RequestsApiTest extends ApiTests {
       .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
       .withProxy("Stuart", "Rebecca", "6059539205")
       .withStatus(OPEN_NOT_YET_FILLED)
+      .withPosition(1)
       .create();
 
     client.post(requestStorageUrl(),
@@ -108,6 +109,7 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getString("requestExpirationDate"), is("2017-07-30"));
     assertThat(representation.getString("holdShelfExpirationDate"), is("2017-08-31"));
     assertThat(representation.getString("status"), is(OPEN_NOT_YET_FILLED));
+    assertThat(representation.getInteger("position"), is(1));
 
     assertThat(representation.containsKey("item"), is(true));
     assertThat(representation.getJsonObject("item").getString("title"), is("Nod"));
@@ -460,6 +462,7 @@ public class RequestsApiTest extends ApiTests {
       .toHoldShelf()
       .withItem("Nod", "565578437802")
       .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
+      .withPosition(1)
       .create();
 
     createRequest(createRequestRequest);
@@ -478,6 +481,7 @@ public class RequestsApiTest extends ApiTests {
       .copy()
       .put("requesterId", newRequesterId.toString())
       .put("proxyUserId", proxyId.toString())
+      .put("position", 2)
       .put("requester", new JsonObject()
         .put("lastName", "Smith")
         .put("firstName", "Jessica")
@@ -513,6 +517,7 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
     assertThat(representation.getString("requestExpirationDate"), is("2017-07-30"));
     assertThat(representation.getString("holdShelfExpirationDate"), is("2017-08-31"));
+    assertThat(representation.getInteger("position"), is(2));
 
     assertThat(representation.containsKey("item"), is(true));
     assertThat(representation.getJsonObject("item").getString("title"), is("Nod"));
@@ -766,6 +771,7 @@ public class RequestsApiTest extends ApiTests {
       .withHoldShelfExpiration(new LocalDate(2017, 8, 31))
       .withItem("Nod", "565578437802")
       .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
+      .withPosition(3)
       .create();
 
     createRequest(requestRequest);
@@ -785,6 +791,7 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
     assertThat(representation.getString("requestExpirationDate"), is("2017-07-30"));
     assertThat(representation.getString("holdShelfExpirationDate"), is("2017-08-31"));
+    assertThat(representation.getInteger("position"), is(3));
 
     assertThat(representation.containsKey("item"), is(true));
     assertThat(representation.getJsonObject("item").getString("title"), is("Nod"));
