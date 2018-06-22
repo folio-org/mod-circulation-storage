@@ -3,7 +3,6 @@ package org.folio.rest.impl;
 import com.github.mauricio.async.db.postgresql.exceptions.GenericDatabaseException;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -31,6 +30,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
 public class RequestsAPI implements RequestStorageResource {
@@ -53,11 +53,11 @@ public class RequestsAPI implements RequestStorageResource {
 
         postgresClient.mutate(String.format("TRUNCATE TABLE %s_%s.%s",
           tenantId, "mod_circulation_storage", REQUEST_TABLE),
-          reply -> asyncResultHandler.handle(Future.succeededFuture(
+          reply -> asyncResultHandler.handle(succeededFuture(
             DeleteRequestStorageRequestsResponse.withNoContent())));
       }
       catch(Exception e) {
-        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+        asyncResultHandler.handle(succeededFuture(
           DeleteRequestStorageRequestsResponse
             .withPlainInternalServerError(e.getMessage())));
       }
@@ -76,7 +76,7 @@ public class RequestsAPI implements RequestStorageResource {
 
     Consumer<Exception> exceptionHandler = e -> {
       log.error("Getting requests failed", e);
-      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+      asyncResultHandler.handle(succeededFuture(
         GetRequestStorageRequestsByRequestIdResponse.
           withPlainInternalServerError(e.getMessage())));
     };
@@ -110,11 +110,11 @@ public class RequestsAPI implements RequestStorageResource {
                   pagedRequests.setRequests(requests);
                   pagedRequests.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
 
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                  asyncResultHandler.handle(succeededFuture(
                     GetRequestStorageRequestsResponse.withJsonOK(pagedRequests)));
                 }
                 else {
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                  asyncResultHandler.handle(succeededFuture(
                     LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
                       withPlainInternalServerError(reply.cause().getMessage())));
                 }
@@ -159,40 +159,37 @@ public class RequestsAPI implements RequestStorageResource {
                   OutStream stream = new OutStream();
                   stream.setData(entity);
 
-                  asyncResultHandler.handle(
-                    io.vertx.core.Future.succeededFuture(
+                  asyncResultHandler.handle(succeededFuture(
                       PostRequestStorageRequestsResponse
                         .withJsonCreated(reply.result(), stream)));
                 }
                 else {
                   if(isSamePositionInQueueError(reply)) {
-                    asyncResultHandler.handle(
-                      io.vertx.core.Future.succeededFuture(RequestStorageResource.PostRequestStorageRequestsResponse
+                    asyncResultHandler.handle(succeededFuture(
+                      PostRequestStorageRequestsResponse
                         .withJsonUnprocessableEntity(samePositionInQueueError(entity))));
                   }
                   else {
-                    asyncResultHandler.handle(
-                      io.vertx.core.Future.succeededFuture(
-                        PostRequestStorageRequestsResponse
-                          .withPlainInternalServerError(reply.cause().toString())));
+                    asyncResultHandler.handle(succeededFuture(
+                      PostRequestStorageRequestsResponse
+                        .withPlainInternalServerError(reply.cause().toString())));
                   }
                 }
               } catch (Exception e) {
-                asyncResultHandler.handle(
-                  io.vertx.core.Future.succeededFuture(
-                    PostRequestStorageRequestsResponse
-                      .withPlainInternalServerError(e.getMessage())));
+                asyncResultHandler.handle(succeededFuture(
+                  PostRequestStorageRequestsResponse
+                    .withPlainInternalServerError(e.getMessage())));
               }
             });
         } catch (Exception e) {
-          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+          asyncResultHandler.handle(succeededFuture(
             PostRequestStorageRequestsResponse
               .withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-        LoanPolicyStorageResource.PostLoanPolicyStorageLoanPoliciesResponse
+      asyncResultHandler.handle(succeededFuture(
+        PostRequestStorageRequestsResponse
           .withPlainInternalServerError(e.getMessage())));
     }
   }
@@ -207,7 +204,7 @@ public class RequestsAPI implements RequestStorageResource {
 
     Consumer<Exception> exceptionHandler = e -> {
       log.error("Getting request by ID failed", e);
-      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+      asyncResultHandler.handle(succeededFuture(
         GetRequestStorageRequestsByRequestIdResponse.
           withPlainInternalServerError(e.getMessage())));
     };
@@ -237,22 +234,19 @@ public class RequestsAPI implements RequestStorageResource {
                   if (requests.size() == 1) {
                     Request request = requests.get(0);
 
-                    asyncResultHandler.handle(
-                      io.vertx.core.Future.succeededFuture(
-                        GetRequestStorageRequestsByRequestIdResponse.
-                          withJsonOK(request)));
+                    asyncResultHandler.handle(succeededFuture(
+                      GetRequestStorageRequestsByRequestIdResponse.
+                        withJsonOK(request)));
                   }
                   else {
-                    asyncResultHandler.handle(
-                      Future.succeededFuture(
-                        GetRequestStorageRequestsByRequestIdResponse.
-                          withPlainNotFound("Not Found")));
+                    asyncResultHandler.handle(succeededFuture(
+                      GetRequestStorageRequestsByRequestIdResponse.
+                        withPlainNotFound("Not Found")));
                   }
                 } else {
-                  asyncResultHandler.handle(
-                    Future.succeededFuture(
-                        GetRequestStorageRequestsByRequestIdResponse.
-                        withPlainInternalServerError(reply.cause().getMessage())));
+                  asyncResultHandler.handle(succeededFuture(
+                    GetRequestStorageRequestsByRequestIdResponse.
+                      withPlainInternalServerError(reply.cause().getMessage())));
 
                 }
               } catch (Exception e) {
@@ -296,25 +290,24 @@ public class RequestsAPI implements RequestStorageResource {
           postgresClient.delete(REQUEST_TABLE, criterion,
             reply -> {
               if(reply.succeeded()) {
-                asyncResultHandler.handle(
-                  Future.succeededFuture(
-                    DeleteRequestStorageRequestsByRequestIdResponse
-                      .withNoContent()));
+                asyncResultHandler.handle(succeededFuture(
+                  DeleteRequestStorageRequestsByRequestIdResponse
+                    .withNoContent()));
               }
               else {
-                asyncResultHandler.handle(Future.succeededFuture(
+                asyncResultHandler.handle(succeededFuture(
                   DeleteRequestStorageRequestsByRequestIdResponse
                     .withPlainInternalServerError(reply.cause().getMessage())));
               }
             });
         } catch (Exception e) {
-          asyncResultHandler.handle(Future.succeededFuture(
+          asyncResultHandler.handle(succeededFuture(
             DeleteRequestStorageRequestsByRequestIdResponse
               .withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      asyncResultHandler.handle(Future.succeededFuture(
+      asyncResultHandler.handle(succeededFuture(
         DeleteRequestStorageRequestsByRequestIdResponse
           .withPlainInternalServerError(e.getMessage())));
     }
@@ -360,32 +353,29 @@ public class RequestsAPI implements RequestStorageResource {
                             OutStream stream = new OutStream();
                             stream.setData(entity);
 
-                            asyncResultHandler.handle(
-                              Future.succeededFuture(
-                                PutRequestStorageRequestsByRequestIdResponse
-                                  .withNoContent()));
+                            asyncResultHandler.handle(succeededFuture(
+                              PutRequestStorageRequestsByRequestIdResponse
+                                .withNoContent()));
                           }
                           else {
                             if (isSamePositionInQueueError(update)) {
-                              asyncResultHandler.handle(
-                                io.vertx.core.Future.succeededFuture(PutRequestStorageRequestsByRequestIdResponse
+                              asyncResultHandler.handle(succeededFuture(
+                                PutRequestStorageRequestsByRequestIdResponse
                                   .withJsonUnprocessableEntity(samePositionInQueueError(entity))));
                             } else {
-                              asyncResultHandler.handle(
-                                io.vertx.core.Future.succeededFuture(
-                                  PutRequestStorageRequestsByRequestIdResponse
-                                    .withPlainInternalServerError(reply.cause().toString())));
+                              asyncResultHandler.handle(succeededFuture(
+                                PutRequestStorageRequestsByRequestIdResponse
+                                  .withPlainInternalServerError(reply.cause().toString())));
                             }
                           }
                         } catch (Exception e) {
-                          asyncResultHandler.handle(
-                            Future.succeededFuture(
-                              PutRequestStorageRequestsByRequestIdResponse
-                                .withPlainInternalServerError(e.getMessage())));
+                          asyncResultHandler.handle(succeededFuture(
+                            PutRequestStorageRequestsByRequestIdResponse
+                              .withPlainInternalServerError(e.getMessage())));
                         }
                       });
                   } catch (Exception e) {
-                    asyncResultHandler.handle(Future.succeededFuture(
+                    asyncResultHandler.handle(succeededFuture(
                       PutRequestStorageRequestsByRequestIdResponse
                         .withPlainInternalServerError(e.getMessage())));
                   }
@@ -399,50 +389,47 @@ public class RequestsAPI implements RequestStorageResource {
                             OutStream stream = new OutStream();
                             stream.setData(entity);
 
-                            asyncResultHandler.handle(
-                              Future.succeededFuture(
-                                PutRequestStorageRequestsByRequestIdResponse
-                                  .withNoContent()));
+                            asyncResultHandler.handle(succeededFuture(
+                              PutRequestStorageRequestsByRequestIdResponse
+                                .withNoContent()));
                           }
                           else {
                             if (isSamePositionInQueueError(save)) {
-                              asyncResultHandler.handle(
-                                io.vertx.core.Future.succeededFuture(PutRequestStorageRequestsByRequestIdResponse
+                              asyncResultHandler.handle(succeededFuture(
+                                PutRequestStorageRequestsByRequestIdResponse
                                   .withJsonUnprocessableEntity(samePositionInQueueError(entity))));
                             } else {
-                              asyncResultHandler.handle(
-                                io.vertx.core.Future.succeededFuture(
-                                  PutRequestStorageRequestsByRequestIdResponse
-                                    .withPlainInternalServerError(reply.cause().toString())));
+                              asyncResultHandler.handle(succeededFuture(
+                                PutRequestStorageRequestsByRequestIdResponse
+                                  .withPlainInternalServerError(reply.cause().toString())));
                             }
                           }
                         } catch (Exception e) {
-                          asyncResultHandler.handle(
-                            Future.succeededFuture(
-                              PutRequestStorageRequestsByRequestIdResponse
-                                .withPlainInternalServerError(e.getMessage())));
+                          asyncResultHandler.handle(succeededFuture(
+                            PutRequestStorageRequestsByRequestIdResponse
+                              .withPlainInternalServerError(e.getMessage())));
                         }
                       });
                   } catch (Exception e) {
-                    asyncResultHandler.handle(Future.succeededFuture(
+                    asyncResultHandler.handle(succeededFuture(
                       PutRequestStorageRequestsByRequestIdResponse
                         .withPlainInternalServerError(e.getMessage())));
                   }
                 }
               } else {
-                asyncResultHandler.handle(Future.succeededFuture(
+                asyncResultHandler.handle(succeededFuture(
                   PutRequestStorageRequestsByRequestIdResponse
                     .withPlainInternalServerError(reply.cause().getMessage())));
               }
             });
         } catch (Exception e) {
-          asyncResultHandler.handle(Future.succeededFuture(
+          asyncResultHandler.handle(succeededFuture(
             PutRequestStorageRequestsByRequestIdResponse
               .withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      asyncResultHandler.handle(Future.succeededFuture(
+      asyncResultHandler.handle(succeededFuture(
         PutRequestStorageRequestsByRequestIdResponse
           .withPlainInternalServerError(e.getMessage())));
     }
