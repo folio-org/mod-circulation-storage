@@ -89,6 +89,20 @@
       "withMetadata": false,
       "withAuditing": false,
       "customSnippetPath": "insertEmptyLoanRulesRecord.sql"
+    },
+    {
+      "tableName": "staff_slips",
+      "generateId": false,
+      "pkColumnName": "_id",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD",
+          "caseSensitive": false
+        }
+      ]
     }
   ]
 }

@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "staffSlips": {
+      "id": "staffSlips",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "staff-slip.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "staffSlips",
+    "totalRecords"
+  ]
+}
