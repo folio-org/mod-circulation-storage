@@ -14,29 +14,32 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import static org.folio.rest.api.FixedDueDateApiTest.dueDateURL;
-import static org.folio.rest.api.LoanPoliciesApiTest.loanPolicyStorageUrl;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
-import static org.hamcrest.core.Is.is;
 import org.hamcrest.junit.MatcherAssert;
-import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
-import static org.folio.rest.api.FixedDueDateApiTest.dueDateURL;
-import static org.folio.rest.api.LoanPoliciesApiTest.loanPolicyStorageUrl;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertTrue;
-import static org.folio.rest.api.FixedDueDateApiTest.dueDateURL;
-import static org.folio.rest.api.LoanPoliciesApiTest.loanPolicyStorageUrl;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertTrue;
-import static org.folio.rest.api.FixedDueDateApiTest.dueDateURL;
-import static org.folio.rest.api.LoanPoliciesApiTest.loanPolicyStorageUrl;
-import org.folio.rest.support.Response;
+import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
 import org.folio.rest.support.TextResponse;
+import org.folio.rest.support.builders.RequestRequestBuilder;
+import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET_FILLED;
+import static org.hamcrest.core.Is.is;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -46,11 +49,6 @@ import static org.junit.Assert.assertTrue;
  * @author kurt
  */
 public class CancellationReasonsApiTest extends ApiTests {
-  @Before
-  public void beforeEach()
-    throws MalformedURLException {
-    StorageTestSuite.deleteAll(cancelReasonURL());
-  }
   
   protected static URL cancelReasonURL() throws MalformedURLException {
     return cancelReasonURL("");
@@ -71,7 +69,8 @@ public class CancellationReasonsApiTest extends ApiTests {
 
     JsonResponse response = createCancellationReason(request);
     
-    MatcherAssert.assertThat(String.format("Failed to create cancellation reason: %s", response.getBody()),
+    MatcherAssert.assertThat(String.format("Failed to create cancellation reason: %s",
+        response.getBody()),
       response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     return new IndividualResource(response);
@@ -182,7 +181,13 @@ public class CancellationReasonsApiTest extends ApiTests {
         response.getBody(), response.getStatusCode()),
         response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
   }
-  
+  //Test Init
+  @Before
+  public void beforeEach()
+      throws MalformedURLException {
+    StorageTestSuite.deleteAll(requestStorageUrl());
+    StorageTestSuite.deleteAll(cancelReasonURL());
+  }
   //Tests
   @Test
   public void canCreateCancellationReason() 
@@ -285,6 +290,50 @@ public class CancellationReasonsApiTest extends ApiTests {
     assertEquals(400, response.getStatusCode());    
   }
   
+  @Test
+  public void cannotDeleteCancellationReasonInUse() 
+      throws MalformedURLException, 
+      InterruptedException, 
+      ExecutionException, 
+      TimeoutException {
+    UUID requestId = UUID.randomUUID();
+    UUID cancellationReasonId = UUID.randomUUID();
+    UUID itemId = UUID.randomUUID();
+    UUID requesterId = UUID.randomUUID();
+    UUID proxyId = UUID.randomUUID();
+    DateTime requestDate = new DateTime(2017, 7, 22, 10, 22, 54, DateTimeZone.UTC);
+    
+    JsonObject reasonRequest = new JsonObject()
+        .put("name", "worms").put("description", "Item Eaten by space worms.")
+        .put("id", cancellationReasonId.toString());
+
+    JsonObject requestRequest = new RequestRequestBuilder()
+      .recall()
+      .toHoldShelf()
+      .withId(requestId)
+      .withRequestDate(requestDate)
+      .withItemId(itemId)
+      .withRequesterId(requesterId)
+      .withProxyId(proxyId)
+      .withRequestExpiration(new LocalDate(2017, 7, 30))
+      .withHoldShelfExpiration(new LocalDate(2017, 8, 31))
+      .withItem("Nod", "565578437802")
+      .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
+      .withProxy("Stuart", "Rebecca", "6059539205")
+      .withStatus(OPEN_NOT_YET_FILLED)
+      .withCancellationReasonId(cancellationReasonId)
+      .create();
+    
+    assertCreateCancellationReason(reasonRequest);
+    CompletableFuture<JsonResponse> createRequestFuture = new CompletableFuture<>();
+    client.post(requestStorageUrl(), requestRequest, StorageTestSuite.TENANT_ID,
+        ResponseHandler.json(createRequestFuture));
+    JsonResponse createRequestResponse = createRequestFuture.get(5, TimeUnit.SECONDS);
+    assertEquals(201, createRequestResponse.getStatusCode());
+    TextResponse deleteReasonResponse = deleteCancellationReason(cancellationReasonId.toString());
+    assertEquals(400, deleteReasonResponse.getStatusCode());
+    
+  }
   @Test
   //My canary in the coalmine :)
   public void dummyTest() {

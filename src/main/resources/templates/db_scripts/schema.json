@@ -22,17 +22,10 @@
       ]
     },
     {
-      "tableName": "request",
+      "tableName": "cancellation_reason",
       "generateId": false,
       "pkColumnName": "_id",
       "withMetadata": true,
-      "withAuditing": false
-    },
-    {
-      "tableName": "fixed_due_date_schedule",
-      "generateId": false,
-      "pkColumnName": "_id",
-      "withMetadata": false,
       "withAuditing": false,
       "uniqueIndex": [
         {
@@ -43,10 +36,24 @@
       ]
     },
     {
-      "tableName": "cancellation_reason",
+      "tableName": "request",
       "generateId": false,
       "pkColumnName": "_id",
       "withMetadata": true,
+      "withAuditing": false,
+      "foreignKeys": [
+        {
+          "fieldName": "cancellationReasonId",
+          "targetTable": "cancellation_reason",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "fixed_due_date_schedule",
+      "generateId": false,
+      "pkColumnName": "_id",
+      "withMetadata": false,
       "withAuditing": false,
       "uniqueIndex": [
         {

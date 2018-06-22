@@ -1184,11 +1184,11 @@ public class RequestsApiTest extends ApiTests {
       getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
 
-  private static URL requestStorageUrl() throws MalformedURLException {
+  protected static URL requestStorageUrl() throws MalformedURLException {
     return requestStorageUrl("");
   }
 
-  private static URL requestStorageUrl(String subPath)
+  protected static URL requestStorageUrl(String subPath)
     throws MalformedURLException {
 
     return StorageTestSuite.storageUrl("/request-storage/requests" + subPath);

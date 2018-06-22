@@ -77,6 +77,13 @@ public class CancellationReasonsAPI implements CancellationReasonStorageResource
       return false;
     }
   }
+  
+  private boolean isStillReferenced(String errorMessage){
+    if(errorMessage != null && errorMessage.contains("violates foreign key constraint")){
+      return true;
+    }
+    return false;
+  }
 
   @Override
   public void deleteCancellationReasonStorageCancellationReasons(String lang, 
@@ -247,14 +254,19 @@ public class CancellationReasonsAPI implements CancellationReasonStorageResource
           .setValue(cancellationReasonId).addField(ID_FIELD);
       String tenantId = okapiHeaders.get(TENANT_HEADER);
       PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(TABLE_NAME,
-          new Criterion(idCrit), deleteHandler -> {
-        if(deleteHandler.failed()) {
-          String message = logAndSaveError(deleteHandler.cause());
-          asyncResultHandler.handle(Future.succeededFuture(
-              DeleteCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
-              .withPlainInternalServerError(getErrorResponse(message))));
+          new Criterion(idCrit), deleteReply -> {
+        if(deleteReply.failed()) {
+          String message = logAndSaveError(deleteReply.cause());
+          if(isStillReferenced(message)) {
+            asyncResultHandler.handle(Future.succeededFuture(DeleteCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
+                .withPlainBadRequest(PgExceptionUtil.badRequestMessage(deleteReply.cause()))));
+          } else {
+            asyncResultHandler.handle(Future.succeededFuture(
+                DeleteCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
+                .withPlainInternalServerError(getErrorResponse(message))));
+          }
         } else {
-          if(deleteHandler.result().getUpdated() < 1) {
+          if(deleteReply.result().getUpdated() < 1) {
             asyncResultHandler.handle(Future.succeededFuture(
               DeleteCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
                   .withPlainNotFound("Record not found")));
