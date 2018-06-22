@@ -99,25 +99,17 @@ public class RequestRequestBuilder extends JsonBuilder {
   public JsonObject create() {
     JsonObject request = new JsonObject();
 
-    if(this.id != null) {
-      request.put("id", this.id.toString());
-    }
-
+    put(request, "id", this.id);
     put(request, "requestType", this.requestType);
     put(request, "requestDate", this.requestDate);
     put(request, "itemId", this.itemId);
     put(request, "requesterId", this.requesterId);
     put(request, "fulfilmentPreference", this.fulfilmentPreference);
     put(request, "position", this.position);
-
     put(request, "status", status);
-
     put(request, "proxyUserId", proxyId);
-
     put(request, "deliveryAddressTypeId", this.deliveryAddressTypeId);
-
     put(request, "requestExpirationDate", this.requestExpirationDate);
-
     put(request, "holdShelfExpirationDate", this.holdShelfExpirationDate);
 
     if(this.itemSummary != null) {
@@ -150,22 +142,13 @@ public class RequestRequestBuilder extends JsonBuilder {
 
       put(request, "proxy", proxy);
     }
-    
-    if(cancellationReasonId != null) {
-      request.put("cancellationReasonId", this.cancellationReasonId.toString());
-    }
-    
-    if(cancelledByUserId != null) {
-      request.put("cancelledByUserId", this.cancelledByUserId.toString());
-    }
-    
-    if(cancellationAdditionalInformation != null) {
-      request.put("cancellationAdditionalInformation", this.cancellationAdditionalInformation);
-    }
-    
-    if(cancelledDate != null) {
-      request.put("cancelledDate", formatDateTime(this.cancelledDate));
-    }
+
+    put(request, "cancellationReasonId", this.cancellationReasonId);
+    put(request, "cancelledByUserId", this.cancelledByUserId);
+    put(request, "cancellationAdditionalInformation",
+      this.cancellationAdditionalInformation);
+
+    put(request, "cancelledDate", this.cancelledDate);
 
     return request;
   }
@@ -568,7 +551,7 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position);
   }
 
-  public RequestRequestBuilder withPosition(int newPosition) {
+  public RequestRequestBuilder withPosition(Integer newPosition) {
     return new RequestRequestBuilder(
       this.id,
       this.requestType,
@@ -589,6 +572,10 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.cancellationAdditionalInformation,
       this.cancelledDate,
       newPosition);
+  }
+
+  public RequestRequestBuilder withNoPosition() {
+    return withPosition(null);
   }
 
   public RequestRequestBuilder withCancellationReasonId(UUID cancellationReasonId) {

@@ -193,10 +193,9 @@ public class LoansAPI implements LoanStorageResource {
                 }
                 else {
                   if(isMultipleOpenLoanError(reply)) {
-
                     asyncResultHandler.handle(
                       io.vertx.core.Future.succeededFuture(LoanStorageResource.PostLoanStorageLoansResponse
-                      .withJsonUnprocessableEntity(moreThanOnceOpenLoanError(entity))));
+                      .withJsonUnprocessableEntity(moreThanOneOpenLoanError(entity))));
                   }
                   else {
                     asyncResultHandler.handle(
@@ -419,7 +418,7 @@ public class LoansAPI implements LoanStorageResource {
                                 io.vertx.core.Future.succeededFuture(
                                   LoanStorageResource.PutLoanStorageLoansByLoanIdResponse
                                   .withJsonUnprocessableEntity(
-                                    moreThanOnceOpenLoanError(entity))));
+                                    moreThanOneOpenLoanError(entity))));
                             }
                             else {
                               asyncResultHandler.handle(
@@ -461,7 +460,7 @@ public class LoansAPI implements LoanStorageResource {
                                 io.vertx.core.Future.succeededFuture(
                                   LoanStorageResource.PutLoanStorageLoansByLoanIdResponse
                                   .withJsonUnprocessableEntity(
-                                    moreThanOnceOpenLoanError(entity))));
+                                    moreThanOneOpenLoanError(entity))));
                             }
                             else {
                               asyncResultHandler.handle(
@@ -571,7 +570,7 @@ public class LoansAPI implements LoanStorageResource {
                   .setOffset(new Offset(offset));
             adjustedQuery = cql.toString();
           }
-          
+
           postgresClient.get(LOAN_HISTORY_TABLE, LOAN_CLASS, fieldList, adjustedQuery,
             true, false, reply -> {
               try {
@@ -615,7 +614,7 @@ public class LoansAPI implements LoanStorageResource {
     }
   }
 
-  private Errors moreThanOnceOpenLoanError(Loan entity) {
+  private Errors moreThanOneOpenLoanError(Loan entity) {
     return ValidationHelper.createValidationErrorMessage(
       "itemId", entity.getItemId(),
       "Cannot have more than one open loan for the same item");

@@ -21,6 +21,7 @@ traits:
   - language: !include raml-util/traits/language.raml
   - pageable: !include raml-util/traits/pageable.raml
   - searchable: !include raml-util/traits/searchable.raml
+  - validate: !include raml-util/traits/validation.raml
 
 resourceTypes:
   - collection: !include raml-util/rtypes/collection.raml
@@ -44,6 +45,7 @@ resourceTypes:
         501:
           description: "Not implemented yet"
     post:
+      is: [validate]
       responses:
         501:
           description: "Not implemented yet"
@@ -68,6 +70,7 @@ resourceTypes:
           501:
             description: "Not implemented yet"
       put:
+        is: [validate]
         responses:
           501:
             description: "Not implemented yet"

@@ -1,11 +1,14 @@
 package org.folio.rest.impl;
 
+import com.github.mauricio.async.db.postgresql.exceptions.GenericDatabaseException;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.folio.rest.jaxrs.model.Error;
+import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.jaxrs.model.Requests;
 import org.folio.rest.jaxrs.resource.LoanPolicyStorageResource;
@@ -22,6 +25,7 @@ import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
 import javax.ws.rs.core.Response;
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -161,10 +165,17 @@ public class RequestsAPI implements RequestStorageResource {
                         .withJsonCreated(reply.result(), stream)));
                 }
                 else {
-                  asyncResultHandler.handle(
-                    io.vertx.core.Future.succeededFuture(
-                      PostRequestStorageRequestsResponse
-                        .withPlainInternalServerError(reply.cause().toString())));
+                  if(isSamePositionInQueueError(reply)) {
+                    asyncResultHandler.handle(
+                      io.vertx.core.Future.succeededFuture(RequestStorageResource.PostRequestStorageRequestsResponse
+                        .withJsonUnprocessableEntity(samePositionInQueueError(entity))));
+                  }
+                  else {
+                    asyncResultHandler.handle(
+                      io.vertx.core.Future.succeededFuture(
+                        PostRequestStorageRequestsResponse
+                          .withPlainInternalServerError(reply.cause().toString())));
+                  }
                 }
               } catch (Exception e) {
                 asyncResultHandler.handle(
@@ -355,11 +366,16 @@ public class RequestsAPI implements RequestStorageResource {
                                   .withNoContent()));
                           }
                           else {
-                            asyncResultHandler.handle(
-                              Future.succeededFuture(
-                                PutRequestStorageRequestsByRequestIdResponse
-                                  .withPlainInternalServerError(
-                                    update.cause().getMessage())));
+                            if (isSamePositionInQueueError(update)) {
+                              asyncResultHandler.handle(
+                                io.vertx.core.Future.succeededFuture(PutRequestStorageRequestsByRequestIdResponse
+                                  .withJsonUnprocessableEntity(samePositionInQueueError(entity))));
+                            } else {
+                              asyncResultHandler.handle(
+                                io.vertx.core.Future.succeededFuture(
+                                  PutRequestStorageRequestsByRequestIdResponse
+                                    .withPlainInternalServerError(reply.cause().toString())));
+                            }
                           }
                         } catch (Exception e) {
                           asyncResultHandler.handle(
@@ -389,11 +405,16 @@ public class RequestsAPI implements RequestStorageResource {
                                   .withNoContent()));
                           }
                           else {
-                            asyncResultHandler.handle(
-                              Future.succeededFuture(
-                                PutRequestStorageRequestsByRequestIdResponse
-                                  .withPlainInternalServerError(
-                                    save.cause().getMessage())));
+                            if (isSamePositionInQueueError(save)) {
+                              asyncResultHandler.handle(
+                                io.vertx.core.Future.succeededFuture(PutRequestStorageRequestsByRequestIdResponse
+                                  .withJsonUnprocessableEntity(samePositionInQueueError(entity))));
+                            } else {
+                              asyncResultHandler.handle(
+                                io.vertx.core.Future.succeededFuture(
+                                  PutRequestStorageRequestsByRequestIdResponse
+                                    .withPlainInternalServerError(reply.cause().toString())));
+                            }
                           }
                         } catch (Exception e) {
                           asyncResultHandler.handle(
@@ -425,5 +446,27 @@ public class RequestsAPI implements RequestStorageResource {
         PutRequestStorageRequestsByRequestIdResponse
           .withPlainInternalServerError(e.getMessage())));
     }
+  }
+
+  private Errors samePositionInQueueError(Request request) {
+    Error error = new Error();
+
+    error.withMessage("Cannot have more than one request with the same position in the queue")
+      .withAdditionalProperty("itemId", request.getItemId())
+      .withAdditionalProperty("position", request.getPosition());
+
+    List<Error> errorList = new ArrayList<>();
+    errorList.add(error);
+
+    Errors errors = new Errors();
+    errors.setErrors(errorList);
+
+    return errors;
+  }
+
+  private <T> boolean isSamePositionInQueueError(AsyncResult<T> reply) {
+    return reply.cause() instanceof GenericDatabaseException &&
+      ((GenericDatabaseException) reply.cause()).errorMessage().message()
+        .contains("request_itemid_position_idx_unique");
   }
 }

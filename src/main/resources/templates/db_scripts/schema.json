@@ -47,7 +47,8 @@
           "targetTable": "cancellation_reason",
           "tOps": "ADD"
         }
-      ]
+      ],
+      "customSnippetPath": "uniqueRequestItemIdAndPosition.sql"
     },
     {
       "tableName": "fixed_due_date_schedule",
