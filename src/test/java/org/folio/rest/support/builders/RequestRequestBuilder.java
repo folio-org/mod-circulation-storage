@@ -163,6 +163,22 @@ public class RequestRequestBuilder {
 
       request.put("proxy", proxy);
     }
+    
+    if(cancellationReasonId != null) {
+      request.put("cancellationReasonId", this.cancellationReasonId.toString());
+    }
+    
+    if(cancelledByUserId != null) {
+      request.put("cancelledByUserId", this.cancelledByUserId.toString());
+    }
+    
+    if(cancellationAdditionalInformation != null) {
+      request.put("cancellationAdditionalInformation", this.cancellationAdditionalInformation);
+    }
+    
+    if(cancelledDate != null) {
+      request.put("cancelledDate", formatDateTime(this.cancelledDate));
+    }
 
     return request;
   }
