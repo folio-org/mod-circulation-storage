@@ -4,12 +4,10 @@ import io.vertx.core.json.JsonObject;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.ISODateTimeFormat;
 
 import java.util.UUID;
 
-public class RequestRequestBuilder {
+public class RequestRequestBuilder extends JsonBuilder {
   public static final String OPEN_NOT_YET_FILLED = "Open - Not yet filled";
   public static final String OPEN_AWAITING_PICKUP = "Open - Awaiting pickup";
   public static final String CLOSED_FILLED = "Closed - Filled";
@@ -105,67 +103,52 @@ public class RequestRequestBuilder {
       request.put("id", this.id.toString());
     }
 
-    request.put("requestType", this.requestType);
-    request.put("requestDate", formatDateTime(this.requestDate));
-    request.put("itemId", this.itemId.toString());
-    request.put("requesterId", this.requesterId.toString());
-    request.put("fulfilmentPreference", this.fulfilmentPreference);
-    request.put("position", this.position);
+    put(request, "requestType", this.requestType);
+    put(request, "requestDate", this.requestDate);
+    put(request, "itemId", this.itemId);
+    put(request, "requesterId", this.requesterId);
+    put(request, "fulfilmentPreference", this.fulfilmentPreference);
+    put(request, "position", this.position);
 
-    if(status != null) {
-      request.put("status", status);
-    }
+    put(request, "status", status);
 
-    if(proxyId != null) {
-      request.put("proxyUserId", proxyId.toString());
-    }
+    put(request, "proxyUserId", proxyId);
 
-    if(deliveryAddressTypeId != null) {
-      request.put("deliveryAddressTypeId", this.deliveryAddressTypeId.toString());
-    }
+    put(request, "deliveryAddressTypeId", this.deliveryAddressTypeId);
 
-    if(requestExpirationDate != null) {
-      request.put("requestExpirationDate",
-        formatDateOnly(this.requestExpirationDate));
-    }
+    put(request, "requestExpirationDate", this.requestExpirationDate);
 
-    if(holdShelfExpirationDate != null) {
-      request.put("holdShelfExpirationDate",
-        formatDateOnly(this.holdShelfExpirationDate));
-    }
+    put(request, "holdShelfExpirationDate", this.holdShelfExpirationDate);
 
-    if(itemSummary != null) {
-      request.put("item", new JsonObject()
-          .put("title", itemSummary.title)
-          .put("barcode", itemSummary.barcode));
+    if(this.itemSummary != null) {
+      final JsonObject item = new JsonObject();
+
+      put(item, "title", this.itemSummary.title);
+      put(item, "barcode", this.itemSummary.barcode);
+
+      put(request, "item", item);
     }
 
     if(requesterSummary != null) {
-      JsonObject requester = new JsonObject()
-        .put("lastName", requesterSummary.lastName)
-        .put("firstName", requesterSummary.firstName);
+      JsonObject requester = new JsonObject();
 
-      if(requesterSummary.middleName != null) {
-        requester.put("middleName", requesterSummary.middleName);
-      }
+      put(requester, "lastName", requesterSummary.lastName);
+      put(requester, "firstName", requesterSummary.firstName);
+      put(requester, "middleName", requesterSummary.middleName);
+      put(requester, "barcode", requesterSummary.barcode);
 
-      requester.put("barcode", requesterSummary.barcode);
-
-      request.put("requester", requester);
+      put(request, "requester", requester);
     }
 
     if(proxySummary != null) {
-      JsonObject proxy = new JsonObject()
-        .put("lastName", proxySummary.lastName)
-        .put("firstName", proxySummary.firstName);
+      JsonObject proxy = new JsonObject();
 
-      if(proxySummary.middleName != null) {
-        proxy.put("middleName", proxySummary.middleName);
-      }
+      put(proxy, "lastName", proxySummary.lastName);
+      put(proxy, "firstName", proxySummary.firstName);
+      put(proxy, "middleName", proxySummary.middleName);
+      put(proxy, "barcode", proxySummary.barcode);
 
-      proxy.put("barcode", proxySummary.barcode);
-
-      request.put("proxy", proxy);
+      put(request, "proxy", proxy);
     }
     
     if(cancellationReasonId != null) {
@@ -560,14 +543,6 @@ public class RequestRequestBuilder {
       this.cancellationAdditionalInformation,
       this.cancelledDate,
       this.position);
-  }
-
-  private String formatDateTime(DateTime requestDate) {
-    return requestDate.toString(ISODateTimeFormat.dateTime());
-  }
-
-  private String formatDateOnly(LocalDate date) {
-    return date.toString(DateTimeFormat.forPattern("yyyy-MM-dd"));
   }
 
   public RequestRequestBuilder withProxyId(UUID proxyId) {
