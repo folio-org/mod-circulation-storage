@@ -182,6 +182,42 @@
       ]
     },
     {
+      "id" : "cancellation-reason-storage",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/cancellation-reason-storage/cancellation-reasons",
+          "permissionsRequired": ["circulation-storage.cancellation-reasons.collection.get"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/cancellation-reason-storage/cancellation-reasons/{id}",
+          "permissionsRequired": ["circulation-storage.cancellation-reasons.item.get"]
+        },
+        {
+          "methods": ["POST"],
+          "pathPattern": "/cancellation-reason-storage/cancellation-reasons",
+          "permissionsRequired": ["circulation-storage.cancellation-reasons.item.post"]
+        },
+        {
+          "methods": ["PUT"],
+          "pathPattern": "/cancellation-reason-storage/cancellation-reasons/{id}",
+          "permissionsRequired": ["circulation-storage.cancellation-reasons.item.put"]
+        },
+        {
+          "methods": ["DELETE"],
+          "pathPattern": "/cancellation-reason-storage/cancellation-reasons",
+          "permissionsRequired": ["circulation-storage.cancellation-reasons.collection.delete"]
+        },
+        {
+          "methods": ["DELETE"],
+          "pathPattern": "/cancellation-reason-storage/cancellation-reasons/{id}",
+          "permissionsRequired": ["circulation-storage.cancellation-reasons.item.delete"]
+        }
+      ]
+    },
+    {
       "id": "_tenant",
       "version": "1.0",
       "interfaceType": "system",
@@ -363,6 +399,36 @@
       "description": "Modify individual staff slip in storage"
     },
     {
+      "permissionName": "circulation-storage.cancellation-reasons.collection.get",
+      "displayName": "Circulation storage - get cancellation reasons collection",
+      "description": "Get cancellation reasons from storage"
+    },    
+    {
+      "permissionName": "circulation-storage.cancellation-reasons.item.get",
+      "displayName": "Circulation storage - get individual cancellation reason",
+      "description": "Get individual cancellation reason by id"
+    },
+    {
+      "permissionName": "circulation-storage.cancellation-reasons.item.post",
+      "displayName": "Circulation storage - create individual cancellation reason",
+      "description": "Create individual cancellation reason"
+    },
+    {
+      "permissionName": "circulation-storage.cancellation-reasons.item.put",
+      "displayName": "Circulation storage - put individual cancellation reason",
+      "description": "Modify individual cancellation reason by id"
+    },
+    {
+      "permissionName": "circulation-storage.cancellation-reasons.collection.delete",
+      "displayName": "Circulation storage - delete cancellation reasons",
+      "description": "Delete entire cancellation reasons collection"
+    },
+    {
+      "permissionName": "circulation-storage.cancellation-reasons.item.delete",
+      "displayName": "Circulation storage - delete individual cancellation reason",
+      "description": "Delete individual cancellation reason by id"
+    },
+    {
       "permissionName": "circulation-storage.all",
       "displayName": "Circulation storage module - all permissions",
       "description": "Entire set of permissions needed to use the circulation storage module",
@@ -399,7 +465,13 @@
         "circulation-storage.staff-slips.collection.get",
         "circulation-storage.staff-slips.item.post",
         "circulation-storage.staff-slips.item.put",
-        "circulation-storage.staff-slips.item.get"      
+        "circulation-storage.staff-slips.item.get",
+        "circulation-storage.cancellation-reasons.collection.get",
+        "circulation-storage.cancellation-reasons.item.get",
+        "circulation-storage.cancellation-reasons.item.post",
+        "circulation-storage.cancellation-reasons.item.put",
+        "circulation-storage.cancellation-reasons.collection.delete",
+        "circulation-storage.cancellation-reasons.item.delete"
       ]
     }
   ],
