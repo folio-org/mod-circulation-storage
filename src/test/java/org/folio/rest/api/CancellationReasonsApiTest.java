@@ -214,7 +214,7 @@ public class CancellationReasonsApiTest extends ApiTests {
         .put("description", "Item slimed");
     assertCreateCancellationReason(request);
     IndividualResource reason = assertGetCancellationReason(id);
-    assertEquals(reason.getJson().getString("name"), "slime");
+    assertEquals("slime", reason.getJson().getString("name"));
   }
   
   @Test
@@ -232,7 +232,7 @@ public class CancellationReasonsApiTest extends ApiTests {
     request.put("name", "oobleck");
     assertUpdateCancellationReason(id, request);
     IndividualResource reason = assertGetCancellationReason(id);
-    assertEquals(reason.getJson().getString("name"), "oobleck");
+    assertEquals("oobleck", reason.getJson().getString("name"));
   }
   
   @Test
@@ -252,8 +252,8 @@ public class CancellationReasonsApiTest extends ApiTests {
     JsonResponse response = getCancellationReasonCollection("description=*burnt");
     assertTrue(response.getJson().containsKey("totalRecords"));
     assertTrue(response.getJson().getInteger("totalRecords").equals(1));
-    assertEquals(response.getJson().getJsonArray("cancellationReasons")
-        .getJsonObject(0).getString("name"), "fire");
+    assertEquals("fire", response.getJson().getJsonArray("cancellationReasons")
+        .getJsonObject(0).getString("name"));
   }
   
   @Test
