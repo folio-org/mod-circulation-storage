@@ -6,6 +6,15 @@
 package org.folio.rest.api;
 
 import io.vertx.core.json.JsonObject;
+import org.folio.rest.support.*;
+import org.folio.rest.support.builders.RequestRequestBuilder;
+import org.hamcrest.junit.MatcherAssert;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
+import org.junit.Before;
+import org.junit.Test;
+
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -14,33 +23,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import org.folio.rest.support.ApiTests;
-import org.folio.rest.support.IndividualResource;
-import org.folio.rest.support.JsonResponse;
-import org.folio.rest.support.ResponseHandler;
-import org.hamcrest.junit.MatcherAssert;
-import org.junit.Before;
-import org.junit.Test;
+
 import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
-import org.folio.rest.support.TextResponse;
-import org.folio.rest.support.builders.RequestRequestBuilder;
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET_FILLED;
-import static org.hamcrest.core.Is.is;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
-import static org.hamcrest.core.Is.is;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -50,18 +36,18 @@ import static org.junit.Assert.assertTrue;
  */
 public class CancellationReasonsApiTest extends ApiTests {
   
-  protected static URL cancelReasonURL() throws MalformedURLException {
+  private static URL cancelReasonURL() throws MalformedURLException {
     return cancelReasonURL("");
   }
 
-  protected static URL cancelReasonURL(String subPath)
+  private static URL cancelReasonURL(String subPath)
     throws MalformedURLException {
 
     return StorageTestSuite.storageUrl(
       "/cancellation-reason-storage/cancellation-reasons" + subPath);
   }
   
-  private IndividualResource assertCreateCancellationReason(JsonObject request)
+  private void assertCreateCancellationReason(JsonObject request)
       throws MalformedURLException,
       InterruptedException,
       ExecutionException,
@@ -73,7 +59,7 @@ public class CancellationReasonsApiTest extends ApiTests {
         response.getBody()),
       response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    return new IndividualResource(response);
+    new IndividualResource(response);
   }
   
   private JsonResponse createCancellationReason(JsonObject request) 
@@ -86,8 +72,7 @@ public class CancellationReasonsApiTest extends ApiTests {
     client.post(cancelReasonURL(), request, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createCompleted));
 
-    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
-    return response;
+    return createCompleted.get(5, TimeUnit.SECONDS);
   }
   
   private IndividualResource assertGetCancellationReason(String id) 
@@ -112,8 +97,8 @@ public class CancellationReasonsApiTest extends ApiTests {
     CompletableFuture<JsonResponse> getReasonFuture = new CompletableFuture<>();    
     client.get(cancelReasonURL("/"+id), StorageTestSuite.TENANT_ID,
         ResponseHandler.json(getReasonFuture));
-    JsonResponse response = getReasonFuture.get(5, TimeUnit.SECONDS);
-    return response;
+
+    return getReasonFuture.get(5, TimeUnit.SECONDS);
   }
   
   private JsonResponse getCancellationReasonCollection(String query)
@@ -130,8 +115,8 @@ public class CancellationReasonsApiTest extends ApiTests {
     }
     client.get(cancelReasonURL(queryParam), StorageTestSuite.TENANT_ID,
         ResponseHandler.json(getReasonsFuture));
-    JsonResponse response = getReasonsFuture.get(5, TimeUnit.SECONDS);
-    return response;
+
+    return getReasonsFuture.get(5, TimeUnit.SECONDS);
   }
   
   private TextResponse updateCancellationReason(String id, JsonObject request) 
@@ -142,8 +127,8 @@ public class CancellationReasonsApiTest extends ApiTests {
     CompletableFuture<TextResponse> updateReasonFuture = new CompletableFuture<>();
     client.put(cancelReasonURL("/"+id), request, StorageTestSuite.TENANT_ID,
         ResponseHandler.text(updateReasonFuture));
-    TextResponse textResponse = updateReasonFuture.get(5, TimeUnit.SECONDS);
-    return textResponse;    
+
+    return updateReasonFuture.get(5, TimeUnit.SECONDS);
   }
   
   private void assertUpdateCancellationReason(String id, JsonObject request)
@@ -164,10 +149,11 @@ public class CancellationReasonsApiTest extends ApiTests {
       ExecutionException, 
       TimeoutException {
     CompletableFuture<TextResponse> deleteReasonFuture = new CompletableFuture<>();
+
     client.delete(cancelReasonURL("/"+id), StorageTestSuite.TENANT_ID,
         ResponseHandler.text(deleteReasonFuture));
-    TextResponse textResponse = deleteReasonFuture.get(5, TimeUnit.SECONDS);
-    return textResponse;
+
+    return deleteReasonFuture.get(5, TimeUnit.SECONDS);
   }
   
   private void assertDeleteCancellationReason(String id)
@@ -211,7 +197,8 @@ public class CancellationReasonsApiTest extends ApiTests {
     JsonObject request = new JsonObject()
         .put("name", "slime")
         .put("id", id)
-        .put("description", "Item slimed");
+        .put("description", "Item slimed")
+        .put("requiresAddInfo", true);
     assertCreateCancellationReason(request);
     IndividualResource reason = assertGetCancellationReason(id);
     assertEquals("slime", reason.getJson().getString("name"));
@@ -229,7 +216,11 @@ public class CancellationReasonsApiTest extends ApiTests {
         .put("id", id)
         .put("description", "Item slimed");
     assertCreateCancellationReason(request);
-    request.put("name", "oobleck");
+
+    request
+      .put("name", "oobleck")
+      .put("requiresAddInfo", false);
+
     assertUpdateCancellationReason(id, request);
     IndividualResource reason = assertGetCancellationReason(id);
     assertEquals("oobleck", reason.getJson().getString("name"));
