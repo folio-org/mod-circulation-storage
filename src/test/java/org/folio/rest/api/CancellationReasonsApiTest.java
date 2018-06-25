@@ -198,7 +198,7 @@ public class CancellationReasonsApiTest extends ApiTests {
         .put("name", "slime")
         .put("id", id)
         .put("description", "Item slimed")
-        .put("requiresAddInfo", true);
+        .put("requiresAdditionalInformation", true);
     assertCreateCancellationReason(request);
     IndividualResource reason = assertGetCancellationReason(id);
     assertEquals("slime", reason.getJson().getString("name"));
@@ -219,7 +219,7 @@ public class CancellationReasonsApiTest extends ApiTests {
 
     request
       .put("name", "oobleck")
-      .put("requiresAddInfo", false);
+      .put("requiresAdditionalInformation", false);
 
     assertUpdateCancellationReason(id, request);
     IndividualResource reason = assertGetCancellationReason(id);

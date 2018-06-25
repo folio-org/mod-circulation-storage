@@ -11,7 +11,7 @@
     "description" : {
       "type": "string"
     },
-    "requiresAddInfo": {
+    "requiresAdditionalInformation": {
       "type": "boolean"
     },
     "metadata": {
