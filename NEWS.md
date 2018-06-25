@@ -1,4 +1,4 @@
-## 5.1.0 Unreleased
+## 5.1.0 2018-06-25
 
 * Provides `staff-slips-storage` interface 1.0 (CIRCSTORE-52)
 * For loan-history end-point: Allows limit/offset to set by default when query is null
