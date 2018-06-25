@@ -7,6 +7,7 @@
   "fulfilmentPreference": "Hold Shelf",
   "holdShelfExpirationDate": "2018-09-10",
   "status": "Open - Awaiting pickup",
+  "position": 1,
   "item": {
     "title": "Temeraire",
     "barcode": "326547658598"
