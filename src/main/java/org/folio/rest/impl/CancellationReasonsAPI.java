@@ -68,15 +68,6 @@ public class CancellationReasonsAPI implements CancellationReasonStorageResource
     }
     return false;
   }
-
-  private boolean isInvalidUUID(String errorMessage){
-    if(errorMessage != null && errorMessage.contains("invalid input syntax for uuid")){
-      return true;
-    }
-    else{
-      return false;
-    }
-  }
   
   private boolean isStillReferenced(String errorMessage){
     if(errorMessage != null && errorMessage.contains("violates foreign key constraint")){
