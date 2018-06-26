@@ -1,3 +1,9 @@
+## 5.2.0 Unreleased
+
+* Adds 'Closed - Cancelled' request status enum (CIRCSTORE-47)
+* Adds 'cancellationReason' and 'cancelledDate' properties to requests (CIRCSTORE-48)
+* Provides cancellationrequests interface 1.0
+
 ## 5.1.0 2018-06-25
 
 * Provides `staff-slips-storage` interface 1.0 (CIRCSTORE-52)

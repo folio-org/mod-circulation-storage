@@ -29,8 +29,17 @@ import io.vertx.ext.sql.ResultSet;
 
 @RunWith(Suite.class)
 
-@Suite.SuiteClasses({ LoansApiTest.class, LoanRulesApiTest.class, FixedDueDateApiTest.class, LoanPoliciesApiTest.class,
-		RequestsApiTest.class, LoansApiHistoryTest.class, StaffSlipsApiTest.class })
+@Suite.SuiteClasses({
+  LoansApiTest.class,
+  LoanRulesApiTest.class,
+  FixedDueDateApiTest.class,
+  LoanPoliciesApiTest.class,
+  RequestsApiTest.class,
+  LoansApiHistoryTest.class,
+  StaffSlipsApiTest.class,
+  CancellationReasonsApiTest.class
+})
+
 public class StorageTestSuite {
 	public static final String TENANT_ID = "test_tenant";
 

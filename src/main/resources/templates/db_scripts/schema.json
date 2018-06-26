@@ -22,11 +22,32 @@
       ]
     },
     {
+      "tableName": "cancellation_reason",
+      "generateId": false,
+      "pkColumnName": "_id",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD",
+          "caseSensitive": false
+        }
+      ]
+    },
+    {
       "tableName": "request",
       "generateId": false,
       "pkColumnName": "_id",
       "withMetadata": true,
-      "withAuditing": false
+      "withAuditing": false,
+      "foreignKeys": [
+        {
+          "fieldName": "cancellationReasonId",
+          "targetTable": "cancellation_reason",
+          "tOps": "ADD"
+        }
+      ]
     },
     {
       "tableName": "fixed_due_date_schedule",
