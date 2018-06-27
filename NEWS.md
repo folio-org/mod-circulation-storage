@@ -1,8 +1,10 @@
-## 5.2.0 Unreleased
+## 5.2.0 2018-06-27
 
-* Adds 'Closed - Cancelled' request status enum (CIRCSTORE-47)
-* Adds 'cancellationReason' and 'cancelledDate' properties to requests (CIRCSTORE-48)
-* Provides cancellationrequests interface 1.0
+* Adds `Closed - Cancelled` request status enum (CIRCSTORE-59)
+* Adds cancellation properties to requests (CIRCSTORE-47)
+* Introduces cancellation reasons API (CIRCSTORE-57)
+* Provides `cancellation-reason-storage` interface 1.0 (CIRCSTORE-57)
+* Provides `request-storage` interface 2.1 (CIRCSTORE-59, CIRCSTORE-47)
 
 ## 5.1.0 2018-06-25
 
