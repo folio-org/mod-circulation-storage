@@ -42,6 +42,7 @@ import static org.junit.Assert.assertThat;
 public class StorageTestSuite {
 	static final String TENANT_ID = "test_tenant";
   private static final int TENANT_API_TIMEOUT = 20;
+  private static final int VERTICLE_OPERATION_TIMEOUT = 20;
 
   private static Vertx vertx;
 	private static int port;
@@ -117,7 +118,7 @@ public class StorageTestSuite {
 			}
 		});
 
-		undeploymentComplete.get(20, TimeUnit.SECONDS);
+		undeploymentComplete.get(VERTICLE_OPERATION_TIMEOUT, TimeUnit.SECONDS);
 	}
 
 	public static boolean isNotInitialised() {
@@ -188,7 +189,7 @@ public class StorageTestSuite {
 			}
 		});
 
-		deploymentComplete.get(20, TimeUnit.SECONDS);
+		deploymentComplete.get(VERTICLE_OPERATION_TIMEOUT, TimeUnit.SECONDS);
 	}
 
 	private static void prepareTenant(String tenantId) {
