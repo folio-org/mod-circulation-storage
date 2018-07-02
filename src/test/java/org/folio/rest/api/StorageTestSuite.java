@@ -40,13 +40,14 @@ import static org.junit.Assert.assertThat;
 })
 
 public class StorageTestSuite {
-	public static final String TENANT_ID = "test_tenant";
+	static final String TENANT_ID = "test_tenant";
+  private static final int TENANT_API_TIMEOUT = 20;
 
-	private static Vertx vertx;
+  private static Vertx vertx;
 	private static int port;
 	private static boolean initialised = false;
 
-	public static URL storageUrl(String path) throws MalformedURLException {
+  public static URL storageUrl(String path) throws MalformedURLException {
 		return new URL("http", "localhost", port, path);
 	}
 
@@ -198,7 +199,7 @@ public class StorageTestSuite {
 
 			client.post(storageUrl("/_/tenant"), null, tenantId, ResponseHandler.text(tenantPrepared));
 			
-      TextResponse response = tenantPrepared.get(20, TimeUnit.SECONDS);
+      TextResponse response = tenantPrepared.get(TENANT_API_TIMEOUT, TimeUnit.SECONDS);
 
 			String failureMessage = String.format("Tenant preparation failed: %s: %s", response.getStatusCode(),
 					response.getBody());
@@ -219,7 +220,7 @@ public class StorageTestSuite {
 
 			client.delete(storageUrl("/_/tenant"), tenantId, ResponseHandler.text(tenantDeleted));
 
-      TextResponse response = tenantDeleted.get(20, TimeUnit.SECONDS);
+      TextResponse response = tenantDeleted.get(TENANT_API_TIMEOUT, TimeUnit.SECONDS);
 
 			String failureMessage = String.format("Tenant cleanup failed: %s: %s", response.getStatusCode(),
 					response.getBody());
