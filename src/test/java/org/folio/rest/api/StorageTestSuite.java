@@ -23,6 +23,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static java.net.HttpURLConnection.HTTP_CREATED;
+import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -135,7 +137,7 @@ public class StorageTestSuite {
 
 			Response response = deleteAllFinished.get(5, TimeUnit.SECONDS);
 
-			if (response.getStatusCode() != 204) {
+			if (response.getStatusCode() != HTTP_NO_CONTENT) {
 				System.out.println("WARNING!!!!! Delete all resources preparation failed");
 			}
 		} catch (Exception e) {
@@ -205,7 +207,7 @@ public class StorageTestSuite {
 			String failureMessage = String.format("Tenant preparation failed: %s: %s", response.getStatusCode(),
 					response.getBody());
 
-			assertThat(failureMessage, response.getStatusCode(), is(201));
+			assertThat(failureMessage, response.getStatusCode(), is(HTTP_CREATED));
 
 		} catch (Exception e) {
 			System.out.println("WARNING!!!!! Tenant preparation failed: " + e.getMessage());
@@ -226,7 +228,7 @@ public class StorageTestSuite {
 			String failureMessage = String.format("Tenant cleanup failed: %s: %s", response.getStatusCode(),
 					response.getBody());
 
-			assertThat(failureMessage, response.getStatusCode(), is(204));
+			assertThat(failureMessage, response.getStatusCode(), is(HTTP_NO_CONTENT));
 
 		} catch (Exception e) {
 			System.out.println("WARNING!!!!! Tenant cleanup failed: " + e.getMessage());
