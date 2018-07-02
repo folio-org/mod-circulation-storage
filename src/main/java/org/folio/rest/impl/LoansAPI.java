@@ -562,8 +562,8 @@ public class LoansAPI implements LoanStorageResource {
   @Validate
   @Override
   public void getLoanStorageLoanHistory(int offset, int limit, String query, String lang,
-      Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) {
+                                        Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+                                        Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -574,30 +574,33 @@ public class LoansAPI implements LoanStorageResource {
             vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
           String[] fieldList = {"*"};
+
+          CQLWrapper cql = null;
           String adjustedQuery = null;
+          CQL2PgJSON cql2pgJson = new CQL2PgJSON(LOAN_HISTORY_TABLE+".jsonb");
+
           if(query != null){
             //a bit of a hack, assume that <space>sortBy<space>
             //is a sort request that is received as part of the cql , and hence pass
             //the cql as is. If no sorting is requested, sort by created_date column
             //in the loan history table which represents the date the entry was created
             //aka the date an action was made on the loan
-            CQL2PgJSON cql2pgJson = new CQL2PgJSON(LOAN_HISTORY_TABLE+".jsonb");
-
-            CQLWrapper cql;
-
             if(!query.contains(" sortBy ")){
               cql = new CQLWrapper(cql2pgJson, query);
               adjustedQuery = cql.toString() + " order by created_date desc ";
               adjustedQuery = adjustedQuery + new Limit(limit).toString() + " " +new Offset(offset).toString();
             } else{
               cql = new CQLWrapper(cql2pgJson, query)
-                  .setLimit(new Limit(limit))
-                  .setOffset(new Offset(offset));
+                .setLimit(new Limit(limit))
+                .setOffset(new Offset(offset));
               adjustedQuery = cql.toString();
             }
-
-            log.info(String.format("CQL query: %s", query));
-            log.info(String.format("SQL generated from CQL: %s", cql.toString()));
+            log.info("CQL Query: " + cql.toString());
+          } else {
+            cql = new CQLWrapper(cql2pgJson, query)
+              .setLimit(new Limit(limit))
+              .setOffset(new Offset(offset));
+            adjustedQuery = cql.toString();
           }
 
           postgresClient.get(LOAN_HISTORY_TABLE, LOAN_CLASS, fieldList, adjustedQuery,
@@ -611,33 +614,33 @@ public class LoansAPI implements LoanStorageResource {
                   pagedLoans.setLoans(loans);
                   pagedLoans.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
 
-                  asyncResultHandler.handle(succeededFuture(
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                     GetLoanStorageLoanHistoryResponse.
                       withJsonOK(pagedLoans)));
                 }
                 else {
                   log.error(reply.cause().getMessage(), reply.cause());
-                  asyncResultHandler.handle(succeededFuture(
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                     GetLoanStorageLoanHistoryResponse.
                       withPlainInternalServerError(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
                 log.error(e.getMessage(), e);
-                asyncResultHandler.handle(succeededFuture(
+                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                   GetLoanStorageLoanHistoryResponse.
                     withPlainInternalServerError(e.getMessage())));
               }
             });
         } catch (Exception e) {
           log.error(e.getMessage(), e);
-          asyncResultHandler.handle(succeededFuture(
+          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             GetLoanStorageLoanHistoryResponse.
               withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
       log.error(e.getMessage(), e);
-      asyncResultHandler.handle(succeededFuture(
+      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         GetLoanStorageLoanHistoryResponse.
           withPlainInternalServerError(e.getMessage())));
     }

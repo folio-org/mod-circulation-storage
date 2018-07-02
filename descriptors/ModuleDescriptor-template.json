@@ -85,7 +85,7 @@
     },
     {
       "id": "request-storage",
-      "version": "2.0",
+      "version": "2.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -142,6 +142,78 @@
           "methods": ["DELETE"],
           "pathPattern": "/fixed-due-date-schedule-storage/fixed-due-date-schedules",
           "permissionsRequired": ["circulation-storage.fixed-due-date-schedules.collection.delete"]
+        }
+      ]
+    },
+    {
+      "id": "staff-slips-storage",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/staff-slips-storage/staff-slips",
+          "permissionsRequired": ["circulation-storage.staff-slips.collection.get"]
+        },
+        {
+          "methods": ["POST"],
+          "pathPattern": "/staff-slips-storage/staff-slips",
+          "permissionsRequired": ["circulation-storage.staff-slips.item.post"]
+        },
+        {
+          "methods": ["DELETE"],
+          "pathPattern": "/staff-slips-storage/staff-slips",
+          "permissionsRequired": ["circulation-storage.staff-slips.collection.delete"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/staff-slips-storage/staff-slips/{id}",
+          "permissionsRequired": ["circulation-storage.staff-slips.item.get"]
+        },
+        {
+          "methods": ["PUT"],
+          "pathPattern": "/staff-slips-storage/staff-slips/{id}",
+          "permissionsRequired": ["circulation-storage.staff-slips.item.put"]
+        },
+        {
+          "methods": ["DELETE"],
+          "pathPattern": "/staff-slips-storage/staff-slips/{id}",
+          "permissionsRequired": ["circulation-storage.staff-slips.item.delete"]
+        }
+      ]
+    },
+    {
+      "id" : "cancellation-reason-storage",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/cancellation-reason-storage/cancellation-reasons",
+          "permissionsRequired": ["circulation-storage.cancellation-reasons.collection.get"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/cancellation-reason-storage/cancellation-reasons/{id}",
+          "permissionsRequired": ["circulation-storage.cancellation-reasons.item.get"]
+        },
+        {
+          "methods": ["POST"],
+          "pathPattern": "/cancellation-reason-storage/cancellation-reasons",
+          "permissionsRequired": ["circulation-storage.cancellation-reasons.item.post"]
+        },
+        {
+          "methods": ["PUT"],
+          "pathPattern": "/cancellation-reason-storage/cancellation-reasons/{id}",
+          "permissionsRequired": ["circulation-storage.cancellation-reasons.item.put"]
+        },
+        {
+          "methods": ["DELETE"],
+          "pathPattern": "/cancellation-reason-storage/cancellation-reasons",
+          "permissionsRequired": ["circulation-storage.cancellation-reasons.collection.delete"]
+        },
+        {
+          "methods": ["DELETE"],
+          "pathPattern": "/cancellation-reason-storage/cancellation-reasons/{id}",
+          "permissionsRequired": ["circulation-storage.cancellation-reasons.item.delete"]
         }
       ]
     },
@@ -297,6 +369,66 @@
       "description": "Delete collection of fixed due date from storage"
     },
     {
+      "permissionName": "circulation-storage.staff-slips.collection.get",
+      "displayName": "Circulation storage - get staff slip collection from storage",
+      "description": "Get staff slip collection from storage"
+    },
+    {
+      "permissionName": "circulation-storage.staff-slips.collection.delete",
+      "displayName": "Circulation storage - delete entire staff slipp collection",
+      "description": "Delete entire staff slip collection"
+    },
+    {
+      "permissionName": "circulation-storage.staff-slips.item.post",
+      "displayName": "Circulation storage - create indavidual staff slip in storage",
+      "description": "Create individual staff slip in storage"
+    },
+    {
+      "permissionName": "circulation-storage.staff-slips.item.get",
+      "displayName": "Circulation storage - get indavidual staff slip from storage",
+      "description": "Get individual staff slip from storage"
+    },
+    {
+      "permissionName": "circulation-storage.staff-slips.item.delete",
+      "displayName": "Circulation storage - delete indavidual staff slip from storage",
+      "description": "Delete individual staff slip from storage"
+    },
+    {
+      "permissionName": "circulation-storage.staff-slips.item.put",
+      "displayName": "Circulation storage - modify indavidual staff slip in storage",
+      "description": "Modify individual staff slip in storage"
+    },
+    {
+      "permissionName": "circulation-storage.cancellation-reasons.collection.get",
+      "displayName": "Circulation storage - get cancellation reasons collection",
+      "description": "Get cancellation reasons from storage"
+    },    
+    {
+      "permissionName": "circulation-storage.cancellation-reasons.item.get",
+      "displayName": "Circulation storage - get individual cancellation reason",
+      "description": "Get individual cancellation reason by id"
+    },
+    {
+      "permissionName": "circulation-storage.cancellation-reasons.item.post",
+      "displayName": "Circulation storage - create individual cancellation reason",
+      "description": "Create individual cancellation reason"
+    },
+    {
+      "permissionName": "circulation-storage.cancellation-reasons.item.put",
+      "displayName": "Circulation storage - put individual cancellation reason",
+      "description": "Modify individual cancellation reason by id"
+    },
+    {
+      "permissionName": "circulation-storage.cancellation-reasons.collection.delete",
+      "displayName": "Circulation storage - delete cancellation reasons",
+      "description": "Delete entire cancellation reasons collection"
+    },
+    {
+      "permissionName": "circulation-storage.cancellation-reasons.item.delete",
+      "displayName": "Circulation storage - delete individual cancellation reason",
+      "description": "Delete individual cancellation reason by id"
+    },
+    {
       "permissionName": "circulation-storage.all",
       "displayName": "Circulation storage module - all permissions",
       "description": "Entire set of permissions needed to use the circulation storage module",
@@ -327,7 +459,19 @@
         "circulation-storage.fixed-due-date-schedules.item.put",
         "circulation-storage.fixed-due-date-schedules.item.post",
         "circulation-storage.fixed-due-date-schedules.item.get",
-        "circulation-storage.fixed-due-date-schedules.collection.get"
+        "circulation-storage.fixed-due-date-schedules.collection.get",
+        "circulation-storage.staff-slips.item.delete",
+        "circulation-storage.staff-slips.collection.delete",
+        "circulation-storage.staff-slips.collection.get",
+        "circulation-storage.staff-slips.item.post",
+        "circulation-storage.staff-slips.item.put",
+        "circulation-storage.staff-slips.item.get",
+        "circulation-storage.cancellation-reasons.collection.get",
+        "circulation-storage.cancellation-reasons.item.get",
+        "circulation-storage.cancellation-reasons.item.post",
+        "circulation-storage.cancellation-reasons.item.put",
+        "circulation-storage.cancellation-reasons.collection.delete",
+        "circulation-storage.cancellation-reasons.item.delete"
       ]
     }
   ],

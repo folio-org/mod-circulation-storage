@@ -1,53 +1,59 @@
 #%RAML 0.8
-title: Loan Policy Storage
-version: v1.2
+title: Cancellation Reasons
+version: v1.0
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost:9130
 
 documentation:
-  - title: Loan Policy Storage API
-    content: <b>Storage for loan policies</b>
+  - title: Cancellation Reasons API
+    content: <b>Storage for cancellation reasons</b>
 
 schemas:
-  - loan-policy.json: !include loan-policy.json
-  - period.json: !include period.json
-  - loan-policies: !include loan-policies.json
+  - cancellation-reason.json: !include cancellation-reason.json
+  - cancellation-reasons: !include cancellation-reasons.json
+  - raml-util/schemas/metadata.schema: !include raml-util/schemas/metadata.schema
+  - errors: !include raml-util/schemas/errors.schema
+  - error.schema: !include raml-util/schemas/error.schema
+  - parameters.schema: !include raml-util/schemas/parameters.schema
 
 traits:
   - secured: !include raml-util/traits/auth.raml
   - language: !include raml-util/traits/language.raml
   - pageable: !include raml-util/traits/pageable.raml
   - searchable: !include raml-util/traits/searchable.raml
+  - validate: !include raml-util/traits/validation.raml
 
 resourceTypes:
   - collection: !include raml-util/rtypes/collection.raml
   - collection-item: !include raml-util/rtypes/item-collection.raml
 
-/loan-policy-storage:
-  /loan-policies:
-    displayName: Loan Policies
+/cancellation-reason-storage:
+  /cancellation-reasons:
+    displayName: Cancellation Reasons
     type:
       collection:
-        exampleCollection: !include examples/loan-policies.json
-        exampleItem: !include examples/loan-policy.json
-        schemaCollection: loan-policies
-        schemaItem: loan-policy.json
+        exampleCollection: !include examples/cancellation-reasons.json
+        exampleItem: !include examples/cancellation-reason.json
+        schemaCollection: cancellation-reasons
+        schemaItem: cancellation-reason.json
     get:
-      is: [pageable,
-        searchable: {description: "searchable using CQL",
-                        example: "id=\"cf23adf0-61ba-4887-bf82-956c4aae2260\""},
+      is: [
+        validate,
+        pageable,
+        searchable: {description: "with valid searchable fields", example: "cancellationReason=lost"}
         ]
       responses:
         501:
           description: "Not implemented yet"
     post:
+      is: [validate]
       responses:
         501:
           description: "Not implemented yet"
     delete:
       responses:
         204:
-          description: "All loans deleted"
+          description: "All cancellation reasons deleted"
         500:
           description: "Internal server error, e.g. due to misconfiguration"
           body:
@@ -55,11 +61,11 @@ resourceTypes:
               example: "Internal server error, contact administrator"
         501:
           description: "Not implemented yet"
-    /{loanPolicyId}:
+    /{cancellationReasonId}:
       type:
         collection-item:
-          exampleItem: !include examples/loan-policy.json
-          schema: loan-policy.json
+          exampleItem: !include examples/cancellation-reason.json
+          schema: cancellation-reason.json
       get:
         responses:
           501:

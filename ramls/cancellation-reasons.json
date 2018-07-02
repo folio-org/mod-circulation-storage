@@ -2,20 +2,21 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
   "properties": {
-    "loanPolicies": {
-      "id": "loanPolicies",
+    "cancellationReasons": {
+      "id": "cancellationReasons",
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "loan-policy.json"
+        "$ref": "cancellation-reason.json"
       }
     },
     "totalRecords": {
       "type": "integer"
     }
   },
+  "additionalProperties": false,
   "required": [
-    "loanPolicies",
+    "cancellationReasons",
     "totalRecords"
   ]
 }

@@ -1,42 +1,46 @@
 #%RAML 0.8
-title: Loan Policy Storage
-version: v1.2
+title: Staff Slips
+version: v1.0
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost:9130
 
 documentation:
-  - title: Loan Policy Storage API
-    content: <b>Storage for loan policies</b>
-
+  - title: Staff Slips Storage API
+    content: <b>Storage for staff slips</b>
+  
 schemas:
-  - loan-policy.json: !include loan-policy.json
-  - period.json: !include period.json
-  - loan-policies: !include loan-policies.json
+  - staff-slips: !include staff-slips.json
+  - staff-slip.json: !include staff-slip.json
+  - errors: !include raml-util/schemas/errors.schema
+  - error.schema: !include raml-util/schemas/error.schema
+  - parameters.schema: !include raml-util/schemas/parameters.schema
+  - raml-util/schemas/metadata.schema: !include raml-util/schemas/metadata.schema
 
 traits:
   - secured: !include raml-util/traits/auth.raml
   - language: !include raml-util/traits/language.raml
   - pageable: !include raml-util/traits/pageable.raml
   - searchable: !include raml-util/traits/searchable.raml
+  - validate: !include raml-util/traits/validation.raml
 
 resourceTypes:
   - collection: !include raml-util/rtypes/collection.raml
   - collection-item: !include raml-util/rtypes/item-collection.raml
-
-/loan-policy-storage:
-  /loan-policies:
-    displayName: Loan Policies
+  
+/staff-slips-storage:
+  /staff-slips:
+    displayName: Staff Slips
     type:
       collection:
-        exampleCollection: !include examples/loan-policies.json
-        exampleItem: !include examples/loan-policy.json
-        schemaCollection: loan-policies
-        schemaItem: loan-policy.json
+        exampleCollection: !include examples/staff-slips.json
+        exampleItem: !include examples/staff-slip.json
+        schemaCollection: staff-slips
+        schemaItem: staff-slip.json
     get:
       is: [pageable,
-        searchable: {description: "searchable using CQL",
-                        example: "id=\"cf23adf0-61ba-4887-bf82-956c4aae2260\""},
-        ]
+        searchable: {description: "by using CQL",
+                        example: "id=\"6406fd34-9ae3-46f8-aca3-bf07455635ea\""}
+      ]
       responses:
         501:
           description: "Not implemented yet"
@@ -46,8 +50,6 @@ resourceTypes:
           description: "Not implemented yet"
     delete:
       responses:
-        204:
-          description: "All loans deleted"
         500:
           description: "Internal server error, e.g. due to misconfiguration"
           body:
@@ -55,20 +57,20 @@ resourceTypes:
               example: "Internal server error, contact administrator"
         501:
           description: "Not implemented yet"
-    /{loanPolicyId}:
+    /{staffSlipId}:
       type:
         collection-item:
-          exampleItem: !include examples/loan-policy.json
-          schema: loan-policy.json
+          exampleItem: !include examples/staff-slip.json
+          schema: staff-slip.json
       get:
         responses:
           501:
             description: "Not implemented yet"
-      put:
+      delete:
         responses:
           501:
             description: "Not implemented yet"
-      delete:
+      put:
         responses:
           501:
             description: "Not implemented yet"

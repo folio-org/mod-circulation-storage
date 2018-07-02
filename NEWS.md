@@ -1,3 +1,16 @@
+## 5.2.0 2018-06-27
+
+* Adds `Closed - Cancelled` request status enum (CIRCSTORE-59)
+* Adds cancellation properties to requests (CIRCSTORE-47)
+* Introduces cancellation reasons API (CIRCSTORE-57)
+* Provides `cancellation-reason-storage` interface 1.0 (CIRCSTORE-57)
+* Provides `request-storage` interface 2.1 (CIRCSTORE-59, CIRCSTORE-47)
+
+## 5.1.0 2018-06-25
+
+* Provides `staff-slips-storage` interface 1.0 (CIRCSTORE-52)
+* For loan-history end-point: Allows limit/offset to set by default when query is null
+
 ## 5.0.1 2018-05-01
 
 * Upgrades RAML Module Builder to version 19.0.0 (CIRCSTORE-43, RMB-130)
