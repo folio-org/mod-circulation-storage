@@ -6,11 +6,11 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.folio.rest.impl.support.DatabaseIdentity;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.jaxrs.model.Requests;
 import org.folio.rest.jaxrs.resource.LoanPolicyStorageResource;
 import org.folio.rest.jaxrs.resource.RequestStorageResource;
-import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
@@ -31,7 +31,14 @@ import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
 public class RequestsAPI implements RequestStorageResource {
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
   private static final String REQUEST_TABLE = "request";
+  private static final String IDENTITY_FIELD_NAME = "_id";
+
+  private static final Class<Request> REQUEST_CLASS = Request.class;
+
+  private static final DatabaseIdentity databaseIdentity = new DatabaseIdentity(
+    IDENTITY_FIELD_NAME);
 
   @Override
   public void deleteRequestStorageRequests(
@@ -92,10 +99,10 @@ public class RequestsAPI implements RequestStorageResource {
             .setLimit(new Limit(limit))
             .setOffset(new Offset(offset));
 
-          log.error(String.format("CQL query: %s", query));
-          log.error(String.format("SQL generated from CQL: %s", cql.toString()));
+          log.info(String.format("CQL query: %s", query));
+          log.info(String.format("SQL generated from CQL: %s", cql.toString()));
 
-          postgresClient.get(REQUEST_TABLE, Request.class, fieldList, cql,
+          postgresClient.get(REQUEST_TABLE, REQUEST_CLASS, fieldList, cql,
             true, false, reply -> {
               try {
                 if(reply.succeeded()) {
@@ -110,6 +117,7 @@ public class RequestsAPI implements RequestStorageResource {
                     GetRequestStorageRequestsResponse.withJsonOK(pagedRequests)));
                 }
                 else {
+                  log.error("Failed to get requests", reply.cause());
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                     LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
                       withPlainInternalServerError(reply.cause().getMessage())));
@@ -207,20 +215,15 @@ public class RequestsAPI implements RequestStorageResource {
       PostgresClient postgresClient = PostgresClient.getInstance(
         vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-      Criteria a = new Criteria();
-
-      a.addField("'id'");
-      a.setOperation("=");
-      a.setValue(requestId);
-
-      Criterion criterion = new Criterion(a);
+      Criterion criterion = databaseIdentity.queryBy(requestId);
 
       vertxContext.runOnContext(v -> {
         try {
-          postgresClient.get(REQUEST_TABLE, Request.class, criterion, true, false,
+          postgresClient.get(REQUEST_TABLE, REQUEST_CLASS, criterion, true, false,
             reply -> {
               try {
                 if (reply.succeeded()) {
+                  @SuppressWarnings("unchecked")
                   List<Request> requests = (List<Request>) reply.result().getResults();
 
                   if (requests.size() == 1) {
@@ -272,13 +275,7 @@ public class RequestsAPI implements RequestStorageResource {
         PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-      Criteria a = new Criteria();
-
-      a.addField("'id'");
-      a.setOperation("=");
-      a.setValue(requestId);
-
-      Criterion criterion = new Criterion(a);
+      Criterion criterion = databaseIdentity.queryBy(requestId);
 
       vertxContext.runOnContext(v -> {
         try {
@@ -324,19 +321,14 @@ public class RequestsAPI implements RequestStorageResource {
         PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-      Criteria a = new Criteria();
-
-      a.addField("'id'");
-      a.setOperation("=");
-      a.setValue(requestId);
-
-      Criterion criterion = new Criterion(a);
+      Criterion criterion = databaseIdentity.queryBy(requestId);
 
       vertxContext.runOnContext(v -> {
         try {
-          postgresClient.get(REQUEST_TABLE, Request.class, criterion, true, false,
+          postgresClient.get(REQUEST_TABLE, REQUEST_CLASS, criterion, true, false,
             reply -> {
               if(reply.succeeded()) {
+                @SuppressWarnings("unchecked")
                 List<Request> requestList = (List<Request>) reply.result().getResults();
 
                 if (requestList.size() == 1) {

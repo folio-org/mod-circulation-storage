@@ -5,12 +5,12 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.io.IOUtils;
 import org.folio.rest.annotations.Validate;
+import org.folio.rest.impl.support.DatabaseIdentity;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.FixedDueDateSchedule;
 import org.folio.rest.jaxrs.model.FixedDueDateSchedules;
 import org.folio.rest.jaxrs.model.Schedule;
 import org.folio.rest.jaxrs.resource.FixedDueDateScheduleStorageResource;
-import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
@@ -25,6 +25,7 @@ import org.folio.rest.tools.utils.ValidationHelper;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
 import javax.ws.rs.core.Response;
+import java.lang.invoke.MethodHandles;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -33,15 +34,20 @@ import java.util.UUID;
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
 public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageResource {
+  private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-  private static final Logger       log               = LoggerFactory.getLogger(FixedDueDateSchedulesAPI.class);
-  private static final String       SCHEMA_NAME       = "apidocs/raml/fixed-due-date-schedule.json";
-  private static final String       FIXED_SCHEDULE_TABLE  = "fixed_due_date_schedule";
-  private static final String       INVALID_DATE_MSG  = "Unable to save fixed loan date. Date range not valid";
+  private static final String SCHEMA_NAME = "apidocs/raml/fixed-due-date-schedule.json";
+  private static final String FIXED_SCHEDULE_TABLE = "fixed_due_date_schedule";
+  private static final String IDENTITY_FIELD_NAME = "_id";
 
-  private static String             schema      =  null;
-  private final Class<FixedDueDateSchedule> DUE_DATE_SCHEDULE_CLASS = FixedDueDateSchedule.class;
+  private static final String INVALID_DATE_MSG = "Unable to save fixed loan date. Date range not valid";
 
+  private static final Class<FixedDueDateSchedule> DUE_DATE_SCHEDULE_CLASS = FixedDueDateSchedule.class;
+
+  private static final DatabaseIdentity databaseIdentity = new DatabaseIdentity(
+    IDENTITY_FIELD_NAME);
+
+  private static String schema = null;
 
   public FixedDueDateSchedulesAPI(Vertx vertx, String tenantId) {
     if(schema == null){
@@ -60,12 +66,11 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
   @Override
   @Validate
   public void deleteFixedDueDateScheduleStorageFixedDueDateSchedules(
-      String lang,
-      Map<String,
-      String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext
-      ) throws Exception {
+    String lang,
+    Map<String,
+    String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -101,14 +106,13 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
 
   @Override
   public void getFixedDueDateScheduleStorageFixedDueDateSchedules(
-      int offset,
-      int limit,
-      String query,
-      String lang,
-      Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext
-      ) throws Exception {
+    int offset,
+    int limit,
+    String query,
+    String lang,
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -136,9 +140,26 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
                         .withJsonOK(pagedSchedules)));
               } else {
                 log.error(reply.cause());
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                    FixedDueDateScheduleStorageResource.GetFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
-                        .withPlainInternalServerError(reply.cause().getMessage())));
+
+                if(reply.cause() instanceof CQLQueryValidationException) {
+                  CQLQueryValidationException exception = (CQLQueryValidationException)reply.cause();
+
+                  String field = exception.getMessage();
+                  int start = field.indexOf('\'');
+                  int end = field.lastIndexOf('\'');
+                  if(start != -1 && end != -1){
+                    field = field.substring(start+1, end);
+                  }
+                  Errors e = ValidationHelper.createValidationErrorMessage(field, "", exception.getMessage());
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                    GetFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
+                      .withJsonUnprocessableEntity(e)));
+                }
+                else {
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                      FixedDueDateScheduleStorageResource.GetFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
+                          .withPlainInternalServerError(reply.cause().getMessage())));
+                }
               }
             } catch (Exception e) {
               log.error(e);
@@ -147,19 +168,6 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
                       .withPlainInternalServerError(e.getMessage())));
             }
           });
-        }
-        catch(CQLQueryValidationException e1){
-          String field = e1.getMessage();
-          int start = field.indexOf('\'');
-          int end = field.lastIndexOf('\'');
-          if(start != -1 && end != -1){
-            field = field.substring(start+1, end);
-          }
-          log.error(e1.getMessage());
-          Errors e = ValidationHelper.createValidationErrorMessage(field, "", e1.getMessage());
-          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            GetFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
-            .withJsonUnprocessableEntity(e)));
         }
         catch (Exception e) {
           log.error(e);
@@ -179,12 +187,11 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
   @Override
   @Validate
   public void postFixedDueDateScheduleStorageFixedDueDateSchedules(
-      String lang,
-      FixedDueDateSchedule entity,
-      Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext
-      ) throws Exception {
+    String lang,
+    FixedDueDateSchedule entity,
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -254,12 +261,11 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
   @Override
   @Validate
   public void getFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleId(
-      String fixedDueDateScheduleId,
-      String lang,
-      Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext
-      ) throws Exception {
+    String fixedDueDateScheduleId,
+    String lang,
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -267,13 +273,7 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
       PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
           TenantTool.calculateTenantId(tenantId));
 
-      Criteria a = new Criteria(SCHEMA_NAME);
-
-      a.addField("'id'");
-      a.setOperation("=");
-      a.setValue(fixedDueDateScheduleId);
-
-      Criterion criterion = new Criterion(a);
+      Criterion criterion = databaseIdentity.queryBy(fixedDueDateScheduleId);
 
       vertxContext.runOnContext(v -> {
         try {
@@ -296,10 +296,18 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
                 }
               } else {
                 log.error(reply.cause());
-                asyncResultHandler.handle(Future.succeededFuture(
-                    FixedDueDateScheduleStorageResource.GetFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
-                        .withPlainInternalServerError(reply.cause().getMessage())));
 
+                if (ValidationHelper.isInvalidUUID(reply.cause().getMessage())) {
+                  //Should potentially be 400 rather than 404
+                  asyncResultHandler.handle(Future.succeededFuture(
+                    FixedDueDateScheduleStorageResource.GetFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
+                      .withPlainNotFound(reply.cause().getMessage())));
+                }
+                else {
+                  asyncResultHandler.handle(Future.succeededFuture(
+                    FixedDueDateScheduleStorageResource.GetFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
+                      .withPlainInternalServerError(reply.cause().getMessage())));
+                }
               }
             } catch (Exception e) {
               log.error(e);
@@ -326,13 +334,12 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
   @Override
   @Validate
   public void deleteFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleId(
-      String fixedDueDateScheduleId,
-      String lang,
-      Map<String,
-      String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext
-      ) throws Exception {
+    String fixedDueDateScheduleId,
+    String lang,
+    Map<String,
+    String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -340,13 +347,7 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
       PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
           TenantTool.calculateTenantId(tenantId));
 
-      Criteria a = new Criteria();
-
-      a.addField("'id'");
-      a.setOperation("=");
-      a.setValue(fixedDueDateScheduleId);
-
-      Criterion criterion = new Criterion(a);
+      Criterion criterion = databaseIdentity.queryBy(fixedDueDateScheduleId);
 
       vertxContext.runOnContext(v -> {
         try {
@@ -397,8 +398,7 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
       FixedDueDateSchedule entity,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext
-      ) throws Exception {
+      Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -415,13 +415,7 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
       PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
           TenantTool.calculateTenantId(tenantId));
 
-      Criteria a = new Criteria();
-
-      a.addField("'id'");
-      a.setOperation("=");
-      a.setValue(fixedDueDateScheduleId);
-
-      Criterion criterion = new Criterion(a);
+      Criterion criterion = databaseIdentity.queryBy(fixedDueDateScheduleId);
 
       vertxContext.runOnContext(v -> {
         try {
@@ -538,8 +532,6 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
     }
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
   }
-
-
 
   private Errors isDateRangeValid(List<Schedule> schedules) {
 

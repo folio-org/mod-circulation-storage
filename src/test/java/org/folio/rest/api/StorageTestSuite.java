@@ -1,15 +1,9 @@
 package org.folio.rest.api;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
+import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.sql.ResultSet;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HttpClient;
@@ -22,10 +16,17 @@ import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.sql.ResultSet;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import static java.net.HttpURLConnection.HTTP_CREATED;
+import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 @RunWith(Suite.class)
 
@@ -41,13 +42,15 @@ import io.vertx.ext.sql.ResultSet;
 })
 
 public class StorageTestSuite {
-	public static final String TENANT_ID = "test_tenant";
+	static final String TENANT_ID = "test_tenant";
+  private static final int TENANT_API_TIMEOUT = 20;
+  private static final int VERTICLE_OPERATION_TIMEOUT = 20;
 
-	private static Vertx vertx;
+  private static Vertx vertx;
 	private static int port;
 	private static boolean initialised = false;
 
-	public static URL storageUrl(String path) throws MalformedURLException {
+  public static URL storageUrl(String path) throws MalformedURLException {
 		return new URL("http", "localhost", port, path);
 	}
 
@@ -117,7 +120,7 @@ public class StorageTestSuite {
 			}
 		});
 
-		undeploymentComplete.get(20, TimeUnit.SECONDS);
+		undeploymentComplete.get(VERTICLE_OPERATION_TIMEOUT, TimeUnit.SECONDS);
 	}
 
 	public static boolean isNotInitialised() {
@@ -134,7 +137,7 @@ public class StorageTestSuite {
 
 			Response response = deleteAllFinished.get(5, TimeUnit.SECONDS);
 
-			if (response.getStatusCode() != 204) {
+			if (response.getStatusCode() != HTTP_NO_CONTENT) {
 				System.out.println("WARNING!!!!! Delete all resources preparation failed");
 			}
 		} catch (Exception e) {
@@ -188,7 +191,7 @@ public class StorageTestSuite {
 			}
 		});
 
-		deploymentComplete.get(20, TimeUnit.SECONDS);
+		deploymentComplete.get(VERTICLE_OPERATION_TIMEOUT, TimeUnit.SECONDS);
 	}
 
 	private static void prepareTenant(String tenantId) {
@@ -198,13 +201,13 @@ public class StorageTestSuite {
 			HttpClient client = new HttpClient(vertx);
 
 			client.post(storageUrl("/_/tenant"), null, tenantId, ResponseHandler.text(tenantPrepared));
-
-			TextResponse response = tenantPrepared.get(10, TimeUnit.SECONDS);
+			
+      TextResponse response = tenantPrepared.get(TENANT_API_TIMEOUT, TimeUnit.SECONDS);
 
 			String failureMessage = String.format("Tenant preparation failed: %s: %s", response.getStatusCode(),
 					response.getBody());
 
-			assertThat(failureMessage, response.getStatusCode(), is(201));
+			assertThat(failureMessage, response.getStatusCode(), is(HTTP_CREATED));
 
 		} catch (Exception e) {
 			System.out.println("WARNING!!!!! Tenant preparation failed: " + e.getMessage());
@@ -220,12 +223,12 @@ public class StorageTestSuite {
 
 			client.delete(storageUrl("/_/tenant"), tenantId, ResponseHandler.text(tenantDeleted));
 
-			TextResponse response = tenantDeleted.get(10, TimeUnit.SECONDS);
+      TextResponse response = tenantDeleted.get(TENANT_API_TIMEOUT, TimeUnit.SECONDS);
 
 			String failureMessage = String.format("Tenant cleanup failed: %s: %s", response.getStatusCode(),
 					response.getBody());
 
-			assertThat(failureMessage, response.getStatusCode(), is(204));
+			assertThat(failureMessage, response.getStatusCode(), is(HTTP_NO_CONTENT));
 
 		} catch (Exception e) {
 			System.out.println("WARNING!!!!! Tenant cleanup failed: " + e.getMessage());

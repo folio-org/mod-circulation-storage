@@ -4,11 +4,13 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.folio.rest.annotations.Validate;
+import org.folio.rest.impl.support.DatabaseIdentity;
 import org.folio.rest.jaxrs.model.LoanPolicies;
 import org.folio.rest.jaxrs.model.LoanPolicy;
 import org.folio.rest.jaxrs.resource.LoanPolicyStorageResource;
-import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
@@ -19,6 +21,7 @@ import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
 import javax.ws.rs.core.Response;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -26,16 +29,22 @@ import java.util.UUID;
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
 public class LoanPoliciesAPI implements LoanPolicyStorageResource {
+  private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-  private final String LOAN_POLICY_TABLE = "loan_policy";
-  private final Class<LoanPolicy> LOAN_POLICY_CLASS = LoanPolicy.class;
+  private static final String LOAN_POLICY_TABLE = "loan_policy";
+  private static final String IDENTITY_FIELD_NAME = "_id";
+
+  private static final Class<LoanPolicy> LOAN_POLICY_CLASS = LoanPolicy.class;
+
+  private static final DatabaseIdentity databaseIdentity = new DatabaseIdentity(
+    IDENTITY_FIELD_NAME);
 
   @Override
   @Validate
   public void deleteLoanPolicyStorageLoanPolicies(
     String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -47,12 +56,21 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
         postgresClient.mutate(String.format("TRUNCATE TABLE %s_%s.%s",
           tenantId, "mod_circulation_storage", LOAN_POLICY_TABLE),
           reply -> {
+          try {
             asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
               LoanPolicyStorageResource.DeleteLoanPolicyStorageLoanPoliciesResponse
                 .noContent().build()));
-          });
+          }
+          catch (Exception e) {
+            log.error("Failed to handle database response when deleting all loan policies", e);
+            asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+              LoanPolicyStorageResource.DeleteLoanPolicyStorageLoanPoliciesResponse
+                .withPlainInternalServerError(e.getMessage())));
+          }
+        });
       }
       catch(Exception e) {
+        log.error("Failed to make database request when deleting all loans", e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
           LoanPolicyStorageResource.DeleteLoanPolicyStorageLoanPoliciesResponse
             .withPlainInternalServerError(e.getMessage())));
@@ -68,63 +86,64 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
     String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
-      String tenantId = okapiHeaders.get(TENANT_HEADER);
+    String tenantId = okapiHeaders.get(TENANT_HEADER);
 
-      try {
-        vertxContext.runOnContext(v -> {
-          try {
-            PostgresClient postgresClient = PostgresClient.getInstance(
-              vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
+    try {
+      vertxContext.runOnContext(v -> {
+        try {
+          PostgresClient postgresClient = PostgresClient.getInstance(
+            vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-            String[] fieldList = {"*"};
+          String[] fieldList = {"*"};
 
-            CQL2PgJSON cql2pgJson = new CQL2PgJSON("loan_policy.jsonb");
-            CQLWrapper cql = new CQLWrapper(cql2pgJson, query)
-              .setLimit(new Limit(limit))
-              .setOffset(new Offset(offset));
+          CQL2PgJSON cql2pgJson = new CQL2PgJSON("loan_policy.jsonb");
+          CQLWrapper cql = new CQLWrapper(cql2pgJson, query)
+            .setLimit(new Limit(limit))
+            .setOffset(new Offset(offset));
 
-            postgresClient.get(LOAN_POLICY_TABLE, LOAN_POLICY_CLASS, fieldList, cql,
-              true, false, reply -> {
-                try {
-                  if(reply.succeeded()) {
-                    @SuppressWarnings("unchecked")
-                    List<LoanPolicy> loanPolicies = (List<LoanPolicy>) reply.result().getResults();
+          postgresClient.get(LOAN_POLICY_TABLE, LOAN_POLICY_CLASS, fieldList, cql,
+            true, false, reply -> {
+              try {
+                if(reply.succeeded()) {
+                  @SuppressWarnings("unchecked")
+                  List<LoanPolicy> loanPolicies = (List<LoanPolicy>) reply.result().getResults();
 
-                    LoanPolicies pagedLoans = new LoanPolicies();
-                    pagedLoans.setLoanPolicies(loanPolicies);
-                    pagedLoans.setTotalRecords((Integer)reply.result().getResultInfo().getTotalRecords());
+                  LoanPolicies pagedLoans = new LoanPolicies();
+                  pagedLoans.setLoanPolicies(loanPolicies);
+                  pagedLoans.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
 
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                      LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
-                        withJsonOK(pagedLoans)));
-                  }
-                  else {
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                      LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
-                        withPlainInternalServerError(reply.cause().getMessage())));
-                  }
-                } catch (Exception e) {
-                  e.printStackTrace();
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                     LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
-                      withPlainInternalServerError(e.getMessage())));
+                      withJsonOK(pagedLoans)));
                 }
-              });
-          } catch (Exception e) {
-            e.printStackTrace();
-            asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-              LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
-                withPlainInternalServerError(e.getMessage())));
-          }
-        });
-      } catch (Exception e) {
-        e.printStackTrace();
-        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-          LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
-            withPlainInternalServerError(e.getMessage())));
-      }
+                else {
+                  log.error("Failed to get loan policies", reply.cause());
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                    LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
+                      withPlainInternalServerError(reply.cause().getMessage())));
+                }
+              } catch (Exception e) {
+                log.error("Failed to handle database response when getting loan policies", e);
+                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                  LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
+                    withPlainInternalServerError(e.getMessage())));
+              }
+            });
+        } catch (Exception e) {
+          log.error("Failed to make database request when getting loan policies", e);
+          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+            LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
+              withPlainInternalServerError(e.getMessage())));
+        }
+      });
+    } catch (Exception e) {
+      log.error("Failed to run operation on context when getting loan policies", e);
+      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+        LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
+          withPlainInternalServerError(e.getMessage())));
+    }
   }
 
   @Override
@@ -133,7 +152,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
     String lang, LoanPolicy entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -148,7 +167,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
             entity.setId(UUID.randomUUID().toString());
           }
 
-          postgresClient.save("loan_policy", entity.getId(), entity,
+          postgresClient.save(LOAN_POLICY_TABLE, entity.getId(), entity,
             reply -> {
               try {
                 if(reply.succeeded()) {
@@ -161,13 +180,14 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
                         .withJsonCreated(reply.result(), stream)));
                 }
                 else {
+                  log.error("Failed to create a loan policy", reply.cause());
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(
                       LoanPolicyStorageResource.PostLoanPolicyStorageLoanPoliciesResponse
                         .withPlainInternalServerError(reply.cause().toString())));
                 }
               } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Failed to handle database response when creating loan policy", e);
                 asyncResultHandler.handle(
                   io.vertx.core.Future.succeededFuture(
                     LoanPolicyStorageResource.PostLoanPolicyStorageLoanPoliciesResponse
@@ -175,14 +195,14 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
               }
             });
         } catch (Exception e) {
-          e.printStackTrace();
+          log.error("Failed to make database request when creating loan policy", e);
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             LoanPolicyStorageResource.PostLoanPolicyStorageLoanPoliciesResponse
               .withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error("Failed to run operation on context when creating loan policy", e);
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         LoanPolicyStorageResource.PostLoanPolicyStorageLoanPoliciesResponse
           .withPlainInternalServerError(e.getMessage())));
@@ -196,7 +216,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
     String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -204,13 +224,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
       PostgresClient postgresClient = PostgresClient.getInstance(
         vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-      Criteria a = new Criteria();
-
-      a.addField("'id'");
-      a.setOperation("=");
-      a.setValue(loanPolicyId);
-
-      Criterion criterion = new Criterion(a);
+      Criterion criterion = databaseIdentity.queryBy(loanPolicyId);
 
       vertxContext.runOnContext(v -> {
         try {
@@ -238,6 +252,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
                           withPlainNotFound("Not Found")));
                   }
                 } else {
+                  log.error("Failed to get a loan policy", reply.cause());
                   asyncResultHandler.handle(
                     Future.succeededFuture(
                       LoanPolicyStorageResource.
@@ -246,7 +261,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
 
                 }
               } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Failed to handle database response when getting a loan policy", e);
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                   LoanPolicyStorageResource.
                     GetLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse.
@@ -254,7 +269,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
               }
             });
         } catch (Exception e) {
-          e.printStackTrace();
+          log.error("Failed to make database request when getting a loan policy", e);
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             LoanPolicyStorageResource.
               GetLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse.
@@ -262,7 +277,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
         }
       });
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error("Failed to run operation on context when getting a loan policy", e);
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         LoanPolicyStorageResource.
           GetLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse.
@@ -276,7 +291,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
     String loanPolicyId,
     String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -285,18 +300,13 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
         PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-      Criteria a = new Criteria();
-
-      a.addField("'id'");
-      a.setOperation("=");
-      a.setValue(loanPolicyId);
-
-      Criterion criterion = new Criterion(a);
+      Criterion criterion = databaseIdentity.queryBy(loanPolicyId);
 
       vertxContext.runOnContext(v -> {
         try {
           postgresClient.delete(LOAN_POLICY_TABLE, criterion,
             reply -> {
+            try {
               if(reply.succeeded()) {
                 asyncResultHandler.handle(
                   Future.succeededFuture(
@@ -304,18 +314,28 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
                       .withNoContent()));
               }
               else {
+                log.error("Failed to delete a loan policy", reply.cause());
                 asyncResultHandler.handle(Future.succeededFuture(
                   DeleteLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
                     .withPlainInternalServerError(reply.cause().getMessage())));
               }
+            }
+            catch (Exception e) {
+              log.error("Failed to handle database response when deleting a loan policy", e);
+              asyncResultHandler.handle(Future.succeededFuture(
+                DeleteLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
+                  .withPlainInternalServerError(e.getMessage())));
+            }
             });
         } catch (Exception e) {
+          log.error("Failed to make database request when deleting a loan policy", e);
           asyncResultHandler.handle(Future.succeededFuture(
             DeleteLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
               .withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
+      log.error("Failed to run operation on context when deleting a loan policy", e);
       asyncResultHandler.handle(Future.succeededFuture(
         DeleteLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
           .withPlainInternalServerError(e.getMessage())));
@@ -330,7 +350,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
     LoanPolicy entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -339,13 +359,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
         PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-      Criteria a = new Criteria();
-
-      a.addField("'id'");
-      a.setOperation("=");
-      a.setValue(loanPolicyId);
-
-      Criterion criterion = new Criterion(a);
+      Criterion criterion = databaseIdentity.queryBy(loanPolicyId);
 
       vertxContext.runOnContext(v -> {
         try {
@@ -371,6 +385,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
                                   .withNoContent()));
                           }
                           else {
+                            log.error("Failed to replace a loan policy", reply.cause());
                             asyncResultHandler.handle(
                               Future.succeededFuture(
                                 PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
@@ -378,6 +393,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
                                     update.cause().getMessage())));
                           }
                         } catch (Exception e) {
+                          log.error("Failed to handle database response when replacing a loan policy", e);
                           asyncResultHandler.handle(
                             Future.succeededFuture(
                               PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
@@ -385,6 +401,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
                         }
                       });
                   } catch (Exception e) {
+                    log.error("Failed to replace a loan policy", reply.cause());
                     asyncResultHandler.handle(Future.succeededFuture(
                       PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
                         .withPlainInternalServerError(e.getMessage())));
@@ -405,6 +422,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
                                   .withNoContent()));
                           }
                           else {
+                            log.error("Failed to create a loan policy", reply.cause());
                             asyncResultHandler.handle(
                               Future.succeededFuture(
                                 PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
@@ -412,6 +430,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
                                     save.cause().getMessage())));
                           }
                         } catch (Exception e) {
+                          log.error("Failed to handle database response when creating a loan policy", e);
                           asyncResultHandler.handle(
                             Future.succeededFuture(
                               PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
@@ -419,24 +438,28 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
                         }
                       });
                   } catch (Exception e) {
+                    log.error("Failed to create a loan policy", reply.cause());
                     asyncResultHandler.handle(Future.succeededFuture(
                       PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
                         .withPlainInternalServerError(e.getMessage())));
                   }
                 }
               } else {
+                log.error("Failed to get loan policy whilst creating or replacing a loan policy", reply.cause());
                 asyncResultHandler.handle(Future.succeededFuture(
                   PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
                     .withPlainInternalServerError(reply.cause().getMessage())));
               }
             });
         } catch (Exception e) {
+          log.error("Failed to run operation on context when replacing a loan policy", e);
           asyncResultHandler.handle(Future.succeededFuture(
             PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
               .withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
+      log.error("Failed when replacing a loan policy", e);
       asyncResultHandler.handle(Future.succeededFuture(
         PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
           .withPlainInternalServerError(e.getMessage())));

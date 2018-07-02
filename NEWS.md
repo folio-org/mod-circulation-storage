@@ -1,3 +1,8 @@
+## 5.3.0 Unreleased
+
+* Adds initial set of database indexes (CIRCSTORE-51)
+* Upgrades RAML module builder to version 19.1.4, to allow for database connection expiry (CIRCSTORE-62, RMB-154)
+
 ## 5.2.0 2018-06-27
 
 * Adds `Closed - Cancelled` request status enum (CIRCSTORE-59)

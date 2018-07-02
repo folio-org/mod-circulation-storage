@@ -19,6 +19,26 @@
           "caseSensitive": true,
           "whereClause": "WHERE (jsonb->'status'->>'name') = 'Open'"
         }
+      ],
+      "index": [
+        {
+          "fieldName": "itemId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "status.name",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "id",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        }
       ]
     },
     {
@@ -41,6 +61,26 @@
       "pkColumnName": "_id",
       "withMetadata": true,
       "withAuditing": false,
+      "index": [
+        {
+          "fieldName": "itemId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "status",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "requestDate",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        }
+      ],
       "foreignKeys": [
         {
           "fieldName": "cancellationReasonId",
