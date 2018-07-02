@@ -140,9 +140,26 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
                         .withJsonOK(pagedSchedules)));
               } else {
                 log.error(reply.cause());
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                    FixedDueDateScheduleStorageResource.GetFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
-                        .withPlainInternalServerError(reply.cause().getMessage())));
+
+                if(reply.cause() instanceof CQLQueryValidationException) {
+                  CQLQueryValidationException exception = (CQLQueryValidationException)reply.cause();
+
+                  String field = exception.getMessage();
+                  int start = field.indexOf('\'');
+                  int end = field.lastIndexOf('\'');
+                  if(start != -1 && end != -1){
+                    field = field.substring(start+1, end);
+                  }
+                  Errors e = ValidationHelper.createValidationErrorMessage(field, "", exception.getMessage());
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                    GetFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
+                      .withJsonUnprocessableEntity(e)));
+                }
+                else {
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                      FixedDueDateScheduleStorageResource.GetFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
+                          .withPlainInternalServerError(reply.cause().getMessage())));
+                }
               }
             } catch (Exception e) {
               log.error(e);
@@ -151,19 +168,6 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
                       .withPlainInternalServerError(e.getMessage())));
             }
           });
-        }
-        catch(CQLQueryValidationException e1){
-          String field = e1.getMessage();
-          int start = field.indexOf('\'');
-          int end = field.lastIndexOf('\'');
-          if(start != -1 && end != -1){
-            field = field.substring(start+1, end);
-          }
-          log.error(e1.getMessage());
-          Errors e = ValidationHelper.createValidationErrorMessage(field, "", e1.getMessage());
-          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            GetFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
-            .withJsonUnprocessableEntity(e)));
         }
         catch (Exception e) {
           log.error(e);
