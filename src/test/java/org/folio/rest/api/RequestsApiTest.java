@@ -444,7 +444,58 @@ public class RequestsApiTest extends ApiTests {
     assertThat(response.getErrors(),
       hasSoleMessgeContaining(
         "Cannot have more than one request with the same position in the queue"));
+  }
 
+  @Test
+  public void canCreateMultipleClosedRequestsForTheSameItem()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID itemId = UUID.randomUUID();
+
+    //TODO: Create this in the suite rather than in this test
+    final UUID cancellationReasonId = UUID.fromString(createCancellationReason(
+      "Cancelled at patron’s request", "Use when patron wants to request cancelling")
+      .getId());
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withNoPosition()
+      .withStatus(CLOSED_CANCELLED)
+      .withCancellationReasonId(cancellationReasonId)
+      .create());
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withNoPosition()
+      .withStatus(CLOSED_CANCELLED)
+      .withCancellationReasonId(cancellationReasonId)
+      .create());
+  }
+
+  //This should not happen, but shouldn't really fail either (maybe need to check)
+  @Test
+  public void canCreateMultipleOpenRequestsForTheSameItemWithNoPosition()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID itemId = UUID.randomUUID();
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withPosition(1)
+      .withStatus(OPEN_AWAITING_PICKUP)
+      .create());
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withNoPosition()
+      .withStatus(OPEN_NOT_YET_FILLED)
+      .create());
   }
 
   @Test
@@ -1355,11 +1406,11 @@ public class RequestsApiTest extends ApiTests {
       getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
 
-  protected static URL requestStorageUrl() throws MalformedURLException {
+  static URL requestStorageUrl() throws MalformedURLException {
     return requestStorageUrl("");
   }
 
-  protected static URL requestStorageUrl(String subPath)
+  static URL requestStorageUrl(String subPath)
     throws MalformedURLException {
 
     return StorageTestSuite.storageUrl("/request-storage/requests" + subPath);
@@ -1399,5 +1450,44 @@ public class RequestsApiTest extends ApiTests {
       ResponseHandler.json(getCompleted));
 
     return getCompleted.get(5, TimeUnit.SECONDS);
+  }
+
+  //TODO: Move this to separate class
+  private static URL cancelReasonURL() throws MalformedURLException {
+    return cancelReasonURL("");
+  }
+
+  private static URL cancelReasonURL(String subPath)
+    throws MalformedURLException {
+
+    return StorageTestSuite.storageUrl(
+      "/cancellation-reason-storage/cancellation-reasons" + subPath);
+  }
+
+  private IndividualResource createCancellationReason(
+    String name,
+    String description)
+
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    final JsonObject body = new JsonObject();
+
+    body.put("name", name);
+    body.put("description", description);
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    client.post(cancelReasonURL(), body, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to create cancellation reason: %s",
+      postResponse.getBody()), postResponse.getStatusCode(), is(HTTP_CREATED));
+
+    return new IndividualResource(postResponse);
   }
 }

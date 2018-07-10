@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
-import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET_FILLED;
+import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_CANCELLED;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -312,7 +312,7 @@ public class CancellationReasonsApiTest extends ApiTests {
       .withItem("Nod", "565578437802")
       .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
       .withProxy("Stuart", "Rebecca", "6059539205")
-      .withStatus(OPEN_NOT_YET_FILLED)
+      .withStatus(CLOSED_CANCELLED)
       .withCancellationReasonId(cancellationReasonId)
       .create();
 
