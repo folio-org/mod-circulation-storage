@@ -1,4 +1,4 @@
-## 5.3.0 Unreleased
+## 5.3.0 2018-07-10
 
 * Upgrades RAML module builder to version 19.1.5, to allow for database connection expiry (CIRCSTORE-62, RMB-154)
 
