@@ -1,3 +1,6 @@
+## 5.4.0 Unreleased
+* Add 'metadata' field to loans-policy records (CIRCSTORE-63)
+
 ## 5.3.0 2018-07-10
 
 * Upgrades RAML module builder to version 19.1.5, to allow for database connection expiry (CIRCSTORE-62, RMB-154)

@@ -67,7 +67,7 @@
       "tableName": "loan_policy",
       "generateId": false,
       "pkColumnName": "_id",
-      "withMetadata": false,
+      "withMetadata": true,
       "withAuditing": false,
       "foreignKeys": [
         {

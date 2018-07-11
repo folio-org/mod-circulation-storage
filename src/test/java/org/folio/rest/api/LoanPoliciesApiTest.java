@@ -254,6 +254,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     assertThat(representation.getBoolean("renewable"), is(true));
 
     assertThat(representation.containsKey("loansPolicy"), is(true));
+    assertThat(representation.containsKey("metadata"), is(true));
 
     JsonObject loansPolicy = representation.getJsonObject("loansPolicy");
 
