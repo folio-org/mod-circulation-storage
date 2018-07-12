@@ -53,7 +53,7 @@ shift $((OPTIND -1))
 okapiUrl=${okapiUrl:-http://localhost:9130}
 tenant=${tenant:-demo_tenant}
 dataDirs=${dataDirs:-'.'}
-modEndpoints='loan-policy-storage/loan-policies loan-rules-storage'
+modEndpoints='loan-policy-storage/loan-policies loan-rules-storage cancellation-reason-storage/cancellation-reasons'
 
 for dir in "${dataDirs[@]}";
 do
