@@ -183,7 +183,7 @@
     },
     {
       "id" : "cancellation-reason-storage",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -402,7 +402,7 @@
       "permissionName": "circulation-storage.cancellation-reasons.collection.get",
       "displayName": "Circulation storage - get cancellation reasons collection",
       "description": "Get cancellation reasons from storage"
-    },    
+    },
     {
       "permissionName": "circulation-storage.cancellation-reasons.item.get",
       "displayName": "Circulation storage - get individual cancellation reason",
