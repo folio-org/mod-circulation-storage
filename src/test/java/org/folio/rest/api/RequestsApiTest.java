@@ -1379,6 +1379,67 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
+  public void canSortRequestsByAscendingPosition()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException, UnsupportedEncodingException {
+
+    UUID itemId = UUID.randomUUID();
+
+    //Deliberately create requests out of order to demonstrate sorting,
+    // should not happen under normal circumstances
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withPosition(2)
+      .create()).getId();
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withPosition(1)
+      .create()).getId();
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withPosition(4)
+      .create()).getId();
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withPosition(3)
+      .create()).getId();
+
+    CompletableFuture<JsonResponse> getRequestsCompleted = new CompletableFuture<>();
+
+    String query = URLEncoder.encode(
+      String.format("itemId==%s sortBy position/sort.ascending", itemId),
+      "UTF-8");
+
+    client.get(requestStorageUrl() + String.format("?query=%s", query),
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(getRequestsCompleted));
+
+    JsonResponse getRequestsResponse = getRequestsCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to get requests: %s",
+      getRequestsResponse.getBody()),
+      getRequestsResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject wrappedRequests = getRequestsResponse.getJson();
+
+    List<JsonObject> requests = JsonArrayHelper
+      .toList(wrappedRequests.getJsonArray("requests"));
+
+    assertThat(requests.size(), is(4));
+    assertThat(wrappedRequests.getInteger("totalRecords"), is(4));
+
+    List<Integer> sortedPositions = requests.stream()
+      .map(request -> request.getInteger("position"))
+      .collect(Collectors.toList());
+
+    assertThat(sortedPositions, contains(1, 2, 3, 4));
+  }
+
+  @Test
   public void canDeleteARequest()
     throws InterruptedException,
     MalformedURLException,
