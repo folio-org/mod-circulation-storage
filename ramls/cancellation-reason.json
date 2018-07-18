@@ -11,6 +11,9 @@
     "description" : {
       "type": "string"
     },
+    "publicDescription": {
+      "type": "string"
+    },
     "requiresAdditionalInformation": {
       "type": "boolean"
     },
@@ -21,8 +24,7 @@
    },
    "additionalProperties": false,
     "required": [
-      "name",
-      "description"
+      "name"
     ]
 }
 

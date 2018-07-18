@@ -35,7 +35,7 @@ import static org.junit.Assert.assertTrue;
  * @author kurt
  */
 public class CancellationReasonsApiTest extends ApiTests {
-  
+
   private static URL cancelReasonURL() throws MalformedURLException {
     return cancelReasonURL("");
   }
@@ -46,7 +46,7 @@ public class CancellationReasonsApiTest extends ApiTests {
     return StorageTestSuite.storageUrl(
       "/cancellation-reason-storage/cancellation-reasons" + subPath);
   }
-  
+
   private void assertCreateCancellationReason(JsonObject request)
       throws MalformedURLException,
       InterruptedException,
@@ -54,15 +54,15 @@ public class CancellationReasonsApiTest extends ApiTests {
       TimeoutException {
 
     JsonResponse response = createCancellationReason(request);
-    
+
     MatcherAssert.assertThat(String.format("Failed to create cancellation reason: %s",
         response.getBody()),
       response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     new IndividualResource(response);
   }
-  
-  private JsonResponse createCancellationReason(JsonObject request) 
+
+  private JsonResponse createCancellationReason(JsonObject request)
       throws MalformedURLException,
       InterruptedException,
       ExecutionException,
@@ -74,37 +74,37 @@ public class CancellationReasonsApiTest extends ApiTests {
 
     return createCompleted.get(5, TimeUnit.SECONDS);
   }
-  
-  private IndividualResource assertGetCancellationReason(String id) 
+
+  private IndividualResource assertGetCancellationReason(String id)
       throws MalformedURLException,
-      InterruptedException, 
+      InterruptedException,
       ExecutionException,
-      TimeoutException {    
+      TimeoutException {
     JsonResponse response = getCancellationReason(id);
-    
+
     MatcherAssert.assertThat(String.format("Failed to retrieve cancellation reason: %s (%s)",
         response.getBody(), response.getStatusCode()),
         response.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-    
+
     return new IndividualResource(response);
   }
-  
-  private JsonResponse getCancellationReason(String id) 
+
+  private JsonResponse getCancellationReason(String id)
       throws MalformedURLException,
       InterruptedException,
-      ExecutionException, 
+      ExecutionException,
       TimeoutException {
-    CompletableFuture<JsonResponse> getReasonFuture = new CompletableFuture<>();    
+    CompletableFuture<JsonResponse> getReasonFuture = new CompletableFuture<>();
     client.get(cancelReasonURL("/"+id), StorageTestSuite.TENANT_ID,
         ResponseHandler.json(getReasonFuture));
 
     return getReasonFuture.get(5, TimeUnit.SECONDS);
   }
-  
+
   private JsonResponse getCancellationReasonCollection(String query)
       throws MalformedURLException,
       InterruptedException,
-      ExecutionException, 
+      ExecutionException,
       TimeoutException {
     CompletableFuture<JsonResponse> getReasonsFuture = new CompletableFuture<>();
     String queryParam;
@@ -118,11 +118,11 @@ public class CancellationReasonsApiTest extends ApiTests {
 
     return getReasonsFuture.get(5, TimeUnit.SECONDS);
   }
-  
-  private TextResponse updateCancellationReason(String id, JsonObject request) 
+
+  private TextResponse updateCancellationReason(String id, JsonObject request)
       throws MalformedURLException,
       InterruptedException,
-      ExecutionException, 
+      ExecutionException,
       TimeoutException {
     CompletableFuture<TextResponse> updateReasonFuture = new CompletableFuture<>();
     client.put(cancelReasonURL("/"+id), request, StorageTestSuite.TENANT_ID,
@@ -130,23 +130,23 @@ public class CancellationReasonsApiTest extends ApiTests {
 
     return updateReasonFuture.get(5, TimeUnit.SECONDS);
   }
-  
+
   private void assertUpdateCancellationReason(String id, JsonObject request)
       throws MalformedURLException,
       InterruptedException,
-      ExecutionException, 
+      ExecutionException,
       TimeoutException {
     TextResponse response = updateCancellationReason(id, request);
-    
+
     MatcherAssert.assertThat(String.format("Failed to update cancellation reason: %s (%s)",
         response.getBody(), response.getStatusCode()),
         response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
   }
-  
+
   private TextResponse deleteCancellationReason(String id)
       throws MalformedURLException,
       InterruptedException,
-      ExecutionException, 
+      ExecutionException,
       TimeoutException {
     CompletableFuture<TextResponse> deleteReasonFuture = new CompletableFuture<>();
 
@@ -155,14 +155,14 @@ public class CancellationReasonsApiTest extends ApiTests {
 
     return deleteReasonFuture.get(5, TimeUnit.SECONDS);
   }
-  
+
   private void assertDeleteCancellationReason(String id)
       throws MalformedURLException,
       InterruptedException,
-      ExecutionException, 
+      ExecutionException,
       TimeoutException {
     TextResponse response = deleteCancellationReason(id);
-    
+
     MatcherAssert.assertThat(String.format("Failed to delete cancellation reason: %s (%s)",
         response.getBody(), response.getStatusCode()),
         response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
@@ -176,20 +176,21 @@ public class CancellationReasonsApiTest extends ApiTests {
   }
   //Tests
   @Test
-  public void canCreateCancellationReason() 
-      throws MalformedURLException, 
-      InterruptedException, 
-      ExecutionException, 
+  public void canCreateCancellationReason()
+      throws MalformedURLException,
+      InterruptedException,
+      ExecutionException,
       TimeoutException {
     JsonObject request = new JsonObject()
         .put("name", "cosmicrays")
-        .put("description", "Excess solar radiation has destroyed the item");
+        .put("description", "Excess solar radiation has destroyed the item")
+        .put("publicDescription", "The item has been destroyed");
     assertCreateCancellationReason(request);
   }
-  
+
   @Test
-  public void canCreateAndRetrieveCancellationRequest() 
-      throws MalformedURLException, 
+  public void canCreateAndRetrieveCancellationRequest()
+      throws MalformedURLException,
       InterruptedException,
       ExecutionException,
       TimeoutException {
@@ -203,10 +204,10 @@ public class CancellationReasonsApiTest extends ApiTests {
     IndividualResource reason = assertGetCancellationReason(id);
     assertEquals("slime", reason.getJson().getString("name"));
   }
-  
+
   @Test
   public void canUpdateCancellationRequest()
-      throws MalformedURLException, 
+      throws MalformedURLException,
       InterruptedException,
       ExecutionException,
       TimeoutException {
@@ -225,10 +226,10 @@ public class CancellationReasonsApiTest extends ApiTests {
     IndividualResource reason = assertGetCancellationReason(id);
     assertEquals("oobleck", reason.getJson().getString("name"));
   }
-  
+
   @Test
   public void canRetrieveByCQL()
-      throws MalformedURLException, 
+      throws MalformedURLException,
       InterruptedException,
       ExecutionException,
       TimeoutException {
@@ -246,10 +247,10 @@ public class CancellationReasonsApiTest extends ApiTests {
     assertEquals("fire", response.getJson().getJsonArray("cancellationReasons")
         .getJsonObject(0).getString("name"));
   }
-  
+
   @Test
   public void canDeleteCancellationRequest()
-      throws MalformedURLException, 
+      throws MalformedURLException,
       InterruptedException,
       ExecutionException,
       TimeoutException {
@@ -263,10 +264,10 @@ public class CancellationReasonsApiTest extends ApiTests {
     JsonResponse getResponse = getCancellationReason(id);
     assertTrue(getResponse.getStatusCode() == 404);
   }
-  
+
   @Test
   public void cannotCreateDuplicateCancellationRequestNames()
-      throws MalformedURLException, 
+      throws MalformedURLException,
       InterruptedException,
       ExecutionException,
       TimeoutException {
@@ -278,14 +279,14 @@ public class CancellationReasonsApiTest extends ApiTests {
         .put("description", "Chicken grease stains on item");
     assertCreateCancellationReason(request);
     JsonResponse response = createCancellationReason(request2);
-    assertEquals(400, response.getStatusCode());    
+    assertEquals(400, response.getStatusCode());
   }
-  
+
   @Test
-  public void cannotDeleteCancellationReasonInUse() 
-      throws MalformedURLException, 
-      InterruptedException, 
-      ExecutionException, 
+  public void cannotDeleteCancellationReasonInUse()
+      throws MalformedURLException,
+      InterruptedException,
+      ExecutionException,
       TimeoutException {
     UUID requestId = UUID.randomUUID();
     UUID cancellationReasonId = UUID.randomUUID();
@@ -293,7 +294,7 @@ public class CancellationReasonsApiTest extends ApiTests {
     UUID requesterId = UUID.randomUUID();
     UUID proxyId = UUID.randomUUID();
     DateTime requestDate = new DateTime(2017, 7, 22, 10, 22, 54, DateTimeZone.UTC);
-    
+
     JsonObject reasonRequest = new JsonObject()
         .put("name", "worms").put("description", "Item Eaten by space worms.")
         .put("id", cancellationReasonId.toString());
@@ -314,7 +315,7 @@ public class CancellationReasonsApiTest extends ApiTests {
       .withStatus(OPEN_NOT_YET_FILLED)
       .withCancellationReasonId(cancellationReasonId)
       .create();
-    
+
     assertCreateCancellationReason(reasonRequest);
     CompletableFuture<JsonResponse> createRequestFuture = new CompletableFuture<>();
     client.post(requestStorageUrl(), requestRequest, StorageTestSuite.TENANT_ID,
@@ -323,13 +324,13 @@ public class CancellationReasonsApiTest extends ApiTests {
     assertEquals(201, createRequestResponse.getStatusCode());
     TextResponse deleteReasonResponse = deleteCancellationReason(cancellationReasonId.toString());
     assertEquals(400, deleteReasonResponse.getStatusCode());
-    
+
   }
   @Test
   //My canary in the coalmine :)
   public void dummyTest() {
     assertTrue(true);
   }
-  
-  
+
+
 }

@@ -1,5 +1,6 @@
 ## 5.4.0 Unreleased
 * Add 'metadata' field to loans-policy records (CIRCSTORE-63)
+* Add `publicDescription` to cancellation reason record (CIRCSTORE-66).
 
 ## 5.3.0 2018-07-10
 
