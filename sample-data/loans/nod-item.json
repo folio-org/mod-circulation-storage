@@ -5,7 +5,7 @@
   "loanDate": "2017-03-03T15:41:54Z",
   "dueDate": "2017-03-17T15:41:54Z",
   "action": "recallrequested",
-  "itemStatus": "Checked out - Recalled",
+  "itemStatus": "Checked out",
   "status": {
     "name": "Open"
   },
