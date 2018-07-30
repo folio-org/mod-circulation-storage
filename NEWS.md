@@ -1,3 +1,8 @@
+## 5.5.0 Unreleased
+
+* Introduces `position` property for requests (CIRCSTORE-60)
+* Provides `request-storage` interface 2.2 (CIRCSTORE-60)
+
 ## 5.4.0 2018-07-24
 
 * Add 'metadata' field to loans-policy records (CIRCSTORE-63)
@@ -19,8 +24,8 @@
 
 ## 5.1.0 2018-06-25
 
+* Allows `loan-history` endpoint limit/offset to be set by default when query is null (CIRCSTORE-58)
 * Provides `staff-slips-storage` interface 1.0 (CIRCSTORE-52)
-* For loan-history end-point: Allows limit/offset to set by default when query is null
 
 ## 5.0.1 2018-05-01
 

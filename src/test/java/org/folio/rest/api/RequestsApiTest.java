@@ -29,6 +29,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+import static java.net.HttpURLConnection.HTTP_CREATED;
+import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
+import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
 import static org.folio.rest.support.builders.RequestRequestBuilder.*;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.equivalentTo;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
@@ -85,6 +88,7 @@ public class RequestsApiTest extends ApiTests {
       .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
       .withProxy("Stuart", "Rebecca", "6059539205")
       .withStatus(OPEN_NOT_YET_FILLED)
+      .withPosition(1)
       .create();
 
     client.post(requestStorageUrl(),
@@ -94,7 +98,7 @@ public class RequestsApiTest extends ApiTests {
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Failed to create request: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+      response.getStatusCode(), is(HTTP_CREATED));
 
     JsonObject representation = response.getJson();
 
@@ -108,6 +112,7 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getString("requestExpirationDate"), is("2017-07-30"));
     assertThat(representation.getString("holdShelfExpirationDate"), is("2017-08-31"));
     assertThat(representation.getString("status"), is(OPEN_NOT_YET_FILLED));
+    assertThat(representation.getInteger("position"), is(1));
 
     assertThat(representation.containsKey("item"), is(true));
     assertThat(representation.getJsonObject("item").getString("title"), is("Nod"));
@@ -167,7 +172,7 @@ public class RequestsApiTest extends ApiTests {
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Failed to create request: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+      response.getStatusCode(), is(HTTP_CREATED));
 
     JsonObject representation = response.getJson();
 
@@ -228,7 +233,7 @@ public class RequestsApiTest extends ApiTests {
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Failed to create request: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+      response.getStatusCode(), is(HTTP_CREATED));
 
     JsonObject representation = response.getJson();
 
@@ -287,7 +292,7 @@ public class RequestsApiTest extends ApiTests {
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Failed to create request: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+      response.getStatusCode(), is(HTTP_CREATED));
 
     JsonObject representation = response.getJson();
 
@@ -323,7 +328,7 @@ public class RequestsApiTest extends ApiTests {
     JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Failed to create loan policy: %s", postResponse.getBody()),
-      postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+      postResponse.getStatusCode(), is(HTTP_CREATED));
 
     JsonObject createdRequest = postResponse.getJson();
 
@@ -368,11 +373,129 @@ public class RequestsApiTest extends ApiTests {
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Failed to create request: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+      response.getStatusCode(), is(HTTP_CREATED));
 
     JsonObject representation = response.getJson();
 
     assertThat(representation.getString("id"), is(notNullValue()));
+  }
+
+  @Test
+  public void canCreateMultipleRequestsForSameItemWithNoPosition()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID itemId = UUID.randomUUID();
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withNoPosition()
+      .create());
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    final JsonObject secondRequest = new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withNoPosition()
+      .create();
+
+    client.post(requestStorageUrl(),
+      secondRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Should create request: %s", response.getBody()),
+      response.getStatusCode(), is(HTTP_CREATED));
+  }
+
+  @Test
+  public void cannotCreateRequestForSameItemAndPosition()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID itemId = UUID.randomUUID();
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withPosition(1)
+      .create());
+
+    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture<>();
+
+    final JsonObject secondRequest = new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withPosition(1)
+      .create();
+
+    client.post(requestStorageUrl(),
+      secondRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.jsonErrors(createCompleted));
+
+    JsonErrorResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Should fail to create request: %s", response.getBody()),
+      response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
+
+    assertThat(response.getErrors(),
+      hasSoleMessgeContaining(
+        "Cannot have more than one request with the same position in the queue"));
+  }
+
+  @Test
+  public void canCreateMultipleClosedRequestsForTheSameItem()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID itemId = UUID.randomUUID();
+
+    //TODO: Create this in the suite rather than in this test
+    final UUID cancellationReasonId = UUID.fromString(createCancellationReason(
+      "Cancelled at patron’s request", "Use when patron wants to request cancelling")
+      .getId());
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withNoPosition()
+      .withStatus(CLOSED_CANCELLED)
+      .withCancellationReasonId(cancellationReasonId)
+      .create());
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withNoPosition()
+      .withStatus(CLOSED_CANCELLED)
+      .withCancellationReasonId(cancellationReasonId)
+      .create());
+  }
+
+  //This should not happen, but shouldn't really fail either (maybe need to check)
+  @Test
+  public void canCreateMultipleOpenRequestsForTheSameItemWithNoPosition()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID itemId = UUID.randomUUID();
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withPosition(1)
+      .withStatus(OPEN_AWAITING_PICKUP)
+      .create());
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withNoPosition()
+      .withStatus(OPEN_NOT_YET_FILLED)
+      .create());
   }
 
   @Test
@@ -381,7 +504,6 @@ public class RequestsApiTest extends ApiTests {
     MalformedURLException,
     TimeoutException,
     ExecutionException {
-
 
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
@@ -440,6 +562,44 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
+  public void cannotCreateRequestAtSpecificLocationForSameItemAndPosition()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID itemId = UUID.randomUUID();
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withPosition(1)
+      .create());
+
+    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture<>();
+
+    final UUID secondRequestId = UUID.randomUUID();
+
+    final JsonObject secondRequest = new RequestRequestBuilder()
+      .withId(secondRequestId)
+      .withItemId(itemId)
+      .withPosition(1)
+      .create();
+
+    client.put(requestStorageUrl(String.format("/%s", secondRequestId)),
+      secondRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.jsonErrors(createCompleted));
+
+    JsonErrorResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Should fail to create request: %s", response.getBody()),
+      response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
+
+    assertThat(response.getErrors(),
+      hasSoleMessgeContaining(
+        "Cannot have more than one request with the same position in the queue"));
+  }
+
+  @Test
   public void canUpdateAnExistingRequestAtASpecificLocation()
     throws InterruptedException,
     MalformedURLException,
@@ -460,6 +620,7 @@ public class RequestsApiTest extends ApiTests {
       .toHoldShelf()
       .withItem("Nod", "565578437802")
       .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
+      .withPosition(1)
       .create();
 
     createRequest(createRequestRequest);
@@ -478,6 +639,7 @@ public class RequestsApiTest extends ApiTests {
       .copy()
       .put("requesterId", newRequesterId.toString())
       .put("proxyUserId", proxyId.toString())
+      .put("position", 2)
       .put("requester", new JsonObject()
         .put("lastName", "Smith")
         .put("firstName", "Jessica")
@@ -513,6 +675,7 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
     assertThat(representation.getString("requestExpirationDate"), is("2017-07-30"));
     assertThat(representation.getString("holdShelfExpirationDate"), is("2017-08-31"));
+    assertThat(representation.getInteger("position"), is(2));
 
     assertThat(representation.containsKey("item"), is(true));
     assertThat(representation.getJsonObject("item").getString("title"), is("Nod"));
@@ -660,6 +823,45 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
+  public void cannotUpdateRequestForSameItemToAnExistingPosition()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID itemId = UUID.randomUUID();
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withPosition(1)
+      .create());
+
+    final IndividualResource secondRequest = createRequest(
+      new RequestRequestBuilder()
+        .withItemId(itemId)
+        .withPosition(2)
+        .create());
+
+    final JsonObject changedSecondRequest = secondRequest.getJson()
+      .put("position", 1);
+
+    CompletableFuture<JsonErrorResponse> updateCompleted = new CompletableFuture<>();
+
+    client.put(requestStorageUrl(String.format("/%s", secondRequest.getId())),
+      changedSecondRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.jsonErrors(updateCompleted));
+
+    JsonErrorResponse response = updateCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Should fail to update request: %s", response.getBody()),
+      response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
+
+    assertThat(response.getErrors(),
+      hasSoleMessgeContaining(
+        "Cannot have more than one request with the same position in the queue"));
+  }
+
+  @Test
   public void updatedRequestHasUpdatedMetadata()
     throws InterruptedException,
     MalformedURLException,
@@ -766,6 +968,7 @@ public class RequestsApiTest extends ApiTests {
       .withHoldShelfExpiration(new LocalDate(2017, 8, 31))
       .withItem("Nod", "565578437802")
       .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
+      .withPosition(3)
       .create();
 
     createRequest(requestRequest);
@@ -785,6 +988,7 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
     assertThat(representation.getString("requestExpirationDate"), is("2017-07-30"));
     assertThat(representation.getString("holdShelfExpirationDate"), is("2017-08-31"));
+    assertThat(representation.getInteger("position"), is(3));
 
     assertThat(representation.containsKey("item"), is(true));
     assertThat(representation.getJsonObject("item").getString("title"), is("Nod"));
@@ -1014,13 +1218,19 @@ public class RequestsApiTest extends ApiTests {
     UUID otherItemId = UUID.randomUUID();
 
     createRequest(new RequestRequestBuilder()
-      .withItemId(itemId).create());
+      .withItemId(itemId)
+      .withPosition(1)
+      .create());
 
     createRequest(new RequestRequestBuilder()
-      .withItemId(itemId).create());
+      .withItemId(itemId)
+      .withPosition(2)
+      .create());
 
     createRequest(new RequestRequestBuilder()
-      .withItemId(otherItemId).create());
+      .withItemId(otherItemId)
+      .withPosition(1)
+      .create());
 
     CompletableFuture<JsonResponse> getRequestsCompleted = new CompletableFuture<>();
 
@@ -1051,26 +1261,32 @@ public class RequestsApiTest extends ApiTests {
 
     createRequest(new RequestRequestBuilder()
       .withItemId(itemId)
+      .withPosition(1)
       .withStatus(OPEN_NOT_YET_FILLED).create());
 
     createRequest(new RequestRequestBuilder()
       .withItemId(itemId)
+      .withPosition(2)
       .withStatus(OPEN_AWAITING_PICKUP).create());
 
     createRequest(new RequestRequestBuilder()
       .withItemId(itemId)
+      .withNoPosition()
       .withStatus(CLOSED_FILLED).create());
 
     createRequest(new RequestRequestBuilder()
       .withItemId(otherItemId)
+      .withPosition(1)
       .withStatus(OPEN_NOT_YET_FILLED).create());
 
     createRequest(new RequestRequestBuilder()
       .withItemId(otherItemId)
+      .withPosition(2)
       .withStatus(OPEN_AWAITING_PICKUP).create());
 
     createRequest(new RequestRequestBuilder()
       .withItemId(otherItemId)
+      .withNoPosition()
       .withStatus(CLOSED_FILLED).create());
 
     CompletableFuture<JsonResponse> getRequestsCompleted = new CompletableFuture<>();
@@ -1104,21 +1320,27 @@ public class RequestsApiTest extends ApiTests {
     UUID itemId = UUID.randomUUID();
 
     createRequest(new RequestRequestBuilder()
+      .withItemId(itemId)
       .withRequestDate(new DateTime(2018, 02, 14, 15, 10, 54, DateTimeZone.UTC))
-      .withItemId(itemId).create()).getId();
+      .withPosition(1)
+      .create()).getId();
 
     createRequest(new RequestRequestBuilder()
       .withItemId(itemId)
       .withRequestDate(new DateTime(2017, 11, 24, 12, 31, 27, DateTimeZone.UTC))
+      .withPosition(2)
       .create()).getId();
 
     createRequest(new RequestRequestBuilder()
+      .withItemId(itemId)
       .withRequestDate(new DateTime(2018, 02, 04, 15, 10, 54, DateTimeZone.UTC))
-      .withItemId(itemId).create()).getId();
+      .withPosition(3)
+      .create()).getId();
 
     createRequest(new RequestRequestBuilder()
       .withItemId(itemId)
       .withRequestDate(new DateTime(2018, 01, 12, 12, 31, 27, DateTimeZone.UTC))
+      .withPosition(4)
       .create()).getId();
 
     CompletableFuture<JsonResponse> getRequestsCompleted = new CompletableFuture<>();
@@ -1157,6 +1379,67 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
+  public void canSortRequestsByAscendingPosition()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException, UnsupportedEncodingException {
+
+    UUID itemId = UUID.randomUUID();
+
+    //Deliberately create requests out of order to demonstrate sorting,
+    // should not happen under normal circumstances
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withPosition(2)
+      .create()).getId();
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withPosition(1)
+      .create()).getId();
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withPosition(4)
+      .create()).getId();
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withPosition(3)
+      .create()).getId();
+
+    CompletableFuture<JsonResponse> getRequestsCompleted = new CompletableFuture<>();
+
+    String query = URLEncoder.encode(
+      String.format("itemId==%s sortBy position/sort.ascending", itemId),
+      "UTF-8");
+
+    client.get(requestStorageUrl() + String.format("?query=%s", query),
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(getRequestsCompleted));
+
+    JsonResponse getRequestsResponse = getRequestsCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to get requests: %s",
+      getRequestsResponse.getBody()),
+      getRequestsResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject wrappedRequests = getRequestsResponse.getJson();
+
+    List<JsonObject> requests = JsonArrayHelper
+      .toList(wrappedRequests.getJsonArray("requests"));
+
+    assertThat(requests.size(), is(4));
+    assertThat(wrappedRequests.getInteger("totalRecords"), is(4));
+
+    List<Integer> sortedPositions = requests.stream()
+      .map(request -> request.getInteger("position"))
+      .collect(Collectors.toList());
+
+    assertThat(sortedPositions, contains(1, 2, 3, 4));
+  }
+
+  @Test
   public void canDeleteARequest()
     throws InterruptedException,
     MalformedURLException,
@@ -1184,11 +1467,11 @@ public class RequestsApiTest extends ApiTests {
       getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
 
-  protected static URL requestStorageUrl() throws MalformedURLException {
+  static URL requestStorageUrl() throws MalformedURLException {
     return requestStorageUrl("");
   }
 
-  protected static URL requestStorageUrl(String subPath)
+  static URL requestStorageUrl(String subPath)
     throws MalformedURLException {
 
     return StorageTestSuite.storageUrl("/request-storage/requests" + subPath);
@@ -1209,7 +1492,7 @@ public class RequestsApiTest extends ApiTests {
     JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Failed to create loan policy: %s", postResponse.getBody()),
-      postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+      postResponse.getStatusCode(), is(HTTP_CREATED));
 
     return new IndividualResource(postResponse);
   }
@@ -1228,5 +1511,44 @@ public class RequestsApiTest extends ApiTests {
       ResponseHandler.json(getCompleted));
 
     return getCompleted.get(5, TimeUnit.SECONDS);
+  }
+
+  //TODO: Move this to separate class
+  private static URL cancelReasonURL() throws MalformedURLException {
+    return cancelReasonURL("");
+  }
+
+  private static URL cancelReasonURL(String subPath)
+    throws MalformedURLException {
+
+    return StorageTestSuite.storageUrl(
+      "/cancellation-reason-storage/cancellation-reasons" + subPath);
+  }
+
+  private IndividualResource createCancellationReason(
+    String name,
+    String description)
+
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    final JsonObject body = new JsonObject();
+
+    body.put("name", name);
+    body.put("description", description);
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    client.post(cancelReasonURL(), body, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to create cancellation reason: %s",
+      postResponse.getBody()), postResponse.getStatusCode(), is(HTTP_CREATED));
+
+    return new IndividualResource(postResponse);
   }
 }
