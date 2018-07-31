@@ -412,6 +412,37 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
+  public void canCreateMultipleRequestsForDifferentItemsWithSamePosition()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID firstItemId = UUID.randomUUID();
+    UUID secondItemId = UUID.randomUUID();
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(firstItemId)
+      .withPosition(1)
+      .create());
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(firstItemId)
+      .withPosition(2)
+      .create());
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(secondItemId)
+      .withPosition(1)
+      .create());
+
+    createRequest(new RequestRequestBuilder()
+      .withItemId(secondItemId)
+      .withPosition(2)
+      .create());
+  }
+
+  @Test
   public void cannotCreateRequestForSameItemAndPosition()
     throws InterruptedException,
     MalformedURLException,
