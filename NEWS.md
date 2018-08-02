@@ -1,4 +1,4 @@
-## 5.5.0 Unreleased
+## 5.5.0 2018-08-02
 
 * Introduces `position` property for requests (CIRCSTORE-60)
 * Provides `request-storage` interface 2.2 (CIRCSTORE-60)
