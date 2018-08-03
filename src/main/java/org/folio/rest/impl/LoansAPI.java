@@ -23,6 +23,7 @@ import org.joda.time.DateTime;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
 import javax.ws.rs.core.Response;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -31,8 +32,7 @@ import java.util.UUID;
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
 public class LoansAPI implements LoanStorageResource {
-
-  private static final Logger log = LoggerFactory.getLogger(LoansAPI.class);
+  private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
   private static final String LOAN_TABLE = "loan";
   //TODO: Reinstate when can name audit tables
@@ -124,21 +124,21 @@ public class LoansAPI implements LoanStorageResource {
                       withPlainInternalServerError(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
-                e.printStackTrace();
+                log.error(e);
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                   LoanStorageResource.GetLoanStorageLoansResponse.
                     withPlainInternalServerError(e.getMessage())));
               }
             });
         } catch (Exception e) {
-          e.printStackTrace();
+          log.error(e);
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             LoanStorageResource.GetLoanStorageLoansResponse.
               withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error(e);
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         LoanStorageResource.GetLoanStorageLoansResponse.
           withPlainInternalServerError(e.getMessage())));
@@ -205,7 +205,7 @@ public class LoansAPI implements LoanStorageResource {
                   }
                 }
               } catch (Exception e) {
-                e.printStackTrace();
+                log.error(e);
                 asyncResultHandler.handle(
                   io.vertx.core.Future.succeededFuture(
                     LoanStorageResource.PostLoanStorageLoansResponse
@@ -213,14 +213,14 @@ public class LoansAPI implements LoanStorageResource {
               }
             });
         } catch (Exception e) {
-          e.printStackTrace();
+          log.error(e);
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             LoanStorageResource.PostLoanStorageLoansResponse
               .withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error(e);
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         LoanStorageResource.PostLoanStorageLoansResponse
           .withPlainInternalServerError(e.getMessage())));
@@ -281,21 +281,21 @@ public class LoansAPI implements LoanStorageResource {
 
                 }
               } catch (Exception e) {
-                e.printStackTrace();
+                log.error(e);
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                   LoanStorageResource.GetLoanStorageLoansByLoanIdResponse.
                     withPlainInternalServerError(e.getMessage())));
               }
             });
         } catch (Exception e) {
-          e.printStackTrace();
+          log.error(e);
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             LoanStorageResource.GetLoanStorageLoansByLoanIdResponse.
               withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error(e);
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         LoanStorageResource.GetLoanStorageLoansByLoanIdResponse.
           withPlainInternalServerError(e.getMessage())));
