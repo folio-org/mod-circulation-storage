@@ -4,6 +4,8 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.LoanPolicies;
 import org.folio.rest.jaxrs.model.LoanPolicy;
@@ -19,6 +21,7 @@ import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
 import javax.ws.rs.core.Response;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -26,6 +29,7 @@ import java.util.UUID;
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
 public class LoanPoliciesAPI implements LoanPolicyStorageResource {
+  private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
   private final String LOAN_POLICY_TABLE = "loan_policy";
   private final Class<LoanPolicy> LOAN_POLICY_CLASS = LoanPolicy.class;
@@ -106,21 +110,21 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
                         withPlainInternalServerError(reply.cause().getMessage())));
                   }
                 } catch (Exception e) {
-                  e.printStackTrace();
+                  log.error(e);
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                     LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
                       withPlainInternalServerError(e.getMessage())));
                 }
               });
           } catch (Exception e) {
-            e.printStackTrace();
+            log.error(e);
             asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
               LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
                 withPlainInternalServerError(e.getMessage())));
           }
         });
       } catch (Exception e) {
-        e.printStackTrace();
+        log.error(e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
           LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
             withPlainInternalServerError(e.getMessage())));
@@ -167,7 +171,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
                         .withPlainInternalServerError(reply.cause().toString())));
                 }
               } catch (Exception e) {
-                e.printStackTrace();
+                log.error(e);
                 asyncResultHandler.handle(
                   io.vertx.core.Future.succeededFuture(
                     LoanPolicyStorageResource.PostLoanPolicyStorageLoanPoliciesResponse
@@ -175,14 +179,14 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
               }
             });
         } catch (Exception e) {
-          e.printStackTrace();
+          log.error(e);
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             LoanPolicyStorageResource.PostLoanPolicyStorageLoanPoliciesResponse
               .withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error(e);
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         LoanPolicyStorageResource.PostLoanPolicyStorageLoanPoliciesResponse
           .withPlainInternalServerError(e.getMessage())));
@@ -246,7 +250,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
 
                 }
               } catch (Exception e) {
-                e.printStackTrace();
+                log.error(e);
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                   LoanPolicyStorageResource.
                     GetLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse.
@@ -254,7 +258,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
               }
             });
         } catch (Exception e) {
-          e.printStackTrace();
+          log.error(e);
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             LoanPolicyStorageResource.
               GetLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse.
@@ -262,7 +266,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
         }
       });
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error(e);
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         LoanPolicyStorageResource.
           GetLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse.
