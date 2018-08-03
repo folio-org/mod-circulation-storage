@@ -563,7 +563,9 @@ public class LoansAPI implements LoanStorageResource {
                   .setOffset(new Offset(offset));
               adjustedQuery = cql.toString();
             }
-            System.out.println("CQL Query: " + cql.toString());
+
+            log.debug("CQL Query: " + cql.toString());
+
           } else {
             cql = new CQLWrapper(cql2pgJson, query)
                   .setLimit(new Limit(limit))
