@@ -11,26 +11,28 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.folio.rest.annotations.Validate;
+import org.folio.rest.jaxrs.model.CancellationReason;
+import org.folio.rest.jaxrs.model.CancellationReasons;
+import org.folio.rest.jaxrs.resource.CancellationReasonStorageResource;
+import org.folio.rest.persist.Criteria.Criteria;
+import org.folio.rest.persist.Criteria.Criterion;
+import org.folio.rest.persist.Criteria.Limit;
+import org.folio.rest.persist.Criteria.Offset;
+import org.folio.rest.persist.PgExceptionUtil;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.tools.PomReader;
+import org.folio.rest.tools.utils.OutStream;
+import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
+import org.z3950.zing.cql.cql2pgjson.FieldException;
+
+import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import javax.ws.rs.core.Response;
-import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.CancellationReason;
-import org.folio.rest.jaxrs.resource.CancellationReasonStorageResource;
-import org.folio.rest.persist.Criteria.Limit;
-import org.folio.rest.persist.Criteria.Offset;
-import org.folio.rest.persist.cql.CQLWrapper;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
-import org.folio.rest.jaxrs.model.CancellationReasons;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.PgExceptionUtil;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.tools.PomReader;
-import org.folio.rest.tools.utils.OutStream;
 
 /**
  *
@@ -43,7 +45,7 @@ public class CancellationReasonsAPI implements CancellationReasonStorageResource
   private boolean suppressErrorResponse = false;
   private static final String ID_FIELD = "'id'";
   
-  private CQLWrapper getCQL(String query, int limit, int offset) throws Exception {
+  private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
     CQL2PgJSON cql2pgJson = new CQL2PgJSON(TABLE_NAME + ".jsonb");
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit))
         .setOffset(new Offset(offset));
@@ -63,17 +65,13 @@ public class CancellationReasonsAPI implements CancellationReasonStorageResource
   }
 
   private boolean isDuplicate(String errorMessage){
-    if(errorMessage != null && errorMessage.contains("duplicate key value violates unique constraint")){
-      return true;
-    }
-    return false;
+    return errorMessage != null
+      && errorMessage.contains("duplicate key value violates unique constraint");
   }
   
   private boolean isStillReferenced(String errorMessage){
-    if(errorMessage != null && errorMessage.contains("violates foreign key constraint")){
-      return true;
-    }
-    return false;
+    return errorMessage != null
+      && errorMessage.contains("violates foreign key constraint");
   }
 
   @Override
