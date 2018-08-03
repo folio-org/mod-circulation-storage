@@ -35,8 +35,7 @@ public class LoansAPI implements LoanStorageResource {
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
   private static final String LOAN_TABLE = "loan";
-  //TODO: Reinstate when can name audit tables
-//  private static final String LOAN_HISTORY_TABLE = "loan_history_table";
+  //TODO: Change loan history table name when can be configured, used to be "loan_history_table"
   private static final String LOAN_HISTORY_TABLE = "audit_loan";
 
   private static final Class<Loan> LOAN_CLASS = Loan.class;
@@ -61,11 +60,8 @@ public class LoansAPI implements LoanStorageResource {
 
         postgresClient.mutate(String.format("TRUNCATE TABLE %s_%s.loan",
           tenantId, "mod_circulation_storage"),
-          reply -> {
-            asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-              LoanStorageResource.DeleteLoanStorageLoansResponse
-                .noContent().build()));
-          });
+          reply -> asyncResultHandler.handle(Future.succeededFuture(
+            DeleteLoanStorageLoansResponse.withNoContent())));
       }
       catch(Exception e) {
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
@@ -157,7 +153,7 @@ public class LoansAPI implements LoanStorageResource {
 
     ImmutablePair<Boolean, String> validationResult = validateLoan(entity);
 
-    if(validationResult.getLeft() == false) {
+    if(!validationResult.getLeft()) {
       asyncResultHandler.handle(
         io.vertx.core.Future.succeededFuture(
           LoanStorageResource.PostLoanStorageLoansResponse
@@ -366,7 +362,7 @@ public class LoansAPI implements LoanStorageResource {
 
     ImmutablePair<Boolean, String> validationResult = validateLoan(entity);
 
-    if(validationResult.getLeft() == false) {
+    if(!validationResult.getLeft()) {
       asyncResultHandler.handle(
         io.vertx.core.Future.succeededFuture(
           LoanStorageResource.PostLoanStorageLoansResponse
