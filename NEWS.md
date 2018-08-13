@@ -1,3 +1,8 @@
+## 5.6.0 Unreleased
+
+* Use declarative unique index for request queue position, instead of custom snippet (CIRCSTORE-70)
+* Upgrade to RAML Module Builder 19.3.1 (CIRCSTORE-70, RMB-176)
+
 ## 5.5.0 2018-08-02
 
 * Introduces `position` property for requests (CIRCSTORE-60)

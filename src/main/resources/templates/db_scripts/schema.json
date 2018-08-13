@@ -48,7 +48,12 @@
           "tOps": "ADD"
         }
       ],
-      "customSnippetPath": "uniqueRequestItemIdAndPosition.sql"
+      "uniqueIndex": [
+        {
+          "fieldName": "itemId, position",
+          "tOps": "ADD"
+        }
+      ]
     },
     {
       "tableName": "fixed_due_date_schedule",
