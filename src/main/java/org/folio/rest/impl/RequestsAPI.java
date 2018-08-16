@@ -6,6 +6,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.folio.rest.impl.support.LogWriter;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Request;
@@ -35,6 +36,8 @@ import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
 public class RequestsAPI implements RequestStorageResource {
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+  private static final LogWriter logWriter = new LogWriter(log);
+
   private static final String REQUEST_TABLE = "request";
 
   @Override
@@ -57,6 +60,8 @@ public class RequestsAPI implements RequestStorageResource {
             DeleteRequestStorageRequestsResponse.withNoContent())));
       }
       catch(Exception e) {
+        logWriter.error(e);
+
         asyncResultHandler.handle(succeededFuture(
           DeleteRequestStorageRequestsResponse
             .withPlainInternalServerError(e.getMessage())));
@@ -75,7 +80,8 @@ public class RequestsAPI implements RequestStorageResource {
     Context vertxContext) {
 
     Consumer<Exception> exceptionHandler = e -> {
-      log.error("Getting requests failed", e);
+      logWriter.error(e);
+
       asyncResultHandler.handle(succeededFuture(
         GetRequestStorageRequestsByRequestIdResponse.
           withPlainInternalServerError(e.getMessage())));
@@ -96,8 +102,8 @@ public class RequestsAPI implements RequestStorageResource {
             .setLimit(new Limit(limit))
             .setOffset(new Offset(offset));
 
-          log.error(String.format("CQL query: %s", query));
-          log.error(String.format("SQL generated from CQL: %s", cql.toString()));
+          log.info(String.format("CQL query: %s", query));
+          log.info(String.format("SQL generated from CQL: %s", cql.toString()));
 
           postgresClient.get(REQUEST_TABLE, Request.class, fieldList, cql,
             true, false, reply -> {
@@ -176,18 +182,24 @@ public class RequestsAPI implements RequestStorageResource {
                   }
                 }
               } catch (Exception e) {
+                logWriter.error(e);
+
                 asyncResultHandler.handle(succeededFuture(
                   PostRequestStorageRequestsResponse
                     .withPlainInternalServerError(e.getMessage())));
               }
             });
         } catch (Exception e) {
+          logWriter.error(e);
+
           asyncResultHandler.handle(succeededFuture(
             PostRequestStorageRequestsResponse
               .withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
+      logWriter.error(e);
+
       asyncResultHandler.handle(succeededFuture(
         PostRequestStorageRequestsResponse
           .withPlainInternalServerError(e.getMessage())));
@@ -203,7 +215,8 @@ public class RequestsAPI implements RequestStorageResource {
     Context vertxContext) {
 
     Consumer<Exception> exceptionHandler = e -> {
-      log.error("Getting request by ID failed", e);
+      logWriter.error(e);
+
       asyncResultHandler.handle(succeededFuture(
         GetRequestStorageRequestsByRequestIdResponse.
           withPlainInternalServerError(e.getMessage())));
@@ -301,12 +314,16 @@ public class RequestsAPI implements RequestStorageResource {
               }
             });
         } catch (Exception e) {
+          logWriter.error(e);
+
           asyncResultHandler.handle(succeededFuture(
             DeleteRequestStorageRequestsByRequestIdResponse
               .withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
+      logWriter.error(e);
+
       asyncResultHandler.handle(succeededFuture(
         DeleteRequestStorageRequestsByRequestIdResponse
           .withPlainInternalServerError(e.getMessage())));
@@ -369,12 +386,16 @@ public class RequestsAPI implements RequestStorageResource {
                             }
                           }
                         } catch (Exception e) {
+                          logWriter.error(e);
+
                           asyncResultHandler.handle(succeededFuture(
                             PutRequestStorageRequestsByRequestIdResponse
                               .withPlainInternalServerError(e.getMessage())));
                         }
                       });
                   } catch (Exception e) {
+                    logWriter.error(e);
+
                     asyncResultHandler.handle(succeededFuture(
                       PutRequestStorageRequestsByRequestIdResponse
                         .withPlainInternalServerError(e.getMessage())));
@@ -405,12 +426,16 @@ public class RequestsAPI implements RequestStorageResource {
                             }
                           }
                         } catch (Exception e) {
+                          logWriter.error(e);
+
                           asyncResultHandler.handle(succeededFuture(
                             PutRequestStorageRequestsByRequestIdResponse
                               .withPlainInternalServerError(e.getMessage())));
                         }
                       });
                   } catch (Exception e) {
+                    logWriter.error(e);
+
                     asyncResultHandler.handle(succeededFuture(
                       PutRequestStorageRequestsByRequestIdResponse
                         .withPlainInternalServerError(e.getMessage())));
@@ -423,12 +448,16 @@ public class RequestsAPI implements RequestStorageResource {
               }
             });
         } catch (Exception e) {
+          logWriter.error(e);
+
           asyncResultHandler.handle(succeededFuture(
             PutRequestStorageRequestsByRequestIdResponse
               .withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
+      logWriter.error(e);
+
       asyncResultHandler.handle(succeededFuture(
         PutRequestStorageRequestsByRequestIdResponse
           .withPlainInternalServerError(e.getMessage())));

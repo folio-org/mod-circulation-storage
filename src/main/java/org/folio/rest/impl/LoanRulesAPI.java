@@ -7,6 +7,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
+import org.folio.rest.impl.support.LogWriter;
 import org.folio.rest.jaxrs.model.LoanRules;
 import org.folio.rest.jaxrs.resource.LoanRulesStorageResource;
 import org.folio.rest.persist.Criteria.Criterion;
@@ -20,10 +21,13 @@ import java.util.Map;
 
 public class LoanRulesAPI implements LoanRulesStorageResource {
   private static final Logger log = LoggerFactory.getLogger(LoanRulesStorageResource.class);
+  private static final LogWriter logWriter = new LogWriter(log);
+
   private static final String LOAN_RULES_TABLE = "loan_rules";
 
   private void internalErrorGet(Handler<AsyncResult<Response>> asyncResultHandler, Throwable e) {
-    log.error(e);
+    logWriter.error(e);
+
     asyncResultHandler.handle(Future.succeededFuture(
         LoanRulesStorageResource.GetLoanRulesStorageResponse.
         withPlainInternalServerError(e.getMessage())));
@@ -71,7 +75,8 @@ public class LoanRulesAPI implements LoanRulesStorageResource {
   }
 
   private void internalErrorPut(Handler<AsyncResult<Response>> asyncResultHandler, Throwable e) {
-    log.error(e);
+    logWriter.error(e);
+
     asyncResultHandler.handle(Future.succeededFuture(
         LoanRulesStorageResource.PutLoanRulesStorageResponse.
         withPlainInternalServerError(e.getMessage())));

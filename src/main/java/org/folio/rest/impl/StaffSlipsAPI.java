@@ -6,6 +6,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.folio.rest.impl.support.LogWriter;
 import org.folio.rest.jaxrs.model.StaffSlip;
 import org.folio.rest.jaxrs.model.StaffSlips;
 import org.folio.rest.jaxrs.resource.LoanStorageResource;
@@ -21,6 +22,7 @@ import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
 import javax.ws.rs.core.Response;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -30,12 +32,12 @@ import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
 public class StaffSlipsAPI implements StaffSlipsStorageResource {
-
-	private static final String STAFF_SLIP_TABLE = "staff_slips";
+	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+  private static final LogWriter logWriter = new LogWriter(log);
 
 	private static final Class<StaffSlip> STAFF_SLIP_CLASS = StaffSlip.class;
 
-	private static final Logger log = LoggerFactory.getLogger(STAFF_SLIP_CLASS);
+	private static final String STAFF_SLIP_TABLE = "staff_slips";
 
 	@Override
 	public void deleteStaffSlipsStorageStaffSlips(String lang, Map<String, String> okapiHeaders,
@@ -57,6 +59,8 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
               DeleteStaffSlipsStorageStaffSlipsResponse.noContent().build())));
 
 			} catch (Exception e) {
+        logWriter.error(e);
+
 				asyncResultHandler
 						.handle(succeededFuture(
 						  StaffSlipsStorageResource.DeleteStaffSlipsStorageStaffSlipsResponse
@@ -104,7 +108,8 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 					}
 
 				} catch (Exception e) {
-					log.error(e.getMessage());
+          logWriter.error(e);
+
 					asyncResultHandler
 							.handle(succeededFuture(StaffSlipsStorageResource.GetStaffSlipsStorageStaffSlipsResponse
 									.withPlainInternalServerError(e.getMessage())));
@@ -113,7 +118,8 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 			});
 
 		} catch (Exception e) {
-			log.error(e.getMessage());
+      logWriter.error(e);
+
 			asyncResultHandler.handle(succeededFuture(StaffSlipsStorageResource.GetStaffSlipsStorageStaffSlipsResponse
 					.withPlainInternalServerError(e.getMessage())));
 		}
@@ -190,7 +196,8 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 					});
 
 				} catch (Exception e) {
-					log.error(e.getMessage());
+          logWriter.error(e);
+
 					asyncResultHandler.handle(
 							succeededFuture(StaffSlipsStorageResource.GetStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
 									.withPlainInternalServerError(e.getMessage())));
@@ -198,7 +205,8 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 			});
 
 		} catch (Exception e) {
-			log.error(e.getMessage());
+      logWriter.error(e);
+
 			asyncResultHandler
 					.handle(succeededFuture(StaffSlipsStorageResource.GetStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
 							.withPlainInternalServerError(e.getMessage())));
@@ -242,6 +250,8 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 					});
 
 				} catch (Exception e) {
+          logWriter.error(e);
+
 					asyncResultHandler.handle(
 							succeededFuture(StaffSlipsStorageResource.DeleteStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
 									.withPlainInternalServerError(e.getMessage())));
@@ -249,6 +259,8 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 			});
 
 		} catch (Exception e) {
+      logWriter.error(e);
+
 			asyncResultHandler.handle(
 					succeededFuture(StaffSlipsStorageResource.DeleteStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
 							.withPlainInternalServerError(e.getMessage())));
@@ -315,6 +327,8 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 											}
 
 										} catch (Exception e) {
+                      logWriter.error(e);
+
 											asyncResultHandler.handle(succeededFuture(StaffSlipsStorageResource.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
 															.withPlainInternalServerError(e.getMessage())));
 										}
@@ -322,6 +336,8 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 									});
 
 								} catch (Exception e) {
+                  logWriter.error(e);
+
 									asyncResultHandler.handle(succeededFuture(StaffSlipsStorageResource.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
 													.withPlainInternalServerError(e.getMessage())));
 								}
@@ -342,6 +358,8 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 					});
 
 				} catch (Exception e) {
+          logWriter.error(e);
+
 					asyncResultHandler.handle(
 							succeededFuture(StaffSlipsStorageResource.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
 									.withPlainInternalServerError(e.getMessage())));
@@ -349,6 +367,8 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 			});
 
 		} catch (Exception e) {
+      logWriter.error(e);
+
 			asyncResultHandler
 					.handle(succeededFuture(StaffSlipsStorageResource.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
 							.withPlainInternalServerError(e.getMessage())));
@@ -390,7 +410,8 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 										.withPlainInternalServerError(reply.cause().toString())));
 							}
 						} catch (Exception e) {
-							log.error(e.getMessage());
+              logWriter.error(e);
+
 							asyncResultHandler
 									.handle(succeededFuture(StaffSlipsStorageResource.PostStaffSlipsStorageStaffSlipsResponse
 											.withPlainInternalServerError(e.getMessage())));
@@ -398,7 +419,8 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 					});
 
 				} catch (Exception e) {
-					log.error(e.getMessage());
+          logWriter.error(e);
+
 					asyncResultHandler
 							.handle(succeededFuture(StaffSlipsStorageResource.PostStaffSlipsStorageStaffSlipsResponse
 									.withPlainInternalServerError(e.getMessage())));
@@ -406,6 +428,8 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 			});
 
 		} catch (Exception e) {
+      logWriter.error(e);
+
 			asyncResultHandler.handle(
 					succeededFuture(PostStaffSlipsStorageStaffSlipsResponse.withPlainInternalServerError(e.getMessage())));
 		}
