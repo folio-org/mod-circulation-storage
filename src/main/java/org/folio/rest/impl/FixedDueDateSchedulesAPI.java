@@ -5,6 +5,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.io.IOUtils;
 import org.folio.rest.annotations.Validate;
+import org.folio.rest.impl.support.LogWriter;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.FixedDueDateSchedule;
 import org.folio.rest.jaxrs.model.FixedDueDateSchedules;
@@ -23,8 +24,11 @@ import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
+import org.z3950.zing.cql.cql2pgjson.FieldException;
+import org.z3950.zing.cql.cql2pgjson.SchemaException;
 
 import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -35,12 +39,13 @@ import static org.folio.rest.impl.Headers.TENANT_HEADER;
 public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageResource {
 
   private static final Logger       log               = LoggerFactory.getLogger(FixedDueDateSchedulesAPI.class);
+  private static final LogWriter    logWriter         = new LogWriter(log);
   private static final String       SCHEMA_NAME       = "apidocs/raml/fixed-due-date-schedule.json";
   private static final String       FIXED_SCHEDULE_TABLE  = "fixed_due_date_schedule";
   private static final String       INVALID_DATE_MSG  = "Unable to save fixed loan date. Date range not valid";
 
   private static String             schema      =  null;
-  private final Class<FixedDueDateSchedule> DUE_DATE_SCHEDULE_CLASS = FixedDueDateSchedule.class;
+  private static final Class<FixedDueDateSchedule> DUE_DATE_SCHEDULE_CLASS = FixedDueDateSchedule.class;
 
 
   public FixedDueDateSchedulesAPI(Vertx vertx, String tenantId) {
@@ -53,7 +58,7 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
     try {
       schema = IOUtils.toString(FixedDueDateSchedulesAPI.class.getClassLoader().getResourceAsStream(SCHEMA_NAME), "UTF-8");
     } catch (Exception e) {
-      log.error("unable to load schema - " +SCHEMA_NAME+ ", validation of query fields will not be active");
+      log.error("unable to load schema - " +SCHEMA_NAME+ ", validation of query fields will not be active", e);
     }
   }
 
@@ -64,8 +69,7 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
       Map<String,
       String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext
-      ) throws Exception {
+      Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -83,15 +87,15 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
                       .DeleteFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
                         .noContent().build()));
                 }
-                else{
-                  log.error(reply.cause());
+                else {
+                  logWriter.error(reply.cause());
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                       FixedDueDateScheduleStorageResource.DeleteFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
                           .withPlainInternalServerError(reply.cause().getMessage())));
                 }
             });
       } catch (Exception e) {
-        log.error(e);
+        logWriter.error(e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             FixedDueDateScheduleStorageResource.DeleteFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
                 .withPlainInternalServerError(e.getMessage())));
@@ -107,8 +111,7 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
       String lang,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext
-      ) throws Exception {
+      Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -135,7 +138,7 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
                     FixedDueDateScheduleStorageResource.GetFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
                         .withJsonOK(pagedSchedules)));
               } else {
-                log.error(reply.cause());
+                logWriter.error(reply.cause());
 
                 if(reply.cause() instanceof CQLQueryValidationException) {
                   CQLQueryValidationException exception = (CQLQueryValidationException)reply.cause();
@@ -158,7 +161,7 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
                 }
               }
             } catch (Exception e) {
-              log.error(e);
+              logWriter.error(e);
               asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                   FixedDueDateScheduleStorageResource.GetFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
                       .withPlainInternalServerError(e.getMessage())));
@@ -166,14 +169,14 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
           });
         }
         catch (Exception e) {
-          log.error(e);
+          logWriter.error(e);
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
               FixedDueDateScheduleStorageResource.GetFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
                   .withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      log.error(e);
+      logWriter.error(e);
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
           FixedDueDateScheduleStorageResource.GetFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
               .withPlainInternalServerError(e.getMessage())));
@@ -187,8 +190,7 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
       FixedDueDateSchedule entity,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext
-      ) throws Exception {
+      Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -221,7 +223,7 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
                     FixedDueDateScheduleStorageResource.PostFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
                         .withJsonCreated(reply.result(), stream)));
               } else {
-                log.error(reply.cause());
+                logWriter.error(reply.cause());
                 if(isUniqueViolation(reply.cause())){
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                     FixedDueDateScheduleStorageResource.PostFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
@@ -234,21 +236,21 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
                 }
               }
             } catch (Exception e) {
-              log.error(e);
+              logWriter.error(e);
               asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                 FixedDueDateScheduleStorageResource.PostFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
                     .withPlainInternalServerError(e.getMessage())));
             }
           });
         } catch (Exception e) {
-          log.error(e);
+          logWriter.error(e);
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
               FixedDueDateScheduleStorageResource.PostFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
                   .withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      log.error(e);
+      logWriter.error(e);
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
           FixedDueDateScheduleStorageResource.PostFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
               .withPlainInternalServerError(e.getMessage())));
@@ -262,8 +264,7 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
       String lang,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext
-      ) throws Exception {
+      Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -299,28 +300,28 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
                           .withPlainNotFound(PgExceptionUtil.badRequestMessage(reply.cause()))));
                 }
               } else {
-                log.error(reply.cause());
+                logWriter.error(reply.cause());
                 asyncResultHandler.handle(Future.succeededFuture(
                     FixedDueDateScheduleStorageResource.GetFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
                         .withPlainInternalServerError(reply.cause().getMessage())));
 
               }
             } catch (Exception e) {
-              log.error(e);
+              logWriter.error(e);
               asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                   FixedDueDateScheduleStorageResource.GetFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
                       .withPlainInternalServerError(e.getMessage())));
             }
           });
         } catch (Exception e) {
-          log.error(e);
+          logWriter.error(e);
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
               FixedDueDateScheduleStorageResource.GetFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
                   .withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      log.error(e);
+      logWriter.error(e);
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
           FixedDueDateScheduleStorageResource.GetFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
               .withPlainInternalServerError(e.getMessage())));
@@ -360,7 +361,7 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
                   DeleteFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
                       .withNoContent()));
             } else {
-              log.error(reply.cause());
+              logWriter.error(reply.cause());
               if(isBadId(reply.cause())){
                 asyncResultHandler.handle(Future.succeededFuture(
                   DeleteFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
@@ -379,14 +380,14 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
             }
           });
         } catch (Exception e) {
-          log.error(e);
+          logWriter.error(e);
           asyncResultHandler.handle(Future
               .succeededFuture(DeleteFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
                   .withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      log.error(e);
+      logWriter.error(e);
       asyncResultHandler.handle(
           Future.succeededFuture(DeleteFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
               .withPlainInternalServerError(e.getMessage())));
@@ -446,7 +447,7 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
                             PutFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
                                 .withNoContent()));
                       } else {
-                        log.error(update.cause());
+                        logWriter.error(update.cause());
                         if(isUniqueViolation(update.cause())){
                           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                             FixedDueDateScheduleStorageResource.
@@ -454,21 +455,21 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
                                 .withPlainBadRequest(PgExceptionUtil.badRequestMessage(update.cause()))));
                         }
                         else{
-                          log.error(update.cause());
+                          logWriter.error(update.cause());
                           asyncResultHandler.handle(Future.succeededFuture(
                             PutFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
                                 .withPlainInternalServerError(update.cause().getMessage())));
                         }
                       }
                     } catch (Exception e) {
-                      log.error(e);
+                      logWriter.error(e);
                       asyncResultHandler.handle(Future.succeededFuture(
                           PutFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
                               .withPlainInternalServerError(e.getMessage())));
                     }
                   });
                 } catch (Exception e) {
-                  log.error(e);
+                  logWriter.error(e);
                   asyncResultHandler.handle(Future.succeededFuture(
                       PutFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
                           .withPlainInternalServerError(e.getMessage())));
@@ -485,27 +486,27 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
                             PutFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
                                 .withNoContent()));
                       } else {
-                          log.error(save.cause());
+                          logWriter.error(save.cause());
                           asyncResultHandler.handle(Future.succeededFuture(
                               PutFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
                                   .withPlainInternalServerError(save.cause().getMessage())));
                       }
                     } catch (Exception e) {
-                      log.error(e);
+                      logWriter.error(e);
                       asyncResultHandler.handle(Future.succeededFuture(
                           PutFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
                               .withPlainInternalServerError(e.getMessage())));
                     }
                   });
                 } catch (Exception e) {
-                    log.error(e);
+                    logWriter.error(e);
                     asyncResultHandler.handle(Future.succeededFuture(
                       PutFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
                           .withPlainInternalServerError(e.getMessage())));
                 }
               }
             } else {
-              log.error(reply.cause());
+              logWriter.error(reply.cause());
               if(isBadId(reply.cause())){
                 asyncResultHandler.handle(Future
                   .succeededFuture(PutFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
@@ -519,21 +520,23 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
             }
           });
         } catch (Exception e) {
-          log.error(e);
+          logWriter.error(e);
           asyncResultHandler.handle(
               Future.succeededFuture(PutFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
                   .withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      log.error(e);
+      logWriter.error(e);
       asyncResultHandler.handle(
           Future.succeededFuture(PutFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
               .withPlainInternalServerError(e.getMessage())));
     }
   }
 
-  private CQLWrapper getCQL(String query, int limit, int offset, String schema) throws Exception {
+  private CQLWrapper getCQL(String query, int limit, int offset, String schema)
+    throws FieldException, IOException, SchemaException {
+
     CQL2PgJSON cql2pgJson = null;
     if(schema != null){
       cql2pgJson = new CQL2PgJSON("fixed_due_date_schedule.jsonb", schema);
@@ -576,29 +579,23 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
         }
       }
     } catch (Exception e) {
-      log.error(e.getMessage(), e);
+      logWriter.error(e);
     }
     return errors;
   }
 
   private boolean isUniqueViolation(Throwable e){
-    if(e != null && e.getMessage().contains("duplicate key value violates unique constraint")){
-      return true;
-    }
-    return false;
+    return e != null
+      && e.getMessage().contains("duplicate key value violates unique constraint");
   }
 
   private boolean isBadId(Throwable e){
-    if(e != null && e.getMessage().contains("invalid input syntax for type numeric")){
-      return true;
-    }
-    return false;
+    return e != null
+      && e.getMessage().contains("invalid input syntax for type numeric");
   }
 
   private boolean iStillReferenced(Throwable e){
-    if(e != null && e.getMessage().contains("violates foreign key constraint")){
-      return true;
-    }
-    return false;
+    return e != null
+      && e.getMessage().contains("violates foreign key constraint");
   }
 }
