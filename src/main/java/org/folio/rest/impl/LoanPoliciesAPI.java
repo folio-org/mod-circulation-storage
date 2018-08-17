@@ -4,6 +4,8 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.LoanPolicies;
 import org.folio.rest.jaxrs.model.LoanPolicy;
@@ -19,6 +21,7 @@ import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
 import javax.ws.rs.core.Response;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -26,16 +29,17 @@ import java.util.UUID;
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
 public class LoanPoliciesAPI implements LoanPolicyStorageResource {
+  private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-  private final String LOAN_POLICY_TABLE = "loan_policy";
-  private final Class<LoanPolicy> LOAN_POLICY_CLASS = LoanPolicy.class;
+  private static final String LOAN_POLICY_TABLE = "loan_policy";
+  private static final Class<LoanPolicy> LOAN_POLICY_CLASS = LoanPolicy.class;
 
   @Override
   @Validate
   public void deleteLoanPolicyStorageLoanPolicies(
     String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -46,11 +50,8 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
 
         postgresClient.mutate(String.format("TRUNCATE TABLE %s_%s.%s",
           tenantId, "mod_circulation_storage", LOAN_POLICY_TABLE),
-          reply -> {
-            asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-              LoanPolicyStorageResource.DeleteLoanPolicyStorageLoanPoliciesResponse
-                .noContent().build()));
-          });
+          reply -> asyncResultHandler.handle(Future.succeededFuture(
+            DeleteLoanPolicyStorageLoanPoliciesResponse.withNoContent())));
       }
       catch(Exception e) {
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
@@ -68,7 +69,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
     String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
       String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -94,7 +95,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
 
                     LoanPolicies pagedLoans = new LoanPolicies();
                     pagedLoans.setLoanPolicies(loanPolicies);
-                    pagedLoans.setTotalRecords((Integer)reply.result().getResultInfo().getTotalRecords());
+                    pagedLoans.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
 
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                       LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
@@ -106,21 +107,21 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
                         withPlainInternalServerError(reply.cause().getMessage())));
                   }
                 } catch (Exception e) {
-                  e.printStackTrace();
+                  log.error(e);
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                     LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
                       withPlainInternalServerError(e.getMessage())));
                 }
               });
           } catch (Exception e) {
-            e.printStackTrace();
+            log.error(e);
             asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
               LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
                 withPlainInternalServerError(e.getMessage())));
           }
         });
       } catch (Exception e) {
-        e.printStackTrace();
+        log.error(e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
           LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
             withPlainInternalServerError(e.getMessage())));
@@ -133,7 +134,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
     String lang, LoanPolicy entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -148,7 +149,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
             entity.setId(UUID.randomUUID().toString());
           }
 
-          postgresClient.save("loan_policy", entity.getId(), entity,
+          postgresClient.save(LOAN_POLICY_TABLE, entity.getId(), entity,
             reply -> {
               try {
                 if(reply.succeeded()) {
@@ -167,7 +168,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
                         .withPlainInternalServerError(reply.cause().toString())));
                 }
               } catch (Exception e) {
-                e.printStackTrace();
+                log.error(e);
                 asyncResultHandler.handle(
                   io.vertx.core.Future.succeededFuture(
                     LoanPolicyStorageResource.PostLoanPolicyStorageLoanPoliciesResponse
@@ -175,14 +176,14 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
               }
             });
         } catch (Exception e) {
-          e.printStackTrace();
+          log.error(e);
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             LoanPolicyStorageResource.PostLoanPolicyStorageLoanPoliciesResponse
               .withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error(e);
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         LoanPolicyStorageResource.PostLoanPolicyStorageLoanPoliciesResponse
           .withPlainInternalServerError(e.getMessage())));
@@ -196,7 +197,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
     String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -246,7 +247,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
 
                 }
               } catch (Exception e) {
-                e.printStackTrace();
+                log.error(e);
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                   LoanPolicyStorageResource.
                     GetLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse.
@@ -254,7 +255,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
               }
             });
         } catch (Exception e) {
-          e.printStackTrace();
+          log.error(e);
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             LoanPolicyStorageResource.
               GetLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse.
@@ -262,7 +263,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
         }
       });
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error(e);
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         LoanPolicyStorageResource.
           GetLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse.
@@ -276,7 +277,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
     String loanPolicyId,
     String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -330,7 +331,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
     LoanPolicy entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 

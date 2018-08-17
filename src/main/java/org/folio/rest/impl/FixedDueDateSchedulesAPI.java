@@ -23,8 +23,11 @@ import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
+import org.z3950.zing.cql.cql2pgjson.FieldException;
+import org.z3950.zing.cql.cql2pgjson.SchemaException;
 
 import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +43,7 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
   private static final String       INVALID_DATE_MSG  = "Unable to save fixed loan date. Date range not valid";
 
   private static String             schema      =  null;
-  private final Class<FixedDueDateSchedule> DUE_DATE_SCHEDULE_CLASS = FixedDueDateSchedule.class;
+  private static final Class<FixedDueDateSchedule> DUE_DATE_SCHEDULE_CLASS = FixedDueDateSchedule.class;
 
 
   public FixedDueDateSchedulesAPI(Vertx vertx, String tenantId) {
@@ -64,8 +67,7 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
       Map<String,
       String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext
-      ) throws Exception {
+      Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -107,8 +109,7 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
       String lang,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext
-      ) throws Exception {
+      Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -187,8 +188,7 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
       FixedDueDateSchedule entity,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext
-      ) throws Exception {
+      Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -262,8 +262,7 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
       String lang,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext
-      ) throws Exception {
+      Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -533,7 +532,9 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
     }
   }
 
-  private CQLWrapper getCQL(String query, int limit, int offset, String schema) throws Exception {
+  private CQLWrapper getCQL(String query, int limit, int offset, String schema)
+    throws FieldException, IOException, SchemaException {
+
     CQL2PgJSON cql2pgJson = null;
     if(schema != null){
       cql2pgJson = new CQL2PgJSON("fixed_due_date_schedule.jsonb", schema);
@@ -582,23 +583,17 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorageReso
   }
 
   private boolean isUniqueViolation(Throwable e){
-    if(e != null && e.getMessage().contains("duplicate key value violates unique constraint")){
-      return true;
-    }
-    return false;
+    return e != null
+      && e.getMessage().contains("duplicate key value violates unique constraint");
   }
 
   private boolean isBadId(Throwable e){
-    if(e != null && e.getMessage().contains("invalid input syntax for type numeric")){
-      return true;
-    }
-    return false;
+    return e != null
+      && e.getMessage().contains("invalid input syntax for type numeric");
   }
 
   private boolean iStillReferenced(Throwable e){
-    if(e != null && e.getMessage().contains("violates foreign key constraint")){
-      return true;
-    }
-    return false;
+    return e != null
+      && e.getMessage().contains("violates foreign key constraint");
   }
 }
