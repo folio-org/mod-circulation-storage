@@ -68,7 +68,7 @@ same `itemId` and `position` should be rejected with a error (422) response
 
 ### Optional
 
-- Python 3.6.0 (for un-registering module during managed deployment scripts)
+- Python 3.6.0 (for un-registering module during managed deployment scripts, and the lint-raml tools)
 
 ## Preparation
 
@@ -91,7 +91,7 @@ This is only required to run tests against an external Postgres instance, the de
 
 ### Checking the RAML and JSON.Schema definitions
 
-run `./scripts/lint-raml-cop.sh` to validate the RAML and JSON.Schema descriptions of the API.
+Follow the [guide](https://dev.folio.org/guides/raml-cop/) to use raml-cop to assess RAML, schema, and examples.
 
 ## Frequently Asked Questions
 
