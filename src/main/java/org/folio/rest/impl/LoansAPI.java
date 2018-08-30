@@ -9,6 +9,7 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.Loans;
+import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.jaxrs.resource.LoanStorageResource;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
@@ -150,6 +151,10 @@ public class LoansAPI implements LoanStorageResource {
     Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
+
+    if(entity.getStatus() == null) {
+      entity.setStatus(new Status().withName("Open"));
+    }
 
     ImmutablePair<Boolean, String> validationResult = validateLoan(entity);
 
@@ -360,12 +365,16 @@ public class LoansAPI implements LoanStorageResource {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
+    if(entity.getStatus() == null) {
+      entity.setStatus(new Status().withName("Open"));
+    }
+
     ImmutablePair<Boolean, String> validationResult = validateLoan(entity);
 
     if(!validationResult.getLeft()) {
       asyncResultHandler.handle(
         io.vertx.core.Future.succeededFuture(
-          LoanStorageResource.PostLoanStorageLoansResponse
+          LoanStorageResource.PutLoanStorageLoansByLoanIdResponse
             .withPlainBadRequest(
               validationResult.getRight())));
 
