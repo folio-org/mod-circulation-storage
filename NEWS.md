@@ -1,7 +1,12 @@
-## 5.6.0 2018-008-29
+## 5.7.0 Unreleased
+
+* Default loan `status` to `Open` (CIRCSTORE-71)
+* Upgrades to RAML Module Builder 19.4.1 (RMB-231) 
+
+## 5.6.0 2018-08-29
 
 * Use declarative unique index for request queue position, instead of custom snippet (CIRCSTORE-70)
-* Upgrade to RAML Module Builder 19.3.1 (CIRCSTORE-70, RMB-176)
+* Upgrades to RAML Module Builder 19.3.1 (CIRCSTORE-70, RMB-176)
 
 ## 5.5.0 2018-08-02
 

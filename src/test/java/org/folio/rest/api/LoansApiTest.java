@@ -321,12 +321,51 @@ public class LoansApiTest extends ApiTests {
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
+    client.post(loanStorageUrl(), loanRequest,
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(createCompleted));
+
+    JsonResponse createResponse = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to create loan: '%s'", createResponse.getBody()),
+      createResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    JsonObject loan = createResponse.getJson();
+
+    assertThat("id does not match",
+      loan.getString("id"), is(id.toString()));
+
+    assertThat("Loan should have a status",
+      loan.containsKey("status"), is(true));
+
+    assertThat("Status should be defaulted to open",
+      loan.getJsonObject("status").getString("name"), is("Open"));
+  }
+
+  @Test
+  public void canCreateALoanWithOnlyRequiredPropertiesUsingPut()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    UUID id = UUID.randomUUID();
+
+    JsonObject loanRequest = new LoanRequestBuilder()
+      .withId(id)
+      .withNoStatus() //Status is currently optional, as it is defaulted to Open
+      .withNoItemStatus() //Item status is currently optional
+      .withLoanDate(new DateTime(2017, 3, 5, 14, 23, 41, DateTimeZone.UTC))
+      .withAction("checkedout")
+      .create();
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
     client.put(loanStorageUrl(String.format("/%s", id.toString())), loanRequest,
       StorageTestSuite.TENANT_ID, ResponseHandler.json(createCompleted));
 
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(String.format("Failed to create loan: %s", response.getBody()),
+    assertThat(String.format("Failed to create loan: '%s'", response.getBody()),
       response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
     JsonResponse getResponse = getById(id);
@@ -338,6 +377,12 @@ public class LoansApiTest extends ApiTests {
 
     assertThat("id does not match",
       loan.getString("id"), is(id.toString()));
+
+    assertThat("Loan should have a status",
+      loan.containsKey("status"), is(true));
+
+    assertThat("Status should be defaulted to open",
+      loan.getJsonObject("status").getString("name"), is("Open"));
   }
 
   @Test
