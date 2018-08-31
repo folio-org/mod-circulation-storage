@@ -182,7 +182,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateAClosedLoanWithReturnDates()
+  public void canCreateAnAlreadyClosedLoan()
     throws InterruptedException,
     ExecutionException,
     TimeoutException,
@@ -222,7 +222,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateALoanAtASpecificLocation()
+  public void canCreateALoanAtViaPutToSpecificLocation()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -371,7 +371,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotCreateMultipleOpenLoansAtSpecificLocationForSameItem()
+  public void cannotCreateMultipleOpenLoansForSameItemViaPutToSpecificLocation()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -560,15 +560,17 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canCompleteALoanByReturningTheItem()
+  public void canCloseALoanByReturningTheItem()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
     ExecutionException {
 
     DateTime loanDate = new DateTime(2017, 3, 1, 13, 25, 46, 232, DateTimeZone.UTC);
+    final UUID userId = UUID.randomUUID();
 
     IndividualResource loan = loansClient.create(new LoanRequestBuilder()
+      .withUserId(userId)
       .withLoanDate(loanDate)
       .withDueDate(loanDate.plus(Period.days(14)))
       .create());
@@ -583,6 +585,8 @@ public class LoansApiTest extends ApiTests {
 
     JsonObject updatedLoan = loansClient.getById(UUID.fromString(loan.getId()))
       .getJson();
+
+    assertThat(updatedLoan.getString("userId"), is(userId.toString()));
 
     assertThat(updatedLoan.getString("returnDate"),
       is("2017-03-05T14:23:41.000Z"));
@@ -695,6 +699,7 @@ public class LoansApiTest extends ApiTests {
     assertThat(String.format("Should have failed to update loan: %s", response.getBody()),
       response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
 
+    //TODO: Convert these to validation responses
     assertThat(response.getBody(),
       containsString("loan date must be a date time (in RFC3339 format)"));
 
@@ -1077,5 +1082,4 @@ public class LoansApiTest extends ApiTests {
       .withStatus(statusName)
       .create();
   }
-
 }
