@@ -91,4 +91,21 @@ public class AssertingRecordClient {
 
     return getCompleted.get(5, TimeUnit.SECONDS);
   }
+
+  public JsonResponse attemptCreateOrReplace(
+    String id,
+    JsonObject representation)
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    CompletableFuture<JsonResponse> putCompleted = new CompletableFuture<>();
+
+    client.put(urlMaker.combine(String.format("/%s", id)),
+      representation, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(putCompleted));
+
+    return putCompleted.get(5, TimeUnit.SECONDS);
+  }
 }
