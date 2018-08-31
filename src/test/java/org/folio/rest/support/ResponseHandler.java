@@ -34,8 +34,7 @@ public class ResponseHandler {
           int statusCode = response.statusCode();
           String body = BufferHelper.stringFromBuffer(buffer);
 
-          System.out.println(String.format("Response: %s", body));
-          log.debug(String.format("Response: %s", body));
+          log.info(String.format("Response: '%s'", body));
 
           completed.complete(new JsonResponse(statusCode, body));
 
@@ -55,6 +54,8 @@ public class ResponseHandler {
         response.bodyHandler(buffer -> {
           try {
             String body = BufferHelper.stringFromBuffer(buffer);
+
+            log.info(String.format("Response: '%s'", body));
 
             completed.complete(new TextResponse(statusCode, body));
 
