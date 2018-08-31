@@ -1,5 +1,7 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.support.matchers.LoanStatusMatchers.isClosed;
+import static org.folio.rest.support.matchers.LoanStatusMatchers.isOpen;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessageContaining;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasParameter;
@@ -107,8 +109,7 @@ public class LoansApiTest extends ApiTests {
     assertThat("loan date does not match",
       loan.getString("loanDate"), is("2017-06-27T10:23:43.000Z"));
 
-    assertThat("status is not open",
-      loan.getJsonObject("status").getString("name"), is("Open"));
+    assertThat(loan, isOpen());
 
     assertThat("action is not checked out",
       loan.getString("action"), is("checkedout"));
@@ -166,8 +167,7 @@ public class LoansApiTest extends ApiTests {
     assertThat("loan date does not match",
       loan.getString("loanDate"), is("2017-03-20T07:21:45.000Z"));
 
-    assertThat("status is not open",
-      loan.getJsonObject("status").getString("name"), is("Open"));
+    assertThat(loan, isOpen());
 
     assertThat("action is not checked out",
       loan.getString("action"), is("checkedout"));
@@ -264,8 +264,7 @@ public class LoansApiTest extends ApiTests {
     assertThat("loan date does not match",
       loan.getString("loanDate"), is("2017-02-27T21:14:43.000Z"));
 
-    assertThat("status is not open",
-      loan.getJsonObject("status").getString("name"), is("Open"));
+    assertThat(loan, isOpen());
 
     assertThat("action is not checked out",
       loan.getString("action"), is("checkedout"));
@@ -545,8 +544,7 @@ public class LoansApiTest extends ApiTests {
     assertThat("item status is not checked out",
       loan.getString("itemStatus"), is("Checked out"));
 
-    assertThat("status is not open",
-      loan.getJsonObject("status").getString("name"), is("Open"));
+    assertThat(loan, isOpen());
   }
 
   @Test
@@ -589,8 +587,7 @@ public class LoansApiTest extends ApiTests {
     assertThat(updatedLoan.getString("returnDate"),
       is("2017-03-05T14:23:41.000Z"));
 
-    assertThat("status is not closed",
-      updatedLoan.getJsonObject("status").getString("name"), is("Closed"));
+    assertThat(updatedLoan, isClosed());
 
     assertThat("item status is not available",
       updatedLoan.getString("itemStatus"), is("Available"));
@@ -629,8 +626,7 @@ public class LoansApiTest extends ApiTests {
     assertThat(updatedLoan.getString("dueDate"),
       is("2017-03-30T13:25:46.000+0000"));
 
-    assertThat("status is not open",
-      updatedLoan.getJsonObject("status").getString("name"), is("Open"));
+    assertThat(updatedLoan, isOpen());
 
     assertThat("action is not renewed",
       updatedLoan.getString("action"), is("renewed"));
