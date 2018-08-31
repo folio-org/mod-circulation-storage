@@ -1,9 +1,10 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessageContaining;
+import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasParameter;
 import static org.folio.rest.support.matchers.ValidationResponseMatchers.isValidationResponseWhich;
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
@@ -313,8 +314,9 @@ public class LoansApiTest extends ApiTests {
 
     JsonResponse response = loansClient.attemptCreate(loanRequest);
 
-    assertThat(String.format("Creating the loan should fail: %s", response.getBody()),
-      response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
+    assertThat(response, isValidationResponseWhich(allOf(
+      hasMessage("may not be null"),
+      hasParameter("action", "null"))));
   }
 
   @Test
