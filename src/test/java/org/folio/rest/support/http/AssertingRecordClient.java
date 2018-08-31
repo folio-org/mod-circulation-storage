@@ -37,16 +37,25 @@ public class AssertingRecordClient {
     TimeoutException,
     MalformedURLException {
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
-
-    this.client.post(urlMaker.combine(""), representation, this.tenantId,
-      ResponseHandler.json(createCompleted));
-
-    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+    JsonResponse response = attemptCreate(representation);
 
     assertThat(String.format("Failed to create record: %s", response.getBody()),
       response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     return new IndividualResource(response);
+  }
+
+  private JsonResponse attemptCreate(JsonObject representation)
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    client.post(urlMaker.combine(""), representation, this.tenantId,
+      ResponseHandler.json(createCompleted));
+
+    return createCompleted.get(5, TimeUnit.SECONDS);
   }
 }
