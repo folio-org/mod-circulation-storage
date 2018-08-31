@@ -8,7 +8,7 @@ import org.joda.time.format.ISODateTimeFormat;
 
 import io.vertx.core.json.JsonObject;
 
-public class LoanRequestBuilder {
+public class LoanRequestBuilder implements Builder {
 
   private final UUID id;
   private final UUID itemId;
@@ -133,6 +133,7 @@ public class LoanRequestBuilder {
       renewalCount);
   }
 
+  @Override
   public JsonObject create() {
     JsonObject request = new JsonObject();
 

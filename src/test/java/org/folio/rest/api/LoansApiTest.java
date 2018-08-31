@@ -197,8 +197,6 @@ public class LoansApiTest extends ApiTests {
     DateTime returnDate = new DateTime(2017, 4, 1, 11, 35, 0, DateTimeZone.UTC);
     DateTime systemReturnDate = new DateTime(2017, 4, 1, 12, 0, 0, DateTimeZone.UTC);
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
-
     JsonObject loanRequest = new LoanRequestBuilder()
       .withId(id)
       .withUserId(userId)
@@ -581,11 +579,7 @@ public class LoansApiTest extends ApiTests {
       .withItemStatus("Available")
       .withReturnDate(new DateTime(2017, 3, 5, 14, 23, 41, DateTimeZone.UTC));
 
-    JsonResponse replaceResponse = loansClient.attemptCreateOrReplace(
-      loan.getId(), returnedLoan.create());
-
-    assertThat(String.format("Failed to update loan: %s", replaceResponse.getBody()),
-      replaceResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    loansClient.replace(loan.getId(), returnedLoan);
 
     JsonObject updatedLoan = loansClient.getById(UUID.fromString(loan.getId()))
       .getJson();
@@ -623,11 +617,7 @@ public class LoansApiTest extends ApiTests {
       .withItemStatus("Checked out")
       .withRenewalCount(1);
 
-    JsonResponse replaceResponse = loansClient.attemptCreateOrReplace(
-      loan.getId(), returnedLoan.create());
-
-    assertThat(String.format("Failed to update loan: %s", replaceResponse.getBody()),
-      replaceResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    loansClient.replace(loan.getId(), returnedLoan);
 
     JsonObject updatedLoan = loansClient.getById(UUID.fromString(loan.getId()))
       .getJson();
