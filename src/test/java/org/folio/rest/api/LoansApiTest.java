@@ -256,12 +256,7 @@ public class LoansApiTest extends ApiTests {
     assertThat(String.format("Failed to create loan: %s", response.getBody()),
       response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-    JsonResponse getResponse = loansClient.attemptGetById(id);
-
-    assertThat(String.format("Failed to get loan: %s", getResponse.getBody()),
-      getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-
-    JsonObject loan = getResponse.getJson();
+    JsonObject loan = loansClient.getById(id).getJson();
 
     assertThat("id does not match",
       loan.getString("id"), is(id.toString()));
@@ -317,12 +312,7 @@ public class LoansApiTest extends ApiTests {
     assertThat(String.format("Failed to create loan: %s", response.getBody()),
       response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-    JsonResponse getResponse = loansClient.attemptGetById(id);
-
-    assertThat(String.format("Failed to get loan: %s", getResponse.getBody()),
-      getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-
-    JsonObject loan = getResponse.getJson();
+    JsonObject loan = loansClient.getById(id).getJson();
 
     assertThat("id does not match",
       loan.getString("id"), is(id.toString()));
@@ -555,12 +545,7 @@ public class LoansApiTest extends ApiTests {
 
     loansClient.create(loanRequest);
 
-    JsonResponse getResponse = loansClient.attemptGetById(id);
-
-    assertThat(String.format("Failed to get loan: %s", getResponse.getBody()),
-      getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-
-    JsonObject loan = getResponse.getJson();
+    JsonObject loan = loansClient.getById(id).getJson();
 
     assertThat("id does not match",
       loan.getString("id"), is(id.toString()));
@@ -627,9 +612,8 @@ public class LoansApiTest extends ApiTests {
     assertThat(String.format("Failed to update loan: %s", putResponse.getBody()),
       putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-    JsonResponse updatedLoanResponse = loansClient.attemptGetById(UUID.fromString(loan.getId()));
-
-    JsonObject updatedLoan = updatedLoanResponse.getJson();
+    JsonObject updatedLoan = loansClient.getById(UUID.fromString(loan.getId()))
+      .getJson();
 
     assertThat(updatedLoan.getString("returnDate"),
       is("2017-03-05T14:23:41.000Z"));
@@ -675,9 +659,8 @@ public class LoansApiTest extends ApiTests {
     assertThat(String.format("Failed to update loan: %s", putResponse.getBody()),
       putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-    JsonResponse updatedLoanResponse = loansClient.attemptGetById(UUID.fromString(loan.getId()));
-
-    JsonObject updatedLoan = updatedLoanResponse.getJson();
+    JsonObject updatedLoan = loansClient.getById(UUID.fromString(loan.getId()))
+      .getJson();
 
     //The RAML-Module-Builder converts all date-time formatted strings to UTC
     //and presents the offset as +0000 (which is ISO8601 compatible, but not RFC3339)
