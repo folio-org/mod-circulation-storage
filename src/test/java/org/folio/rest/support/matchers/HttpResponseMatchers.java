@@ -1,5 +1,6 @@
-package org.folio.rest.support;
+package org.folio.rest.support.matchers;
 
+import org.folio.rest.support.TextResponse;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeDiagnosingMatcher;

@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
-import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
+import static org.folio.rest.support.matchers.JsonObjectMatchers.hasSoleMessgeContaining;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
