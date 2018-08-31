@@ -246,10 +246,11 @@ public class LoansApiTest extends ApiTests {
       .withDueDate(new DateTime(2017, 3, 29, 21, 14, 43, DateTimeZone.UTC))
       .create();
 
-    JsonResponse response = createOrReplace(id.toString(), loanRequest);
+    JsonResponse createResponse = loansClient.attemptCreateOrReplace(
+      id.toString(), loanRequest);
 
-    assertThat(String.format("Failed to create loan: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    assertThat(String.format("Failed to create loan: %s", createResponse.getBody()),
+      createResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
     JsonObject loan = loansClient.getById(id).getJson();
 
@@ -297,10 +298,11 @@ public class LoansApiTest extends ApiTests {
       .withAction("checkedout")
       .create();
 
-    JsonResponse response = createOrReplace(id.toString(), loanRequest);
+    JsonResponse createResponse = loansClient.attemptCreateOrReplace(
+      id.toString(), loanRequest);
 
-    assertThat(String.format("Failed to create loan: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    assertThat(String.format("Failed to create loan: %s", createResponse.getBody()),
+      createResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
     JsonObject loan = loansClient.getById(id).getJson();
 
@@ -401,9 +403,10 @@ public class LoansApiTest extends ApiTests {
       .open()
       .create();
 
-    JsonResponse response = createOrReplace(secondLoanId.toString(), secondLoanRequest);
+    JsonResponse createResponse = loansClient.attemptCreateOrReplace(
+      secondLoanId.toString(), secondLoanRequest);
 
-    assertThat(response, isValidationResponseWhich(hasMessage(
+    assertThat(createResponse, isValidationResponseWhich(hasMessage(
       "Cannot have more than one open loan for the same item")));
   }
 
@@ -586,10 +589,11 @@ public class LoansApiTest extends ApiTests {
       .withItemStatus("Available")
       .withReturnDate(new DateTime(2017, 3, 5, 14, 23, 41, DateTimeZone.UTC));
 
-    JsonResponse putResponse = createOrReplace(loan.getId(), returnedLoan.create());
+    JsonResponse replaceResponse = loansClient.attemptCreateOrReplace(
+      loan.getId(), returnedLoan.create());
 
-    assertThat(String.format("Failed to update loan: %s", putResponse.getBody()),
-      putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    assertThat(String.format("Failed to update loan: %s", replaceResponse.getBody()),
+      replaceResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
     JsonObject updatedLoan = loansClient.getById(UUID.fromString(loan.getId()))
       .getJson();
@@ -627,10 +631,11 @@ public class LoansApiTest extends ApiTests {
       .withItemStatus("Checked out")
       .withRenewalCount(1);
 
-    JsonResponse putResponse = createOrReplace(loan.getId(), returnedLoan.create());
+    JsonResponse replaceResponse = loansClient.attemptCreateOrReplace(
+      loan.getId(), returnedLoan.create());
 
-    assertThat(String.format("Failed to update loan: %s", putResponse.getBody()),
-      putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    assertThat(String.format("Failed to update loan: %s", replaceResponse.getBody()),
+      replaceResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
     JsonObject updatedLoan = loansClient.getById(UUID.fromString(loan.getId()))
       .getJson();
@@ -679,9 +684,10 @@ public class LoansApiTest extends ApiTests {
     LoanRequestBuilder reopenLoanRequest = LoanRequestBuilder.from(closedLoan.getJson())
       .open();
 
-    JsonResponse response = createOrReplace(closedLoan.getId(), reopenLoanRequest.create());
+    JsonResponse replaceResponse = loansClient.attemptCreateOrReplace(
+      closedLoan.getId(), reopenLoanRequest.create());
 
-    assertThat(response, isValidationResponseWhich(hasMessage(
+    assertThat(replaceResponse, isValidationResponseWhich(hasMessage(
       "Cannot have more than one open loan for the same item")));
   }
 
@@ -1090,22 +1096,5 @@ public class LoansApiTest extends ApiTests {
       .withUserId(userId)
       .withStatus(statusName)
       .create();
-  }
-
-  private JsonResponse createOrReplace(
-    String id,
-    JsonObject representation)
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
-    CompletableFuture<JsonResponse> putCompleted = new CompletableFuture<>();
-
-    client.put(InterfaceUrls.loanStorageUrl(String.format("/%s", id)),
-      representation, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(putCompleted));
-
-    return putCompleted.get(5, TimeUnit.SECONDS);
   }
 }
