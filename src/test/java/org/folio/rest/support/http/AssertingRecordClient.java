@@ -62,6 +62,20 @@ public class AssertingRecordClient {
     return createCompleted.get(5, TimeUnit.SECONDS);
   }
 
+  public IndividualResource getById(UUID id)
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    JsonResponse response = attemptGetById(id);
+
+    assertThat(String.format("Failed to get record: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    return new IndividualResource(response);
+  }
+
   public JsonResponse attemptGetById(UUID id)
     throws MalformedURLException,
     InterruptedException,
