@@ -1008,21 +1008,9 @@ public class LoansApiTest extends ApiTests {
 
     loansClient.create(new LoanRequestBuilder().withId(id).create());
 
-    CompletableFuture<TextResponse> deleteCompleted = new CompletableFuture<>();
+    loansClient.deleteById(id);
 
-    client.delete(InterfaceUrls.loanStorageUrl(String.format("/%s", id)),
-      StorageTestSuite.TENANT_ID, ResponseHandler.text(deleteCompleted));
-
-    TextResponse deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-
-    client.get(InterfaceUrls.loanStorageUrl(String.format("/%s", id)),
-      StorageTestSuite.TENANT_ID, ResponseHandler.empty(getCompleted));
-
-    Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+    Response getResponse = loansClient.attemptGetById(id);
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
