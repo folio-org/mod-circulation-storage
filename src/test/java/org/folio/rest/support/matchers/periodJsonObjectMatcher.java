@@ -1,4 +1,4 @@
-package org.folio.rest.support;
+package org.folio.rest.support.matchers;
 
 import io.vertx.core.json.JsonObject;
 import org.hamcrest.Description;
