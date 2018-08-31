@@ -4,7 +4,7 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.MalformedURLException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -20,22 +20,26 @@ import io.vertx.core.json.JsonObject;
 public class AssertingRecordClient {
   private final HttpClient client;
   private final String tenantId;
+  private final UrlMaker urlMaker;
 
-  public AssertingRecordClient(HttpClient client, String tenantId) {
+  public AssertingRecordClient(
+    HttpClient client,
+    String tenantId,
+    UrlMaker urlMaker) {
     this.client = client;
     this.tenantId = tenantId;
+    this.urlMaker = urlMaker;
   }
 
-  public IndividualResource create(
-    JsonObject representation,
-    URL baseUrl)
+  public IndividualResource create(JsonObject representation)
     throws InterruptedException,
     ExecutionException,
-    TimeoutException {
+    TimeoutException,
+    MalformedURLException {
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
-    this.client.post(baseUrl, representation, this.tenantId,
+    this.client.post(urlMaker.combine(""), representation, this.tenantId,
       ResponseHandler.json(createCompleted));
 
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);

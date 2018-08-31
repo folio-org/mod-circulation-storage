@@ -50,7 +50,8 @@ import io.vertx.core.json.JsonObject;
 
 public class LoansApiTest extends ApiTests {
   private final AssertingRecordClient loansClient =
-    new AssertingRecordClient(client, StorageTestSuite.TENANT_ID);
+    new AssertingRecordClient(client, StorageTestSuite.TENANT_ID,
+      InterfaceUrls::loanStorageUrl);
 
   @Before
   public void beforeEach()
@@ -423,7 +424,7 @@ public class LoansApiTest extends ApiTests {
       .open()
       .create();
 
-    loansClient.create(firstLoanRequest, InterfaceUrls.loanStorageUrl());
+    loansClient.create(firstLoanRequest);
 
     JsonObject secondLoanRequest = new LoanRequestBuilder()
       .withItemId(itemId)
@@ -455,7 +456,7 @@ public class LoansApiTest extends ApiTests {
       .open()
       .create();
 
-    loansClient.create(firstLoanRequest, InterfaceUrls.loanStorageUrl());
+    loansClient.create(firstLoanRequest);
 
     UUID secondLoanId = UUID.randomUUID();
 
@@ -490,7 +491,7 @@ public class LoansApiTest extends ApiTests {
       .closed()
       .create();
 
-    loansClient.create(closedLoanRequest, InterfaceUrls.loanStorageUrl());
+    loansClient.create(closedLoanRequest);
 
     JsonObject openLoanRequest = new LoanRequestBuilder()
       .withItemId(itemId)
@@ -523,7 +524,7 @@ public class LoansApiTest extends ApiTests {
       .open()
       .create();
 
-    loansClient.create(firstLoanRequest, InterfaceUrls.loanStorageUrl());
+    loansClient.create(firstLoanRequest);
 
     JsonObject secondLoanRequest = new LoanRequestBuilder()
       .withItemId(secondItemId)
@@ -555,7 +556,7 @@ public class LoansApiTest extends ApiTests {
       .closed()
       .create();
 
-    loansClient.create(firstLoanRequest, InterfaceUrls.loanStorageUrl());
+    loansClient.create(firstLoanRequest);
 
     JsonObject secondLoanRequest = new LoanRequestBuilder()
       .withItemId(itemId)
@@ -588,7 +589,7 @@ public class LoansApiTest extends ApiTests {
       .open()
       .create();
 
-    loansClient.create(firstLoanRequest, InterfaceUrls.loanStorageUrl());
+    loansClient.create(firstLoanRequest);
 
     JsonObject secondLoanRequest = new LoanRequestBuilder()
       .withItemId(secondItemId)
@@ -629,7 +630,7 @@ public class LoansApiTest extends ApiTests {
       .withItemStatus("Checked out")
       .create();
 
-    loansClient.create(loanRequest, InterfaceUrls.loanStorageUrl());
+    loansClient.create(loanRequest);
 
     JsonResponse getResponse = getById(id);
 
@@ -684,7 +685,7 @@ public class LoansApiTest extends ApiTests {
     IndividualResource loan = loansClient.create(new LoanRequestBuilder()
       .withLoanDate(loanDate)
       .withDueDate(loanDate.plus(Period.days(14)))
-      .create(), InterfaceUrls.loanStorageUrl());
+      .create());
 
     LoanRequestBuilder returnedLoan = LoanRequestBuilder.from(loan.copyJson())
       .closed()
@@ -732,7 +733,7 @@ public class LoansApiTest extends ApiTests {
     IndividualResource loan = loansClient.create(new LoanRequestBuilder()
       .withLoanDate(loanDate)
       .withDueDate(loanDate.plus(Period.days(14)))
-      .create(), InterfaceUrls.loanStorageUrl());
+      .create());
 
     LoanRequestBuilder returnedLoan = LoanRequestBuilder.from(loan.getJson())
       .withDueDate(new DateTime(2017, 3, 30, 13, 25, 46, DateTimeZone.UTC))
@@ -787,14 +788,14 @@ public class LoansApiTest extends ApiTests {
       .open()
       .create();
 
-    loansClient.create(openLoanRequest, InterfaceUrls.loanStorageUrl());
+    loansClient.create(openLoanRequest);
 
     JsonObject closedLoanRequest = new LoanRequestBuilder()
       .withItemId(itemId)
       .closed()
       .create();
 
-    IndividualResource closedLoan = loansClient.create(closedLoanRequest, InterfaceUrls.loanStorageUrl());
+    IndividualResource closedLoan = loansClient.create(closedLoanRequest);
 
     LoanRequestBuilder reopenLoanRequest = LoanRequestBuilder.from(closedLoan.getJson())
       .open();
@@ -818,7 +819,7 @@ public class LoansApiTest extends ApiTests {
     TimeoutException,
     ExecutionException {
 
-    IndividualResource loan = loansClient.create(loanRequest(), InterfaceUrls.loanStorageUrl());
+    IndividualResource loan = loansClient.create(loanRequest());
 
     JsonObject returnedLoan = loan.copyJson();
 
@@ -855,7 +856,7 @@ public class LoansApiTest extends ApiTests {
     IndividualResource loan = loansClient.create(new LoanRequestBuilder()
       .withLoanDate(loanDate)
       .withDueDate(loanDate.plus(Period.days(14)))
-      .create(), InterfaceUrls.loanStorageUrl());
+      .create());
 
     LoanRequestBuilder returnedLoan = LoanRequestBuilder.from(loan.copyJson())
       .closed();
@@ -882,13 +883,13 @@ public class LoansApiTest extends ApiTests {
     TimeoutException,
     ExecutionException {
 
-    loansClient.create(loanRequest(), InterfaceUrls.loanStorageUrl());
-    loansClient.create(loanRequest(), InterfaceUrls.loanStorageUrl());
-    loansClient.create(loanRequest(), InterfaceUrls.loanStorageUrl());
-    loansClient.create(loanRequest(), InterfaceUrls.loanStorageUrl());
-    loansClient.create(loanRequest(), InterfaceUrls.loanStorageUrl());
-    loansClient.create(loanRequest(), InterfaceUrls.loanStorageUrl());
-    loansClient.create(loanRequest(), InterfaceUrls.loanStorageUrl());
+    loansClient.create(loanRequest());
+    loansClient.create(loanRequest());
+    loansClient.create(loanRequest());
+    loansClient.create(loanRequest());
+    loansClient.create(loanRequest());
+    loansClient.create(loanRequest());
+    loansClient.create(loanRequest());
 
     CompletableFuture<JsonResponse> firstPageCompleted = new CompletableFuture<>();
     CompletableFuture<JsonResponse> secondPageCompleted = new CompletableFuture<>();
@@ -935,14 +936,14 @@ public class LoansApiTest extends ApiTests {
 
     String queryTemplate = InterfaceUrls.loanStorageUrl() + "?query=userId=\"%s\"";
 
-    loansClient.create(new LoanRequestBuilder().withUserId(firstUserId).create(), InterfaceUrls.loanStorageUrl());
-    loansClient.create(new LoanRequestBuilder().withUserId(firstUserId).create(), InterfaceUrls.loanStorageUrl());
-    loansClient.create(new LoanRequestBuilder().withUserId(firstUserId).create(), InterfaceUrls.loanStorageUrl());
-    loansClient.create(new LoanRequestBuilder().withUserId(firstUserId).create(), InterfaceUrls.loanStorageUrl());
+    loansClient.create(new LoanRequestBuilder().withUserId(firstUserId).create());
+    loansClient.create(new LoanRequestBuilder().withUserId(firstUserId).create());
+    loansClient.create(new LoanRequestBuilder().withUserId(firstUserId).create());
+    loansClient.create(new LoanRequestBuilder().withUserId(firstUserId).create());
 
-    loansClient.create(new LoanRequestBuilder().withUserId(secondUserId).create(), InterfaceUrls.loanStorageUrl());
-    loansClient.create(new LoanRequestBuilder().withUserId(secondUserId).create(), InterfaceUrls.loanStorageUrl());
-    loansClient.create(new LoanRequestBuilder().withUserId(secondUserId).create(), InterfaceUrls.loanStorageUrl());
+    loansClient.create(new LoanRequestBuilder().withUserId(secondUserId).create());
+    loansClient.create(new LoanRequestBuilder().withUserId(secondUserId).create());
+    loansClient.create(new LoanRequestBuilder().withUserId(secondUserId).create());
 
     CompletableFuture<JsonResponse> firstUserSearchCompleted = new CompletableFuture<>();
     CompletableFuture<JsonResponse> secondUserSeatchCompleted = new CompletableFuture<>();
@@ -988,12 +989,12 @@ public class LoansApiTest extends ApiTests {
 
     String queryTemplate = "query=userId=\"%s\"+and+status.name=\"%s\"";
 
-    loansClient.create(loanRequest(userId, "Open"), InterfaceUrls.loanStorageUrl());
-    loansClient.create(loanRequest(userId, "Open"), InterfaceUrls.loanStorageUrl());
-    loansClient.create(loanRequest(userId, "Closed"), InterfaceUrls.loanStorageUrl());
-    loansClient.create(loanRequest(userId, "Closed"), InterfaceUrls.loanStorageUrl());
-    loansClient.create(loanRequest(userId, "Closed"), InterfaceUrls.loanStorageUrl());
-    loansClient.create(loanRequest(userId, "Closed"), InterfaceUrls.loanStorageUrl());
+    loansClient.create(loanRequest(userId, "Open"));
+    loansClient.create(loanRequest(userId, "Open"));
+    loansClient.create(loanRequest(userId, "Closed"));
+    loansClient.create(loanRequest(userId, "Closed"));
+    loansClient.create(loanRequest(userId, "Closed"));
+    loansClient.create(loanRequest(userId, "Closed"));
 
     CompletableFuture<JsonResponse> openSearchComppleted = new CompletableFuture<>();
     CompletableFuture<JsonResponse> closedSearchCompleted = new CompletableFuture<>();
@@ -1141,7 +1142,7 @@ public class LoansApiTest extends ApiTests {
 
     UUID id = UUID.randomUUID();
 
-    loansClient.create(new LoanRequestBuilder().withId(id).create(), InterfaceUrls.loanStorageUrl());
+    loansClient.create(new LoanRequestBuilder().withId(id).create());
 
     CompletableFuture<TextResponse> deleteCompleted = new CompletableFuture<>();
 
