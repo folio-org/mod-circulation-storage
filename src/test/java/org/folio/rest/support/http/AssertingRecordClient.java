@@ -45,7 +45,7 @@ public class AssertingRecordClient {
     return new IndividualResource(response);
   }
 
-  private JsonResponse attemptCreate(JsonObject representation)
+  public JsonResponse attemptCreate(JsonObject representation)
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
