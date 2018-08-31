@@ -681,19 +681,17 @@ public class LoansApiTest extends ApiTests {
       .withDueDate(loanDate.plus(Period.days(14)))
       .create());
 
-    JsonObject returnedLoan = loan.copyJson();
-
-    returnedLoan
-      .put("status", new JsonObject().put("name", "Closed"))
-      .put("action", "checkedin")
-      .put("itemStatus", "Available")
-      .put("returnDate", new DateTime(2017, 3, 5, 14, 23, 41, DateTimeZone.UTC)
-      .toString(ISODateTimeFormat.dateTime()));
+    LoanRequestBuilder returnedLoan = LoanRequestBuilder.from(loan.copyJson())
+      .closed()
+      .withAction("checkedin")
+      .withItemStatus("Available")
+      .withReturnDate(new DateTime(2017, 3, 5, 14, 23, 41, DateTimeZone.UTC));
 
     CompletableFuture<JsonResponse> putCompleted = new CompletableFuture<>();
 
-    client.put(loanStorageUrl(String.format("/%s", loan.getId())), returnedLoan,
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(putCompleted));
+    client.put(loanStorageUrl(String.format("/%s", loan.getId())),
+      returnedLoan.create(), StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(putCompleted));
 
     JsonResponse putResponse = putCompleted.get(5, TimeUnit.SECONDS);
 
@@ -731,19 +729,17 @@ public class LoansApiTest extends ApiTests {
       .withDueDate(loanDate.plus(Period.days(14)))
       .create());
 
-    JsonObject returnedLoan = loan.copyJson();
-
-    returnedLoan
-      .put("dueDate", new DateTime(2017, 3, 30, 13, 25, 46, DateTimeZone.UTC)
-        .toString(ISODateTimeFormat.dateTime()))
-      .put("action", "renewed")
-      .put("itemStatus", "Checked out")
-      .put("renewalCount", 1);
+    LoanRequestBuilder returnedLoan = LoanRequestBuilder.from(loan.getJson())
+      .withDueDate(new DateTime(2017, 3, 30, 13, 25, 46, DateTimeZone.UTC))
+      .withAction("renewed")
+      .withItemStatus("Checked out")
+      .withRenewalCount(1);
 
     CompletableFuture<JsonResponse> putCompleted = new CompletableFuture<>();
 
-    client.put(loanStorageUrl(String.format("/%s", loan.getId())), returnedLoan,
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(putCompleted));
+    client.put(loanStorageUrl(String.format("/%s", loan.getId())),
+      returnedLoan.create(), StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(putCompleted));
 
     JsonResponse putResponse = putCompleted.get(5, TimeUnit.SECONDS);
 
@@ -795,13 +791,14 @@ public class LoansApiTest extends ApiTests {
 
     IndividualResource closedLoan = createLoan(closedLoanRequest);
 
-    JsonObject reopenLoanRequest = closedLoan.copyJson()
-      .put("status", new JsonObject().put("name", "Open"));
+    LoanRequestBuilder reopenLoanRequest = LoanRequestBuilder.from(closedLoan.getJson())
+      .open();
 
     CompletableFuture<JsonResponse> reopenRequestCompleted = new CompletableFuture<>();
 
-    client.put(loanStorageUrl(String.format("/%s", closedLoan.getId())), reopenLoanRequest,
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(reopenRequestCompleted));
+    client.put(loanStorageUrl(String.format("/%s", closedLoan.getId())),
+      reopenLoanRequest.create(), StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(reopenRequestCompleted));
 
     JsonResponse response = reopenRequestCompleted.get(5, TimeUnit.SECONDS);
 
@@ -855,15 +852,14 @@ public class LoansApiTest extends ApiTests {
       .withDueDate(loanDate.plus(Period.days(14)))
       .create());
 
-    JsonObject returnedLoan = loan.copyJson();
-
-    returnedLoan
-      .put("status", new JsonObject().put("name", "Closed"));
+    LoanRequestBuilder returnedLoan = LoanRequestBuilder.from(loan.copyJson())
+      .closed();
 
     CompletableFuture<TextResponse> putCompleted = new CompletableFuture<>();
 
-    client.put(loanStorageUrl(String.format("/%s", loan.getId())), returnedLoan,
-      StorageTestSuite.TENANT_ID, ResponseHandler.text(putCompleted));
+    client.put(loanStorageUrl(String.format("/%s", loan.getId())),
+      returnedLoan.create(), StorageTestSuite.TENANT_ID,
+      ResponseHandler.text(putCompleted));
 
     TextResponse response = putCompleted.get(5, TimeUnit.SECONDS);
 

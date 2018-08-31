@@ -9,6 +9,7 @@ import org.joda.time.format.ISODateTimeFormat;
 import io.vertx.core.json.JsonObject;
 
 public class LoanRequestBuilder {
+
   private final UUID id;
   private final UUID itemId;
   private final UUID userId;
@@ -21,6 +22,7 @@ public class LoanRequestBuilder {
   private final UUID loanPolicyId;
   private DateTime returnDate;
   private DateTime systemReturnDate;
+  private final Integer renewalCount;
 
   public LoanRequestBuilder() {
     this(UUID.randomUUID(),
@@ -34,8 +36,8 @@ public class LoanRequestBuilder {
       null,
       null,
       null,
-      null
-    );
+      null,
+      null);
   }
 
   private LoanRequestBuilder(
@@ -50,7 +52,8 @@ public class LoanRequestBuilder {
     DateTime dueDate,
     UUID loanPolicyId,
     DateTime returnDate,
-    DateTime systemReturnDate) {
+    DateTime systemReturnDate,
+    Integer renewalCount) {
 
     this.id = id;
     this.itemId = itemId;
@@ -64,6 +67,70 @@ public class LoanRequestBuilder {
     this.loanPolicyId = loanPolicyId;
     this.returnDate = returnDate;
     this.systemReturnDate = systemReturnDate;
+    this.renewalCount = renewalCount;
+  }
+
+  public static LoanRequestBuilder from(JsonObject example) {
+    //TODO: Extract constants for properties
+
+    final UUID id = example.containsKey("id")
+      ? UUID.fromString(example.getString("id"))
+      : null;
+
+    final UUID userId = example.containsKey("userId")
+      ? UUID.fromString(example.getString("userId"))
+      : null;
+
+    final UUID itemId = example.containsKey("itemId")
+      ? UUID.fromString(example.getString("itemId"))
+      : null;
+
+    final UUID proxyUserId = example.containsKey("proxyUserId")
+      ? UUID.fromString(example.getString("proxyUserId"))
+      : null;
+
+    final UUID loanPolicyId = example.containsKey("loanPolicyId")
+      ? UUID.fromString(example.getString("loanPolicyId"))
+      : null;
+
+    final DateTime loanDate = example.containsKey("loanDate")
+      ? DateTime.parse(example.getString("loanDate"))
+      : null;
+
+    final DateTime dueDate = example.containsKey("dueDate")
+      ? DateTime.parse(example.getString("dueDate"))
+      : null;
+
+    final DateTime returnDate = example.containsKey("returnDate")
+      ? DateTime.parse(example.getString("returnDate"))
+      : null;
+
+    final DateTime systemReturnDate = example.containsKey("systemReturnDate")
+      ? DateTime.parse(example.getString("systemReturnDate"))
+      : null;
+
+    final String statusName = example.containsKey("status")
+      ? example.getJsonObject("status").getString("name")
+      : null;
+
+    final Integer renewalCount = example.containsKey("renewalCount")
+      ? example.getInteger("renewalCount")
+      : null;
+
+    return new LoanRequestBuilder(
+      id,
+      itemId,
+      userId,
+      proxyUserId,
+      loanDate,
+      statusName,
+      example.getString("itemStatus"),
+      example.getString("action"),
+      dueDate,
+      loanPolicyId,
+      returnDate,
+      systemReturnDate,
+      renewalCount);
   }
 
   public JsonObject create() {
@@ -115,6 +182,10 @@ public class LoanRequestBuilder {
       request.put("dueDate", formatDateTime(dueDate));
     }
 
+    if(renewalCount != null) {
+      request.put("renewalCount", renewalCount);
+    }
+
     return request;
   }
 
@@ -131,7 +202,8 @@ public class LoanRequestBuilder {
       this.dueDate,
       this.loanPolicyId,
       this.returnDate,
-      this.systemReturnDate);
+      this.systemReturnDate,
+      this.renewalCount);
   }
 
   public LoanRequestBuilder withNoId() {
@@ -151,7 +223,8 @@ public class LoanRequestBuilder {
       this.dueDate,
       this.loanPolicyId,
       this.returnDate,
-      this.systemReturnDate);
+      this.systemReturnDate,
+      this.renewalCount);
   }
 
   public LoanRequestBuilder withUserId(UUID userId) {
@@ -167,7 +240,8 @@ public class LoanRequestBuilder {
       this.dueDate,
       this.loanPolicyId,
       this.returnDate,
-      this.systemReturnDate);
+      this.systemReturnDate,
+      this.renewalCount);
   }
 
   public LoanRequestBuilder withProxyUserId(UUID proxyUserId) {
@@ -183,7 +257,8 @@ public class LoanRequestBuilder {
       this.dueDate,
       this.loanPolicyId,
       this.returnDate,
-      this.systemReturnDate);
+      this.systemReturnDate,
+      this.renewalCount);
   }
 
   public LoanRequestBuilder withLoanDate(DateTime loanDate) {
@@ -199,7 +274,8 @@ public class LoanRequestBuilder {
       this.dueDate,
       this.loanPolicyId,
       this.returnDate,
-      this.systemReturnDate);
+      this.systemReturnDate,
+      this.renewalCount);
   }
 
   public LoanRequestBuilder withStatus(String statusName) {
@@ -215,7 +291,8 @@ public class LoanRequestBuilder {
       this.dueDate,
       this.loanPolicyId,
       this.returnDate,
-      this.systemReturnDate);
+      this.systemReturnDate,
+      this.renewalCount);
   }
 
   public LoanRequestBuilder open() {
@@ -239,7 +316,8 @@ public class LoanRequestBuilder {
       this.dueDate,
       this.loanPolicyId,
       this.returnDate,
-      this.systemReturnDate);
+      this.systemReturnDate,
+      this.renewalCount);
   }
 
   public LoanRequestBuilder withAction(String action) {
@@ -255,7 +333,8 @@ public class LoanRequestBuilder {
       this.dueDate,
       this.loanPolicyId,
       this.returnDate,
-      this.systemReturnDate);
+      this.systemReturnDate,
+      this.renewalCount);
   }
 
   public LoanRequestBuilder withDueDate(DateTime dueDate) {
@@ -271,7 +350,8 @@ public class LoanRequestBuilder {
       dueDate,
       this.loanPolicyId,
       this.returnDate,
-      this.systemReturnDate);
+      this.systemReturnDate,
+      this.renewalCount);
   }
 
   public LoanRequestBuilder withReturnDate(DateTime returnDate) {
@@ -287,7 +367,8 @@ public class LoanRequestBuilder {
       this.dueDate,
       this.loanPolicyId,
       returnDate,
-      this.systemReturnDate);
+      this.systemReturnDate,
+      this.renewalCount);
   }
 
   public LoanRequestBuilder withSystemReturnDate(DateTime systemReturnDate) {
@@ -303,7 +384,8 @@ public class LoanRequestBuilder {
       this.dueDate,
       this.loanPolicyId,
       this.returnDate,
-      systemReturnDate);
+      systemReturnDate,
+      this.renewalCount);
   }
 
   public LoanRequestBuilder withNoStatus() {
@@ -331,6 +413,24 @@ public class LoanRequestBuilder {
       this.dueDate,
       loanPolicyId,
       this.returnDate,
-      this.systemReturnDate);
+      this.systemReturnDate,
+      this.renewalCount);
+  }
+
+  public LoanRequestBuilder withRenewalCount(int renewalCount) {
+    return new LoanRequestBuilder(
+      this.id,
+      this.itemId,
+      this.userId,
+      this.proxyUserId,
+      this.loanDate,
+      this.statusName,
+      this.itemStatus,
+      this.action,
+      this.dueDate,
+      this.loanPolicyId,
+      this.returnDate,
+      this.systemReturnDate,
+      renewalCount);
   }
 }
