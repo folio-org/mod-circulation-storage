@@ -1,14 +1,14 @@
 package org.folio.rest.support.builders;
 
-import io.vertx.core.json.JsonObject;
+import java.util.UUID;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.ISODateTimeFormat;
 
-import java.util.UUID;
+import io.vertx.core.json.JsonObject;
 
 public class LoanRequestBuilder {
-
   private final UUID id;
   private final UUID itemId;
   private final UUID userId;
@@ -34,7 +34,8 @@ public class LoanRequestBuilder {
       null,
       null,
       null,
-      null);
+      null
+    );
   }
 
   private LoanRequestBuilder(
@@ -73,13 +74,16 @@ public class LoanRequestBuilder {
     }
 
     request
-      .put("userId", userId.toString())
       .put("itemId", itemId.toString())
       .put("loanDate", loanDate.toString(ISODateTimeFormat.dateTime()))
       .put("action", action);
 
     if(itemStatus != null) {
       request.put("itemStatus", itemStatus);
+    }
+
+    if(userId != null) {
+      request.put("userId", userId.toString());
     }
 
     if(proxyUserId != null) {
@@ -212,6 +216,14 @@ public class LoanRequestBuilder {
       this.loanPolicyId,
       this.returnDate,
       this.systemReturnDate);
+  }
+
+  public LoanRequestBuilder open() {
+    return withStatus("Open");
+  }
+
+  public LoanRequestBuilder closed() {
+    return withStatus("Closed");
   }
 
   public LoanRequestBuilder withItemStatus(String itemStatus) {

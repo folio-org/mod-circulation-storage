@@ -78,7 +78,7 @@ public class LoansApiTest extends ApiTests {
       .withUserId(userId)
       .withProxyUserId(proxyUserId)
       .withLoanDate(new DateTime(2017, 6, 27, 10, 23, 43, DateTimeZone.UTC))
-      .withStatus("Open")
+      .open()
       .withAction("checkedout")
       .withItemStatus("Checked out")
       .withDueDate(new DateTime(2017, 7, 27, 10, 23, 43, DateTimeZone.UTC))
@@ -147,7 +147,7 @@ public class LoansApiTest extends ApiTests {
       .withUserId(userId)
       .withProxyUserId(proxyUserId)
       .withLoanDate(new DateTime(2017, 3, 20, 7, 21, 45, DateTimeZone.UTC))
-      .withStatus("Open")
+      .open()
       .withAction("checkedout")
       .withItemStatus("Checked out")
       .withDueDate(new DateTime(2017, 4, 20, 7, 21, 45, DateTimeZone.UTC))
@@ -224,7 +224,7 @@ public class LoansApiTest extends ApiTests {
       .withDueDate(dueDate)
       .withReturnDate(returnDate)
       .withSystemReturnDate(systemReturnDate)
-      .withStatus("Closed")
+      .closed()
       .create();
 
     client.post(loanStorageUrl(), loanRequest, StorageTestSuite.TENANT_ID,
@@ -264,7 +264,7 @@ public class LoansApiTest extends ApiTests {
       .withUserId(userId)
       .withProxyUserId(proxyUserId)
       .withLoanDate(new DateTime(2017, 2, 27, 21, 14, 43, DateTimeZone.UTC))
-      .withStatus("Open")
+      .open()
       .withAction("checkedout")
       .withItemStatus("Checked out")
       .withDueDate(new DateTime(2017, 3, 29, 21, 14, 43, DateTimeZone.UTC))
@@ -415,14 +415,14 @@ public class LoansApiTest extends ApiTests {
 
     JsonObject firstLoanRequest = new LoanRequestBuilder()
       .withItemId(itemId)
-      .withStatus("Open")
+      .open()
       .create();
 
     createLoan(firstLoanRequest);
 
     JsonObject secondLoanRequest = new LoanRequestBuilder()
       .withItemId(itemId)
-      .withStatus("Open")
+      .open()
       .create();
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
@@ -447,7 +447,7 @@ public class LoansApiTest extends ApiTests {
 
     JsonObject firstLoanRequest = new LoanRequestBuilder()
       .withItemId(itemId)
-      .withStatus("Open")
+      .open()
       .create();
 
     createLoan(firstLoanRequest);
@@ -457,7 +457,7 @@ public class LoansApiTest extends ApiTests {
     JsonObject secondLoanRequest = new LoanRequestBuilder()
       .withId(secondLoanId)
       .withItemId(itemId)
-      .withStatus("Open")
+      .open()
       .create();
 
     CompletableFuture<JsonResponse> secondCreateCompleted = new CompletableFuture<>();
@@ -482,14 +482,14 @@ public class LoansApiTest extends ApiTests {
 
     JsonObject closedLoanRequest = new LoanRequestBuilder()
       .withItemId(itemId)
-      .withStatus("Closed")
+      .closed()
       .create();
 
     createLoan(closedLoanRequest);
 
     JsonObject openLoanRequest = new LoanRequestBuilder()
       .withItemId(itemId)
-      .withStatus("Open")
+      .open()
       .create();
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
@@ -515,14 +515,14 @@ public class LoansApiTest extends ApiTests {
 
     JsonObject firstLoanRequest = new LoanRequestBuilder()
       .withItemId(firstItemId)
-      .withStatus("Open")
+      .open()
       .create();
 
     createLoan(firstLoanRequest);
 
     JsonObject secondLoanRequest = new LoanRequestBuilder()
       .withItemId(secondItemId)
-      .withStatus("Open")
+      .open()
       .create();
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
@@ -547,14 +547,14 @@ public class LoansApiTest extends ApiTests {
 
     JsonObject firstLoanRequest = new LoanRequestBuilder()
       .withItemId(itemId)
-      .withStatus("Closed")
+      .closed()
       .create();
 
     createLoan(firstLoanRequest);
 
     JsonObject secondLoanRequest = new LoanRequestBuilder()
       .withItemId(itemId)
-      .withStatus("Closed")
+      .closed()
       .create();
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
@@ -580,14 +580,14 @@ public class LoansApiTest extends ApiTests {
 
     JsonObject firstLoanRequest = new LoanRequestBuilder()
       .withItemId(firstItemId)
-      .withStatus("Open")
+      .open()
       .create();
 
     createLoan(firstLoanRequest);
 
     JsonObject secondLoanRequest = new LoanRequestBuilder()
       .withItemId(secondItemId)
-      .withStatus("Closed")
+      .closed()
       .create();
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
@@ -619,7 +619,7 @@ public class LoansApiTest extends ApiTests {
       .withUserId(userId)
       .withProxyUserId(proxyUserId)
       .withLoanDate(new DateTime(2016, 10, 15, 8, 26, 53, DateTimeZone.UTC))
-      .withStatus("Open")
+      .open()
       .withAction("checkedout")
       .withItemStatus("Checked out")
       .create();
@@ -783,14 +783,14 @@ public class LoansApiTest extends ApiTests {
 
     JsonObject openLoanRequest = new LoanRequestBuilder()
       .withItemId(itemId)
-      .withStatus("Open")
+      .open()
       .create();
 
     createLoan(openLoanRequest);
 
     JsonObject closedLoanRequest = new LoanRequestBuilder()
       .withItemId(itemId)
-      .withStatus("Closed")
+      .closed()
       .create();
 
     IndividualResource closedLoan = createLoan(closedLoanRequest);
