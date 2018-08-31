@@ -92,6 +92,21 @@ public class AssertingRecordClient {
     return getCompleted.get(5, TimeUnit.SECONDS);
   }
 
+  public void createAtSpecificLocation(
+    UUID id,
+    JsonObject representation)
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    JsonResponse createResponse = attemptCreateOrReplace(
+      id.toString(), representation);
+
+    assertThat(String.format("Failed to create record: %s", createResponse.getBody()),
+      createResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+  }
+
   public JsonResponse attemptCreateOrReplace(
     String id,
     JsonObject representation)

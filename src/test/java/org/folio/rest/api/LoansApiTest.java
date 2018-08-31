@@ -246,7 +246,7 @@ public class LoansApiTest extends ApiTests {
       .withDueDate(new DateTime(2017, 3, 29, 21, 14, 43, DateTimeZone.UTC))
       .create();
 
-    createAtSpecificLocation(id, loanRequest);
+    loansClient.createAtSpecificLocation(id, loanRequest);
 
     JsonObject loan = loansClient.getById(id).getJson();
 
@@ -294,7 +294,7 @@ public class LoansApiTest extends ApiTests {
       .withAction("checkedout")
       .create();
 
-    createAtSpecificLocation(id, loanRequest);
+    loansClient.createAtSpecificLocation(id, loanRequest);
 
     JsonObject loan = loansClient.getById(id).getJson();
 
@@ -1090,18 +1090,4 @@ public class LoansApiTest extends ApiTests {
       .create();
   }
 
-  private void createAtSpecificLocation(
-    UUID id,
-    JsonObject representation)
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
-    JsonResponse createResponse = loansClient.attemptCreateOrReplace(
-      id.toString(), representation);
-
-    assertThat(String.format("Failed to create record: %s", createResponse.getBody()),
-      createResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-  }
 }
