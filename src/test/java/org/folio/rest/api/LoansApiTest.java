@@ -13,7 +13,6 @@ import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -257,7 +256,7 @@ public class LoansApiTest extends ApiTests {
     assertThat(String.format("Failed to create loan: %s", response.getBody()),
       response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-    JsonResponse getResponse = getById(id);
+    JsonResponse getResponse = loansClient.attemptGetById(id);
 
     assertThat(String.format("Failed to get loan: %s", getResponse.getBody()),
       getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
@@ -318,7 +317,7 @@ public class LoansApiTest extends ApiTests {
     assertThat(String.format("Failed to create loan: %s", response.getBody()),
       response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-    JsonResponse getResponse = getById(id);
+    JsonResponse getResponse = loansClient.attemptGetById(id);
 
     assertThat(String.format("Failed to get loan: %s", getResponse.getBody()),
       getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
@@ -556,7 +555,7 @@ public class LoansApiTest extends ApiTests {
 
     loansClient.create(loanRequest);
 
-    JsonResponse getResponse = getById(id);
+    JsonResponse getResponse = loansClient.attemptGetById(id);
 
     assertThat(String.format("Failed to get loan: %s", getResponse.getBody()),
       getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
@@ -592,7 +591,7 @@ public class LoansApiTest extends ApiTests {
     ExecutionException,
     TimeoutException {
 
-    JsonResponse getResponse = getById(UUID.randomUUID());
+    JsonResponse getResponse = loansClient.attemptGetById(UUID.randomUUID());
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
@@ -628,7 +627,7 @@ public class LoansApiTest extends ApiTests {
     assertThat(String.format("Failed to update loan: %s", putResponse.getBody()),
       putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-    JsonResponse updatedLoanResponse = getById(UUID.fromString(loan.getId()));
+    JsonResponse updatedLoanResponse = loansClient.attemptGetById(UUID.fromString(loan.getId()));
 
     JsonObject updatedLoan = updatedLoanResponse.getJson();
 
@@ -676,7 +675,7 @@ public class LoansApiTest extends ApiTests {
     assertThat(String.format("Failed to update loan: %s", putResponse.getBody()),
       putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-    JsonResponse updatedLoanResponse = getById(UUID.fromString(loan.getId()));
+    JsonResponse updatedLoanResponse = loansClient.attemptGetById(UUID.fromString(loan.getId()));
 
     JsonObject updatedLoan = updatedLoanResponse.getJson();
 
@@ -1130,22 +1129,6 @@ public class LoansApiTest extends ApiTests {
 
     assertThat(response, isValidationResponseWhich(
       hasMessageContaining("Unrecognized field")));
-  }
-
-  private JsonResponse getById(UUID id)
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
-    URL getInstanceUrl = InterfaceUrls.loanStorageUrl(String.format("/%s", id));
-
-    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
-
-    client.get(getInstanceUrl, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(getCompleted));
-
-    return getCompleted.get(5, TimeUnit.SECONDS);
   }
 
   private JsonObject loanRequest() {

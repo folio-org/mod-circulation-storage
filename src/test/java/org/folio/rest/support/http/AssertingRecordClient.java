@@ -5,11 +5,14 @@ import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.folio.rest.api.StorageTestSuite;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonResponse;
@@ -57,5 +60,21 @@ public class AssertingRecordClient {
       ResponseHandler.json(createCompleted));
 
     return createCompleted.get(5, TimeUnit.SECONDS);
+  }
+
+  public JsonResponse attemptGetById(UUID id)
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    URL getInstanceUrl = urlMaker.combine(String.format("/%s", id));
+
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
+
+    client.get(getInstanceUrl, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(getCompleted));
+
+    return getCompleted.get(5, TimeUnit.SECONDS);
   }
 }
