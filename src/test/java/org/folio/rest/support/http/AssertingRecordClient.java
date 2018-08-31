@@ -18,9 +18,14 @@ import org.folio.rest.support.ResponseHandler;
 import io.vertx.core.json.JsonObject;
 
 public class AssertingRecordClient {
+  private final HttpClient client;
+
+  public AssertingRecordClient(HttpClient client) {
+    this.client = client;
+  }
+
   public IndividualResource create(
     JsonObject representation,
-    HttpClient client,
     URL baseUrl,
     String tenantId)
     throws InterruptedException,
@@ -29,7 +34,7 @@ public class AssertingRecordClient {
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
-    client.post(baseUrl, representation, tenantId,
+    this.client.post(baseUrl, representation, tenantId,
       ResponseHandler.json(createCompleted));
 
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
