@@ -3,6 +3,8 @@ package org.folio.rest.api;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
+import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
@@ -25,6 +27,8 @@ import org.junit.runners.Suite;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.sql.ResultSet;
 
 @RunWith(Suite.class)
@@ -41,6 +45,8 @@ import io.vertx.ext.sql.ResultSet;
 })
 
 public class StorageTestSuite {
+  private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
 	public static final String TENANT_ID = "test_tenant";
 
 	private static Vertx vertx;
@@ -56,34 +62,51 @@ public class StorageTestSuite {
 	}
 
 	@BeforeClass
-	public static void before() throws Exception {
+	public static void before()
+    throws IOException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
 		vertx = Vertx.vertx();
 
-		String useExternalDatabase = System.getProperty("org.folio.circulation.storage.test.database", "embedded");
+		String useExternalDatabase = System.getProperty(
+		  "org.folio.circulation.storage.test.database",
+            "embedded");
 
 		switch (useExternalDatabase) {
-		case "environment":
-			System.out.println("Using environment settings");
-			break;
+      case "environment":
+        log.info("Using environment settings");
+        break;
 
-		case "external":
-			String postgresConfigPath = System.getProperty("org.folio.circulation.storage.test.config",
-					"/postgres-conf-local.json");
+      case "external":
+        String postgresConfigPath = System.getProperty(
+          "org.folio.circulation.storage.test.config",
+            "/postgres-conf-local.json");
 
-			PostgresClient.setConfigFilePath(postgresConfigPath);
-			break;
-		case "embedded":
-			PostgresClient.setIsEmbedded(true);
-			PostgresClient.setEmbeddedPort(NetworkUtils.nextFreePort());
-			PostgresClient client = PostgresClient.getInstance(vertx);
-			client.startEmbeddedPostgres();
-			break;
-		default:
-			String message = "No understood database choice made." + "Please set org.folio.circulation.storage.test.config"
-					+ "to 'external', 'environment' or 'embedded'";
+        log.info("Using external configuration settings: '%s'",
+          postgresConfigPath);
 
-			throw new Exception(message);
+        PostgresClient.setConfigFilePath(postgresConfigPath);
+        break;
+
+      case "embedded":
+        log.info("Using embedded PostgreSQL");
+
+        PostgresClient.setIsEmbedded(true);
+        PostgresClient.setEmbeddedPort(NetworkUtils.nextFreePort());
+
+        PostgresClient client = PostgresClient.getInstance(vertx);
+        client.startEmbeddedPostgres();
+        break;
+
+      default:
+        String message = "No understood database choice made."
+          + "Please set org.folio.circulation.storage.test.config"
+          + "to 'external', 'environment' or 'embedded'";
+
+        log.error(message);
+        assert false;
 		}
 
 		port = NetworkUtils.nextFreePort();
@@ -101,7 +124,10 @@ public class StorageTestSuite {
 	}
 
 	@AfterClass
-	public static void after() throws InterruptedException, ExecutionException, TimeoutException {
+	public static void after()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
 		initialised = false;
 
@@ -135,10 +161,12 @@ public class StorageTestSuite {
 			Response response = deleteAllFinished.get(5, TimeUnit.SECONDS);
 
 			if (response.getStatusCode() != 204) {
-				System.out.println("WARNING!!!!! Delete all resources preparation failed");
+				log.warn(String.format("Deleting all records at '%s' failed",
+          rootUrl));
 			}
 		} catch (Exception e) {
-			System.out.println("WARNING!!!!! Unable to delete all resources: " + e.getMessage());
+			log.error("Unable to delete all resources: " + e.getMessage(), e);
+			assert false;
 		}
 	}
 
@@ -149,22 +177,31 @@ public class StorageTestSuite {
 			Integer mismatchedRowCount = results.getNumRows();
 
 			assertThat(mismatchedRowCount, is(0));
+
 		} catch (Exception e) {
-			System.out.println(String.format("WARNING!!!!! Unable to determine mismatched ID rows for %s", table));
+      log.error(String.format(
+        "Unable to determine mismatched ID rows for '%s': '%s'",
+        table, e.getMessage()), e);
+      assert false;
 		}
 	}
 
-	private static ResultSet getRecordsWithUnmatchedIds(String tenantId, String tableName)
-			throws InterruptedException, ExecutionException, TimeoutException {
+	private static ResultSet getRecordsWithUnmatchedIds(
+	  String tenantId,
+    String tableName)
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
-		PostgresClient dbClient = PostgresClient.getInstance(getVertx(), tenantId);
+		PostgresClient postgresClient = PostgresClient.getInstance(getVertx(), tenantId);
 
 		CompletableFuture<ResultSet> selectCompleted = new CompletableFuture<>();
 
-		String sql = String.format("SELECT null FROM %s_%s.%s" + " WHERE CAST(_id AS VARCHAR(50)) != jsonb->>'id'",
+		String sql = String.format(
+		  "SELECT null FROM %s_%s.%s" + " WHERE CAST(_id AS VARCHAR(50)) != jsonb->>'id'",
 				tenantId, "mod_circulation_storage", tableName);
 
-		dbClient.select(sql, result -> {
+		postgresClient.select(sql, result -> {
 			if (result.succeeded()) {
 				selectCompleted.complete(result.result());
 			} else {
@@ -176,7 +213,9 @@ public class StorageTestSuite {
 	}
 
 	private static void startVerticle(DeploymentOptions options)
-			throws InterruptedException, ExecutionException, TimeoutException {
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
 		CompletableFuture<String> deploymentComplete = new CompletableFuture<>();
 
@@ -194,20 +233,23 @@ public class StorageTestSuite {
 	private static void prepareTenant(String tenantId) {
 		CompletableFuture<TextResponse> tenantPrepared = new CompletableFuture<>();
 
+		log.info("Making request to prepare tenant in module");
+
 		try {
 			HttpClient client = new HttpClient(vertx);
 
-			client.post(storageUrl("/_/tenant"), null, tenantId, ResponseHandler.text(tenantPrepared));
+			client.post(storageUrl("/_/tenant"), null, tenantId,
+        ResponseHandler.text(tenantPrepared));
 
 			TextResponse response = tenantPrepared.get(10, TimeUnit.SECONDS);
 
-			String failureMessage = String.format("Tenant preparation failed: %s: %s", response.getStatusCode(),
-					response.getBody());
+			String failureMessage = String.format("Tenant preparation failed: %s: %s",
+        response.getStatusCode(), response.getBody());
 
 			assertThat(failureMessage, response.getStatusCode(), is(201));
 
 		} catch (Exception e) {
-			System.out.println("WARNING!!!!! Tenant preparation failed: " + e.getMessage());
+			log.error("Tenant preparation failed: " + e.getMessage(), e);
 			assert false;
 		}
 	}
@@ -215,20 +257,23 @@ public class StorageTestSuite {
 	private static void removeTenant(String tenantId) {
 		CompletableFuture<TextResponse> tenantDeleted = new CompletableFuture<>();
 
+    log.info("Making request to clean up tenant in module");
+
 		try {
 			HttpClient client = new HttpClient(vertx);
 
-			client.delete(storageUrl("/_/tenant"), tenantId, ResponseHandler.text(tenantDeleted));
+			client.delete(storageUrl("/_/tenant"), tenantId,
+        ResponseHandler.text(tenantDeleted));
 
 			TextResponse response = tenantDeleted.get(10, TimeUnit.SECONDS);
 
-			String failureMessage = String.format("Tenant cleanup failed: %s: %s", response.getStatusCode(),
-					response.getBody());
+			String failureMessage = String.format("Tenant clean up failed: %s: %s",
+        response.getStatusCode(), response.getBody());
 
 			assertThat(failureMessage, response.getStatusCode(), is(204));
 
 		} catch (Exception e) {
-			System.out.println("WARNING!!!!! Tenant cleanup failed: " + e.getMessage());
+      log.error("Tenant clean up failed: " + e.getMessage(), e);
 			assert false;
 		}
 	}
