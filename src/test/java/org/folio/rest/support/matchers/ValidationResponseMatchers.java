@@ -1,6 +1,6 @@
 package org.folio.rest.support.matchers;
 
-import static org.folio.rest.support.matchers.HttpResponseMatchers.isUnprocessableEntity;
+import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isUnprocessableEntity;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasErrorWith;
 
 import org.folio.rest.support.JsonResponse;

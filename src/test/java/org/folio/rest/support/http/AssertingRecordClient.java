@@ -1,9 +1,10 @@
 package org.folio.rest.support.http;
 
-import static org.hamcrest.core.Is.is;
+import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isCreated;
+import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNoContent;
+import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isOk;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.UUID;
@@ -44,8 +45,7 @@ public class AssertingRecordClient {
 
     JsonResponse response = attemptCreate(representation);
 
-    assertThat(String.format("Failed to create record: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    assertThat("Failed to create record", response, isCreated());
 
     return new IndividualResource(response);
   }
@@ -72,8 +72,7 @@ public class AssertingRecordClient {
 
     JsonResponse response = attemptGetById(id);
 
-    assertThat(String.format("Failed to get record: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat("Failed to get record", response, isOk());
 
     return new IndividualResource(response);
   }
@@ -105,8 +104,7 @@ public class AssertingRecordClient {
     JsonResponse createResponse = attemptCreateOrReplace(
       id.toString(), representation);
 
-    assertThat(String.format("Failed to create record: %s", createResponse.getBody()),
-      createResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    assertThat("Failed to create record", createResponse, isNoContent());
   }
 
   public void replace(
@@ -120,8 +118,7 @@ public class AssertingRecordClient {
     JsonResponse replaceResponse = attemptCreateOrReplace(
       id, builder.create());
 
-    assertThat(String.format("Failed to update record: %s", replaceResponse.getBody()),
-      replaceResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    assertThat("Failed to update record", replaceResponse, isNoContent());
   }
 
   public JsonResponse attemptCreateOrReplace(
@@ -154,7 +151,6 @@ public class AssertingRecordClient {
 
     TextResponse deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(String.format("Failed to delete record: %s", deleteResponse.getBody()),
-      deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    assertThat("Failed to delete record", deleteResponse, isNoContent());
   }
 }
