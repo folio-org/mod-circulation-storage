@@ -17,6 +17,7 @@ import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.TextResponse;
 import org.folio.rest.support.builders.Builder;
 
 import io.vertx.core.json.JsonObject;
@@ -138,5 +139,22 @@ public class AssertingRecordClient {
       ResponseHandler.json(putCompleted));
 
     return putCompleted.get(5, TimeUnit.SECONDS);
+  }
+
+  public void deleteById(UUID id)
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    CompletableFuture<TextResponse> deleteCompleted = new CompletableFuture<>();
+
+    client.delete(InterfaceUrls.loanStorageUrl(String.format("/%s", id)),
+      StorageTestSuite.TENANT_ID, ResponseHandler.text(deleteCompleted));
+
+    TextResponse deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to delete record: %s", deleteResponse.getBody()),
+      deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
   }
 }
