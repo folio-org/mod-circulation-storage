@@ -1,6 +1,8 @@
-package org.folio.rest.support;
+package org.folio.rest.support.matchers;
 
 import io.vertx.core.json.JsonObject;
+
+import org.folio.rest.support.JsonArrayHelper;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
