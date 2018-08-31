@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.support.matchers.HttpResponseMatchers.isNotFound;
 import static org.folio.rest.support.matchers.LoanStatusMatchers.isClosed;
 import static org.folio.rest.support.matchers.LoanStatusMatchers.isOpen;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
@@ -31,7 +32,6 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonResponse;
-import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.TextResponse;
 import org.folio.rest.support.builders.LoanRequestBuilder;
@@ -1010,9 +1010,9 @@ public class LoansApiTest extends ApiTests {
 
     loansClient.deleteById(id);
 
-    Response getResponse = loansClient.attemptGetById(id);
+    JsonResponse getResponse = loansClient.attemptGetById(id);
 
-    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+    assertThat(getResponse, isNotFound());
   }
 
   @Test
