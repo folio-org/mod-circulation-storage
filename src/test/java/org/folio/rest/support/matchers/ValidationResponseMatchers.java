@@ -1,15 +1,15 @@
 package org.folio.rest.support.matchers;
 
-import io.vertx.core.json.JsonObject;
+import static org.folio.rest.support.matchers.HttpResponseMatchers.isUnprocessableEntity;
+import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasErrorWith;
 
 import org.folio.rest.support.JsonResponse;
-import org.folio.rest.support.Response;
+import org.folio.rest.support.TextResponse;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
 
-import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasErrorWith;
-import static org.hamcrest.CoreMatchers.is;
+import io.vertx.core.json.JsonObject;
 
 public class ValidationResponseMatchers {
   public static TypeSafeDiagnosingMatcher<JsonResponse> isValidationResponseWhich(
@@ -25,10 +25,10 @@ public class ValidationResponseMatchers {
 
       @Override
       protected boolean matchesSafely(JsonResponse response, Description description) {
-        final Matcher<Integer> statusCodeMatcher = is(422);
+        final Matcher<TextResponse> statusCodeMatcher = isUnprocessableEntity();
 
-        if(!statusCodeMatcher.matches(response.getStatusCode())) {
-          statusCodeMatcher.describeMismatch(response.getStatusCode(), description);
+        if(!statusCodeMatcher.matches(response)) {
+          statusCodeMatcher.describeMismatch(response, description);
           return false;
         }
 
