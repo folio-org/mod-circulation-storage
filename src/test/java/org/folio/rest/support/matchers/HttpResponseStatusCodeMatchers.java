@@ -1,22 +1,36 @@
 package org.folio.rest.support.matchers;
 
+import static java.net.HttpURLConnection.HTTP_CREATED;
+import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
+import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
+import static java.net.HttpURLConnection.HTTP_OK;
+import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
 import static org.hamcrest.CoreMatchers.is;
 
-import java.net.HttpURLConnection;
-
-import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.TextResponse;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
 
-public class HttpResponseMatchers {
+public class HttpResponseStatusCodeMatchers {
   public static TypeSafeDiagnosingMatcher<TextResponse> isNotFound() {
-    return hasStatusCode(HttpURLConnection.HTTP_NOT_FOUND);
+    return hasStatusCode(HTTP_NOT_FOUND);
   }
 
   static TypeSafeDiagnosingMatcher<TextResponse> isUnprocessableEntity() {
-    return hasStatusCode(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY);
+    return hasStatusCode(UNPROCESSABLE_ENTITY);
+  }
+
+  public static TypeSafeDiagnosingMatcher<TextResponse> isNoContent() {
+    return hasStatusCode(HTTP_NO_CONTENT);
+  }
+
+  public static TypeSafeDiagnosingMatcher<TextResponse> isCreated() {
+    return hasStatusCode(HTTP_CREATED);
+  }
+
+  public static TypeSafeDiagnosingMatcher<TextResponse> isOk() {
+    return hasStatusCode(HTTP_OK);
   }
 
   private static TypeSafeDiagnosingMatcher<TextResponse> hasStatusCode(Integer statusCode) {

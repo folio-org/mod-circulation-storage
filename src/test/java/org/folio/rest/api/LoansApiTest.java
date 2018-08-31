@@ -1,6 +1,6 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.support.matchers.HttpResponseMatchers.isNotFound;
+import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNotFound;
 import static org.folio.rest.support.matchers.LoanStatusMatchers.isClosed;
 import static org.folio.rest.support.matchers.LoanStatusMatchers.isOpen;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
@@ -50,9 +50,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 public class LoansApiTest extends ApiTests {
-  private final AssertingRecordClient loansClient =
-    new AssertingRecordClient(client, StorageTestSuite.TENANT_ID,
-      InterfaceUrls::loanStorageUrl);
+  private final AssertingRecordClient loansClient = new AssertingRecordClient(
+    client, StorageTestSuite.TENANT_ID, InterfaceUrls::loanStorageUrl);
 
   @Before
   public void beforeEach()
