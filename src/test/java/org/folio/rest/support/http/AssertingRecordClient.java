@@ -19,22 +19,23 @@ import io.vertx.core.json.JsonObject;
 
 public class AssertingRecordClient {
   private final HttpClient client;
+  private final String tenantId;
 
-  public AssertingRecordClient(HttpClient client) {
+  public AssertingRecordClient(HttpClient client, String tenantId) {
     this.client = client;
+    this.tenantId = tenantId;
   }
 
   public IndividualResource create(
     JsonObject representation,
-    URL baseUrl,
-    String tenantId)
+    URL baseUrl)
     throws InterruptedException,
     ExecutionException,
     TimeoutException {
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
-    this.client.post(baseUrl, representation, tenantId,
+    this.client.post(baseUrl, representation, this.tenantId,
       ResponseHandler.json(createCompleted));
 
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
