@@ -1,16 +1,15 @@
 package org.folio.rest.api;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import org.folio.rest.jaxrs.model.Metadata;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.support.*;
-import org.folio.rest.support.builders.LoanRequestBuilder;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.Period;
-import org.joda.time.format.ISODateTimeFormat;
-import org.junit.*;
+import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
+import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
+import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessageContaining;
+import static org.folio.rest.support.matchers.ValidationResponseMatchers.isValidationResponseWhich;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNot.not;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.hamcrest.core.IsNull.nullValue;
+import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -25,14 +24,27 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
-import static org.folio.rest.support.matchers.JsonObjectMatchers.hasSoleMessgeContaining;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNot.not;
-import static org.hamcrest.core.IsNull.notNullValue;
-import static org.hamcrest.core.IsNull.nullValue;
-import static org.hamcrest.junit.MatcherAssert.assertThat;
+import org.folio.rest.jaxrs.model.Metadata;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.support.ApiTests;
+import org.folio.rest.support.IndividualResource;
+import org.folio.rest.support.JsonResponse;
+import org.folio.rest.support.Response;
+import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.TextResponse;
+import org.folio.rest.support.builders.LoanRequestBuilder;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.Period;
+import org.joda.time.format.ISODateTimeFormat;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 public class LoansApiTest extends ApiTests {
   @Before
@@ -413,18 +425,15 @@ public class LoansApiTest extends ApiTests {
       .withStatus("Open")
       .create();
 
-    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     client.post(loanStorageUrl(), secondLoanRequest, StorageTestSuite.TENANT_ID,
-      ResponseHandler.jsonErrors(createCompleted));
+      ResponseHandler.json(createCompleted));
 
-    JsonErrorResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(String.format("Creating the loan should fail: %s", response.getBody()),
-      response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
-
-    assertThat(response.getErrors(),
-      hasSoleMessgeContaining("Cannot have more than one open loan for the same item"));
+    assertThat(response, isValidationResponseWhich(hasMessage(
+      "Cannot have more than one open loan for the same item")));
   }
 
   @Test
@@ -451,18 +460,15 @@ public class LoansApiTest extends ApiTests {
       .withStatus("Open")
       .create();
 
-    CompletableFuture<JsonErrorResponse> secondCreateCompleted = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> secondCreateCompleted = new CompletableFuture<>();
 
     client.put(loanStorageUrl(String.format("/%s", secondLoanId.toString())), secondLoanRequest,
-      StorageTestSuite.TENANT_ID, ResponseHandler.jsonErrors(secondCreateCompleted));
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(secondCreateCompleted));
 
-    JsonErrorResponse response = secondCreateCompleted.get(5, TimeUnit.SECONDS);
+    JsonResponse response = secondCreateCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(String.format("Creating the loan should fail: %s", response.getBody()),
-      response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
-
-    assertThat(response.getErrors(),
-      hasSoleMessgeContaining("Cannot have more than one open loan for the same item"));
+    assertThat(response, isValidationResponseWhich(hasMessage(
+      "Cannot have more than one open loan for the same item")));
   }
 
   @Test
@@ -792,18 +798,15 @@ public class LoansApiTest extends ApiTests {
     JsonObject reopenLoanRequest = closedLoan.copyJson()
       .put("status", new JsonObject().put("name", "Open"));
 
-    CompletableFuture<JsonErrorResponse> reopenRequestCompleted = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> reopenRequestCompleted = new CompletableFuture<>();
 
     client.put(loanStorageUrl(String.format("/%s", closedLoan.getId())), reopenLoanRequest,
-      StorageTestSuite.TENANT_ID, ResponseHandler.jsonErrors(reopenRequestCompleted));
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(reopenRequestCompleted));
 
-    JsonErrorResponse response = reopenRequestCompleted.get(5, TimeUnit.SECONDS);
+    JsonResponse response = reopenRequestCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(String.format("Re-opening the loan should fail: %s", response.getBody()),
-      response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
-
-    assertThat(response.getErrors(),
-      hasSoleMessgeContaining("Cannot have more than one open loan for the same item"));
+    assertThat(response, isValidationResponseWhich(hasMessage(
+      "Cannot have more than one open loan for the same item")));
   }
 
   @Test
@@ -1173,15 +1176,15 @@ public class LoansApiTest extends ApiTests {
 
     requestWithAdditionalProperty.put("somethingAdditional", "foo");
 
-    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     client.post(loanStorageUrl(), requestWithAdditionalProperty,
-      StorageTestSuite.TENANT_ID, ResponseHandler.jsonErrors(createCompleted));
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(createCompleted));
 
-    JsonErrorResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
-    assertThat(response.getErrors(), hasSoleMessgeContaining("Unrecognized field"));
+    assertThat(response, isValidationResponseWhich(
+      hasMessageContaining("Unrecognized field")));
   }
 
   @Test
@@ -1200,15 +1203,15 @@ public class LoansApiTest extends ApiTests {
     requestWithAdditionalProperty.getJsonObject("status")
       .put("somethingAdditional", "foo");
 
-    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     client.post(loanStorageUrl(), requestWithAdditionalProperty,
-      StorageTestSuite.TENANT_ID, ResponseHandler.jsonErrors(createCompleted));
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(createCompleted));
 
-    JsonErrorResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
-    assertThat(response.getErrors(), hasSoleMessgeContaining("Unrecognized field"));
+    assertThat(response, isValidationResponseWhich(
+      hasMessageContaining("Unrecognized field")));
   }
 
   private JsonResponse getById(UUID id)
