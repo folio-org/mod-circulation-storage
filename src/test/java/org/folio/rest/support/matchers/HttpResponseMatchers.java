@@ -4,6 +4,7 @@ import static org.hamcrest.CoreMatchers.is;
 
 import java.net.HttpURLConnection;
 
+import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.TextResponse;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -14,11 +15,15 @@ public class HttpResponseMatchers {
     return hasStatusCode(HttpURLConnection.HTTP_NOT_FOUND);
   }
 
-  public static TypeSafeDiagnosingMatcher<TextResponse> hasStatusCode(Integer statusCode) {
+  static TypeSafeDiagnosingMatcher<TextResponse> isUnprocessableEntity() {
+    return hasStatusCode(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY);
+  }
+
+  private static TypeSafeDiagnosingMatcher<TextResponse> hasStatusCode(Integer statusCode) {
     return new TypeSafeDiagnosingMatcher<TextResponse>() {
       @Override
       public void describeTo(Description description) {
-        description.appendText("an response with status code ")
+        description.appendText("a response with status code ")
           .appendValue(statusCode);
       }
 
@@ -31,7 +36,7 @@ public class HttpResponseMatchers {
         final boolean matches = statusCodeMatcher.matches(response.getStatusCode());
 
         if(!matches) {
-          description.appendText("Received body: ").appendValue(response.getBody());
+          description.appendText("\nReceived body: ").appendValue(response.getBody());
         }
 
         return matches;
