@@ -17,6 +17,7 @@ import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.builders.Builder;
 
 import io.vertx.core.json.JsonObject;
 
@@ -105,6 +106,21 @@ public class AssertingRecordClient {
 
     assertThat(String.format("Failed to create record: %s", createResponse.getBody()),
       createResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+  }
+
+  public void replace(
+    String id,
+    Builder builder)
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    JsonResponse replaceResponse = attemptCreateOrReplace(
+      id, builder.create());
+
+    assertThat(String.format("Failed to update record: %s", replaceResponse.getBody()),
+      replaceResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
   }
 
   public JsonResponse attemptCreateOrReplace(
