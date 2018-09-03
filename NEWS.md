@@ -1,6 +1,7 @@
 ## 5.7.0 Unreleased
 
-* Defaults loan `status` to `Open` (CIRCSTORE-71) 
+* Defaults loan `status` to `Open` (CIRCSTORE-71)
+* Upgrades to RAML Module Builder 19.4.1 (RMB-231)
 
 ## 5.6.0 2018-08-29
 
