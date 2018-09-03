@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isBadRequest;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNotFound;
 import static org.folio.rest.support.matchers.LoanStatusMatchers.isClosed;
 import static org.folio.rest.support.matchers.LoanStatusMatchers.isOpen;
@@ -683,20 +684,17 @@ public class LoansApiTest extends ApiTests {
 
     IndividualResource loan = loansClient.create(loanRequest());
 
-    JsonObject returnedLoan = loan.copyJson();
+    JsonObject changedLoan = loan.copyJson();
 
-    returnedLoan.put("loanDate", "bar");
-    returnedLoan.put("returnDate", "foo");
+    changedLoan.put("loanDate", "bar");
+    changedLoan.put("returnDate", "foo");
 
     CompletableFuture<TextResponse> putCompleted = new CompletableFuture<>();
 
-    client.put(InterfaceUrls.loanStorageUrl(String.format("/%s", loan.getId())), returnedLoan,
-      StorageTestSuite.TENANT_ID, ResponseHandler.text(putCompleted));
+    final JsonResponse response = loansClient.attemptCreateOrReplace(
+      loan.getId(), changedLoan);
 
-    TextResponse response = putCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(String.format("Should have failed to update loan: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+    assertThat(response, isBadRequest());
 
     //TODO: Convert these to validation responses
     assertThat(response.getBody(),
