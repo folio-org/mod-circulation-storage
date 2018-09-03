@@ -286,7 +286,34 @@ public class LoansApiTest extends ApiTests {
 
     JsonObject loanRequest = new LoanRequestBuilder()
       .withId(id)
-      .withNoStatus() //Status is currently optional, as it is defaulted to Open
+      .withNoStatus()
+      .withNoItemStatus() //Item status is currently optional
+      .withLoanDate(new DateTime(2017, 3, 5, 14, 23, 41, DateTimeZone.UTC))
+      .withAction("checkedout")
+      .create();
+
+    loansClient.create(loanRequest);
+
+    JsonObject loan = loansClient.getById(id).getJson();
+
+    assertThat("id does not match",
+      loan.getString("id"), is(id.toString()));
+
+    assertThat(loan, isOpen());
+  }
+
+  @Test
+  public void canCreateALoanAtSpecificLocationWithOnlyRequiredProperties()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    UUID id = UUID.randomUUID();
+
+    JsonObject loanRequest = new LoanRequestBuilder()
+      .withId(id)
+      .withNoStatus()
       .withNoItemStatus() //Item status is currently optional
       .withLoanDate(new DateTime(2017, 3, 5, 14, 23, 41, DateTimeZone.UTC))
       .withAction("checkedout")
@@ -298,6 +325,8 @@ public class LoansApiTest extends ApiTests {
 
     assertThat("id does not match",
       loan.getString("id"), is(id.toString()));
+
+    assertThat(loan, isOpen());
   }
 
   @Test
@@ -643,6 +672,28 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
+  public void omittedStatusFromReplacedLoanDefaultsToOpen()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    IndividualResource loan = loansClient.create(new LoanRequestBuilder()
+      .open()
+      .create());
+
+    LoanRequestBuilder returnedLoan = LoanRequestBuilder.from(loan.copyJson())
+      .withNoStatus();
+
+    loansClient.replace(loan.getId(), returnedLoan);
+
+    JsonObject updatedLoan = loansClient.getById(UUID.fromString(loan.getId()))
+      .getJson();
+
+    assertThat(updatedLoan, isOpen());
+  }
+
+  @Test
   public void cannotReopenLoanWhenOpenLoanForSameItem()
     throws InterruptedException,
     MalformedURLException,
@@ -688,8 +739,6 @@ public class LoansApiTest extends ApiTests {
 
     changedLoan.put("loanDate", "bar");
     changedLoan.put("returnDate", "foo");
-
-    CompletableFuture<TextResponse> putCompleted = new CompletableFuture<>();
 
     final JsonResponse response = loansClient.attemptCreateOrReplace(
       loan.getId(), changedLoan);

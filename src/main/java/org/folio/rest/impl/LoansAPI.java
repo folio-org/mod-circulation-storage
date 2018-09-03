@@ -1,14 +1,21 @@
 package org.folio.rest.impl;
 
-import com.github.mauricio.async.db.postgresql.exceptions.GenericDatabaseException;
-import io.vertx.core.*;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import static org.folio.rest.impl.Headers.TENANT_HEADER;
+
+import java.lang.invoke.MethodHandles;
+import java.util.List;
+import java.util.Map;
+import java.util.StringJoiner;
+import java.util.UUID;
+
+import javax.ws.rs.core.Response;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.Loans;
+import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.jaxrs.resource.LoanStorageResource;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
@@ -22,14 +29,15 @@ import org.folio.rest.tools.utils.ValidationHelper;
 import org.joda.time.DateTime;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
-import javax.ws.rs.core.Response;
-import java.lang.invoke.MethodHandles;
-import java.util.List;
-import java.util.Map;
-import java.util.StringJoiner;
-import java.util.UUID;
+import com.github.mauricio.async.db.postgresql.exceptions.GenericDatabaseException;
 
-import static org.folio.rest.impl.Headers.TENANT_HEADER;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 public class LoansAPI implements LoanStorageResource {
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -150,6 +158,10 @@ public class LoansAPI implements LoanStorageResource {
     Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
+
+    if(entity.getStatus() == null) {
+      entity.setStatus(new Status().withName("Open"));
+    }
 
     ImmutablePair<Boolean, String> validationResult = validateLoan(entity);
 
@@ -360,12 +372,16 @@ public class LoansAPI implements LoanStorageResource {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
+    if(entity.getStatus() == null) {
+      entity.setStatus(new Status().withName("Open"));
+    }
+
     ImmutablePair<Boolean, String> validationResult = validateLoan(entity);
 
     if(!validationResult.getLeft()) {
       asyncResultHandler.handle(
         io.vertx.core.Future.succeededFuture(
-          LoanStorageResource.PostLoanStorageLoansResponse
+          LoanStorageResource.PutLoanStorageLoansByLoanIdResponse
             .withPlainBadRequest(
               validationResult.getRight())));
 
