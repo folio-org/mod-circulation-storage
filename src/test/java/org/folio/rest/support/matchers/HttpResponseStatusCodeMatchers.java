@@ -1,5 +1,6 @@
 package org.folio.rest.support.matchers;
 
+import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
 import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
@@ -31,6 +32,10 @@ public class HttpResponseStatusCodeMatchers {
 
   public static TypeSafeDiagnosingMatcher<TextResponse> isOk() {
     return hasStatusCode(HTTP_OK);
+  }
+
+  public static TypeSafeDiagnosingMatcher<TextResponse> isBadRequest() {
+    return hasStatusCode(HTTP_BAD_REQUEST);
   }
 
   private static TypeSafeDiagnosingMatcher<TextResponse> hasStatusCode(Integer statusCode) {
