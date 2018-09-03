@@ -222,6 +222,31 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
+  public void canCreateAnAlreadyClosedLoanWithoutUserId()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    UUID id = UUID.randomUUID();
+
+    JsonObject loanRequest = new LoanRequestBuilder()
+      .withId(id)
+      .withNoUserId()
+      .closed()
+      .create();
+
+    final IndividualResource createLoanResponse = loansClient.create(loanRequest);
+
+    JsonObject loan = createLoanResponse.getJson();
+
+    assertThat(loan, isClosed());
+
+    assertThat("should not have a user ID",
+      loan.containsKey("userId"), is(false));
+  }
+
+  @Test
   public void canCreateALoanAtViaPutToSpecificLocation()
     throws MalformedURLException,
     InterruptedException,
@@ -627,6 +652,112 @@ public class LoansApiTest extends ApiTests {
 
     assertThat("action is not checkedin",
       updatedLoan.getString("action"), is("checkedin"));
+  }
+
+  @Test
+  public void canRemoveUserIdFromClosedLoan()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    DateTime loanDate = new DateTime(2017, 3, 1, 13, 25, 46, 232, DateTimeZone.UTC);
+    final UUID loanId = UUID.randomUUID();
+    final UUID userId = UUID.randomUUID();
+
+    IndividualResource loan = loansClient.create(new LoanRequestBuilder()
+      .withId(loanId)
+      .withUserId(userId)
+      .withLoanDate(loanDate)
+      .withDueDate(loanDate.plus(Period.days(14)))
+      .open()
+      .create());
+
+    final LoanRequestBuilder closedLoanRequest = LoanRequestBuilder
+      .from(loan.getJson())
+      .closed();
+
+    loansClient.replace(loanId.toString(), closedLoanRequest);
+
+    final IndividualResource closedLoan = loansClient.getById(loanId);
+
+    final LoanRequestBuilder anonymisedLoanRequest = LoanRequestBuilder
+      .from(closedLoan.getJson())
+      .withNoUserId();
+
+    loansClient.replace(loanId.toString(), anonymisedLoanRequest);
+
+    final IndividualResource anonymisedLoan = loansClient.getById(loanId);
+
+    assertThat(anonymisedLoan.getJson(), isClosed());
+
+    assertThat("Should not have a user ID",
+      anonymisedLoan.getJson().containsKey("userId"), is(false));
+  }
+
+  @Test
+  public void cannotCreateOpenLoanWithoutUserId()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    final LoanRequestBuilder loanRequest = new LoanRequestBuilder()
+      .open()
+      .withNoUserId();
+
+    final JsonResponse putResponse = loansClient.attemptCreate(loanRequest);
+
+    assertThat(putResponse, isValidationResponseWhich(
+      hasMessage("Open loan must have a user ID")));
+  }
+
+  @Test
+  public void cannotCreateOpenLoanWithoutUserIdViaPut()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    final UUID loanId = UUID.randomUUID();
+
+    final LoanRequestBuilder loanRequest = new LoanRequestBuilder()
+      .withId(loanId)
+      .open()
+      .withNoUserId();
+
+    final JsonResponse putResponse = loansClient.attemptCreateOrReplace(
+      loanId.toString(), loanRequest);
+
+    assertThat(putResponse, isValidationResponseWhich(
+      hasMessage("Open loan must have a user ID")));
+  }
+
+  @Test
+  public void cannotRemoveUserIdFromOpenLoan()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    final UUID loanId = UUID.randomUUID();
+    final UUID userId = UUID.randomUUID();
+
+    IndividualResource loan = loansClient.create(new LoanRequestBuilder()
+      .withId(loanId)
+      .withUserId(userId)
+      .open()
+      .create());
+
+    final LoanRequestBuilder loanRequestWithoutId = LoanRequestBuilder
+      .from(loan.getJson())
+      .withNoUserId();
+
+    final JsonResponse putResponse = loansClient.attemptCreateOrReplace(
+      loanId.toString(), loanRequestWithoutId);
+
+    assertThat(putResponse, isValidationResponseWhich(
+      hasMessage("Open loan must have a user ID")));
   }
 
   @Test

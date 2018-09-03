@@ -1,7 +1,9 @@
-## 5.7.0 Unreleased
+## 6.0.0 Unreleased
 
+* Only requires `userId` for open loans (CIRCSTORE-71) 
 * Defaults loan `status` to `Open` (CIRCSTORE-71)
 * Upgrades to RAML Module Builder 19.4.1 (RMB-231)
+* Provides `loan-stoage` 5.0 (CIRCSTORE-71)
 
 ## 5.6.0 2018-08-29
 

@@ -245,6 +245,10 @@ public class LoanRequestBuilder implements Builder {
       this.renewalCount);
   }
 
+  public LoanRequestBuilder withNoUserId() {
+    return withUserId(null);
+  }
+
   public LoanRequestBuilder withProxyUserId(UUID proxyUserId) {
     return new LoanRequestBuilder(
       this.id,

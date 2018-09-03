@@ -4,15 +4,19 @@ import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.UUID;
+import java.util.function.Function;
 
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.folio.rest.annotations.Validate;
+import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.Loans;
@@ -47,6 +51,7 @@ public class LoansAPI implements LoanStorageResource {
   private static final String LOAN_HISTORY_TABLE = "audit_loan";
 
   private static final Class<Loan> LOAN_CLASS = Loan.class;
+  private static final String OPEN_LOAN_STATUS = "Open";
 
   public LoansAPI(Vertx vertx, String tenantId) {
     PostgresClient.getInstance(vertx, tenantId).setIdField("_id");
@@ -160,9 +165,17 @@ public class LoansAPI implements LoanStorageResource {
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
     if(loan.getStatus() == null) {
-      loan.setStatus(new Status().withName("Open"));
+      loan.setStatus(new Status().withName(OPEN_LOAN_STATUS));
     }
 
+    if(isOpenAndHasNoUserId(loan)) {
+      respondWithError(asyncResultHandler,
+        PostLoanStorageLoansResponse::withJsonUnprocessableEntity,
+        "Open loan must have a user ID");
+      return;
+    }
+
+    //TODO: Convert this to use validation responses (422 and error of errors)
     ImmutablePair<Boolean, String> validationResult = validateLoan(loan);
 
     if(!validationResult.getLeft()) {
@@ -374,7 +387,7 @@ public class LoansAPI implements LoanStorageResource {
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
     if(loan.getStatus() == null) {
-      loan.setStatus(new Status().withName("Open"));
+      loan.setStatus(new Status().withName(OPEN_LOAN_STATUS));
     }
 
     ImmutablePair<Boolean, String> validationResult = validateLoan(loan);
@@ -386,6 +399,13 @@ public class LoansAPI implements LoanStorageResource {
             .withPlainBadRequest(
               validationResult.getRight())));
 
+      return;
+    }
+
+    if(isOpenAndHasNoUserId(loan)) {
+      respondWithError(asyncResultHandler,
+        PutLoanStorageLoansByLoanIdResponse::withJsonUnprocessableEntity,
+        "Open loan must have a user ID");
       return;
     }
 
@@ -639,5 +659,26 @@ public class LoansAPI implements LoanStorageResource {
     return reply.cause() instanceof GenericDatabaseException &&
       ((GenericDatabaseException) reply.cause()).errorMessage().message()
         .contains("loan_itemid_idx_unique");
+  }
+
+  private boolean isOpenAndHasNoUserId(Loan loan) {
+    return Objects.equals(loan.getStatus().getName(), OPEN_LOAN_STATUS)
+      && loan.getUserId() == null;
+  }
+
+  private void respondWithError(
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Function<Errors, Response> responseCreator,
+    String message) {
+
+    final ArrayList<Error> errorsList = new ArrayList<>();
+
+    errorsList.add(new Error().withMessage(message));
+
+    final Errors errors = new Errors()
+      .withErrors(errorsList);
+
+    asyncResultHandler.handle(succeededFuture(
+      responseCreator.apply(errors)));
   }
 }

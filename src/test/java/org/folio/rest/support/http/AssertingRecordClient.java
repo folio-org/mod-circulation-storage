@@ -50,6 +50,15 @@ public class AssertingRecordClient {
     return new IndividualResource(response);
   }
 
+  public JsonResponse attemptCreate(Builder builder)
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    return attemptCreate(builder.create());
+  }
+
   public JsonResponse attemptCreate(JsonObject representation)
     throws MalformedURLException,
     InterruptedException,
@@ -119,6 +128,17 @@ public class AssertingRecordClient {
       id, builder.create());
 
     assertThat("Failed to update record", replaceResponse, isNoContent());
+  }
+
+  public JsonResponse attemptCreateOrReplace(
+    String id,
+    Builder builder)
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    return attemptCreateOrReplace(id, builder.create());
   }
 
   public JsonResponse attemptCreateOrReplace(
