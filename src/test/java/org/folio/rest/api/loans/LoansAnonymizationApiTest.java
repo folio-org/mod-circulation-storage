@@ -1,5 +1,6 @@
 package org.folio.rest.api.loans;
 
+import static org.folio.rest.support.http.InterfaceUrls.loanStorageUrl;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNoContent;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
@@ -14,7 +15,6 @@ import org.folio.rest.api.StorageTestSuite;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.TextResponse;
-import org.folio.rest.support.http.InterfaceUrls;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,7 +24,7 @@ public class LoansAnonymizationApiTest extends ApiTests {
   public void beforeEach()
     throws MalformedURLException {
 
-    StorageTestSuite.deleteAll(InterfaceUrls.loanStorageUrl());
+    StorageTestSuite.deleteAll(loanStorageUrl());
   }
 
   @After
@@ -39,11 +39,20 @@ public class LoansAnonymizationApiTest extends ApiTests {
     InterruptedException,
     TimeoutException {
 
-    final UUID unknownUser = UUID.randomUUID();
+    final UUID unknownUserId = UUID.randomUUID();
+
+    anonymizeLoansFor(unknownUserId);
+  }
+
+  private void anonymizeLoansFor(UUID userId)
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
     final CompletableFuture<TextResponse> postCompleted = new CompletableFuture<>();
 
-    client.post(InterfaceUrls.loanStorageUrl("/anonymize/" + unknownUser),
+    client.post(loanStorageUrl("/anonymize/" + userId),
       StorageTestSuite.TENANT_ID, ResponseHandler.text(postCompleted));
 
     final TextResponse postResponse = postCompleted.get(5, TimeUnit.SECONDS);
