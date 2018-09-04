@@ -42,17 +42,17 @@ some of which are noted below.
 ### Only one Open Loan per Item
 
 This implementation introduces the constraint that only one loan can be open for a
-given item. 
+given item.
 
 HTTP Requests (either POST or PUT) which could result in two loans with the
 same `itemId` and the `status` of `Open` should be rejected with a error (422) response
 
 ### Unique Position in per-item Request Queue
 
-This implementation introduces the constraint that only one open (e.g. `Open - Not yet filled`) request 
-for a given item can be at a particular position in the request queue for that item. 
+This implementation introduces the constraint that only one open (e.g. `Open - Not yet filled`) request
+for a given item can be at a particular position in the request queue for that item.
 
-HTTP Requests (either POST or PUT) which could result two open requests with the 
+HTTP Requests (either POST or PUT) which could result two open requests with the
 same `itemId` and `position` should be rejected with a error (422) response
 
 ## Prerequisites

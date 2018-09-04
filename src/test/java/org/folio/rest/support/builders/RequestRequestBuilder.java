@@ -647,7 +647,7 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.cancelledDate,
       this.position);
   }
-    
+
   public RequestRequestBuilder withCancelledDate(DateTime cancelledDate) {
     return new RequestRequestBuilder(
       this.id,

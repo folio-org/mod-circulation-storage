@@ -39,24 +39,24 @@ import static org.folio.rest.impl.Headers.TENANT_HEADER;
  * @author kurt
  */
 public class CancellationReasonsAPI implements CancellationReasonStorageResource {
-  
+
   private static final Logger logger = LoggerFactory.getLogger(CancellationReasonsAPI.class);
   private static final String TABLE_NAME = "cancellation_reason";
   private boolean suppressErrorResponse = false;
   private static final String ID_FIELD = "'id'";
-  
+
   private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
     CQL2PgJSON cql2pgJson = new CQL2PgJSON(TABLE_NAME + ".jsonb");
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit))
         .setOffset(new Offset(offset));
   }
-  
+
   private String logAndSaveError(Throwable err) {
     String message = err.getLocalizedMessage();
     logger.error(message, err);
     return message;
   }
-  
+
   private String getErrorResponse(String response) {
     if(suppressErrorResponse) {
       return "Internal Server Error: Please contact Admin";
@@ -68,15 +68,15 @@ public class CancellationReasonsAPI implements CancellationReasonStorageResource
     return errorMessage != null
       && errorMessage.contains("duplicate key value violates unique constraint");
   }
-  
+
   private boolean isStillReferenced(String errorMessage){
     return errorMessage != null
       && errorMessage.contains("violates foreign key constraint");
   }
 
   @Override
-  public void deleteCancellationReasonStorageCancellationReasons(String lang, 
-      Map<String, String> okapiHeaders, 
+  public void deleteCancellationReasonStorageCancellationReasons(String lang,
+      Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) throws Exception {
     try {
@@ -89,7 +89,7 @@ public class CancellationReasonsAPI implements CancellationReasonStorageResource
           String message = logAndSaveError(mutateReply.cause());
           asyncResultHandler.handle(Future.succeededFuture(
               DeleteCancellationReasonStorageCancellationReasonsResponse
-              .withPlainInternalServerError(getErrorResponse(message))));     
+              .withPlainInternalServerError(getErrorResponse(message))));
         } else {
           asyncResultHandler.handle(Future.succeededFuture(
               DeleteCancellationReasonStorageCancellationReasonsResponse
@@ -100,7 +100,7 @@ public class CancellationReasonsAPI implements CancellationReasonStorageResource
       String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
           DeleteCancellationReasonStorageCancellationReasonsResponse
-          .withPlainInternalServerError(getErrorResponse(message))));     
+          .withPlainInternalServerError(getErrorResponse(message))));
     }
   }
 
@@ -120,29 +120,29 @@ public class CancellationReasonsAPI implements CancellationReasonStorageResource
             String message = logAndSaveError(getReply.cause());
             asyncResultHandler.handle(Future.succeededFuture(
                 GetCancellationReasonStorageCancellationReasonsResponse
-                .withPlainInternalServerError(getErrorResponse(message))));              
+                .withPlainInternalServerError(getErrorResponse(message))));
           } else {
             CancellationReasons collection = new CancellationReasons();
-            List<CancellationReason> crList = (List<CancellationReason>) 
+            List<CancellationReason> crList = (List<CancellationReason>)
                 getReply.result().getResults();
             collection.setCancellationReasons(crList);
             collection.setTotalRecords(getReply.result().getResultInfo().getTotalRecords());
             asyncResultHandler.handle(Future.succeededFuture(
                 GetCancellationReasonStorageCancellationReasonsResponse
-                .withJsonOK(collection)));               
+                .withJsonOK(collection)));
           }
         } catch(Exception e) {
           String message = logAndSaveError(e);
           asyncResultHandler.handle(Future.succeededFuture(
               GetCancellationReasonStorageCancellationReasonsResponse
-              .withPlainInternalServerError(getErrorResponse(message))));          
-        }     
+              .withPlainInternalServerError(getErrorResponse(message))));
+        }
       });
     } catch(Exception e) {
       String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
           GetCancellationReasonStorageCancellationReasonsResponse
-          .withPlainInternalServerError(getErrorResponse(message))));      
+          .withPlainInternalServerError(getErrorResponse(message))));
     }
   }
 
@@ -263,14 +263,14 @@ public class CancellationReasonsAPI implements CancellationReasonStorageResource
             asyncResultHandler.handle(Future.succeededFuture(
               DeleteCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
                   .withNoContent()));
-          }         
+          }
         }
       });
     } catch(Exception e) {
       String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
           DeleteCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
-          .withPlainInternalServerError(getErrorResponse(message))));      
+          .withPlainInternalServerError(getErrorResponse(message))));
     }
   }
 
@@ -285,14 +285,14 @@ public class CancellationReasonsAPI implements CancellationReasonStorageResource
       Criteria idCrit = new Criteria().setOperation("=")
           .setValue(cancellationReasonId).addField(ID_FIELD);
       String tenantId = okapiHeaders.get(TENANT_HEADER);
-      PostgresClient.getInstance(vertxContext.owner(), tenantId).update(TABLE_NAME, 
-          entity, new Criterion(idCrit), true, putHandler -> {            
+      PostgresClient.getInstance(vertxContext.owner(), tenantId).update(TABLE_NAME,
+          entity, new Criterion(idCrit), true, putHandler -> {
         if(putHandler.failed()) {
           String message = logAndSaveError(putHandler.cause());
           if(isDuplicate(message)) {
             asyncResultHandler.handle(Future.succeededFuture(
                 PutCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
-                .withPlainBadRequest(PgExceptionUtil.badRequestMessage(putHandler.cause()))));            
+                .withPlainBadRequest(PgExceptionUtil.badRequestMessage(putHandler.cause()))));
           } else {
             asyncResultHandler.handle(Future.succeededFuture(
                 PutCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
@@ -316,5 +316,5 @@ public class CancellationReasonsAPI implements CancellationReasonStorageResource
           PutCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
           .withPlainInternalServerError(getErrorResponse(message))));
     }
-  }  
+  }
 }
