@@ -20,6 +20,7 @@ import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.TextResponse;
 import org.folio.rest.support.builders.Builder;
+import org.folio.rest.support.builders.LoanRequestBuilder;
 
 import io.vertx.core.json.JsonObject;
 
@@ -35,6 +36,15 @@ public class AssertingRecordClient {
     this.client = client;
     this.tenantId = tenantId;
     this.urlMaker = urlMaker;
+  }
+
+  public IndividualResource create(LoanRequestBuilder builder)
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    return create(builder.create());
   }
 
   public IndividualResource create(JsonObject representation)
@@ -71,6 +81,15 @@ public class AssertingRecordClient {
       ResponseHandler.json(createCompleted));
 
     return createCompleted.get(5, TimeUnit.SECONDS);
+  }
+
+  public IndividualResource getById(String id)
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    return getById(UUID.fromString(id));
   }
 
   public IndividualResource getById(UUID id)
