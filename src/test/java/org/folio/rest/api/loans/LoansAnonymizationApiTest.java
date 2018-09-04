@@ -2,7 +2,7 @@ package org.folio.rest.api.loans;
 
 import static org.folio.rest.support.http.InterfaceUrls.loanStorageUrl;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNoContent;
-import static org.hamcrest.core.Is.is;
+import static org.folio.rest.support.matchers.UUIDMatchers.isUUID;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import java.net.MalformedURLException;
@@ -72,7 +72,7 @@ public class LoansAnonymizationApiTest extends ApiTests {
     final IndividualResource fetchedLoan = loansClient.getById(
       otherUsersLoan.getId());
 
-    assertThat(fetchedLoan.getJson().getString("userId"), is(firstUserId.toString()));
+    assertThat(fetchedLoan.getJson().getString("userId"), isUUID(firstUserId));
   }
 
   private void anonymizeLoansFor(UUID userId)
