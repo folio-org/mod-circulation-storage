@@ -1,20 +1,20 @@
 package org.folio.rest.api;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-import org.folio.rest.support.*;
-import org.folio.rest.support.builders.RequestRequestBuilder;
-import org.hamcrest.junit.MatcherAssert;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDate;
-import org.joda.time.Seconds;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import static java.net.HttpURLConnection.HTTP_CREATED;
+import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_CANCELLED;
+import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_FILLED;
+import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_AWAITING_PICKUP;
+import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET_FILLED;
+import static org.folio.rest.support.matchers.TextDateTimeMatcher.equivalentTo;
+import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
+import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
+import static org.folio.rest.support.matchers.ValidationResponseMatchers.isValidationResponseWhich;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.notNullValue;
 
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
@@ -29,18 +29,28 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import static java.net.HttpURLConnection.HTTP_CREATED;
-import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
-import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
-import static org.folio.rest.support.builders.RequestRequestBuilder.*;
-import static org.folio.rest.support.matchers.TextDateTimeMatcher.equivalentTo;
-import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNull.notNullValue;
+import org.folio.rest.support.ApiTests;
+import org.folio.rest.support.HttpClient;
+import org.folio.rest.support.IndividualResource;
+import org.folio.rest.support.JsonArrayHelper;
+import org.folio.rest.support.JsonResponse;
+import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.TextResponse;
+import org.folio.rest.support.builders.RequestRequestBuilder;
+import org.hamcrest.junit.MatcherAssert;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
+import org.joda.time.Seconds;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 
 @RunWith(JUnitParamsRunner.class)
 public class RequestsApiTest extends ApiTests {
@@ -456,7 +466,7 @@ public class RequestsApiTest extends ApiTests {
       .withPosition(1)
       .create());
 
-    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     final JsonObject secondRequest = new RequestRequestBuilder()
       .withItemId(itemId)
@@ -465,16 +475,12 @@ public class RequestsApiTest extends ApiTests {
 
     client.post(requestStorageUrl(),
       secondRequest, StorageTestSuite.TENANT_ID,
-      ResponseHandler.jsonErrors(createCompleted));
+      ResponseHandler.json(createCompleted));
 
-    JsonErrorResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(String.format("Should fail to create request: %s", response.getBody()),
-      response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
-
-    assertThat(response.getErrors(),
-      hasSoleMessgeContaining(
-        "Cannot have more than one request with the same position in the queue"));
+    assertThat(response, isValidationResponseWhich(hasMessage(
+      "Cannot have more than one request with the same position in the queue")));
   }
 
   @Test
@@ -606,8 +612,6 @@ public class RequestsApiTest extends ApiTests {
       .withPosition(1)
       .create());
 
-    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture<>();
-
     final UUID secondRequestId = UUID.randomUUID();
 
     final JsonObject secondRequest = new RequestRequestBuilder()
@@ -616,18 +620,16 @@ public class RequestsApiTest extends ApiTests {
       .withPosition(1)
       .create();
 
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
     client.put(requestStorageUrl(String.format("/%s", secondRequestId)),
       secondRequest, StorageTestSuite.TENANT_ID,
-      ResponseHandler.jsonErrors(createCompleted));
+      ResponseHandler.json(createCompleted));
 
-    JsonErrorResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(String.format("Should fail to create request: %s", response.getBody()),
-      response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
-
-    assertThat(response.getErrors(),
-      hasSoleMessgeContaining(
-        "Cannot have more than one request with the same position in the queue"));
+    assertThat(response, isValidationResponseWhich(hasMessage(
+      "Cannot have more than one request with the same position in the queue")));
   }
 
   @Test
@@ -876,20 +878,16 @@ public class RequestsApiTest extends ApiTests {
     final JsonObject changedSecondRequest = secondRequest.getJson()
       .put("position", 1);
 
-    CompletableFuture<JsonErrorResponse> updateCompleted = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> updateCompleted = new CompletableFuture<>();
 
     client.put(requestStorageUrl(String.format("/%s", secondRequest.getId())),
       changedSecondRequest, StorageTestSuite.TENANT_ID,
-      ResponseHandler.jsonErrors(updateCompleted));
+      ResponseHandler.json(updateCompleted));
 
-    JsonErrorResponse response = updateCompleted.get(5, TimeUnit.SECONDS);
+    JsonResponse response = updateCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(String.format("Should fail to update request: %s", response.getBody()),
-      response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
-
-    assertThat(response.getErrors(),
-      hasSoleMessgeContaining(
-        "Cannot have more than one request with the same position in the queue"));
+    assertThat(response, isValidationResponseWhich(hasMessage(
+      "Cannot have more than one request with the same position in the queue")));
   }
 
   @Test

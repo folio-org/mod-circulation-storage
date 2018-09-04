@@ -1,20 +1,23 @@
 package org.folio.rest.api;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import org.folio.rest.jaxrs.model.Metadata;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.support.*;
-import org.folio.rest.support.builders.LoanRequestBuilder;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.Period;
-import org.joda.time.format.ISODateTimeFormat;
-import org.junit.*;
+import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isBadRequest;
+import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNotFound;
+import static org.folio.rest.support.matchers.LoanStatusMatchers.isClosed;
+import static org.folio.rest.support.matchers.LoanStatusMatchers.isOpen;
+import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
+import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessageContaining;
+import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasParameter;
+import static org.folio.rest.support.matchers.ValidationResponseMatchers.isValidationResponseWhich;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNot.not;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.hamcrest.core.IsNull.nullValue;
+import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -25,21 +28,37 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
-import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNot.not;
-import static org.hamcrest.core.IsNull.notNullValue;
-import static org.hamcrest.core.IsNull.nullValue;
-import static org.hamcrest.junit.MatcherAssert.assertThat;
+import org.folio.rest.jaxrs.model.Metadata;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.support.ApiTests;
+import org.folio.rest.support.IndividualResource;
+import org.folio.rest.support.JsonResponse;
+import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.TextResponse;
+import org.folio.rest.support.builders.LoanRequestBuilder;
+import org.folio.rest.support.http.AssertingRecordClient;
+import org.folio.rest.support.http.InterfaceUrls;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.Period;
+import org.joda.time.format.ISODateTimeFormat;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 public class LoansApiTest extends ApiTests {
+  private final AssertingRecordClient loansClient = new AssertingRecordClient(
+    client, StorageTestSuite.TENANT_ID, InterfaceUrls::loanStorageUrl);
+
   @Before
   public void beforeEach()
     throws MalformedURLException {
 
-    StorageTestSuite.deleteAll(loanStorageUrl());
+    StorageTestSuite.deleteAll(InterfaceUrls.loanStorageUrl());
   }
 
   @After
@@ -66,24 +85,14 @@ public class LoansApiTest extends ApiTests {
       .withUserId(userId)
       .withProxyUserId(proxyUserId)
       .withLoanDate(new DateTime(2017, 6, 27, 10, 23, 43, DateTimeZone.UTC))
-      .withStatus("Open")
+      .open()
       .withAction("checkedout")
       .withItemStatus("Checked out")
       .withDueDate(new DateTime(2017, 7, 27, 10, 23, 43, DateTimeZone.UTC))
       .withLoanPolicyId(loanPolicyId)
       .create();
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
-
-    client.post(loanStorageUrl(), loanRequest, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(createCompleted));
-
-    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(String.format("Failed to create loan: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    JsonObject loan = response.getJson();
+    JsonObject loan = loansClient.create(loanRequest).getJson();
 
     assertThat("id does not match",
       loan.getString("id"), is(id.toString()));
@@ -100,8 +109,7 @@ public class LoansApiTest extends ApiTests {
     assertThat("loan date does not match",
       loan.getString("loanDate"), is("2017-06-27T10:23:43.000Z"));
 
-    assertThat("status is not open",
-      loan.getJsonObject("status").getString("name"), is("Open"));
+    assertThat(loan, isOpen());
 
     assertThat("action is not checked out",
       loan.getString("action"), is("checkedout"));
@@ -135,27 +143,17 @@ public class LoansApiTest extends ApiTests {
       .withUserId(userId)
       .withProxyUserId(proxyUserId)
       .withLoanDate(new DateTime(2017, 3, 20, 7, 21, 45, DateTimeZone.UTC))
-      .withStatus("Open")
+      .open()
       .withAction("checkedout")
       .withItemStatus("Checked out")
       .withDueDate(new DateTime(2017, 4, 20, 7, 21, 45, DateTimeZone.UTC))
       .create();
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
-
-    client.post(loanStorageUrl(), loanRequest, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(createCompleted));
-
-    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(String.format("Failed to create loan: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    JsonObject loan = response.getJson();
+    JsonObject loan = loansClient.create(loanRequest).getJson();
 
     String newId = loan.getString("id");
 
-    Assert.assertThat(newId, is(notNullValue()));
+    assertThat(newId, is(notNullValue()));
 
     assertThat("user id does not match",
       loan.getString("userId"), is(userId.toString()));
@@ -169,8 +167,7 @@ public class LoansApiTest extends ApiTests {
     assertThat("loan date does not match",
       loan.getString("loanDate"), is("2017-03-20T07:21:45.000Z"));
 
-    assertThat("status is not open",
-      loan.getJsonObject("status").getString("name"), is("Open"));
+    assertThat(loan, isOpen());
 
     assertThat("action is not checked out",
       loan.getString("action"), is("checkedout"));
@@ -185,7 +182,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateAClosedLoanWithReturnDates()
+  public void canCreateAnAlreadyClosedLoan()
     throws InterruptedException,
     ExecutionException,
     TimeoutException,
@@ -201,8 +198,6 @@ public class LoansApiTest extends ApiTests {
     DateTime returnDate = new DateTime(2017, 4, 1, 11, 35, 0, DateTimeZone.UTC);
     DateTime systemReturnDate = new DateTime(2017, 4, 1, 12, 0, 0, DateTimeZone.UTC);
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
-
     JsonObject loanRequest = new LoanRequestBuilder()
       .withId(id)
       .withUserId(userId)
@@ -212,18 +207,10 @@ public class LoansApiTest extends ApiTests {
       .withDueDate(dueDate)
       .withReturnDate(returnDate)
       .withSystemReturnDate(systemReturnDate)
-      .withStatus("Closed")
+      .closed()
       .create();
 
-    client.post(loanStorageUrl(), loanRequest, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(createCompleted));
-
-    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(String.format("Failed to create loan: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    JsonObject loan = response.getJson();
+    JsonObject loan = loansClient.create(loanRequest).getJson();
 
     assertThat("return date does not match",
       loan.getString("returnDate"), is("2017-04-01T11:35:00.000Z"));
@@ -235,7 +222,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateALoanAtASpecificLocation()
+  public void canCreateALoanAtViaPutToSpecificLocation()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -252,28 +239,15 @@ public class LoansApiTest extends ApiTests {
       .withUserId(userId)
       .withProxyUserId(proxyUserId)
       .withLoanDate(new DateTime(2017, 2, 27, 21, 14, 43, DateTimeZone.UTC))
-      .withStatus("Open")
+      .open()
       .withAction("checkedout")
       .withItemStatus("Checked out")
       .withDueDate(new DateTime(2017, 3, 29, 21, 14, 43, DateTimeZone.UTC))
       .create();
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+    loansClient.createAtSpecificLocation(id, loanRequest);
 
-    client.put(loanStorageUrl(String.format("/%s", id.toString())), loanRequest,
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(createCompleted));
-
-    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(String.format("Failed to create loan: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-
-    JsonResponse getResponse = getById(id);
-
-    assertThat(String.format("Failed to get loan: %s", getResponse.getBody()),
-      getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-
-    JsonObject loan = getResponse.getJson();
+    JsonObject loan = loansClient.getById(id).getJson();
 
     assertThat("id does not match",
       loan.getString("id"), is(id.toString()));
@@ -290,8 +264,7 @@ public class LoansApiTest extends ApiTests {
     assertThat("loan date does not match",
       loan.getString("loanDate"), is("2017-02-27T21:14:43.000Z"));
 
-    assertThat("status is not open",
-      loan.getJsonObject("status").getString("name"), is("Open"));
+    assertThat(loan, isOpen());
 
     assertThat("action is not checked out",
       loan.getString("action"), is("checkedout"));
@@ -319,22 +292,9 @@ public class LoansApiTest extends ApiTests {
       .withAction("checkedout")
       .create();
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+    loansClient.createAtSpecificLocation(id, loanRequest);
 
-    client.put(loanStorageUrl(String.format("/%s", id.toString())), loanRequest,
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(createCompleted));
-
-    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(String.format("Failed to create loan: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-
-    JsonResponse getResponse = getById(id);
-
-    assertThat(String.format("Failed to get loan: %s", getResponse.getBody()),
-      getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-
-    JsonObject loan = getResponse.getJson();
+    JsonObject loan = loansClient.getById(id).getJson();
 
     assertThat("id does not match",
       loan.getString("id"), is(id.toString()));
@@ -351,15 +311,11 @@ public class LoansApiTest extends ApiTests {
 
     loanRequest.remove("action");
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+    JsonResponse response = loansClient.attemptCreate(loanRequest);
 
-    client.post(loanStorageUrl(), loanRequest, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(createCompleted));
-
-    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(String.format("Creating the loan should fail: %s", response.getBody()),
-      response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
+    assertThat(response, isValidationResponseWhich(allOf(
+      hasMessage("may not be null"),
+      hasParameter("action", "null"))));
   }
 
   @Test
@@ -375,12 +331,7 @@ public class LoansApiTest extends ApiTests {
       .put("loanDate", "foo")
       .put("returnDate", "bar");
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
-
-    client.post(loanStorageUrl(), loanRequest, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(createCompleted));
-
-    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+    JsonResponse response = loansClient.attemptCreate(loanRequest);
 
     assertThat(String.format("Creating the loan should fail: %s", response.getBody()),
       response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
@@ -403,32 +354,24 @@ public class LoansApiTest extends ApiTests {
 
     JsonObject firstLoanRequest = new LoanRequestBuilder()
       .withItemId(itemId)
-      .withStatus("Open")
+      .open()
       .create();
 
-    createLoan(firstLoanRequest);
+    loansClient.create(firstLoanRequest);
 
     JsonObject secondLoanRequest = new LoanRequestBuilder()
       .withItemId(itemId)
-      .withStatus("Open")
+      .open()
       .create();
 
-    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture<>();
+    JsonResponse response = loansClient.attemptCreate(secondLoanRequest);
 
-    client.post(loanStorageUrl(), secondLoanRequest, StorageTestSuite.TENANT_ID,
-      ResponseHandler.jsonErrors(createCompleted));
-
-    JsonErrorResponse response = createCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(String.format("Creating the loan should fail: %s", response.getBody()),
-      response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
-
-    assertThat(response.getErrors(),
-      hasSoleMessgeContaining("Cannot have more than one open loan for the same item"));
+    assertThat(response, isValidationResponseWhich(hasMessage(
+      "Cannot have more than one open loan for the same item")));
   }
 
   @Test
-  public void cannotCreateMultipleOpenLoansAtSpecificLocationForSameItem()
+  public void cannotCreateMultipleOpenLoansForSameItemViaPutToSpecificLocation()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -438,31 +381,24 @@ public class LoansApiTest extends ApiTests {
 
     JsonObject firstLoanRequest = new LoanRequestBuilder()
       .withItemId(itemId)
-      .withStatus("Open")
+      .open()
       .create();
 
-    createLoan(firstLoanRequest);
+    loansClient.create(firstLoanRequest);
 
     UUID secondLoanId = UUID.randomUUID();
 
     JsonObject secondLoanRequest = new LoanRequestBuilder()
       .withId(secondLoanId)
       .withItemId(itemId)
-      .withStatus("Open")
+      .open()
       .create();
 
-    CompletableFuture<JsonErrorResponse> secondCreateCompleted = new CompletableFuture<>();
+    JsonResponse createResponse = loansClient.attemptCreateOrReplace(
+      secondLoanId.toString(), secondLoanRequest);
 
-    client.put(loanStorageUrl(String.format("/%s", secondLoanId.toString())), secondLoanRequest,
-      StorageTestSuite.TENANT_ID, ResponseHandler.jsonErrors(secondCreateCompleted));
-
-    JsonErrorResponse response = secondCreateCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(String.format("Creating the loan should fail: %s", response.getBody()),
-      response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
-
-    assertThat(response.getErrors(),
-      hasSoleMessgeContaining("Cannot have more than one open loan for the same item"));
+    assertThat(createResponse, isValidationResponseWhich(hasMessage(
+      "Cannot have more than one open loan for the same item")));
   }
 
   @Test
@@ -476,25 +412,17 @@ public class LoansApiTest extends ApiTests {
 
     JsonObject closedLoanRequest = new LoanRequestBuilder()
       .withItemId(itemId)
-      .withStatus("Closed")
+      .closed()
       .create();
 
-    createLoan(closedLoanRequest);
+    loansClient.create(closedLoanRequest);
 
     JsonObject openLoanRequest = new LoanRequestBuilder()
       .withItemId(itemId)
-      .withStatus("Open")
+      .open()
       .create();
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
-
-    client.post(loanStorageUrl(), openLoanRequest, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(createCompleted));
-
-    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(String.format("Creating the loan should succeed: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    loansClient.create(openLoanRequest);
   }
 
   @Test
@@ -509,25 +437,17 @@ public class LoansApiTest extends ApiTests {
 
     JsonObject firstLoanRequest = new LoanRequestBuilder()
       .withItemId(firstItemId)
-      .withStatus("Open")
+      .open()
       .create();
 
-    createLoan(firstLoanRequest);
+    loansClient.create(firstLoanRequest);
 
     JsonObject secondLoanRequest = new LoanRequestBuilder()
       .withItemId(secondItemId)
-      .withStatus("Open")
+      .open()
       .create();
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
-
-    client.post(loanStorageUrl(), secondLoanRequest, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(createCompleted));
-
-    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(String.format("Creating the loan should succeed: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    loansClient.create(secondLoanRequest);
   }
 
   @Test
@@ -541,25 +461,17 @@ public class LoansApiTest extends ApiTests {
 
     JsonObject firstLoanRequest = new LoanRequestBuilder()
       .withItemId(itemId)
-      .withStatus("Closed")
+      .closed()
       .create();
 
-    createLoan(firstLoanRequest);
+    loansClient.create(firstLoanRequest);
 
     JsonObject secondLoanRequest = new LoanRequestBuilder()
       .withItemId(itemId)
-      .withStatus("Closed")
+      .closed()
       .create();
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
-
-    client.post(loanStorageUrl(), secondLoanRequest, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(createCompleted));
-
-    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(String.format("Creating the loan should succeed: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    loansClient.create(secondLoanRequest);
   }
 
   @Test
@@ -574,25 +486,17 @@ public class LoansApiTest extends ApiTests {
 
     JsonObject firstLoanRequest = new LoanRequestBuilder()
       .withItemId(firstItemId)
-      .withStatus("Open")
+      .open()
       .create();
 
-    createLoan(firstLoanRequest);
+    loansClient.create(firstLoanRequest);
 
     JsonObject secondLoanRequest = new LoanRequestBuilder()
       .withItemId(secondItemId)
-      .withStatus("Closed")
+      .closed()
       .create();
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
-
-    client.post(loanStorageUrl(), secondLoanRequest, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(createCompleted));
-
-    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(String.format("Creating the loan should succeed: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    loansClient.create(secondLoanRequest);
   }
 
   @Test
@@ -613,19 +517,14 @@ public class LoansApiTest extends ApiTests {
       .withUserId(userId)
       .withProxyUserId(proxyUserId)
       .withLoanDate(new DateTime(2016, 10, 15, 8, 26, 53, DateTimeZone.UTC))
-      .withStatus("Open")
+      .open()
       .withAction("checkedout")
       .withItemStatus("Checked out")
       .create();
 
-    createLoan(loanRequest);
+    loansClient.create(loanRequest);
 
-    JsonResponse getResponse = getById(id);
-
-    assertThat(String.format("Failed to get loan: %s", getResponse.getBody()),
-      getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-
-    JsonObject loan = getResponse.getJson();
+    JsonObject loan = loansClient.getById(id).getJson();
 
     assertThat("id does not match",
       loan.getString("id"), is(id.toString()));
@@ -645,8 +544,7 @@ public class LoansApiTest extends ApiTests {
     assertThat("item status is not checked out",
       loan.getString("itemStatus"), is("Checked out"));
 
-    assertThat("status is not open",
-      loan.getJsonObject("status").getString("name"), is("Open"));
+    assertThat(loan, isOpen());
   }
 
   @Test
@@ -656,53 +554,44 @@ public class LoansApiTest extends ApiTests {
     ExecutionException,
     TimeoutException {
 
-    JsonResponse getResponse = getById(UUID.randomUUID());
+    JsonResponse getResponse = loansClient.attemptGetById(UUID.randomUUID());
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
 
   @Test
-  public void canCompleteALoanByReturningTheItem()
+  public void canCloseALoanByReturningTheItem()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
     ExecutionException {
 
     DateTime loanDate = new DateTime(2017, 3, 1, 13, 25, 46, 232, DateTimeZone.UTC);
+    final UUID userId = UUID.randomUUID();
 
-    IndividualResource loan = createLoan(new LoanRequestBuilder()
+    IndividualResource loan = loansClient.create(new LoanRequestBuilder()
+      .withUserId(userId)
       .withLoanDate(loanDate)
       .withDueDate(loanDate.plus(Period.days(14)))
       .create());
 
-    JsonObject returnedLoan = loan.copyJson();
+    LoanRequestBuilder returnedLoan = LoanRequestBuilder.from(loan.copyJson())
+      .closed()
+      .withAction("checkedin")
+      .withItemStatus("Available")
+      .withReturnDate(new DateTime(2017, 3, 5, 14, 23, 41, DateTimeZone.UTC));
 
-    returnedLoan
-      .put("status", new JsonObject().put("name", "Closed"))
-      .put("action", "checkedin")
-      .put("itemStatus", "Available")
-      .put("returnDate", new DateTime(2017, 3, 5, 14, 23, 41, DateTimeZone.UTC)
-      .toString(ISODateTimeFormat.dateTime()));
+    loansClient.replace(loan.getId(), returnedLoan);
 
-    CompletableFuture<JsonResponse> putCompleted = new CompletableFuture<>();
+    JsonObject updatedLoan = loansClient.getById(UUID.fromString(loan.getId()))
+      .getJson();
 
-    client.put(loanStorageUrl(String.format("/%s", loan.getId())), returnedLoan,
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(putCompleted));
-
-    JsonResponse putResponse = putCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(String.format("Failed to update loan: %s", putResponse.getBody()),
-      putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-
-    JsonResponse updatedLoanResponse = getById(UUID.fromString(loan.getId()));
-
-    JsonObject updatedLoan = updatedLoanResponse.getJson();
+    assertThat(updatedLoan.getString("userId"), is(userId.toString()));
 
     assertThat(updatedLoan.getString("returnDate"),
       is("2017-03-05T14:23:41.000Z"));
 
-    assertThat("status is not closed",
-      updatedLoan.getJsonObject("status").getString("name"), is("Closed"));
+    assertThat(updatedLoan, isClosed());
 
     assertThat("item status is not available",
       updatedLoan.getString("itemStatus"), is("Available"));
@@ -720,41 +609,28 @@ public class LoansApiTest extends ApiTests {
 
     DateTime loanDate = new DateTime(2017, 3, 1, 13, 25, 46, DateTimeZone.UTC);
 
-    IndividualResource loan = createLoan(new LoanRequestBuilder()
+    IndividualResource loan = loansClient.create(new LoanRequestBuilder()
       .withLoanDate(loanDate)
       .withDueDate(loanDate.plus(Period.days(14)))
       .create());
 
-    JsonObject returnedLoan = loan.copyJson();
+    LoanRequestBuilder returnedLoan = LoanRequestBuilder.from(loan.getJson())
+      .withDueDate(new DateTime(2017, 3, 30, 13, 25, 46, DateTimeZone.UTC))
+      .withAction("renewed")
+      .withItemStatus("Checked out")
+      .withRenewalCount(1);
 
-    returnedLoan
-      .put("dueDate", new DateTime(2017, 3, 30, 13, 25, 46, DateTimeZone.UTC)
-        .toString(ISODateTimeFormat.dateTime()))
-      .put("action", "renewed")
-      .put("itemStatus", "Checked out")
-      .put("renewalCount", 1);
+    loansClient.replace(loan.getId(), returnedLoan);
 
-    CompletableFuture<JsonResponse> putCompleted = new CompletableFuture<>();
-
-    client.put(loanStorageUrl(String.format("/%s", loan.getId())), returnedLoan,
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(putCompleted));
-
-    JsonResponse putResponse = putCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(String.format("Failed to update loan: %s", putResponse.getBody()),
-      putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-
-    JsonResponse updatedLoanResponse = getById(UUID.fromString(loan.getId()));
-
-    JsonObject updatedLoan = updatedLoanResponse.getJson();
+    JsonObject updatedLoan = loansClient.getById(UUID.fromString(loan.getId()))
+      .getJson();
 
     //The RAML-Module-Builder converts all date-time formatted strings to UTC
     //and presents the offset as +0000 (which is ISO8601 compatible, but not RFC3339)
     assertThat(updatedLoan.getString("dueDate"),
       is("2017-03-30T13:25:46.000+0000"));
 
-    assertThat("status is not open",
-      updatedLoan.getJsonObject("status").getString("name"), is("Open"));
+    assertThat(updatedLoan, isOpen());
 
     assertThat("action is not renewed",
       updatedLoan.getString("action"), is("renewed"));
@@ -777,33 +653,26 @@ public class LoansApiTest extends ApiTests {
 
     JsonObject openLoanRequest = new LoanRequestBuilder()
       .withItemId(itemId)
-      .withStatus("Open")
+      .open()
       .create();
 
-    createLoan(openLoanRequest);
+    loansClient.create(openLoanRequest);
 
     JsonObject closedLoanRequest = new LoanRequestBuilder()
       .withItemId(itemId)
-      .withStatus("Closed")
+      .closed()
       .create();
 
-    IndividualResource closedLoan = createLoan(closedLoanRequest);
+    IndividualResource closedLoan = loansClient.create(closedLoanRequest);
 
-    JsonObject reopenLoanRequest = closedLoan.copyJson()
-      .put("status", new JsonObject().put("name", "Open"));
+    LoanRequestBuilder reopenLoanRequest = LoanRequestBuilder.from(closedLoan.getJson())
+      .open();
 
-    CompletableFuture<JsonErrorResponse> reopenRequestCompleted = new CompletableFuture<>();
+    JsonResponse replaceResponse = loansClient.attemptCreateOrReplace(
+      closedLoan.getId(), reopenLoanRequest.create());
 
-    client.put(loanStorageUrl(String.format("/%s", closedLoan.getId())), reopenLoanRequest,
-      StorageTestSuite.TENANT_ID, ResponseHandler.jsonErrors(reopenRequestCompleted));
-
-    JsonErrorResponse response = reopenRequestCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(String.format("Re-opening the loan should fail: %s", response.getBody()),
-      response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
-
-    assertThat(response.getErrors(),
-      hasSoleMessgeContaining("Cannot have more than one open loan for the same item"));
+    assertThat(replaceResponse, isValidationResponseWhich(hasMessage(
+      "Cannot have more than one open loan for the same item")));
   }
 
   @Test
@@ -813,23 +682,21 @@ public class LoansApiTest extends ApiTests {
     TimeoutException,
     ExecutionException {
 
-    IndividualResource loan = createLoan(loanRequest());
+    IndividualResource loan = loansClient.create(loanRequest());
 
-    JsonObject returnedLoan = loan.copyJson();
+    JsonObject changedLoan = loan.copyJson();
 
-    returnedLoan.put("loanDate", "bar");
-    returnedLoan.put("returnDate", "foo");
+    changedLoan.put("loanDate", "bar");
+    changedLoan.put("returnDate", "foo");
 
     CompletableFuture<TextResponse> putCompleted = new CompletableFuture<>();
 
-    client.put(loanStorageUrl(String.format("/%s", loan.getId())), returnedLoan,
-      StorageTestSuite.TENANT_ID, ResponseHandler.text(putCompleted));
+    final JsonResponse response = loansClient.attemptCreateOrReplace(
+      loan.getId(), changedLoan);
 
-    TextResponse response = putCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(response, isBadRequest());
 
-    assertThat(String.format("Should have failed to update loan: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-
+    //TODO: Convert these to validation responses
     assertThat(response.getBody(),
       containsString("loan date must be a date time (in RFC3339 format)"));
 
@@ -847,20 +714,19 @@ public class LoansApiTest extends ApiTests {
 
     DateTime loanDate = new DateTime(2017, 3, 1, 13, 25, 46, 232, DateTimeZone.UTC);
 
-    IndividualResource loan = createLoan(new LoanRequestBuilder()
+    IndividualResource loan = loansClient.create(new LoanRequestBuilder()
       .withLoanDate(loanDate)
       .withDueDate(loanDate.plus(Period.days(14)))
       .create());
 
-    JsonObject returnedLoan = loan.copyJson();
-
-    returnedLoan
-      .put("status", new JsonObject().put("name", "Closed"));
+    LoanRequestBuilder returnedLoan = LoanRequestBuilder.from(loan.copyJson())
+      .closed();
 
     CompletableFuture<TextResponse> putCompleted = new CompletableFuture<>();
 
-    client.put(loanStorageUrl(String.format("/%s", loan.getId())), returnedLoan,
-      StorageTestSuite.TENANT_ID, ResponseHandler.text(putCompleted));
+    client.put(InterfaceUrls.loanStorageUrl(String.format("/%s", loan.getId())),
+      returnedLoan.create(), StorageTestSuite.TENANT_ID,
+      ResponseHandler.text(putCompleted));
 
     TextResponse response = putCompleted.get(5, TimeUnit.SECONDS);
 
@@ -878,21 +744,21 @@ public class LoansApiTest extends ApiTests {
     TimeoutException,
     ExecutionException {
 
-    createLoan(loanRequest());
-    createLoan(loanRequest());
-    createLoan(loanRequest());
-    createLoan(loanRequest());
-    createLoan(loanRequest());
-    createLoan(loanRequest());
-    createLoan(loanRequest());
+    loansClient.create(loanRequest());
+    loansClient.create(loanRequest());
+    loansClient.create(loanRequest());
+    loansClient.create(loanRequest());
+    loansClient.create(loanRequest());
+    loansClient.create(loanRequest());
+    loansClient.create(loanRequest());
 
     CompletableFuture<JsonResponse> firstPageCompleted = new CompletableFuture<>();
     CompletableFuture<JsonResponse> secondPageCompleted = new CompletableFuture<>();
 
-    client.get(loanStorageUrl() + "?limit=4", StorageTestSuite.TENANT_ID,
+    client.get(InterfaceUrls.loanStorageUrl() + "?limit=4", StorageTestSuite.TENANT_ID,
       ResponseHandler.json(firstPageCompleted));
 
-    client.get(loanStorageUrl() + "?limit=4&offset=4", StorageTestSuite.TENANT_ID,
+    client.get(InterfaceUrls.loanStorageUrl() + "?limit=4&offset=4", StorageTestSuite.TENANT_ID,
       ResponseHandler.json(secondPageCompleted));
 
     JsonResponse firstPageResponse = firstPageCompleted.get(5, TimeUnit.SECONDS);
@@ -929,16 +795,16 @@ public class LoansApiTest extends ApiTests {
     UUID firstUserId = UUID.randomUUID();
     UUID secondUserId = UUID.randomUUID();
 
-    String queryTemplate = loanStorageUrl() + "?query=userId=\"%s\"";
+    String queryTemplate = InterfaceUrls.loanStorageUrl() + "?query=userId=\"%s\"";
 
-    createLoan(new LoanRequestBuilder().withUserId(firstUserId).create());
-    createLoan(new LoanRequestBuilder().withUserId(firstUserId).create());
-    createLoan(new LoanRequestBuilder().withUserId(firstUserId).create());
-    createLoan(new LoanRequestBuilder().withUserId(firstUserId).create());
+    loansClient.create(new LoanRequestBuilder().withUserId(firstUserId).create());
+    loansClient.create(new LoanRequestBuilder().withUserId(firstUserId).create());
+    loansClient.create(new LoanRequestBuilder().withUserId(firstUserId).create());
+    loansClient.create(new LoanRequestBuilder().withUserId(firstUserId).create());
 
-    createLoan(new LoanRequestBuilder().withUserId(secondUserId).create());
-    createLoan(new LoanRequestBuilder().withUserId(secondUserId).create());
-    createLoan(new LoanRequestBuilder().withUserId(secondUserId).create());
+    loansClient.create(new LoanRequestBuilder().withUserId(secondUserId).create());
+    loansClient.create(new LoanRequestBuilder().withUserId(secondUserId).create());
+    loansClient.create(new LoanRequestBuilder().withUserId(secondUserId).create());
 
     CompletableFuture<JsonResponse> firstUserSearchCompleted = new CompletableFuture<>();
     CompletableFuture<JsonResponse> secondUserSeatchCompleted = new CompletableFuture<>();
@@ -984,20 +850,20 @@ public class LoansApiTest extends ApiTests {
 
     String queryTemplate = "query=userId=\"%s\"+and+status.name=\"%s\"";
 
-    createLoan(loanRequest(userId, "Open"));
-    createLoan(loanRequest(userId, "Open"));
-    createLoan(loanRequest(userId, "Closed"));
-    createLoan(loanRequest(userId, "Closed"));
-    createLoan(loanRequest(userId, "Closed"));
-    createLoan(loanRequest(userId, "Closed"));
+    loansClient.create(loanRequest(userId, "Open"));
+    loansClient.create(loanRequest(userId, "Open"));
+    loansClient.create(loanRequest(userId, "Closed"));
+    loansClient.create(loanRequest(userId, "Closed"));
+    loansClient.create(loanRequest(userId, "Closed"));
+    loansClient.create(loanRequest(userId, "Closed"));
 
     CompletableFuture<JsonResponse> openSearchComppleted = new CompletableFuture<>();
     CompletableFuture<JsonResponse> closedSearchCompleted = new CompletableFuture<>();
 
-    client.get(loanStorageUrl(), String.format(queryTemplate, userId, "Open"),
+    client.get(InterfaceUrls.loanStorageUrl(), String.format(queryTemplate, userId, "Open"),
       StorageTestSuite.TENANT_ID, ResponseHandler.json(openSearchComppleted));
 
-    client.get(loanStorageUrl(), String.format(queryTemplate, userId, "Closed"),
+    client.get(InterfaceUrls.loanStorageUrl(), String.format(queryTemplate, userId, "Closed"),
       StorageTestSuite.TENANT_ID, ResponseHandler.json(closedSearchCompleted));
 
     JsonResponse openLoansResponse = openSearchComppleted.get(5, TimeUnit.SECONDS);
@@ -1082,13 +948,13 @@ public class LoansApiTest extends ApiTests {
     CompletableFuture<JsonResponse> get3    = new CompletableFuture<>();
 
     ///////////////post loan//////////////////////
-    client.post(loanStorageUrl(), j1, StorageTestSuite.TENANT_ID,
+    client.post(InterfaceUrls.loanStorageUrl(), j1, StorageTestSuite.TENANT_ID,
       "af23adf0-61ba-4887-bf82-956c4aae2260", ResponseHandler.json(create1));
 
     create1.get(5, TimeUnit.SECONDS);
 
     //////////////get loan/////////////////////
-    client.get(loanStorageUrl("/"+id1.toString()), StorageTestSuite.TENANT_ID,
+    client.get(InterfaceUrls.loanStorageUrl("/"+id1.toString()), StorageTestSuite.TENANT_ID,
       ResponseHandler.json(get1));
 
     JsonResponse response2 = get1.get(5, TimeUnit.SECONDS);
@@ -1097,13 +963,13 @@ public class LoansApiTest extends ApiTests {
       response2.getJson().getJsonObject("metadata").getString("createdByUserId"), is("af23adf0-61ba-4887-bf82-956c4aae2260"));
 
     ///////////////post loan//////////////////////
-    client.post(loanStorageUrl(), j2, StorageTestSuite.TENANT_ID, null,
+    client.post(InterfaceUrls.loanStorageUrl(), j2, StorageTestSuite.TENANT_ID, null,
       ResponseHandler.json(create2));
 
     create2.get(5, TimeUnit.SECONDS);
 
     //////////////get loan/////////////////////
-    client.get(loanStorageUrl("/"+id2.toString()), StorageTestSuite.TENANT_ID,
+    client.get(InterfaceUrls.loanStorageUrl("/"+id2.toString()), StorageTestSuite.TENANT_ID,
       ResponseHandler.json(get2));
 
     JsonResponse response4 = get2.get(5, TimeUnit.SECONDS);
@@ -1112,13 +978,13 @@ public class LoansApiTest extends ApiTests {
       response4.getJson().getJsonObject("metadata"), is(nullValue()));
 
     ///////////////post loan//////////////////////
-    client.post(loanStorageUrl(), j3, StorageTestSuite.TENANT_ID,
+    client.post(InterfaceUrls.loanStorageUrl(), j3, StorageTestSuite.TENANT_ID,
       "af23adf0-61ba-4887-bf82-956c4aae2260", ResponseHandler.json(create3));
 
     create3.get(5, TimeUnit.SECONDS);
 
     //////////////get loan/////////////////////
-    client.get(loanStorageUrl("/"+id3.toString()), StorageTestSuite.TENANT_ID,
+    client.get(InterfaceUrls.loanStorageUrl("/"+id3.toString()), StorageTestSuite.TENANT_ID,
       ResponseHandler.json(get3));
 
     JsonResponse response6 = get3.get(5, TimeUnit.SECONDS);
@@ -1137,25 +1003,13 @@ public class LoansApiTest extends ApiTests {
 
     UUID id = UUID.randomUUID();
 
-    createLoan(new LoanRequestBuilder().withId(id).create());
+    loansClient.create(new LoanRequestBuilder().withId(id).create());
 
-    CompletableFuture<TextResponse> deleteCompleted = new CompletableFuture<>();
+    loansClient.deleteById(id);
 
-    client.delete(loanStorageUrl(String.format("/%s", id)),
-      StorageTestSuite.TENANT_ID, ResponseHandler.text(deleteCompleted));
+    JsonResponse getResponse = loansClient.attemptGetById(id);
 
-    TextResponse deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-
-    client.get(loanStorageUrl(String.format("/%s", id)),
-      StorageTestSuite.TENANT_ID, ResponseHandler.empty(getCompleted));
-
-    Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+    assertThat(getResponse, isNotFound());
   }
 
   @Test
@@ -1173,15 +1027,11 @@ public class LoansApiTest extends ApiTests {
 
     requestWithAdditionalProperty.put("somethingAdditional", "foo");
 
-    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture<>();
+    JsonResponse response = loansClient.attemptCreate(
+      requestWithAdditionalProperty);
 
-    client.post(loanStorageUrl(), requestWithAdditionalProperty,
-      StorageTestSuite.TENANT_ID, ResponseHandler.jsonErrors(createCompleted));
-
-    JsonErrorResponse response = createCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
-    assertThat(response.getErrors(), hasSoleMessgeContaining("Unrecognized field"));
+    assertThat(response, isValidationResponseWhich(
+      hasMessageContaining("Unrecognized field")));
   }
 
   @Test
@@ -1200,50 +1050,11 @@ public class LoansApiTest extends ApiTests {
     requestWithAdditionalProperty.getJsonObject("status")
       .put("somethingAdditional", "foo");
 
-    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture<>();
+    JsonResponse response = loansClient.attemptCreate(
+      requestWithAdditionalProperty);
 
-    client.post(loanStorageUrl(), requestWithAdditionalProperty,
-      StorageTestSuite.TENANT_ID, ResponseHandler.jsonErrors(createCompleted));
-
-    JsonErrorResponse response = createCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
-    assertThat(response.getErrors(), hasSoleMessgeContaining("Unrecognized field"));
-  }
-
-  private JsonResponse getById(UUID id)
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
-    URL getInstanceUrl = loanStorageUrl(String.format("/%s", id));
-
-    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
-
-    client.get(getInstanceUrl, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(getCompleted));
-
-    return getCompleted.get(5, TimeUnit.SECONDS);
-  }
-
-  private IndividualResource createLoan(JsonObject loanRequest)
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
-
-    client.post(loanStorageUrl(), loanRequest, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(createCompleted));
-
-    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(String.format("Failed to create loan: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    return new IndividualResource(response);
+    assertThat(response, isValidationResponseWhich(
+      hasMessageContaining("Unrecognized field")));
   }
 
   private JsonObject loanRequest() {
@@ -1255,15 +1066,5 @@ public class LoansApiTest extends ApiTests {
       .withUserId(userId)
       .withStatus(statusName)
       .create();
-  }
-
-  private static URL loanStorageUrl() throws MalformedURLException {
-    return loanStorageUrl("");
-  }
-
-  private static URL loanStorageUrl(String subPath)
-    throws MalformedURLException {
-
-    return StorageTestSuite.storageUrl("/loan-storage/loans" + subPath);
   }
 }
