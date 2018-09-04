@@ -84,8 +84,8 @@ public class StorageTestSuite {
           "org.folio.circulation.storage.test.config",
             "/postgres-conf-local.json");
 
-        log.info("Using external configuration settings: '%s'",
-          postgresConfigPath);
+        log.info(String.format(
+          "Using external configuration settings: '%s'", postgresConfigPath));
 
         PostgresClient.setConfigFilePath(postgresConfigPath);
         break;
