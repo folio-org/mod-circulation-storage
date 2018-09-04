@@ -256,9 +256,45 @@ public class LoansAPI implements LoanStorageResource {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    asyncResultHandler.handle(succeededFuture(
-      LoanStorageResource.PostLoanStorageLoansAnonymizeByUserIdResponse
-        .withNoContent()));
+    vertxContext.runOnContext(v -> {
+      try {
+        final String tenantId = TenantTool.tenantId(okapiHeaders);
+
+        final PostgresClient postgresClient = PostgresClient.getInstance(
+            vertxContext.owner(), tenantId);
+
+        postgresClient.mutate(String.format("UPDATE %s_%s.loan " +
+            "SET jsonb = jsonb - 'userId' WHERE jsonb->>'userId' = '" + userId + "'",
+          tenantId, "mod_circulation_storage"),
+          reply -> {
+            if(reply.succeeded()) {
+              asyncResultHandler.handle(succeededFuture(
+                LoanStorageResource.PostLoanStorageLoansAnonymizeByUserIdResponse
+                  .withNoContent()));
+            }
+            else {
+              if(reply.cause() != null) {
+                log.error(reply.cause(), reply.cause().getMessage());
+                asyncResultHandler.handle(succeededFuture(
+                  LoanStorageResource.PostLoanStorageLoansAnonymizeByUserIdResponse
+                    .withPlainInternalServerError(reply.cause().getMessage())));
+              }
+              else {
+                log.error("Unknown error occurred");
+                asyncResultHandler.handle(succeededFuture(
+                  LoanStorageResource.PostLoanStorageLoansAnonymizeByUserIdResponse
+                    .withPlainInternalServerError("Unknown error occurred")));
+              }
+            }
+        });
+      }
+      catch(Exception e) {
+        log.error(e, e.getMessage());
+        asyncResultHandler.handle(succeededFuture(
+          LoanStorageResource.PostLoanStorageLoansAnonymizeByUserIdResponse
+            .withPlainInternalServerError(e.getCause().getMessage())));
+      }
+    });
   }
 
   @Validate

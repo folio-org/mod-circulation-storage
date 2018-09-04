@@ -3,6 +3,7 @@ package org.folio.rest.api.loans;
 import static org.folio.rest.support.http.InterfaceUrls.loanStorageUrl;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNoContent;
 import static org.folio.rest.support.matchers.UUIDMatchers.isUUID;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import java.net.MalformedURLException;
@@ -50,6 +51,29 @@ public class LoansAnonymizationApiTest extends ApiTests {
     final UUID unknownUserId = UUID.randomUUID();
 
     anonymizeLoansFor(unknownUserId);
+  }
+
+  @Test
+  public void shouldAnonymizeSingleClosedLoanForUser()
+    throws MalformedURLException,
+    ExecutionException,
+    InterruptedException,
+    TimeoutException {
+
+    final UUID userId = UUID.randomUUID();
+
+    final IndividualResource loan = loansClient.create(
+      new LoanRequestBuilder()
+        .closed()
+        .withUserId(userId));
+
+    anonymizeLoansFor(userId);
+
+    final IndividualResource fetchedLoan = loansClient.getById(
+      loan.getId());
+
+    assertThat("Should no longer have a user ID",
+      fetchedLoan.getJson().containsKey("userId"), is(false));
   }
 
   @Test
