@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.folio.rest.RestVerticle;
+import org.folio.rest.api.loans.LoansAnonymizationApiTest;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
@@ -35,6 +36,7 @@ import io.vertx.ext.sql.ResultSet;
 
 @Suite.SuiteClasses({
   LoansApiTest.class,
+  LoansAnonymizationApiTest.class,
   LoanRulesApiTest.class,
   FixedDueDateApiTest.class,
   LoanPoliciesApiTest.class,
@@ -150,7 +152,7 @@ public class StorageTestSuite {
 		return !initialised;
 	}
 
-	static void deleteAll(URL rootUrl) {
+	public static void deleteAll(URL rootUrl) {
 		HttpClient client = new HttpClient(getVertx());
 
 		CompletableFuture<Response> deleteAllFinished = new CompletableFuture<>();
@@ -170,7 +172,7 @@ public class StorageTestSuite {
 		}
 	}
 
-	static void checkForMismatchedIDs(String table) {
+	public static void checkForMismatchedIDs(String table) {
 		try {
 			ResultSet results = getRecordsWithUnmatchedIds(TENANT_ID, table);
 

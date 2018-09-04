@@ -56,6 +56,16 @@ resourceTypes:
           body:
             text/plain:
               example: "Internal server error, contact administrator"
+    /anonymize/{userId}:
+      post:
+        responses:
+          204:
+            description: "Closed loans for this user have been anonymized"
+          500:
+            description: "Internal server error, e.g. due to misconfiguration"
+            body:
+              text/plain:
+                example: "Internal server error, contact administrator"
     /{loanId}:
       type:
         collection-item:

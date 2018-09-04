@@ -12,6 +12,7 @@ import java.util.StringJoiner;
 import java.util.UUID;
 import java.util.function.Function;
 
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -246,6 +247,18 @@ public class LoansAPI implements LoanStorageResource {
         LoanStorageResource.PostLoanStorageLoansResponse
           .withPlainInternalServerError(e.getMessage())));
     }
+  }
+
+  @Override
+  public void postLoanStorageLoansAnonymizeByUserId(
+    @NotNull String userId,
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+    asyncResultHandler.handle(succeededFuture(
+      LoanStorageResource.PostLoanStorageLoansAnonymizeByUserIdResponse
+        .withNoContent()));
   }
 
   @Validate
