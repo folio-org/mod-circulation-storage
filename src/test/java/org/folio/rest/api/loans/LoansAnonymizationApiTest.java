@@ -5,14 +5,17 @@ import static org.folio.rest.support.http.InterfaceUrls.loanStorageUrl;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNoContent;
 import static org.folio.rest.support.matchers.UUIDMatchers.isUUID;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import java.net.MalformedURLException;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import org.folio.rest.api.StorageTestSuite;
 import org.folio.rest.support.ApiTests;
@@ -95,27 +98,27 @@ public class LoansAnonymizationApiTest extends ApiTests {
     loansClient.create(loanForUser
       .closed()
       .withItemId(UUID.randomUUID())
-      .withId(UUID.randomUUID()));
+      .withId(UUID.randomUUID())).getId();
 
     loansClient.create(loanForUser
       .closed()
       .withItemId(UUID.randomUUID())
-      .withId(UUID.randomUUID()));
+      .withId(UUID.randomUUID())).getId();
+
+    final String firstOpenLoanId = loansClient.create(loanForUser
+      .open()
+      .withItemId(UUID.randomUUID())
+      .withId(UUID.randomUUID())).getId();
+
+    final String secondOpenLoanId = loansClient.create(loanForUser
+      .open()
+      .withItemId(UUID.randomUUID())
+      .withId(UUID.randomUUID())).getId();
 
     loansClient.create(loanForUser
       .closed()
       .withItemId(UUID.randomUUID())
-      .withId(UUID.randomUUID()));
-
-    loansClient.create(loanForUser
-      .open()
-      .withItemId(UUID.randomUUID())
-      .withId(UUID.randomUUID()));
-
-    loansClient.create(loanForUser
-      .open()
-      .withItemId(UUID.randomUUID())
-      .withId(UUID.randomUUID()));
+      .withId(UUID.randomUUID())).getId();
 
     anonymizeLoansFor(userId);
 
@@ -131,7 +134,16 @@ public class LoansAnonymizationApiTest extends ApiTests {
     final JsonObject wrappedLoans = fetchedLoansResponse.getJson();
 
     assertThat(wrappedLoans.getInteger("totalRecords"), is(2));
-    assertThat(toList(wrappedLoans, "loans").size(), is(2));
+
+    final List<JsonObject> fetchedLoans = toList(wrappedLoans, "loans");
+
+    assertThat(fetchedLoans.size(), is(2));
+
+    final List<String> fetchedLoanIds = fetchedLoans.stream()
+      .map(loan -> loan.getString("id"))
+      .collect(Collectors.toList());
+
+    assertThat(fetchedLoanIds, containsInAnyOrder(firstOpenLoanId, secondOpenLoanId));
   }
 
   @Test
