@@ -46,7 +46,7 @@ public class LoansAnonymizationApiTest extends ApiTests {
   }
 
   @Test
-  public void shouldDoNothingWhenNoLoansForUser()
+  public void shouldSucceedEvenWhenNoLoansForUser()
     throws MalformedURLException,
     ExecutionException,
     InterruptedException,
