@@ -263,9 +263,13 @@ public class LoansAPI implements LoanStorageResource {
         final PostgresClient postgresClient = PostgresClient.getInstance(
             vertxContext.owner(), tenantId);
 
-        postgresClient.mutate(String.format("UPDATE %s_%s.loan " +
-            "SET jsonb = jsonb - 'userId' WHERE jsonb->>'userId' = '" + userId + "'",
-          tenantId, "mod_circulation_storage"),
+        final String anonymizeLoansSql = String.format(
+          "UPDATE %s_%s.loan SET jsonb = jsonb - 'userId'"
+            + " WHERE jsonb->>'userId' = '" + userId + "'"
+            + " AND jsonb->'status'->>'name' = 'Closed'",
+          tenantId, "mod_circulation_storage");
+
+        postgresClient.mutate(anonymizeLoansSql,
           reply -> {
             if(reply.succeeded()) {
               asyncResultHandler.handle(succeededFuture(
