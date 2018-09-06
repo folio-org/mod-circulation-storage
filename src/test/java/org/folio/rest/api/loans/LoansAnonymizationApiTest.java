@@ -3,6 +3,7 @@ package org.folio.rest.api.loans;
 import static org.folio.rest.support.JsonArrayHelper.toList;
 import static org.folio.rest.support.http.InterfaceUrls.loanStorageUrl;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNoContent;
+import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isOk;
 import static org.folio.rest.support.matchers.UUIDMatchers.isUUID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
@@ -107,16 +108,7 @@ public class LoansAnonymizationApiTest extends ApiTests {
 
     anonymizeLoansFor(userId);
 
-    final CompletableFuture<JsonResponse> fetchAllCompleted = new CompletableFuture<>();
-
-    client.get(loanStorageUrl(),
-      String.format("query=userId==%s", userId), StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(fetchAllCompleted));
-
-    final JsonResponse fetchedLoansResponse = fetchAllCompleted
-      .get(5, TimeUnit.SECONDS);
-
-    final JsonObject wrappedLoans = fetchedLoansResponse.getJson();
+    final JsonObject wrappedLoans = getLoansForUser(userId);
 
     assertThat(wrappedLoans.getInteger("totalRecords"), is(2));
 
@@ -170,16 +162,7 @@ public class LoansAnonymizationApiTest extends ApiTests {
 
     anonymizeLoansFor(userId);
 
-    final CompletableFuture<JsonResponse> fetchAllCompleted = new CompletableFuture<>();
-
-    client.get(loanStorageUrl(),
-      String.format("query=userId==%s", userId), StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(fetchAllCompleted));
-
-    final JsonResponse fetchedLoansResponse = fetchAllCompleted
-      .get(5, TimeUnit.SECONDS);
-
-    final JsonObject wrappedLoans = fetchedLoansResponse.getJson();
+    final JsonObject wrappedLoans = getLoansForUser(userId);
 
     assertThat(wrappedLoans.getInteger("totalRecords"), is(2));
 
@@ -231,5 +214,25 @@ public class LoansAnonymizationApiTest extends ApiTests {
     final TextResponse postResponse = postCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(postResponse, isNoContent());
+  }
+
+  private JsonObject getLoansForUser(UUID userId)
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    final CompletableFuture<JsonResponse> fetchAllCompleted = new CompletableFuture<>();
+
+    client.get(loanStorageUrl(),
+      "query=" + String.format("userId==%s", userId), StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(fetchAllCompleted));
+
+    final JsonResponse fetchedLoansResponse = fetchAllCompleted
+      .get(5, TimeUnit.SECONDS);
+
+    assertThat(fetchedLoansResponse, isOk());
+
+    return fetchedLoansResponse.getJson();
   }
 }
