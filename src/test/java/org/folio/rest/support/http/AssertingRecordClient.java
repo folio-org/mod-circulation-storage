@@ -17,6 +17,7 @@ import org.folio.rest.api.StorageTestSuite;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonResponse;
+import org.folio.rest.support.MultipleRecords;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.TextResponse;
 import org.folio.rest.support.builders.Builder;
@@ -193,7 +194,7 @@ public class AssertingRecordClient {
     assertThat("Failed to delete record", deleteResponse, isNoContent());
   }
 
-  public JsonObject getMany(String cqlQuery)
+  public MultipleRecords<JsonObject> getMany(String cqlQuery)
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -210,6 +211,6 @@ public class AssertingRecordClient {
 
     assertThat(fetchedLoansResponse, isOk());
 
-    return fetchedLoansResponse.getJson();
+    return MultipleRecords.fromJson(fetchedLoansResponse.getJson(), "loans");
   }
 }

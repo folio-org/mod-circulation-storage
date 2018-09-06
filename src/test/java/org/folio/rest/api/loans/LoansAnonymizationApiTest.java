@@ -1,6 +1,5 @@
 package org.folio.rest.api.loans;
 
-import static org.folio.rest.support.JsonArrayHelper.toList;
 import static org.folio.rest.support.http.InterfaceUrls.loanStorageUrl;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNoContent;
 import static org.folio.rest.support.matchers.UUIDMatchers.isUUID;
@@ -9,6 +8,7 @@ import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInA
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import java.net.MalformedURLException;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 import org.folio.rest.api.StorageTestSuite;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.IndividualResource;
+import org.folio.rest.support.MultipleRecords;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.TextResponse;
 import org.folio.rest.support.builders.LoanRequestBuilder;
@@ -106,11 +107,11 @@ public class LoansAnonymizationApiTest extends ApiTests {
 
     anonymizeLoansFor(userId);
 
-    final JsonObject wrappedLoans = getLoansForUser(userId);
+    final MultipleRecords<JsonObject> wrappedLoans = getLoansForUser(userId);
 
-    assertThat(wrappedLoans.getInteger("totalRecords"), is(2));
+    assertThat(wrappedLoans.getTotalRecords(), is(2));
 
-    final List<JsonObject> fetchedLoans = toList(wrappedLoans, "loans");
+    final Collection<JsonObject> fetchedLoans = wrappedLoans.getRecords();
 
     assertThat(fetchedLoans.size(), is(2));
 
@@ -118,7 +119,8 @@ public class LoansAnonymizationApiTest extends ApiTests {
       .map(loan -> loan.getString("id"))
       .collect(Collectors.toList());
 
-    assertThat(fetchedLoanIds, containsInAnyOrder(firstOpenLoanId, secondOpenLoanId));
+    assertThat(fetchedLoanIds,
+      containsInAnyOrder(firstOpenLoanId, secondOpenLoanId));
   }
 
   @Test
@@ -160,11 +162,11 @@ public class LoansAnonymizationApiTest extends ApiTests {
 
     anonymizeLoansFor(userId);
 
-    final JsonObject wrappedLoans = getLoansForUser(userId);
+    final MultipleRecords<JsonObject> wrappedLoans = getLoansForUser(userId);
 
-    assertThat(wrappedLoans.getInteger("totalRecords"), is(2));
+    assertThat(wrappedLoans.getTotalRecords(), is(2));
 
-    final List<JsonObject> fetchedLoans = toList(wrappedLoans, "loans");
+    final Collection<JsonObject> fetchedLoans = wrappedLoans.getRecords();
 
     assertThat(fetchedLoans.size(), is(2));
 
@@ -172,7 +174,8 @@ public class LoansAnonymizationApiTest extends ApiTests {
       .map(loan -> loan.getString("id"))
       .collect(Collectors.toList());
 
-    assertThat(fetchedLoanIds, containsInAnyOrder(firstOpenLoanId, secondOpenLoanId));
+    assertThat(fetchedLoanIds,
+      containsInAnyOrder(firstOpenLoanId, secondOpenLoanId));
   }
 
   @Test
@@ -214,7 +217,7 @@ public class LoansAnonymizationApiTest extends ApiTests {
     assertThat(postResponse, isNoContent());
   }
 
-  private JsonObject getLoansForUser(UUID userId)
+  private MultipleRecords<JsonObject> getLoansForUser(UUID userId)
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
