@@ -192,4 +192,24 @@ public class AssertingRecordClient {
 
     assertThat("Failed to delete record", deleteResponse, isNoContent());
   }
+
+  public JsonObject getMany(String cqlQuery)
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    final CompletableFuture<JsonResponse> fetchManyCompleted = new CompletableFuture<>();
+
+    this.client.get(urlMaker.combine(""),
+      "query=" + cqlQuery, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(fetchManyCompleted));
+
+    final JsonResponse fetchedLoansResponse = fetchManyCompleted
+      .get(5, TimeUnit.SECONDS);
+
+    assertThat(fetchedLoansResponse, isOk());
+
+    return fetchedLoansResponse.getJson();
+  }
 }

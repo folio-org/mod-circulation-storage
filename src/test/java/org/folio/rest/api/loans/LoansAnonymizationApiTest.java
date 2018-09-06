@@ -3,7 +3,6 @@ package org.folio.rest.api.loans;
 import static org.folio.rest.support.JsonArrayHelper.toList;
 import static org.folio.rest.support.http.InterfaceUrls.loanStorageUrl;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNoContent;
-import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isOk;
 import static org.folio.rest.support.matchers.UUIDMatchers.isUUID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
@@ -21,7 +20,6 @@ import java.util.stream.Collectors;
 import org.folio.rest.api.StorageTestSuite;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.IndividualResource;
-import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.TextResponse;
 import org.folio.rest.support.builders.LoanRequestBuilder;
@@ -222,17 +220,6 @@ public class LoansAnonymizationApiTest extends ApiTests {
     ExecutionException,
     TimeoutException {
 
-    final CompletableFuture<JsonResponse> fetchAllCompleted = new CompletableFuture<>();
-
-    client.get(loanStorageUrl(),
-      "query=" + String.format("userId==%s", userId), StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(fetchAllCompleted));
-
-    final JsonResponse fetchedLoansResponse = fetchAllCompleted
-      .get(5, TimeUnit.SECONDS);
-
-    assertThat(fetchedLoansResponse, isOk());
-
-    return fetchedLoansResponse.getJson();
+    return loansClient.getMany(String.format("userId==%s", userId));
   }
 }
