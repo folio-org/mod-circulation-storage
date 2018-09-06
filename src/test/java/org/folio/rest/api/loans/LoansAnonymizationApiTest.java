@@ -84,7 +84,55 @@ public class LoansAnonymizationApiTest extends ApiTests {
   }
 
   @Test
-  public void shouldOnlyAnonymizeClosedLoans()
+  public void shouldNotAnonymizeOpenLoans()
+    throws MalformedURLException,
+    ExecutionException,
+    InterruptedException,
+    TimeoutException {
+
+    final UUID userId = UUID.randomUUID();
+
+    final LoanRequestBuilder loanForUser = new LoanRequestBuilder()
+      .withUserId(userId);
+
+    final String firstOpenLoanId = loansClient.create(loanForUser
+      .open()
+      .withItemId(UUID.randomUUID())
+      .withId(UUID.randomUUID())).getId();
+
+    final String secondOpenLoanId = loansClient.create(loanForUser
+      .open()
+      .withItemId(UUID.randomUUID())
+      .withId(UUID.randomUUID())).getId();
+
+    anonymizeLoansFor(userId);
+
+    final CompletableFuture<JsonResponse> fetchAllCompleted = new CompletableFuture<>();
+
+    client.get(loanStorageUrl(),
+      String.format("query=userId==%s", userId), StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(fetchAllCompleted));
+
+    final JsonResponse fetchedLoansResponse = fetchAllCompleted
+      .get(5, TimeUnit.SECONDS);
+
+    final JsonObject wrappedLoans = fetchedLoansResponse.getJson();
+
+    assertThat(wrappedLoans.getInteger("totalRecords"), is(2));
+
+    final List<JsonObject> fetchedLoans = toList(wrappedLoans, "loans");
+
+    assertThat(fetchedLoans.size(), is(2));
+
+    final List<String> fetchedLoanIds = fetchedLoans.stream()
+      .map(loan -> loan.getString("id"))
+      .collect(Collectors.toList());
+
+    assertThat(fetchedLoanIds, containsInAnyOrder(firstOpenLoanId, secondOpenLoanId));
+  }
+
+  @Test
+  public void shouldOnlyAnonymizeClosedLoansWhenBothArePresent()
     throws MalformedURLException,
     ExecutionException,
     InterruptedException,
