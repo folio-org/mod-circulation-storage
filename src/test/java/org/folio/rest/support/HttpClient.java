@@ -1,5 +1,10 @@
 package org.folio.rest.support;
 
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.UUID;
+
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClientRequest;
@@ -7,11 +12,6 @@ import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.json.Json;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.UUID;
 
 public class HttpClient {
   private static final Logger log = LoggerFactory.getLogger(HttpClient.class);
@@ -41,7 +41,8 @@ public class HttpClient {
                    String userId,
                    Handler<HttpClientResponse> responseHandler) {
 
-    HttpClientRequest request = client.postAbs(url.toString(), responseHandler);
+    HttpClientRequest request = client.postAbs(url.toString(),
+      responseHandler);
 
     request.headers().add("Accept","application/json, text/plain");
     request.headers().add("Content-type","application/json");
@@ -57,10 +58,7 @@ public class HttpClient {
     if(body != null) {
       String encodedBody = Json.encodePrettily(body);
 
-      System.out.println(String.format("POST %s, Request: %s",
-        url.toString(), encodedBody));
-
-      log.debug(String.format("POST %s, Request: %s",
+      log.info(String.format("POST %s, Request: %s",
         url.toString(), encodedBody));
 
       request.end(encodedBody);
@@ -113,10 +111,7 @@ public class HttpClient {
 
     String encodedBody = Json.encodePrettily(body);
 
-    System.out.println(String.format("PUT %s, Request: %s",
-      url.toString(), encodedBody));
-
-    log.debug(String.format("PUT %s, Request: %s",
+    log.info(String.format("PUT %s, Request: %s",
       url.toString(), encodedBody));
 
     request.end(encodedBody);
