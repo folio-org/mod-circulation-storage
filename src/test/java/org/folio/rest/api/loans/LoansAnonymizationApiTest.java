@@ -107,20 +107,7 @@ public class LoansAnonymizationApiTest extends ApiTests {
 
     anonymizeLoansFor(userId);
 
-    final MultipleRecords<JsonObject> wrappedLoans = getLoansForUser(userId);
-
-    assertThat(wrappedLoans.getTotalRecords(), is(2));
-
-    final Collection<JsonObject> fetchedLoans = wrappedLoans.getRecords();
-
-    assertThat(fetchedLoans.size(), is(2));
-
-    final List<String> fetchedLoanIds = fetchedLoans.stream()
-      .map(loan -> loan.getString("id"))
-      .collect(Collectors.toList());
-
-    assertThat(fetchedLoanIds,
-      containsInAnyOrder(firstOpenLoanId, secondOpenLoanId));
+    hasOpenLoansForUser(userId, firstOpenLoanId, secondOpenLoanId);
   }
 
   @Test
@@ -162,20 +149,7 @@ public class LoansAnonymizationApiTest extends ApiTests {
 
     anonymizeLoansFor(userId);
 
-    final MultipleRecords<JsonObject> wrappedLoans = getLoansForUser(userId);
-
-    assertThat(wrappedLoans.getTotalRecords(), is(2));
-
-    final Collection<JsonObject> fetchedLoans = wrappedLoans.getRecords();
-
-    assertThat(fetchedLoans.size(), is(2));
-
-    final List<String> fetchedLoanIds = fetchedLoans.stream()
-      .map(loan -> loan.getString("id"))
-      .collect(Collectors.toList());
-
-    assertThat(fetchedLoanIds,
-      containsInAnyOrder(firstOpenLoanId, secondOpenLoanId));
+    hasOpenLoansForUser(userId, firstOpenLoanId, secondOpenLoanId);
   }
 
   @Test
@@ -224,5 +198,26 @@ public class LoansAnonymizationApiTest extends ApiTests {
     TimeoutException {
 
     return loansClient.getMany(String.format("userId==%s", userId));
+  }
+
+  private void hasOpenLoansForUser(UUID userId, String... openLoanIds)
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    final MultipleRecords<JsonObject> wrappedLoans = getLoansForUser(userId);
+
+    assertThat(wrappedLoans.getTotalRecords(), is(openLoanIds.length));
+
+    final Collection<JsonObject> fetchedLoans = wrappedLoans.getRecords();
+
+    assertThat(fetchedLoans.size(), is(openLoanIds.length));
+
+    final List<String> fetchedLoanIds = fetchedLoans.stream()
+      .map(loan -> loan.getString("id"))
+      .collect(Collectors.toList());
+
+    assertThat(fetchedLoanIds, containsInAnyOrder(openLoanIds));
   }
 }
