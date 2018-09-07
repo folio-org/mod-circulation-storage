@@ -209,6 +209,49 @@ public class LoansAnonymizationApiTest extends ApiTests {
   }
 
   @Test
+  public void shouldNotAnonymizeLoanActionHistoryForOpenLoans()
+    throws MalformedURLException,
+    ExecutionException,
+    InterruptedException,
+    TimeoutException {
+
+    final UUID userId = UUID.randomUUID();
+
+    final LoanRequestBuilder loanForUser = new LoanRequestBuilder()
+      .withUserId(userId);
+
+    final String firstOpenLoanId = loansClient.create(loanForUser
+      .open()
+      .withItemId(UUID.randomUUID())
+      .withId(UUID.randomUUID())).getId();
+
+    final String secondOpenLoanId = loansClient.create(loanForUser
+      .open()
+      .withItemId(UUID.randomUUID())
+      .withId(UUID.randomUUID())).getId();
+
+    anonymizeLoansFor(userId);
+
+    final MultipleRecords<JsonObject> wrappedLoanHistoryActions
+      = getLoanActionHistoryForUser(userId);
+
+    final Collection<JsonObject> fetchedLoanActionHistoryEntries
+      = wrappedLoanHistoryActions.getRecords();
+
+    //Needs to be distinct as could be multiple entries per loan
+    final List<String> fetchedLoanHistoryIds = fetchedLoanActionHistoryEntries
+      .stream()
+      .map(entry -> entry.getString("id"))
+      .distinct()
+      .collect(Collectors.toList());
+
+    assertThat(fetchedLoanActionHistoryEntries.size(), is(2));
+
+    assertThat(fetchedLoanHistoryIds,
+      containsInAnyOrder(firstOpenLoanId, secondOpenLoanId));
+  }
+
+  @Test
   public void shouldNotAnonymizeLoansHistoryForOtherUser()
     throws MalformedURLException,
     ExecutionException,

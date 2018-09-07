@@ -269,13 +269,23 @@ public class LoansAPI implements LoanStorageResource {
             + " AND jsonb->'status'->>'name' = 'Closed'",
           tenantId, "mod_circulation_storage");
 
+        //Only anonymize the history for loans that are currently closed
+        //meaning that we need to refer to loans in this query
         final String anonymizeLoansActionHistorySql = String.format(
           "UPDATE %s_%s.%s SET jsonb = jsonb - 'userId'"
-            + " WHERE jsonb->>'userId' = '" + userId + "'",
-          tenantId, "mod_circulation_storage", LOAN_HISTORY_TABLE);
+            + " WHERE jsonb->>'userId' = '" + userId + "'"
+            + " AND jsonb->>'id' IN (SELECT l.jsonb->>'id'" +
+            " FROM %s_%s.loan l WHERE l.jsonb->>'userId' = '" + userId + "'"
+            + " AND l.jsonb->'status'->>'name' = 'Closed')",
+          tenantId, "mod_circulation_storage", LOAN_HISTORY_TABLE,
+            tenantId, "mod_circulation_storage");
 
-        final String combinedAnonymizationSql = anonymizeLoansSql + "; "
-          + anonymizeLoansActionHistorySql;
+
+        //Loan action history needs to go first, as needs to be for specific loans
+        final String combinedAnonymizationSql = anonymizeLoansActionHistorySql + "; "
+          + anonymizeLoansSql;
+
+        log.info(String.format("Anonymization SQL: %s", combinedAnonymizationSql));
 
         postgresClient.mutate(combinedAnonymizationSql,
           reply -> {
