@@ -269,7 +269,15 @@ public class LoansAPI implements LoanStorageResource {
             + " AND jsonb->'status'->>'name' = 'Closed'",
           tenantId, "mod_circulation_storage");
 
-        postgresClient.mutate(anonymizeLoansSql,
+        final String anonymizeLoansActionHistorySql = String.format(
+          "UPDATE %s_%s.%s SET jsonb = jsonb - 'userId'"
+            + " WHERE jsonb->>'userId' = '" + userId + "'",
+          tenantId, "mod_circulation_storage", LOAN_HISTORY_TABLE);
+
+        final String combinedAnonymizationSql = anonymizeLoansSql + "; "
+          + anonymizeLoansActionHistorySql;
+
+        postgresClient.mutate(combinedAnonymizationSql,
           reply -> {
             if(reply.succeeded()) {
               asyncResultHandler.handle(succeededFuture(

@@ -4,6 +4,7 @@ import static org.folio.rest.support.http.InterfaceUrls.loanStorageUrl;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNoContent;
 import static org.folio.rest.support.matchers.UUIDMatchers.isUUID;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
@@ -20,12 +21,14 @@ import java.util.stream.Collectors;
 import org.folio.rest.api.StorageTestSuite;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.IndividualResource;
+import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.MultipleRecords;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.TextResponse;
 import org.folio.rest.support.builders.LoanRequestBuilder;
 import org.folio.rest.support.http.AssertingRecordClient;
 import org.folio.rest.support.http.InterfaceUrls;
+import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -173,6 +176,81 @@ public class LoansAnonymizationApiTest extends ApiTests {
       otherUsersLoan.getId());
 
     assertThat(fetchedLoan.getJson().getString("userId"), isUUID(firstUserId));
+  }
+
+  @Test
+  public void shouldAnonymizeSingleClosedLoanHistoryForUser()
+    throws MalformedURLException,
+    ExecutionException,
+    InterruptedException,
+    TimeoutException {
+
+    final UUID userId = UUID.randomUUID();
+
+    final IndividualResource loan = loansClient.create(
+      new LoanRequestBuilder()
+        .open()
+        .withUserId(userId));
+
+    loansClient.replace(loan.getId(), LoanRequestBuilder.from(loan.getJson())
+      .withReturnDate(DateTime.now())
+      .closed());
+
+    anonymizeLoansFor(userId);
+
+    final CompletableFuture<JsonResponse> fetchHistoryCompleted = new CompletableFuture<>();
+
+    client.get(StorageTestSuite.storageUrl("/loan-storage/loan-history"),
+      String.format("query=userId==%s", userId),
+      StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(fetchHistoryCompleted));
+
+    final JsonResponse historyResponse = fetchHistoryCompleted.get(5, TimeUnit.SECONDS);
+
+    final MultipleRecords<JsonObject> historyRecords
+      = MultipleRecords.fromJson(historyResponse.getJson(), "loans");
+
+    assertThat("Should be no history records for user",
+      historyRecords.getRecords().size(), is(0));
+
+    assertThat("Should be no history records for user",
+      historyRecords.getTotalRecords(), is(0));
+  }
+
+  @Test
+  public void shouldNotAnonymizeLoansHistoryForOtherUser()
+    throws MalformedURLException,
+    ExecutionException,
+    InterruptedException,
+    TimeoutException {
+
+    final UUID firstUserId = UUID.randomUUID();
+    final UUID secondUserId = UUID.randomUUID();
+
+    loansClient.create(
+      new LoanRequestBuilder()
+        .closed()
+        .withUserId(firstUserId));
+
+    anonymizeLoansFor(secondUserId);
+
+    final CompletableFuture<JsonResponse> fetchHistoryCompleted = new CompletableFuture<>();
+
+    client.get(StorageTestSuite.storageUrl("/loan-storage/loan-history"),
+      String.format("query=userId==%s", firstUserId),
+      StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(fetchHistoryCompleted));
+
+    final JsonResponse historyResponse = fetchHistoryCompleted.get(5, TimeUnit.SECONDS);
+
+    final MultipleRecords<JsonObject> historyRecords
+      = MultipleRecords.fromJson(historyResponse.getJson(), "loans");
+
+    assertThat("Should still be history records for other user",
+      historyRecords.getRecords().size(), is(greaterThan(0)));
+
+    assertThat("Should still be history records for other user",
+      historyRecords.getTotalRecords(), is(greaterThan(0)));
   }
 
   private void anonymizeLoansFor(UUID userId)
