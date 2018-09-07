@@ -198,17 +198,8 @@ public class LoansAnonymizationApiTest extends ApiTests {
 
     anonymizeLoansFor(userId);
 
-    final CompletableFuture<JsonResponse> fetchHistoryCompleted = new CompletableFuture<>();
-
-    client.get(StorageTestSuite.storageUrl("/loan-storage/loan-history"),
-      String.format("query=userId==%s", userId),
-      StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(fetchHistoryCompleted));
-
-    final JsonResponse historyResponse = fetchHistoryCompleted.get(5, TimeUnit.SECONDS);
-
     final MultipleRecords<JsonObject> historyRecords
-      = MultipleRecords.fromJson(historyResponse.getJson(), "loans");
+      = getLoanActionHistoryForUser(userId);
 
     assertThat("Should be no history records for user",
       historyRecords.getRecords().size(), is(0));
@@ -234,17 +225,8 @@ public class LoansAnonymizationApiTest extends ApiTests {
 
     anonymizeLoansFor(secondUserId);
 
-    final CompletableFuture<JsonResponse> fetchHistoryCompleted = new CompletableFuture<>();
-
-    client.get(StorageTestSuite.storageUrl("/loan-storage/loan-history"),
-      String.format("query=userId==%s", firstUserId),
-      StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(fetchHistoryCompleted));
-
-    final JsonResponse historyResponse = fetchHistoryCompleted.get(5, TimeUnit.SECONDS);
-
     final MultipleRecords<JsonObject> historyRecords
-      = MultipleRecords.fromJson(historyResponse.getJson(), "loans");
+      = getLoanActionHistoryForUser(firstUserId);
 
     assertThat("Should still be history records for other user",
       historyRecords.getRecords().size(), is(greaterThan(0)));
@@ -276,6 +258,24 @@ public class LoansAnonymizationApiTest extends ApiTests {
     TimeoutException {
 
     return loansClient.getMany(String.format("userId==%s", userId));
+  }
+
+  private MultipleRecords<JsonObject> getLoanActionHistoryForUser(UUID userId)
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    final CompletableFuture<JsonResponse> fetchHistoryCompleted = new CompletableFuture<>();
+
+    client.get(StorageTestSuite.storageUrl("/loan-storage/loan-history"),
+      String.format("query=userId==%s", userId),
+      StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(fetchHistoryCompleted));
+
+    final JsonResponse historyResponse = fetchHistoryCompleted.get(5, TimeUnit.SECONDS);
+
+    return MultipleRecords.fromJson(historyResponse.getJson(), "loans");
   }
 
   private void hasOpenLoansForUser(UUID userId, String... openLoanIds)
