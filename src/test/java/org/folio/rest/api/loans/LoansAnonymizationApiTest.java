@@ -83,6 +83,9 @@ public class LoansAnonymizationApiTest extends ApiTests {
 
     assertThat("Should no longer have a user ID",
       fetchedLoan.getJson().containsKey("userId"), is(false));
+
+    assertThat("Anonymized loans should still be present",
+      loansClient.getAll().getTotalRecords(), is(1));
   }
 
   @Test
@@ -110,6 +113,9 @@ public class LoansAnonymizationApiTest extends ApiTests {
     anonymizeLoansFor(userId);
 
     hasOpenLoansForUser(userId, firstOpenLoanId, secondOpenLoanId);
+
+    assertThat("Anonymized loans should still be present",
+      loansClient.getAll().getTotalRecords(), is(2));
   }
 
   @Test
@@ -152,6 +158,9 @@ public class LoansAnonymizationApiTest extends ApiTests {
     anonymizeLoansFor(userId);
 
     hasOpenLoansForUser(userId, firstOpenLoanId, secondOpenLoanId);
+
+    assertThat("Anonymized loans should still be present",
+      loansClient.getAll().getTotalRecords(), is(5));
   }
 
   @Test
@@ -175,6 +184,9 @@ public class LoansAnonymizationApiTest extends ApiTests {
       otherUsersLoan.getId());
 
     assertThat(fetchedLoan.getJson().getString("userId"), isUUID(firstUserId));
+
+    assertThat("Anonymized loans should still be present",
+      loansClient.getAll().getTotalRecords(), is(1));
   }
 
   @Test
@@ -295,7 +307,7 @@ public class LoansAnonymizationApiTest extends ApiTests {
 
     hasLoanHistoryForUser(userId, firstOpenLoanId, secondOpenLoanId);
   }
-  
+
   private void anonymizeLoansFor(UUID userId)
     throws MalformedURLException,
     InterruptedException,

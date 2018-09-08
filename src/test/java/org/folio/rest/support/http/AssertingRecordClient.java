@@ -213,4 +213,23 @@ public class AssertingRecordClient {
 
     return MultipleRecords.fromJson(fetchedLoansResponse.getJson(), "loans");
   }
+
+  public MultipleRecords<JsonObject> getAll()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    final CompletableFuture<JsonResponse> fetchManyCompleted = new CompletableFuture<>();
+
+    this.client.get(urlMaker.combine(""), StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(fetchManyCompleted));
+
+    final JsonResponse fetchedLoansResponse = fetchManyCompleted
+      .get(5, TimeUnit.SECONDS);
+
+    assertThat(fetchedLoansResponse, isOk());
+
+    return MultipleRecords.fromJson(fetchedLoansResponse.getJson(), "loans");
+  }
 }
