@@ -4,7 +4,6 @@ import static org.folio.rest.support.http.InterfaceUrls.loanStorageUrl;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNoContent;
 import static org.folio.rest.support.matchers.UUIDMatchers.isUUID;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
@@ -232,23 +231,7 @@ public class LoansAnonymizationApiTest extends ApiTests {
 
     anonymizeLoansFor(userId);
 
-    final MultipleRecords<JsonObject> wrappedLoanHistoryActions
-      = getLoanActionHistoryForUser(userId);
-
-    final Collection<JsonObject> fetchedLoanActionHistoryEntries
-      = wrappedLoanHistoryActions.getRecords();
-
-    //Needs to be distinct as could be multiple entries per loan
-    final List<String> fetchedLoanHistoryIds = fetchedLoanActionHistoryEntries
-      .stream()
-      .map(entry -> entry.getString("id"))
-      .distinct()
-      .collect(Collectors.toList());
-
-    assertThat(fetchedLoanActionHistoryEntries.size(), is(2));
-
-    assertThat(fetchedLoanHistoryIds,
-      containsInAnyOrder(firstOpenLoanId, secondOpenLoanId));
+    hasLoanHistoryForUser(userId, firstOpenLoanId, secondOpenLoanId);
   }
 
   @Test
@@ -261,21 +244,14 @@ public class LoansAnonymizationApiTest extends ApiTests {
     final UUID firstUserId = UUID.randomUUID();
     final UUID secondUserId = UUID.randomUUID();
 
-    loansClient.create(
+    final IndividualResource loanForOtherUser = loansClient.create(
       new LoanRequestBuilder()
         .closed()
         .withUserId(firstUserId));
 
     anonymizeLoansFor(secondUserId);
 
-    final MultipleRecords<JsonObject> historyRecords
-      = getLoanActionHistoryForUser(firstUserId);
-
-    assertThat("Should still be history records for other user",
-      historyRecords.getRecords().size(), is(greaterThan(0)));
-
-    assertThat("Should still be history records for other user",
-      historyRecords.getTotalRecords(), is(greaterThan(0)));
+    hasLoanHistoryForUser(firstUserId, loanForOtherUser.getId());
   }
 
   private void anonymizeLoansFor(UUID userId)
@@ -340,5 +316,29 @@ public class LoansAnonymizationApiTest extends ApiTests {
       .collect(Collectors.toList());
 
     assertThat(fetchedLoanIds, containsInAnyOrder(openLoanIds));
+  }
+
+  private void hasLoanHistoryForUser(UUID userId, String... openLoanIds)
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    final MultipleRecords<JsonObject> wrappedLoanHistoryActions
+      = getLoanActionHistoryForUser(userId);
+
+    final Collection<JsonObject> fetchedLoanActionHistoryEntries
+      = wrappedLoanHistoryActions.getRecords();
+
+    //Needs to be distinct as could be multiple entries per loan
+    final List<String> fetchedLoanHistoryIds = fetchedLoanActionHistoryEntries
+      .stream()
+      .map(entry -> entry.getString("id"))
+      .distinct()
+      .collect(Collectors.toList());
+
+    assertThat(fetchedLoanActionHistoryEntries.size(), is(openLoanIds.length));
+
+    assertThat(fetchedLoanHistoryIds, containsInAnyOrder(openLoanIds));
   }
 }

@@ -280,7 +280,6 @@ public class LoansAPI implements LoanStorageResource {
           tenantId, "mod_circulation_storage", LOAN_HISTORY_TABLE,
             tenantId, "mod_circulation_storage");
 
-
         //Loan action history needs to go first, as needs to be for specific loans
         final String combinedAnonymizationSql = anonymizeLoansActionHistorySql + "; "
           + anonymizeLoansSql;
