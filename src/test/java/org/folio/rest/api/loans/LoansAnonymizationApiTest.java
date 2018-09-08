@@ -254,6 +254,48 @@ public class LoansAnonymizationApiTest extends ApiTests {
     hasLoanHistoryForUser(firstUserId, loanForOtherUser.getId());
   }
 
+  @Test
+  public void shouldOnlyAnonymizeClosedLoansHistoryWhenBothArePresent()
+    throws MalformedURLException,
+    ExecutionException,
+    InterruptedException,
+    TimeoutException {
+
+    final UUID userId = UUID.randomUUID();
+
+    final LoanRequestBuilder loanForUser = new LoanRequestBuilder()
+      .withUserId(userId);
+
+    loansClient.create(loanForUser
+      .closed()
+      .withItemId(UUID.randomUUID())
+      .withId(UUID.randomUUID())).getId();
+
+    loansClient.create(loanForUser
+      .closed()
+      .withItemId(UUID.randomUUID())
+      .withId(UUID.randomUUID())).getId();
+
+    final String firstOpenLoanId = loansClient.create(loanForUser
+      .open()
+      .withItemId(UUID.randomUUID())
+      .withId(UUID.randomUUID())).getId();
+
+    final String secondOpenLoanId = loansClient.create(loanForUser
+      .open()
+      .withItemId(UUID.randomUUID())
+      .withId(UUID.randomUUID())).getId();
+
+    loansClient.create(loanForUser
+      .closed()
+      .withItemId(UUID.randomUUID())
+      .withId(UUID.randomUUID())).getId();
+
+    anonymizeLoansFor(userId);
+
+    hasLoanHistoryForUser(userId, firstOpenLoanId, secondOpenLoanId);
+  }
+  
   private void anonymizeLoansFor(UUID userId)
     throws MalformedURLException,
     InterruptedException,
