@@ -58,6 +58,7 @@ resourceTypes:
               example: "Internal server error, contact administrator"
     /anonymize/{userId}:
       post:
+        is: [validate]
         responses:
           204:
             description: "Closed loans for this user have been anonymized"
@@ -66,6 +67,10 @@ resourceTypes:
             body:
               text/plain:
                 example: "Internal server error, contact administrator"
+          400:
+            description: "Bad request, e.g. malformed request body or query parameter."
+            body:
+              text/plain:
     /{loanId}:
       type:
         collection-item:
