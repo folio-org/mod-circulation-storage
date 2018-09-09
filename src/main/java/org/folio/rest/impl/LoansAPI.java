@@ -11,7 +11,6 @@ import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.UUID;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.core.Response;
@@ -49,6 +48,7 @@ import io.vertx.core.logging.LoggerFactory;
 public class LoansAPI implements LoanStorageResource {
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
+  private static final String MODULE_NAME = "mod_circulation_storage";
   private static final String LOAN_TABLE = "loan";
   //TODO: Change loan history table name when can be configured, used to be "loan_history_table"
   private static final String LOAN_HISTORY_TABLE = "audit_loan";
@@ -75,7 +75,7 @@ public class LoansAPI implements LoanStorageResource {
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
         postgresClient.mutate(String.format("TRUNCATE TABLE %s_%s.loan",
-          tenantId, "mod_circulation_storage"),
+          tenantId, MODULE_NAME),
           reply -> asyncResultHandler.handle(succeededFuture(
             DeleteLoanStorageLoansResponse.withNoContent())));
       }
@@ -754,7 +754,7 @@ public class LoansAPI implements LoanStorageResource {
       "UPDATE %s_%s.loan SET jsonb = jsonb - 'userId'"
         + " WHERE jsonb->>'userId' = '" + userId + "'"
         + " AND jsonb->'status'->>'name' = 'Closed'",
-      tenantId, "mod_circulation_storage");
+      tenantId, MODULE_NAME);
 
     //Only anonymize the history for loans that are currently closed
     //meaning that we need to refer to loans in this query
@@ -764,8 +764,8 @@ public class LoansAPI implements LoanStorageResource {
         + " AND jsonb->>'id' IN (SELECT l.jsonb->>'id'" +
         " FROM %s_%s.loan l WHERE l.jsonb->>'userId' = '" + userId + "'"
         + " AND l.jsonb->'status'->>'name' = 'Closed')",
-      tenantId, "mod_circulation_storage", LOAN_HISTORY_TABLE,
-      tenantId, "mod_circulation_storage");
+      tenantId, MODULE_NAME, LOAN_HISTORY_TABLE,
+      tenantId, MODULE_NAME);
 
     //Loan action history needs to go first, as needs to be for specific loans
     return anonymizeLoansActionHistorySql + "; " + anonymizeLoansSql;
