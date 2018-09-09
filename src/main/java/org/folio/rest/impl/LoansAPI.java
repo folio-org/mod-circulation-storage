@@ -10,11 +10,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.UUID;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.HEAD;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -34,6 +32,7 @@ import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
+import org.folio.support.ResultHandlerFactory;
 import org.folio.support.ServerErrorResponder;
 import org.folio.support.UUIDValidation;
 import org.joda.time.DateTime;
@@ -45,6 +44,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
@@ -288,7 +288,7 @@ public class LoansAPI implements LoanStorageResource {
         log.info(String.format("Anonymization SQL: %s", combinedAnonymizationSql));
 
         postgresClient.mutate(combinedAnonymizationSql,
-          resultHandlerFrom(
+          new ResultHandlerFactory().when(
             s -> responseHandler.handle(succeededFuture(
               PostLoanStorageLoansAnonymizeByUserIdResponse.withNoContent())),
             e -> {
@@ -768,22 +768,4 @@ public class LoansAPI implements LoanStorageResource {
     return anonymizeLoansActionHistorySql + "; " + anonymizeLoansSql;
   }
 
-  private Handler<AsyncResult<String>> resultHandlerFrom(
-    Consumer<String> onSuccess,
-    Consumer<Throwable> onFailure) {
-
-    return reply -> {
-      try {
-        if(reply.succeeded()) {
-          onSuccess.accept(reply.result());
-        }
-        else {
-          onFailure.accept(reply.cause());
-        }
-      }
-      catch(Exception e) {
-        onFailure.accept(e);
-      }
-    };
-  }
 }
