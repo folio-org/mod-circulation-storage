@@ -256,12 +256,12 @@ public class LoansAPI implements LoanStorageResource {
   public void postLoanStorageLoansAnonymizeByUserId(
     @NotNull String userId,
     Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
+    Handler<AsyncResult<Response>> responseHandler,
     Context vertxContext) {
 
     final ServerErrorResponder serverErrorResponder =
       new ServerErrorResponder(PostLoanStorageLoansAnonymizeByUserIdResponse
-        ::withPlainInternalServerError, asyncResultHandler);
+        ::withPlainInternalServerError, responseHandler);
 
     vertxContext.runOnContext(v -> {
       try {
@@ -269,7 +269,7 @@ public class LoansAPI implements LoanStorageResource {
           final Errors errors = ValidationHelper.createValidationErrorMessage(
             "userId", userId, "Invalid user ID, should be a UUID");
 
-          asyncResultHandler.handle(succeededFuture(
+          responseHandler.handle(succeededFuture(
             LoanStorageResource.PostLoanStorageLoansAnonymizeByUserIdResponse
               .withJsonUnprocessableEntity(errors)));
           return;
@@ -286,29 +286,8 @@ public class LoansAPI implements LoanStorageResource {
         log.info(String.format("Anonymization SQL: %s", combinedAnonymizationSql));
 
         postgresClient.mutate(combinedAnonymizationSql,
-          reply -> {
-            try {
-              if(reply.succeeded()) {
-                asyncResultHandler.handle(succeededFuture(
-                  LoanStorageResource.PostLoanStorageLoansAnonymizeByUserIdResponse
-                    .withNoContent()));
-              }
-              else {
-                if(reply.cause() != null) {
-                  log.error(reply.cause(), reply.cause().getMessage());
-                  serverErrorResponder.withError(reply.cause());
-                }
-                else {
-                  log.error("Unknown error occurred");
-                  serverErrorResponder.withMessage("Unknown error occurred");
-                }
-              }
-            }
-            catch(Exception e) {
-              log.error(e, e.getMessage());
-              serverErrorResponder.withError(e);
-            }
-        });
+          executeAnonymizationSQLResultHandler(responseHandler,
+            serverErrorResponder));
       }
       catch(Exception e) {
         log.error(e, e.getMessage());
@@ -774,5 +753,34 @@ public class LoansAPI implements LoanStorageResource {
 
     //Loan action history needs to go first, as needs to be for specific loans
     return anonymizeLoansActionHistorySql + "; " + anonymizeLoansSql;
+  }
+
+  private Handler<AsyncResult<String>> executeAnonymizationSQLResultHandler(
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    ServerErrorResponder serverErrorResponder) {
+    
+    return reply -> {
+      try {
+        if(reply.succeeded()) {
+          asyncResultHandler.handle(succeededFuture(
+            PostLoanStorageLoansAnonymizeByUserIdResponse
+              .withNoContent()));
+        }
+        else {
+          if(reply.cause() != null) {
+            log.error(reply.cause(), reply.cause().getMessage());
+            serverErrorResponder.withError(reply.cause());
+          }
+          else {
+            log.error("Unknown error occurred");
+            serverErrorResponder.withMessage("Unknown error occurred");
+          }
+        }
+      }
+      catch(Exception e) {
+        log.error(e, e.getMessage());
+        serverErrorResponder.withError(e);
+      }
+    };
   }
 }
