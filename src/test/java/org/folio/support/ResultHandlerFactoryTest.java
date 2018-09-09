@@ -6,6 +6,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.Test;
 
@@ -53,5 +54,25 @@ public class ResultHandlerFactoryTest {
 
     assertThat("Success consumer should not be called",
       onSuccessCalled.get(), is(false));
+  }
+
+  @Test
+  public void shouldExecuteFailureConsumerOnExceptionInSuccessConsumer() {
+    final ResultHandlerFactory resultHandlerFactory = new ResultHandlerFactory();
+
+    final RuntimeException expectedException
+      = new RuntimeException("Something went wrong in success handler");
+
+    AtomicReference<Throwable> receivedException = new AtomicReference<>();
+
+    final Handler<AsyncResult<String>> resultHandler =
+      resultHandlerFactory.when(
+        s -> { throw expectedException; },
+        receivedException::set);
+
+    resultHandler.handle(succeededFuture("foo"));
+
+    assertThat("Failure consumer should be called with exception",
+      receivedException.get(), is(expectedException));
   }
 }
