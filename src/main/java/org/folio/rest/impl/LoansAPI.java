@@ -44,7 +44,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
@@ -263,7 +262,7 @@ public class LoansAPI implements LoanStorageResource {
 
     final ServerErrorResponder serverErrorResponder =
       new ServerErrorResponder(PostLoanStorageLoansAnonymizeByUserIdResponse
-        ::withPlainInternalServerError, responseHandler);
+        ::withPlainInternalServerError, responseHandler, log);
 
     vertxContext.runOnContext(v -> {
       try {
@@ -291,19 +290,9 @@ public class LoansAPI implements LoanStorageResource {
           new ResultHandlerFactory().when(
             s -> responseHandler.handle(succeededFuture(
               PostLoanStorageLoansAnonymizeByUserIdResponse.withNoContent())),
-            e -> {
-                if(e != null) {
-                  log.error(e, e.getMessage());
-                  serverErrorResponder.withError(e);
-                }
-                else {
-                  log.error("Unknown error occurred");
-                  serverErrorResponder.withMessage("Unknown error occurred");
-                }
-              }));
+            serverErrorResponder::withError));
       }
       catch(Exception e) {
-        log.error(e, e.getMessage());
         serverErrorResponder.withError(e);
       }
     });

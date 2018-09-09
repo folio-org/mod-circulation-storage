@@ -3,6 +3,7 @@ package org.folio.support;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import java.lang.invoke.MethodHandles;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -13,8 +14,12 @@ import javax.ws.rs.core.Response;
 import org.junit.Test;
 
 import io.vertx.core.AsyncResult;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 public class ServerErrorResponderTest {
+  private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
   @Test
   public void shouldRespondWithMessage()
     throws InterruptedException,
@@ -26,7 +31,7 @@ public class ServerErrorResponderTest {
 
     final ServerErrorResponder responder = new ServerErrorResponder(
       s -> Response.serverError().entity(s).build(),
-      responseFuture::complete);
+      responseFuture::complete, log);
 
     responder.withMessage("Something went wrong");
 
@@ -48,7 +53,7 @@ public class ServerErrorResponderTest {
 
     final ServerErrorResponder responder = new ServerErrorResponder(
       s -> Response.serverError().entity(s).build(),
-      responseFuture::complete);
+      responseFuture::complete, log);
 
     responder.withError(new RuntimeException("An exceptional occurrence"));
 
@@ -68,9 +73,9 @@ public class ServerErrorResponderTest {
     final CompletableFuture<AsyncResult<Response>> responseFuture
       = new CompletableFuture<>();
 
-    final InternalErrorResponder responder = new InternalErrorResponder(
+    final ServerErrorResponder responder = new ServerErrorResponder(
       s -> Response.serverError().entity(s).build(),
-      responseFuture::complete);
+      responseFuture::complete, log);
 
     responder.withError(null);
 
