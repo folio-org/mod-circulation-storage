@@ -265,9 +265,10 @@ public class LoansAPI implements LoanStorageResource {
       new ServerErrorResponder(PostLoanStorageLoansAnonymizeByUserIdResponse
         ::withPlainInternalServerError, responseHandler, log);
 
-    final VertxContextRunner runner = new VertxContextRunner();
+    final VertxContextRunner runner = new VertxContextRunner(
+      vertxContext, serverErrorResponder::withError);
 
-    runner.runOnContext(vertxContext, serverErrorResponder::withError, () -> {
+    runner.runOnContext(() -> {
       if(!UUIDValidation.isValidUUID(userId)) {
         final Errors errors = ValidationHelper.createValidationErrorMessage(
           "userId", userId, "Invalid user ID, should be a UUID");

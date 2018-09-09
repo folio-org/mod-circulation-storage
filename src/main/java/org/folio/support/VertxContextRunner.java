@@ -5,17 +5,24 @@ import java.util.function.Consumer;
 import io.vertx.core.Context;
 
 public class VertxContextRunner {
-  public void runOnContext(
-    Context vertxContext,
-    Consumer<Throwable> onError,
-    Runnable runnable) {
+  private final Context vertxContext;
+  private final Consumer<Throwable> onError;
 
-    vertxContext.runOnContext(v -> {
+  public VertxContextRunner(
+    Context vertxContext,
+    Consumer<Throwable> onError) {
+
+    this.vertxContext = vertxContext;
+    this.onError = onError;
+  }
+
+  public void runOnContext(Runnable runnable) {
+    this.vertxContext.runOnContext(v -> {
       try {
         runnable.run();
       }
       catch(Exception e) {
-        onError.accept(e);
+        this.onError.accept(e);
       }
     });
   }
