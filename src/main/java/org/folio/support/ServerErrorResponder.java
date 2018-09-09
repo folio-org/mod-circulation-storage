@@ -22,7 +22,12 @@ public class ServerErrorResponder {
   }
 
   public void withError(Throwable error) {
-    withMessage(error.getMessage());
+    if(error == null) {
+      withMessage("Unknown error cause");
+    }
+    else {
+      withMessage(error.getMessage());
+    }
   }
 
   public void withMessage(String message) {

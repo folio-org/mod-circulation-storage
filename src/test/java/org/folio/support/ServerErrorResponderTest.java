@@ -58,4 +58,26 @@ public class ServerErrorResponderTest {
     assertThat(result.result().getStatus(), is(500));
     assertThat(result.result().getEntity(), is("An exceptional occurrence"));
   }
+
+  @Test
+  public void shouldRespondWhenErrorIsNull()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    final CompletableFuture<AsyncResult<Response>> responseFuture
+      = new CompletableFuture<>();
+
+    final InternalErrorResponder responder = new InternalErrorResponder(
+      s -> Response.serverError().entity(s).build(),
+      responseFuture::complete);
+
+    responder.withError(null);
+
+    final AsyncResult<Response> result = responseFuture.get(1, TimeUnit.SECONDS);
+
+    assertThat("Should succeed", result.succeeded(), is(true));
+    assertThat(result.result().getStatus(), is(500));
+    assertThat(result.result().getEntity(), is("Unknown error cause"));
+  }
 }
