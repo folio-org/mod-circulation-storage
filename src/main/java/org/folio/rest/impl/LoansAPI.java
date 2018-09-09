@@ -32,6 +32,7 @@ import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
+import org.folio.support.ServerErrorResponder;
 import org.folio.support.UUIDValidation;
 import org.joda.time.DateTime;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
@@ -258,6 +259,10 @@ public class LoansAPI implements LoanStorageResource {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
+    final ServerErrorResponder serverErrorResponder =
+      new ServerErrorResponder(PostLoanStorageLoansAnonymizeByUserIdResponse
+        ::withPlainInternalServerError, asyncResultHandler);
+
     vertxContext.runOnContext(v -> {
       try {
         if(!UUIDValidation.isValidUUID(userId)) {
@@ -282,32 +287,32 @@ public class LoansAPI implements LoanStorageResource {
 
         postgresClient.mutate(combinedAnonymizationSql,
           reply -> {
-            if(reply.succeeded()) {
-              asyncResultHandler.handle(succeededFuture(
-                LoanStorageResource.PostLoanStorageLoansAnonymizeByUserIdResponse
-                  .withNoContent()));
-            }
-            else {
-              if(reply.cause() != null) {
-                log.error(reply.cause(), reply.cause().getMessage());
+            try {
+              if(reply.succeeded()) {
                 asyncResultHandler.handle(succeededFuture(
                   LoanStorageResource.PostLoanStorageLoansAnonymizeByUserIdResponse
-                    .withPlainInternalServerError(reply.cause().getMessage())));
+                    .withNoContent()));
               }
               else {
-                log.error("Unknown error occurred");
-                asyncResultHandler.handle(succeededFuture(
-                  LoanStorageResource.PostLoanStorageLoansAnonymizeByUserIdResponse
-                    .withPlainInternalServerError("Unknown error occurred")));
+                if(reply.cause() != null) {
+                  log.error(reply.cause(), reply.cause().getMessage());
+                  serverErrorResponder.withError(reply.cause());
+                }
+                else {
+                  log.error("Unknown error occurred");
+                  serverErrorResponder.withMessage("Unknown error occurred");
+                }
               }
+            }
+            catch(Exception e) {
+              log.error(e, e.getMessage());
+              serverErrorResponder.withError(e);
             }
         });
       }
       catch(Exception e) {
         log.error(e, e.getMessage());
-        asyncResultHandler.handle(succeededFuture(
-          LoanStorageResource.PostLoanStorageLoansAnonymizeByUserIdResponse
-            .withPlainInternalServerError(e.getCause().getMessage())));
+        serverErrorResponder.withError(e);
       }
     });
   }

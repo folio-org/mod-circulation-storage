@@ -325,7 +325,7 @@
           </excludes>
           <includes>
             <include>org/folio/rest/api/StorageTestSuite.java</include>
-            <include>org/folio/rest/**</include>
+            <include>org/folio/**</include>
           </includes>
         </configuration>
       </plugin>
