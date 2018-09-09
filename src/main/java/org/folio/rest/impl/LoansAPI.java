@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.UUID;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 import javax.validation.constraints.NotNull;
@@ -36,6 +35,7 @@ import org.folio.rest.tools.utils.ValidationHelper;
 import org.folio.support.ResultHandlerFactory;
 import org.folio.support.ServerErrorResponder;
 import org.folio.support.UUIDValidation;
+import org.folio.support.VertxContextRunner;
 import org.joda.time.DateTime;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
@@ -265,7 +265,9 @@ public class LoansAPI implements LoanStorageResource {
       new ServerErrorResponder(PostLoanStorageLoansAnonymizeByUserIdResponse
         ::withPlainInternalServerError, responseHandler, log);
 
-    runOnContext(vertxContext, serverErrorResponder::withError, () -> {
+    final VertxContextRunner runner = new VertxContextRunner();
+
+    runner.runOnContext(vertxContext, serverErrorResponder::withError, () -> {
       if(!UUIDValidation.isValidUUID(userId)) {
         final Errors errors = ValidationHelper.createValidationErrorMessage(
           "userId", userId, "Invalid user ID, should be a UUID");
@@ -753,18 +755,4 @@ public class LoansAPI implements LoanStorageResource {
     return anonymizeLoansActionHistorySql + "; " + anonymizeLoansSql;
   }
 
-  private void runOnContext(
-    Context vertxContext,
-    Consumer<Throwable> onError,
-    Runnable runnable) {
-
-    vertxContext.runOnContext(v -> {
-      try {
-        runnable.run();
-      }
-      catch(Exception e) {
-        onError.accept(e);
-      }
-    });
-  }
 }
