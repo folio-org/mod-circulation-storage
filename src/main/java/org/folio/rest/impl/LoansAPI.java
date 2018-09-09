@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import javax.validation.constraints.NotNull;
@@ -264,37 +265,32 @@ public class LoansAPI implements LoanStorageResource {
       new ServerErrorResponder(PostLoanStorageLoansAnonymizeByUserIdResponse
         ::withPlainInternalServerError, responseHandler, log);
 
-    vertxContext.runOnContext(v -> {
-      try {
-        if(!UUIDValidation.isValidUUID(userId)) {
-          final Errors errors = ValidationHelper.createValidationErrorMessage(
-            "userId", userId, "Invalid user ID, should be a UUID");
+    runOnContext(vertxContext, serverErrorResponder::withError, () -> {
+      if(!UUIDValidation.isValidUUID(userId)) {
+        final Errors errors = ValidationHelper.createValidationErrorMessage(
+          "userId", userId, "Invalid user ID, should be a UUID");
 
-          responseHandler.handle(succeededFuture(
-            LoanStorageResource.PostLoanStorageLoansAnonymizeByUserIdResponse
-              .withJsonUnprocessableEntity(errors)));
-          return;
-        }
-
-        final String tenantId = TenantTool.tenantId(okapiHeaders);
-
-        final PostgresClient postgresClient = PostgresClient.getInstance(
-            vertxContext.owner(), tenantId);
-
-        final String combinedAnonymizationSql = createAnonymizationSQL(userId,
-          tenantId);
-
-        log.info(String.format("Anonymization SQL: %s", combinedAnonymizationSql));
-
-        postgresClient.mutate(combinedAnonymizationSql,
-          new ResultHandlerFactory().when(
-            s -> responseHandler.handle(succeededFuture(
-              PostLoanStorageLoansAnonymizeByUserIdResponse.withNoContent())),
-            serverErrorResponder::withError));
+        responseHandler.handle(succeededFuture(
+          PostLoanStorageLoansAnonymizeByUserIdResponse
+            .withJsonUnprocessableEntity(errors)));
+        return;
       }
-      catch(Exception e) {
-        serverErrorResponder.withError(e);
-      }
+
+      final String tenantId = TenantTool.tenantId(okapiHeaders);
+
+      final PostgresClient postgresClient = PostgresClient.getInstance(
+          vertxContext.owner(), tenantId);
+
+      final String combinedAnonymizationSql = createAnonymizationSQL(userId,
+        tenantId);
+
+      log.info(String.format("Anonymization SQL: %s", combinedAnonymizationSql));
+
+      postgresClient.mutate(combinedAnonymizationSql,
+        new ResultHandlerFactory().when(
+          s -> responseHandler.handle(succeededFuture(
+            PostLoanStorageLoansAnonymizeByUserIdResponse.withNoContent())),
+          serverErrorResponder::withError));
     });
   }
 
@@ -757,4 +753,18 @@ public class LoansAPI implements LoanStorageResource {
     return anonymizeLoansActionHistorySql + "; " + anonymizeLoansSql;
   }
 
+  private void runOnContext(
+    Context vertxContext,
+    Consumer<Throwable> onError,
+    Runnable runnable) {
+
+    vertxContext.runOnContext(v -> {
+      try {
+        runnable.run();
+      }
+      catch(Exception e) {
+        onError.accept(e);
+      }
+    });
+  }
 }
