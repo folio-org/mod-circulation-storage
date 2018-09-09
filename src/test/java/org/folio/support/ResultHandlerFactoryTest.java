@@ -4,6 +4,7 @@ import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.IsInstanceOf.instanceOf;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -74,5 +75,45 @@ public class ResultHandlerFactoryTest {
 
     assertThat("Failure consumer should be called with exception",
       receivedException.get(), is(expectedException));
+  }
+
+  @Test
+  public void shouldExecuteFailureConsumerWhenResultIsNull() {
+    final ResultHandlerFactory resultHandlerFactory = new ResultHandlerFactory();
+
+    AtomicReference<Throwable> receivedException = new AtomicReference<>();
+
+    final Handler<AsyncResult<String>> resultHandler =
+      resultHandlerFactory.when(
+        s -> { throw new RuntimeException("Should not be called"); },
+        receivedException::set);
+
+    resultHandler.handle(null);
+
+    assertThat("Failure consumer should be called with runtime exception",
+      receivedException.get(), instanceOf(RuntimeException.class));
+
+    assertThat("Exception should describe unknown error cause",
+      receivedException.get().getMessage(), is("Result should not be null"));
+  }
+
+  @Test
+  public void shouldExecuteFailureConsumerWhenFailureCauseIsNull() {
+    final ResultHandlerFactory resultHandlerFactory = new ResultHandlerFactory();
+
+    AtomicReference<Throwable> receivedException = new AtomicReference<>();
+
+    final Handler<AsyncResult<String>> resultHandler =
+      resultHandlerFactory.when(
+        s -> { throw new RuntimeException("Should not be called"); },
+        receivedException::set);
+
+    resultHandler.handle(failedFuture((Throwable) null));
+
+    assertThat("Failure consumer should be called with runtime exception",
+      receivedException.get(), instanceOf(RuntimeException.class));
+
+    assertThat("Exception should describe unknown error cause",
+      receivedException.get().getMessage(), is("Unknown error cause"));
   }
 }
