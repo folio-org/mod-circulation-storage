@@ -26,9 +26,9 @@ public class ServerErrorResponder {
   }
 
   public void withError(Throwable error) {
-    if (error == null) {
-      final String unknownErrorMessage = "Unknown error cause";
+    final String unknownErrorMessage = "Unknown error cause";
 
+    if (new ServerError().isUnknown(error)) {
       log.error(unknownErrorMessage);
       withMessage(unknownErrorMessage);
     } else {

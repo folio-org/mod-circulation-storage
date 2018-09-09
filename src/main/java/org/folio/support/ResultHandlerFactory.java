@@ -4,7 +4,6 @@ import java.util.function.Consumer;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
-import io.vertx.core.impl.NoStackTraceThrowable;
 
 public class ResultHandlerFactory {
   public Handler<AsyncResult<String>> when(
@@ -35,9 +34,6 @@ public class ResultHandlerFactory {
   }
 
   private boolean hasNoCause(AsyncResult<String> result) {
-    //When a failed vert.x future received a null cause,
-    // it is replaced by an instance of NoStackTraceThrowable
-    return result.cause() == null
-      || result.cause() instanceof NoStackTraceThrowable;
+    return new ServerError().isUnknown(result.cause());
   }
 }
