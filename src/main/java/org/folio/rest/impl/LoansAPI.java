@@ -33,6 +33,7 @@ import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
+import org.folio.support.UUIDValidation;
 import org.joda.time.DateTime;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
@@ -259,9 +260,7 @@ public class LoansAPI implements LoanStorageResource {
 
     vertxContext.runOnContext(v -> {
       try {
-        final String uuidPattern = "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$";
-
-        if(!Pattern.matches(uuidPattern, userId)) {
+        if(!UUIDValidation.isValidUUID(userId)) {
           final Errors errors = ValidationHelper.createValidationErrorMessage(
             "userId", userId, "Invalid user ID, should be a UUID");
 
