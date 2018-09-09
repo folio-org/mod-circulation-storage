@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.core.Response;
@@ -258,6 +259,18 @@ public class LoansAPI implements LoanStorageResource {
 
     vertxContext.runOnContext(v -> {
       try {
+        final String uuidPattern = "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$";
+
+        if(!Pattern.matches(uuidPattern, userId)) {
+          final Errors errors = ValidationHelper.createValidationErrorMessage(
+            "userId", userId, "Invalid user ID, should be a UUID");
+
+          asyncResultHandler.handle(succeededFuture(
+            LoanStorageResource.PostLoanStorageLoansAnonymizeByUserIdResponse
+              .withJsonUnprocessableEntity(errors)));
+          return;
+        }
+
         final String tenantId = TenantTool.tenantId(okapiHeaders);
 
         final PostgresClient postgresClient = PostgresClient.getInstance(

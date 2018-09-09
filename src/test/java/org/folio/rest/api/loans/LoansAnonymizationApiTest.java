@@ -3,6 +3,10 @@ package org.folio.rest.api.loans;
 import static org.folio.rest.support.http.InterfaceUrls.loanStorageUrl;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNoContent;
 import static org.folio.rest.support.matchers.UUIDMatchers.isUUID;
+import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
+import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasParameter;
+import static org.folio.rest.support.matchers.ValidationResponseMatchers.isValidationResponseWhich;
+import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
@@ -51,7 +55,7 @@ public class LoansAnonymizationApiTest extends ApiTests {
   }
 
   @Test
-  public void shouldSucceedEvenWhenNoLoansForUser()
+  public void shouldSucceedEvenWhenNoLoans()
     throws MalformedURLException,
     ExecutionException,
     InterruptedException,
@@ -394,5 +398,24 @@ public class LoansAnonymizationApiTest extends ApiTests {
     assertThat(fetchedLoanActionHistoryEntries.size(), is(openLoanIds.length));
 
     assertThat(fetchedLoanHistoryIds, containsInAnyOrder(openLoanIds));
+  }
+
+  @Test
+  public void shouldRejectInvalidUUID()
+    throws MalformedURLException,
+    ExecutionException,
+    InterruptedException,
+    TimeoutException {
+
+    final CompletableFuture<JsonResponse> postCompleted = new CompletableFuture<>();
+
+    client.post(loanStorageUrl("/anonymize/" + "foo"),
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(postCompleted));
+
+    final JsonResponse postResponse = postCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(postResponse, isValidationResponseWhich(allOf(
+      hasMessage("Invalid user ID, should be a UUID"),
+      hasParameter("userId", "foo"))));
   }
 }
