@@ -1,4 +1,4 @@
-## 6.0.0 Unreleased
+## 6.0.0 2018-09-09
 
 * Only requires `userId` for open loans (CIRCSTORE-71) 
 * Defaults loan `status` to `Open` (CIRCSTORE-71)
