@@ -22,7 +22,7 @@ public class VertxContextRunner {
         runnable.run();
       }
       catch(Exception e) {
-        this.onError.accept(e);
+        onError.accept(e);
       }
     });
   }
