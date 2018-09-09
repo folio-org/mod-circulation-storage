@@ -10,9 +10,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.HEAD;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -286,8 +288,19 @@ public class LoansAPI implements LoanStorageResource {
         log.info(String.format("Anonymization SQL: %s", combinedAnonymizationSql));
 
         postgresClient.mutate(combinedAnonymizationSql,
-          executeAnonymizationSQLResultHandler(responseHandler,
-            serverErrorResponder));
+          resultHandlerFrom(
+            s -> responseHandler.handle(succeededFuture(
+              PostLoanStorageLoansAnonymizeByUserIdResponse.withNoContent())),
+            e -> {
+                if(e != null) {
+                  log.error(e, e.getMessage());
+                  serverErrorResponder.withError(e);
+                }
+                else {
+                  log.error("Unknown error occurred");
+                  serverErrorResponder.withMessage("Unknown error occurred");
+                }
+              }));
       }
       catch(Exception e) {
         log.error(e, e.getMessage());
@@ -755,31 +768,21 @@ public class LoansAPI implements LoanStorageResource {
     return anonymizeLoansActionHistorySql + "; " + anonymizeLoansSql;
   }
 
-  private Handler<AsyncResult<String>> executeAnonymizationSQLResultHandler(
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    ServerErrorResponder serverErrorResponder) {
-    
+  private Handler<AsyncResult<String>> resultHandlerFrom(
+    Consumer<String> onSuccess,
+    Consumer<Throwable> onFailure) {
+
     return reply -> {
       try {
         if(reply.succeeded()) {
-          asyncResultHandler.handle(succeededFuture(
-            PostLoanStorageLoansAnonymizeByUserIdResponse
-              .withNoContent()));
+          onSuccess.accept(reply.result());
         }
         else {
-          if(reply.cause() != null) {
-            log.error(reply.cause(), reply.cause().getMessage());
-            serverErrorResponder.withError(reply.cause());
-          }
-          else {
-            log.error("Unknown error occurred");
-            serverErrorResponder.withMessage("Unknown error occurred");
-          }
+          onFailure.accept(reply.cause());
         }
       }
       catch(Exception e) {
-        log.error(e, e.getMessage());
-        serverErrorResponder.withError(e);
+        onFailure.accept(e);
       }
     };
   }
