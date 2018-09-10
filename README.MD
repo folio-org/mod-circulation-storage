@@ -55,6 +55,14 @@ for a given item can be at a particular position in the request queue for that i
 HTTP Requests (either POST or PUT) which could result two open requests with the
 same `itemId` and `position` should be rejected with a error (422) response
 
+### Known Limitations
+
+#### Anonymization SQL
+
+At the moment, this is constructed with string concatenation (it will hopefully soon be replaced by prepared statements).
+
+The `userId` parameter is checked to take the form of a UUID to try to reduce the exposure of this.
+
 ## Prerequisites
 
 ## Required

@@ -2,14 +2,13 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>mod-circulation-storage</artifactId>
   <groupId>org.folio</groupId>
-  <version>6.0.1-SNAPSHOT</version>
+  <version>6.1.0-SNAPSHOT</version>
   <licenses>
     <license>
       <name>Apache License 2.0</name>
       <url>http://spdx.org/licenses/Apache-2.0</url>
     </license>
   </licenses>
-
   <repositories>
     <repository>
       <id>folio-nexus</id>
@@ -322,11 +321,11 @@
         <version>2.19.1</version>
         <configuration>
           <excludes>
-            <exclude>org/folio/rest/api/*Test.java</exclude>
+            <exclude>org/folio/rest/api/**/*Test.java</exclude>
           </excludes>
           <includes>
             <include>org/folio/rest/api/StorageTestSuite.java</include>
-            <include>org/folio/rest/**</include>
+            <include>org/folio/**</include>
           </includes>
         </configuration>
       </plugin>

@@ -17,9 +17,11 @@ import org.folio.rest.api.StorageTestSuite;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonResponse;
+import org.folio.rest.support.MultipleRecords;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.TextResponse;
 import org.folio.rest.support.builders.Builder;
+import org.folio.rest.support.builders.LoanRequestBuilder;
 
 import io.vertx.core.json.JsonObject;
 
@@ -35,6 +37,15 @@ public class AssertingRecordClient {
     this.client = client;
     this.tenantId = tenantId;
     this.urlMaker = urlMaker;
+  }
+
+  public IndividualResource create(LoanRequestBuilder builder)
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    return create(builder.create());
   }
 
   public IndividualResource create(JsonObject representation)
@@ -71,6 +82,15 @@ public class AssertingRecordClient {
       ResponseHandler.json(createCompleted));
 
     return createCompleted.get(5, TimeUnit.SECONDS);
+  }
+
+  public IndividualResource getById(String id)
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    return getById(UUID.fromString(id));
   }
 
   public IndividualResource getById(UUID id)
@@ -172,5 +192,44 @@ public class AssertingRecordClient {
     TextResponse deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat("Failed to delete record", deleteResponse, isNoContent());
+  }
+
+  public MultipleRecords<JsonObject> getMany(String cqlQuery)
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    final CompletableFuture<JsonResponse> fetchManyCompleted = new CompletableFuture<>();
+
+    this.client.get(urlMaker.combine(""),
+      "query=" + cqlQuery, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(fetchManyCompleted));
+
+    final JsonResponse fetchedLoansResponse = fetchManyCompleted
+      .get(5, TimeUnit.SECONDS);
+
+    assertThat(fetchedLoansResponse, isOk());
+
+    return MultipleRecords.fromJson(fetchedLoansResponse.getJson(), "loans");
+  }
+
+  public MultipleRecords<JsonObject> getAll()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    final CompletableFuture<JsonResponse> fetchManyCompleted = new CompletableFuture<>();
+
+    this.client.get(urlMaker.combine(""), StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(fetchManyCompleted));
+
+    final JsonResponse fetchedLoansResponse = fetchManyCompleted
+      .get(5, TimeUnit.SECONDS);
+
+    assertThat(fetchedLoansResponse, isOk());
+
+    return MultipleRecords.fromJson(fetchedLoansResponse.getJson(), "loans");
   }
 }

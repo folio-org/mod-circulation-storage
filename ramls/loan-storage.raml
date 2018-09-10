@@ -1,6 +1,6 @@
 #%RAML 0.8
 title: Loan Storage
-version: v5.0
+version: v5.1
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost:9130
 
@@ -56,6 +56,21 @@ resourceTypes:
           body:
             text/plain:
               example: "Internal server error, contact administrator"
+    /anonymize/{userId}:
+      post:
+        is: [validate]
+        responses:
+          204:
+            description: "Closed loans for this user have been anonymized"
+          500:
+            description: "Internal server error, e.g. due to misconfiguration"
+            body:
+              text/plain:
+                example: "Internal server error, contact administrator"
+          400:
+            description: "Bad request, e.g. malformed request body or query parameter."
+            body:
+              text/plain:
     /{loanId}:
       type:
         collection-item:

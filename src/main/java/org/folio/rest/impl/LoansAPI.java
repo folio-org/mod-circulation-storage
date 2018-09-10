@@ -12,6 +12,7 @@ import java.util.StringJoiner;
 import java.util.UUID;
 import java.util.function.Function;
 
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -31,6 +32,10 @@ import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
+import org.folio.support.ResultHandlerFactory;
+import org.folio.support.ServerErrorResponder;
+import org.folio.support.UUIDValidation;
+import org.folio.support.VertxContextRunner;
 import org.joda.time.DateTime;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
@@ -46,6 +51,7 @@ import io.vertx.core.logging.LoggerFactory;
 public class LoansAPI implements LoanStorageResource {
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
+  private static final String MODULE_NAME = "mod_circulation_storage";
   private static final String LOAN_TABLE = "loan";
   //TODO: Change loan history table name when can be configured, used to be "loan_history_table"
   private static final String LOAN_HISTORY_TABLE = "audit_loan";
@@ -72,7 +78,7 @@ public class LoansAPI implements LoanStorageResource {
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
         postgresClient.mutate(String.format("TRUNCATE TABLE %s_%s.loan",
-          tenantId, "mod_circulation_storage"),
+          tenantId, MODULE_NAME),
           reply -> asyncResultHandler.handle(succeededFuture(
             DeleteLoanStorageLoansResponse.withNoContent())));
       }
@@ -246,6 +252,49 @@ public class LoansAPI implements LoanStorageResource {
         LoanStorageResource.PostLoanStorageLoansResponse
           .withPlainInternalServerError(e.getMessage())));
     }
+  }
+
+  @Override
+  public void postLoanStorageLoansAnonymizeByUserId(
+    @NotNull String userId,
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> responseHandler,
+    Context vertxContext) {
+
+    final ServerErrorResponder serverErrorResponder =
+      new ServerErrorResponder(PostLoanStorageLoansAnonymizeByUserIdResponse
+        ::withPlainInternalServerError, responseHandler, log);
+
+    final VertxContextRunner runner = new VertxContextRunner(
+      vertxContext, serverErrorResponder::withError);
+
+    runner.runOnContext(() -> {
+      if(!UUIDValidation.isValidUUID(userId)) {
+        final Errors errors = ValidationHelper.createValidationErrorMessage(
+          "userId", userId, "Invalid user ID, should be a UUID");
+
+        responseHandler.handle(succeededFuture(
+          PostLoanStorageLoansAnonymizeByUserIdResponse
+            .withJsonUnprocessableEntity(errors)));
+        return;
+      }
+
+      final String tenantId = TenantTool.tenantId(okapiHeaders);
+
+      final PostgresClient postgresClient = PostgresClient.getInstance(
+          vertxContext.owner(), tenantId);
+
+      final String combinedAnonymizationSql = createAnonymizationSQL(userId,
+        tenantId);
+
+      log.info(String.format("Anonymization SQL: %s", combinedAnonymizationSql));
+
+      postgresClient.mutate(combinedAnonymizationSql,
+        new ResultHandlerFactory().when(
+          s -> responseHandler.handle(succeededFuture(
+            PostLoanStorageLoansAnonymizeByUserIdResponse.withNoContent())),
+          serverErrorResponder::withError));
+    });
   }
 
   @Validate
@@ -681,4 +730,30 @@ public class LoansAPI implements LoanStorageResource {
     asyncResultHandler.handle(succeededFuture(
       responseCreator.apply(errors)));
   }
+
+  private String createAnonymizationSQL(
+    @NotNull String userId,
+    String tenantId) {
+
+    final String anonymizeLoansSql = String.format(
+      "UPDATE %s_%s.loan SET jsonb = jsonb - 'userId'"
+        + " WHERE jsonb->>'userId' = '" + userId + "'"
+        + " AND jsonb->'status'->>'name' = 'Closed'",
+      tenantId, MODULE_NAME);
+
+    //Only anonymize the history for loans that are currently closed
+    //meaning that we need to refer to loans in this query
+    final String anonymizeLoansActionHistorySql = String.format(
+      "UPDATE %s_%s.%s SET jsonb = jsonb - 'userId'"
+        + " WHERE jsonb->>'userId' = '" + userId + "'"
+        + " AND jsonb->>'id' IN (SELECT l.jsonb->>'id'" +
+        " FROM %s_%s.loan l WHERE l.jsonb->>'userId' = '" + userId + "'"
+        + " AND l.jsonb->'status'->>'name' = 'Closed')",
+      tenantId, MODULE_NAME, LOAN_HISTORY_TABLE,
+      tenantId, MODULE_NAME);
+
+    //Loan action history needs to go first, as needs to be for specific loans
+    return anonymizeLoansActionHistorySql + "; " + anonymizeLoansSql;
+  }
+
 }
