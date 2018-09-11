@@ -1,4 +1,4 @@
-## 6.1.0 2018-09-10
+## 6.1.0 2018-09-11
 
 * Can anonymize all closed loans for a single user (CIRCSTORE-73)
 * Provides `loan-stoage` 5.1 (CIRCSTORE-73)
