@@ -5,6 +5,8 @@
   "itemId": "cb20f34f-b773-462f-a091-b233cc96b9e6",
   "loanDate": "2017-03-01T23:11:00-01:00",
   "dueDate": "2017-03-15T23:11:00-01:00",
+  "checkoutServicePointId": "8bb53832-c9fb-47ef-986d-5b1a498a8b30",
+  "checkinServicePointId": "8bb53832-c9fb-47ef-986d-5b1a498a8b30",
   "status": {
     "name": "Open"
   },

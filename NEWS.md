@@ -1,3 +1,7 @@
+## 6.2.0 UNRELEASED
+
+* Added `checkinServicePointId` and `checkoutServicePointId` to the loan schema (CIRCSTORE-77)
+
 ## 6.1.0 2018-09-11
 
 * Can anonymize all closed loans for a single user (CIRCSTORE-73)
