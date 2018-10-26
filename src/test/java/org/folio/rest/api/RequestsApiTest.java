@@ -82,6 +82,7 @@ public class RequestsApiTest extends ApiTests {
     UUID itemId = UUID.randomUUID();
     UUID requesterId = UUID.randomUUID();
     UUID proxyId = UUID.randomUUID();
+    UUID pickupServicePointId = UUID.randomUUID();
     DateTime requestDate = new DateTime(2017, 7, 22, 10, 22, 54, DateTimeZone.UTC);
 
     JsonObject requestRequest = new RequestRequestBuilder()
@@ -99,6 +100,7 @@ public class RequestsApiTest extends ApiTests {
       .withProxy("Stuart", "Rebecca", "6059539205")
       .withStatus(OPEN_NOT_YET_FILLED)
       .withPosition(1)
+      .withPickupServicePointId(pickupServicePointId)
       .create();
 
     client.post(requestStorageUrl(),
@@ -123,6 +125,7 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getString("holdShelfExpirationDate"), is("2017-08-31"));
     assertThat(representation.getString("status"), is(OPEN_NOT_YET_FILLED));
     assertThat(representation.getInteger("position"), is(1));
+    assertThat(representation.getString("pickupServicePointId"), is(pickupServicePointId.toString()));
 
     assertThat(representation.containsKey("item"), is(true));
     assertThat(representation.getJsonObject("item").getString("title"), is("Nod"));
