@@ -97,6 +97,10 @@
         "barcode": {
           "description": "barcode of the requesting patron",
           "type": "string"
+        },
+        "patronGroup" : {
+          "description": "the patrongroup of the requesting patron",
+          "type": "string"
         }
       },
       "additionalProperties": false
@@ -119,6 +123,10 @@
         },
         "barcode": {
           "description": "barcode of the proxy patron",
+          "type": "string"
+        },
+        "patronGroup": {
+          "description": "patrongroup of the proxy patron",
           "type": "string"
         }
       },
