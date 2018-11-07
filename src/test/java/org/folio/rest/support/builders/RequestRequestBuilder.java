@@ -117,7 +117,7 @@ public class RequestRequestBuilder extends JsonBuilder {
     put(request, "requestExpirationDate", this.requestExpirationDate);
     put(request, "holdShelfExpirationDate", this.holdShelfExpirationDate);
     put(request, "pickupServicePointId", this.pickupServicePointId);
-    
+
     if(this.itemSummary != null) {
       final JsonObject item = new JsonObject();
 
@@ -696,7 +696,7 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position,
       this.pickupServicePointId);
   }
-  
+
   public RequestRequestBuilder withPickupServicePointId(UUID pickupServicePointId) {
     return new RequestRequestBuilder(
       this.id,
