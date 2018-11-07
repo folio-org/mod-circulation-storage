@@ -1,8 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Collection of staffSlips",
   "type": "object",
   "properties": {
     "staffSlips": {
+      "description": "List of staffSlip items",
       "id": "staffSlips",
       "type": "array",
       "items": {

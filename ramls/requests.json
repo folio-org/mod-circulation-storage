@@ -1,8 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Collection of requests",
   "type": "object",
   "properties": {
     "requests": {
+      "description": "List of request items",
       "id": "requests",
       "type": "array",
       "items": {
