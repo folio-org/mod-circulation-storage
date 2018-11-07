@@ -5,14 +5,14 @@
 ## 6.1.0 2018-09-11
 
 * Can anonymize all closed loans for a single user (CIRCSTORE-73)
-* Provides `loan-stoage` 5.1 (CIRCSTORE-73)
+* Provides `loan-storage` 5.1 (CIRCSTORE-73)
 
 ## 6.0.0 2018-09-09
 
 * Only requires `userId` for open loans (CIRCSTORE-71)
 * Defaults loan `status` to `Open` (CIRCSTORE-71)
 * Upgrades to RAML Module Builder 19.4.1 (RMB-231)
-* Provides `loan-stoage` 5.0 (CIRCSTORE-71)
+* Provides `loan-storage` 5.0 (CIRCSTORE-71)
 
 ## 5.6.0 2018-08-29
 
