@@ -10,8 +10,8 @@ import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.jaxrs.model.Requests;
-import org.folio.rest.jaxrs.resource.LoanPolicyStorageResource;
-import org.folio.rest.jaxrs.resource.RequestStorageResource;
+import org.folio.rest.jaxrs.resource.LoanPolicyStorage;
+import org.folio.rest.jaxrs.resource.RequestStorage;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
@@ -33,7 +33,7 @@ import java.util.function.Consumer;
 import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
-public class RequestsAPI implements RequestStorageResource {
+public class RequestsAPI implements RequestStorage {
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
   private static final String REQUEST_TABLE = "request";
 
@@ -54,12 +54,12 @@ public class RequestsAPI implements RequestStorageResource {
         postgresClient.mutate(String.format("TRUNCATE TABLE %s_%s.%s",
           tenantId, "mod_circulation_storage", REQUEST_TABLE),
           reply -> asyncResultHandler.handle(succeededFuture(
-            DeleteRequestStorageRequestsResponse.withNoContent())));
+            DeleteRequestStorageRequestsResponse.respond204())));
       }
       catch(Exception e) {
         asyncResultHandler.handle(succeededFuture(
           DeleteRequestStorageRequestsResponse
-            .withPlainInternalServerError(e.getMessage())));
+            .respond500WithTextPlain(e.getMessage())));
       }
     });
   }
@@ -78,7 +78,7 @@ public class RequestsAPI implements RequestStorageResource {
       log.error("Getting requests failed", e);
       asyncResultHandler.handle(succeededFuture(
         GetRequestStorageRequestsByRequestIdResponse.
-          withPlainInternalServerError(e.getMessage())));
+          respond500WithTextPlain(e.getMessage())));
     };
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
@@ -111,12 +111,12 @@ public class RequestsAPI implements RequestStorageResource {
                   pagedRequests.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
 
                   asyncResultHandler.handle(succeededFuture(
-                    GetRequestStorageRequestsResponse.withJsonOK(pagedRequests)));
+                    GetRequestStorageRequestsResponse.respond200WithApplicationJson(pagedRequests)));
                 }
                 else {
                   asyncResultHandler.handle(succeededFuture(
-                    LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
-                      withPlainInternalServerError(reply.cause().getMessage())));
+                    LoanPolicyStorage.GetLoanPolicyStorageLoanPoliciesResponse.
+                      respond500WithTextPlain(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
                 exceptionHandler.accept(e);
@@ -161,36 +161,37 @@ public class RequestsAPI implements RequestStorageResource {
 
                   asyncResultHandler.handle(succeededFuture(
                       PostRequestStorageRequestsResponse
-                        .withJsonCreated(reply.result(), stream)));
+                        .respond201WithApplicationJson(entity, 
+                          PostRequestStorageRequestsResponse.headersFor201().withLocation(reply.result()))));
                 }
                 else {
                   if(isSamePositionInQueueError(reply)) {
                     asyncResultHandler.handle(succeededFuture(
                       PostRequestStorageRequestsResponse
-                        .withJsonUnprocessableEntity(samePositionInQueueError(entity))));
+                        .respond422WithApplicationJson(samePositionInQueueError(entity))));
                   }
                   else {
                     asyncResultHandler.handle(succeededFuture(
                       PostRequestStorageRequestsResponse
-                        .withPlainInternalServerError(reply.cause().toString())));
+                        .respond500WithTextPlain(reply.cause().toString())));
                   }
                 }
               } catch (Exception e) {
                 asyncResultHandler.handle(succeededFuture(
                   PostRequestStorageRequestsResponse
-                    .withPlainInternalServerError(e.getMessage())));
+                    .respond500WithTextPlain(e.getMessage())));
               }
             });
         } catch (Exception e) {
           asyncResultHandler.handle(succeededFuture(
             PostRequestStorageRequestsResponse
-              .withPlainInternalServerError(e.getMessage())));
+              .respond500WithTextPlain(e.getMessage())));
         }
       });
     } catch (Exception e) {
       asyncResultHandler.handle(succeededFuture(
         PostRequestStorageRequestsResponse
-          .withPlainInternalServerError(e.getMessage())));
+          .respond500WithTextPlain(e.getMessage())));
     }
   }
 
@@ -206,7 +207,7 @@ public class RequestsAPI implements RequestStorageResource {
       log.error("Getting request by ID failed", e);
       asyncResultHandler.handle(succeededFuture(
         GetRequestStorageRequestsByRequestIdResponse.
-          withPlainInternalServerError(e.getMessage())));
+          respond500WithTextPlain(e.getMessage())));
     };
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
@@ -236,17 +237,17 @@ public class RequestsAPI implements RequestStorageResource {
 
                     asyncResultHandler.handle(succeededFuture(
                       GetRequestStorageRequestsByRequestIdResponse.
-                        withJsonOK(request)));
+                        respond200WithApplicationJson(request)));
                   }
                   else {
                     asyncResultHandler.handle(succeededFuture(
                       GetRequestStorageRequestsByRequestIdResponse.
-                        withPlainNotFound("Not Found")));
+                        respond404WithTextPlain("Not Found")));
                   }
                 } else {
                   asyncResultHandler.handle(succeededFuture(
                     GetRequestStorageRequestsByRequestIdResponse.
-                      withPlainInternalServerError(reply.cause().getMessage())));
+                      respond500WithTextPlain(reply.cause().getMessage())));
 
                 }
               } catch (Exception e) {
@@ -292,24 +293,24 @@ public class RequestsAPI implements RequestStorageResource {
               if(reply.succeeded()) {
                 asyncResultHandler.handle(succeededFuture(
                   DeleteRequestStorageRequestsByRequestIdResponse
-                    .withNoContent()));
+                    .respond204()));
               }
               else {
                 asyncResultHandler.handle(succeededFuture(
                   DeleteRequestStorageRequestsByRequestIdResponse
-                    .withPlainInternalServerError(reply.cause().getMessage())));
+                    .respond500WithTextPlain(reply.cause().getMessage())));
               }
             });
         } catch (Exception e) {
           asyncResultHandler.handle(succeededFuture(
             DeleteRequestStorageRequestsByRequestIdResponse
-              .withPlainInternalServerError(e.getMessage())));
+              .respond500WithTextPlain(e.getMessage())));
         }
       });
     } catch (Exception e) {
       asyncResultHandler.handle(succeededFuture(
         DeleteRequestStorageRequestsByRequestIdResponse
-          .withPlainInternalServerError(e.getMessage())));
+          .respond500WithTextPlain(e.getMessage())));
     }
   }
 
@@ -355,29 +356,29 @@ public class RequestsAPI implements RequestStorageResource {
 
                             asyncResultHandler.handle(succeededFuture(
                               PutRequestStorageRequestsByRequestIdResponse
-                                .withNoContent()));
+                                .respond204()));
                           }
                           else {
                             if (isSamePositionInQueueError(update)) {
                               asyncResultHandler.handle(succeededFuture(
                                 PutRequestStorageRequestsByRequestIdResponse
-                                  .withJsonUnprocessableEntity(samePositionInQueueError(entity))));
+                                  .respond422WithApplicationJson(samePositionInQueueError(entity))));
                             } else {
                               asyncResultHandler.handle(succeededFuture(
                                 PutRequestStorageRequestsByRequestIdResponse
-                                  .withPlainInternalServerError(reply.cause().toString())));
+                                  .respond500WithTextPlain(reply.cause().toString())));
                             }
                           }
                         } catch (Exception e) {
                           asyncResultHandler.handle(succeededFuture(
                             PutRequestStorageRequestsByRequestIdResponse
-                              .withPlainInternalServerError(e.getMessage())));
+                              .respond500WithTextPlain(e.getMessage())));
                         }
                       });
                   } catch (Exception e) {
                     asyncResultHandler.handle(succeededFuture(
                       PutRequestStorageRequestsByRequestIdResponse
-                        .withPlainInternalServerError(e.getMessage())));
+                        .respond500WithTextPlain(e.getMessage())));
                   }
                 }
                 else {
@@ -391,47 +392,47 @@ public class RequestsAPI implements RequestStorageResource {
 
                             asyncResultHandler.handle(succeededFuture(
                               PutRequestStorageRequestsByRequestIdResponse
-                                .withNoContent()));
+                                .respond204()));
                           }
                           else {
                             if (isSamePositionInQueueError(save)) {
                               asyncResultHandler.handle(succeededFuture(
                                 PutRequestStorageRequestsByRequestIdResponse
-                                  .withJsonUnprocessableEntity(samePositionInQueueError(entity))));
+                                  .respond422WithApplicationJson(samePositionInQueueError(entity))));
                             } else {
                               asyncResultHandler.handle(succeededFuture(
                                 PutRequestStorageRequestsByRequestIdResponse
-                                  .withPlainInternalServerError(reply.cause().toString())));
+                                  .respond500WithTextPlain(reply.cause().toString())));
                             }
                           }
                         } catch (Exception e) {
                           asyncResultHandler.handle(succeededFuture(
                             PutRequestStorageRequestsByRequestIdResponse
-                              .withPlainInternalServerError(e.getMessage())));
+                              .respond500WithTextPlain(e.getMessage())));
                         }
                       });
                   } catch (Exception e) {
                     asyncResultHandler.handle(succeededFuture(
                       PutRequestStorageRequestsByRequestIdResponse
-                        .withPlainInternalServerError(e.getMessage())));
+                        .respond500WithTextPlain(e.getMessage())));
                   }
                 }
               } else {
                 asyncResultHandler.handle(succeededFuture(
                   PutRequestStorageRequestsByRequestIdResponse
-                    .withPlainInternalServerError(reply.cause().getMessage())));
+                    .respond500WithTextPlain(reply.cause().getMessage())));
               }
             });
         } catch (Exception e) {
           asyncResultHandler.handle(succeededFuture(
             PutRequestStorageRequestsByRequestIdResponse
-              .withPlainInternalServerError(e.getMessage())));
+              .respond500WithTextPlain(e.getMessage())));
         }
       });
     } catch (Exception e) {
       asyncResultHandler.handle(succeededFuture(
         PutRequestStorageRequestsByRequestIdResponse
-          .withPlainInternalServerError(e.getMessage())));
+          .respond500WithTextPlain(e.getMessage())));
     }
   }
 

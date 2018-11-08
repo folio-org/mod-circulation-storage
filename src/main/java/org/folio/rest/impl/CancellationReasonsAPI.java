@@ -9,7 +9,7 @@ import io.vertx.core.logging.LoggerFactory;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.CancellationReason;
 import org.folio.rest.jaxrs.model.CancellationReasons;
-import org.folio.rest.jaxrs.resource.CancellationReasonStorageResource;
+import org.folio.rest.jaxrs.resource.CancellationReasonStorage;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
@@ -18,7 +18,6 @@ import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.PomReader;
-import org.folio.rest.tools.utils.OutStream;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
 
@@ -33,7 +32,7 @@ import static org.folio.rest.impl.Headers.TENANT_HEADER;
  *
  * @author kurt
  */
-public class CancellationReasonsAPI implements CancellationReasonStorageResource {
+public class CancellationReasonsAPI implements CancellationReasonStorage {
 
   private static final Logger logger = LoggerFactory.getLogger(CancellationReasonsAPI.class);
   private static final String TABLE_NAME = "cancellation_reason";
@@ -73,7 +72,7 @@ public class CancellationReasonsAPI implements CancellationReasonStorageResource
   public void deleteCancellationReasonStorageCancellationReasons(String lang,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
     try {
       String tenantId = okapiHeaders.get(TENANT_HEADER);
       String deleteAllQuery = String.format("DELETE FROM %s_%s.%s", tenantId,
@@ -84,7 +83,7 @@ public class CancellationReasonsAPI implements CancellationReasonStorageResource
           String message = logAndSaveError(mutateReply.cause());
           asyncResultHandler.handle(Future.succeededFuture(
               DeleteCancellationReasonStorageCancellationReasonsResponse
-              .withPlainInternalServerError(getErrorResponse(message))));
+              .respond500WithTextPlain(getErrorResponse(message))));
         } else {
           asyncResultHandler.handle(Future.succeededFuture(
               DeleteCancellationReasonStorageCancellationReasonsResponse
@@ -95,15 +94,14 @@ public class CancellationReasonsAPI implements CancellationReasonStorageResource
       String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
           DeleteCancellationReasonStorageCancellationReasonsResponse
-          .withPlainInternalServerError(getErrorResponse(message))));
+          .respond500WithTextPlain(getErrorResponse(message))));
     }
   }
 
   @Override
   public void getCancellationReasonStorageCancellationReasons(int offset,
       int limit, String query, String lang, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
-      throws Exception {
+      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     try {
       String tenantId = okapiHeaders.get(TENANT_HEADER);
       CQLWrapper cql = getCQL(query, limit, offset);
@@ -115,7 +113,7 @@ public class CancellationReasonsAPI implements CancellationReasonStorageResource
             String message = logAndSaveError(getReply.cause());
             asyncResultHandler.handle(Future.succeededFuture(
                 GetCancellationReasonStorageCancellationReasonsResponse
-                .withPlainInternalServerError(getErrorResponse(message))));
+                .respond500WithTextPlain(getErrorResponse(message))));
           } else {
             CancellationReasons collection = new CancellationReasons();
             List<CancellationReason> crList = (List<CancellationReason>)
@@ -124,20 +122,20 @@ public class CancellationReasonsAPI implements CancellationReasonStorageResource
             collection.setTotalRecords(getReply.result().getResultInfo().getTotalRecords());
             asyncResultHandler.handle(Future.succeededFuture(
                 GetCancellationReasonStorageCancellationReasonsResponse
-                .withJsonOK(collection)));
+                .respond200WithApplicationJson(collection)));
           }
         } catch(Exception e) {
           String message = logAndSaveError(e);
           asyncResultHandler.handle(Future.succeededFuture(
               GetCancellationReasonStorageCancellationReasonsResponse
-              .withPlainInternalServerError(getErrorResponse(message))));
+              .respond500WithTextPlain(getErrorResponse(message))));
         }
       });
     } catch(Exception e) {
       String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
           GetCancellationReasonStorageCancellationReasonsResponse
-          .withPlainInternalServerError(getErrorResponse(message))));
+          .respond500WithTextPlain(getErrorResponse(message))));
     }
   }
 
@@ -145,8 +143,7 @@ public class CancellationReasonsAPI implements CancellationReasonStorageResource
   @Validate
   public void postCancellationReasonStorageCancellationReasons(String lang,
       CancellationReason entity, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
-      throws Exception {
+      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     try {
       String tenantId = okapiHeaders.get(TENANT_HEADER);
       String id = entity.getId();
@@ -163,39 +160,38 @@ public class CancellationReasonsAPI implements CancellationReasonStorageResource
             if(isDuplicate(message)) {
               asyncResultHandler.handle(Future.succeededFuture(
                   PostCancellationReasonStorageCancellationReasonsResponse
-                  .withPlainBadRequest(PgExceptionUtil.badRequestMessage(reply.cause()))));
+                  .respond400WithTextPlain(PgExceptionUtil.badRequestMessage(reply.cause()))));
             } else {
               asyncResultHandler.handle(Future.succeededFuture(
                   PostCancellationReasonStorageCancellationReasonsResponse
-                  .withPlainInternalServerError(getErrorResponse(message))));
+                  .respond500WithTextPlain(getErrorResponse(message))));
             }
           } else {
-            OutStream stream = new OutStream();
-            stream.setData(entity);
             asyncResultHandler.handle(Future.succeededFuture(
                 PostCancellationReasonStorageCancellationReasonsResponse
-                .withJsonCreated(reply.result(), stream)));
+                  .respond201WithApplicationJson(entity, 
+                    PostCancellationReasonStorageCancellationReasonsResponse.
+                      headersFor201().withLocation(reply.result()))));
           }
         } catch(Exception e) {
           String message = logAndSaveError(e);
           asyncResultHandler.handle(Future.succeededFuture(
               PostCancellationReasonStorageCancellationReasonsResponse
-              .withPlainInternalServerError(getErrorResponse(message))));
+              .respond500WithTextPlain(getErrorResponse(message))));
         }
       });
     } catch(Exception e) {
       String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
           PostCancellationReasonStorageCancellationReasonsResponse
-          .withPlainInternalServerError(getErrorResponse(message))));
+          .respond500WithTextPlain(getErrorResponse(message))));
     }
   }
 
   @Override
   public void getCancellationReasonStorageCancellationReasonsByCancellationReasonId(
       String cancellationReasonId, String lang, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
-      throws Exception {
+      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     try {
       Criteria idCrit = new Criteria().setOperation("=")
           .setValue(cancellationReasonId).addField(ID_FIELD);
@@ -206,17 +202,17 @@ public class CancellationReasonsAPI implements CancellationReasonStorageResource
           String message = logAndSaveError(getReply.cause());
           asyncResultHandler.handle(Future.succeededFuture(
               GetCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
-              .withPlainInternalServerError(getErrorResponse(message))));
+              .respond500WithTextPlain(getErrorResponse(message))));
         } else {
           List<CancellationReason> reasons = (List<CancellationReason>) getReply.result().getResults();
           if(reasons.isEmpty()) {
             asyncResultHandler.handle(Future.succeededFuture(
               GetCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
-                  .withPlainNotFound("No record with that id")));
+                  .respond404WithTextPlain("No record with that id")));
           } else {
            asyncResultHandler.handle(Future.succeededFuture(
               GetCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
-                  .withJsonOK(reasons.get(0))));
+                  .respond200WithApplicationJson(reasons.get(0))));
           }
         }
       });
@@ -224,15 +220,14 @@ public class CancellationReasonsAPI implements CancellationReasonStorageResource
       String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
           GetCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
-          .withPlainInternalServerError(getErrorResponse(message))));
+          .respond500WithTextPlain(getErrorResponse(message))));
     }
   }
 
   @Override
   public void deleteCancellationReasonStorageCancellationReasonsByCancellationReasonId(
       String cancellationReasonId, String lang, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
-      throws Exception {
+      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     try {
       Criteria idCrit = new Criteria().setOperation("=")
           .setValue(cancellationReasonId).addField(ID_FIELD);
@@ -243,21 +238,21 @@ public class CancellationReasonsAPI implements CancellationReasonStorageResource
           String message = logAndSaveError(deleteReply.cause());
           if(isStillReferenced(message)) {
             asyncResultHandler.handle(Future.succeededFuture(DeleteCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
-                .withPlainBadRequest(PgExceptionUtil.badRequestMessage(deleteReply.cause()))));
+                .respond400WithTextPlain(PgExceptionUtil.badRequestMessage(deleteReply.cause()))));
           } else {
             asyncResultHandler.handle(Future.succeededFuture(
                 DeleteCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
-                .withPlainInternalServerError(getErrorResponse(message))));
+                .respond500WithTextPlain(getErrorResponse(message))));
           }
         } else {
           if(deleteReply.result().getUpdated() < 1) {
             asyncResultHandler.handle(Future.succeededFuture(
               DeleteCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
-                  .withPlainNotFound("Record not found")));
+                  .respond404WithTextPlain("Record not found")));
           } else {
             asyncResultHandler.handle(Future.succeededFuture(
               DeleteCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
-                  .withNoContent()));
+                  .respond204()));
           }
         }
       });
@@ -265,7 +260,7 @@ public class CancellationReasonsAPI implements CancellationReasonStorageResource
       String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
           DeleteCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
-          .withPlainInternalServerError(getErrorResponse(message))));
+          .respond500WithTextPlain(getErrorResponse(message))));
     }
   }
 
@@ -275,7 +270,7 @@ public class CancellationReasonsAPI implements CancellationReasonStorageResource
       String cancellationReasonId, String lang, CancellationReason entity,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
     try {
       Criteria idCrit = new Criteria().setOperation("=")
           .setValue(cancellationReasonId).addField(ID_FIELD);
@@ -287,21 +282,21 @@ public class CancellationReasonsAPI implements CancellationReasonStorageResource
           if(isDuplicate(message)) {
             asyncResultHandler.handle(Future.succeededFuture(
                 PutCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
-                .withPlainBadRequest(PgExceptionUtil.badRequestMessage(putHandler.cause()))));
+                .respond400WithTextPlain(PgExceptionUtil.badRequestMessage(putHandler.cause()))));
           } else {
             asyncResultHandler.handle(Future.succeededFuture(
                 PutCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
-                .withPlainInternalServerError(getErrorResponse(message))));
+                .respond500WithTextPlain(getErrorResponse(message))));
           }
         } else {
           if(putHandler.result().getUpdated() < 1) {
             asyncResultHandler.handle(Future.succeededFuture(
                 PutCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
-                .withPlainNotFound("Record not found")));
+                .respond404WithTextPlain("Record not found")));
           } else {
             asyncResultHandler.handle(Future.succeededFuture(
                 PutCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
-                .withNoContent()));
+                .respond204()));
           }
         }
       });
@@ -309,7 +304,7 @@ public class CancellationReasonsAPI implements CancellationReasonStorageResource
       String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
           PutCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
-          .withPlainInternalServerError(getErrorResponse(message))));
+          .respond500WithTextPlain(getErrorResponse(message))));
     }
   }
 }

@@ -8,8 +8,8 @@ import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.folio.rest.jaxrs.model.StaffSlip;
 import org.folio.rest.jaxrs.model.StaffSlips;
-import org.folio.rest.jaxrs.resource.LoanStorageResource;
-import org.folio.rest.jaxrs.resource.StaffSlipsStorageResource;
+import org.folio.rest.jaxrs.resource.LoanStorage;
+import org.folio.rest.jaxrs.resource.StaffSlipsStorage;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
@@ -29,7 +29,7 @@ import java.util.UUID;
 import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
-public class StaffSlipsAPI implements StaffSlipsStorageResource {
+public class StaffSlipsAPI implements StaffSlipsStorage {
 
 	private static final String STAFF_SLIP_TABLE = "staff_slips";
 
@@ -39,7 +39,7 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 
 	@Override
 	public void deleteStaffSlipsStorageStaffSlips(String lang, Map<String, String> okapiHeaders,
-			Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+			Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
 		String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -59,8 +59,8 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 			} catch (Exception e) {
 				asyncResultHandler
 						.handle(succeededFuture(
-						  StaffSlipsStorageResource.DeleteStaffSlipsStorageStaffSlipsResponse
-                .withPlainInternalServerError(e.getMessage())));
+						  StaffSlipsStorage.DeleteStaffSlipsStorageStaffSlipsResponse
+                .respond500WithTextPlain(e.getMessage())));
 			}
 		});
 
@@ -95,42 +95,42 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 						pagedStaffSlips.setTotalRecords((Integer) reply.result().getResultInfo().getTotalRecords());
 
 						asyncResultHandler.handle(succeededFuture(
-								StaffSlipsStorageResource.GetStaffSlipsStorageStaffSlipsResponse.withJsonOK(pagedStaffSlips)));
+								StaffSlipsStorage.GetStaffSlipsStorageStaffSlipsResponse.respond200WithApplicationJson(pagedStaffSlips)));
 
 					} else {
 						asyncResultHandler
-								.handle(succeededFuture(StaffSlipsStorageResource.GetStaffSlipsStorageStaffSlipsResponse
-										.withPlainInternalServerError(reply.cause().getMessage())));
+								.handle(succeededFuture(StaffSlipsStorage.GetStaffSlipsStorageStaffSlipsResponse
+										.respond500WithTextPlain(reply.cause().getMessage())));
 					}
 
 				} catch (Exception e) {
 					log.error(e.getMessage());
 					asyncResultHandler
-							.handle(succeededFuture(StaffSlipsStorageResource.GetStaffSlipsStorageStaffSlipsResponse
-									.withPlainInternalServerError(e.getMessage())));
+							.handle(succeededFuture(StaffSlipsStorage.GetStaffSlipsStorageStaffSlipsResponse
+									.respond500WithTextPlain(e.getMessage())));
 				}
 
 			});
 
 		} catch (Exception e) {
 			log.error(e.getMessage());
-			asyncResultHandler.handle(succeededFuture(StaffSlipsStorageResource.GetStaffSlipsStorageStaffSlipsResponse
-					.withPlainInternalServerError(e.getMessage())));
+			asyncResultHandler.handle(succeededFuture(StaffSlipsStorage.GetStaffSlipsStorageStaffSlipsResponse
+					.respond500WithTextPlain(e.getMessage())));
 		}
 
 	}
 
 	@Override
 	public void postStaffSlipsStorageStaffSlips(String lang, StaffSlip entity, Map<String, String> okapiHeaders,
-			Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+			Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
 		String tenantId = okapiHeaders.get(TENANT_HEADER);
 
 		ImmutablePair<Boolean, String> validationResult = validateStaffSlip(entity);
 
 		if (!validationResult.getLeft()) {
-			asyncResultHandler.handle(succeededFuture(StaffSlipsStorageResource.PostStaffSlipsStorageStaffSlipsResponse
-					.withPlainBadRequest(validationResult.getRight())));
+			asyncResultHandler.handle(succeededFuture(StaffSlipsStorage.PostStaffSlipsStorageStaffSlipsResponse
+					.respond400WithTextPlain(validationResult.getRight())));
 
 			return;
 		}
@@ -141,8 +141,7 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 
 	@Override
 	public void getStaffSlipsStorageStaffSlipsByStaffSlipId(String staffSlipId, String lang,
-			Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
-			throws Exception {
+			Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
 		String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -172,19 +171,19 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 								StaffSlip staffSlip = staffSlips.get(0);
 
 								asyncResultHandler.handle(
-										succeededFuture(StaffSlipsStorageResource.GetStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
-												.withJsonOK(staffSlip)));
+										succeededFuture(StaffSlipsStorage.GetStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+												.respond200WithApplicationJson(staffSlip)));
 
 							} else {
 								asyncResultHandler.handle(
-										succeededFuture(StaffSlipsStorageResource.GetStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
-												.withPlainNotFound("Not Found")));
+										succeededFuture(StaffSlipsStorage.GetStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+												.respond404WithTextPlain("Not Found")));
 							}
 
 						} else {
 							asyncResultHandler.handle(
-									succeededFuture(StaffSlipsStorageResource.GetStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
-											.withPlainInternalServerError(reply.cause().getMessage())));
+									succeededFuture(StaffSlipsStorage.GetStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+											.respond500WithTextPlain(reply.cause().getMessage())));
 
 						}
 					});
@@ -192,24 +191,23 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 				} catch (Exception e) {
 					log.error(e.getMessage());
 					asyncResultHandler.handle(
-							succeededFuture(StaffSlipsStorageResource.GetStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
-									.withPlainInternalServerError(e.getMessage())));
+							succeededFuture(StaffSlipsStorage.GetStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+									.respond500WithTextPlain(e.getMessage())));
 				}
 			});
 
 		} catch (Exception e) {
 			log.error(e.getMessage());
 			asyncResultHandler
-					.handle(succeededFuture(StaffSlipsStorageResource.GetStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
-							.withPlainInternalServerError(e.getMessage())));
+					.handle(succeededFuture(StaffSlipsStorage.GetStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+							.respond500WithTextPlain(e.getMessage())));
 		}
 
 	}
 
 	@Override
 	public void deleteStaffSlipsStorageStaffSlipsByStaffSlipId(String staffSlipId, String lang,
-			Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
-			throws Exception {
+			Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
 		String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -233,33 +231,32 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 						if (reply.succeeded()) {
 
 							asyncResultHandler.handle(
-									succeededFuture(DeleteStaffSlipsStorageStaffSlipsByStaffSlipIdResponse.withNoContent()));
+									succeededFuture(DeleteStaffSlipsStorageStaffSlipsByStaffSlipIdResponse.respond204()));
 
 						} else {
-							asyncResultHandler.handle(succeededFuture(StaffSlipsStorageResource.DeleteStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
-											.withPlainInternalServerError(reply.cause().getMessage())));
+							asyncResultHandler.handle(succeededFuture(StaffSlipsStorage.DeleteStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+											.respond500WithTextPlain(reply.cause().getMessage())));
 						}
 					});
 
 				} catch (Exception e) {
 					asyncResultHandler.handle(
-							succeededFuture(StaffSlipsStorageResource.DeleteStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
-									.withPlainInternalServerError(e.getMessage())));
+							succeededFuture(StaffSlipsStorage.DeleteStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+									.respond500WithTextPlain(e.getMessage())));
 				}
 			});
 
 		} catch (Exception e) {
 			asyncResultHandler.handle(
-					succeededFuture(StaffSlipsStorageResource.DeleteStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
-							.withPlainInternalServerError(e.getMessage())));
+					succeededFuture(StaffSlipsStorage.DeleteStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+							.respond500WithTextPlain(e.getMessage())));
 		}
 
 	}
 
 	@Override
 	public void putStaffSlipsStorageStaffSlipsByStaffSlipId(String staffSlipId, String lang, StaffSlip entity,
-			Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
-			throws Exception {
+			Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
 		String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -267,7 +264,7 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 
 		if (!validationResult.getLeft()) {
 			asyncResultHandler.handle(succeededFuture(
-					LoanStorageResource.PostLoanStorageLoansResponse.withPlainBadRequest(validationResult.getRight())));
+					LoanStorage.PostLoanStorageLoansResponse.respond400WithTextPlain(validationResult.getRight())));
 
 			return;
 		}
@@ -306,52 +303,52 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 												OutStream stream = new OutStream();
 												stream.setData(entity);
 
-												asyncResultHandler.handle(succeededFuture(PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse.withNoContent()));
+												asyncResultHandler.handle(succeededFuture(PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse.respond204()));
 
 											} else {
 												asyncResultHandler.handle(succeededFuture(
-														StaffSlipsStorageResource.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
-																.withPlainInternalServerError(reply.cause().getMessage())));
+														StaffSlipsStorage.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+																.respond500WithTextPlain(reply.cause().getMessage())));
 											}
 
 										} catch (Exception e) {
-											asyncResultHandler.handle(succeededFuture(StaffSlipsStorageResource.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
-															.withPlainInternalServerError(e.getMessage())));
+											asyncResultHandler.handle(succeededFuture(StaffSlipsStorage.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+															.respond500WithTextPlain(e.getMessage())));
 										}
 
 									});
 
 								} catch (Exception e) {
-									asyncResultHandler.handle(succeededFuture(StaffSlipsStorageResource.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
-													.withPlainInternalServerError(e.getMessage())));
+									asyncResultHandler.handle(succeededFuture(StaffSlipsStorage.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+													.respond500WithTextPlain(e.getMessage())));
 								}
 
 							} else {
 								try {
 									createStaffSlip(entity, tenantId, asyncResultHandler, vertxContext);
 								} catch (Exception e) {
-									asyncResultHandler.handle(succeededFuture(StaffSlipsStorageResource.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
-													.withPlainInternalServerError(e.getMessage())));
+									asyncResultHandler.handle(succeededFuture(StaffSlipsStorage.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+													.respond500WithTextPlain(e.getMessage())));
 								}
 							}
 						} else {
 							asyncResultHandler.handle(
-									succeededFuture(StaffSlipsStorageResource.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
-											.withPlainInternalServerError(reply.cause().getMessage())));
+									succeededFuture(StaffSlipsStorage.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+											.respond500WithTextPlain(reply.cause().getMessage())));
 						}
 					});
 
 				} catch (Exception e) {
 					asyncResultHandler.handle(
-							succeededFuture(StaffSlipsStorageResource.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
-									.withPlainInternalServerError(e.getMessage())));
+							succeededFuture(StaffSlipsStorage.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+									.respond500WithTextPlain(e.getMessage())));
 				}
 			});
 
 		} catch (Exception e) {
 			asyncResultHandler
-					.handle(succeededFuture(StaffSlipsStorageResource.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
-							.withPlainInternalServerError(e.getMessage())));
+					.handle(succeededFuture(StaffSlipsStorage.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+							.respond500WithTextPlain(e.getMessage())));
 		}
 
 	}
@@ -382,32 +379,33 @@ public class StaffSlipsAPI implements StaffSlipsStorageResource {
 								stream.setData(entity);
 
 								asyncResultHandler
-										.handle(succeededFuture(StaffSlipsStorageResource.PostStaffSlipsStorageStaffSlipsResponse
-												.withJsonCreated(reply.result(), stream)));
+										.handle(succeededFuture(StaffSlipsStorage.PostStaffSlipsStorageStaffSlipsResponse
+                                                                                  .respond201WithApplicationJson(entity, 
+                                                                                    PostStaffSlipsStorageStaffSlipsResponse.headersFor201().withLocation(reply.result()))));
 
 							} else {
-								asyncResultHandler.handle(succeededFuture(LoanStorageResource.PostLoanStorageLoansResponse
-										.withPlainInternalServerError(reply.cause().toString())));
+								asyncResultHandler.handle(succeededFuture(LoanStorage.PostLoanStorageLoansResponse
+										.respond500WithTextPlain(reply.cause().toString())));
 							}
 						} catch (Exception e) {
 							log.error(e.getMessage());
 							asyncResultHandler
-									.handle(succeededFuture(StaffSlipsStorageResource.PostStaffSlipsStorageStaffSlipsResponse
-											.withPlainInternalServerError(e.getMessage())));
+									.handle(succeededFuture(StaffSlipsStorage.PostStaffSlipsStorageStaffSlipsResponse
+											.respond500WithTextPlain(e.getMessage())));
 						}
 					});
 
 				} catch (Exception e) {
 					log.error(e.getMessage());
 					asyncResultHandler
-							.handle(succeededFuture(StaffSlipsStorageResource.PostStaffSlipsStorageStaffSlipsResponse
-									.withPlainInternalServerError(e.getMessage())));
+							.handle(succeededFuture(StaffSlipsStorage.PostStaffSlipsStorageStaffSlipsResponse
+									.respond500WithTextPlain(e.getMessage())));
 				}
 			});
 
 		} catch (Exception e) {
 			asyncResultHandler.handle(
-					succeededFuture(PostStaffSlipsStorageStaffSlipsResponse.withPlainInternalServerError(e.getMessage())));
+					succeededFuture(PostStaffSlipsStorageStaffSlipsResponse.respond500WithTextPlain(e.getMessage())));
 		}
 	}
 

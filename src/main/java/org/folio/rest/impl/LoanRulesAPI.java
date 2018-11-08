@@ -8,7 +8,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import org.folio.rest.jaxrs.model.LoanRules;
-import org.folio.rest.jaxrs.resource.LoanRulesStorageResource;
+import org.folio.rest.jaxrs.resource.LoanRulesStorage;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.UpdateSection;
 import org.folio.rest.persist.PostgresClient;
@@ -18,15 +18,15 @@ import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.Map;
 
-public class LoanRulesAPI implements LoanRulesStorageResource {
-  private static final Logger log = LoggerFactory.getLogger(LoanRulesStorageResource.class);
+public class LoanRulesAPI implements LoanRulesStorage {
+  private static final Logger log = LoggerFactory.getLogger(LoanRulesStorage.class);
   private static final String LOAN_RULES_TABLE = "loan_rules";
 
   private void internalErrorGet(Handler<AsyncResult<Response>> asyncResultHandler, Throwable e) {
     log.error(e);
     asyncResultHandler.handle(Future.succeededFuture(
-        LoanRulesStorageResource.GetLoanRulesStorageResponse.
-        withPlainInternalServerError(e.getMessage())));
+        LoanRulesStorage.GetLoanRulesStorageResponse.
+        respond500WithTextPlain(e.getMessage())));
   }
 
   @Override
@@ -56,7 +56,7 @@ public class LoanRulesAPI implements LoanRulesStorageResource {
 
                 LoanRules loanRules = loanRulesList.get(0);
                 asyncResultHandler.handle(Future.succeededFuture(
-                    LoanRulesStorageResource.GetLoanRulesStorageResponse.withJsonOK(loanRules)));
+                    LoanRulesStorage.GetLoanRulesStorageResponse.respond200WithApplicationJson(loanRules)));
               } catch (Exception e) {
                 internalErrorGet(asyncResultHandler, e);
               }
@@ -73,8 +73,8 @@ public class LoanRulesAPI implements LoanRulesStorageResource {
   private void internalErrorPut(Handler<AsyncResult<Response>> asyncResultHandler, Throwable e) {
     log.error(e);
     asyncResultHandler.handle(Future.succeededFuture(
-        LoanRulesStorageResource.PutLoanRulesStorageResponse.
-        withPlainInternalServerError(e.getMessage())));
+        LoanRulesStorage.PutLoanRulesStorageResponse.
+        respond500WithTextPlain(e.getMessage())));
   }
 
   @Override
@@ -95,7 +95,7 @@ public class LoanRulesAPI implements LoanRulesStorageResource {
                   return;
                 }
                 asyncResultHandler.handle(Future.succeededFuture(
-                    PutLoanRulesStorageResponse.withNoContent()));
+                    PutLoanRulesStorageResponse.respond204()));
               } catch (Exception e) {
                 internalErrorPut(asyncResultHandler, e);
               }
