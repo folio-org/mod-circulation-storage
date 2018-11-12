@@ -1,4 +1,4 @@
-#%RAML 0.8
+#%RAML 1.0
 title: Loan Policy Storage
 version: v1.3
 protocols: [ HTTP, HTTPS ]
@@ -8,21 +8,18 @@ documentation:
   - title: Loan Policy Storage API
     content: <b>Storage for loan policies</b>
 
-schemas:
-  - loan-policy.json: !include loan-policy.json
-  - period.json: !include period.json
-  - loan-policies: !include loan-policies.json
-  - raml-util/schemas/metadata.schema: !include raml-util/schemas/metadata.schema
+types:
+  loan-policy: !include loan-policy.json
+  loan-policies: !include loan-policies.json
 
 traits:
-  - secured: !include raml-util/traits/auth.raml
-  - language: !include raml-util/traits/language.raml
-  - pageable: !include raml-util/traits/pageable.raml
-  - searchable: !include raml-util/traits/searchable.raml
+  language: !include raml-util/traits/language.raml
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
 
 resourceTypes:
-  - collection: !include raml-util/rtypes/collection.raml
-  - collection-item: !include raml-util/rtypes/item-collection.raml
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
 
 /loan-policy-storage:
   /loan-policies:
@@ -32,7 +29,7 @@ resourceTypes:
         exampleCollection: !include examples/loan-policies.json
         exampleItem: !include examples/loan-policy.json
         schemaCollection: loan-policies
-        schemaItem: loan-policy.json
+        schemaItem: loan-policy
     get:
       is: [pageable,
         searchable: {description: "searchable using CQL",
@@ -46,6 +43,7 @@ resourceTypes:
         501:
           description: "Not implemented yet"
     delete:
+      is: [language]
       responses:
         204:
           description: "All loans deleted"
@@ -60,7 +58,7 @@ resourceTypes:
       type:
         collection-item:
           exampleItem: !include examples/loan-policy.json
-          schema: loan-policy.json
+          schema: loan-policy
       get:
         responses:
           501:

@@ -1,4 +1,4 @@
-#%RAML 0.8
+#%RAML 1.0
 title: Cancellation Reasons
 version: v1.1
 protocols: [ HTTP, HTTPS ]
@@ -8,24 +8,21 @@ documentation:
   - title: Cancellation Reasons API
     content: <b>Storage for cancellation reasons</b>
 
-schemas:
-  - cancellation-reason.json: !include cancellation-reason.json
-  - cancellation-reasons: !include cancellation-reasons.json
-  - raml-util/schemas/metadata.schema: !include raml-util/schemas/metadata.schema
-  - errors: !include raml-util/schemas/errors.schema
-  - error.schema: !include raml-util/schemas/error.schema
-  - parameters.schema: !include raml-util/schemas/parameters.schema
+types:
+  cancellation-reason: !include cancellation-reason.json
+  cancellation-reasons: !include cancellation-reasons.json
+  errors: !include raml-util/schemas/errors.schema
+  parameters: !include raml-util/schemas/parameters.schema
 
 traits:
-  - secured: !include raml-util/traits/auth.raml
-  - language: !include raml-util/traits/language.raml
-  - pageable: !include raml-util/traits/pageable.raml
-  - searchable: !include raml-util/traits/searchable.raml
-  - validate: !include raml-util/traits/validation.raml
+  language: !include raml-util/traits/language.raml
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  validate: !include raml-util/traits/validation.raml
 
 resourceTypes:
-  - collection: !include raml-util/rtypes/collection.raml
-  - collection-item: !include raml-util/rtypes/item-collection.raml
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
 
 /cancellation-reason-storage:
   /cancellation-reasons:
@@ -35,7 +32,7 @@ resourceTypes:
         exampleCollection: !include examples/cancellation-reasons.json
         exampleItem: !include examples/cancellation-reason.json
         schemaCollection: cancellation-reasons
-        schemaItem: cancellation-reason.json
+        schemaItem: cancellation-reason
     get:
       is: [
         validate,
@@ -51,6 +48,7 @@ resourceTypes:
         501:
           description: "Not implemented yet"
     delete:
+      is: [language]
       responses:
         204:
           description: "All cancellation reasons deleted"
@@ -65,7 +63,7 @@ resourceTypes:
       type:
         collection-item:
           exampleItem: !include examples/cancellation-reason.json
-          schema: cancellation-reason.json
+          schema: cancellation-reason
       get:
         responses:
           501:

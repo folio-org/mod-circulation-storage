@@ -1,4 +1,4 @@
-#%RAML 0.8
+#%RAML 1.0
 title: Request Storage
 version: v2.2
 protocols: [ HTTP, HTTPS ]
@@ -8,24 +8,21 @@ documentation:
   - title: Request Storage API
     content: <b>Storage for requests</b>
 
-schemas:
-  - request.json: !include request.json
-  - requests: !include requests.json
-  - errors: !include raml-util/schemas/errors.schema
-  - error.schema: !include raml-util/schemas/error.schema
-  - parameters.schema: !include raml-util/schemas/parameters.schema
-  - raml-util/schemas/metadata.schema: !include raml-util/schemas/metadata.schema
+types:
+  request: !include request.json
+  requests: !include requests.json
+  errors: !include raml-util/schemas/errors.schema
+  parameters: !include raml-util/schemas/parameters.schema
 
 traits:
-  - secured: !include raml-util/traits/auth.raml
-  - language: !include raml-util/traits/language.raml
-  - pageable: !include raml-util/traits/pageable.raml
-  - searchable: !include raml-util/traits/searchable.raml
-  - validate: !include raml-util/traits/validation.raml
+  language: !include raml-util/traits/language.raml
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  validate: !include raml-util/traits/validation.raml
 
 resourceTypes:
-  - collection: !include raml-util/rtypes/collection.raml
-  - collection-item: !include raml-util/rtypes/item-collection.raml
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
 
 /request-storage:
   /requests:
@@ -35,7 +32,7 @@ resourceTypes:
         exampleCollection: !include examples/requests.json
         exampleItem: !include examples/request.json
         schemaCollection: requests
-        schemaItem: request.json
+        schemaItem: request
     get:
       is: [pageable,
         searchable: {description: "by using CQL",
@@ -50,6 +47,7 @@ resourceTypes:
         501:
           description: "Not implemented yet"
     delete:
+      is: [language]
       responses:
         204:
           description: "All requests deleted"
@@ -64,7 +62,7 @@ resourceTypes:
       type:
         collection-item:
           exampleItem: !include examples/request.json
-          schema: request.json
+          schema: request
       get:
         responses:
           501:

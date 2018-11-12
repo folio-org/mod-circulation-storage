@@ -1,4 +1,4 @@
-#%RAML 0.8
+#%RAML 1.0
 title: Loan Storage
 version: v5.1
 protocols: [ HTTP, HTTPS ]
@@ -8,25 +8,22 @@ documentation:
   - title: Loan Storage API
     content: <b>Storage for loans</b>
 
-schemas:
-  - loan.json: !include loan.json
-  - loans: !include loans.json
-  - errors: !include raml-util/schemas/errors.schema
-  - error.schema: !include raml-util/schemas/error.schema
-  - parameters.schema: !include raml-util/schemas/parameters.schema
-  - raml-util/schemas/metadata.schema: !include raml-util/schemas/metadata.schema
+types:
+  loan: !include loan.json
+  loans: !include loans.json
+  errors: !include raml-util/schemas/errors.schema
+  parameters: !include raml-util/schemas/parameters.schema
 
 traits:
-  - secured: !include raml-util/traits/auth.raml
-  - language: !include raml-util/traits/language.raml
-  - pageable: !include raml-util/traits/pageable.raml
-  - searchable: !include raml-util/traits/searchable.raml
-  - validate: !include raml-util/traits/validation.raml
+  language: !include raml-util/traits/language.raml
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  validate: !include raml-util/traits/validation.raml
 
 resourceTypes:
-  - collection: !include raml-util/rtypes/collection.raml
-  - collection-item: !include raml-util/rtypes/item-collection.raml
-  - get-only: !include raml-util/rtypes/get-only.raml
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+  get-only: !include raml-util/rtypes/get-only.raml
 
 /loan-storage:
   /loans:
@@ -36,7 +33,7 @@ resourceTypes:
         exampleCollection: !include examples/loans.json
         exampleItem: !include examples/loan.json
         schemaCollection: loans
-        schemaItem: loan.json
+        schemaItem: loan
     get:
       is: [pageable,
         searchable: {description: "searchable using CQL",
@@ -48,6 +45,7 @@ resourceTypes:
     post:
       is: [validate]
     delete:
+      is: [language]
       responses:
         204:
           description: "All loans deleted"
@@ -75,7 +73,7 @@ resourceTypes:
       type:
         collection-item:
           exampleItem: !include examples/loan.json
-          schema: loan.json
+          schema: loan
       get:
         responses:
           501:

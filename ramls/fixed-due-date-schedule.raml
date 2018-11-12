@@ -1,4 +1,4 @@
-#%RAML 0.8
+#%RAML 1.0
 title: Fixed Due Date Schedule
 version: v2.0
 protocols: [ HTTP, HTTPS ]
@@ -8,25 +8,22 @@ documentation:
   - title: Fixed Due Date Schedule Storage API
     content: <b>Storage for fixed due date schedules</b>
 
-schemas:
-  - fixed-due-date-schedule.json: !include fixed-due-date-schedule.json
-  - schedule.json: !include schedule.json
-  - fixed-due-date-schedules: !include fixed-due-date-schedules.json
-  - raml-util/schemas/metadata.schema: !include raml-util/schemas/metadata.schema
-  - errors: !include raml-util/schemas/errors.schema
-  - error.schema: !include raml-util/schemas/error.schema
-  - parameters.schema: !include raml-util/schemas/parameters.schema
+types:
+  fixed-due-date-schedule: !include fixed-due-date-schedule.json
+  schedule: !include schedule.json
+  fixed-due-date-schedules: !include fixed-due-date-schedules.json
+  errors: !include raml-util/schemas/errors.schema
+  parameters: !include raml-util/schemas/parameters.schema
 
 traits:
-  - secured: !include raml-util/traits/auth.raml
-  - language: !include raml-util/traits/language.raml
-  - pageable: !include raml-util/traits/pageable.raml
-  - searchable: !include raml-util/traits/searchable.raml
-  - validate: !include raml-util/traits/validation.raml
+  language: !include raml-util/traits/language.raml
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  validate: !include raml-util/traits/validation.raml
 
 resourceTypes:
-  - collection: !include raml-util/rtypes/collection.raml
-  - collection-item: !include raml-util/rtypes/item-collection.raml
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
 
 /fixed-due-date-schedule-storage:
   /fixed-due-date-schedules:
@@ -36,7 +33,7 @@ resourceTypes:
         exampleCollection: !include examples/fixed-due-date-schedules.json
         exampleItem: !include examples/fixed-due-date-schedule.json
         schemaCollection: fixed-due-date-schedules
-        schemaItem: fixed-due-date-schedule.json
+        schemaItem: fixed-due-date-schedule
     get:
       is: [
         validate,
@@ -52,6 +49,7 @@ resourceTypes:
         501:
           description: "Not implemented yet"
     delete:
+      is: [language]
       responses:
         204:
           description: "All fixed due date schedules deleted"
@@ -66,7 +64,7 @@ resourceTypes:
       type:
         collection-item:
           exampleItem: !include examples/fixed-due-date-schedule.json
-          schema: fixed-due-date-schedule.json
+          schema: fixed-due-date-schedule
       get:
         responses:
           501:

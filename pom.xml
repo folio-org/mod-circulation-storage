@@ -26,7 +26,7 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>domain-models-runtime</artifactId>
-      <version>19.4.1</version>
+      <version>23.1.0</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -51,7 +51,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
+    <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
     <argLine />
   </properties>
 
@@ -112,10 +112,6 @@
               <!-- <executable>java</executable> -->
               <cleanupDaemonThreads>false</cleanupDaemonThreads>
               <systemProperties>
-                <systemProperty>
-                  <key>project.basedir</key>
-                  <value>${basedir}</value>
-                </systemProperty>
                 <systemProperty>
                   <key>raml_files</key>
                   <value>${ramlfiles_path}</value>

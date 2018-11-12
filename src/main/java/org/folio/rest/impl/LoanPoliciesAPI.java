@@ -9,7 +9,7 @@ import io.vertx.core.logging.LoggerFactory;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.LoanPolicies;
 import org.folio.rest.jaxrs.model.LoanPolicy;
-import org.folio.rest.jaxrs.resource.LoanPolicyStorageResource;
+import org.folio.rest.jaxrs.resource.LoanPolicyStorage;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
@@ -28,7 +28,7 @@ import java.util.UUID;
 
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
-public class LoanPoliciesAPI implements LoanPolicyStorageResource {
+public class LoanPoliciesAPI implements LoanPolicyStorage {
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
   private static final String LOAN_POLICY_TABLE = "loan_policy";
@@ -51,12 +51,12 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
         postgresClient.mutate(String.format("TRUNCATE TABLE %s_%s.%s",
           tenantId, "mod_circulation_storage", LOAN_POLICY_TABLE),
           reply -> asyncResultHandler.handle(Future.succeededFuture(
-            DeleteLoanPolicyStorageLoanPoliciesResponse.withNoContent())));
+            DeleteLoanPolicyStorageLoanPoliciesResponse.respond204())));
       }
       catch(Exception e) {
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-          LoanPolicyStorageResource.DeleteLoanPolicyStorageLoanPoliciesResponse
-            .withPlainInternalServerError(e.getMessage())));
+          LoanPolicyStorage.DeleteLoanPolicyStorageLoanPoliciesResponse
+            .respond500WithTextPlain(e.getMessage())));
       }
     });
   }
@@ -98,33 +98,33 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
                     pagedLoans.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
 
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                      LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
-                        withJsonOK(pagedLoans)));
+                      LoanPolicyStorage.GetLoanPolicyStorageLoanPoliciesResponse.
+                        respond200WithApplicationJson(pagedLoans)));
                   }
                   else {
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                      LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
-                        withPlainInternalServerError(reply.cause().getMessage())));
+                      LoanPolicyStorage.GetLoanPolicyStorageLoanPoliciesResponse.
+                        respond500WithTextPlain(reply.cause().getMessage())));
                   }
                 } catch (Exception e) {
                   log.error(e);
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                    LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
-                      withPlainInternalServerError(e.getMessage())));
+                    LoanPolicyStorage.GetLoanPolicyStorageLoanPoliciesResponse.
+                      respond500WithTextPlain(e.getMessage())));
                 }
               });
           } catch (Exception e) {
             log.error(e);
             asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-              LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
-                withPlainInternalServerError(e.getMessage())));
+              LoanPolicyStorage.GetLoanPolicyStorageLoanPoliciesResponse.
+                respond500WithTextPlain(e.getMessage())));
           }
         });
       } catch (Exception e) {
         log.error(e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-          LoanPolicyStorageResource.GetLoanPolicyStorageLoanPoliciesResponse.
-            withPlainInternalServerError(e.getMessage())));
+          LoanPolicyStorage.GetLoanPolicyStorageLoanPoliciesResponse.
+            respond500WithTextPlain(e.getMessage())));
       }
   }
 
@@ -158,35 +158,36 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
 
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(
-                      LoanPolicyStorageResource.PostLoanPolicyStorageLoanPoliciesResponse
-                        .withJsonCreated(reply.result(), stream)));
+                      LoanPolicyStorage.PostLoanPolicyStorageLoanPoliciesResponse
+                        .respond201WithApplicationJson(entity,
+                          PostLoanPolicyStorageLoanPoliciesResponse.headersFor201().withLocation(reply.result()))));
                 }
                 else {
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(
-                      LoanPolicyStorageResource.PostLoanPolicyStorageLoanPoliciesResponse
-                        .withPlainInternalServerError(reply.cause().toString())));
+                      LoanPolicyStorage.PostLoanPolicyStorageLoanPoliciesResponse
+                        .respond500WithTextPlain(reply.cause().toString())));
                 }
               } catch (Exception e) {
                 log.error(e);
                 asyncResultHandler.handle(
                   io.vertx.core.Future.succeededFuture(
-                    LoanPolicyStorageResource.PostLoanPolicyStorageLoanPoliciesResponse
-                      .withPlainInternalServerError(e.getMessage())));
+                    LoanPolicyStorage.PostLoanPolicyStorageLoanPoliciesResponse
+                      .respond500WithTextPlain(e.getMessage())));
               }
             });
         } catch (Exception e) {
           log.error(e);
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            LoanPolicyStorageResource.PostLoanPolicyStorageLoanPoliciesResponse
-              .withPlainInternalServerError(e.getMessage())));
+            LoanPolicyStorage.PostLoanPolicyStorageLoanPoliciesResponse
+              .respond500WithTextPlain(e.getMessage())));
         }
       });
     } catch (Exception e) {
       log.error(e);
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-        LoanPolicyStorageResource.PostLoanPolicyStorageLoanPoliciesResponse
-          .withPlainInternalServerError(e.getMessage())));
+        LoanPolicyStorage.PostLoanPolicyStorageLoanPoliciesResponse
+          .respond500WithTextPlain(e.getMessage())));
     }
   }
 
@@ -227,47 +228,47 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
 
                     asyncResultHandler.handle(
                       io.vertx.core.Future.succeededFuture(
-                        LoanPolicyStorageResource.
+                        LoanPolicyStorage.
                           GetLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse.
-                          withJsonOK(loanPolicy)));
+                          respond200WithApplicationJson(loanPolicy)));
                   }
                   else {
                     asyncResultHandler.handle(
                       Future.succeededFuture(
-                        LoanPolicyStorageResource.
+                        LoanPolicyStorage.
                           GetLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse.
-                          withPlainNotFound("Not Found")));
+                          respond404WithTextPlain("Not Found")));
                   }
                 } else {
                   asyncResultHandler.handle(
                     Future.succeededFuture(
-                      LoanPolicyStorageResource.
+                      LoanPolicyStorage.
                         GetLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse.
-                        withPlainInternalServerError(reply.cause().getMessage())));
+                        respond500WithTextPlain(reply.cause().getMessage())));
 
                 }
               } catch (Exception e) {
                 log.error(e);
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                  LoanPolicyStorageResource.
+                  LoanPolicyStorage.
                     GetLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse.
-                    withPlainInternalServerError(e.getMessage())));
+                    respond500WithTextPlain(e.getMessage())));
               }
             });
         } catch (Exception e) {
           log.error(e);
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            LoanPolicyStorageResource.
+            LoanPolicyStorage.
               GetLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse.
-              withPlainInternalServerError(e.getMessage())));
+              respond500WithTextPlain(e.getMessage())));
         }
       });
     } catch (Exception e) {
       log.error(e);
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-        LoanPolicyStorageResource.
+        LoanPolicyStorage.
           GetLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse.
-          withPlainInternalServerError(e.getMessage())));
+          respond500WithTextPlain(e.getMessage())));
     }
   }
 
@@ -302,24 +303,24 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
                 asyncResultHandler.handle(
                   Future.succeededFuture(
                     DeleteLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
-                      .withNoContent()));
+                      .respond204()));
               }
               else {
                 asyncResultHandler.handle(Future.succeededFuture(
                   DeleteLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
-                    .withPlainInternalServerError(reply.cause().getMessage())));
+                    .respond500WithTextPlain(reply.cause().getMessage())));
               }
             });
         } catch (Exception e) {
           asyncResultHandler.handle(Future.succeededFuture(
             DeleteLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
-              .withPlainInternalServerError(e.getMessage())));
+              .respond500WithTextPlain(e.getMessage())));
         }
       });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         DeleteLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
-          .withPlainInternalServerError(e.getMessage())));
+          .respond500WithTextPlain(e.getMessage())));
     }
   }
 
@@ -369,26 +370,26 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
                             asyncResultHandler.handle(
                               Future.succeededFuture(
                                 PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
-                                  .withNoContent()));
+                                  .respond204()));
                           }
                           else {
                             asyncResultHandler.handle(
                               Future.succeededFuture(
                                 PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
-                                  .withPlainInternalServerError(
+                                  .respond500WithTextPlain(
                                     update.cause().getMessage())));
                           }
                         } catch (Exception e) {
                           asyncResultHandler.handle(
                             Future.succeededFuture(
                               PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
-                                .withPlainInternalServerError(e.getMessage())));
+                                .respond500WithTextPlain(e.getMessage())));
                         }
                       });
                   } catch (Exception e) {
                     asyncResultHandler.handle(Future.succeededFuture(
                       PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
-                        .withPlainInternalServerError(e.getMessage())));
+                        .respond500WithTextPlain(e.getMessage())));
                   }
                 }
                 else {
@@ -403,44 +404,44 @@ public class LoanPoliciesAPI implements LoanPolicyStorageResource {
                             asyncResultHandler.handle(
                               Future.succeededFuture(
                                 PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
-                                  .withNoContent()));
+                                  .respond204()));
                           }
                           else {
                             asyncResultHandler.handle(
                               Future.succeededFuture(
                                 PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
-                                  .withPlainInternalServerError(
+                                  .respond500WithTextPlain(
                                     save.cause().getMessage())));
                           }
                         } catch (Exception e) {
                           asyncResultHandler.handle(
                             Future.succeededFuture(
                               PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
-                                .withPlainInternalServerError(e.getMessage())));
+                                .respond500WithTextPlain(e.getMessage())));
                         }
                       });
                   } catch (Exception e) {
                     asyncResultHandler.handle(Future.succeededFuture(
                       PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
-                        .withPlainInternalServerError(e.getMessage())));
+                        .respond500WithTextPlain(e.getMessage())));
                   }
                 }
               } else {
                 asyncResultHandler.handle(Future.succeededFuture(
                   PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
-                    .withPlainInternalServerError(reply.cause().getMessage())));
+                    .respond500WithTextPlain(reply.cause().getMessage())));
               }
             });
         } catch (Exception e) {
           asyncResultHandler.handle(Future.succeededFuture(
             PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
-              .withPlainInternalServerError(e.getMessage())));
+              .respond500WithTextPlain(e.getMessage())));
         }
       });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse
-          .withPlainInternalServerError(e.getMessage())));
+          .respond500WithTextPlain(e.getMessage())));
     }
   }
 }
