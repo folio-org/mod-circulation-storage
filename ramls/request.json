@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "description": "A request",
+  "description": "A request by a patron for a specific item",
   "type": "object",
   "properties": {
     "id": {
@@ -100,7 +100,7 @@
           "type": "string"
         },
         "patronGroup" : {
-          "description": "the patrongroup of the requesting patron",
+          "description": "DEPRECATED, to be removed in subsequent major version",
           "type": "string"
         }
       },
@@ -127,7 +127,7 @@
           "type": "string"
         },
         "patronGroup": {
-          "description": "patrongroup of the proxy patron",
+          "description": "DEPRECATED, to be removed in subsequent major version",
           "type": "string"
         }
       },
