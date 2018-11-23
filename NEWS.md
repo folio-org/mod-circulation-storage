@@ -1,6 +1,10 @@
-## 6.2.0 UNRELEASED
+## 6.2.0 2018-11-23
 
-* Added `checkinServicePointId` and `checkoutServicePointId` to the loan schema (CIRCSTORE-77)
+* Adds `checkinServicePointId` and `checkoutServicePointId` to a loan (CIRCSTORE-77)
+* Adds `pickupServicePointId` to a request (CIRCSTORE-76)
+* Uses RAML 1.0 for API documentation (CIRCSTORE-79)
+* Provides `loan-storage` 5.2 (CIRCSTORE-77)
+* Provides `request-storage` 2.3 (CIRCSTORE-76)
 
 ## 6.1.0 2018-09-11
 
