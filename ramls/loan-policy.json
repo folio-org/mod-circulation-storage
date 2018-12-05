@@ -35,6 +35,10 @@
           "type": "object",
           "$ref": "period.json"
         },
+        "openingTimeOffset": {
+          "type": "object",
+          "$ref": "period.json"
+        },
         "fixedDueDateScheduleId": {
           "type": "string"
         }
