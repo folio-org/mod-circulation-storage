@@ -229,7 +229,7 @@ public class StorageTestSuite {
 			}
 		});
 
-		deploymentComplete.get(20, TimeUnit.SECONDS);
+		deploymentComplete.get(30, TimeUnit.SECONDS);
 	}
 
 	private static void prepareTenant(String tenantId) {
@@ -243,7 +243,7 @@ public class StorageTestSuite {
 			client.post(storageUrl("/_/tenant"), null, tenantId,
         ResponseHandler.text(tenantPrepared));
 
-			TextResponse response = tenantPrepared.get(10, TimeUnit.SECONDS);
+			TextResponse response = tenantPrepared.get(20, TimeUnit.SECONDS);
 
 			String failureMessage = String.format("Tenant preparation failed: %s: %s",
         response.getStatusCode(), response.getBody());
