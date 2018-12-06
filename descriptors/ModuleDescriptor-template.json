@@ -58,7 +58,7 @@
     },
     {
       "id": "loan-policy-storage",
-      "version": "1.3",
+      "version": "1.4",
       "handlers": [
         {
           "methods": ["GET"],
