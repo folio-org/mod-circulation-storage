@@ -3,10 +3,12 @@
   "type": "object",
   "properties": {
     "duration": {
-      "type": "integer"
+      "type": "integer",
+      "description": "Duration amount"
     },
     "intervalId": {
-      "type": "string"
+      "type": "string",
+      "description": "Interval id"
     }
   },
   "required": [

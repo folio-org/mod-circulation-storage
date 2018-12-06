@@ -8,6 +8,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -21,7 +22,7 @@ public class VertxContextRunnerTest {
     vertx = Vertx.vertx();
   }
 
-  @Before
+  @After
   public void afterAll() {
     if(vertx != null) {
       vertx.close();
