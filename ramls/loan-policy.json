@@ -18,56 +18,70 @@
       "type": "object",
       "properties": {
         "profileId": {
-          "type": "string"
+          "type": "string",
+          "description": "Loan profile"
         },
         "period": {
           "type": "object",
-          "$ref": "period.json"
+          "$ref": "period.json",
+          "description": "Loan period"
         },
         "closedLibraryDueDateManagementId": {
-          "type": "string"
+          "type": "string",
+          "description": "Closed library due date management"
         },
         "existingRequestsPeriod": {
           "type": "object",
-          "$ref": "period.json"
+          "$ref": "period.json",
+          "description": "Alternate loan period for items with existing requests"
         },
         "gracePeriod": {
           "type": "object",
-          "$ref": "period.json"
+          "$ref": "period.json",
+          "description": "Grace period"
         },
         "openingTimeOffset": {
           "type": "object",
-          "$ref": "period.json"
+          "$ref": "period.json",
+          "description": "Opening offset time period"
         },
         "fixedDueDateScheduleId": {
-          "type": "string"
+          "type": "string",
+          "description": "Fixed due date schedule (due date limit)"
         }
       }
     },
     "renewable": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "Is item renewable"
     },
     "renewalsPolicy": {
       "type": "object",
       "properties": {
         "unlimited": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Unlimited renewals"
         },
         "numberAllowed": {
-          "type": "number"
+          "type": "number",
+          "description": "Number of renewals allowed"
         },
         "renewFromId": {
-          "type": "string"
+          "type": "string",
+          "description": "Renew from date"
         },
         "differentPeriod": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Renewal period different from original loan"
         },
         "period": {
           "type": "object",
-          "$ref": "period.json"
+          "$ref": "period.json",
+          "description": "Alternate loan period for renewals"
         },
         "alternateFixedDueDateScheduleId": {
-          "type": "string"
+          "type": "string",
+          "description": "Alternate fixed due date schedule (due date limit) for renewals"
         }
       }
     },
