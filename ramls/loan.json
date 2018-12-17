@@ -54,6 +54,10 @@
       "description": "Last action performed on a loan (currently can be any value, values commonly used are checkedout and checkedin)",
       "type": "string"
     },
+    "actionComment": {
+      "description": "Comment to last action performed on a loan",
+      "type": "string"
+    },
     "itemStatus": {
       "description": "Last item status used in relation to this loan (currently can be any value, values commonly used are Checked out and Available)",
       "type": "string"
