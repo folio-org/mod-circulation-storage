@@ -39,6 +39,7 @@ import org.folio.rest.support.builders.LoanRequestBuilder;
 import org.folio.rest.support.http.AssertingRecordClient;
 import org.folio.rest.support.http.InterfaceUrls;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Period;
 import org.joda.time.format.ISODateTimeFormat;
@@ -767,7 +768,7 @@ public class LoansApiTest extends ApiTests {
     TimeoutException,
     ExecutionException {
 
-    DateTime loanDate = new DateTime(2017, 3, 1, 13, 25, 46, DateTimeZone.UTC);
+    DateTime loanDate = new DateTime(2017, DateTimeConstants.MARCH, 1, 13, 25, 46, DateTimeZone.UTC);
 
     IndividualResource loan = loansClient.create(new LoanRequestBuilder()
       .withLoanDate(loanDate)
@@ -775,8 +776,9 @@ public class LoansApiTest extends ApiTests {
       .create());
 
     LoanRequestBuilder returnedLoan = LoanRequestBuilder.from(loan.getJson())
-      .withDueDate(new DateTime(2017, 3, 30, 13, 25, 46, DateTimeZone.UTC))
+      .withDueDate(new DateTime(2017, DateTimeConstants.MARCH, 30, 13, 25, 46, DateTimeZone.UTC))
       .withAction("renewed")
+      .withActionComment("test action comment")
       .withItemStatus("Checked out")
       .withRenewalCount(1);
 
@@ -794,6 +796,9 @@ public class LoansApiTest extends ApiTests {
 
     assertThat("action is not renewed",
       updatedLoan.getString("action"), is("renewed"));
+
+    assertThat("action comment is incorrect",
+      updatedLoan.getString("actionComment"), is("test action comment"));
 
     assertThat("renewal count is not 1",
       updatedLoan.getInteger("renewalCount"), is(1));

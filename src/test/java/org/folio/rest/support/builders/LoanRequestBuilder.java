@@ -19,6 +19,7 @@ public class LoanRequestBuilder implements Builder {
   private final String itemStatus;
   private final DateTime dueDate;
   private final String action;
+  private final String actionComment;
   private final UUID loanPolicyId;
   private DateTime returnDate;
   private DateTime systemReturnDate;
@@ -33,6 +34,7 @@ public class LoanRequestBuilder implements Builder {
       "Open",
       null,
       "checkedout",
+      "test",
       null,
       null,
       null,
@@ -49,6 +51,7 @@ public class LoanRequestBuilder implements Builder {
     String statusName,
     String itemStatus,
     String action,
+    String actionComment,
     DateTime dueDate,
     UUID loanPolicyId,
     DateTime returnDate,
@@ -64,6 +67,7 @@ public class LoanRequestBuilder implements Builder {
     this.itemStatus = itemStatus;
     this.dueDate = dueDate;
     this.action = action;
+    this.actionComment = actionComment;
     this.loanPolicyId = loanPolicyId;
     this.returnDate = returnDate;
     this.systemReturnDate = systemReturnDate;
@@ -126,6 +130,7 @@ public class LoanRequestBuilder implements Builder {
       statusName,
       example.getString("itemStatus"),
       example.getString("action"),
+      example.getString("actionComment"),
       dueDate,
       loanPolicyId,
       returnDate,
@@ -187,6 +192,10 @@ public class LoanRequestBuilder implements Builder {
       request.put("renewalCount", renewalCount);
     }
 
+    if(actionComment != null) {
+      request.put("actionComment", actionComment);
+    }
+
     return request;
   }
 
@@ -200,6 +209,7 @@ public class LoanRequestBuilder implements Builder {
       this.statusName,
       this.itemStatus,
       this.action,
+      this.actionComment,
       this.dueDate,
       this.loanPolicyId,
       this.returnDate,
@@ -221,6 +231,7 @@ public class LoanRequestBuilder implements Builder {
       this.statusName,
       this.itemStatus,
       this.action,
+      this.actionComment,
       this.dueDate,
       this.loanPolicyId,
       this.returnDate,
@@ -238,6 +249,7 @@ public class LoanRequestBuilder implements Builder {
       this.statusName,
       this.itemStatus,
       this.action,
+      this.actionComment,
       this.dueDate,
       this.loanPolicyId,
       this.returnDate,
@@ -259,6 +271,7 @@ public class LoanRequestBuilder implements Builder {
       this.statusName,
       this.itemStatus,
       this.action,
+      this.actionComment,
       this.dueDate,
       this.loanPolicyId,
       this.returnDate,
@@ -276,6 +289,7 @@ public class LoanRequestBuilder implements Builder {
       this.statusName,
       this.itemStatus,
       this.action,
+      this.actionComment,
       this.dueDate,
       this.loanPolicyId,
       this.returnDate,
@@ -293,6 +307,7 @@ public class LoanRequestBuilder implements Builder {
       statusName,
       this.itemStatus,
       this.action,
+      this.actionComment,
       this.dueDate,
       this.loanPolicyId,
       this.returnDate,
@@ -318,6 +333,7 @@ public class LoanRequestBuilder implements Builder {
       statusName,
       itemStatus,
       this.action,
+      this.actionComment,
       this.dueDate,
       this.loanPolicyId,
       this.returnDate,
@@ -335,6 +351,25 @@ public class LoanRequestBuilder implements Builder {
       this.statusName,
       this.itemStatus,
       action,
+      this.actionComment,
+      this.dueDate,
+      this.loanPolicyId,
+      this.returnDate,
+      this.systemReturnDate,
+      this.renewalCount);
+  }
+
+  public LoanRequestBuilder withActionComment(String actionComment) {
+    return new LoanRequestBuilder(
+      this.id,
+      this.itemId,
+      this.userId,
+      this.proxyUserId,
+      this.loanDate,
+      this.statusName,
+      this.itemStatus,
+      this.action,
+      actionComment,
       this.dueDate,
       this.loanPolicyId,
       this.returnDate,
@@ -352,6 +387,7 @@ public class LoanRequestBuilder implements Builder {
       this.statusName,
       this.itemStatus,
       this.action,
+      this.actionComment,
       dueDate,
       this.loanPolicyId,
       this.returnDate,
@@ -369,6 +405,7 @@ public class LoanRequestBuilder implements Builder {
       this.statusName,
       this.itemStatus,
       this.action,
+      this.actionComment,
       this.dueDate,
       this.loanPolicyId,
       returnDate,
@@ -386,6 +423,7 @@ public class LoanRequestBuilder implements Builder {
       this.statusName,
       this.itemStatus,
       this.action,
+      this.actionComment,
       this.dueDate,
       this.loanPolicyId,
       this.returnDate,
@@ -415,6 +453,7 @@ public class LoanRequestBuilder implements Builder {
       this.statusName,
       this.itemStatus,
       this.action,
+      this.actionComment,
       this.dueDate,
       loanPolicyId,
       this.returnDate,
@@ -432,6 +471,7 @@ public class LoanRequestBuilder implements Builder {
       this.statusName,
       this.itemStatus,
       this.action,
+      this.actionComment,
       this.dueDate,
       this.loanPolicyId,
       this.returnDate,
