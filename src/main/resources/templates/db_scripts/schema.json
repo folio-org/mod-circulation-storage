@@ -109,6 +109,13 @@
           "caseSensitive": false
         }
       ]
+    },
+    {
+      "tableName": "patron_notice_policy",
+      "generateId": false,
+      "pkColumnName": "_id",
+      "withMetadata": true,
+      "withAuditing": false
     }
   ]
 }
