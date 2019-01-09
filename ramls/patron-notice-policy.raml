@@ -1,0 +1,45 @@
+#%RAML 1.0
+title: Patron Notice Policies
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost:9130
+
+documentation:
+  - title: Patron Notice Policies API
+    content: <b>Storage for Patron Notice Policies</b>
+
+types:
+  patron-notice-policy: !include patron-notice-policy.json
+
+/patron-notice-policy-storage:
+  /patron-notice-policies:
+    displayName: Patron Notice Policies
+    post:
+      body:
+        application/json:
+          type: patron-notice-policy
+      responses:
+        201:
+          description: "Create new Patron Notice Policy"
+          body:
+            application/json:
+              type: patron-notice-policy
+        500:
+          description: "Internal server error"
+          body:
+            text/plain:
+              example: "Internal server error"
+    /{patronNoticePolicyId}:
+      put:
+        body:
+          application/json:
+            type: patron-notice-policy
+        responses:
+          204:
+            description: "Update Patron Notice Policy by id"
+          500:
+            description: "Internal server error"
+            body:
+              text/plain:
+                example: "Internal server error"
+
