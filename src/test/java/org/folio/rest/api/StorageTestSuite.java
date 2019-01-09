@@ -43,7 +43,8 @@ import io.vertx.ext.sql.ResultSet;
   RequestsApiTest.class,
   LoansApiHistoryTest.class,
   StaffSlipsApiTest.class,
-  CancellationReasonsApiTest.class
+  CancellationReasonsApiTest.class,
+  PatronNoticePoliciesApiTest.class
 })
 
 public class StorageTestSuite {
@@ -146,6 +147,8 @@ public class StorageTestSuite {
 		});
 
 		undeploymentComplete.get(20, TimeUnit.SECONDS);
+
+		PostgresClient.stopEmbeddedPostgres();
 	}
 
 	public static boolean isNotInitialised() {
