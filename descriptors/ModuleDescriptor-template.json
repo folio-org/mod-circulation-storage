@@ -222,6 +222,22 @@
       ]
     },
     {
+      "id": "patron-notice-policy-storage",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["POST"],
+          "pathPattern": "/patron-notice-policy-storage/patron-notice-policies",
+          "permissionsRequired": ["circulation-storage.patron-notice-policies.item.create"]
+        },
+        {
+          "methods": ["PUT"],
+          "pathPattern": "/patron-notice-policy-storage/patron-notice-policies/{id}",
+          "permissionsRequired": ["circulation-storage.patron-notice-policies.item.update"]
+        }
+      ]
+    },
+    {
       "id": "_tenant",
       "version": "1.0",
       "interfaceType": "system",
@@ -481,7 +497,9 @@
         "circulation-storage.cancellation-reasons.item.post",
         "circulation-storage.cancellation-reasons.item.put",
         "circulation-storage.cancellation-reasons.collection.delete",
-        "circulation-storage.cancellation-reasons.item.delete"
+        "circulation-storage.cancellation-reasons.item.delete",
+        "circulation-storage.patron-notice-policies.item.create",
+        "circulation-storage.patron-notice-policies.item.update"
       ]
     }
   ],
