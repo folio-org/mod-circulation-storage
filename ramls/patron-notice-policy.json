@@ -18,10 +18,10 @@
     },
     "active": {
       "type": "boolean",
-      "description": "Patron notice policy description"
+      "description": "A flag to determine if a patron notice policy is active"
     },
     "metadata": {
-      "description": "Metadata about creation and changes to requests, provided by the server (client should not provide)",
+      "description": "Metadata about creation and changes to policy, provided by the server (client should not provide)",
       "type": "object",
       "$ref": "raml-util/schemas/metadata.schema"
     },
