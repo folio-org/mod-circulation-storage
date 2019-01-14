@@ -215,15 +215,6 @@
                   "After"
                 ]
               },
-              "sendWhen": {
-                "type": "string",
-                "description": "date due/overdue/renewed",
-                "enum": [
-                  "Due date",
-                  "Overdue",
-                  "Renewed"
-                ]
-              },
               "sendBy": {
                 "type": "object",
                 "additionalProperties": false,
@@ -284,8 +275,7 @@
               }
             },
             "required": [
-              "sendHow",
-              "sendWhen"
+              "sendHow"
             ]
           }
         },
@@ -354,11 +344,11 @@
               },
               "sendWhen": {
                 "type": "string",
-                "description": "date due/overdue/renewed",
+                "description": "available/hold expiration/cancellation",
                 "enum": [
-                  "Due date",
-                  "Overdue",
-                  "Renewed"
+                  "Available",
+                  "Hold Expiration",
+                  "Cancellation"
                 ]
               },
               "sendBy": {
