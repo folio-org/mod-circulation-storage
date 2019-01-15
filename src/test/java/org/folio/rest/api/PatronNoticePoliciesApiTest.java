@@ -1,12 +1,16 @@
 package org.folio.rest.api;
 
+import io.vertx.ext.sql.UpdateResult;
 import org.folio.rest.jaxrs.model.PatronNoticePolicy;
+import org.folio.rest.persist.Criteria.Criterion;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.junit.MatcherAssert;
+import org.junit.After;
 import org.junit.Test;
 
 import java.net.MalformedURLException;
@@ -16,9 +20,19 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static org.folio.rest.impl.PatronNoticePoliciesAPI.PATRON_NOTICE_POLICY_TABLE;
 import static org.folio.rest.impl.PatronNoticePoliciesAPI.STATUS_CODE_DUPLICATE_NAME;
 
 public class PatronNoticePoliciesApiTest extends ApiTests {
+
+  @After
+  public void cleanUp() {
+    CompletableFuture<UpdateResult> future = new CompletableFuture<>();
+    PostgresClient
+      .getInstance(StorageTestSuite.getVertx(), StorageTestSuite.TENANT_ID)
+      .delete(PATRON_NOTICE_POLICY_TABLE, new Criterion(), del -> future.complete(del.result()));
+    future.join();
+  }
 
   @Test
   public void canCreatePatronNoticePolicy() throws MalformedURLException, InterruptedException, ExecutionException,
@@ -99,6 +113,27 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
     JsonResponse response = updatePatronNoticePolicy(entity);
 
     MatcherAssert.assertThat(response.getStatusCode(), CoreMatchers.is(404));
+  }
+
+  @Test
+  public void canGetAllPatronNoticePolicies() throws MalformedURLException, InterruptedException, ExecutionException,
+    TimeoutException {
+
+    PatronNoticePolicy entity = new PatronNoticePolicy();
+    entity.setName("firstPolicy");
+
+    createPatronNoticePolicy(entity);
+    createPatronNoticePolicy(entity.withName("secondPolicy"));
+
+    CompletableFuture<JsonResponse> getAllCompleted = new CompletableFuture<>();
+
+    client.get(patronNoticePoliciesStorageUrl(), StorageTestSuite.TENANT_ID, ResponseHandler.json(getAllCompleted));
+
+    JsonResponse response = getAllCompleted.get(5, TimeUnit.SECONDS);
+
+    MatcherAssert.assertThat("Failed to get all patron notice policies", response.getStatusCode(), CoreMatchers.is(200));
+    MatcherAssert.assertThat(response.getJson().getJsonArray("patronNoticePolicies").size(), CoreMatchers.is(2));
+    MatcherAssert.assertThat(response.getJson().getInteger("totalRecords"), CoreMatchers.is(2));
   }
 
   private JsonResponse createPatronNoticePolicy(PatronNoticePolicy entity) throws MalformedURLException,

@@ -10,11 +10,33 @@ documentation:
 
 types:
   patron-notice-policy: !include patron-notice-policy.json
+  patron-notice-policies: !include patron-notice-policies.json
   errors: !include raml-util/schemas/errors.schema
+
+traits:
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
 
 /patron-notice-policy-storage:
   /patron-notice-policies:
     displayName: Patron Notice Policies
+    get:
+      is: [
+        pageable,
+        searchable: {description: "searchable using CQL", example: "id=\"cf23adf0-61ba-4887-bf82-956c4aae2260\""}
+      ]
+      description: "Get Patron Notice Policy list"
+      responses:
+        200:
+          description: "Return Patron Notice Policy list"
+          body:
+            application/json:
+              type: patron-notice-policies
+        500:
+          description: "Internal server error"
+          body:
+            text/plain:
+              example: "Internal server error"
     post:
       description: "Create new Patron Notice Policy"
       body:
