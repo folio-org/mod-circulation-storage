@@ -428,8 +428,6 @@
     }
   },
   "required": [
-    "name",
-    "description",
-    "active"
+    "name"
   ]
 }

@@ -10,20 +10,27 @@ documentation:
 
 types:
   patron-notice-policy: !include patron-notice-policy.json
+  errors: !include raml-util/schemas/errors.schema
 
 /patron-notice-policy-storage:
   /patron-notice-policies:
     displayName: Patron Notice Policies
     post:
+      description: "Create new Patron Notice Policy"
       body:
         application/json:
           type: patron-notice-policy
       responses:
         201:
-          description: "Create new Patron Notice Policy"
+          description: "Successfully created"
           body:
             application/json:
               type: patron-notice-policy
+        422:
+          description: "Unprocessable entity"
+          body:
+            application/json:
+              type: errors
         500:
           description: "Internal server error"
           body:
@@ -31,12 +38,18 @@ types:
               example: "Internal server error"
     /{patronNoticePolicyId}:
       put:
+        description: "Update Patron Notice Policy by id"
         body:
           application/json:
             type: patron-notice-policy
         responses:
           204:
-            description: "Update Patron Notice Policy by id"
+            description: "Successfully updated"
+          422:
+            description: "Unprocessable entity"
+            body:
+              application/json:
+                type: errors
           500:
             description: "Internal server error"
             body:

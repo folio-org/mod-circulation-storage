@@ -2,7 +2,6 @@ package org.folio.rest.api;
 
 import org.folio.rest.jaxrs.model.PatronNoticePolicy;
 import org.folio.rest.support.ApiTests;
-import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
@@ -17,6 +16,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static org.folio.rest.impl.PatronNoticePoliciesAPI.STATUS_CODE_DUPLICATE_NAME;
+
 public class PatronNoticePoliciesApiTest extends ApiTests {
 
   @Test
@@ -24,11 +25,26 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
     TimeoutException {
 
     PatronNoticePolicy entity = new PatronNoticePolicy();
-    entity.setName("name");
-    entity.setDescription("desc");
-    entity.setActive(true);
+    entity.setName("createName");
 
-    assertCreatePatronNoticePolicy(entity);
+    JsonResponse response = createPatronNoticePolicy(entity);
+
+    MatcherAssert.assertThat("Failed to create patron notice policy", response.getStatusCode(), CoreMatchers.is(201));
+  }
+
+  @Test
+  public void cannotCreatePatronNoticePolicyWithNotUniqueName() throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    PatronNoticePolicy entity = new PatronNoticePolicy();
+    entity.setName("createUniqueName");
+
+    createPatronNoticePolicy(entity);
+    JsonResponse response = createPatronNoticePolicy(entity);
+    String code = response.getJson().getJsonArray("errors").getJsonObject(0).getString("code");
+
+    MatcherAssert.assertThat(response.getStatusCode(), CoreMatchers.is(422));
+    MatcherAssert.assertThat(code, CoreMatchers.is(STATUS_CODE_DUPLICATE_NAME));
   }
 
   @Test
@@ -36,19 +52,43 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
     TimeoutException {
 
     PatronNoticePolicy entity = new PatronNoticePolicy();
-    entity.setName("testPolicy");
-    entity.setDescription("Test Patron Notice Policy");
-    entity.setActive(true);
+    entity.setName("updateName");
 
-    String id = assertCreatePatronNoticePolicy(entity).getId();
+    String id = createPatronNoticePolicy(entity).getJson().getString("id");
 
     entity.setId(id);
-    entity.setDescription("New description");
+    entity.setDescription("description");
 
-    assertUpdatePatronNoticePolicy(entity);
+    Response response = updatePatronNoticePolicy(entity);
+
+    MatcherAssert.assertThat("Failed to update patron notice policy", response.getStatusCode(), CoreMatchers.is(204));
   }
 
-  private IndividualResource assertCreatePatronNoticePolicy(PatronNoticePolicy entity) throws MalformedURLException,
+  @Test
+  public void cannotUpdatePatronNoticePolicyWithNotUniqueName() throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    PatronNoticePolicy firstEntity = new PatronNoticePolicy();
+    firstEntity.setName("firstName");
+
+    createPatronNoticePolicy(firstEntity);
+
+    PatronNoticePolicy secondEntity = new PatronNoticePolicy();
+    secondEntity.setName("secondName");
+
+    String id = createPatronNoticePolicy(secondEntity).getJson().getString("id");
+
+    JsonResponse response = updatePatronNoticePolicy(secondEntity
+      .withId(id)
+      .withName("firstName"));
+
+    String code = response.getJson().getJsonArray("errors").getJsonObject(0).getString("code");
+
+    MatcherAssert.assertThat(response.getStatusCode(), CoreMatchers.is(422));
+    MatcherAssert.assertThat(code, CoreMatchers.is(STATUS_CODE_DUPLICATE_NAME));
+  }
+
+  private JsonResponse createPatronNoticePolicy(PatronNoticePolicy entity) throws MalformedURLException,
     InterruptedException, ExecutionException, TimeoutException {
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
@@ -56,24 +96,19 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
     client.post(patronNoticePoliciesStorageUrl(), entity, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createCompleted));
 
-    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
-    MatcherAssert.assertThat("Failed to create patron notice policy", response.getStatusCode(), CoreMatchers.is(201));
-
-    return new IndividualResource(response);
+    return createCompleted.get(5, TimeUnit.SECONDS);
   }
 
-  private void assertUpdatePatronNoticePolicy(PatronNoticePolicy entity) throws MalformedURLException,
+  private JsonResponse updatePatronNoticePolicy(PatronNoticePolicy entity) throws MalformedURLException,
     InterruptedException, ExecutionException, TimeoutException {
 
-    CompletableFuture<Response> updateCompleted = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> updateCompleted = new CompletableFuture<>();
 
     client.put(patronNoticePoliciesStorageUrl("/" + entity.getId()), entity, StorageTestSuite.TENANT_ID,
-      ResponseHandler.empty(updateCompleted));
+      ResponseHandler.json(updateCompleted));
 
-    Response response = updateCompleted.get(5, TimeUnit.SECONDS);
-
-    MatcherAssert.assertThat("Failed to update patron notice policy", response.getStatusCode(), CoreMatchers.is(204));
+    return updateCompleted.get(5, TimeUnit.SECONDS);
   }
 
   private static URL patronNoticePoliciesStorageUrl() throws MalformedURLException {
