@@ -223,7 +223,7 @@
     },
     {
       "id": "patron-notice-policy-storage",
-      "version": "1.0",
+      "version": "0.1",
       "handlers": [
         {
           "methods": ["POST"],
@@ -498,8 +498,8 @@
         "circulation-storage.cancellation-reasons.item.put",
         "circulation-storage.cancellation-reasons.collection.delete",
         "circulation-storage.cancellation-reasons.item.delete",
-        "circulation-storage.patron-notice-policies.item.create",
-        "circulation-storage.patron-notice-policies.item.update"
+        "circulation-storage.patron-notice-policies.item.post",
+        "circulation-storage.patron-notice-policies.item.put"
       ]
     }
   ],
