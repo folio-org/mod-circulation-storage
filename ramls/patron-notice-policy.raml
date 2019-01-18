@@ -45,6 +45,11 @@ types:
         responses:
           204:
             description: "Successfully updated"
+          404:
+            description: "Not found"
+            body:
+              text/plain:
+                example: "Not found"
           422:
             description: "Unprocessable entity"
             body:

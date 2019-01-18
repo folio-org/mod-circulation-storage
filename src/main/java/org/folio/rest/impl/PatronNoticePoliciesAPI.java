@@ -85,10 +85,18 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
               asyncResultHandler.handle(Future.succeededFuture(
                 PutPatronNoticePolicyStoragePatronNoticePoliciesByPatronNoticePolicyIdResponse
                   .respond422WithApplicationJson(createNotUniqueNameErrors(entity.getName()))));
+              return;
             }
             asyncResultHandler.handle(Future.succeededFuture(
               PutPatronNoticePolicyStoragePatronNoticePoliciesByPatronNoticePolicyIdResponse
                 .respond500WithTextPlain(update.cause())));
+            return;
+          }
+
+          if (update.result().getUpdated() == 0) {
+            asyncResultHandler.handle(Future.succeededFuture(
+              PutPatronNoticePolicyStoragePatronNoticePoliciesByPatronNoticePolicyIdResponse
+                .respond404WithTextPlain("Not found")));
             return;
           }
           asyncResultHandler.handle(Future.succeededFuture(

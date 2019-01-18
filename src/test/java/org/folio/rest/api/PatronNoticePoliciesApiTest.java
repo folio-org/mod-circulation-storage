@@ -88,6 +88,19 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
     MatcherAssert.assertThat(code, CoreMatchers.is(STATUS_CODE_DUPLICATE_NAME));
   }
 
+  @Test
+  public void cannotUpdateNonexistentPatronNoticePolicy() throws InterruptedException, MalformedURLException,
+    TimeoutException, ExecutionException {
+
+    PatronNoticePolicy entity = new PatronNoticePolicy();
+    entity.setId("0f612a84-dc0f-4670-9017-62981ba63644");
+    entity.setName("nonexistentPolicy");
+
+    JsonResponse response = updatePatronNoticePolicy(entity);
+
+    MatcherAssert.assertThat(response.getStatusCode(), CoreMatchers.is(404));
+  }
+
   private JsonResponse createPatronNoticePolicy(PatronNoticePolicy entity) throws MalformedURLException,
     InterruptedException, ExecutionException, TimeoutException {
 
