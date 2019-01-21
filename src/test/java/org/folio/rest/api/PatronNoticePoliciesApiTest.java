@@ -22,6 +22,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static org.folio.rest.impl.PatronNoticePoliciesAPI.NOT_FOUND;
 import static org.folio.rest.impl.PatronNoticePoliciesAPI.PATRON_NOTICE_POLICY_TABLE;
 import static org.folio.rest.impl.PatronNoticePoliciesAPI.STATUS_CODE_DUPLICATE_NAME;
 import static org.hamcrest.collection.IsArrayContainingInAnyOrder.arrayContainingInAnyOrder;
@@ -135,6 +136,38 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
       .toArray(String[]::new);
 
     MatcherAssert.assertThat(names, arrayContainingInAnyOrder(firstPolicy.getName(), secondPolicy.getName()));
+  }
+
+  @Test
+  public void canGetPatronNoticePolicy() throws MalformedURLException, InterruptedException, ExecutionException,
+    TimeoutException {
+
+    String id = createPatronNoticePolicy(firstPolicy).getJson().getString("id");
+
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
+
+    client.get(patronNoticePoliciesStorageUrl("/" + id), StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
+
+    JsonResponse response = getCompleted.get(5, TimeUnit.SECONDS);
+
+    MatcherAssert.assertThat(response.getStatusCode(), CoreMatchers.is(200));
+    MatcherAssert.assertThat(response.getJson().getString("id"), CoreMatchers.is(id));
+    MatcherAssert.assertThat(response.getJson().getString("name"), CoreMatchers.is(firstPolicy.getName()));
+  }
+
+  @Test
+  public void cannotGetNonexistentPatronNoticePolicy() throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
+
+    client.get(patronNoticePoliciesStorageUrl("/" + nonexistentPolicy.getId()),
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
+
+    JsonResponse response = getCompleted.get(5, TimeUnit.SECONDS);
+
+    MatcherAssert.assertThat(response.getStatusCode(), CoreMatchers.is(404));
+    MatcherAssert.assertThat(response.getBody(), CoreMatchers.is(NOT_FOUND));
   }
 
   private JsonResponse createPatronNoticePolicy(PatronNoticePolicy entity) throws MalformedURLException,
