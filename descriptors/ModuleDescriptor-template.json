@@ -222,6 +222,22 @@
       ]
     },
     {
+      "id": "patron-notice-policy-storage",
+      "version": "0.1",
+      "handlers": [
+        {
+          "methods": ["POST"],
+          "pathPattern": "/patron-notice-policy-storage/patron-notice-policies",
+          "permissionsRequired": ["circulation-storage.patron-notice-policies.item.post"]
+        },
+        {
+          "methods": ["PUT"],
+          "pathPattern": "/patron-notice-policy-storage/patron-notice-policies/{id}",
+          "permissionsRequired": ["circulation-storage.patron-notice-policies.item.put"]
+        }
+      ]
+    },
+    {
       "id": "_tenant",
       "version": "1.0",
       "interfaceType": "system",
@@ -438,6 +454,16 @@
       "description": "Delete individual cancellation reason by id"
     },
     {
+      "permissionName": "circulation-storage.patron-notice-policies.item.post",
+      "displayName": "Circulation storage - post individual patron notice policy",
+      "description": "Post individual patron notice policy"
+    },
+    {
+      "permissionName": "circulation-storage.patron-notice-policies.item.put",
+      "displayName": "Circulation storage - put individual patron notice policy",
+      "description": "Put individual patron notice policy by id"
+    },
+    {
       "permissionName": "circulation-storage.all",
       "displayName": "Circulation storage module - all permissions",
       "description": "Entire set of permissions needed to use the circulation storage module",
@@ -481,7 +507,9 @@
         "circulation-storage.cancellation-reasons.item.post",
         "circulation-storage.cancellation-reasons.item.put",
         "circulation-storage.cancellation-reasons.collection.delete",
-        "circulation-storage.cancellation-reasons.item.delete"
+        "circulation-storage.cancellation-reasons.item.delete",
+        "circulation-storage.patron-notice-policies.item.post",
+        "circulation-storage.patron-notice-policies.item.put"
       ]
     }
   ],
