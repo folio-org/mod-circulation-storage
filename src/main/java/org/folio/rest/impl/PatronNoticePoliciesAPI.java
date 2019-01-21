@@ -47,7 +47,7 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
 
         String[] fieldList = {"*"};
 
-        CQL2PgJSON cql2pgJson = new CQL2PgJSON("patron_notice_policy.jsonb");
+        CQL2PgJSON cql2pgJson = new CQL2PgJSON(PATRON_NOTICE_POLICY_TABLE + ".jsonb");
         CQLWrapper cql = new CQLWrapper(cql2pgJson, query)
           .setLimit(new Limit(limit))
           .setOffset(new Offset(offset));
