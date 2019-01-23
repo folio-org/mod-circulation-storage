@@ -4,7 +4,7 @@
   "type": "object",
   "properties": {
     "patronNoticePolicies": {
-      "description": "List of items",
+      "description": "List of patron notice policies",
       "id": "patronNoticePolicies",
       "type": "array",
       "items": {
