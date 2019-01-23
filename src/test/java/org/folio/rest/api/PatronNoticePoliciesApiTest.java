@@ -1,6 +1,7 @@
 package org.folio.rest.api;
 
 import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.UpdateResult;
 import org.folio.rest.jaxrs.model.PatronNoticePolicy;
 import org.folio.rest.persist.Criteria.Criterion;
@@ -23,6 +24,7 @@ import java.util.concurrent.TimeoutException;
 
 import static org.folio.rest.impl.PatronNoticePoliciesAPI.PATRON_NOTICE_POLICY_TABLE;
 import static org.folio.rest.impl.PatronNoticePoliciesAPI.STATUS_CODE_DUPLICATE_NAME;
+import static org.hamcrest.collection.IsArrayContainingInAnyOrder.arrayContainingInAnyOrder;
 
 public class PatronNoticePoliciesApiTest extends ApiTests {
 
@@ -124,10 +126,15 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
     JsonArray policies = response.getJson().getJsonArray("patronNoticePolicies");
 
     MatcherAssert.assertThat(policies.size(), CoreMatchers.is(2));
-    MatcherAssert.assertThat(policies.getJsonObject(0).getString("name"), CoreMatchers.is(firstPolicy.getName()));
-    MatcherAssert.assertThat(policies.getJsonObject(1).getString("name"), CoreMatchers.is(secondPolicy.getName()));
-    MatcherAssert.assertThat(policies.size(), CoreMatchers.is(2));
     MatcherAssert.assertThat(response.getJson().getInteger("totalRecords"), CoreMatchers.is(2));
+
+    String[] names = policies.stream()
+      .map(o -> (JsonObject) o)
+      .map(o -> o.mapTo(PatronNoticePolicy.class))
+      .map(PatronNoticePolicy::getName)
+      .toArray(String[]::new);
+
+    MatcherAssert.assertThat(names, arrayContainingInAnyOrder(firstPolicy.getName(), secondPolicy.getName()));
   }
 
   private JsonResponse createPatronNoticePolicy(PatronNoticePolicy entity) throws MalformedURLException,
