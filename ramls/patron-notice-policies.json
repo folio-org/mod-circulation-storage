@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Collection of patron notice policies",
+  "type": "object",
+  "properties": {
+    "patronNoticePolicies": {
+      "description": "List of patron notice policies",
+      "id": "patronNoticePolicies",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "patron-notice-policy.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "patronNoticePolicies",
+    "totalRecords"
+  ]
+}

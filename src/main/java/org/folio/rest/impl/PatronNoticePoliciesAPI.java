@@ -9,10 +9,15 @@ import io.vertx.core.logging.LoggerFactory;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
+import org.folio.rest.jaxrs.model.PatronNoticePolicies;
 import org.folio.rest.jaxrs.model.PatronNoticePolicy;
 import org.folio.rest.jaxrs.resource.PatronNoticePolicyStorage;
+import org.folio.rest.persist.Criteria.Limit;
+import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.ValidationHelper;
+import org.folio.rest.persist.cql.CQLWrapper;
+import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
 import javax.ws.rs.core.Response;
 import java.util.Collections;
@@ -23,8 +28,54 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
 
   private static final Logger logger = LoggerFactory.getLogger(PatronNoticePoliciesAPI.class);
 
-  private static final String PATRON_NOTICE_POLICY_TABLE = "patron_notice_policy";
+  public static final String PATRON_NOTICE_POLICY_TABLE = "patron_notice_policy";
   public static final String STATUS_CODE_DUPLICATE_NAME = "duplicate.name";
+
+  @Override
+  public void getPatronNoticePolicyStoragePatronNoticePolicies(
+    int offset,
+    int limit,
+    String query,
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+    vertxContext.runOnContext(v -> {
+      try {
+        String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
+        PostgresClient pgClient = PostgresClient.getInstance(vertxContext.owner(), tenantId);
+
+        String[] fieldList = {"*"};
+
+        CQL2PgJSON cql2pgJson = new CQL2PgJSON(PATRON_NOTICE_POLICY_TABLE + ".jsonb");
+        CQLWrapper cql = new CQLWrapper(cql2pgJson, query)
+          .setLimit(new Limit(limit))
+          .setOffset(new Offset(offset));
+
+        pgClient.get(PATRON_NOTICE_POLICY_TABLE, PatronNoticePolicy.class, fieldList, cql, true, false, get -> {
+          if (get.failed()) {
+            logger.error(get.cause());
+            asyncResultHandler.handle(Future.succeededFuture(
+              GetPatronNoticePolicyStoragePatronNoticePoliciesResponse.respond500WithTextPlain(get.cause())));
+            return;
+          }
+
+          PatronNoticePolicies patronNoticePolicies = new PatronNoticePolicies()
+            .withPatronNoticePolicies(get.result().getResults())
+            .withTotalRecords(get.result().getResultInfo().getTotalRecords());
+
+          asyncResultHandler.handle(Future.succeededFuture(
+            GetPatronNoticePolicyStoragePatronNoticePoliciesResponse
+              .respond200WithApplicationJson(patronNoticePolicies)));
+
+        });
+      } catch (Exception e) {
+        logger.error(e);
+        asyncResultHandler.handle(Future.succeededFuture(
+          GetPatronNoticePolicyStoragePatronNoticePoliciesResponse.respond500WithTextPlain(e)));
+      }
+    });
+  }
 
   @Override
   public void postPatronNoticePolicyStoragePatronNoticePolicies(
