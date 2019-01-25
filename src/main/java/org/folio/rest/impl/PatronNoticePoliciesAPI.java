@@ -12,10 +12,9 @@ import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.PatronNoticePolicies;
 import org.folio.rest.jaxrs.model.PatronNoticePolicy;
 import org.folio.rest.jaxrs.resource.PatronNoticePolicyStorage;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.utils.ValidationHelper;
@@ -126,42 +125,9 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    vertxContext.runOnContext(v -> {
-      try {
-        String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
-        PostgresClient pgClient = PostgresClient.getInstance(vertxContext.owner(), tenantId);
-
-        Criteria criteria = new Criteria()
-          .addField("'id'")
-          .setOperation(Criteria.OP_EQUAL)
-          .setValue(patronNoticePolicyId);
-
-        pgClient.get(PATRON_NOTICE_POLICY_TABLE, PatronNoticePolicy.class, new Criterion(criteria), false, get -> {
-          if (get.failed()) {
-            logger.error(get.cause());
-            asyncResultHandler.handle(Future.succeededFuture(
-              GetPatronNoticePolicyStoragePatronNoticePoliciesByPatronNoticePolicyIdResponse
-                .respond500WithTextPlain(get.cause())));
-            return;
-          }
-
-          if (get.result().getResults().isEmpty()) {
-            asyncResultHandler.handle(Future.succeededFuture(
-              GetPatronNoticePolicyStoragePatronNoticePoliciesByPatronNoticePolicyIdResponse
-                .respond404WithTextPlain(NOT_FOUND)));
-            return;
-          }
-
-          asyncResultHandler.handle(Future.succeededFuture(
-            GetPatronNoticePolicyStoragePatronNoticePoliciesByPatronNoticePolicyIdResponse
-              .respond200WithApplicationJson(get.result().getResults().get(0))));
-        });
-      } catch (Exception e) {
-        logger.error(e);
-        asyncResultHandler.handle(Future.succeededFuture(
-          PostPatronNoticePolicyStoragePatronNoticePoliciesResponse.respond500WithTextPlain(e)));
-      }
-    });
+    PgUtil.getById(PATRON_NOTICE_POLICY_TABLE, PatronNoticePolicy.class, patronNoticePolicyId, okapiHeaders,
+      vertxContext, GetPatronNoticePolicyStoragePatronNoticePoliciesByPatronNoticePolicyIdResponse.class,
+      asyncResultHandler);
   }
 
   @Override
