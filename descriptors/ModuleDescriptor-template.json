@@ -223,7 +223,7 @@
     },
     {
       "id": "patron-notice-policy-storage",
-      "version": "0.2",
+      "version": "0.3",
       "handlers": [
         {
           "methods": ["POST"],
@@ -239,6 +239,11 @@
           "methods": ["GET"],
           "pathPattern": "/patron-notice-policy-storage/patron-notice-policies",
           "permissionsRequired": ["circulation-storage.patron-notice-policies.collection.get"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/patron-notice-policy-storage/patron-notice-policies/{id}",
+          "permissionsRequired": ["circulation-storage.patron-notice-policies.item.get"]
         }
       ]
     },
@@ -474,6 +479,11 @@
       "description": "Get patron notice policy collection from storage"
     },
     {
+      "permissionName": "circulation-storage.patron-notice-policies.item.get",
+      "displayName": "Circulation storage - get individual patron notice policy",
+      "description": "Get individual patron notice policy by id"
+    },
+    {
       "permissionName": "circulation-storage.all",
       "displayName": "Circulation storage module - all permissions",
       "description": "Entire set of permissions needed to use the circulation storage module",
@@ -520,7 +530,8 @@
         "circulation-storage.cancellation-reasons.item.delete",
         "circulation-storage.patron-notice-policies.item.post",
         "circulation-storage.patron-notice-policies.item.put",
-        "circulation-storage.patron-notice-policies.collection.get"
+        "circulation-storage.patron-notice-policies.collection.get",
+        "circulation-storage.patron-notice-policies.item.get"
       ]
     }
   ],

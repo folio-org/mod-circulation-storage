@@ -10,8 +10,6 @@ import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
-import org.hamcrest.CoreMatchers;
-import org.hamcrest.junit.MatcherAssert;
 import org.junit.After;
 import org.junit.Test;
 
@@ -22,9 +20,12 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static org.folio.rest.impl.PatronNoticePoliciesAPI.NOT_FOUND;
 import static org.folio.rest.impl.PatronNoticePoliciesAPI.PATRON_NOTICE_POLICY_TABLE;
 import static org.folio.rest.impl.PatronNoticePoliciesAPI.STATUS_CODE_DUPLICATE_NAME;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.collection.IsArrayContainingInAnyOrder.arrayContainingInAnyOrder;
+import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 public class PatronNoticePoliciesApiTest extends ApiTests {
 
@@ -53,7 +54,7 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
 
     JsonResponse response = createPatronNoticePolicy(firstPolicy);
 
-    MatcherAssert.assertThat("Failed to create patron notice policy", response.getStatusCode(), CoreMatchers.is(201));
+    assertThat("Failed to create patron notice policy", response.getStatusCode(), is(201));
   }
 
   @Test
@@ -64,8 +65,8 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
     JsonResponse response = createPatronNoticePolicy(firstPolicy);
     String code = response.getJson().getJsonArray("errors").getJsonObject(0).getString("code");
 
-    MatcherAssert.assertThat(response.getStatusCode(), CoreMatchers.is(422));
-    MatcherAssert.assertThat(code, CoreMatchers.is(STATUS_CODE_DUPLICATE_NAME));
+    assertThat(response.getStatusCode(), is(422));
+    assertThat(code, is(STATUS_CODE_DUPLICATE_NAME));
   }
 
   @Test
@@ -79,7 +80,7 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
 
     Response response = updatePatronNoticePolicy(firstPolicy);
 
-    MatcherAssert.assertThat("Failed to update patron notice policy", response.getStatusCode(), CoreMatchers.is(204));
+    assertThat("Failed to update patron notice policy", response.getStatusCode(), is(204));
   }
 
   @Test
@@ -96,8 +97,8 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
 
     String code = response.getJson().getJsonArray("errors").getJsonObject(0).getString("code");
 
-    MatcherAssert.assertThat(response.getStatusCode(), CoreMatchers.is(422));
-    MatcherAssert.assertThat(code, CoreMatchers.is(STATUS_CODE_DUPLICATE_NAME));
+    assertThat(response.getStatusCode(), is(422));
+    assertThat(code, is(STATUS_CODE_DUPLICATE_NAME));
   }
 
   @Test
@@ -106,7 +107,7 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
 
     JsonResponse response = updatePatronNoticePolicy(nonexistentPolicy);
 
-    MatcherAssert.assertThat(response.getStatusCode(), CoreMatchers.is(404));
+    assertThat(response.getStatusCode(), is(404));
   }
 
   @Test
@@ -122,11 +123,11 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
 
     JsonResponse response = getAllCompleted.get(5, TimeUnit.SECONDS);
 
-    MatcherAssert.assertThat("Failed to get all patron notice policies", response.getStatusCode(), CoreMatchers.is(200));
+    assertThat("Failed to get all patron notice policies", response.getStatusCode(), is(200));
     JsonArray policies = response.getJson().getJsonArray("patronNoticePolicies");
 
-    MatcherAssert.assertThat(policies.size(), CoreMatchers.is(2));
-    MatcherAssert.assertThat(response.getJson().getInteger("totalRecords"), CoreMatchers.is(2));
+    assertThat(policies.size(), is(2));
+    assertThat(response.getJson().getInteger("totalRecords"), is(2));
 
     String[] names = policies.stream()
       .map(o -> (JsonObject) o)
@@ -134,7 +135,39 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
       .map(PatronNoticePolicy::getName)
       .toArray(String[]::new);
 
-    MatcherAssert.assertThat(names, arrayContainingInAnyOrder(firstPolicy.getName(), secondPolicy.getName()));
+    assertThat(names, arrayContainingInAnyOrder(firstPolicy.getName(), secondPolicy.getName()));
+  }
+
+  @Test
+  public void canGetPatronNoticePolicy() throws MalformedURLException, InterruptedException, ExecutionException,
+    TimeoutException {
+
+    String id = createPatronNoticePolicy(firstPolicy).getJson().getString("id");
+
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
+
+    client.get(patronNoticePoliciesStorageUrl("/" + id), StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
+
+    JsonResponse response = getCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(200));
+    assertThat(response.getJson().getString("id"), is(id));
+    assertThat(response.getJson().getString("name"), is(firstPolicy.getName()));
+  }
+
+  @Test
+  public void cannotGetNonexistentPatronNoticePolicy() throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
+
+    client.get(patronNoticePoliciesStorageUrl("/" + nonexistentPolicy.getId()),
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
+
+    JsonResponse response = getCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(404));
+    assertThat(response.getBody(), is(NOT_FOUND));
   }
 
   private JsonResponse createPatronNoticePolicy(PatronNoticePolicy entity) throws MalformedURLException,

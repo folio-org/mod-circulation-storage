@@ -59,6 +59,25 @@ traits:
             text/plain:
               example: "Internal server error"
     /{patronNoticePolicyId}:
+      get:
+        description: "Get Patron Notice Policy by id"
+        responses:
+          200:
+            description: "Return Patron Notice Policy"
+            body:
+              application/json:
+                type: patron-notice-policy
+          404:
+            description: "Not found"
+            body:
+              text/plain:
+                example: "Not found"
+          500:
+            description: "Internal server error"
+            body:
+              text/plain:
+                example: "Internal server error"
+
       put:
         description: "Update Patron Notice Policy by id"
         body:
