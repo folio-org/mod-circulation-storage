@@ -15,14 +15,13 @@ import org.junit.Test;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.folio.rest.impl.PatronNoticePoliciesAPI.NOT_FOUND;
-import static org.folio.rest.impl.PatronNoticePoliciesAPI.PATRON_NOTICE_POLICY_TABLE;
-import static org.folio.rest.impl.PatronNoticePoliciesAPI.STATUS_CODE_DUPLICATE_NAME;
+import static org.folio.rest.impl.PatronNoticePoliciesAPI.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.collection.IsArrayContainingInAnyOrder.arrayContainingInAnyOrder;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
@@ -170,6 +169,27 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
     assertThat(response.getBody(), is(NOT_FOUND));
   }
 
+  @Test
+  public void canDeletePatronNoticePolicy() throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    String id = createPatronNoticePolicy(firstPolicy).getJson().getString("id");
+    JsonResponse response = deletePatronNoticePolicy(id);
+
+    assertThat(response.getStatusCode(), is(204));
+  }
+
+  @Test
+  public void cannotDeleteNonexistentPatronNoticePolicyId() throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    String id = UUID.randomUUID().toString();
+    JsonResponse response = deletePatronNoticePolicy(id);
+
+    assertThat(response.getStatusCode(), is(404));
+    assertThat(response.getBody(), is(NOT_FOUND));
+  }
+
   private JsonResponse createPatronNoticePolicy(PatronNoticePolicy entity) throws MalformedURLException,
     InterruptedException, ExecutionException, TimeoutException {
 
@@ -190,6 +210,17 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
       ResponseHandler.json(updateCompleted));
 
     return updateCompleted.get(5, TimeUnit.SECONDS);
+  }
+
+  private JsonResponse deletePatronNoticePolicy(String patronNoticePolicyId) throws MalformedURLException,
+    InterruptedException, ExecutionException, TimeoutException {
+
+    CompletableFuture<JsonResponse> deleteCompleted = new CompletableFuture<>();
+
+    client.delete(patronNoticePoliciesStorageUrl("/" + patronNoticePolicyId), StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(deleteCompleted));
+
+    return deleteCompleted.get(5, TimeUnit.SECONDS);
   }
 
   private static URL patronNoticePoliciesStorageUrl() throws MalformedURLException {
