@@ -85,6 +85,69 @@
         }
       }
     },
+    "requestManagement": {
+      "type": "object",
+      "properties": {
+        "recalls": {
+          "type": "object",
+          "properties": {
+            "alternateGracePeriod": {
+              "type": "object",
+              "$ref": "period.json",
+              "description": "Alternate grace period for recalled items"
+            },
+            "minLoanPeriod": {
+              "type": "object",
+              "$ref": "period.json",
+              "description": "Minimum guaranteed loan period"
+            },
+            "recallReturnInterval": {
+              "type": "object",
+              "$ref": "period.json",
+              "description": "Recall return interval"
+            }
+          }
+        },
+        "holds": {
+          "type": "object",
+          "properties": {
+            "alternateCheckoutLoanPeriod": {
+              "type": "object",
+              "$ref": "period.json",
+              "description": "Alternate loan period at checkout for items with active, pending hold request"
+            },
+            "renewItemsWithRequest": {
+              "type": "boolean",
+              "description": "Allow renewal of items with active, pending hold request"
+            },
+            "alternateRenewalLoanPeriod": {
+              "type": "object",
+              "$ref": "period.json",
+              "description": "Alternate loan period at renewal for items with active, pending hold request"
+            }
+          }
+        },
+        "pages": {
+          "type": "object",
+          "properties": {
+            "alternateCheckoutLoanPeriod": {
+              "type": "object",
+              "$ref": "period.json",
+              "description": "Alternate loan period at checkout for items with active, pending page request"
+            },
+            "renewItemsWithRequest": {
+              "type": "boolean",
+              "description": "Allow renewal of items with active, pending page request"
+            },
+            "alternateRenewalLoanPeriod": {
+              "type": "object",
+              "$ref": "period.json",
+              "description": "Alternate loan period at renewal for items with active, pending page request"
+            }
+          }
+        }
+      }
+    },
     "metadata": {
       "$ref": "raml-util/schemas/metadata.schema",
       "readonly": true
