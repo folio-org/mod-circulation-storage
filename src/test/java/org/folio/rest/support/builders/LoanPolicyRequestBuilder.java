@@ -39,8 +39,25 @@ public class LoanPolicyRequestBuilder {
     loansPolicy.put("gracePeriod", createPeriod(7, "Days"));
     loansPolicy.put("openingTimeOffset", createPeriod(3, "Hours"));
 
-    request.put("loansPolicy", loansPolicy);
+    JsonObject requestManagement = new JsonObject();
+    JsonObject recalls = new JsonObject();
+    recalls.put("alternateGracePeriod", createPeriod(1, "Months"));
+    recalls.put("minLoanPeriod", createPeriod(1, "Weeks"));
+    recalls.put("recallReturnInterval", createPeriod(1, "Days"));
+    JsonObject holds = new JsonObject();
+    holds.put("alternateCheckoutLoanPeriod", createPeriod(2, "Months"));
+    holds.put("renewItemsWithRequest", false);
+    holds.put("alternateRenewalLoanPeriod", createPeriod(2, "Days"));
+    JsonObject pages = new JsonObject();
+    pages.put("alternateCheckoutLoanPeriod", createPeriod(3, "Months"));
+    pages.put("renewItemsWithRequest", true);
+    pages.put("alternateRenewalLoanPeriod", createPeriod(3, "Days"));
+    requestManagement.put("recalls", recalls);
+    requestManagement.put("holds", holds);
+    requestManagement.put("pages", pages);
 
+    request.put("loansPolicy", loansPolicy);
+    request.put("requestManagement", requestManagement);
     request.put("renewable", true);
 
     JsonObject renewalsPolicy = new JsonObject();
