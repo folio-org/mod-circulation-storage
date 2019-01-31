@@ -42,7 +42,7 @@ public class LoanPolicyRequestBuilder {
     JsonObject requestManagement = new JsonObject();
     JsonObject recalls = new JsonObject();
     recalls.put("alternateGracePeriod", createPeriod(1, "Months"));
-    recalls.put("minLoanPeriod", createPeriod(1, "Weeks"));
+    recalls.put("minimumLoanPeriod", createPeriod(1, "Weeks"));
     recalls.put("recallReturnInterval", createPeriod(1, "Days"));
     JsonObject holds = new JsonObject();
     holds.put("alternateCheckoutLoanPeriod", createPeriod(2, "Months"));
