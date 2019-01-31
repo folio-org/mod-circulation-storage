@@ -16,7 +16,6 @@
     },
     "loansPolicy": {
       "type": "object",
-      "additionalProperties": false,
       "properties": {
         "profileId": {
           "type": "string",
@@ -58,7 +57,6 @@
     },
     "renewalsPolicy": {
       "type": "object",
-      "additionalProperties": false,
       "properties": {
         "unlimited": {
           "type": "boolean",
