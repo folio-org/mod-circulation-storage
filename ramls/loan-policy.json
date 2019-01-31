@@ -100,7 +100,7 @@
               "$ref": "period.json",
               "description": "Alternate grace period for recalled items"
             },
-            "minLoanPeriod": {
+            "minimumLoanPeriod": {
               "type": "object",
               "$ref": "period.json",
               "description": "Minimum guaranteed loan period"
