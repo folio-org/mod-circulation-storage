@@ -10,10 +10,6 @@
       "intervalId": "Months"
     },
     "closedLibraryDueDateManagementId": "KEEP_CURRENT_DATE",
-    "existingRequestsPeriod": {
-      "duration": 1,
-      "intervalId": "Weeks"
-    },
     "gracePeriod": {
       "duration": 7,
       "intervalId": "Days"

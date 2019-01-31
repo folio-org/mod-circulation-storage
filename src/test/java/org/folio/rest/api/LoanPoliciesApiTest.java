@@ -261,7 +261,6 @@ public class LoanPoliciesApiTest extends ApiTests {
     assertThat(loansPolicy.getString("profileId"), is("Rolling"));
     assertThat(loansPolicy.getJsonObject("period"), matchesPeriod(1, "Months"));
     assertThat(loansPolicy.getString("closedLibraryDueDateManagementId"), is("KEEP_CURRENT_DATE"));
-    assertThat(loansPolicy.getJsonObject("existingRequestsPeriod"), matchesPeriod(1, "Weeks"));
     assertThat(loansPolicy.getJsonObject("gracePeriod"), matchesPeriod(7, "Days"));
 
     assertThat(representation.containsKey("renewalsPolicy"), is(true));
@@ -351,7 +350,6 @@ public class LoanPoliciesApiTest extends ApiTests {
     assertThat(loansPolicy.getString("profileId"), is("Rolling"));
     assertThat(loansPolicy.getJsonObject("period"), matchesPeriod(1, "Months"));
     assertThat(loansPolicy.getString("closedLibraryDueDateManagementId"), is("KEEP_CURRENT_DATE"));
-    assertThat(loansPolicy.getJsonObject("existingRequestsPeriod"), matchesPeriod(1, "Weeks"));
     assertThat(loansPolicy.getJsonObject("gracePeriod"), matchesPeriod(7, "Days"));
 
     assertThat(representation.containsKey("renewalsPolicy"), is(true));
@@ -395,7 +393,6 @@ public class LoanPoliciesApiTest extends ApiTests {
     assertThat(loansPolicy.getString("profileId"), is("Rolling"));
     assertThat(loansPolicy.getJsonObject("period"), matchesPeriod(1, "Months"));
     assertThat(loansPolicy.getString("closedLibraryDueDateManagementId"), is("KEEP_CURRENT_DATE"));
-    assertThat(loansPolicy.getJsonObject("existingRequestsPeriod"), matchesPeriod(1, "Weeks"));
     assertThat(loansPolicy.getJsonObject("gracePeriod"), matchesPeriod(7, "Days"));
     assertThat(loansPolicy.getJsonObject("openingTimeOffset"), matchesPeriod(3, "Hours"));
 
@@ -612,7 +609,6 @@ public class LoanPoliciesApiTest extends ApiTests {
     assertThat(loansPolicy.getString("profileId"), is("Rolling"));
     assertThat(loansPolicy.getJsonObject("period"), matchesPeriod(1, "Months"));
     assertThat(loansPolicy.getString("closedLibraryDueDateManagementId"), is("KEEP_CURRENT_DATE"));
-    assertThat(loansPolicy.getJsonObject("existingRequestsPeriod"), matchesPeriod(1, "Weeks"));
     assertThat(loansPolicy.getJsonObject("gracePeriod"), matchesPeriod(7, "Days"));
     assertThat(loansPolicy.getJsonObject("openingTimeOffset"), matchesPeriod(3, "Hours"));
 

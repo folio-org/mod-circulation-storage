@@ -35,7 +35,6 @@ public class LoanPolicyRequestBuilder {
     loansPolicy.put("profileId", "Rolling");
     loansPolicy.put("period", createPeriod(1, "Months"));
     loansPolicy.put("closedLibraryDueDateManagementId", "KEEP_CURRENT_DATE");
-    loansPolicy.put("existingRequestsPeriod", createPeriod(1, "Weeks"));
     loansPolicy.put("gracePeriod", createPeriod(7, "Days"));
     loansPolicy.put("openingTimeOffset", createPeriod(3, "Hours"));
 
