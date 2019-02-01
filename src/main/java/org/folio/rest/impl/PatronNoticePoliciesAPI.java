@@ -131,6 +131,18 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
   }
 
   @Override
+  public void deletePatronNoticePolicyStoragePatronNoticePoliciesByPatronNoticePolicyId(
+    String patronNoticePolicyId,
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+    PgUtil.deleteById(PATRON_NOTICE_POLICY_TABLE, patronNoticePolicyId, okapiHeaders,
+      vertxContext, DeletePatronNoticePolicyStoragePatronNoticePoliciesByPatronNoticePolicyIdResponse.class,
+      asyncResultHandler);
+  }
+
+  @Override
   public void putPatronNoticePolicyStoragePatronNoticePoliciesByPatronNoticePolicyId(
     String patronNoticePolicyId,
     PatronNoticePolicy entity,

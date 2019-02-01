@@ -1,6 +1,6 @@
 #%RAML 1.0
 title: Patron Notice Policies
-version: v1.0
+version: v0.4
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost:9130
 
@@ -77,7 +77,21 @@ traits:
             body:
               text/plain:
                 example: "Internal server error"
-
+      delete:
+        description: "Delete Patron Notice Policy by id"
+        responses:
+          204:
+            description: "Source record deleted"
+          404:
+            description: "There is no source record for that patronNoticePolicyId"
+            body:
+              text/plain:
+                example: "Not found"
+          500:
+            description: "Internal server error, e.g. due to misconfiguration"
+            body:
+              text/plain:
+                example: "Internal server error"
       put:
         description: "Update Patron Notice Policy by id"
         body:
@@ -101,4 +115,3 @@ traits:
             body:
               text/plain:
                 example: "Internal server error"
-
