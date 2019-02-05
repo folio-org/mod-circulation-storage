@@ -251,66 +251,52 @@ public class RequestPoliciesAPI implements RequestPolicyStorage {
 
       Criterion criterion = getRequestByIdCriterion(requestPolicyId);
 
-      vertxContext.runOnContext(v -> {
+      vertxContext.runOnContext(v ->
         postgresClient.get(REQUEST_POLICY_TABLE, REQUEST_POLICY_CLASS, criterion, true, false,
           reply -> {
-            if(reply.succeeded()) {
+            if (reply.succeeded()) {
               @SuppressWarnings("unchecked")
               List<RequestPolicy> requestPolicyList = reply.result().getResults();
-
               if (requestPolicyList.size() == 1) {
-                try {
-                  postgresClient.update(REQUEST_POLICY_TABLE, entity, criterion,
-                    true,
-                    update -> {
-                        if(update.succeeded()) {
-                          OutStream stream = new OutStream();
-                          stream.setData(entity);
+                postgresClient.update(REQUEST_POLICY_TABLE, entity, criterion,
+                  true,
+                  update -> {
+                    if (update.succeeded()) {
+                      OutStream stream = new OutStream();
+                      stream.setData(entity);
 
-                          asyncResultHandler.handle(
-                            Future.succeededFuture( PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
-                                .respond204()));
-                        }
-                        else {
-                          asyncResultHandler.handle(
-                            Future.succeededFuture( PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
-                              .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", entity.getName(), update.cause().getMessage()))));
-                        }
-                    });
-                } catch (Exception e) {
-                  asyncResultHandler.handle(Future.succeededFuture( PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
-                    .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", entity.getName(), e.getMessage()))));
-                }
-              }
-              else {
-                try {
-                  postgresClient.save(REQUEST_POLICY_TABLE, entity.getId(), entity,
-                    save -> {
-                      if(save.succeeded()) {
-                        OutStream stream = new OutStream();
-                        stream.setData(entity);
+                      asyncResultHandler.handle(
+                        Future.succeededFuture(PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
+                          .respond204()));
+                    } else {
+                      asyncResultHandler.handle(
+                        Future.succeededFuture(PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
+                          .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", entity.getName(), update.cause().getMessage()))));
+                    }
+                  });
+              } else {
+                postgresClient.save(REQUEST_POLICY_TABLE, entity.getId(), entity,
+                  save -> {
+                    if (save.succeeded()) {
+                      OutStream stream = new OutStream();
+                      stream.setData(entity);
 
-                        asyncResultHandler.handle(
-                          Future.succeededFuture( PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
-                              .respond204()));
-                      }
-                      else {
-                        asyncResultHandler.handle(
-                          Future.succeededFuture(PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
-                            .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", entity.getName(), save.cause().getMessage()))));
-                      }
-                    });
-                } catch (Exception e) {
-                  asyncResultHandler.handle(Future.succeededFuture(PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
-                    .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", entity.getName(), e.getMessage()))));
-                }
+                      asyncResultHandler.handle(
+                        Future.succeededFuture(PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
+                          .respond204()));
+                    } else {
+                      asyncResultHandler.handle(
+                        Future.succeededFuture(PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
+                          .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", entity.getName(), save.cause().getMessage()))));
+                    }
+                  });
               }
             } else {
               asyncResultHandler.handle(Future.succeededFuture(PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
                 .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", entity.getName(), reply.cause().getMessage()))));
             }
-          });
-      });
+          })
+      );
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
         .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", entity.getName(), e.getMessage()))));
@@ -364,8 +350,6 @@ public class RequestPoliciesAPI implements RequestPolicyStorage {
     a.addField("'id'");
     a.setOperation("=");
     a.setValue(id);
-    Criterion criterion = new Criterion(a);
-
-    return criterion;
+    return new Criterion(a);
   }
 }
