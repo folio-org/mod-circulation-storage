@@ -44,7 +44,8 @@ import io.vertx.ext.sql.ResultSet;
   LoansApiHistoryTest.class,
   StaffSlipsApiTest.class,
   CancellationReasonsApiTest.class,
-  PatronNoticePoliciesApiTest.class
+  PatronNoticePoliciesApiTest.class,
+  RequestPoliciesApiTest.class
 })
 
 public class StorageTestSuite {

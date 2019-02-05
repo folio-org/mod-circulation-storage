@@ -2,21 +2,17 @@ package org.folio.rest.api;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.folio.rest.jaxrs.model.Errors;
-import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.jaxrs.model.RequestPolicy;
 import org.folio.rest.jaxrs.model.RequestType;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.rmi.server.UID;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -34,7 +30,7 @@ public class RequestPoliciesApiTest extends ApiTests {
 
   private static final int CONNECTION_TIMEOUT = 5;
   private static final String DEFAULT_REQUEST_POLICY_NAME = "default_request_policy";
-/*
+
   @After
   public void CleanupAfterEachTest()
     throws InterruptedException,
@@ -50,7 +46,7 @@ public class RequestPoliciesApiTest extends ApiTests {
     JsonResponse response = deleteCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
     assertThat("response is null", response != null);
   }
-*/
+
   @Test
   public void canCreateARequestPolicy()
     throws InterruptedException,
@@ -729,39 +725,6 @@ public class RequestPoliciesApiTest extends ApiTests {
 
     JsonResponse response = updateCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
     assertThat("Failed to update request-policy", response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-  }
-
-  @Test
-  public void cannotUpdateRequestPolicyToBadId()
-    throws InterruptedException,
-    MalformedURLException,
-    TimeoutException,
-    ExecutionException {
-
-    CompletableFuture<JsonResponse> updateCompleted = new CompletableFuture<>();
-    String policy1Name = "select count(*)";
-    String badId = "select count(*)";
-
-    List<RequestType> requestTypes = Arrays.asList( RequestType.HOLD, RequestType.PAGE);
-    RequestPolicy requestPolicy = createDefaultRequestPolicy(UUID.randomUUID(), policy1Name,
-      "plain description", requestTypes);
-
-    //update set RequestPolicy's Id to nonexistent.
-    requestPolicy.setId(badId);
-    requestPolicy.setDescription("new description for policy 1");
-    requestPolicy.setRequestTypes(Arrays.asList( RequestType.RECALL, RequestType.HOLD));
-
-    client.put(requestPolicyStorageUrl("/" + requestPolicy.getId()),
-      requestPolicy,
-      StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(updateCompleted));
-
-    JsonResponse response = updateCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
-    assertThat("Failed to update request-policy", response.getStatusCode(), is(HttpURLConnection.HTTP_INTERNAL_ERROR));
-
-    JsonObject anError = extractErrorObject(response);
-
-    assertThat("Error message does not contain keyword 'already existed'", anError.getString("message").contains("already exists"));
   }
 
   private URL requestPolicyStorageUrl(String path) throws MalformedURLException {

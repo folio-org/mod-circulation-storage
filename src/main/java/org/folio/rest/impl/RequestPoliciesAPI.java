@@ -6,10 +6,8 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.RequestPolicies;
 import org.folio.rest.jaxrs.model.RequestPolicy;
-import org.folio.rest.jaxrs.resource.LoanPolicyStorage;
 import org.folio.rest.jaxrs.resource.RequestPolicyStorage;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
@@ -60,7 +58,7 @@ public class RequestPoliciesAPI implements RequestPolicyStorage {
                 if(reply.succeeded()) {
 
                   @SuppressWarnings("unchecked")
-                  List<RequestPolicy> requestPolicies = (List<RequestPolicy>) reply.result().getResults();
+                  List<RequestPolicy> requestPolicies = reply.result().getResults();
 
                   RequestPolicies pagedRequestPolicies = new RequestPolicies();
                   pagedRequestPolicies.setRequestPolicies(requestPolicies);
@@ -165,8 +163,12 @@ public class RequestPoliciesAPI implements RequestPolicyStorage {
         PostgresClient postgresClient = PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-        postgresClient.mutate(String.format("TRUNCATE TABLE %s_%s.%s",
-          tenantId, "mod_circulation_storage", REQUEST_POLICY_TABLE),
+        CQL2PgJSON cql2pgJson = new CQL2PgJSON("request_policy.jsonb");
+        String query = String.format("TRUNCATE TABLE %s_%s.%s",
+          tenantId, "mod_circulation_storage", REQUEST_POLICY_TABLE);
+        CQLWrapper cql = new CQLWrapper(cql2pgJson, null);
+
+        postgresClient.delete(REQUEST_POLICY_TABLE, cql,
           reply -> asyncResultHandler.handle(Future.succeededFuture(
             DeleteRequestPolicyStorageRequestPoliciesResponse.respond204())));
       }
@@ -201,7 +203,7 @@ public class RequestPoliciesAPI implements RequestPolicyStorage {
               try {
                 if (reply.succeeded()) {
                   @SuppressWarnings("unchecked")
-                  List<RequestPolicy> requestPolicies = (List<RequestPolicy>) reply.result().getResults();
+                  List<RequestPolicy> requestPolicies = reply.result().getResults();
 
                   if (requestPolicies.size() == 1) {
                     RequestPolicy requestPolicy = requestPolicies.get(0);
