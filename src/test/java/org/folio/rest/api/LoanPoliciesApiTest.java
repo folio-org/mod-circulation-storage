@@ -312,7 +312,7 @@ public class LoanPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateALoanPolicyWithInvalidPeriodInterval()
+  public void cannotCreateALoanPolicyWithInvalidPeriodInterval()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -341,8 +341,8 @@ public class LoanPoliciesApiTest extends ApiTests {
 
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(String.format("Failed to create loan policy: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    assertThat(String.format("Should fail to create loan policy: %s", response.getBody()),
+      response.getStatusCode(), is(HttpStatus.HTTP_BAD_REQUEST.toInt()));
   }
 
   @Test

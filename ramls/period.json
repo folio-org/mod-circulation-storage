@@ -4,11 +4,18 @@
   "properties": {
     "duration": {
       "type": "integer",
-      "description": "Duration amount"
+      "description": "Duration of the period, number of times the interval repeats"
     },
     "intervalId": {
       "type": "string",
-      "description": "Interval id"
+      "description": "Interval for the period, e.g. hours, days or weeks",
+      "enum":[
+        "Minutes",
+        "Hours",
+        "Days",
+        "Weeks",
+        "Months"
+      ]
     }
   },
   "required": [
