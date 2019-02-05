@@ -164,8 +164,6 @@ public class RequestPoliciesAPI implements RequestPolicyStorage {
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
         CQL2PgJSON cql2pgJson = new CQL2PgJSON("request_policy.jsonb");
-        String query = String.format("TRUNCATE TABLE %s_%s.%s",
-          tenantId, "mod_circulation_storage", REQUEST_POLICY_TABLE);
         CQLWrapper cql = new CQLWrapper(cql2pgJson, null);
 
         postgresClient.delete(REQUEST_POLICY_TABLE, cql,
@@ -188,13 +186,7 @@ public class RequestPoliciesAPI implements RequestPolicyStorage {
       PostgresClient postgresClient = PostgresClient.getInstance(
         vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-      Criteria a = new Criteria();
-
-      a.addField("'id'");
-      a.setOperation("=");
-      a.setValue(requestPolicyId);
-
-      Criterion criterion = new Criterion(a);
+      Criterion criterion = getRequestByIdCriterion(requestPolicyId);
 
       vertxContext.runOnContext(v -> {
         try {
@@ -257,91 +249,67 @@ public class RequestPoliciesAPI implements RequestPolicyStorage {
       PostgresClient postgresClient = PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-      Criteria a = new Criteria();
-
-      a.addField("'id'");
-      a.setOperation("=");
-      a.setValue(requestPolicyId);
-
-      Criterion criterion = new Criterion(a);
+      Criterion criterion = getRequestByIdCriterion(requestPolicyId);
 
       vertxContext.runOnContext(v -> {
-        try {
-          postgresClient.get(REQUEST_POLICY_TABLE, REQUEST_POLICY_CLASS, criterion, true, false,
-            reply -> {
-              if(reply.succeeded()) {
-                @SuppressWarnings("unchecked")
-                List<RequestPolicy> requestPolicyList = reply.result().getResults();
+        postgresClient.get(REQUEST_POLICY_TABLE, REQUEST_POLICY_CLASS, criterion, true, false,
+          reply -> {
+            if(reply.succeeded()) {
+              @SuppressWarnings("unchecked")
+              List<RequestPolicy> requestPolicyList = reply.result().getResults();
 
-                if (requestPolicyList.size() == 1) {
-                  try {
-                    postgresClient.update(REQUEST_POLICY_TABLE, entity, criterion,
-                      true,
-                      update -> {
-                        try {
-                          if(update.succeeded()) {
-                            OutStream stream = new OutStream();
-                            stream.setData(entity);
+              if (requestPolicyList.size() == 1) {
+                try {
+                  postgresClient.update(REQUEST_POLICY_TABLE, entity, criterion,
+                    true,
+                    update -> {
+                        if(update.succeeded()) {
+                          OutStream stream = new OutStream();
+                          stream.setData(entity);
 
-                            asyncResultHandler.handle(
-                              Future.succeededFuture( PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
-                                  .respond204()));
-                          }
-                          else {
-                            asyncResultHandler.handle(
-                              Future.succeededFuture( PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
-                                .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", entity.getName(), update.cause().getMessage()))));
-
-                          }
-                        } catch (Exception e) {
                           asyncResultHandler.handle(
                             Future.succeededFuture( PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
-                              .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", entity.getName(), e.getMessage()))));
+                                .respond204()));
                         }
-                      });
-                  } catch (Exception e) {
-                    asyncResultHandler.handle(Future.succeededFuture( PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
-                      .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", entity.getName(), e.getMessage()))));
-                  }
-                }
-                else {
-                  try {
-                    postgresClient.save(REQUEST_POLICY_TABLE, entity.getId(), entity,
-                      save -> {
-                        try {
-                          if(save.succeeded()) {
-                            OutStream stream = new OutStream();
-                            stream.setData(entity);
-
-                            asyncResultHandler.handle(
-                              Future.succeededFuture( PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
-                                  .respond204()));
-                          }
-                          else {
-                            asyncResultHandler.handle(
-                              Future.succeededFuture(PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
-                                .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", entity.getName(), save.cause().getMessage()))));
-                          }
-                        } catch (Exception e) {
+                        else {
                           asyncResultHandler.handle(
-                            Future.succeededFuture(PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
-                                .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", entity.getName(), e.getMessage()))));
+                            Future.succeededFuture( PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
+                              .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", entity.getName(), update.cause().getMessage()))));
                         }
-                      });
-                  } catch (Exception e) {
-                    asyncResultHandler.handle(Future.succeededFuture(PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
-                      .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", entity.getName(), e.getMessage()))));
-                  }
+                    });
+                } catch (Exception e) {
+                  asyncResultHandler.handle(Future.succeededFuture( PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
+                    .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", entity.getName(), e.getMessage()))));
                 }
-              } else {
-                asyncResultHandler.handle(Future.succeededFuture(PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
-                  .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", entity.getName(), reply.cause().getMessage()))));
               }
-            });
-        } catch (Exception e) {
-          asyncResultHandler.handle(Future.succeededFuture(PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
-            .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", entity.getName(), e.getMessage()))));
-        }
+              else {
+                try {
+                  postgresClient.save(REQUEST_POLICY_TABLE, entity.getId(), entity,
+                    save -> {
+                      if(save.succeeded()) {
+                        OutStream stream = new OutStream();
+                        stream.setData(entity);
+
+                        asyncResultHandler.handle(
+                          Future.succeededFuture( PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
+                              .respond204()));
+                      }
+                      else {
+                        asyncResultHandler.handle(
+                          Future.succeededFuture(PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
+                            .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", entity.getName(), save.cause().getMessage()))));
+                      }
+                    });
+                } catch (Exception e) {
+                  asyncResultHandler.handle(Future.succeededFuture(PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
+                    .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", entity.getName(), e.getMessage()))));
+                }
+              }
+            } else {
+              asyncResultHandler.handle(Future.succeededFuture(PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
+                .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", entity.getName(), reply.cause().getMessage()))));
+            }
+          });
       });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
@@ -359,13 +327,7 @@ public class RequestPoliciesAPI implements RequestPolicyStorage {
           PostgresClient.getInstance(
             vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-        Criteria a = new Criteria();
-
-        a.addField("'id'");
-        a.setOperation("=");
-        a.setValue(requestPolicyId);
-
-        Criterion criterion = new Criterion(a);
+        Criterion criterion = getRequestByIdCriterion(requestPolicyId);
 
         vertxContext.runOnContext(v -> {
           try {
@@ -394,5 +356,16 @@ public class RequestPoliciesAPI implements RequestPolicyStorage {
           DeleteRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
             .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", RequestPolicy.class.getName(), e.getMessage()))));
       }
+  }
+
+  private Criterion getRequestByIdCriterion( String id){
+
+    Criteria a = new Criteria();
+    a.addField("'id'");
+    a.setOperation("=");
+    a.setValue(id);
+    Criterion criterion = new Criterion(a);
+
+    return criterion;
   }
 }
