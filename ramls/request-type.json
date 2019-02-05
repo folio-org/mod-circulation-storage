@@ -1,0 +1,7 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "string",
+  "description": "Whether the item should be held upon return, recalled or paged for",
+  "enum":["Hold", "Recall", "Page"],
+  "additionalProperties": false
+}
