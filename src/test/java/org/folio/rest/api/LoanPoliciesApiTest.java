@@ -16,6 +16,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.folio.HttpStatus;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonArrayHelper;
@@ -280,9 +281,9 @@ public class LoanPoliciesApiTest extends ApiTests {
     assertThat(renewalsPolicy.getBoolean("differentPeriod"), is(true));
     assertThat(renewalsPolicy.getJsonObject("period"), matchesPeriod(30, "Days"));
   }
-  
+
   @Test
-  public void canCreateALoanPolicyWithAdditionalPropertiesInLoanPolicy()
+  public void cannotCreateALoanPolicyWithAdditionalPropertiesInLoanPolicy()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -306,8 +307,8 @@ public class LoanPoliciesApiTest extends ApiTests {
 
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(String.format("Failed to create loan policy: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    assertThat(String.format("Should fail to create loan policy: %s", response.getBody()),
+      response.getStatusCode(), is(HttpStatus.HTTP_VALIDATION_ERROR.toInt()));
   }
 
   @Test

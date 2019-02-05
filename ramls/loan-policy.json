@@ -16,6 +16,7 @@
     },
     "loansPolicy": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "profileId": {
           "type": "string",
