@@ -32,7 +32,6 @@ public class RequestPoliciesApiTest extends ApiTests {
   private static final String DEFAULT_REQUEST_POLICY_NAME = "default_request_policy";
   private static int REQ_POLICY_NAME_INCR = 0;  //This number is appended to the name of the default request policy to ensure uniqueness
 
-
   @After
   public void CleanupRequestPolicyRecords()
     throws InterruptedException,
@@ -59,20 +58,6 @@ public class RequestPoliciesApiTest extends ApiTests {
     createDefaultRequestPolicy();
   }
 
-  private void validateRequestPolicy(RequestPolicy expectedPolicy, JsonObject outcomePolicy){
-
-    assertThat(outcomePolicy.getString("id"), is( expectedPolicy.getId()) );
-    assertThat(outcomePolicy.getString("name"), is( expectedPolicy.getName() ));
-    assertThat(outcomePolicy.getString("description"), is( expectedPolicy.getDescription() ));
-
-    JsonArray resultRequestTypes = outcomePolicy.getJsonArray("requestTypes");
-
-    for ( Object type : resultRequestTypes) {
-      assertThat("requestType returned: " + type.toString() + " does not exist in input list",
-        expectedPolicy.getRequestTypes().contains(RequestType.fromValue(type.toString())));
-    }
-  }
-
   @Test
   public void canCreateRequestPolicyWithoutUID()
     throws InterruptedException,
@@ -95,7 +80,6 @@ public class RequestPoliciesApiTest extends ApiTests {
       String reqPolicyName = "request_policy_name";
 
       List<RequestType> requestTypes = Collections.singletonList(RequestType.HOLD);
-      UUID id = UUID.randomUUID();
 
       //create a requestPolicy with reqPolicyName as name
       createDefaultRequestPolicy(UUID.randomUUID(), reqPolicyName,"test policy", requestTypes );
@@ -319,6 +303,9 @@ public class RequestPoliciesApiTest extends ApiTests {
 
     JsonResponse responseGet = getCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
     assertThat("Failed to not retrieve a request policy by non-existing ID", responseGet.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+
+    JsonObject error = extractErrorObject(responseGet);
+    assertThat("Error message does not contain keyword 'already existed'", error.getString("message").contains("Not Found"));
   }
 
   @Test
@@ -385,7 +372,7 @@ public class RequestPoliciesApiTest extends ApiTests {
     JsonResponse responseGet = getCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
     JsonObject getResultsJson = responseGet.getJson();
 
-    assertThat("response is null", getResultsJson != null);
+    assertThat(getResultsJson, is(notNullValue()));
     assertThat(getResultsJson.getString("id"), is(rp.getId()));
 
     //Delete existing policy
@@ -401,6 +388,9 @@ public class RequestPoliciesApiTest extends ApiTests {
 
     JsonResponse responseGetVerify = getCompletedVerify.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
     assertThat("Failed to not get request-policy", responseGetVerify.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+    JsonObject error = extractErrorObject(responseGetVerify);
+
+    assertThat("Error message does not contain keyword 'already existed'", error.getString("message").contains("Not Found"));
   }
 
   @Test
@@ -608,9 +598,21 @@ public class RequestPoliciesApiTest extends ApiTests {
   private JsonObject extractErrorObject(JsonResponse response){
     JsonObject responseJson = response.getJson();
     JsonArray errors = responseJson.getJsonArray("errors");
-    JsonObject anError = errors.getJsonObject(0);
 
-    return anError;
+    return errors.getJsonObject(0);
   }
 
+  private void validateRequestPolicy(RequestPolicy expectedPolicy, JsonObject outcomePolicy){
+
+    assertThat(outcomePolicy.getString("id"), is( expectedPolicy.getId()) );
+    assertThat(outcomePolicy.getString("name"), is( expectedPolicy.getName() ));
+    assertThat(outcomePolicy.getString("description"), is( expectedPolicy.getDescription() ));
+
+    JsonArray resultRequestTypes = outcomePolicy.getJsonArray("requestTypes");
+
+    for ( Object type : resultRequestTypes) {
+      assertThat("requestType returned: " + type.toString() + " does not exist in input list",
+        expectedPolicy.getRequestTypes().contains(RequestType.fromValue(type.toString())));
+    }
+  }
 }

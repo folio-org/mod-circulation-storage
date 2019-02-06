@@ -209,7 +209,7 @@ public class RequestPoliciesAPI implements RequestPolicyStorage {
                     asyncResultHandler.handle(
                       Future.succeededFuture(
                         RequestPolicyStorage.GetRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse.
-                          respond404WithTextPlain("Not Found")));
+                          respond404WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", RequestPolicy.class.getName(), "Not Found"))));
                   }
                 } else {
                   asyncResultHandler.handle(
