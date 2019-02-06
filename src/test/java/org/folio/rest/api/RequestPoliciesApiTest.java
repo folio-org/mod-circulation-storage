@@ -32,22 +32,6 @@ public class RequestPoliciesApiTest extends ApiTests {
   private static final String DEFAULT_REQUEST_POLICY_NAME = "default_request_policy";
   private static int REQ_POLICY_NAME_INCR = 0;  //This number is appended to the name of the default request policy to ensure uniqueness
 
-  @After
-  public void CleanupRequestPolicyRecords()
-    throws InterruptedException,
-    MalformedURLException,
-    TimeoutException,
-    ExecutionException {
-    CompletableFuture<JsonResponse> deleteCompleted = new CompletableFuture<>();
-
-    client.delete(requestPolicyStorageUrl(""),
-      StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(deleteCompleted));
-
-    JsonResponse response = deleteCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
-    assertThat("response is null", response != null);
-  }
-
   @Test
   public void canCreateARequestPolicy()
     throws InterruptedException,
@@ -67,6 +51,37 @@ public class RequestPoliciesApiTest extends ApiTests {
 
     List<RequestType> requestTypes = Collections.singletonList(RequestType.HOLD);
     createDefaultRequestPolicy(null,"successful_get","test policy",requestTypes);
+  }
+
+  @Test
+  public void cannotCreateRequestPolicyWithoutName()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    CompletableFuture<JsonResponse> failedCompleted = new CompletableFuture<>();
+    List<RequestType> requestTypes = Collections.singletonList(RequestType.HOLD);
+
+    //create requestPolicy without name
+    UUID id = UUID.randomUUID();
+    RequestPolicy requestPolicy = new RequestPolicy();
+    requestPolicy.withDescription("test policy 2");
+    requestPolicy.withRequestTypes(requestTypes);
+    requestPolicy.withId(id.toString());
+
+    client.post(requestPolicyStorageUrl(""),
+      requestPolicy,
+      StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(failedCompleted));
+
+    JsonResponse response2 = failedCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to create request policy: %s", response2.getBody()),
+      response2.getStatusCode(), is(422));
+
+    JsonObject error = extractErrorObject(response2);
+    assertThat("unexpected error message" , error.getString("message").contains("may not be null"));
   }
 
   @Test
@@ -515,6 +530,37 @@ public class RequestPoliciesApiTest extends ApiTests {
   }
 
   @Test
+  public void cannotUpdateRequestPolicyWithoutName()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    CompletableFuture<JsonResponse> failedCompleted = new CompletableFuture<>();
+    List<RequestType> requestTypes = Collections.singletonList(RequestType.HOLD);
+
+    RequestPolicy requestPolicy = createDefaultRequestPolicy();
+
+    //update requestPolicy
+    requestPolicy.setDescription("new description!!!");
+    requestPolicy.setName(null);
+    requestPolicy.setRequestTypes(requestTypes);
+
+    client.put(requestPolicyStorageUrl("/" + requestPolicy.getId()),
+      requestPolicy,
+      StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(failedCompleted));
+
+    JsonResponse response2 = failedCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to create request policy: %s", response2.getBody()),
+      response2.getStatusCode(), is(422));
+
+    JsonObject error = extractErrorObject(response2);
+    assertThat("unexpected error message" , error.getString("message").contains("may not be null"));
+  }
+
+  @Test
   public void canUpdateRequestPolicyWithNewId()
     throws InterruptedException,
     MalformedURLException,
@@ -614,5 +660,20 @@ public class RequestPoliciesApiTest extends ApiTests {
       assertThat("requestType returned: " + type.toString() + " does not exist in input list",
         expectedPolicy.getRequestTypes().contains(RequestType.fromValue(type.toString())));
     }
+  }
+
+  private void CleanupRequestPolicyRecords()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+    CompletableFuture<JsonResponse> deleteCompleted = new CompletableFuture<>();
+
+    client.delete(requestPolicyStorageUrl(""),
+      StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(deleteCompleted));
+
+    JsonResponse response = deleteCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
+    assertThat("response is null", response != null);
   }
 }
