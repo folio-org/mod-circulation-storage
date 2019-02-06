@@ -312,6 +312,40 @@ public class LoanPoliciesApiTest extends ApiTests {
   }
 
   @Test
+  public void canCreateALoanPolicyWithInvalidPeriodInterval()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    UUID id = UUID.randomUUID();
+
+    JsonObject loanPolicyRequest = new LoanPolicyRequestBuilder()
+      .withId(id)
+      .withName("Example Loan Policy")
+      .withDescription("An example loan policy")
+      .create();
+
+    JsonObject period = new JsonObject();
+
+    period.put("duration", 1);
+    period.put("intervalId", "Foo");
+
+    loanPolicyRequest.getJsonObject("loansPolicy").put("period", period);
+
+    client.post(loanPolicyStorageUrl(),
+      loanPolicyRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to create loan policy: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+  }
+
+  @Test
   public void canCreateALoanPolicyWithoutAnId()
     throws InterruptedException,
     MalformedURLException,
