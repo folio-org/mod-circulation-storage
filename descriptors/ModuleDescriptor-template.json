@@ -611,7 +611,7 @@
       "permissionName": "circulation-storage.request-policies.item.delete",
       "displayName": "Circulation storage - delete individual request policy",
       "description": "Delete individual request policy from storage"
-    },
+    }
   ],
   "launchDescriptor": {
     "dockerImage" : "${artifactId}:${version}",
