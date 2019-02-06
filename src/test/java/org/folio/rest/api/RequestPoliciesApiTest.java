@@ -30,9 +30,11 @@ public class RequestPoliciesApiTest extends ApiTests {
 
   private static final int CONNECTION_TIMEOUT = 5;
   private static final String DEFAULT_REQUEST_POLICY_NAME = "default_request_policy";
+  private static int REQ_POLICY_NAME_INCR = 0;  //This number is appended to the name of the default request policy to ensure uniqueness
+
 
   @After
-  public void CleanupAfterEachTest()
+  public void CleanupRequestPolicyRecords()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -54,37 +56,20 @@ public class RequestPoliciesApiTest extends ApiTests {
     TimeoutException,
     ExecutionException {
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+    createDefaultRequestPolicy();
+  }
 
-    UUID id = UUID.randomUUID();
-    List<RequestType> requestTypes = Arrays.asList( RequestType.HOLD, RequestType.PAGE);
+  private void validateRequestPolicy(RequestPolicy expectedPolicy, JsonObject outcomePolicy){
 
-    RequestPolicy requestPolicy = new RequestPolicy();
-    requestPolicy.withDescription("test policy");
-    requestPolicy.withId(id.toString());
-    requestPolicy.withName("successful_get");
-    requestPolicy.withRequestTypes(requestTypes);
+    assertThat(outcomePolicy.getString("id"), is( expectedPolicy.getId()) );
+    assertThat(outcomePolicy.getString("name"), is( expectedPolicy.getName() ));
+    assertThat(outcomePolicy.getString("description"), is( expectedPolicy.getDescription() ));
 
-    client.post(requestPolicyStorageUrl(""),
-                requestPolicy,
-                StorageTestSuite.TENANT_ID,
-                ResponseHandler.json(createCompleted));
-
-    JsonResponse response = createCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
-
-    assertThat("Failed to create new request-policy", response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    JsonObject representation = response.getJson();
-
-    assertThat(representation.getString("id"), is(id.toString()));
-    assertThat(representation.getString("name"), is("successful_get"));
-    assertThat(representation.getString("description"), is("test policy"));
-
-    JsonArray resultRequestTypes = representation.getJsonArray("requestTypes");
+    JsonArray resultRequestTypes = outcomePolicy.getJsonArray("requestTypes");
 
     for ( Object type : resultRequestTypes) {
       assertThat("requestType returned: " + type.toString() + " does not exist in input list",
-                        requestTypes.contains(RequestType.fromValue(type.toString())));
+        expectedPolicy.getRequestTypes().contains(RequestType.fromValue(type.toString())));
     }
   }
 
@@ -95,29 +80,8 @@ public class RequestPoliciesApiTest extends ApiTests {
     TimeoutException,
     ExecutionException {
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
-
     List<RequestType> requestTypes = Collections.singletonList(RequestType.HOLD);
-
-    RequestPolicy requestPolicy = new RequestPolicy();
-    requestPolicy.withDescription("test policy");
-    requestPolicy.withName("successful_get");
-    requestPolicy.withRequestTypes(requestTypes);
-
-    client.post(requestPolicyStorageUrl(""),
-      requestPolicy,
-                StorageTestSuite.TENANT_ID,
-                ResponseHandler.json(createCompleted));
-
-    JsonResponse response = createCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
-
-    assertThat(String.format("Failed to create request policy: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    JsonObject representation = response.getJson();
-    assertThat(representation.getString("id"), is(notNullValue()));
-    assertThat(representation.getString("name"), is("successful_get"));
-    assertThat(representation.getString("description"), is("test policy"));
+    createDefaultRequestPolicy(null,"successful_get","test policy",requestTypes);
   }
 
   @Test
@@ -126,7 +90,6 @@ public class RequestPoliciesApiTest extends ApiTests {
     MalformedURLException,
     TimeoutException,
     ExecutionException{
-      CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
       CompletableFuture<JsonResponse> failedCompleted = new CompletableFuture<>();
 
       String reqPolicyName = "request_policy_name";
@@ -134,21 +97,10 @@ public class RequestPoliciesApiTest extends ApiTests {
       List<RequestType> requestTypes = Collections.singletonList(RequestType.HOLD);
       UUID id = UUID.randomUUID();
 
-      RequestPolicy requestPolicy = new RequestPolicy();
-      requestPolicy.withDescription("test policy");
-      requestPolicy.withName(reqPolicyName);
-      requestPolicy.withRequestTypes(requestTypes);
-      requestPolicy.withId(id.toString());
+      //create a requestPolicy with reqPolicyName as name
+      createDefaultRequestPolicy(UUID.randomUUID(), reqPolicyName,"test policy", requestTypes );
 
-      client.post(requestPolicyStorageUrl(""),
-        requestPolicy,
-        StorageTestSuite.TENANT_ID,
-        ResponseHandler.json(createCompleted));
-
-      JsonResponse response = createCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
-      assertThat(String.format("Failed to create request policy: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
+      //create another requestPolicy with the same name
       UUID id2 = UUID.randomUUID();
       RequestPolicy requestPolicy2 = new RequestPolicy();
       requestPolicy2.withDescription("test policy 2");
@@ -161,15 +113,13 @@ public class RequestPoliciesApiTest extends ApiTests {
         StorageTestSuite.TENANT_ID,
         ResponseHandler.json(failedCompleted));
 
-        JsonResponse response2 = failedCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
-        JsonObject representation = response2.getJson();
+      JsonResponse response2 = failedCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
 
-        assertThat(String.format("Failed to create request policy: %s", response2.getBody()),
-          response2.getStatusCode(), is(HttpURLConnection.HTTP_INTERNAL_ERROR));
+      assertThat(String.format("Failed to create request policy: %s", response2.getBody()),
+        response2.getStatusCode(), is(HttpURLConnection.HTTP_INTERNAL_ERROR));
 
-        JsonArray errors = representation.getJsonArray("errors");
-        JsonObject error  = errors.getJsonObject(0);
-        assertThat("unexpected error message" , error.getString("message").contains("duplicate key value"));
+      JsonObject error = extractErrorObject(response2);
+      assertThat("unexpected error message" , error.getString("message").contains("duplicate key value"));
   }
 
   @Test
@@ -182,12 +132,13 @@ public class RequestPoliciesApiTest extends ApiTests {
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     List<RequestType> requestTypes = Collections.singletonList(RequestType.HOLD);
+    String badId = "d9cdbed-1b49-4b5e-a7bd-064b8d231";
 
     RequestPolicy requestPolicy = new RequestPolicy();
     requestPolicy.withDescription("test policy");
     requestPolicy.withName("successful_get");
     requestPolicy.withRequestTypes(requestTypes);
-    requestPolicy.withId("d9cdbed-1b49-4b5e-a7bd-064b8d231");
+    requestPolicy.withId(badId);
 
     client.post(requestPolicyStorageUrl(""),
       requestPolicy,
@@ -195,13 +146,9 @@ public class RequestPoliciesApiTest extends ApiTests {
       ResponseHandler.json(createCompleted));
 
     JsonResponse response = createCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
-    JsonObject representation = response.getJson();
-
-    JsonArray errors = representation.getJsonArray("errors");
-    JsonObject error  = errors.getJsonObject(0);
-
     assertThat(String.format("Failed to create request policy: %s", response.getBody()),
       response.getStatusCode(), is(HttpURLConnection.HTTP_INTERNAL_ERROR));
+    JsonObject error = extractErrorObject(response);
     assertThat("unexpected error message" , error.getString("message").contains("invalid input syntax for type uuid"));
   }
 
@@ -212,44 +159,11 @@ public class RequestPoliciesApiTest extends ApiTests {
     TimeoutException,
     ExecutionException {
 
-    CompletableFuture<JsonResponse> createCompleted1 = new CompletableFuture<>();
-    CompletableFuture<JsonResponse> createCompleted2 = new CompletableFuture<>();
+    CleanupRequestPolicyRecords();
     CompletableFuture<JsonResponse> createCompletedGet = new CompletableFuture<>();
 
-    List<RequestType> requestTypes = Arrays.asList( RequestType.HOLD, RequestType.PAGE);
-
-    UUID id1 = UUID.randomUUID();
-    RequestPolicy requestPolicy1 = new RequestPolicy();
-    requestPolicy1.withDescription("test policy");
-    requestPolicy1.withId(id1.toString());
-    requestPolicy1.withName("successful_get1");
-    requestPolicy1.withRequestTypes(requestTypes);
-
-    UUID id2 = UUID.randomUUID();
-    RequestPolicy requestPolicy2 = new RequestPolicy();
-    requestPolicy2.withDescription("test policy");
-    requestPolicy2.withId(id2.toString());
-    requestPolicy2.withName("successful_get2");
-    requestPolicy2.withRequestTypes(requestTypes);
-
-    //Create requestPolicy1
-    client.post(requestPolicyStorageUrl(""),
-      requestPolicy1,
-      StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(createCompleted1));
-
-    JsonResponse response1 = createCompleted1.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
-
-    assertThat("Failed to create new request-policy", response1.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    //Create requestPolicy2
-    client.post(requestPolicyStorageUrl(""),
-      requestPolicy2,
-      StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(createCompleted2));
-
-    JsonResponse response2 = createCompleted2.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
-    assertThat("Failed to create new request-policy", response2.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    RequestPolicy requestPolicy1 = createDefaultRequestPolicy();
+    RequestPolicy requestPolicy2 = createDefaultRequestPolicy();
 
     //Get the newly created request policies
     client.get(requestPolicyStorageUrl(""), StorageTestSuite.TENANT_ID,
@@ -261,26 +175,8 @@ public class RequestPoliciesApiTest extends ApiTests {
     JsonArray requestPolicies = getResultsJson.getJsonArray("requestPolicies");
     assertThat(getResultsJson.getInteger("totalRecords"), is(2));
 
-    for (int i = 0; i < 2; i ++) {
-      JsonObject aPolicy = requestPolicies.getJsonObject(i);
-
-      if (i == 0) {
-        assertThat(aPolicy.getString("id"), is(id1.toString()));
-      }
-      else {
-        assertThat(aPolicy.getString("id"), is(id2.toString()));
-      }
-
-      assertThat(aPolicy.getString("name"), is("successful_get" +(i+1)));
-      assertThat(aPolicy.getString("description"), is("test policy"));
-
-      JsonArray resultRequestTypes = aPolicy.getJsonArray("requestTypes");
-
-      for ( Object type : resultRequestTypes) {
-        assertThat("requestType returned: " + type.toString() + " does not exist in input list",
-          requestTypes.contains(RequestType.fromValue(type.toString())));
-      }
-    }
+    validateRequestPolicy(requestPolicy1, requestPolicies.getJsonObject(0));
+    validateRequestPolicy(requestPolicy2, requestPolicies.getJsonObject(1));
   }
 
   @Test
@@ -306,16 +202,7 @@ public class RequestPoliciesApiTest extends ApiTests {
 
     JsonObject aPolicy = requestPolicies.getJsonObject(0);
 
-    assertThat(aPolicy.getString("id"), is(requestPolicy1.getId()));
-    assertThat(aPolicy.getString("name"), is(requestPolicy1.getName()));
-    assertThat(aPolicy.getString("description"), is(requestPolicy1.getDescription()));
-
-    JsonArray resultRequestTypes = aPolicy.getJsonArray("requestTypes");
-
-    for ( Object type : resultRequestTypes) {
-      assertThat("requestType returned: " + type.toString() + " does not exist in input list",
-        requestPolicy1.getRequestTypes().contains(RequestType.fromValue(type.toString())));
-    }
+    validateRequestPolicy(requestPolicy1, aPolicy);
   }
 
   @Test
@@ -335,10 +222,8 @@ public class RequestPoliciesApiTest extends ApiTests {
 
     JsonResponse responseGet = getCommpleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
     assertThat("Failed to not get request-policy", responseGet.getStatusCode(), is(HttpURLConnection.HTTP_INTERNAL_ERROR));
-    JsonObject response = responseGet.getJson();
-    JsonArray errors = response.getJsonArray("errors");
-    JsonObject anError = errors.getJsonObject(0);
 
+    JsonObject anError = extractErrorObject(responseGet);
     assertThat("expected error message not found",anError.getString("message").contains("OFFSET must not be negative"));
   }
 
@@ -371,47 +256,14 @@ public class RequestPoliciesApiTest extends ApiTests {
     TimeoutException,
     ExecutionException {
 
-    CompletableFuture<JsonResponse> createCompleted1 = new CompletableFuture<>();
-    CompletableFuture<JsonResponse> createCompleted2 = new CompletableFuture<>();
     CompletableFuture<JsonResponse> getCommpleted = new CompletableFuture<>();
 
-    List<RequestType> requestTypes = Arrays.asList( RequestType.HOLD, RequestType.PAGE);
+    //create a couple of RequestPolicies
+    createDefaultRequestPolicy();
+    RequestPolicy requestPolicy2 = createDefaultRequestPolicy();
 
-    UUID id1 = UUID.randomUUID();
-    RequestPolicy requestPolicy1 = new RequestPolicy();
-    requestPolicy1.withDescription("test policy");
-    requestPolicy1.withId(id1.toString());
-    requestPolicy1.withName("successful_get1");
-    requestPolicy1.withRequestTypes(requestTypes);
-
-    UUID id2 = UUID.randomUUID();
-    RequestPolicy requestPolicy2 = new RequestPolicy();
-    requestPolicy2.withDescription("test policy");
-    requestPolicy2.withId(id2.toString());
-    requestPolicy2.withName("successful Get2");
-    requestPolicy2.withRequestTypes(requestTypes);
-
-    //Create requestPolicy1
-    client.post(requestPolicyStorageUrl(""),
-      requestPolicy1,
-      StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(createCompleted1));
-
-    JsonResponse response1 = createCompleted1.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
-
-    assertThat("Failed to create new request-policy", response1.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    //Create requestPolicy2
-    client.post(requestPolicyStorageUrl(""),
-      requestPolicy2,
-      StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(createCompleted2));
-
-    JsonResponse response2 = createCompleted2.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
-    assertThat("Failed to create new request-policy", response2.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    //Get the newly created request policies
-    client.get(requestPolicyStorageUrl("?query=name=successful+Get2"), StorageTestSuite.TENANT_ID,
+    //Get the latter created request policy by name
+    client.get(requestPolicyStorageUrl("?query=name=" + requestPolicy2.getName()), StorageTestSuite.TENANT_ID,
       ResponseHandler.json(getCommpleted));
 
     JsonResponse responseGet = getCommpleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
@@ -421,16 +273,8 @@ public class RequestPoliciesApiTest extends ApiTests {
     assertThat(getResultsJson.getInteger("totalRecords"), is(1));
 
     JsonObject aPolicy = requestPolicies.getJsonObject(0);
-    assertThat(aPolicy.getString("id"), is(id2.toString()));
-    assertThat(aPolicy.getString("name"), is("successful Get2"));
-    assertThat(aPolicy.getString("description"), is("test policy"));
 
-    JsonArray resultRequestTypes = aPolicy.getJsonArray("requestTypes");
-
-    for ( Object type : resultRequestTypes) {
-      assertThat("requestType returned: " + type.toString() + " does not exist in input list",
-        requestTypes.contains(RequestType.fromValue(type.toString())));
-    }
+    validateRequestPolicy(requestPolicy2, aPolicy);
   }
 
   @Test
@@ -454,16 +298,7 @@ public class RequestPoliciesApiTest extends ApiTests {
     JsonResponse responseGet = getCommpleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
     JsonObject aPolicy = responseGet.getJson();
 
-    assertThat(aPolicy.getString("id"), is(req2.getId()));
-    assertThat(aPolicy.getString("name"), is(req2.getName()));
-    assertThat(aPolicy.getString("description"), is(req2.getDescription()));
-
-    JsonArray resultRequestTypes = aPolicy.getJsonArray("requestTypes");
-
-    for ( Object type : resultRequestTypes) {
-      assertThat("requestType returned: " + type.toString() + " does not exist in input list",
-        req2.getRequestTypes().contains(RequestType.fromValue(type.toString())));
-    }
+    validateRequestPolicy(req2, aPolicy);
   }
 
   @Test
@@ -493,7 +328,8 @@ public class RequestPoliciesApiTest extends ApiTests {
     TimeoutException,
     ExecutionException {
 
-    //Get them to verify that they're in the system.
+    CleanupRequestPolicyRecords();
+
     CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
     CompletableFuture<JsonResponse> delCompleted = new CompletableFuture<>();
     CompletableFuture<JsonResponse> getCompletedVerify = new CompletableFuture<>();
@@ -535,7 +371,6 @@ public class RequestPoliciesApiTest extends ApiTests {
     TimeoutException,
     ExecutionException {
 
-    //Get them to verify that they're in the system.
     CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
     CompletableFuture<JsonResponse> delCompleted = new CompletableFuture<>();
     CompletableFuture<JsonResponse> getCompletedVerify = new CompletableFuture<>();
@@ -575,7 +410,6 @@ public class RequestPoliciesApiTest extends ApiTests {
     TimeoutException,
     ExecutionException {
 
-    //Get them to verify that they're in the system.
     CompletableFuture<JsonResponse> delCompleted = new CompletableFuture<>();
 
     //Delete existing policy
@@ -622,16 +456,7 @@ public class RequestPoliciesApiTest extends ApiTests {
 
     JsonObject aPolicy = getResponse.getJson();
 
-    assertThat(aPolicy.getString("id"), is(requestPolicy.getId()));
-    assertThat(aPolicy.getString("name"), is(requestPolicy.getName()));
-    assertThat(aPolicy.getString("description"), is(requestPolicy.getDescription()));
-
-    JsonArray resultRequestTypes = aPolicy.getJsonArray("requestTypes");
-
-    for ( Object type : resultRequestTypes) {
-      assertThat("requestType returned: " + type.toString() + " does not exist in input list",
-        requestPolicy.getRequestTypes().contains(RequestType.fromValue(type.toString())));
-    }
+    validateRequestPolicy(requestPolicy, aPolicy);
   }
 
   @Test
@@ -740,7 +565,9 @@ public class RequestPoliciesApiTest extends ApiTests {
     List<RequestType> requestTypes = Arrays.asList( RequestType.HOLD, RequestType.PAGE);
     UUID id1 = UUID.randomUUID();
 
-    return createDefaultRequestPolicy(id1, DEFAULT_REQUEST_POLICY_NAME, "test policy", requestTypes);
+    REQ_POLICY_NAME_INCR++;
+
+    return createDefaultRequestPolicy(id1, DEFAULT_REQUEST_POLICY_NAME + REQ_POLICY_NAME_INCR, "test policy", requestTypes);
   }
 
   private RequestPolicy createDefaultRequestPolicy(UUID id, String name, String descr, List<RequestType> requestTypes)  throws InterruptedException,
@@ -752,9 +579,10 @@ public class RequestPoliciesApiTest extends ApiTests {
 
     RequestPolicy requestPolicy = new RequestPolicy();
     requestPolicy.withDescription(descr);
-    requestPolicy.withId(id.toString());
     requestPolicy.withName(name);
     requestPolicy.withRequestTypes(requestTypes);
+    if (id != null){
+      requestPolicy.withId(id.toString());    }
 
     //Create requestPolicy
     client.post(requestPolicyStorageUrl(""),
@@ -765,7 +593,16 @@ public class RequestPoliciesApiTest extends ApiTests {
     JsonResponse response = createCommpleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
     assertThat("Failed to create new request-policy", response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    return  requestPolicy;
+    JsonObject representation = response.getJson();
+
+    assertThat(representation.getString("id"), is(notNullValue()));
+    assertThat(representation.getString("name"), is(name));
+    assertThat(representation.getString("description"), is(descr));
+    if (id != null){
+      assertThat(representation.getString("id"), is(id.toString()));
+    }
+
+    return requestPolicy;
   }
 
   private JsonObject extractErrorObject(JsonResponse response){
