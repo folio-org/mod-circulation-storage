@@ -7,7 +7,8 @@ import org.folio.rest.jaxrs.model.RequestType;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
-import org.junit.After;
+import org.joda.time.DateTime;
+import org.joda.time.Seconds;
 import org.junit.Test;
 
 import java.net.HttpURLConnection;
@@ -22,6 +23,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
@@ -586,6 +588,60 @@ public class RequestPoliciesApiTest extends ApiTests {
 
     JsonResponse response = updateCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
     assertThat("Failed to update request-policy", response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+  }
+
+  @Test
+  public void createdRequestHasCreationMetadata()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    final String METADATA_PROPERTY = "metadata";
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+    List<RequestType> requestTypes = Arrays.asList( RequestType.HOLD, RequestType.PAGE);
+
+    RequestPolicy requestPolicy = new RequestPolicy();
+    requestPolicy.withDescription("Sample request policy");
+    requestPolicy.withName("Request Policy 1");
+    requestPolicy.withRequestTypes(requestTypes);
+    requestPolicy.withId(UUID.randomUUID().toString());
+
+    String creatorId = UUID.randomUUID().toString();
+
+    DateTime requestMade = DateTime.now();
+
+    //Create requestPolicy
+    client.post(requestPolicyStorageUrl(""),
+      requestPolicy,
+      StorageTestSuite.TENANT_ID,
+      creatorId,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
+    assertThat("Failed to create new request-policy", response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    JsonObject createdResponse = response.getJson();
+
+    assertThat("Request should have metadata property",
+      createdResponse.containsKey(METADATA_PROPERTY), is(true));
+
+    JsonObject metadata = createdResponse.getJsonObject(METADATA_PROPERTY);
+
+    assertThat("Request should have created user",
+      metadata.getString("createdByUserId"), is(creatorId));
+
+    assertThat("Request should have created date close to when request was made",
+      metadata.getString("createdDate"),
+      is(withinSecondsAfter(Seconds.seconds(2), requestMade)));
+
+    //RAML-Module-Builder also populates updated information at creation time
+    assertThat("Request should have updated user",
+      metadata.getString("updatedByUserId"), is(creatorId));
+
+    assertThat("Request should have update date close to when request was made",
+      metadata.getString("updatedDate"),
+      is(withinSecondsAfter(Seconds.seconds(2), requestMade)));
   }
 
   private URL requestPolicyStorageUrl(String path) throws MalformedURLException {

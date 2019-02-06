@@ -4,12 +4,15 @@
   "description": "request policy schema",
   "properties": {
     "id": {
+      "description": "Unique request policy ID",
       "type": "string"
     },
     "name": {
+      "description": "Unique request policy name, required",
       "type": "string"
     },
     "description": {
+      "description": "Description of request policy",
       "type": "string"
     },
     "requestTypes": {
@@ -21,6 +24,7 @@
       }
     },
     "metadata": {
+      "description": "Metadata about creation and changes to request policy, provided by the server (client should not provide)",
       "$ref": "raml-util/schemas/metadata.schema",
       "readonly": true
     }
