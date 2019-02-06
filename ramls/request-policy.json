@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "description": "request policy schema",
+  "properties": {
+    "id": {
+      "description": "Unique request policy ID",
+      "type": "string"
+    },
+    "name": {
+      "description": "Unique request policy name, required",
+      "type": "string"
+    },
+    "description": {
+      "description": "Description of request policy",
+      "type": "string"
+    },
+    "requestTypes": {
+      "description": "Whether the item should be held upon return, recalled or paged for",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "request-type.json"
+      }
+    },
+    "metadata": {
+      "description": "Metadata about creation and changes to request policy, provided by the server (client should not provide)",
+      "$ref": "raml-util/schemas/metadata.schema",
+      "readonly": true
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "name"
+  ]
+}

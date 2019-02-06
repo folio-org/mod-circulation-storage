@@ -89,6 +89,20 @@
       ]
     },
     {
+      "tableName": "request_policy",
+      "generateId": false,
+      "pkColumnName": "_id",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD",
+          "caseSensitive": false
+        }
+      ]
+    },
+    {
       "tableName": "loan_rules",
       "generateId": false,
       "pkColumnName": "_id",

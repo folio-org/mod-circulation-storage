@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Collection of request policies",
+  "type": "object",
+  "properties": {
+    "requestPolicies": {
+      "description": "List of request policies",
+      "id": "requestPolicies",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "request-policy.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "requestPolicies",
+    "totalRecords"
+  ]
+}

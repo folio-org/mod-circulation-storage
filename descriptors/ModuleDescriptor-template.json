@@ -253,6 +253,37 @@
       ]
     },
     {
+      "id": "request-policy-storage",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/request-policy-storage/request-policies",
+          "permissionsRequired": ["circulation-storage.request-policies.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/request-policy-storage/request-policies/{id}",
+          "permissionsRequired": ["circulation-storage.request-policies.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/request-policy-storage/request-policies",
+          "permissionsRequired": ["circulation-storage.request-policies.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/request-policy-storage/request-policies/{id}",
+          "permissionsRequired": ["circulation-storage.request-policies.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/request-policy-storage/request-policies/{id}",
+          "permissionsRequired": ["circulation-storage.request-policies.item.delete"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/request-policy-storage/request-policies",
+          "permissionsRequired": ["circulation-storage.request-policies.collection.delete"]
+        }
+      ]
+    },
+    {
       "id": "_tenant",
       "version": "1.0",
       "interfaceType": "system",
@@ -542,8 +573,44 @@
         "circulation-storage.patron-notice-policies.item.put",
         "circulation-storage.patron-notice-policies.item.delete",
         "circulation-storage.patron-notice-policies.collection.get",
-        "circulation-storage.patron-notice-policies.item.get"
+        "circulation-storage.patron-notice-policies.item.get",
+        "circulation-storage.request-policies.collection.get",
+        "circulation-storage.request-policies.item.get",
+        "circulation-storage.request-policies.collection.delete",
+        "circulation-storage.request-policies.item.delete",
+        "circulation-storage.request-policies.item.post",
+        "circulation-storage.request-policies.item.put"
       ]
+    },
+    {
+      "permissionName": "circulation-storage.request-policies.collection.get",
+      "displayName": "Circulation storage - get request policy collection",
+      "description": "Get request policy collection from storage"
+    },
+    {
+      "permissionName": "circulation-storage.request-policies.collection.delete",
+      "displayName": "Circulation storage - delete entire request policy collection",
+      "description": "Delete entire request policy collection from storage"
+    },
+    {
+      "permissionName": "circulation-storage.request-policies.item.get",
+      "displayName": "Circulation storage - get individual request policy",
+      "description": "Get individual request policy from storage"
+    },
+    {
+      "permissionName": "circulation-storage.request-policies.item.post",
+      "displayName": "Circulation storage - create individual request policy",
+      "description": "Create individual request policy in storage"
+    },
+    {
+      "permissionName": "circulation-storage.request-policies.item.put",
+      "displayName": "Circulation storage - modify individual request policy",
+      "description": "Modify request policy in storage"
+    },
+    {
+      "permissionName": "circulation-storage.request-policies.item.delete",
+      "displayName": "Circulation storage - delete individual request policy",
+      "description": "Delete individual request policy from storage"
     }
   ],
   "launchDescriptor": {

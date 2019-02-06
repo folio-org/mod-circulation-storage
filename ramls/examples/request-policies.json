@@ -1,0 +1,23 @@
+{
+  "requestPolicies": [
+    {
+      "id": "d9cd0bed-1b49-4b5e-a7bd-064b8d177231",
+      "name": "Example Request Policy",
+      "description" : "Description of request policy",
+      "requestTypes" : ["Hold", "Page"]
+    },
+    {
+      "id": "d9cd0bed-1b49-4b5e-a7bd-064b8d177232",
+      "name": "Example Recall Request Policy",
+      "description" : "Description of request policy",
+      "requestTypes" : ["Recall"]
+    },
+    {
+      "id": "d9cd0bed-1b49-4b5e-a7bd-064b8d177233",
+      "name": "Example all-request-types Request Policy",
+      "description" : "Description of request policy",
+      "requestTypes" : ["Hold", "Page", "Recall"]
+    }
+  ],
+  "totalRecords": 3
+}

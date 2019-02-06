@@ -1,0 +1,98 @@
+#%RAML 1.0
+title: Request Policy Storage
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost:9130
+
+documentation:
+  - title: Request Policy Storage API
+    content: <b>Storage for request policies</b>
+
+types:
+  request-policy: !include request-policy.json
+  request-policies: !include request-policies.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  language: !include raml-util/traits/language.raml
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+
+/request-policy-storage:
+  /request-policies:
+    displayName: Request Policies
+    type:
+      collection:
+        exampleCollection: !include examples/request-policies.json
+        exampleItem: !include examples/request-policy.json
+        schemaCollection: request-policies
+        schemaItem: request-policy
+    get:
+      is: [pageable,
+        searchable: {description: "searchable using CQL",
+                        example: "id=\"cf23adf0-61ba-4887-bf82-956c4aae2260\""},
+        ]
+      responses:
+       500:
+         description: "General errors"
+         body:
+           application/json:
+             type: errors
+    post:
+      responses:
+        500:
+           description: "General errors"
+           body:
+             application/json:
+               type: errors
+    delete:
+      is: [language]
+      responses:
+        204:
+          description: "All request policies deleted"
+        500:
+          description: "Internal server error, e.g. due to misconfiguration"
+          body:
+            application/json:
+              example: "Internal server error, contact administrator"
+        501:
+          description: "Not implemented yet"
+    /{requestPolicyId}:
+      type:
+        collection-item:
+          exampleItem: !include examples/request-policy.json
+          schema: request-policy
+      get:
+        responses:
+          501:
+            description: "Not implemented yet"
+          500:
+            description: "General errors"
+            body:
+             application/json:
+               type: errors
+          404:
+            description: "Not found"
+            body:
+              application/json:
+                type: errors
+      put:
+        responses:
+          501:
+            description: "Not implemented yet"
+          500:
+             description: "General errors"
+             body:
+               application/json:
+                 type: errors
+      delete:
+        responses:
+          500:
+            description: "General errors"
+            body:
+             application/json:
+               type: errors
