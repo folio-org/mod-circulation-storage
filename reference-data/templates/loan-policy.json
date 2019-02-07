@@ -10,10 +10,6 @@
       "intervalId" : ""
     },
     "closedLibraryDueDateManagementId" : "",
-    "existingRequestsPeriod" : {
-      "duration" : 0,
-      "intervalId" : ""
-    },
     "gracePeriod" : {
       "duration" : 0,
       "intervalId" : ""

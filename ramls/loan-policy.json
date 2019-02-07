@@ -16,6 +16,7 @@
     },
     "loansPolicy": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "profileId": {
           "type": "string",
@@ -29,11 +30,6 @@
         "closedLibraryDueDateManagementId": {
           "type": "string",
           "description": "Closed library due date management"
-        },
-        "existingRequestsPeriod": {
-          "type": "object",
-          "$ref": "period.json",
-          "description": "Alternate loan period for items with existing requests"
         },
         "gracePeriod": {
           "type": "object",

@@ -1,14 +1,10 @@
 package org.folio.rest.api;
 
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import org.folio.rest.support.*;
-import org.folio.rest.support.builders.LoanPolicyRequestBuilder;
-import org.hamcrest.junit.MatcherAssert;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import static org.folio.rest.support.matchers.periodJsonObjectMatcher.matchesPeriod;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.notNullValue;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -20,10 +16,21 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.folio.rest.support.matchers.periodJsonObjectMatcher.matchesPeriod;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNull.notNullValue;
+import org.folio.HttpStatus;
+import org.folio.rest.support.ApiTests;
+import org.folio.rest.support.IndividualResource;
+import org.folio.rest.support.JsonArrayHelper;
+import org.folio.rest.support.JsonResponse;
+import org.folio.rest.support.Response;
+import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.builders.LoanPolicyRequestBuilder;
+import org.hamcrest.junit.MatcherAssert;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 public class LoanPoliciesApiTest extends ApiTests {
   @Before
@@ -261,7 +268,6 @@ public class LoanPoliciesApiTest extends ApiTests {
     assertThat(loansPolicy.getString("profileId"), is("Rolling"));
     assertThat(loansPolicy.getJsonObject("period"), matchesPeriod(1, "Months"));
     assertThat(loansPolicy.getString("closedLibraryDueDateManagementId"), is("KEEP_CURRENT_DATE"));
-    assertThat(loansPolicy.getJsonObject("existingRequestsPeriod"), matchesPeriod(1, "Weeks"));
     assertThat(loansPolicy.getJsonObject("gracePeriod"), matchesPeriod(7, "Days"));
 
     checkRequestManagementSection(representation);
@@ -274,6 +280,69 @@ public class LoanPoliciesApiTest extends ApiTests {
     assertThat(renewalsPolicy.getString("renewFromId"), is("CURRENT_DUE_DATE"));
     assertThat(renewalsPolicy.getBoolean("differentPeriod"), is(true));
     assertThat(renewalsPolicy.getJsonObject("period"), matchesPeriod(30, "Days"));
+  }
+
+  @Test
+  public void cannotCreateALoanPolicyWithAdditionalPropertiesInLoanPolicy()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    UUID id = UUID.randomUUID();
+
+    JsonObject loanPolicyRequest = new LoanPolicyRequestBuilder()
+      .withId(id)
+      .withName("Example Loan Policy")
+      .withDescription("An example loan policy")
+      .create();
+
+    loanPolicyRequest.getJsonObject("loansPolicy").put("anAdditionalProperty", "blah");
+
+    client.post(loanPolicyStorageUrl(),
+      loanPolicyRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Should fail to create loan policy: %s", response.getBody()),
+      response.getStatusCode(), is(HttpStatus.HTTP_VALIDATION_ERROR.toInt()));
+  }
+
+  @Test
+  public void cannotCreateALoanPolicyWithInvalidPeriodInterval()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    UUID id = UUID.randomUUID();
+
+    JsonObject loanPolicyRequest = new LoanPolicyRequestBuilder()
+      .withId(id)
+      .withName("Example Loan Policy")
+      .withDescription("An example loan policy")
+      .create();
+
+    JsonObject period = new JsonObject();
+
+    period.put("duration", 1);
+    period.put("intervalId", "Foo");
+
+    loanPolicyRequest.getJsonObject("loansPolicy").put("period", period);
+
+    client.post(loanPolicyStorageUrl(),
+      loanPolicyRequest, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Should fail to create loan policy: %s", response.getBody()),
+      response.getStatusCode(), is(HttpStatus.HTTP_BAD_REQUEST.toInt()));
   }
 
   @Test
@@ -353,7 +422,6 @@ public class LoanPoliciesApiTest extends ApiTests {
     assertThat(loansPolicy.getString("profileId"), is("Rolling"));
     assertThat(loansPolicy.getJsonObject("period"), matchesPeriod(1, "Months"));
     assertThat(loansPolicy.getString("closedLibraryDueDateManagementId"), is("KEEP_CURRENT_DATE"));
-    assertThat(loansPolicy.getJsonObject("existingRequestsPeriod"), matchesPeriod(1, "Weeks"));
     assertThat(loansPolicy.getJsonObject("gracePeriod"), matchesPeriod(7, "Days"));
 
     checkRequestManagementSection(representation);
@@ -399,7 +467,6 @@ public class LoanPoliciesApiTest extends ApiTests {
     assertThat(loansPolicy.getString("profileId"), is("Rolling"));
     assertThat(loansPolicy.getJsonObject("period"), matchesPeriod(1, "Months"));
     assertThat(loansPolicy.getString("closedLibraryDueDateManagementId"), is("KEEP_CURRENT_DATE"));
-    assertThat(loansPolicy.getJsonObject("existingRequestsPeriod"), matchesPeriod(1, "Weeks"));
     assertThat(loansPolicy.getJsonObject("gracePeriod"), matchesPeriod(7, "Days"));
     assertThat(loansPolicy.getJsonObject("openingTimeOffset"), matchesPeriod(3, "Hours"));
 
@@ -618,7 +685,6 @@ public class LoanPoliciesApiTest extends ApiTests {
     assertThat(loansPolicy.getString("profileId"), is("Rolling"));
     assertThat(loansPolicy.getJsonObject("period"), matchesPeriod(1, "Months"));
     assertThat(loansPolicy.getString("closedLibraryDueDateManagementId"), is("KEEP_CURRENT_DATE"));
-    assertThat(loansPolicy.getJsonObject("existingRequestsPeriod"), matchesPeriod(1, "Weeks"));
     assertThat(loansPolicy.getJsonObject("gracePeriod"), matchesPeriod(7, "Days"));
     assertThat(loansPolicy.getJsonObject("openingTimeOffset"), matchesPeriod(3, "Hours"));
 
