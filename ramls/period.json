@@ -4,6 +4,7 @@
   "properties": {
     "duration": {
       "type": "integer",
+      "minimum": 1,
       "description": "Duration of the period, number of times the interval repeats"
     },
     "intervalId": {
