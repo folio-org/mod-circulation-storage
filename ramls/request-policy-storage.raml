@@ -40,17 +40,20 @@ resourceTypes:
        500:
          description: "General errors"
          body:
-           application/json:
-             type: errors
+          text/plain:
+            example: "Internal server error, contact administrator"
     post:
       responses:
         201:
           description: "Request policy created"
+          body:
+            application/json:
+              type: request-policy
         500:
            description: "General errors"
            body:
-             application/json:
-               type: errors
+            text/plain:
+              example: "Internal server error, contact administrator"
     delete:
       is: [language]
       responses:
@@ -59,8 +62,8 @@ resourceTypes:
         500:
           description: "General errors"
           body:
-            application/json:
-              type: errors
+            text/plain:
+              example: "Internal server error, contact administrator"
         501:
           description: "Not implemented yet"
     /{requestPolicyId}:
@@ -72,18 +75,21 @@ resourceTypes:
         responses:
           200:
             description: "Request policy successfully retreived"
+            body:
+              application/json:
+                type: request-policy
           501:
             description: "Not implemented yet"
           500:
             description: "General errors"
             body:
-             application/json:
-               type: errors
+              text/plain:
+                example: "Internal server error, contact administrator"
           404:
             description: "Not found"
             body:
-              application/json:
-                type: errors
+              text/plain:
+                example: "Internal server error, contact administrator"
       put:
         responses:
           204:
@@ -93,8 +99,8 @@ resourceTypes:
           500:
              description: "General errors"
              body:
-               application/json:
-                 type: errors
+              text/plain:
+                example: "Internal server error, contact administrator"
       delete:
         responses:
           204:
@@ -102,5 +108,5 @@ resourceTypes:
           500:
             description: "General errors"
             body:
-             application/json:
-               type: errors
+              text/plain:
+                example: "Internal server error, contact administrator"

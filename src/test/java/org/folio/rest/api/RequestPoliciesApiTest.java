@@ -119,8 +119,7 @@ public class RequestPoliciesApiTest extends ApiTests {
       assertThat(String.format("Failed to create request policy: %s", response2.getBody()),
         response2.getStatusCode(), is(HttpURLConnection.HTTP_INTERNAL_ERROR));
 
-      JsonObject error = extractErrorObject(response2);
-      assertThat("unexpected error message" , error.getString("message").contains("duplicate key value"));
+      assertThat("unexpected error message" , response2.getBody().contains("duplicate key value"));
   }
 
   @Test
@@ -149,8 +148,7 @@ public class RequestPoliciesApiTest extends ApiTests {
     JsonResponse response = createCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create request policy: %s", response.getBody()),
       response.getStatusCode(), is(HttpURLConnection.HTTP_INTERNAL_ERROR));
-    JsonObject error = extractErrorObject(response);
-    assertThat("unexpected error message" , error.getString("message").contains("invalid input syntax for type uuid"));
+    assertThat("unexpected error message" , response.getBody().contains("invalid input syntax for type uuid"));
   }
 
   @Test
@@ -224,12 +222,11 @@ public class RequestPoliciesApiTest extends ApiTests {
     JsonResponse responseGet = getCommpleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
     assertThat("Failed to not get request-policy", responseGet.getStatusCode(), is(HttpURLConnection.HTTP_INTERNAL_ERROR));
 
-    JsonObject anError = extractErrorObject(responseGet);
-    assertThat("expected error message not found",anError.getString("message").contains("OFFSET must not be negative"));
+    assertThat("expected error message not found",responseGet.getBody().contains("OFFSET must not be negative"));
   }
 
   @Test
-  public void cannotGetRequestPoliciesByNonExistentName()
+  public void cannotGetRequestPolicyByNonExistentName()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -251,7 +248,7 @@ public class RequestPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void canGetRequestPoliciesByName()
+  public void canGetRequestPolicyByName()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -279,7 +276,7 @@ public class RequestPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void canGetRequestPoliciesById()
+  public void canGetRequestPolicyById()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -321,8 +318,7 @@ public class RequestPoliciesApiTest extends ApiTests {
     JsonResponse responseGet = getCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
     assertThat("Failed to not retrieve a request policy by non-existing ID", responseGet.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
 
-    JsonObject error = extractErrorObject(responseGet);
-    assertThat("Error message does not contain keyword 'already existed'", error.getString("message").contains("Not Found"));
+    assertThat("Error message does not contain keyword 'already existed'", responseGet.getBody().contains("Not Found"));
   }
 
   @Test
@@ -405,9 +401,7 @@ public class RequestPoliciesApiTest extends ApiTests {
 
     JsonResponse responseGetVerify = getCompletedVerify.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
     assertThat("Failed to not get request-policy", responseGetVerify.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
-    JsonObject error = extractErrorObject(responseGetVerify);
-
-    assertThat("Error message does not contain keyword 'already existed'", error.getString("message").contains("Not Found"));
+    assertThat("Error message does not contain keyword 'already existed'", responseGetVerify.getBody().contains("Not Found"));
   }
 
   @Test
@@ -490,9 +484,8 @@ public class RequestPoliciesApiTest extends ApiTests {
     //Because of the unique name constraint, instead of getting an error message about a nonexistent object, the message
     //is about duplicate name. This happens because PUT can also be used to add a new record to the database.
     JsonResponse response = updateCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
-    JsonObject anError = extractErrorObject(response);
     assertThat("Failed to update request-policy", response.getStatusCode(), is(HttpURLConnection.HTTP_INTERNAL_ERROR));
-    assertThat("Error message does not contain keyword 'already existed'", anError.getString("message").contains("already exists"));
+    assertThat("Error message does not contain keyword 'already existed'", response.getBody().contains("already exists"));
   }
 
   @Test
@@ -525,10 +518,7 @@ public class RequestPoliciesApiTest extends ApiTests {
 
     JsonResponse response = updateCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
     assertThat("Failed to update request-policy", response.getStatusCode(), is(HttpURLConnection.HTTP_INTERNAL_ERROR));
-
-    JsonObject anError = extractErrorObject(response);
-
-    assertThat("Error message does not contain keyword 'already existed'", anError.getString("message").contains("already exists"));
+    assertThat("Error message does not contain keyword 'already existed'", response.getBody().contains("already exists"));
   }
 
   @Test
