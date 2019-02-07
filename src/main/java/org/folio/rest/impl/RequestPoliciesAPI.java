@@ -173,7 +173,7 @@ public class RequestPoliciesAPI implements RequestPolicyStorage {
       catch(Exception e) {
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
           RequestPolicyStorage.DeleteRequestPolicyStorageRequestPoliciesResponse
-            .respond500WithApplicationJson(e.getMessage())));
+            .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", RequestPolicy.class.getName(), e.getMessage()))));
       }
     });
   }
