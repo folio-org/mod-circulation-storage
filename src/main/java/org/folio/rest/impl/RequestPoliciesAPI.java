@@ -71,27 +71,27 @@ public class RequestPoliciesAPI implements RequestPolicyStorage {
                 else {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                     RequestPolicyStorage.GetRequestPolicyStorageRequestPoliciesResponse
-                      .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", RequestPolicies.class.getName(), reply.cause().getMessage()))));
+                      .respond500WithTextPlain(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
                 log.error(e);
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                   RequestPolicyStorage.GetRequestPolicyStorageRequestPoliciesResponse
-                    .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", RequestPolicies.class.getName(), e.getMessage()))));
+                    .respond500WithTextPlain(e.getMessage())));
               }
             });
         } catch (Exception e) {
           log.error(e);
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             RequestPolicyStorage.GetRequestPolicyStorageRequestPoliciesResponse
-            .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", RequestPolicies.class.getName(), e.getMessage()))));
+            .respond500WithTextPlain(e.getMessage())));
         }
       });
     } catch (Exception e) {
       log.error(e);
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         RequestPolicyStorage.GetRequestPolicyStorageRequestPoliciesResponse
-          .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", RequestPolicies.class.getName(), e.getMessage()))));
+          .respond500WithTextPlain(e.getMessage())));
     }
   }
 
@@ -127,28 +127,28 @@ public class RequestPoliciesAPI implements RequestPolicyStorage {
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(
                       RequestPolicyStorage.PostRequestPolicyStorageRequestPoliciesResponse
-                        .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", entity.getName(), reply.cause().toString()))));
+                        .respond500WithTextPlain(reply.cause().toString())));
                 }
               } catch (Exception e) {
                 log.error(e);
                 asyncResultHandler.handle(
                   io.vertx.core.Future.succeededFuture(
                     RequestPolicyStorage.PostRequestPolicyStorageRequestPoliciesResponse
-                      .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", entity.getName(), e.getMessage()))));
+                      .respond500WithTextPlain(e.getMessage())));
               }
             });
         } catch (Exception e) {
           log.error(e);
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             RequestPolicyStorage.PostRequestPolicyStorageRequestPoliciesResponse
-              .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", entity.getName(), e.getMessage()))));
+              .respond500WithTextPlain(e.getMessage())));
         }
       });
     } catch (Exception e) {
       log.error(e);
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         RequestPolicyStorage.PostRequestPolicyStorageRequestPoliciesResponse
-          .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", entity.getName(), e.getMessage()))));
+          .respond500WithTextPlain(e.getMessage())));
 
     }
   }
@@ -173,7 +173,7 @@ public class RequestPoliciesAPI implements RequestPolicyStorage {
       catch(Exception e) {
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
           RequestPolicyStorage.DeleteRequestPolicyStorageRequestPoliciesResponse
-            .respond500WithApplicationJson(e.getMessage())));
+            .respond500WithTextPlain(e.getMessage())));
       }
     });
   }
@@ -209,26 +209,26 @@ public class RequestPoliciesAPI implements RequestPolicyStorage {
                     asyncResultHandler.handle(
                       Future.succeededFuture(
                         RequestPolicyStorage.GetRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse.
-                          respond404WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", RequestPolicy.class.getName(), "Not Found"))));
+                          respond404WithTextPlain(ValidationHelper.createValidationErrorMessage("name", RequestPolicy.class.getName(), "Not Found"))));
                   }
                 } else {
                   asyncResultHandler.handle(
                     Future.succeededFuture(
                       RequestPolicyStorage.GetRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
-                        .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", RequestPolicy.class.getName(), reply.cause().getMessage()))));
+                        .respond500WithTextPlain(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
                 log.error(e);
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                   RequestPolicyStorage.GetRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
-                  .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", RequestPolicy.class.getName(), e.getMessage()))));
+                  .respond500WithTextPlain(e.getMessage())));
               }
             });
         } catch (Exception e) {
           log.error(e);
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             RequestPolicyStorage.GetRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
-            .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", RequestPolicy.class.getName(), e.getMessage()))));
+            .respond500WithTextPlain(e.getMessage())));
         }
       });
     } catch (Exception e) {
@@ -236,7 +236,7 @@ public class RequestPoliciesAPI implements RequestPolicyStorage {
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         RequestPolicyStorage.
           GetRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
-            .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", RequestPolicy.class.getName(), e.getMessage()))));
+            .respond500WithTextPlain(e.getMessage())));
     }
   }
 
@@ -271,7 +271,7 @@ public class RequestPoliciesAPI implements RequestPolicyStorage {
                     } else {
                       asyncResultHandler.handle(
                         Future.succeededFuture(PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
-                          .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", entity.getName(), update.cause().getMessage()))));
+                          .respond500WithTextPlain(update.cause().getMessage())));
                     }
                   });
               } else {
@@ -287,19 +287,19 @@ public class RequestPoliciesAPI implements RequestPolicyStorage {
                     } else {
                       asyncResultHandler.handle(
                         Future.succeededFuture(PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
-                          .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", entity.getName(), save.cause().getMessage()))));
+                          .respond500WithTextPlain(save.cause().getMessage())));
                     }
                   });
               }
             } else {
               asyncResultHandler.handle(Future.succeededFuture(PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
-                .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", entity.getName(), reply.cause().getMessage()))));
+                .respond500WithTextPlain(reply.cause().getMessage())));
             }
           })
       );
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(PutRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
-        .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", entity.getName(), e.getMessage()))));
+        .respond500WithTextPlain(e.getMessage())));
     }
   }
 
@@ -328,19 +328,19 @@ public class RequestPoliciesAPI implements RequestPolicyStorage {
                 else {
                   asyncResultHandler.handle(Future.succeededFuture(
                     DeleteRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
-                      .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", RequestPolicy.class.getName(), reply.cause().getMessage()))));
+                      .respond500WithTextPlain(reply.cause().getMessage())));
                 }
               });
           } catch (Exception e) {
             asyncResultHandler.handle(Future.succeededFuture(
               DeleteRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
-                .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", RequestPolicy.class.getName(), e.getMessage()))));
+                .respond500WithTextPlain(e.getMessage())));
           }
         });
       } catch (Exception e) {
         asyncResultHandler.handle(Future.succeededFuture(
           DeleteRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse
-            .respond500WithApplicationJson(ValidationHelper.createValidationErrorMessage("name", RequestPolicy.class.getName(), e.getMessage()))));
+            .respond500WithTextPlain(e.getMessage())));
       }
   }
 
