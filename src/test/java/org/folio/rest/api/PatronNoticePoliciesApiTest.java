@@ -4,6 +4,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.UpdateResult;
 import org.folio.rest.jaxrs.model.PatronNoticePolicy;
+import org.folio.rest.jaxrs.model.RequestNotice;
+import org.folio.rest.jaxrs.model.SendOptions__;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.ApiTests;
@@ -15,6 +17,8 @@ import org.junit.Test;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -76,10 +80,16 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
 
     firstPolicy.setId(id);
     firstPolicy.setDescription("description");
+    firstPolicy.setRequestNotices(createRequestNotices());
 
     Response response = updatePatronNoticePolicy(firstPolicy);
 
     assertThat("Failed to update patron notice policy", response.getStatusCode(), is(204));
+    assertThat(firstPolicy.getRequestNotices().size(), is(1));
+    assertThat(firstPolicy.getRequestNotices().get(0).getName(), is("Test request name"));
+    assertThat(firstPolicy.getRequestNotices().get(0).getFormat(), is(RequestNotice.Format.EMAIL));
+    assertThat(firstPolicy.getRequestNotices().get(0).getFrequency(), is(RequestNotice.Frequency.ONE_TIME));
+    assertThat(firstPolicy.getRequestNotices().get(0).getSendOptions().getSendWhen(), is(SendOptions__.SendWhen.RECALL_REQUEST));
   }
 
   @Test
@@ -229,5 +239,22 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
 
   private static URL patronNoticePoliciesStorageUrl(String subPath) throws MalformedURLException {
     return StorageTestSuite.storageUrl("/patron-notice-policy-storage/patron-notice-policies" + subPath);
+  }
+
+  private List<RequestNotice> createRequestNotices() {
+    RequestNotice requestNotice = new RequestNotice();
+    requestNotice.setName("Test request name");
+    requestNotice.setTemplateId(UUID.randomUUID().toString());
+    requestNotice.setTemplateName("Test template name");
+    requestNotice.setFormat(RequestNotice.Format.EMAIL);
+    requestNotice.setFrequency(RequestNotice.Frequency.ONE_TIME);
+    requestNotice.setRealTime(Boolean.TRUE);
+    SendOptions__.SendHow sendHow = SendOptions__.SendHow.fromValue("Before");
+    SendOptions__.SendWhen sendWhen = SendOptions__.SendWhen.fromValue("Recall request");
+    SendOptions__ sendOptions = new SendOptions__();
+    sendOptions.setSendHow(sendHow);
+    sendOptions.setSendWhen(sendWhen);
+    requestNotice.setSendOptions(sendOptions);
+    return Collections.singletonList(requestNotice);
   }
 }
