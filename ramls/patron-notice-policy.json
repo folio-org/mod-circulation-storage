@@ -346,9 +346,12 @@
                 "type": "string",
                 "description": "available/hold expiration/cancellation",
                 "enum": [
+                  "Recall request",
+                  "Hold request",
+                  "Paging request",
                   "Available",
                   "Hold Expiration",
-                  "Cancellation"
+                  "Request cancellation"
                 ]
               },
               "sendBy": {
