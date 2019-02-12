@@ -7,7 +7,7 @@ Version 2.0. See the file "[LICENSE](LICENSE)" for more information.
 
 ## Goal
 
-FOLIO compatible persistent storage of loans, loan policies, loan rules,
+FOLIO compatible persistent storage of loans, loan policies, circulation rules,
 requests, and fixed due date schedules
 
 ## API

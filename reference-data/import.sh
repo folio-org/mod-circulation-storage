@@ -53,14 +53,14 @@ shift $((OPTIND -1))
 okapiUrl=${okapiUrl:-http://localhost:9130}
 tenant=${tenant:-demo_tenant}
 dataDirs=${dataDirs:-'.'}
-modEndpoints='loan-policy-storage/loan-policies loan-rules-storage cancellation-reason-storage/cancellation-reasons'
+modEndpoints='loan-policy-storage/loan-policies circulation-rules-storage cancellation-reason-storage/cancellation-reasons'
 
 for dir in "${dataDirs[@]}";
 do
   for endpoint in $modEndpoints
   do
     if [ -d "${dir}/${endpoint}" ]; then
-      if [[ "$endpoint" =~ ^loan-rules-storage$ ]]; then
+      if [[ "$endpoint" =~ ^circulation-rules-storage$ ]]; then
         method=PUT
       else
         method=POST
