@@ -45,8 +45,7 @@ public class CirculationRulesAPI implements CirculationRulesStorage {
                   return;
                 }
 
-                @SuppressWarnings("unchecked")
-                List<CirculationRules> circulationRulesList = (List<CirculationRules>) reply.result().getResults();
+                List<CirculationRules> circulationRulesList = reply.result().getResults();
 
                 if (circulationRulesList.size() != 1) {
                   internalErrorGet(asyncResultHandler, new IllegalStateException("circulationRulesList.size() = "
