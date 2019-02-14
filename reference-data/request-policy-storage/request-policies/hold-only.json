@@ -2,5 +2,5 @@
     "id" : "4c6e1fb0-2ef1-4666-bd15-f9190ff89060",
     "name" : "Hold only",
     "description" : "Only allow holds",
-    "requestTypes" : ["HOLD"]
+    "requestTypes" : ["Hold"]
 }
