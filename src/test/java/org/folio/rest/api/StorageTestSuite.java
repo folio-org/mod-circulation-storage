@@ -37,7 +37,7 @@ import io.vertx.ext.sql.ResultSet;
 @Suite.SuiteClasses({
   LoansApiTest.class,
   LoansAnonymizationApiTest.class,
-  LoanRulesApiTest.class,
+  CirculationRulesApiTest.class,
   FixedDueDateApiTest.class,
   LoanPoliciesApiTest.class,
   RequestsApiTest.class,

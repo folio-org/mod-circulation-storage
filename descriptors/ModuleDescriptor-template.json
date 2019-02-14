@@ -42,17 +42,17 @@
       ]
     },
     {
-      "id": "loan-rules-storage",
+      "id": "circulation-rules-storage",
       "version": "1.0",
       "handlers": [
         {
           "methods": ["GET"],
-          "pathPattern": "/loan-rules-storage",
-          "permissionsRequired": ["circulation-storage.loan-rules.get"]
+          "pathPattern": "/circulation-rules-storage",
+          "permissionsRequired": ["circulation-storage.circulation-rules.get"]
         }, {
           "methods": ["PUT"],
-          "pathPattern": "/loan-rules-storage",
-          "permissionsRequired": ["circulation-storage.loan-rules.put"]
+          "pathPattern": "/circulation-rules-storage",
+          "permissionsRequired": ["circulation-storage.circulation-rules.put"]
         }
       ]
     },
@@ -335,14 +335,14 @@
       "description": "Anonymize closed loans for a single user"
     },
     {
-      "permissionName": "circulation-storage.loan-rules.get",
-      "displayName": "Circulation storage - get loan rules",
-      "description": "Get loan rules from storage"
+      "permissionName": "circulation-storage.circulation-rules.get",
+      "displayName": "Circulation storage - get circulation rules",
+      "description": "Get circulation rules from storage"
     },
     {
-      "permissionName": "circulation-storage.loan-rules.put",
-      "displayName": "Circulation storage - modify loan rules",
-      "description": "Modify loan rules in storage"
+      "permissionName": "circulation-storage.circulation-rules.put",
+      "displayName": "Circulation storage - modify circulation rules",
+      "description": "Modify circulation rules in storage"
     },
     {
       "permissionName": "circulation-storage.loan-policies.collection.get",
@@ -537,8 +537,8 @@
         "circulation-storage.loans.collection.delete",
         "circulation-storage.loans.collection.anonymize.user.post",
         "circulation-storage.loans-history.collection.get",
-        "circulation-storage.loan-rules.get",
-        "circulation-storage.loan-rules.put",
+        "circulation-storage.circulation-rules.get",
+        "circulation-storage.circulation-rules.put",
         "circulation-storage.loan-policies.collection.get",
         "circulation-storage.loan-policies.item.get",
         "circulation-storage.loan-policies.item.post",
