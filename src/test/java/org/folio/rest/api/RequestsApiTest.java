@@ -165,7 +165,6 @@ public class RequestsApiTest extends ApiTests {
     final JsonObject tagsRepresentation = representation.getJsonObject("tags");
 
     assertThat(tagsRepresentation.containsKey("tagList"), is(true));
-    assertThat(tagsRepresentation.getJsonArray("tagList").getList(), hasSize(2));
     assertThat(tagsRepresentation.getJsonArray("tagList"), contains("new", "important"));
   }
 
