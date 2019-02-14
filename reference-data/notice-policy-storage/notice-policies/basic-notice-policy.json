@@ -1,0 +1,8 @@
+{
+    "id" : "122b3d2b-4788-4f1e-9117-56daa91cb75c",
+    "name" : "Basic Notice Policy",
+    "description" : "A basic notice policy",
+    "active": true,
+    "loanNotices" : [],
+    "requestNotices" : []
+}
