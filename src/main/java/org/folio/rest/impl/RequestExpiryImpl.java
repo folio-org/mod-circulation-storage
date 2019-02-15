@@ -12,7 +12,7 @@ public class RequestExpiryImpl implements PeriodicAPI {
   @Override
   public long runEvery() {
     String intervalString = MODULE_SPECIFIC_ARGS.getOrDefault("request.expire.interval",
-      "360000");
+      "3600000");
     return Long.parseLong(intervalString);
   }
 
