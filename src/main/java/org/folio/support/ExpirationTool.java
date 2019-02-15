@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
@@ -69,7 +70,9 @@ public class ExpirationTool {
   public static Future<Integer> doRequestExpirationForTenant(Vertx vertx, Context context, String tenant) {
     final Logger logger = LoggerFactory.getLogger(ExpirationTool.class);
     Future<Integer> future = Future.future();
-    String nowDateString =  new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+    String nowDateString =  simpleDateFormat.format(new Date());
     context.runOnContext(v -> {
       PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
       pgClient.setIdField("id");
