@@ -1,0 +1,8 @@
+{
+    "id" : "16b88363-0d93-464a-967a-ad5ad0f9187c",
+    "name" : "Alternate Notice Policy",
+    "description" : "An alternate notice policy",
+    "active": true,
+    "loanNotices" : [],
+    "requestNotices" : []
+}

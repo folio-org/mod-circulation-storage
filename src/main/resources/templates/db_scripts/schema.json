@@ -103,12 +103,12 @@
       ]
     },
     {
-      "tableName": "loan_rules",
+      "tableName": "circulation_rules",
       "generateId": false,
       "pkColumnName": "_id",
       "withMetadata": false,
       "withAuditing": false,
-      "customSnippetPath": "insertEmptyLoanRulesRecord.sql"
+      "customSnippetPath": "insertEmptyCirculationRulesRecord.sql"
     },
     {
       "tableName": "staff_slips",

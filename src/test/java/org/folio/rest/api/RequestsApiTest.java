@@ -4,7 +4,10 @@ import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.util.Arrays.asList;
 import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_CANCELLED;
 import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_FILLED;
+import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_PICKUP_EXPIRED;
+import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_UNFILLED;
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_AWAITING_PICKUP;
+import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_IN_TRANSIT;
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET_FILLED;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.equivalentTo;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
@@ -171,7 +174,10 @@ public class RequestsApiTest extends ApiTests {
   @Parameters({
     OPEN_NOT_YET_FILLED,
     OPEN_AWAITING_PICKUP,
-    CLOSED_FILLED
+    OPEN_IN_TRANSIT,
+    CLOSED_FILLED,
+    CLOSED_UNFILLED,
+    CLOSED_PICKUP_EXPIRED
   })
   public void canCreateARequestWithValidStatus(String status)
     throws InterruptedException,
