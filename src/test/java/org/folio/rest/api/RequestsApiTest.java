@@ -13,7 +13,8 @@ import static org.folio.rest.support.matchers.TextDateTimeMatcher.equivalentTo;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
 import static org.folio.rest.support.matchers.ValidationResponseMatchers.isValidationResponseWhich;
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
@@ -44,8 +45,8 @@ import org.folio.rest.support.builders.RequestRequestBuilder;
 import org.hamcrest.junit.MatcherAssert;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDate;
 import org.joda.time.Seconds;
+import org.joda.time.format.ISODateTimeFormat;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -88,6 +89,8 @@ public class RequestsApiTest extends ApiTests {
     UUID proxyId = UUID.randomUUID();
     UUID pickupServicePointId = UUID.randomUUID();
     DateTime requestDate = new DateTime(2017, 7, 22, 10, 22, 54, DateTimeZone.UTC);
+    DateTime requestExpirationDate = new DateTime(2017, 7, 30, 0, 0, DateTimeZone.UTC);
+    DateTime holdShelfExpirationDate = new DateTime(2017, 8, 31, 0, 0, DateTimeZone.UTC);
 
     JsonObject requestRequest = new RequestRequestBuilder()
       .recall()
@@ -97,8 +100,8 @@ public class RequestsApiTest extends ApiTests {
       .withItemId(itemId)
       .withRequesterId(requesterId)
       .withProxyId(proxyId)
-      .withRequestExpiration(new LocalDate(2017, 7, 30))
-      .withHoldShelfExpiration(new LocalDate(2017, 8, 31))
+      .withRequestExpiration(requestExpirationDate)
+      .withHoldShelfExpiration(holdShelfExpirationDate)
       .withItem("Nod", "565578437802")
       .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
       .withProxy("Stuart", "Rebecca", "6059539205")
@@ -126,8 +129,8 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getString("requesterId"), is(requesterId.toString()));
     assertThat(representation.getString("proxyUserId"), is(proxyId.toString()));
     assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
-    assertThat(representation.getString("requestExpirationDate"), is("2017-07-30"));
-    assertThat(representation.getString("holdShelfExpirationDate"), is("2017-08-31"));
+    assertThat(representation.getString("requestExpirationDate"), is(equivalentTo(requestExpirationDate)));
+    assertThat(representation.getString("holdShelfExpirationDate"), is(equivalentTo(holdShelfExpirationDate)));
     assertThat(representation.getString("status"), is(OPEN_NOT_YET_FILLED));
     assertThat(representation.getInteger("position"), is(1));
     assertThat(representation.getString("pickupServicePointId"), is(pickupServicePointId.toString()));
@@ -564,6 +567,8 @@ public class RequestsApiTest extends ApiTests {
     UUID itemId = UUID.randomUUID();
     UUID requesterId = UUID.randomUUID();
     DateTime requestDate = new DateTime(2017, 7, 22, 10, 22, 54, DateTimeZone.UTC);
+    DateTime requestExpirationDate = new DateTime(2017, 7, 30, 0, 0, DateTimeZone.UTC);
+    DateTime holdShelfExpirationDate = new DateTime(2017, 8, 31, 0, 0, DateTimeZone.UTC);
 
     JsonObject requestRequest = new RequestRequestBuilder()
       .recall()
@@ -572,8 +577,8 @@ public class RequestsApiTest extends ApiTests {
       .withItemId(itemId)
       .withRequesterId(requesterId)
       .toHoldShelf()
-      .withRequestExpiration(new LocalDate(2017, 7, 30))
-      .withHoldShelfExpiration(new LocalDate(2017, 8, 31))
+      .withRequestExpiration(requestExpirationDate)
+      .withHoldShelfExpiration(holdShelfExpirationDate)
       .withItem("Nod", "565578437802")
       .withRequester("Smith", "Jessica", "721076398251")
       .create();
@@ -602,8 +607,8 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getString("itemId"), is(itemId.toString()));
     assertThat(representation.getString("requesterId"), is(requesterId.toString()));
     assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
-    assertThat(representation.getString("requestExpirationDate"), is("2017-07-30"));
-    assertThat(representation.getString("holdShelfExpirationDate"), is("2017-08-31"));
+    assertThat(representation.getString("requestExpirationDate"), is(equivalentTo(requestExpirationDate)));
+    assertThat(representation.getString("holdShelfExpirationDate"), is(equivalentTo(holdShelfExpirationDate)));
 
     assertThat(representation.containsKey("item"), is(true));
     assertThat(representation.getJsonObject("item").getString("title"), is("Nod"));
@@ -661,6 +666,8 @@ public class RequestsApiTest extends ApiTests {
     UUID itemId = UUID.randomUUID();
     UUID requesterId = UUID.randomUUID();
     DateTime requestDate = new DateTime(2017, 7, 22, 10, 22, 54, DateTimeZone.UTC);
+    DateTime requestExpirationDate = new DateTime(2017, 7, 30, 0, 0, DateTimeZone.UTC);
+    DateTime holdShelfExpirationDate = new DateTime(2017, 8, 31, 0, 0, DateTimeZone.UTC);
 
     JsonObject createRequestRequest = new RequestRequestBuilder()
       .recall()
@@ -699,10 +706,8 @@ public class RequestsApiTest extends ApiTests {
         .put("lastName", "Stuart")
         .put("firstName", "Rebecca")
         .put("barcode", "6059539205"))
-      .put("requestExpirationDate", new LocalDate(2017, 7, 30)
-        .toString("yyyy-MM-dd"))
-      .put("holdShelfExpirationDate", new LocalDate(2017, 8, 31)
-        .toString("yyyy-MM-dd"));
+      .put("requestExpirationDate", requestExpirationDate.toString(ISODateTimeFormat.dateTime()))
+      .put("holdShelfExpirationDate", holdShelfExpirationDate.toString(ISODateTimeFormat.dateTime()));
 
     client.put(requestStorageUrl(String.format("/%s", id)),
       updateRequestRequest, StorageTestSuite.TENANT_ID,
@@ -724,8 +729,8 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getString("requesterId"), is(newRequesterId.toString()));
     assertThat(representation.getString("proxyUserId"), is(proxyId.toString()));
     assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
-    assertThat(representation.getString("requestExpirationDate"), is("2017-07-30"));
-    assertThat(representation.getString("holdShelfExpirationDate"), is("2017-08-31"));
+    assertThat(representation.getString("requestExpirationDate"), is(equivalentTo(requestExpirationDate)));
+    assertThat(representation.getString("holdShelfExpirationDate"), is(equivalentTo(holdShelfExpirationDate)));
     assertThat(representation.getInteger("position"), is(2));
 
     assertThat(representation.containsKey("item"), is(true));
@@ -1003,6 +1008,8 @@ public class RequestsApiTest extends ApiTests {
     UUID itemId = UUID.randomUUID();
     UUID requesterId = UUID.randomUUID();
     DateTime requestDate = new DateTime(2017, 7, 22, 10, 22, 54, DateTimeZone.UTC);
+    DateTime requestExpirationDate = new DateTime(2017, 7, 30, 0, 0, DateTimeZone.UTC);
+    DateTime holdShelfExpirationDate = new DateTime(2017, 8, 31, 0, 0, DateTimeZone.UTC);
 
     JsonObject requestRequest = new RequestRequestBuilder()
       .recall()
@@ -1011,8 +1018,8 @@ public class RequestsApiTest extends ApiTests {
       .withItemId(itemId)
       .withRequesterId(requesterId)
       .toHoldShelf()
-      .withRequestExpiration(new LocalDate(2017, 7, 30))
-      .withHoldShelfExpiration(new LocalDate(2017, 8, 31))
+      .withRequestExpiration(requestExpirationDate)
+      .withHoldShelfExpiration(holdShelfExpirationDate)
       .withItem("Nod", "565578437802")
       .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
       .withPosition(3)
@@ -1033,8 +1040,8 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getString("itemId"), is(itemId.toString()));
     assertThat(representation.getString("requesterId"), is(requesterId.toString()));
     assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
-    assertThat(representation.getString("requestExpirationDate"), is("2017-07-30"));
-    assertThat(representation.getString("holdShelfExpirationDate"), is("2017-08-31"));
+    assertThat(representation.getString("requestExpirationDate"), is(equivalentTo(requestExpirationDate)));
+    assertThat(representation.getString("holdShelfExpirationDate"), is(equivalentTo(holdShelfExpirationDate)));
     assertThat(representation.getInteger("position"), is(3));
 
     assertThat(representation.containsKey("item"), is(true));

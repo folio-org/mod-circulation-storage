@@ -4,7 +4,6 @@ import io.vertx.core.json.JsonObject;
 import org.folio.rest.jaxrs.model.Tags;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDate;
 
 import java.util.UUID;
 
@@ -25,8 +24,8 @@ public class RequestRequestBuilder extends JsonBuilder {
   private final UUID proxyId;
   private final String fulfilmentPreference;
   private final UUID deliveryAddressTypeId;
-  private final LocalDate requestExpirationDate;
-  private final LocalDate holdShelfExpirationDate;
+  private final DateTime requestExpirationDate;
+  private final DateTime holdShelfExpirationDate;
   private final ItemSummary itemSummary;
   private final PatronSummary requesterSummary;
   private final PatronSummary proxySummary;
@@ -72,8 +71,8 @@ public class RequestRequestBuilder extends JsonBuilder {
     UUID proxyId,
     String fulfilmentPreference,
     UUID deliveryAddressTypeId,
-    LocalDate requestExpirationDate,
-    LocalDate holdShelfExpirationDate,
+    DateTime requestExpirationDate,
+    DateTime holdShelfExpirationDate,
     ItemSummary itemSummary,
     PatronSummary requesterSummary,
     PatronSummary proxySummary,
@@ -365,7 +364,7 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.tags);
   }
 
-  public RequestRequestBuilder withRequestExpiration(LocalDate requestExpiration) {
+  public RequestRequestBuilder withRequestExpiration(DateTime requestExpiration) {
     return new RequestRequestBuilder(
       this.id,
       this.requestType,
@@ -390,7 +389,7 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.tags);
   }
 
-  public RequestRequestBuilder withHoldShelfExpiration(LocalDate holdShelfExpiration) {
+  public RequestRequestBuilder withHoldShelfExpiration(DateTime holdShelfExpiration) {
     return new RequestRequestBuilder(
       this.id,
       this.requestType,

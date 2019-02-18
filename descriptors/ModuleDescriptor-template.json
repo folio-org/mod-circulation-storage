@@ -89,7 +89,7 @@
     },
     {
       "id": "request-storage",
-      "version": "2.6",
+      "version": "3.0",
       "handlers": [
         {
           "methods": ["GET"],

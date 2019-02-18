@@ -6,7 +6,6 @@ import org.folio.rest.support.builders.RequestRequestBuilder;
 import org.hamcrest.junit.MatcherAssert;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDate;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -289,6 +288,8 @@ public class CancellationReasonsApiTest extends ApiTests {
     UUID requesterId = UUID.randomUUID();
     UUID proxyId = UUID.randomUUID();
     DateTime requestDate = new DateTime(2017, 7, 22, 10, 22, 54, DateTimeZone.UTC);
+    DateTime requestExpirationDate = new DateTime(2017, 7, 30, 0, 0, DateTimeZone.UTC);
+    DateTime holdShelfExpirationDate = new DateTime(2017, 8, 31, 0, 0, DateTimeZone.UTC);
 
     JsonObject reasonRequest = new JsonObject()
         .put("name", "worms").put("description", "Item Eaten by space worms.")
@@ -302,8 +303,8 @@ public class CancellationReasonsApiTest extends ApiTests {
       .withItemId(itemId)
       .withRequesterId(requesterId)
       .withProxyId(proxyId)
-      .withRequestExpiration(new LocalDate(2017, 7, 30))
-      .withHoldShelfExpiration(new LocalDate(2017, 8, 31))
+      .withRequestExpiration(requestExpirationDate)
+      .withHoldShelfExpiration(holdShelfExpirationDate)
       .withItem("Nod", "565578437802")
       .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
       .withProxy("Stuart", "Rebecca", "6059539205")
