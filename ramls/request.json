@@ -165,6 +165,11 @@
       "description": "Metadata about creation and changes to requests, provided by the server (client should not provide)",
       "type": "object",
       "$ref": "raml-util/schemas/metadata.schema"
+    },
+    "tags": {
+      "type": "object",
+      "description": "Tags",
+      "$ref": "raml-util/schemas/tags.schema"
     }
   },
   "additionalProperties": false,

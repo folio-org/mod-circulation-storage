@@ -1,6 +1,7 @@
 package org.folio.rest.api;
 
 import static java.net.HttpURLConnection.HTTP_CREATED;
+import static java.util.Arrays.asList;
 import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_CANCELLED;
 import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_FILLED;
 import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_PICKUP_EXPIRED;
@@ -12,8 +13,7 @@ import static org.folio.rest.support.matchers.TextDateTimeMatcher.equivalentTo;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
 import static org.folio.rest.support.matchers.ValidationResponseMatchers.isValidationResponseWhich;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+import org.folio.rest.jaxrs.model.Tags;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.IndividualResource;
@@ -104,6 +105,7 @@ public class RequestsApiTest extends ApiTests {
       .withStatus(OPEN_NOT_YET_FILLED)
       .withPosition(1)
       .withPickupServicePointId(pickupServicePointId)
+      .withTags(new Tags().withTagList(asList("new", "important")))
       .create();
 
     client.post(requestStorageUrl(),
@@ -159,6 +161,13 @@ public class RequestsApiTest extends ApiTests {
 
     assertThat("barcode is taken from proxying user",
       proxyRepresentation.getString("barcode"), is("6059539205"));
+
+    assertThat(representation.containsKey("tags"), is(true));
+
+    final JsonObject tagsRepresentation = representation.getJsonObject("tags");
+
+    assertThat(tagsRepresentation.containsKey("tagList"), is(true));
+    assertThat(tagsRepresentation.getJsonArray("tagList"), contains("new", "important"));
   }
 
   @Test
