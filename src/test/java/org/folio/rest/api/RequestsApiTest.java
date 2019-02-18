@@ -12,7 +12,6 @@ import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage
 import static org.folio.rest.support.matchers.ValidationResponseMatchers.isValidationResponseWhich;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
