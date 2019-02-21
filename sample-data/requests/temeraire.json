@@ -5,7 +5,7 @@
   "requesterId": "9a6ed769-15b4-4555-bbe1-2987c1e6e014",
   "itemId": "23fdb0bc-ab58-442a-b326-577a96204487",
   "fulfilmentPreference": "Hold Shelf",
-  "holdShelfExpirationDate": "2018-09-10",
+  "holdShelfExpirationDate": "2018-09-10T10:43:16Z",
   "status": "Open - Awaiting pickup",
   "position": 1,
   "item": {
