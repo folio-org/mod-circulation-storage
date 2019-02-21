@@ -16,8 +16,8 @@
       "itemId": "3e5d5433-a271-499c-94f4-5f3e4652e537",
       "fulfilmentPreference": "Delivery",
       "position": 1,
-      "requestExpirationDate": "2017-08-31",
-      "holdShelfExpirationDate": "2017-09-01",
+      "requestExpirationDate": "2017-08-31T22:25:37Z",
+      "holdShelfExpirationDate": "2017-09-01T22:25:37Z",
       "item": {
         "title": "Interesting Times",
         "barcode": "269394016504"
