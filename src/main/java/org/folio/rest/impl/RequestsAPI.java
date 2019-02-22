@@ -35,7 +35,7 @@ import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
 public class RequestsAPI implements RequestStorage {
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-  private static final String REQUEST_TABLE = "request";
+  public static final String REQUEST_TABLE = "request";
 
   @Override
   public void deleteRequestStorageRequests(
