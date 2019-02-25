@@ -72,7 +72,7 @@ public class ExpirationTool {
     String nowDateString =  simpleDateFormat.format(new Date());
     context.runOnContext(v -> {
       PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
-      pgClient.setIdField("id");
+      pgClient.setIdField("_id");
       String query = String.format("(status == \"%s\" AND requestExpirationDate < \"%s\") OR (status == \"%s\" AND holdShelfExpirationDate < \"%s\")",
         OPEN_NOT_YET_FILLED.value(), nowDateString, OPEN_AWAITING_PICKUP.value(), nowDateString);
       CQL2PgJSON cql2pgJson;
@@ -133,7 +133,7 @@ public class ExpirationTool {
     Future<Void> future = Future.future();
     context.runOnContext(v -> {
       PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
-      pgClient.setIdField("id");
+      pgClient.setIdField("_id");
       String query = String.format(
         "itemId==%s and status==(\"%s\" or \"%s\" or \"%s\") sortBy position/sort.ascending",
         request.getItemId(),

@@ -1534,6 +1534,10 @@ public class RequestsApiTest extends ApiTests {
     UUID id4 = UUID.randomUUID();
     UUID id5 = UUID.randomUUID();
     UUID id6 = UUID.randomUUID();
+
+    UUID itemId1 = UUID.randomUUID();
+    UUID itemId2 = UUID.randomUUID();
+
     DateTime requestDate = new DateTime(2019, 1, 22, 10, 22, 54, DateTimeZone.UTC);
 
     /* Status "Open - not yet filled" and request expiration date in the past - should be expired */
@@ -1545,6 +1549,7 @@ public class RequestsApiTest extends ApiTests {
       .withRequesterId(UUID.randomUUID())
       .withRequestExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
       .withItem("Nod", "565578437802")
+      .withItemId(itemId1)
       .withRequester("Smith", "Jessica", "721076398251")
       .withPosition(1)
       .withStatus(OPEN_NOT_YET_FILLED)
@@ -1563,11 +1568,11 @@ public class RequestsApiTest extends ApiTests {
       .withRequestDate(requestDate)
       .withItemId(UUID.randomUUID())
       .withRequesterId(UUID.randomUUID())
-      .withRequestExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
       .withItem("Nod", "565578437802")
+      .withItemId(itemId1)
       .withRequester("Smith", "Jessica", "721076398251")
       .withPosition(2)
-      .withStatus(OPEN_AWAITING_PICKUP)
+      .withStatus(OPEN_NOT_YET_FILLED)
       .create();
 
     CompletableFuture<JsonResponse> createCompleted2 = new CompletableFuture<>();
@@ -1585,6 +1590,7 @@ public class RequestsApiTest extends ApiTests {
       .withRequesterId(UUID.randomUUID())
       .withHoldShelfExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
       .withItem("Nod", "565578437802")
+      .withItemId(itemId1)
       .withRequester("Smith", "Jessica", "721076398251")
       .withPosition(3)
       .withStatus(OPEN_NOT_YET_FILLED)
@@ -1605,6 +1611,7 @@ public class RequestsApiTest extends ApiTests {
       .withRequesterId(UUID.randomUUID())
       .withHoldShelfExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
       .withItem("Nod1", "5655784378021")
+      .withItemId(itemId2)
       .withRequester("Smith", "Jessica", "721076398251")
       .withPosition(1)
       .withStatus(OPEN_AWAITING_PICKUP)
@@ -1625,6 +1632,7 @@ public class RequestsApiTest extends ApiTests {
       .withRequesterId(UUID.randomUUID())
       .withHoldShelfExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
       .withItem("Nod1", "5655784378021")
+      .withItemId(itemId2)
       .withRequester("Smith", "Jessica", "721076398251")
       .withPosition(2)
       .withStatus(OPEN_NOT_YET_FILLED)
@@ -1645,9 +1653,10 @@ public class RequestsApiTest extends ApiTests {
       .withRequesterId(UUID.randomUUID())
       .withHoldShelfExpiration(new DateTime(9999, 7, 30, 10, 22, 54, DateTimeZone.UTC))
       .withItem("Nod1", "5655784378021")
+      .withItemId(itemId2)
       .withRequester("Smith", "Jessica", "721076398251")
       .withPosition(3)
-      .withStatus(OPEN_AWAITING_PICKUP)
+      .withStatus(OPEN_NOT_YET_FILLED)
       .create();
 
     CompletableFuture<JsonResponse> createCompleted6 = new CompletableFuture<>();
@@ -1684,7 +1693,7 @@ public class RequestsApiTest extends ApiTests {
     ExpirationTool.doRequestExpirationForTenant(StorageTestSuite.getVertx(), StorageTestSuite.getVertx().getOrCreateContext(), StorageTestSuite.TENANT_ID).setHandler(res -> {
       getExpirationCF.complete(null);
     });
-    getExpirationCF.get(20, TimeUnit.SECONDS);
+    getExpirationCF.get(5, TimeUnit.SECONDS);
 
     JsonResponse getResponse1 = getById(id1);
     assertThat(String.format("Failed to get request: %s", getResponse1.getBody()),
@@ -1709,18 +1718,18 @@ public class RequestsApiTest extends ApiTests {
     assertThat(getResponse1.getJson().containsKey("position"), is(false));
 
     assertThat(getResponse2.getJson().getString("status"), is(OPEN_NOT_YET_FILLED));
-    assertThat(getResponse3.getJson().getInteger("position"), is(1));
+    assertThat(getResponse2.getJson().getInteger("position"), is(1));
 
-    assertThat(getResponse3.getJson().getString("status"), is(OPEN_AWAITING_PICKUP));
+    assertThat(getResponse3.getJson().getString("status"), is(OPEN_NOT_YET_FILLED));
     assertThat(getResponse3.getJson().getInteger("position"), is(2));
 
     assertThat(getResponse4.getJson().getString("status"), is(CLOSED_PICKUP_EXPIRED));
-    assertThat(getResponse2.getJson().containsKey("position"), is(false));
+    assertThat(getResponse4.getJson().containsKey("position"), is(false));
 
     assertThat(getResponse5.getJson().getString("status"), is(OPEN_NOT_YET_FILLED));
     assertThat(getResponse5.getJson().getInteger("position"), is(1));
 
-    assertThat(getResponse6.getJson().getString("status"), is(OPEN_AWAITING_PICKUP));
+    assertThat(getResponse6.getJson().getString("status"), is(OPEN_NOT_YET_FILLED));
     assertThat(getResponse6.getJson().getInteger("position"), is(2));
   }
 
