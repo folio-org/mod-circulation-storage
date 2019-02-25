@@ -121,9 +121,9 @@ public class ExpirationTool {
           request.setStatus(CLOSED_PICKUP_EXPIRED);
         }
         request.setPosition(null);
-        Future<Void> saveFuture = saveRequest(vertx, context, tenant, request);
+        Future<Void> saveFuture = saveRequest(vertx, context, tenant, request)
+          .compose(v -> updateRequestQueue(vertx, context, tenant, request));
         futureList.add(saveFuture);
-        updateRequestQueue(vertx, context, tenant, request);
       }
     }
     return futureList;
@@ -158,22 +158,27 @@ public class ExpirationTool {
         } else if (reply.result().getResults().isEmpty()) {
           logger.info(String.format("No results found for query %s", query));
         } else {
-          reorderRequests(vertx, context, tenant, reply.result().getResults());
+          List<Future> futureList = reorderRequests(vertx, context, tenant, reply.result().getResults());
+          CompositeFuture compositeFuture = CompositeFuture.join(futureList);
+          compositeFuture.setHandler(compRes -> future.complete());
         }
       });
     });
     return future;
   }
 
-  private static void reorderRequests(Vertx vertx, Context context, String tenant, List<Request> requestList) {
+  private static List<Future> reorderRequests(Vertx vertx, Context context, String tenant, List<Request> requestList) {
+    List<Future> futureList = new ArrayList<>();
     Integer currentPosition = 1;
     for (Request request : requestList) {
       if (!request.getPosition().equals(currentPosition)) {
         request.setPosition(currentPosition);
         currentPosition++;
-        saveRequest(vertx, context, tenant, request);
+        Future<Void> saveFuture = saveRequest(vertx, context, tenant, request);
+        futureList.add(saveFuture);
       }
     }
+    return futureList;
   }
 
   private static Future<Void> saveRequest(Vertx vertx, Context context, String tenant, Request request) {
