@@ -22,10 +22,7 @@ import org.folio.rest.persist.cql.CQLWrapper;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
 import static org.folio.rest.impl.RequestsAPI.REQUEST_TABLE;
-import static org.folio.rest.jaxrs.model.Request.Status.OPEN_NOT_YET_FILLED;
-import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_UNFILLED;
-import static org.folio.rest.jaxrs.model.Request.Status.OPEN_AWAITING_PICKUP;
-import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_PICKUP_EXPIRED;
+import static org.folio.rest.jaxrs.model.Request.Status.*;
 
 public class ExpirationTool {
 
@@ -70,7 +67,7 @@ public class ExpirationTool {
 
   public static Future<Integer> doRequestExpirationForTenant(Vertx vertx, Context context, String tenant) {
     Future<Integer> future = Future.future();
-    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
     simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
     String nowDateString =  simpleDateFormat.format(new Date());
     context.runOnContext(v -> {
@@ -126,9 +123,57 @@ public class ExpirationTool {
         request.setPosition(null);
         Future<Void> saveFuture = saveRequest(vertx, context, tenant, request);
         futureList.add(saveFuture);
+        updateRequestQueue(vertx, context, tenant, request);
       }
     }
     return futureList;
+  }
+
+  private static Future<Void> updateRequestQueue(Vertx vertx, Context context, String tenant, Request request) {
+    Future<Void> future = Future.future();
+    context.runOnContext(v -> {
+      PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
+      pgClient.setIdField("id");
+      String query = String.format(
+        "itemId==%s and status==(\"%s\" or \"%s\" or \"%s\") sortBy position/sort.ascending",
+        request.getItemId(),
+        OPEN_AWAITING_PICKUP.value(),
+        OPEN_NOT_YET_FILLED.value(),
+        OPEN_IN_TRANSIT.value());
+      CQL2PgJSON cql2pgJson;
+      CQLWrapper cqlWrapper;
+      String[] fieldList = {"*"};
+      try {
+        cql2pgJson = new CQL2PgJSON(Collections.singletonList(REQUEST_TABLE + ".jsonb"));
+        cqlWrapper = new CQLWrapper(cql2pgJson, query);
+      } catch(Exception e) {
+        future.fail(e.getLocalizedMessage());
+        return;
+      }
+      pgClient.get(REQUEST_TABLE, Request.class, fieldList, cqlWrapper, true, false, reply -> {
+        if (reply.failed()) {
+          logger.info(String.format("Error executing postgres query: '%s', %s",
+            query, reply.cause().getLocalizedMessage()));
+          future.fail(reply.cause());
+        } else if (reply.result().getResults().isEmpty()) {
+          logger.info(String.format("No results found for query %s", query));
+        } else {
+          reorderRequests(vertx, context, tenant, reply.result().getResults());
+        }
+      });
+    });
+    return future;
+  }
+
+  private static void reorderRequests(Vertx vertx, Context context, String tenant, List<Request> requestList) {
+    Integer currentPosition = 1;
+    for (Request request : requestList) {
+      if (!request.getPosition().equals(currentPosition)) {
+        request.setPosition(currentPosition);
+        currentPosition++;
+        saveRequest(vertx, context, tenant, request);
+      }
+    }
   }
 
   private static Future<Void> saveRequest(Vertx vertx, Context context, String tenant, Request request) {

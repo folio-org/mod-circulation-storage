@@ -1528,44 +1528,26 @@ public class RequestsApiTest extends ApiTests {
     MalformedURLException,
     TimeoutException,
     ExecutionException {
-    UUID id = UUID.randomUUID();
     UUID id1 = UUID.randomUUID();
     UUID id2 = UUID.randomUUID();
     UUID id3 = UUID.randomUUID();
     UUID id4 = UUID.randomUUID();
     UUID id5 = UUID.randomUUID();
+    UUID id6 = UUID.randomUUID();
     DateTime requestDate = new DateTime(2019, 1, 22, 10, 22, 54, DateTimeZone.UTC);
 
     /* Status "Open - not yet filled" and request expiration date in the past - should be expired */
-    JsonObject requestRequest = new RequestRequestBuilder()
-      .recall()
-      .withId(id)
+    JsonObject requestRequest1 = new RequestRequestBuilder()
+      .hold()
+      .withId(id1)
       .withRequestDate(requestDate)
       .withItemId(UUID.randomUUID())
       .withRequesterId(UUID.randomUUID())
       .withRequestExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
       .withItem("Nod", "565578437802")
       .withRequester("Smith", "Jessica", "721076398251")
+      .withPosition(1)
       .withStatus(OPEN_NOT_YET_FILLED)
-      .create();
-
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
-
-    client.put(requestStorageUrl(String.format("/%s", id)),
-      requestRequest, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(createCompleted));
-
-    /* Status "Open - Awaiting pickup" and hold shelf expiration date in the past - should be expired */
-    JsonObject requestRequest1 = new RequestRequestBuilder()
-      .recall()
-      .withId(id1)
-      .withRequestDate(requestDate)
-      .withItemId(UUID.randomUUID())
-      .withRequesterId(UUID.randomUUID())
-      .withHoldShelfExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
-      .withItem("Nod", "565578437802")
-      .withRequester("Smith", "Jessica", "721076398251")
-      .withStatus(OPEN_AWAITING_PICKUP)
       .create();
 
     CompletableFuture<JsonResponse> createCompleted1 = new CompletableFuture<>();
@@ -1576,7 +1558,7 @@ public class RequestsApiTest extends ApiTests {
 
     /* Status "Open - Awaiting pickup" and request expiration date in the past - should NOT be expired */
     JsonObject requestRequest2 = new RequestRequestBuilder()
-      .recall()
+      .hold()
       .withId(id2)
       .withRequestDate(requestDate)
       .withItemId(UUID.randomUUID())
@@ -1584,6 +1566,7 @@ public class RequestsApiTest extends ApiTests {
       .withRequestExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
       .withItem("Nod", "565578437802")
       .withRequester("Smith", "Jessica", "721076398251")
+      .withPosition(2)
       .withStatus(OPEN_AWAITING_PICKUP)
       .create();
 
@@ -1595,7 +1578,7 @@ public class RequestsApiTest extends ApiTests {
 
     /* Status "Open - not yet filled" and hold shelf expiration date in the past - should NOT be expired */
     JsonObject requestRequest3 = new RequestRequestBuilder()
-      .recall()
+      .hold()
       .withId(id3)
       .withRequestDate(requestDate)
       .withItemId(UUID.randomUUID())
@@ -1603,6 +1586,7 @@ public class RequestsApiTest extends ApiTests {
       .withHoldShelfExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
       .withItem("Nod", "565578437802")
       .withRequester("Smith", "Jessica", "721076398251")
+      .withPosition(3)
       .withStatus(OPEN_NOT_YET_FILLED)
       .create();
 
@@ -1612,17 +1596,18 @@ public class RequestsApiTest extends ApiTests {
       requestRequest3, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createCompleted3));
 
-    /* Status "Open - not yet filled" and request expiration date in the future - should NOT be expired */
+    /* Status "Open - Awaiting pickup" and hold shelf expiration date in the past - should be expired */
     JsonObject requestRequest4 = new RequestRequestBuilder()
-      .recall()
+      .hold()
       .withId(id4)
       .withRequestDate(requestDate)
       .withItemId(UUID.randomUUID())
       .withRequesterId(UUID.randomUUID())
       .withHoldShelfExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
-      .withItem("Nod", "565578437802")
+      .withItem("Nod1", "5655784378021")
       .withRequester("Smith", "Jessica", "721076398251")
-      .withStatus(OPEN_NOT_YET_FILLED)
+      .withPosition(1)
+      .withStatus(OPEN_AWAITING_PICKUP)
       .create();
 
     CompletableFuture<JsonResponse> createCompleted4 = new CompletableFuture<>();
@@ -1631,17 +1616,18 @@ public class RequestsApiTest extends ApiTests {
       requestRequest4, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createCompleted4));
 
-    /* Status "Open - Awaiting pickup" and hold shelf expiration date in the future - should NOT be expired */
+    /* Status "Open - not yet filled" and request expiration date in the future - should NOT be expired */
     JsonObject requestRequest5 = new RequestRequestBuilder()
-      .recall()
+      .hold()
       .withId(id5)
       .withRequestDate(requestDate)
       .withItemId(UUID.randomUUID())
       .withRequesterId(UUID.randomUUID())
-      .withHoldShelfExpiration(new DateTime(9999, 7, 30, 10, 22, 54, DateTimeZone.UTC))
-      .withItem("Nod", "565578437802")
+      .withHoldShelfExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+      .withItem("Nod1", "5655784378021")
       .withRequester("Smith", "Jessica", "721076398251")
-      .withStatus(OPEN_AWAITING_PICKUP)
+      .withPosition(2)
+      .withStatus(OPEN_NOT_YET_FILLED)
       .create();
 
     CompletableFuture<JsonResponse> createCompleted5 = new CompletableFuture<>();
@@ -1650,9 +1636,25 @@ public class RequestsApiTest extends ApiTests {
       requestRequest5, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createCompleted5));
 
-    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
-    assertThat(String.format("Failed to create request: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    /* Status "Open - Awaiting pickup" and hold shelf expiration date in the future - should NOT be expired */
+    JsonObject requestRequest6 = new RequestRequestBuilder()
+      .hold()
+      .withId(id6)
+      .withRequestDate(requestDate)
+      .withItemId(UUID.randomUUID())
+      .withRequesterId(UUID.randomUUID())
+      .withHoldShelfExpiration(new DateTime(9999, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+      .withItem("Nod1", "5655784378021")
+      .withRequester("Smith", "Jessica", "721076398251")
+      .withPosition(3)
+      .withStatus(OPEN_AWAITING_PICKUP)
+      .create();
+
+    CompletableFuture<JsonResponse> createCompleted6 = new CompletableFuture<>();
+
+    client.put(requestStorageUrl(String.format("/%s", id6)),
+      requestRequest6, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted6));
 
     JsonResponse response1 = createCompleted1.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create request: %s", response1.getBody()),
@@ -1674,15 +1676,16 @@ public class RequestsApiTest extends ApiTests {
     assertThat(String.format("Failed to create request: %s", response5.getBody()),
       response5.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
+    JsonResponse response6 = createCompleted6.get(5, TimeUnit.SECONDS);
+    assertThat(String.format("Failed to create request: %s", response6.getBody()),
+      response6.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
     CompletableFuture<Void> getExpirationCF = new CompletableFuture();
     ExpirationTool.doRequestExpirationForTenant(StorageTestSuite.getVertx(), StorageTestSuite.getVertx().getOrCreateContext(), StorageTestSuite.TENANT_ID).setHandler(res -> {
       getExpirationCF.complete(null);
     });
-    getExpirationCF.get(5, TimeUnit.SECONDS);
+    getExpirationCF.get(20, TimeUnit.SECONDS);
 
-    JsonResponse getResponse = getById(id);
-    assertThat(String.format("Failed to get request: %s", getResponse.getBody()),
-      getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     JsonResponse getResponse1 = getById(id1);
     assertThat(String.format("Failed to get request: %s", getResponse1.getBody()),
       getResponse1.getStatusCode(), is(HttpURLConnection.HTTP_OK));
@@ -1698,13 +1701,27 @@ public class RequestsApiTest extends ApiTests {
     JsonResponse getResponse5 = getById(id5);
     assertThat(String.format("Failed to get request: %s", getResponse5.getBody()),
       getResponse5.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    JsonResponse getResponse6 = getById(id6);
+    assertThat(String.format("Failed to get request: %s", getResponse6.getBody()),
+      getResponse6.getStatusCode(), is(HttpURLConnection.HTTP_OK));
 
-    assertThat(getResponse.getJson().getString("status"), is(CLOSED_UNFILLED));
-    assertThat(getResponse1.getJson().getString("status"), is(CLOSED_PICKUP_EXPIRED));
-    assertThat(getResponse2.getJson().getString("status"), is(OPEN_AWAITING_PICKUP));
-    assertThat(getResponse3.getJson().getString("status"), is(OPEN_NOT_YET_FILLED));
-    assertThat(getResponse4.getJson().getString("status"), is(OPEN_NOT_YET_FILLED));
-    assertThat(getResponse5.getJson().getString("status"), is(OPEN_AWAITING_PICKUP));
+    assertThat(getResponse1.getJson().getString("status"), is(CLOSED_UNFILLED));
+    assertThat(getResponse1.getJson().containsKey("position"), is(false));
+
+    assertThat(getResponse2.getJson().getString("status"), is(OPEN_NOT_YET_FILLED));
+    assertThat(getResponse3.getJson().getInteger("position"), is(1));
+
+    assertThat(getResponse3.getJson().getString("status"), is(OPEN_AWAITING_PICKUP));
+    assertThat(getResponse3.getJson().getInteger("position"), is(2));
+
+    assertThat(getResponse4.getJson().getString("status"), is(CLOSED_PICKUP_EXPIRED));
+    assertThat(getResponse2.getJson().containsKey("position"), is(false));
+
+    assertThat(getResponse5.getJson().getString("status"), is(OPEN_NOT_YET_FILLED));
+    assertThat(getResponse5.getJson().getInteger("position"), is(1));
+
+    assertThat(getResponse6.getJson().getString("status"), is(OPEN_AWAITING_PICKUP));
+    assertThat(getResponse6.getJson().getInteger("position"), is(2));
   }
 
   static URL requestStorageUrl() throws MalformedURLException {
