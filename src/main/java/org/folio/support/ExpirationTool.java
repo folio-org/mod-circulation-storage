@@ -96,21 +96,18 @@ public class ExpirationTool {
           List<Request> requestList = reply.result().getResults();
           List<Future> futureList = closeRequests(vertx, context, tenant, requestList);
           CompositeFuture compositeFuture = CompositeFuture.join(futureList);
-          compositeFuture.setHandler(compRes -> future.complete(countSucceeded(futureList)));
-        }
+          compositeFuture.setHandler(compRes -> {
+            int succeededCount = 0;
+            for (Future fut : futureList) {
+              if (fut.succeeded()) {
+                succeededCount++;
+              }
+            }
+            future.complete(succeededCount);
+          });        }
       });
     });
     return future;
-  }
-
-  private static int countSucceeded(List<Future> futureList) {
-    int succeededCount = 0;
-    for (Future fut : futureList) {
-      if (fut.succeeded()) {
-        succeededCount++;
-      }
-    }
-    return succeededCount;
   }
 
   private static List<Future> closeRequests(Vertx vertx, Context context, String tenant, List<Request> requestList) {
