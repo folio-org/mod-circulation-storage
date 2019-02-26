@@ -1703,7 +1703,7 @@ public class RequestsApiTest extends ApiTests {
     ExpirationTool.doRequestExpirationForTenant(StorageTestSuite.getVertx(), StorageTestSuite.getVertx().getOrCreateContext(), StorageTestSuite.TENANT_ID).setHandler(res -> {
       getExpirationCF.complete(null);
     });
-    getExpirationCF.get(5, TimeUnit.SECONDS);
+    getExpirationCF.get(10, TimeUnit.SECONDS);
 
     JsonResponse getResponse1_1 = getById(id1_1);
     assertThat(String.format("Failed to get request: %s", getResponse1_1.getBody()),
