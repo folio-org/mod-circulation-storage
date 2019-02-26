@@ -96,19 +96,21 @@ public class ExpirationTool {
           List<Request> requestList = reply.result().getResults();
           List<Future> futureList = closeRequests(vertx, context, tenant, requestList);
           CompositeFuture compositeFuture = CompositeFuture.join(futureList);
-          compositeFuture.setHandler(compRes -> {
-            int succeededCount = 0;
-            for (Future fut : futureList) {
-              if (fut.succeeded()) {
-                succeededCount++;
-              }
-            }
-            future.complete(succeededCount);
-          });
+          compositeFuture.setHandler(compRes -> future.complete(countSucceeded(futureList)));
         }
       });
     });
     return future;
+  }
+
+  private static int countSucceeded(List<Future> futureList) {
+    int succeededCount = 0;
+    for (Future fut : futureList) {
+      if (fut.succeeded()) {
+        succeededCount++;
+      }
+    }
+    return succeededCount;
   }
 
   private static List<Future> closeRequests(Vertx vertx, Context context, String tenant, List<Request> requestList) {
@@ -121,15 +123,16 @@ public class ExpirationTool {
           request.setStatus(CLOSED_PICKUP_EXPIRED);
         }
         request.setPosition(null);
-        Future<Void> saveFuture = saveRequest(vertx, context, tenant, request);
+        Future<Void> saveFuture = saveRequest(vertx, context, tenant, request)
+          .compose(v -> updateRequestQueue(vertx, context, tenant, request));
         futureList.add(saveFuture);
-        updateRequestQueue(vertx, context, tenant, request);
       }
     }
     return futureList;
   }
 
-  private static void updateRequestQueue(Vertx vertx, Context context, String tenant, Request request) {
+  private static Future<Void> updateRequestQueue(Vertx vertx, Context context, String tenant, Request request) {
+    Future<Void> future = Future.future();
     context.runOnContext(v -> {
       PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
       pgClient.setIdField("_id");
@@ -146,30 +149,41 @@ public class ExpirationTool {
         cql2pgJson = new CQL2PgJSON(Collections.singletonList(REQUEST_TABLE + ".jsonb"));
         cqlWrapper = new CQLWrapper(cql2pgJson, query);
       } catch(Exception e) {
+        future.fail(e.getLocalizedMessage());
         return;
       }
       pgClient.get(REQUEST_TABLE, Request.class, fieldList, cqlWrapper, true, false, reply -> {
         if (reply.failed()) {
           logger.info(String.format("Error executing postgres query: '%s', %s",
             query, reply.cause().getLocalizedMessage()));
+          future.fail(reply.cause());
         } else if (reply.result().getResults().isEmpty()) {
           logger.info(String.format("No results found for query %s", query));
         } else {
-          reorderRequests(vertx, context, tenant, reply.result().getResults());
+          List<Future> futureList = reorderRequests(vertx, context, tenant, reply.result().getResults());
+          CompositeFuture compositeFuture = CompositeFuture.join(futureList);
+          compositeFuture.setHandler(compRes -> future.complete());
         }
       });
     });
+    return future;
   }
 
-  private static void reorderRequests(Vertx vertx, Context context, String tenant, List<Request> requestList) {
-    Integer currentPosition = 1;
-    for (Request request : requestList) {
-      if (!request.getPosition().equals(currentPosition)) {
-        request.setPosition(currentPosition);
-        currentPosition++;
-        saveRequest(vertx, context, tenant, request);
+  private static List<Future> reorderRequests(Vertx vertx, Context context, String tenant, List<Request> requestList) {
+    List<Future> futureList = new ArrayList<>();
+    context.runOnContext(v -> {
+      Integer currentPosition = 1;
+      for (Request request : requestList) {
+        if (!request.getPosition().equals(currentPosition)) {
+          final int position = currentPosition;
+          Future<Void> saveFuture = saveRequest(vertx, context, tenant, request.withPosition(null))
+            .compose(res -> saveRequest(vertx, context, tenant, request.withPosition(position)));
+          futureList.add(saveFuture);
+          currentPosition++;
+        }
       }
-    }
+    });
+    return futureList;
   }
 
   private static Future<Void> saveRequest(Vertx vertx, Context context, String tenant, Request request) {

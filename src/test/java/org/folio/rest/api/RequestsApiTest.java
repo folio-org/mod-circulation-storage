@@ -1528,15 +1528,15 @@ public class RequestsApiTest extends ApiTests {
     MalformedURLException,
     TimeoutException,
     ExecutionException {
-    UUID id1_1 = UUID.randomUUID();
-    UUID id1_2 = UUID.randomUUID();
-    UUID id1_3 = UUID.randomUUID();
-    UUID id1_4 = UUID.randomUUID();
-    UUID id1_5 = UUID.randomUUID();
-    UUID id1_6 = UUID.randomUUID();
-    UUID id2_1 = UUID.randomUUID();
-    UUID id2_2 = UUID.randomUUID();
-    UUID id2_3 = UUID.randomUUID();
+    UUID id1_1 = UUID.fromString("191ce6cf-144e-48f1-bb7d-9b62d9ab8fe1");
+    UUID id1_2 = UUID.fromString("be4a78c5-8c57-4a23-a320-7b807b1895e2");
+    UUID id1_3 = UUID.fromString("152a2138-fe46-4230-8bfc-612c973e59e3");
+    UUID id1_4 = UUID.fromString("b2a972bb-94f4-4867-9bd4-9cfc00c0d0e4");
+    UUID id1_5 = UUID.fromString("d2397a85-15a5-4791-85d1-09763dc057e5");
+    UUID id1_6 = UUID.fromString("af49796c-0307-43bf-98f2-51cc71a721e6");
+    UUID id2_1 = UUID.fromString("b990f572-6c7a-4530-85ed-7a4b741b05d1");
+    UUID id2_2 = UUID.fromString("6c7682df-942f-4439-bca3-dae29efbfd0b");
+    UUID id2_3 = UUID.fromString("eb61d8fd-da9b-48c9-b86f-df755d22096e");
 
     UUID itemId1 = UUID.randomUUID();
     UUID itemId2 = UUID.randomUUID();
