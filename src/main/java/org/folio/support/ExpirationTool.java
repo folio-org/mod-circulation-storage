@@ -20,6 +20,7 @@ import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
+import org.z3950.zing.cql.cql2pgjson.FieldException;
 
 import static org.folio.rest.impl.RequestsAPI.REQUEST_TABLE;
 import static org.folio.rest.jaxrs.model.Request.Status.*;
@@ -47,8 +48,6 @@ public class ExpirationTool {
               Future<Integer> expireFuture = doRequestExpirationForTenant(vertx, context, tenant);
               expireFuture.setHandler(res -> {
                 if(res.failed()) {
-                  logger.info(String.format("Attempt to expire records for tenant %s failed: %s",
-                    tenant, res.cause().getLocalizedMessage()));
                   future.fail(res.cause());
                 } else {
                   logger.info(String.format("Expired %s requests", res.result()));
@@ -60,8 +59,6 @@ public class ExpirationTool {
             future.tryComplete();
           }
         } else {
-          logger.info(String.format("TenantQuery '%s' failed: %s", tenantQuery,
-            reply.cause().getLocalizedMessage()));
           future.fail(reply.cause());
         }
       });
@@ -85,41 +82,30 @@ public class ExpirationTool {
       pgClient.setIdField("_id");
       String query = String.format("(status == \"%s\" AND requestExpirationDate < \"%s\") OR (status == \"%s\" AND holdShelfExpirationDate < \"%s\")",
         OPEN_NOT_YET_FILLED.value(), nowDateString, OPEN_AWAITING_PICKUP.value(), nowDateString);
-      CQLWrapper cqlWrapper = initCqlWrapper(query);
-      if (cqlWrapper == null) {
-        future.fail("Failed to init CQLWrapper");
-        return;
+      try {
+        pgClient.get(REQUEST_TABLE, Request.class, new String[]{"*"}, initCqlWrapper(query), true, false, reply -> {
+          if (reply.failed()) {
+            future.fail(reply.cause());
+          } else if (reply.result().getResults().isEmpty()) {
+            future.tryComplete();
+          } else {
+            List<Request> requestList = reply.result().getResults();
+            List<Future> futureList = closeRequests(vertx, context, tenant, requestList);
+            CompositeFuture compositeFuture = CompositeFuture.join(futureList);
+            compositeFuture.setHandler(compRes -> future.complete(countSucceeded(futureList)));
+          }
+        });
+      } catch (FieldException e) {
+        future.fail(e.getLocalizedMessage());
       }
-      pgClient.get(REQUEST_TABLE, Request.class, new String[]{"*"}, cqlWrapper, true, false, reply -> {
-        if (reply.failed()) {
-          logger.info(String.format("Error executing postgres query: '%s', %s",
-            query, reply.cause().getLocalizedMessage()));
-          future.fail(reply.cause());
-        } else if (reply.result().getResults().isEmpty()) {
-          logger.info(String.format("No results found for query %s", query));
-          future.tryComplete();
-        } else {
-          List<Request> requestList = reply.result().getResults();
-          List<Future> futureList = closeRequests(vertx, context, tenant, requestList);
-          CompositeFuture compositeFuture = CompositeFuture.join(futureList);
-          compositeFuture.setHandler(compRes -> future.complete(countSucceeded(futureList)));
-        }
-      });
     });
     return future;
   }
 
-  private static CQLWrapper initCqlWrapper(String query) {
+  private static CQLWrapper initCqlWrapper(String query) throws FieldException {
     CQL2PgJSON cql2pgJson;
-    CQLWrapper cqlWrapper;
-    try {
-      cql2pgJson = new CQL2PgJSON(Collections.singletonList(REQUEST_TABLE + ".jsonb"));
-      cqlWrapper = new CQLWrapper(cql2pgJson, query);
-    } catch(Exception e) {
-      logger.info("Failed to init CQLWrapper: " + e.getLocalizedMessage());
-      return null;
-    }
-    return cqlWrapper;
+    cql2pgJson = new CQL2PgJSON(Collections.singletonList(REQUEST_TABLE + ".jsonb"));
+    return new CQLWrapper(cql2pgJson, query);
   }
 
   private static int countSucceeded(List<Future> futureList) {
@@ -164,31 +150,30 @@ public class ExpirationTool {
         OPEN_AWAITING_PICKUP.value(),
         OPEN_NOT_YET_FILLED.value(),
         OPEN_IN_TRANSIT.value());
-      CQLWrapper cqlWrapper = initCqlWrapper(query);
-      if (cqlWrapper == null) {
-        future.fail("Failed to init CQLWrapper");
-        return;
-      }
-      pgClient.get(REQUEST_TABLE, Request.class, new String[]{"*"}, cqlWrapper, true, false, reply -> {
-        if (reply.failed()) {
-          logger.info(String.format("Error executing postgres query: '%s', %s",
-            query, reply.cause().getLocalizedMessage()));
-          future.fail(reply.cause());
-        } else if (reply.result().getResults().isEmpty()) {
-          logger.info(String.format("No results found for query %s", query));
-          future.tryComplete();
-        } else {
-          Future<Void> cleanFuture = cleanRequestPositions(vertx, context, tenant, request.getItemId());
-          cleanFuture.setHandler(cleanReply -> {
-            if (cleanReply.succeeded()) {
-              List<Future> reorderList = reorderRequests(vertx, context, tenant, reply.result().getResults());
-              CompositeFuture.join(reorderList).setHandler(compRes -> future.complete());
+      try {
+        pgClient.get(REQUEST_TABLE, Request.class, new String[]{"*"}, initCqlWrapper(query), true, false, res -> {
+          if (!res.failed()) {
+            List<Request> list = res.result().getResults();
+            if (list.isEmpty()) {
+              future.tryComplete();
             } else {
-              future.fail(cleanReply.cause());
+              Future<Void> cleanFuture = cleanRequestPositions(vertx, context, tenant, request.getItemId());
+              cleanFuture.setHandler(cleanReply -> {
+                if (cleanReply.succeeded()) {
+                  List<Future> reorderList = reorderRequests(vertx, context, tenant, res.result().getResults());
+                  CompositeFuture.join(reorderList).setHandler(compRes -> future.complete());
+                } else {
+                  future.fail(cleanReply.cause());
+                }
+              });
             }
-          });
-        }
-      });
+          } else {
+            future.fail(res.cause());
+          }
+        });
+      } catch (FieldException e) {
+        future.fail(e.getLocalizedMessage());
+      }
     });
     return future;
   }
@@ -203,8 +188,6 @@ public class ExpirationTool {
         PostgresClient.convertToPsqlStandard(tenant), REQUEST_TABLE, itemId);
       pgClient.execute(cleanQuery, reply -> {
         if (reply.failed()) {
-          logger.info(String.format("Error executing clean query: '%s', %s",
-            cleanQuery,  reply.cause().getLocalizedMessage()));
           future.fail(reply.cause());
         } else {
           future.complete();
@@ -229,21 +212,17 @@ public class ExpirationTool {
   }
 
   private static Future<Void> saveRequest(Vertx vertx, Context context, String tenant, Request request) {
-    String requestId = request.getId();
-    logger.info(String.format("Updating request with id %s", requestId));
     Future<Void> future = Future.future();
     context.runOnContext(v -> {
       try {
         PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
         pgClient.setIdField("_id");
         Criteria idCrit = new Criteria("ramls/request.json");
-        idCrit.addField("'id'").setOperation("=").setValue(requestId);
+        idCrit.addField("'id'").setOperation("=").setValue(request.getId());
         Criterion criterion = new Criterion(idCrit);
 
         pgClient.update(REQUEST_TABLE, request, criterion, true, updateReply -> {
           if(updateReply.failed()) {
-            logger.info(String.format("Error updating request %s: %s", requestId,
-              updateReply.cause().getLocalizedMessage()));
             future.fail(updateReply.cause());
           } else {
             future.complete();
