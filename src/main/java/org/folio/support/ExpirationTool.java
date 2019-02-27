@@ -96,20 +96,25 @@ public class ExpirationTool {
           List<Request> requestList = reply.result().getResults();
           List<Future> futureList = closeRequests(vertx, context, tenant, requestList);
           CompositeFuture compositeFuture = CompositeFuture.join(futureList);
-          compositeFuture.setHandler(compRes -> {
-            int succeededCount = 0;
-            for (Future fut : futureList) {
-              if (fut.succeeded()) {
-                succeededCount++;
-              }
-            }
-            future.complete(succeededCount);
-          });        }
+          compositeFuture.setHandler(compRes -> future.complete(countSucceeded(futureList)));
+        }
       });
     });
     return future;
   }
 
+  private static int countSucceeded(List<Future> futureList) {
+    int succeededCount = 0;
+    for (Future fut : futureList) {
+      if (fut.succeeded()) {
+        succeededCount++;
+      }
+    }
+    return succeededCount;
+  }
+
+
+  /* For each expired request set Closed status and remove position*/
   private static List<Future> closeRequests(Vertx vertx, Context context, String tenant, List<Request> requestList) {
     List<Future> futureList = new ArrayList<>();
     if (!requestList.isEmpty()) {
@@ -128,6 +133,7 @@ public class ExpirationTool {
     return futureList;
   }
 
+  /* update request queue, request positions adjustment with same itemId */
   private static Future<Void> updateRequestQueue(Vertx vertx, Context context, String tenant, Request request) {
     Future<Void> future = Future.future();
     context.runOnContext(v -> {
@@ -157,9 +163,37 @@ public class ExpirationTool {
         } else if (reply.result().getResults().isEmpty()) {
           logger.info(String.format("No results found for query %s", query));
         } else {
-          List<Future> futureList = reorderRequests(vertx, context, tenant, reply.result().getResults());
-          CompositeFuture compositeFuture = CompositeFuture.join(futureList);
-          compositeFuture.setHandler(compRes -> future.complete());
+          Future<Void> cleanFuture = cleanRequestPositions(vertx, context, tenant, request.getItemId());
+          cleanFuture.setHandler(cleanReply -> {
+            if (cleanReply.succeeded()) {
+              List<Future> reorderList = reorderRequests(vertx, context, tenant, reply.result().getResults());
+              CompositeFuture.join(reorderList).setHandler(compRes -> future.complete());
+            } else {
+              future.fail(cleanReply.cause());
+            }
+          });
+        }
+      });
+    });
+    return future;
+  }
+
+  /* positions should be removed for each request with itemId before adjustment due to itemId-position unique index */
+  private static Future<Void> cleanRequestPositions(Vertx vertx, Context context, String tenant, String itemId) {
+    logger.info("Calling cleanRequestPositions()");
+    Future<Void> future = Future.future();
+    context.runOnContext(v -> {
+      //Get a list of tenants
+      PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
+      String cleanQuery = String.format("UPDATE %1$s.%2$s SET jsonb = jsonb - 'position' WHERE jsonb->>'itemId' = '%3$s'",
+        PostgresClient.convertToPsqlStandard(tenant), REQUEST_TABLE, itemId);
+      pgClient.execute(cleanQuery, reply -> {
+        if (reply.failed()) {
+          logger.info(String.format("Error executing clean query: '%s', %s",
+            cleanQuery,  reply.cause().getLocalizedMessage()));
+          future.fail(reply.cause());
+        } else {
+          future.complete();
         }
       });
     });
@@ -169,15 +203,12 @@ public class ExpirationTool {
   private static List<Future> reorderRequests(Vertx vertx, Context context, String tenant, List<Request> requestList) {
     List<Future> futureList = new ArrayList<>();
     context.runOnContext(v -> {
-      Integer currentPosition = 1;
+      int currentPosition = 1;
       for (Request request : requestList) {
-        if (!request.getPosition().equals(currentPosition)) {
-          final int position = currentPosition;
-          Future<Void> saveFuture = saveRequest(vertx, context, tenant, request.withPosition(null))
-            .compose(res -> saveRequest(vertx, context, tenant, request.withPosition(position)));
-          futureList.add(saveFuture);
-          currentPosition++;
-        }
+        final int position = currentPosition;
+        Future<Void> saveFuture = saveRequest(vertx, context, tenant, request.withPosition(position));
+        futureList.add(saveFuture);
+        currentPosition++;
       }
     });
     return futureList;
@@ -192,9 +223,7 @@ public class ExpirationTool {
         PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
         pgClient.setIdField("_id");
         Criteria idCrit = new Criteria("ramls/request.json");
-        idCrit.addField("'id'");
-        idCrit.setOperation("=");
-        idCrit.setValue(requestId);
+        idCrit.addField("'id'").setOperation("=").setValue(requestId);
         Criterion criterion = new Criterion(idCrit);
 
         pgClient.update(REQUEST_TABLE, request, criterion, true, updateReply -> {
