@@ -11,9 +11,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.folio.rest.tools.utils.TenantLoading;
 
-public class TenantRefAPI  extends TenantAPI {
-  private static final String SAMPLE_LEAD = "sample-data";
-  private static final String SAMPLE_KEY = "loadSample";
+public class TenantRefAPI extends TenantAPI {
   private static final Logger log = LoggerFactory.getLogger(TenantRefAPI.class);
 
   @Override
@@ -35,16 +33,19 @@ public class TenantRefAPI  extends TenantAPI {
         .withIdRaw()
         .add("circulation-rules-storage")
         .withIdContent()
-        .add("cancellation-reason-storage/cancellation-reasons");
-      tl.perform(ta, headers, vertx, res1 -> {
-        if (res1.failed()) {
+        .add("cancellation-reason-storage/cancellation-reasons")
+        .withKey("loadSample").withLead("sample-data")
+        .add("items", "loans-storage/loans")
+        .add("requests", "request-storage/requests")
+        .perform(ta, headers, vertx, res1 -> {
+          if (res1.failed()) {
+            hndlr.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
+              .respond500WithTextPlain(res1.cause().getLocalizedMessage())));
+            return;
+          }
           hndlr.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
-            .respond500WithTextPlain(res1.cause().getLocalizedMessage())));
-          return;
-        }
-        hndlr.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
-          .respond201WithApplicationJson("")));
-      });
+            .respond201WithApplicationJson("")));
+        });
     }, cntxt);
   }
 
