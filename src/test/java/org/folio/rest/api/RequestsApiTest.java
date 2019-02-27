@@ -1528,18 +1528,20 @@ public class RequestsApiTest extends ApiTests {
     MalformedURLException,
     TimeoutException,
     ExecutionException {
-    UUID id1_1 = UUID.fromString("191ce6cf-144e-48f1-bb7d-9b62d9ab8fe1");
-    UUID id1_2 = UUID.fromString("be4a78c5-8c57-4a23-a320-7b807b1895e2");
-    UUID id1_3 = UUID.fromString("152a2138-fe46-4230-8bfc-612c973e59e3");
-    UUID id1_4 = UUID.fromString("b2a972bb-94f4-4867-9bd4-9cfc00c0d0e4");
-    UUID id1_5 = UUID.fromString("d2397a85-15a5-4791-85d1-09763dc057e5");
-    UUID id1_6 = UUID.fromString("af49796c-0307-43bf-98f2-51cc71a721e6");
-    UUID id2_1 = UUID.fromString("b990f572-6c7a-4530-85ed-7a4b741b05d1");
-    UUID id2_2 = UUID.fromString("6c7682df-942f-4439-bca3-dae29efbfd0b");
-    UUID id2_3 = UUID.fromString("eb61d8fd-da9b-48c9-b86f-df755d22096e");
+    UUID id1_1 = UUID.randomUUID();
+    UUID id1_2 = UUID.randomUUID();
+    UUID id1_3 = UUID.randomUUID();
+    UUID id1_4 = UUID.randomUUID();
+    UUID id1_5 = UUID.randomUUID();
+    UUID id1_6 = UUID.randomUUID();
+    UUID id2_1 = UUID.randomUUID();
+    UUID id2_2 = UUID.randomUUID();
+    UUID id2_3 = UUID.randomUUID();
+    UUID id3_1 = UUID.randomUUID();
 
     UUID itemId1 = UUID.randomUUID();
     UUID itemId2 = UUID.randomUUID();
+    UUID itemId3 = UUID.randomUUID();
 
     /* Status "Open - not yet filled" and request expiration date in the past - should be expired */
     JsonObject requestRequest1_1 = new RequestRequestBuilder()
@@ -1663,6 +1665,19 @@ public class RequestsApiTest extends ApiTests {
       requestRequest2_3, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createCompleted2_3));
 
+    JsonObject requestRequest3_1 = new RequestRequestBuilder()
+      .hold()
+      .withId(id3_1)
+      .withRequestExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+      .withItemId(itemId3)
+      .withPosition(1)
+      .withStatus(OPEN_NOT_YET_FILLED)
+      .create();
+    CompletableFuture<JsonResponse> createCompleted3_1 = new CompletableFuture<>();
+    client.put(requestStorageUrl(String.format("/%s", id3_1)),
+      requestRequest3_1, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted3_1));
+
     JsonResponse response1_1 = createCompleted1_1.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create request: %s", response1_1.getBody()),
       response1_1.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
@@ -1699,11 +1714,15 @@ public class RequestsApiTest extends ApiTests {
     assertThat(String.format("Failed to create request: %s", response2_3.getBody()),
       response2_3.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
+    JsonResponse response3_1 = createCompleted3_1.get(5, TimeUnit.SECONDS);
+    assertThat(String.format("Failed to create request: %s", response3_1.getBody()),
+      response3_1.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
     CompletableFuture<Void> getExpirationCF = new CompletableFuture<>();
-    ExpirationTool.doRequestExpirationForTenant(StorageTestSuite.getVertx(), StorageTestSuite.getVertx().getOrCreateContext(), StorageTestSuite.TENANT_ID).setHandler(res -> {
+    ExpirationTool.doRequestExpiration(StorageTestSuite.getVertx(), StorageTestSuite.getVertx().getOrCreateContext()).setHandler(res -> {
       getExpirationCF.complete(null);
     });
-    getExpirationCF.get(5, TimeUnit.SECONDS);
+    getExpirationCF.get(15, TimeUnit.SECONDS);
 
     JsonResponse getResponse1_1 = getById(id1_1);
     assertThat(String.format("Failed to get request: %s", getResponse1_1.getBody()),
@@ -1734,6 +1753,10 @@ public class RequestsApiTest extends ApiTests {
     assertThat(String.format("Failed to get request: %s", getResponse2_3.getBody()),
       getResponse2_3.getStatusCode(), is(HttpURLConnection.HTTP_OK));
 
+    JsonResponse getResponse3_1 = getById(id3_1);
+    assertThat(String.format("Failed to get request: %s", getResponse3_1.getBody()),
+      getResponse3_1.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
     assertThat(getResponse1_1.getJson().getString("status"), is(CLOSED_UNFILLED));
     assertThat(getResponse1_1.getJson().containsKey("position"), is(false));
 
@@ -1760,8 +1783,50 @@ public class RequestsApiTest extends ApiTests {
 
     assertThat(getResponse2_3.getJson().getString("status"), is(OPEN_NOT_YET_FILLED));
     assertThat(getResponse2_3.getJson().getInteger("position"), is(2));
+
+    assertThat(getResponse3_1.getJson().getString("status"), is(CLOSED_UNFILLED));
+    assertThat(getResponse3_1.getJson().containsKey("position"), is(false));
   }
 
+  @Test
+  public void noRequestsToExpire()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+    UUID id1_1 = UUID.randomUUID();
+    UUID itemId1 = UUID.randomUUID();
+
+    JsonObject requestRequest1_1 = new RequestRequestBuilder()
+      .hold()
+      .withId(id1_1)
+      .withHoldShelfExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+      .withItemId(itemId1)
+      .withPosition(1)
+      .withStatus(OPEN_NOT_YET_FILLED)
+      .create();
+    CompletableFuture<JsonResponse> createCompleted1_1 = new CompletableFuture<>();
+    client.put(requestStorageUrl(String.format("/%s", id1_1)),
+      requestRequest1_1, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted1_1));
+
+    JsonResponse response1_1 = createCompleted1_1.get(5, TimeUnit.SECONDS);
+    assertThat(String.format("Failed to create request: %s", response1_1.getBody()),
+      response1_1.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    CompletableFuture<Void> getExpirationCF = new CompletableFuture<>();
+    ExpirationTool.doRequestExpirationForTenant(StorageTestSuite.getVertx(), StorageTestSuite.getVertx().getOrCreateContext(), StorageTestSuite.TENANT_ID).setHandler(res -> {
+      getExpirationCF.complete(null);
+    });
+    getExpirationCF.get(5, TimeUnit.SECONDS);
+
+    JsonResponse getResponse1_1 = getById(id1_1);
+    assertThat(String.format("Failed to get request: %s", getResponse1_1.getBody()),
+      getResponse1_1.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    assertThat(getResponse1_1.getJson().getString("status"), is(OPEN_NOT_YET_FILLED));
+    assertThat(getResponse1_1.getJson().getInteger("position"), is(1));
+  }
   static URL requestStorageUrl() throws MalformedURLException {
     return requestStorageUrl("");
   }

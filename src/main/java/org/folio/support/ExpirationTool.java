@@ -32,8 +32,8 @@ public class ExpirationTool {
     //do nothing
   }
 
-  public static void doRequestExpiration(Vertx vertx, Context context) {
-    logger.info("Calling doRequestExpiration()");
+  public static Future<Void> doRequestExpiration(Vertx vertx, Context context) {
+    Future<Void> future = Future.future();
     context.runOnContext(v -> {
       //Get a list of tenants
       PostgresClient pgClient = PostgresClient.getInstance(vertx);
@@ -41,28 +41,38 @@ public class ExpirationTool {
       pgClient.select(tenantQuery, reply -> {
         if(reply.succeeded()) {
           List<JsonObject> obList = reply.result().getRows();
-          for(JsonObject ob : obList) {
-            String nsTenant = ob.getString("nspname");
-            String suffix = "_mod_circulation_storage";
-            int suffixLength = nsTenant.length() - suffix.length();
-            final String tenant = nsTenant.substring(0, suffixLength);
-            logger.info("Calling doRequestExpirationForTenant for tenant " + tenant);
-            Future<Integer> expireFuture = doRequestExpirationForTenant(vertx, context, tenant);
-            expireFuture.setHandler(res -> {
-              if(res.failed()) {
-                logger.info(String.format("Attempt to expire records for tenant %s failed: %s",
-                  tenant, res.cause().getLocalizedMessage()));
-              } else {
-                logger.info(String.format("Expired %s requests", res.result()));
-              }
-            });
+          if (!obList.isEmpty()) {
+            for (JsonObject ob : obList) {
+              String tenant = getTenant(ob.getString("nspname"));
+              Future<Integer> expireFuture = doRequestExpirationForTenant(vertx, context, tenant);
+              expireFuture.setHandler(res -> {
+                if(res.failed()) {
+                  logger.info(String.format("Attempt to expire records for tenant %s failed: %s",
+                    tenant, res.cause().getLocalizedMessage()));
+                  future.fail(res.cause());
+                } else {
+                  logger.info(String.format("Expired %s requests", res.result()));
+                  future.complete();
+                }
+              });
+            }
+          } else {
+            future.tryComplete();
           }
         } else {
           logger.info(String.format("TenantQuery '%s' failed: %s", tenantQuery,
             reply.cause().getLocalizedMessage()));
+          future.fail(reply.cause());
         }
       });
     });
+    return future;
+  }
+
+  private static String getTenant(String nsTenant) {
+    String suffix = "_mod_circulation_storage";
+    int suffixLength = nsTenant.length() - suffix.length();
+    return nsTenant.substring(0, suffixLength);
   }
 
   public static Future<Integer> doRequestExpirationForTenant(Vertx vertx, Context context, String tenant) {
@@ -75,23 +85,19 @@ public class ExpirationTool {
       pgClient.setIdField("_id");
       String query = String.format("(status == \"%s\" AND requestExpirationDate < \"%s\") OR (status == \"%s\" AND holdShelfExpirationDate < \"%s\")",
         OPEN_NOT_YET_FILLED.value(), nowDateString, OPEN_AWAITING_PICKUP.value(), nowDateString);
-      CQL2PgJSON cql2pgJson;
-      CQLWrapper cqlWrapper;
-      String[] fieldList = {"*"};
-      try {
-        cql2pgJson = new CQL2PgJSON(Collections.singletonList(REQUEST_TABLE + ".jsonb"));
-        cqlWrapper = new CQLWrapper(cql2pgJson, query);
-      } catch(Exception e) {
-        future.fail(e.getLocalizedMessage());
+      CQLWrapper cqlWrapper = initCqlWrapper(query);
+      if (cqlWrapper == null) {
+        future.fail("Failed to init CQLWrapper");
         return;
       }
-      pgClient.get(REQUEST_TABLE, Request.class, fieldList, cqlWrapper, true, false, reply -> {
+      pgClient.get(REQUEST_TABLE, Request.class, new String[]{"*"}, cqlWrapper, true, false, reply -> {
         if (reply.failed()) {
           logger.info(String.format("Error executing postgres query: '%s', %s",
             query, reply.cause().getLocalizedMessage()));
           future.fail(reply.cause());
         } else if (reply.result().getResults().isEmpty()) {
           logger.info(String.format("No results found for query %s", query));
+          future.tryComplete();
         } else {
           List<Request> requestList = reply.result().getResults();
           List<Future> futureList = closeRequests(vertx, context, tenant, requestList);
@@ -101,6 +107,19 @@ public class ExpirationTool {
       });
     });
     return future;
+  }
+
+  private static CQLWrapper initCqlWrapper(String query) {
+    CQL2PgJSON cql2pgJson;
+    CQLWrapper cqlWrapper;
+    try {
+      cql2pgJson = new CQL2PgJSON(Collections.singletonList(REQUEST_TABLE + ".jsonb"));
+      cqlWrapper = new CQLWrapper(cql2pgJson, query);
+    } catch(Exception e) {
+      logger.info("Failed to init CQLWrapper: " + e.getLocalizedMessage());
+      return null;
+    }
+    return cqlWrapper;
   }
 
   private static int countSucceeded(List<Future> futureList) {
@@ -145,23 +164,19 @@ public class ExpirationTool {
         OPEN_AWAITING_PICKUP.value(),
         OPEN_NOT_YET_FILLED.value(),
         OPEN_IN_TRANSIT.value());
-      CQL2PgJSON cql2pgJson;
-      CQLWrapper cqlWrapper;
-      String[] fieldList = {"*"};
-      try {
-        cql2pgJson = new CQL2PgJSON(Collections.singletonList(REQUEST_TABLE + ".jsonb"));
-        cqlWrapper = new CQLWrapper(cql2pgJson, query);
-      } catch(Exception e) {
-        future.fail(e.getLocalizedMessage());
+      CQLWrapper cqlWrapper = initCqlWrapper(query);
+      if (cqlWrapper == null) {
+        future.fail("Failed to init CQLWrapper");
         return;
       }
-      pgClient.get(REQUEST_TABLE, Request.class, fieldList, cqlWrapper, true, false, reply -> {
+      pgClient.get(REQUEST_TABLE, Request.class, new String[]{"*"}, cqlWrapper, true, false, reply -> {
         if (reply.failed()) {
           logger.info(String.format("Error executing postgres query: '%s', %s",
             query, reply.cause().getLocalizedMessage()));
           future.fail(reply.cause());
         } else if (reply.result().getResults().isEmpty()) {
           logger.info(String.format("No results found for query %s", query));
+          future.tryComplete();
         } else {
           Future<Void> cleanFuture = cleanRequestPositions(vertx, context, tenant, request.getItemId());
           cleanFuture.setHandler(cleanReply -> {
@@ -180,7 +195,6 @@ public class ExpirationTool {
 
   /* positions should be removed for each request with itemId before adjustment due to itemId-position unique index */
   private static Future<Void> cleanRequestPositions(Vertx vertx, Context context, String tenant, String itemId) {
-    logger.info("Calling cleanRequestPositions()");
     Future<Void> future = Future.future();
     context.runOnContext(v -> {
       //Get a list of tenants
