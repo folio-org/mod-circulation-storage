@@ -1817,7 +1817,7 @@ public class RequestsApiTest extends ApiTests {
     ExpirationTool.doRequestExpiration(StorageTestSuite.getVertx(), StorageTestSuite.getVertx().getOrCreateContext()).setHandler(res -> {
       getExpirationCF.complete(null);
     });
-    getExpirationCF.get(10, TimeUnit.SECONDS);
+    getExpirationCF.get(15, TimeUnit.SECONDS);
 
     JsonResponse getResponse1_1 = getById(id1_1);
     assertThat(String.format("Failed to get request: %s", getResponse1_1.getBody()),
@@ -1980,7 +1980,7 @@ public class RequestsApiTest extends ApiTests {
     ExpirationTool.doRequestExpiration(StorageTestSuite.getVertx(), StorageTestSuite.getVertx().getOrCreateContext()).setHandler(res -> {
       getExpirationCF.complete(null);
     });
-    getExpirationCF.get(10, TimeUnit.SECONDS);
+    getExpirationCF.get(15, TimeUnit.SECONDS);
 
     JsonResponse getResponse1_1 = getById(id1_1);
     assertThat(String.format("Failed to get request: %s", getResponse1_1.getBody()),
