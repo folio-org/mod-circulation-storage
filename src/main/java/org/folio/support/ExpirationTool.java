@@ -83,12 +83,10 @@ public class ExpirationTool {
     List<Future> futureList = new ArrayList<>();
     if (!requestList.isEmpty()) {
       for (Request request : requestList) {
-        switch (request.getStatus()) {
-          case OPEN_NOT_YET_FILLED :
-            request.setStatus(CLOSED_UNFILLED);
-            break;
-          case OPEN_AWAITING_PICKUP :
-            request.setStatus(CLOSED_PICKUP_EXPIRED);
+        if (request.getStatus() == Request.Status.OPEN_NOT_YET_FILLED) {
+          request.setStatus(CLOSED_UNFILLED);
+        } else if (request.getStatus() == Request.Status.OPEN_AWAITING_PICKUP) {
+          request.setStatus(CLOSED_PICKUP_EXPIRED);
         }
         request.setPosition(null);
         Future<Void> saveFuture = saveRequest(vertx, context, tenant, request)
