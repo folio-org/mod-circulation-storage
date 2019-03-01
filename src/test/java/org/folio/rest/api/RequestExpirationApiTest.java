@@ -8,7 +8,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import io.vertx.core.json.JsonObject;
-import junitparams.JUnitParamsRunner;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.builders.RequestRequestBuilder;
 import org.folio.support.ExpirationTool;
@@ -17,7 +16,6 @@ import org.joda.time.DateTimeZone;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_PICKUP_EXPIRED;
 import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_UNFILLED;
@@ -27,7 +25,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
 
-@RunWith(JUnitParamsRunner.class)
 public class RequestExpirationApiTest extends ApiTests {
 
   private static final String REQUEST_TABLE = "request";
