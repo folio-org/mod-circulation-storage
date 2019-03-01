@@ -449,6 +449,6 @@ public class RequestExpirationApiTest extends ApiTests {
     ExpirationTool.doRequestExpiration(StorageTestSuite.getVertx(),
       StorageTestSuite.getVertx().getOrCreateContext())
       .setHandler(res -> expirationCompleted.complete(null));
-    expirationCompleted.get(15, TimeUnit.SECONDS);
+    expirationCompleted.get(20, TimeUnit.SECONDS);
   }
 }
