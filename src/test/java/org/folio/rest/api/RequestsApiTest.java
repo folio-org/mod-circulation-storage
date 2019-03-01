@@ -367,19 +367,22 @@ public class RequestsApiTest extends ApiTests {
 
     UUID itemId = UUID.randomUUID();
 
-    createEntity(
+    JsonObject representation = createEntity(
       new RequestRequestBuilder()
       .withItemId(itemId)
       .withNoPosition()
       .create(),
-      requestStorageUrl());
+      requestStorageUrl()).getJson();
 
-    createEntity(
+    JsonObject representation2 = createEntity(
       new RequestRequestBuilder()
       .withItemId(itemId)
       .withNoPosition()
       .create(),
-      requestStorageUrl());
+      requestStorageUrl()).getJson();
+
+    assertThat(representation.getString("id"), is(notNullValue()));
+    assertThat(representation2.getString("id"), is(notNullValue()));
   }
 
   @Test
@@ -392,33 +395,37 @@ public class RequestsApiTest extends ApiTests {
     UUID firstItemId = UUID.randomUUID();
     UUID secondItemId = UUID.randomUUID();
 
-    createEntity(
+    JsonObject representation = createEntity(
       new RequestRequestBuilder()
       .withItemId(firstItemId)
       .withPosition(1)
       .create(),
-      requestStorageUrl());
+      requestStorageUrl()).getJson();
+    assertThat(representation.getString("id"), is(notNullValue()));
 
-    createEntity(
+    JsonObject representation2 = createEntity(
       new RequestRequestBuilder()
       .withItemId(firstItemId)
       .withPosition(2)
       .create(),
-      requestStorageUrl());
+      requestStorageUrl()).getJson();
+    assertThat(representation2.getString("id"), is(notNullValue()));
 
-    createEntity(
+    JsonObject representation3 = createEntity(
       new RequestRequestBuilder()
       .withItemId(secondItemId)
       .withPosition(1)
       .create(),
-      requestStorageUrl());
+      requestStorageUrl()).getJson();
+    assertThat(representation3.getString("id"), is(notNullValue()));
 
-    createEntity(
+    JsonObject representation4 = createEntity(
       new RequestRequestBuilder()
       .withItemId(secondItemId)
       .withPosition(2)
       .create(),
-      requestStorageUrl());
+      requestStorageUrl()).getJson();
+    assertThat(representation4.getString("id"), is(notNullValue()));
   }
 
   @Test
@@ -497,21 +504,24 @@ public class RequestsApiTest extends ApiTests {
 
     UUID itemId = UUID.randomUUID();
 
-    createEntity(
+    JsonObject representation = createEntity(
       new RequestRequestBuilder()
-      .withItemId(itemId)
-      .withPosition(1)
-      .withStatus(OPEN_AWAITING_PICKUP)
-      .create(),
-      requestStorageUrl());
+        .withItemId(itemId)
+        .withPosition(1)
+        .withStatus(OPEN_AWAITING_PICKUP)
+        .create(),
+      requestStorageUrl()).getJson();
 
-    createEntity(
+    JsonObject representation2 = createEntity(
       new RequestRequestBuilder()
-      .withItemId(itemId)
-      .withNoPosition()
-      .withStatus(OPEN_NOT_YET_FILLED)
-      .create(),
-      requestStorageUrl());
+        .withItemId(itemId)
+        .withNoPosition()
+        .withStatus(OPEN_NOT_YET_FILLED)
+        .create(),
+      requestStorageUrl()).getJson();
+
+    assertThat(representation.getString("id"), is(notNullValue()));
+    assertThat(representation2.getString("id"), is(notNullValue()));
   }
 
   @Test
