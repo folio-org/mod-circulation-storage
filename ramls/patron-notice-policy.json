@@ -80,11 +80,13 @@
               },
               "sendWhen": {
                 "type": "string",
-                "description": "date due/overdue/renewed",
+                "description": "Triggering event",
                 "enum": [
                   "Due date",
                   "Overdue",
-                  "Renewed"
+                  "Renewed",
+                  "Check in",
+                  "Check out"
                 ]
               },
               "sendBy": {
@@ -147,17 +149,13 @@
               }
             },
             "required": [
-              "sendHow",
               "sendWhen"
             ]
           }
         },
         "required": [
-          "name",
           "templateId",
-          "templateName",
           "format",
-          "frequency",
           "realTime"
         ]
       }
@@ -280,11 +278,8 @@
           }
         },
         "required": [
-          "name",
           "templateId",
-          "templateName",
           "format",
-          "frequency",
           "realTime"
         ]
       }
@@ -420,11 +415,8 @@
           }
         },
         "required": [
-          "name",
           "templateId",
-          "templateName",
           "format",
-          "frequency",
           "realTime"
         ]
       }
