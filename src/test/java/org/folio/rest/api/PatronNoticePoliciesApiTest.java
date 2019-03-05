@@ -3,8 +3,10 @@ package org.folio.rest.api;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.UpdateResult;
+import org.folio.rest.jaxrs.model.LoanNotice;
 import org.folio.rest.jaxrs.model.PatronNoticePolicy;
 import org.folio.rest.jaxrs.model.RequestNotice;
+import org.folio.rest.jaxrs.model.SendOptions;
 import org.folio.rest.jaxrs.model.SendOptions__;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
@@ -90,6 +92,13 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
     assertThat(firstPolicy.getRequestNotices().get(0).getFormat(), is(RequestNotice.Format.EMAIL));
     assertThat(firstPolicy.getRequestNotices().get(0).getFrequency(), is(RequestNotice.Frequency.ONE_TIME));
     assertThat(firstPolicy.getRequestNotices().get(0).getSendOptions().getSendWhen(), is(SendOptions__.SendWhen.RECALL_REQUEST));
+
+    firstPolicy.setLoanNotices(createLoanNotices());
+
+    response = updatePatronNoticePolicy(firstPolicy);
+
+    assertThat("Failed to update patron notice policy", response.getStatusCode(), is(204));
+    assertThat(firstPolicy.getLoanNotices().get(0).getSendOptions().getSendWhen(), is(SendOptions.SendWhen.CHECK_IN));
   }
 
   @Test
@@ -249,12 +258,23 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
     requestNotice.setFormat(RequestNotice.Format.EMAIL);
     requestNotice.setFrequency(RequestNotice.Frequency.ONE_TIME);
     requestNotice.setRealTime(Boolean.TRUE);
-    SendOptions__.SendHow sendHow = SendOptions__.SendHow.fromValue("Before");
-    SendOptions__.SendWhen sendWhen = SendOptions__.SendWhen.fromValue("Recall request");
+    SendOptions__.SendHow sendHow = SendOptions__.SendHow.BEFORE;
+    SendOptions__.SendWhen sendWhen = SendOptions__.SendWhen.RECALL_REQUEST;
     SendOptions__ sendOptions = new SendOptions__();
     sendOptions.setSendHow(sendHow);
     sendOptions.setSendWhen(sendWhen);
     requestNotice.setSendOptions(sendOptions);
     return Collections.singletonList(requestNotice);
+  }
+
+  private List<LoanNotice> createLoanNotices() {
+    LoanNotice loanNotice = new LoanNotice();
+    loanNotice.setTemplateId(UUID.randomUUID().toString());
+    loanNotice.setFormat(LoanNotice.Format.EMAIL);
+    loanNotice.setRealTime(Boolean.TRUE);
+    SendOptions sendOptions = new SendOptions();
+    sendOptions.setSendWhen(SendOptions.SendWhen.CHECK_IN);
+    loanNotice.setSendOptions(sendOptions);
+    return Collections.singletonList(loanNotice);
   }
 }
