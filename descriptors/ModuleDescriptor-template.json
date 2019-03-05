@@ -223,7 +223,7 @@
     },
     {
       "id": "patron-notice-policy-storage",
-      "version": "0.6",
+      "version": "0.7",
       "handlers": [
         {
           "methods": ["POST"],
