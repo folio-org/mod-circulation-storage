@@ -80,11 +80,13 @@
               },
               "sendWhen": {
                 "type": "string",
-                "description": "date due/overdue/renewed",
+                "description": "Triggering event",
                 "enum": [
                   "Due date",
                   "Overdue",
-                  "Renewed"
+                  "Renewed",
+                  "Check in",
+                  "Check out"
                 ]
               },
               "sendBy": {
