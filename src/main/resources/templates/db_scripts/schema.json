@@ -16,8 +16,9 @@
         {
           "fieldName": "itemId",
           "tOps": "ADD",
-          "caseSensitive": true,
-          "whereClause": "WHERE (jsonb->'status'->>'name') = 'Open'"
+          "caseSensitive": false,
+          "removeAccents": true,
+          "whereClause": "WHERE lower(f_unaccent((jsonb->'status'->>'name'))) LIKE 'open'"
         }
       ]
     },
