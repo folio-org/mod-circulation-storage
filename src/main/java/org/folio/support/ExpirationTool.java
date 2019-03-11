@@ -1,7 +1,6 @@
 package org.folio.support;
 
 import io.vertx.core.CompositeFuture;
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.ext.sql.ResultSet;
@@ -37,7 +36,7 @@ public class ExpirationTool {
     //do nothing
   }
 
-  public static Future<Void> doRequestExpiration(Vertx vertx, Context context) {
+  public static Future<Void> doRequestExpiration(Vertx vertx) {
     Future<ResultSet> future = Future.future();
 
     PostgresClient pgClient = PostgresClient.getInstance(vertx);
@@ -51,7 +50,7 @@ public class ExpirationTool {
       .map(compositeFuture -> null);
   }
 
-  public static Future<Integer> doRequestExpirationForTenant(Vertx vertx, String tenant) {
+  private static Future<Integer> doRequestExpirationForTenant(Vertx vertx, String tenant) {
     Future<Integer> future = Future.future();
     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
     simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));

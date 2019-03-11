@@ -18,6 +18,6 @@ public class RequestExpiryImpl implements PeriodicAPI {
 
   @Override
   public void run(Vertx vertx, Context context) {
-    context.runOnContext(v -> ExpirationTool.doRequestExpiration(vertx, context));
+    context.runOnContext(v -> ExpirationTool.doRequestExpiration(vertx));
   }
 }
