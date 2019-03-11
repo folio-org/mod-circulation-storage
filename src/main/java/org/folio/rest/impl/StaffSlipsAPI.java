@@ -31,400 +31,408 @@ import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
 public class StaffSlipsAPI implements StaffSlipsStorage {
 
-	private static final String STAFF_SLIP_TABLE = "staff_slips";
+  private static final String STAFF_SLIP_TABLE = "staff_slips";
 
-	private static final Class<StaffSlip> STAFF_SLIP_CLASS = StaffSlip.class;
+  private static final Class<StaffSlip> STAFF_SLIP_CLASS = StaffSlip.class;
 
-	private static final Logger log = LoggerFactory.getLogger(STAFF_SLIP_CLASS);
+  private static final Logger log = LoggerFactory.getLogger(STAFF_SLIP_CLASS);
 
-	@Override
-	public void deleteStaffSlipsStorageStaffSlips(String lang, Map<String, String> okapiHeaders,
-			Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  @Override
+  public void deleteStaffSlipsStorageStaffSlips(String lang, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-		String tenantId = okapiHeaders.get(TENANT_HEADER);
+    String tenantId = okapiHeaders.get(TENANT_HEADER);
 
-		vertxContext.runOnContext(v -> {
+    vertxContext.runOnContext(v -> {
 
-			try {
+      try {
 
-				PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
-						TenantTool.calculateTenantId(tenantId));
+        PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
+          TenantTool.calculateTenantId(tenantId));
 
-				postgresClient.mutate(
-				  //TODO: Need to add 204 response to staff slips RAML interface definition!
-          String.format("TRUNCATE TABLE %s_%s.%s", tenantId, "mod_circulation_storage", STAFF_SLIP_TABLE), reply ->
+        postgresClient.mutate(
+          // TODO: Need to add 204 response to staff slips RAML interface definition!
+          String.format("TRUNCATE TABLE %s_%s.%s", tenantId, "mod_circulation_storage", STAFF_SLIP_TABLE),
+          reply -> asyncResultHandler.handle(succeededFuture(
+            DeleteStaffSlipsStorageStaffSlipsResponse.noContent().build())));
+
+      } catch (Exception e) {
+        asyncResultHandler
+          .handle(succeededFuture(
+            StaffSlipsStorage.DeleteStaffSlipsStorageStaffSlipsResponse
+              .respond500WithTextPlain(e.getMessage())));
+      }
+    });
+
+  }
+
+  @Override
+  public void getStaffSlipsStorageStaffSlips(int offset, int limit, String query, String lang,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
+    String tenantId = okapiHeaders.get(TENANT_HEADER);
+
+    try {
+
+      PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
+        TenantTool.calculateTenantId(tenantId));
+
+      String[] fieldList = { "*" };
+
+      CQL2PgJSON cql2pgJson = new CQL2PgJSON(STAFF_SLIP_TABLE + ".jsonb");
+      CQLWrapper cql = new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
+
+      postgresClient.get(STAFF_SLIP_TABLE, STAFF_SLIP_CLASS, fieldList, cql, true, false, reply -> {
+        try {
+
+          if (reply.succeeded()) {
+
+            @SuppressWarnings("unchecked")
+            List<StaffSlip> staffSlips = (List<StaffSlip>) reply.result().getResults();
+
+            StaffSlips pagedStaffSlips = new StaffSlips();
+            pagedStaffSlips.setStaffSlips(staffSlips);
+            pagedStaffSlips.setTotalRecords((Integer) reply.result().getResultInfo().getTotalRecords());
+
             asyncResultHandler.handle(succeededFuture(
-              DeleteStaffSlipsStorageStaffSlipsResponse.noContent().build())));
+              StaffSlipsStorage.GetStaffSlipsStorageStaffSlipsResponse.respond200WithApplicationJson(pagedStaffSlips)));
 
-			} catch (Exception e) {
-				asyncResultHandler
-						.handle(succeededFuture(
-						  StaffSlipsStorage.DeleteStaffSlipsStorageStaffSlipsResponse
-                .respond500WithTextPlain(e.getMessage())));
-			}
-		});
+          } else {
+            asyncResultHandler
+              .handle(succeededFuture(StaffSlipsStorage.GetStaffSlipsStorageStaffSlipsResponse
+                .respond500WithTextPlain(reply.cause().getMessage())));
+          }
 
-	}
+        } catch (Exception e) {
+          log.error(e.getMessage());
+          asyncResultHandler
+            .handle(succeededFuture(StaffSlipsStorage.GetStaffSlipsStorageStaffSlipsResponse
+              .respond500WithTextPlain(e.getMessage())));
+        }
 
-	@Override
-	public void getStaffSlipsStorageStaffSlips(int offset, int limit, String query, String lang,
-			Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+      });
 
-		String tenantId = okapiHeaders.get(TENANT_HEADER);
+    } catch (Exception e) {
+      log.error(e.getMessage());
+      asyncResultHandler.handle(succeededFuture(StaffSlipsStorage.GetStaffSlipsStorageStaffSlipsResponse
+        .respond500WithTextPlain(e.getMessage())));
+    }
 
-		try {
+  }
 
-			PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
-					TenantTool.calculateTenantId(tenantId));
+  @Override
+  public void postStaffSlipsStorageStaffSlips(String lang, StaffSlip entity, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-			String[] fieldList = { "*" };
+    String tenantId = okapiHeaders.get(TENANT_HEADER);
 
-			CQL2PgJSON cql2pgJson = new CQL2PgJSON(STAFF_SLIP_TABLE + ".jsonb");
-			CQLWrapper cql = new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
+    ImmutablePair<Boolean, String> validationResult = validateStaffSlip(entity);
 
-			postgresClient.get(STAFF_SLIP_TABLE, STAFF_SLIP_CLASS, fieldList, cql, true, false, reply -> {
-				try {
+    if (!validationResult.getLeft()) {
+      asyncResultHandler.handle(succeededFuture(StaffSlipsStorage.PostStaffSlipsStorageStaffSlipsResponse
+        .respond400WithTextPlain(validationResult.getRight())));
 
-					if (reply.succeeded()) {
+      return;
+    }
 
-						@SuppressWarnings("unchecked")
-						List<StaffSlip> staffSlips = (List<StaffSlip>) reply.result().getResults();
+    createStaffSlip(entity, tenantId, asyncResultHandler, vertxContext);
 
-						StaffSlips pagedStaffSlips = new StaffSlips();
-						pagedStaffSlips.setStaffSlips(staffSlips);
-						pagedStaffSlips.setTotalRecords((Integer) reply.result().getResultInfo().getTotalRecords());
+  }
 
-						asyncResultHandler.handle(succeededFuture(
-								StaffSlipsStorage.GetStaffSlipsStorageStaffSlipsResponse.respond200WithApplicationJson(pagedStaffSlips)));
+  @Override
+  public void getStaffSlipsStorageStaffSlipsByStaffSlipId(String staffSlipId, String lang,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-					} else {
-						asyncResultHandler
-								.handle(succeededFuture(StaffSlipsStorage.GetStaffSlipsStorageStaffSlipsResponse
-										.respond500WithTextPlain(reply.cause().getMessage())));
-					}
+    String tenantId = okapiHeaders.get(TENANT_HEADER);
 
-				} catch (Exception e) {
-					log.error(e.getMessage());
-					asyncResultHandler
-							.handle(succeededFuture(StaffSlipsStorage.GetStaffSlipsStorageStaffSlipsResponse
-									.respond500WithTextPlain(e.getMessage())));
-				}
+    try {
 
-			});
+      PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
+        TenantTool.calculateTenantId(tenantId));
 
-		} catch (Exception e) {
-			log.error(e.getMessage());
-			asyncResultHandler.handle(succeededFuture(StaffSlipsStorage.GetStaffSlipsStorageStaffSlipsResponse
-					.respond500WithTextPlain(e.getMessage())));
-		}
+      Criteria a = new Criteria();
 
-	}
+      a.addField("'id'");
+      a.setOperation("=");
+      a.setValue(staffSlipId);
 
-	@Override
-	public void postStaffSlipsStorageStaffSlips(String lang, StaffSlip entity, Map<String, String> okapiHeaders,
-			Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+      Criterion criterion = new Criterion(a);
 
-		String tenantId = okapiHeaders.get(TENANT_HEADER);
+      vertxContext.runOnContext(v -> {
+        try {
 
-		ImmutablePair<Boolean, String> validationResult = validateStaffSlip(entity);
+          postgresClient.get(STAFF_SLIP_TABLE, STAFF_SLIP_CLASS, criterion, true, false, reply -> {
+            if (reply.succeeded()) {
 
-		if (!validationResult.getLeft()) {
-			asyncResultHandler.handle(succeededFuture(StaffSlipsStorage.PostStaffSlipsStorageStaffSlipsResponse
-					.respond400WithTextPlain(validationResult.getRight())));
+              @SuppressWarnings("unchecked")
+              List<StaffSlip> staffSlips = (List<StaffSlip>) reply.result().getResults();
 
-			return;
-		}
+              if (staffSlips.size() == 1) {
+                StaffSlip staffSlip = staffSlips.get(0);
 
-		createStaffSlip(entity, tenantId, asyncResultHandler, vertxContext);
+                asyncResultHandler.handle(
+                  succeededFuture(StaffSlipsStorage.GetStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+                    .respond200WithApplicationJson(staffSlip)));
 
-	}
+              } else {
+                asyncResultHandler.handle(
+                  succeededFuture(StaffSlipsStorage.GetStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+                    .respond404WithTextPlain("Not Found")));
+              }
 
-	@Override
-	public void getStaffSlipsStorageStaffSlipsByStaffSlipId(String staffSlipId, String lang,
-			Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+            } else {
+              asyncResultHandler.handle(
+                succeededFuture(StaffSlipsStorage.GetStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+                  .respond500WithTextPlain(reply.cause().getMessage())));
 
-		String tenantId = okapiHeaders.get(TENANT_HEADER);
+            }
+          });
 
-		try {
+        } catch (Exception e) {
+          log.error(e.getMessage());
+          asyncResultHandler.handle(
+            succeededFuture(StaffSlipsStorage.GetStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+              .respond500WithTextPlain(e.getMessage())));
+        }
+      });
 
-			PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
-					TenantTool.calculateTenantId(tenantId));
+    } catch (Exception e) {
+      log.error(e.getMessage());
+      asyncResultHandler
+        .handle(succeededFuture(StaffSlipsStorage.GetStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+          .respond500WithTextPlain(e.getMessage())));
+    }
 
-			Criteria a = new Criteria();
+  }
 
-			a.addField("'id'");
-			a.setOperation("=");
-			a.setValue(staffSlipId);
+  @Override
+  public void deleteStaffSlipsStorageStaffSlipsByStaffSlipId(String staffSlipId, String lang,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-			Criterion criterion = new Criterion(a);
+    String tenantId = okapiHeaders.get(TENANT_HEADER);
 
-			vertxContext.runOnContext(v -> {
-				try {
+    try {
 
-					postgresClient.get(STAFF_SLIP_TABLE, STAFF_SLIP_CLASS, criterion, true, false, reply -> {
-						if (reply.succeeded()) {
+      PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
+        TenantTool.calculateTenantId(tenantId));
 
-							@SuppressWarnings("unchecked")
-							List<StaffSlip> staffSlips = (List<StaffSlip>) reply.result().getResults();
+      Criteria c = new Criteria();
 
-							if (staffSlips.size() == 1) {
-								StaffSlip staffSlip = staffSlips.get(0);
+      c.addField("'id'");
+      c.setOperation("=");
+      c.setValue(staffSlipId);
 
-								asyncResultHandler.handle(
-										succeededFuture(StaffSlipsStorage.GetStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
-												.respond200WithApplicationJson(staffSlip)));
+      Criterion criterion = new Criterion(c);
 
-							} else {
-								asyncResultHandler.handle(
-										succeededFuture(StaffSlipsStorage.GetStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
-												.respond404WithTextPlain("Not Found")));
-							}
+      vertxContext.runOnContext(v -> {
+        try {
 
-						} else {
-							asyncResultHandler.handle(
-									succeededFuture(StaffSlipsStorage.GetStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
-											.respond500WithTextPlain(reply.cause().getMessage())));
+          postgresClient.delete(STAFF_SLIP_TABLE, criterion, reply -> {
+            if (reply.succeeded()) {
 
-						}
-					});
+              asyncResultHandler.handle(
+                succeededFuture(DeleteStaffSlipsStorageStaffSlipsByStaffSlipIdResponse.respond204()));
 
-				} catch (Exception e) {
-					log.error(e.getMessage());
-					asyncResultHandler.handle(
-							succeededFuture(StaffSlipsStorage.GetStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
-									.respond500WithTextPlain(e.getMessage())));
-				}
-			});
+            } else {
+              asyncResultHandler
+                .handle(succeededFuture(StaffSlipsStorage.DeleteStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+                  .respond500WithTextPlain(reply.cause().getMessage())));
+            }
+          });
 
-		} catch (Exception e) {
-			log.error(e.getMessage());
-			asyncResultHandler
-					.handle(succeededFuture(StaffSlipsStorage.GetStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
-							.respond500WithTextPlain(e.getMessage())));
-		}
+        } catch (Exception e) {
+          asyncResultHandler.handle(
+            succeededFuture(StaffSlipsStorage.DeleteStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+              .respond500WithTextPlain(e.getMessage())));
+        }
+      });
 
-	}
+    } catch (Exception e) {
+      asyncResultHandler.handle(
+        succeededFuture(StaffSlipsStorage.DeleteStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+          .respond500WithTextPlain(e.getMessage())));
+    }
 
-	@Override
-	public void deleteStaffSlipsStorageStaffSlipsByStaffSlipId(String staffSlipId, String lang,
-			Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  }
 
-		String tenantId = okapiHeaders.get(TENANT_HEADER);
+  @Override
+  public void putStaffSlipsStorageStaffSlipsByStaffSlipId(String staffSlipId, String lang, StaffSlip entity,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-		try {
+    String tenantId = okapiHeaders.get(TENANT_HEADER);
 
-			PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
-					TenantTool.calculateTenantId(tenantId));
+    ImmutablePair<Boolean, String> validationResult = validateStaffSlip(entity);
 
-			Criteria c = new Criteria();
+    if (!validationResult.getLeft()) {
+      asyncResultHandler.handle(succeededFuture(
+        LoanStorage.PostLoanStorageLoansResponse.respond400WithTextPlain(validationResult.getRight())));
 
-			c.addField("'id'");
-			c.setOperation("=");
-			c.setValue(staffSlipId);
+      return;
+    }
 
-			Criterion criterion = new Criterion(c);
+    try {
+      PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
+        TenantTool.calculateTenantId(tenantId));
 
-			vertxContext.runOnContext(v -> {
-				try {
+      Criteria c = new Criteria();
 
-					postgresClient.delete(STAFF_SLIP_TABLE, criterion, reply -> {
-						if (reply.succeeded()) {
+      c.addField("'id'");
+      c.setOperation("=");
+      c.setValue(staffSlipId);
 
-							asyncResultHandler.handle(
-									succeededFuture(DeleteStaffSlipsStorageStaffSlipsByStaffSlipIdResponse.respond204()));
+      Criterion criterion = new Criterion(c);
 
-						} else {
-							asyncResultHandler.handle(succeededFuture(StaffSlipsStorage.DeleteStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
-											.respond500WithTextPlain(reply.cause().getMessage())));
-						}
-					});
+      vertxContext.runOnContext(v -> {
+        try {
 
-				} catch (Exception e) {
-					asyncResultHandler.handle(
-							succeededFuture(StaffSlipsStorage.DeleteStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
-									.respond500WithTextPlain(e.getMessage())));
-				}
-			});
+          postgresClient.get(STAFF_SLIP_TABLE, STAFF_SLIP_CLASS, criterion, true, false, reply -> {
+            if (reply.succeeded()) {
 
-		} catch (Exception e) {
-			asyncResultHandler.handle(
-					succeededFuture(StaffSlipsStorage.DeleteStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
-							.respond500WithTextPlain(e.getMessage())));
-		}
+              @SuppressWarnings("unchecked")
+              List<StaffSlip> staffSlips = (List<StaffSlip>) reply.result().getResults();
 
-	}
+              if (staffSlips.size() == 1) {
 
-	@Override
-	public void putStaffSlipsStorageStaffSlipsByStaffSlipId(String staffSlipId, String lang, StaffSlip entity,
-			Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+                try {
 
-		String tenantId = okapiHeaders.get(TENANT_HEADER);
+                  postgresClient.update(STAFF_SLIP_TABLE, entity, criterion, true, update -> {
 
-		ImmutablePair<Boolean, String> validationResult = validateStaffSlip(entity);
+                    try {
 
-		if (!validationResult.getLeft()) {
-			asyncResultHandler.handle(succeededFuture(
-					LoanStorage.PostLoanStorageLoansResponse.respond400WithTextPlain(validationResult.getRight())));
+                      if (update.succeeded()) {
 
-			return;
-		}
+                        OutStream stream = new OutStream();
+                        stream.setData(entity);
 
-		try {
-			PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
-					TenantTool.calculateTenantId(tenantId));
+                        asyncResultHandler
+                          .handle(succeededFuture(PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse.respond204()));
 
-			Criteria c = new Criteria();
-
-			c.addField("'id'");
-			c.setOperation("=");
-			c.setValue(staffSlipId);
-
-			Criterion criterion = new Criterion(c);
-
-			vertxContext.runOnContext(v -> {
-				try {
-
-					postgresClient.get(STAFF_SLIP_TABLE, STAFF_SLIP_CLASS, criterion, true, false, reply -> {
-						if (reply.succeeded()) {
-
-							@SuppressWarnings("unchecked")
-							List<StaffSlip> staffSlips = (List<StaffSlip>) reply.result().getResults();
-
-							if (staffSlips.size() == 1) {
-
-								try {
-
-									postgresClient.update(STAFF_SLIP_TABLE, entity, criterion, true, update -> {
-
-										try {
-
-											if (update.succeeded()) {
-
-												OutStream stream = new OutStream();
-												stream.setData(entity);
-
-												asyncResultHandler.handle(succeededFuture(PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse.respond204()));
-
-											} else {
-												asyncResultHandler.handle(succeededFuture(
-														StaffSlipsStorage.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
-																.respond500WithTextPlain(reply.cause().getMessage())));
-											}
-
-										} catch (Exception e) {
-											asyncResultHandler.handle(succeededFuture(StaffSlipsStorage.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
-															.respond500WithTextPlain(e.getMessage())));
-										}
-
-									});
-
-								} catch (Exception e) {
-									asyncResultHandler.handle(succeededFuture(StaffSlipsStorage.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
-													.respond500WithTextPlain(e.getMessage())));
-								}
-
-							} else {
-								try {
-									createStaffSlip(entity, tenantId, asyncResultHandler, vertxContext);
-								} catch (Exception e) {
-									asyncResultHandler.handle(succeededFuture(StaffSlipsStorage.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
-													.respond500WithTextPlain(e.getMessage())));
-								}
-							}
-						} else {
-							asyncResultHandler.handle(
-									succeededFuture(StaffSlipsStorage.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
-											.respond500WithTextPlain(reply.cause().getMessage())));
-						}
-					});
-
-				} catch (Exception e) {
-					asyncResultHandler.handle(
-							succeededFuture(StaffSlipsStorage.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
-									.respond500WithTextPlain(e.getMessage())));
-				}
-			});
-
-		} catch (Exception e) {
-			asyncResultHandler
-					.handle(succeededFuture(StaffSlipsStorage.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
-							.respond500WithTextPlain(e.getMessage())));
-		}
-
-	}
-
-	private void createStaffSlip(StaffSlip entity, String tenantId, Handler<AsyncResult<Response>> asyncResultHandler,
-			Context vertxContext) {
-		try {
-
-			PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
-					TenantTool.calculateTenantId(tenantId));
-
-			vertxContext.runOnContext(v -> {
-				try {
-
-					if (entity.getId() == null) {
-						entity.setId(UUID.randomUUID().toString());
-					}
-
-					if (entity.getActive() == null) {
-						entity.setActive(true);
-					}
-
-					postgresClient.save(STAFF_SLIP_TABLE, entity.getId(), entity, reply -> {
-						try {
-							if (reply.succeeded()) {
-
-								OutStream stream = new OutStream();
-								stream.setData(entity);
-
-								asyncResultHandler
-										.handle(succeededFuture(StaffSlipsStorage.PostStaffSlipsStorageStaffSlipsResponse
-                                                                                  .respond201WithApplicationJson(entity, 
-                                                                                    PostStaffSlipsStorageStaffSlipsResponse.headersFor201().withLocation(reply.result()))));
-
-							} else {
-								asyncResultHandler.handle(succeededFuture(LoanStorage.PostLoanStorageLoansResponse
-										.respond500WithTextPlain(reply.cause().toString())));
-							}
-						} catch (Exception e) {
-							log.error(e.getMessage());
-							asyncResultHandler
-									.handle(succeededFuture(StaffSlipsStorage.PostStaffSlipsStorageStaffSlipsResponse
-											.respond500WithTextPlain(e.getMessage())));
-						}
-					});
-
-				} catch (Exception e) {
-					log.error(e.getMessage());
-					asyncResultHandler
-							.handle(succeededFuture(StaffSlipsStorage.PostStaffSlipsStorageStaffSlipsResponse
-									.respond500WithTextPlain(e.getMessage())));
-				}
-			});
-
-		} catch (Exception e) {
-			asyncResultHandler.handle(
-					succeededFuture(PostStaffSlipsStorageStaffSlipsResponse.respond500WithTextPlain(e.getMessage())));
-		}
-	}
-
-	private ImmutablePair<Boolean, String> validateStaffSlip(StaffSlip staffSlip) {
-
-		Boolean valid = true;
-		StringJoiner messages = new StringJoiner("\n");
-
-		if (staffSlip.getName() == null || staffSlip.getName().equals("")) {
-			valid = false;
-			messages.add("Name is a required property");
-		}
-
-		if (staffSlip.getTemplate() == null || staffSlip.getTemplate().equals("")) {
-			valid = false;
-			messages.add("Template is a required property");
-		}
-
-		return new ImmutablePair<>(valid, messages.toString());
-	}
+                      } else {
+                        asyncResultHandler.handle(succeededFuture(
+                          StaffSlipsStorage.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+                            .respond500WithTextPlain(reply.cause().getMessage())));
+                      }
+
+                    } catch (Exception e) {
+                      asyncResultHandler
+                        .handle(succeededFuture(StaffSlipsStorage.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+                          .respond500WithTextPlain(e.getMessage())));
+                    }
+
+                  });
+
+                } catch (Exception e) {
+                  asyncResultHandler
+                    .handle(succeededFuture(StaffSlipsStorage.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+                      .respond500WithTextPlain(e.getMessage())));
+                }
+
+              } else {
+                // return 404 to be consistent with other modules, and be compatible with RMB TenantLoading mechanism
+                // try {
+                //   createStaffSlip(entity, tenantId, asyncResultHandler, vertxContext);
+                // } catch (Exception e) {
+                //   asyncResultHandler.handle(succeededFuture(StaffSlipsStorage.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+                //     .respond500WithTextPlain(e.getMessage())));
+                // }
+                asyncResultHandler
+                  .handle(succeededFuture(StaffSlipsStorage.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+                    .respond404WithTextPlain("Not Found")));
+              }
+            } else {
+              asyncResultHandler.handle(
+                succeededFuture(StaffSlipsStorage.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+                  .respond500WithTextPlain(reply.cause().getMessage())));
+            }
+          });
+
+        } catch (Exception e) {
+          asyncResultHandler.handle(
+            succeededFuture(StaffSlipsStorage.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+              .respond500WithTextPlain(e.getMessage())));
+        }
+      });
+
+    } catch (Exception e) {
+      asyncResultHandler
+        .handle(succeededFuture(StaffSlipsStorage.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+          .respond500WithTextPlain(e.getMessage())));
+    }
+
+  }
+
+  private void createStaffSlip(StaffSlip entity, String tenantId, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+    try {
+
+      PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
+        TenantTool.calculateTenantId(tenantId));
+
+      vertxContext.runOnContext(v -> {
+        try {
+
+          if (entity.getId() == null) {
+            entity.setId(UUID.randomUUID().toString());
+          }
+
+          if (entity.getActive() == null) {
+            entity.setActive(true);
+          }
+
+          postgresClient.save(STAFF_SLIP_TABLE, entity.getId(), entity, reply -> {
+            try {
+              if (reply.succeeded()) {
+
+                OutStream stream = new OutStream();
+                stream.setData(entity);
+
+                asyncResultHandler
+                  .handle(succeededFuture(StaffSlipsStorage.PostStaffSlipsStorageStaffSlipsResponse
+                    .respond201WithApplicationJson(entity,
+                      PostStaffSlipsStorageStaffSlipsResponse.headersFor201().withLocation(reply.result()))));
+
+              } else {
+                asyncResultHandler.handle(succeededFuture(LoanStorage.PostLoanStorageLoansResponse
+                  .respond500WithTextPlain(reply.cause().toString())));
+              }
+            } catch (Exception e) {
+              log.error(e.getMessage());
+              asyncResultHandler
+                .handle(succeededFuture(StaffSlipsStorage.PostStaffSlipsStorageStaffSlipsResponse
+                  .respond500WithTextPlain(e.getMessage())));
+            }
+          });
+
+        } catch (Exception e) {
+          log.error(e.getMessage());
+          asyncResultHandler
+            .handle(succeededFuture(StaffSlipsStorage.PostStaffSlipsStorageStaffSlipsResponse
+              .respond500WithTextPlain(e.getMessage())));
+        }
+      });
+
+    } catch (Exception e) {
+      asyncResultHandler.handle(
+        succeededFuture(PostStaffSlipsStorageStaffSlipsResponse.respond500WithTextPlain(e.getMessage())));
+    }
+  }
+
+  private ImmutablePair<Boolean, String> validateStaffSlip(StaffSlip staffSlip) {
+
+    Boolean valid = true;
+    StringJoiner messages = new StringJoiner("\n");
+
+    if (staffSlip.getName() == null || staffSlip.getName().equals("")) {
+      valid = false;
+      messages.add("Name is a required property");
+    }
+
+    if (staffSlip.getTemplate() == null || staffSlip.getTemplate().equals("")) {
+      valid = false;
+      messages.add("Template is a required property");
+    }
+
+    return new ImmutablePair<>(valid, messages.toString());
+  }
 
 }
