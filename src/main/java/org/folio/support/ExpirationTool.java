@@ -1,17 +1,11 @@
 package org.folio.support;
 
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Vertx;
-import io.vertx.ext.sql.ResultSet;
-import org.folio.rest.jaxrs.model.Request;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.cql.CQLWrapper;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
-import org.z3950.zing.cql.cql2pgjson.FieldException;
+import static org.folio.rest.impl.RequestsAPI.REQUEST_TABLE;
+import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_PICKUP_EXPIRED;
+import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_UNFILLED;
+import static org.folio.rest.jaxrs.model.Request.Status.OPEN_AWAITING_PICKUP;
+import static org.folio.rest.jaxrs.model.Request.Status.OPEN_IN_TRANSIT;
+import static org.folio.rest.jaxrs.model.Request.Status.OPEN_NOT_YET_FILLED;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -21,12 +15,18 @@ import java.util.List;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 
-import static org.folio.rest.impl.RequestsAPI.REQUEST_TABLE;
-import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_PICKUP_EXPIRED;
-import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_UNFILLED;
-import static org.folio.rest.jaxrs.model.Request.Status.OPEN_AWAITING_PICKUP;
-import static org.folio.rest.jaxrs.model.Request.Status.OPEN_IN_TRANSIT;
-import static org.folio.rest.jaxrs.model.Request.Status.OPEN_NOT_YET_FILLED;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
+import io.vertx.core.Vertx;
+import io.vertx.ext.sql.ResultSet;
+import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
+import org.z3950.zing.cql.cql2pgjson.FieldException;
+
+import org.folio.rest.jaxrs.model.Request;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.Criteria.Criteria;
+import org.folio.rest.persist.Criteria.Criterion;
+import org.folio.rest.persist.cql.CQLWrapper;
 
 public class ExpirationTool {
 
@@ -37,7 +37,7 @@ public class ExpirationTool {
     //do nothing
   }
 
-  public static Future<Void> doRequestExpiration(Vertx vertx, Context context) {
+  public static Future<Void> doRequestExpiration(Vertx vertx) {
     Future<ResultSet> future = Future.future();
 
     PostgresClient pgClient = PostgresClient.getInstance(vertx);
@@ -51,7 +51,7 @@ public class ExpirationTool {
       .map(compositeFuture -> null);
   }
 
-  public static Future<Integer> doRequestExpirationForTenant(Vertx vertx, String tenant) {
+  private static Future<Integer> doRequestExpirationForTenant(Vertx vertx, String tenant) {
     Future<Integer> future = Future.future();
     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
     simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));

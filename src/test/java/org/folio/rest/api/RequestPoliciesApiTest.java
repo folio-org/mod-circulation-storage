@@ -1,15 +1,10 @@
 package org.folio.rest.api;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import org.folio.rest.jaxrs.model.RequestPolicy;
-import org.folio.rest.jaxrs.model.RequestType;
-import org.folio.rest.support.ApiTests;
-import org.folio.rest.support.JsonResponse;
-import org.folio.rest.support.ResponseHandler;
-import org.joda.time.DateTime;
-import org.joda.time.Seconds;
-import org.junit.Test;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.notNullValue;
+
+import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -23,10 +18,17 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNull.notNullValue;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import org.joda.time.DateTime;
+import org.joda.time.Seconds;
+import org.junit.Test;
+
+import org.folio.rest.jaxrs.model.RequestPolicy;
+import org.folio.rest.jaxrs.model.RequestType;
+import org.folio.rest.support.ApiTests;
+import org.folio.rest.support.JsonResponse;
+import org.folio.rest.support.ResponseHandler;
 
 public class RequestPoliciesApiTest extends ApiTests {
 
