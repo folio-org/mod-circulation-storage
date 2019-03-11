@@ -70,8 +70,8 @@ public class ExpirationTool {
         } else {
           List<Request> requestList = reply.result().getResults();
           List<Future> futureList = closeRequests(vertx, tenant, requestList);
-          CompositeFuture compositeFuture = CompositeFuture.join(futureList);
-          compositeFuture.setHandler(compRes -> future.complete(countSucceeded(futureList)));
+          CompositeFuture.join(futureList)
+            .setHandler(compRes -> future.complete(countSucceeded(futureList)));
         }
       });
     } catch (FieldException e) {
@@ -82,21 +82,22 @@ public class ExpirationTool {
 
   /* For each expired request set Closed status and remove position*/
   private static List<Future> closeRequests(Vertx vertx, String tenant, List<Request> requestList) {
-    List<Future> futureList = new ArrayList<>();
-    if (!requestList.isEmpty()) {
-      for (Request request : requestList) {
-        if (request.getStatus() == Request.Status.OPEN_NOT_YET_FILLED) {
-          request.setStatus(CLOSED_UNFILLED);
-        } else if (request.getStatus() == Request.Status.OPEN_AWAITING_PICKUP) {
-          request.setStatus(CLOSED_PICKUP_EXPIRED);
-        }
-        request.setPosition(null);
-        Future<Void> saveFuture = saveRequest(vertx, tenant, request)
-          .compose(v -> updateRequestQueue(vertx, tenant, request));
-        futureList.add(saveFuture);
-      }
+
+    return requestList.stream()
+      .map(ExpirationTool::changeRequestStatus)
+      .map(req -> req.withPosition(null))
+      .map(req -> saveRequest(vertx, tenant, req)
+        .compose(v -> updateRequestQueue(vertx, tenant, req)))
+      .collect(Collectors.toList());
+  }
+
+  private static Request changeRequestStatus(Request request) {
+    if (request.getStatus() == Request.Status.OPEN_NOT_YET_FILLED) {
+      request.setStatus(CLOSED_UNFILLED);
+    } else if (request.getStatus() == Request.Status.OPEN_AWAITING_PICKUP) {
+      request.setStatus(CLOSED_PICKUP_EXPIRED);
     }
-    return futureList;
+    return request;
   }
 
   /* update request queue, request positions adjustment with same itemId */
