@@ -77,26 +77,6 @@ public class StaffSlipsApiTest extends ApiTests {
   /* Begin Tests */
 
   @Test
-  public void cannotUpdateNonExistingStaffSlipById()
-    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
-
-    UUID slipId = UUID.randomUUID();
-
-    CompletableFuture<Response> putCompleted = new CompletableFuture<>();
-
-    JsonObject updatedSlip = new StaffSlipRequestBuilder().withId(slipId).withName(TEST_STAFF_SLIP_1_NAME)
-      .withDescription(TEST_STAFF_SLIP_1_DESCRIPTION_ALTERNATE).create();
-
-    client.put(staffSlipsStorageUrl("/" + slipId), updatedSlip, StorageTestSuite.TENANT_ID,
-      ResponseHandler.empty(putCompleted));
-
-    Response putReponse = putCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(putReponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
-
-  }
-
-  @Test
   public void canCreateAStaffSlip()
     throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 

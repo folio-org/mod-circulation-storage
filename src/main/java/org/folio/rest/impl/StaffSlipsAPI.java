@@ -328,10 +328,13 @@ public class StaffSlipsAPI implements StaffSlipsStorage {
                 }
 
               } else {
-                // return 404 to be consistent with other modules, and be compatible with RMB TenantLoading mechanism
-                asyncResultHandler
-                  .handle(succeededFuture(StaffSlipsStorage.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
-                    .respond404WithTextPlain("Not Found")));
+                try {
+                  createStaffSlip(entity, tenantId, asyncResultHandler, vertxContext);
+                } catch (Exception e) {
+                  asyncResultHandler
+                    .handle(succeededFuture(StaffSlipsStorage.PutStaffSlipsStorageStaffSlipsByStaffSlipIdResponse
+                      .respond500WithTextPlain(e.getMessage())));
+                }
               }
             } else {
               asyncResultHandler.handle(
