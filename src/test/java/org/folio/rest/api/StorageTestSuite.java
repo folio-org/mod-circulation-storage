@@ -27,6 +27,7 @@ import org.junit.runners.Suite;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -50,36 +51,37 @@ import io.vertx.ext.sql.ResultSet;
 })
 
 public class StorageTestSuite {
+
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-	public static final String TENANT_ID = "test_tenant";
+  public static final String TENANT_ID = "test_tenant";
 
-	private static Vertx vertx;
-	private static int port;
-	private static boolean initialised = false;
+  private static Vertx vertx;
+  private static int port;
+  private static boolean initialised = false;
 
-	public static URL storageUrl(String path) throws MalformedURLException {
-		return new URL("http", "localhost", port, path);
-	}
+  public static URL storageUrl(String path) throws MalformedURLException {
+    return new URL("http", "localhost", port, path);
+  }
 
-	public static Vertx getVertx() {
-		return vertx;
-	}
+  public static Vertx getVertx() {
+    return vertx;
+  }
 
-	@BeforeClass
-	public static void before()
+  @BeforeClass
+  public static void before()
     throws IOException,
     InterruptedException,
     ExecutionException,
     TimeoutException {
 
-		vertx = Vertx.vertx();
+    vertx = Vertx.vertx();
 
-		String useExternalDatabase = System.getProperty(
-		  "org.folio.circulation.storage.test.database",
-            "embedded");
+    String useExternalDatabase = System.getProperty(
+      "org.folio.circulation.storage.test.database",
+      "embedded");
 
-		switch (useExternalDatabase) {
+    switch (useExternalDatabase) {
       case "environment":
         log.info("Using environment settings");
         break;
@@ -87,7 +89,7 @@ public class StorageTestSuite {
       case "external":
         String postgresConfigPath = System.getProperty(
           "org.folio.circulation.storage.test.config",
-            "/postgres-conf-local.json");
+          "/postgres-conf-local.json");
 
         log.info(String.format(
           "Using external configuration settings: '%s'", postgresConfigPath));
@@ -112,176 +114,184 @@ public class StorageTestSuite {
 
         log.error(message);
         assert false;
-		}
+    }
 
-		port = NetworkUtils.nextFreePort();
+    port = NetworkUtils.nextFreePort();
 
-		DeploymentOptions options = new DeploymentOptions();
+    DeploymentOptions options = new DeploymentOptions();
 
-		options.setConfig(new JsonObject().put("http.port", port));
-		options.setWorker(true);
+    options.setConfig(new JsonObject().put("http.port", port));
+    options.setWorker(true);
 
-		startVerticle(options);
+    startVerticle(options);
 
-		prepareTenant(TENANT_ID);
+    prepareTenant(TENANT_ID);
 
-		initialised = true;
-	}
+    initialised = true;
+  }
 
-	@AfterClass
-	public static void after()
+  @AfterClass
+  public static void after()
     throws InterruptedException,
     ExecutionException,
     TimeoutException {
 
-		initialised = false;
+    initialised = false;
 
-		removeTenant(TENANT_ID);
+    removeTenant(TENANT_ID);
 
-		CompletableFuture<String> undeploymentComplete = new CompletableFuture<>();
+    CompletableFuture<String> undeploymentComplete = new CompletableFuture<>();
 
-		vertx.close(res -> {
-			if (res.succeeded()) {
-				undeploymentComplete.complete(null);
-			} else {
-				undeploymentComplete.completeExceptionally(res.cause());
-			}
-		});
+    vertx.close(res -> {
+      if (res.succeeded()) {
+        undeploymentComplete.complete(null);
+      } else {
+        undeploymentComplete.completeExceptionally(res.cause());
+      }
+    });
 
-		undeploymentComplete.get(20, TimeUnit.SECONDS);
+    undeploymentComplete.get(20, TimeUnit.SECONDS);
 
-		PostgresClient.stopEmbeddedPostgres();
-	}
+    PostgresClient.stopEmbeddedPostgres();
+  }
 
-	public static boolean isNotInitialised() {
-		return !initialised;
-	}
+  public static boolean isNotInitialised() {
+    return !initialised;
+  }
 
-	public static void deleteAll(URL rootUrl) {
-		HttpClient client = new HttpClient(getVertx());
+  public static void deleteAll(URL rootUrl) {
+    HttpClient client = new HttpClient(getVertx());
 
-		CompletableFuture<Response> deleteAllFinished = new CompletableFuture<>();
+    CompletableFuture<Response> deleteAllFinished = new CompletableFuture<>();
 
-		try {
-			client.delete(rootUrl, TENANT_ID, ResponseHandler.empty(deleteAllFinished));
+    try {
+      client.delete(rootUrl, TENANT_ID, ResponseHandler.empty(deleteAllFinished));
 
-			Response response = deleteAllFinished.get(5, TimeUnit.SECONDS);
+      Response response = deleteAllFinished.get(5, TimeUnit.SECONDS);
 
-			if (response.getStatusCode() != 204) {
-				log.warn(String.format("Deleting all records at '%s' failed",
+      if (response.getStatusCode() != 204) {
+        log.warn(String.format("Deleting all records at '%s' failed",
           rootUrl));
-			}
-		} catch (Exception e) {
-			log.error("Unable to delete all resources: " + e.getMessage(), e);
-			assert false;
-		}
-	}
+      }
+    } catch (Exception e) {
+      log.error("Unable to delete all resources: " + e.getMessage(), e);
+      assert false;
+    }
+  }
 
-	public static void checkForMismatchedIDs(String table) {
-		try {
-			ResultSet results = getRecordsWithUnmatchedIds(TENANT_ID, table);
+  public static void checkForMismatchedIDs(String table) {
+    try {
+      ResultSet results = getRecordsWithUnmatchedIds(TENANT_ID, table);
 
-			Integer mismatchedRowCount = results.getNumRows();
+      Integer mismatchedRowCount = results.getNumRows();
 
-			assertThat(mismatchedRowCount, is(0));
+      assertThat(mismatchedRowCount, is(0));
 
-		} catch (Exception e) {
+    } catch (Exception e) {
       log.error(String.format(
         "Unable to determine mismatched ID rows for '%s': '%s'",
         table, e.getMessage()), e);
       assert false;
-		}
-	}
+    }
+  }
 
-	private static ResultSet getRecordsWithUnmatchedIds(
-	  String tenantId,
+  private static ResultSet getRecordsWithUnmatchedIds(
+    String tenantId,
     String tableName)
     throws InterruptedException,
     ExecutionException,
     TimeoutException {
 
-		PostgresClient postgresClient = PostgresClient.getInstance(getVertx(), tenantId);
+    PostgresClient postgresClient = PostgresClient.getInstance(getVertx(), tenantId);
 
-		CompletableFuture<ResultSet> selectCompleted = new CompletableFuture<>();
+    CompletableFuture<ResultSet> selectCompleted = new CompletableFuture<>();
 
-		String sql = String.format(
-		  "SELECT null FROM %s_%s.%s" + " WHERE CAST(_id AS VARCHAR(50)) != jsonb->>'id'",
-				tenantId, "mod_circulation_storage", tableName);
+    String sql = String.format(
+      "SELECT null FROM %s_%s.%s" + " WHERE CAST(_id AS VARCHAR(50)) != jsonb->>'id'",
+      tenantId, "mod_circulation_storage", tableName);
 
-		postgresClient.select(sql, result -> {
-			if (result.succeeded()) {
-				selectCompleted.complete(result.result());
-			} else {
-				selectCompleted.completeExceptionally(result.cause());
-			}
-		});
+    postgresClient.select(sql, result -> {
+      if (result.succeeded()) {
+        selectCompleted.complete(result.result());
+      } else {
+        selectCompleted.completeExceptionally(result.cause());
+      }
+    });
 
-		return selectCompleted.get(5, TimeUnit.SECONDS);
-	}
+    return selectCompleted.get(5, TimeUnit.SECONDS);
+  }
 
-	private static void startVerticle(DeploymentOptions options)
+  private static void startVerticle(DeploymentOptions options)
     throws InterruptedException,
     ExecutionException,
     TimeoutException {
 
-		CompletableFuture<String> deploymentComplete = new CompletableFuture<>();
+    CompletableFuture<String> deploymentComplete = new CompletableFuture<>();
 
-		vertx.deployVerticle(RestVerticle.class.getName(), options, res -> {
-			if (res.succeeded()) {
-				deploymentComplete.complete(res.result());
-			} else {
-				deploymentComplete.completeExceptionally(res.cause());
-			}
-		});
+    vertx.deployVerticle(RestVerticle.class.getName(), options, res -> {
+      if (res.succeeded()) {
+        deploymentComplete.complete(res.result());
+      } else {
+        deploymentComplete.completeExceptionally(res.cause());
+      }
+    });
 
-		deploymentComplete.get(30, TimeUnit.SECONDS);
-	}
+    deploymentComplete.get(30, TimeUnit.SECONDS);
+  }
 
-	private static void prepareTenant(String tenantId) {
-		CompletableFuture<TextResponse> tenantPrepared = new CompletableFuture<>();
+  private static void prepareTenant(String tenantId) {
+    CompletableFuture<TextResponse> tenantPrepared = new CompletableFuture<>();
 
-		log.info("Making request to prepare tenant in module");
+    log.info("Making request to prepare tenant in module");
 
-		try {
-			HttpClient client = new HttpClient(vertx);
+    try {
+      HttpClient client = new HttpClient(vertx);
 
-			client.post(storageUrl("/_/tenant"), null, tenantId,
+      JsonArray ar = new JsonArray();
+
+      ar.add(new JsonObject().put("key", "loadReference").put("value", "true"));
+      ar.add(new JsonObject().put("key", "loadSample").put("value", "true"));
+      JsonObject jo = new JsonObject();
+      jo.put("parameters", ar);
+      jo.put("module_to", "mod-circulation-storage-1.0.0");
+
+      client.post(storageUrl("/_/tenant"), jo, tenantId, null,
         ResponseHandler.text(tenantPrepared));
 
-			TextResponse response = tenantPrepared.get(20, TimeUnit.SECONDS);
+      TextResponse response = tenantPrepared.get(20, TimeUnit.SECONDS);
 
-			String failureMessage = String.format("Tenant preparation failed: %s: %s",
+      String failureMessage = String.format("Tenant preparation failed: %s: %s",
         response.getStatusCode(), response.getBody());
 
-			assertThat(failureMessage, response.getStatusCode(), is(201));
+      assertThat(failureMessage, response.getStatusCode(), is(201));
 
-		} catch (Exception e) {
-			log.error("Tenant preparation failed: " + e.getMessage(), e);
-			assert false;
-		}
-	}
+    } catch (Exception e) {
+      log.error("Tenant preparation failed: " + e.getMessage(), e);
+      assert false;
+    }
+  }
 
-	private static void removeTenant(String tenantId) {
-		CompletableFuture<TextResponse> tenantDeleted = new CompletableFuture<>();
+  private static void removeTenant(String tenantId) {
+    CompletableFuture<TextResponse> tenantDeleted = new CompletableFuture<>();
 
     log.info("Making request to clean up tenant in module");
 
-		try {
-			HttpClient client = new HttpClient(vertx);
+    try {
+      HttpClient client = new HttpClient(vertx);
 
-			client.delete(storageUrl("/_/tenant"), tenantId,
+      client.delete(storageUrl("/_/tenant"), tenantId,
         ResponseHandler.text(tenantDeleted));
 
-			TextResponse response = tenantDeleted.get(10, TimeUnit.SECONDS);
+      TextResponse response = tenantDeleted.get(10, TimeUnit.SECONDS);
 
-			String failureMessage = String.format("Tenant clean up failed: %s: %s",
+      String failureMessage = String.format("Tenant clean up failed: %s: %s",
         response.getStatusCode(), response.getBody());
 
-			assertThat(failureMessage, response.getStatusCode(), is(204));
+      assertThat(failureMessage, response.getStatusCode(), is(204));
 
-		} catch (Exception e) {
+    } catch (Exception e) {
       log.error("Tenant clean up failed: " + e.getMessage(), e);
-			assert false;
-		}
-	}
+      assert false;
+    }
+  }
 }
