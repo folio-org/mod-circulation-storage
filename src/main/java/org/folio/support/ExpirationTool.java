@@ -32,14 +32,16 @@ public class ExpirationTool {
 
   private static final String QUERY_TO_LOOK_FOR_EXPIRED_UNFILLED = "(status == \"%s\" AND requestExpirationDate < \"%s\")";
   private static final String QUERY_TO_LOOK_FOR_EXPIRED_AWAITING_PICKUP = "(status == \"%s\" AND holdShelfExpirationDate < \"%s\")";
-  private static final List<String> itemIds = new ArrayList<>();
-  private static final List<String> requestIds = new ArrayList<>();
+  private static List<String> itemIds = null;
+  private static List<String> requestIds = null;
 
   private ExpirationTool() {
     //do nothing
   }
 
   public static Future<Void> doRequestExpiration(Vertx vertx) {
+    itemIds = new ArrayList<>();
+    requestIds = new ArrayList<>();
     Future<ResultSet> future = Future.future();
 
     PostgresClient pgClient = PostgresClient.getInstance(vertx);
@@ -54,16 +56,13 @@ public class ExpirationTool {
   }
 
   private static Future<Integer> doRequestExpirationForTenant(Vertx vertx, String tenant) {
+    Date currentDate = new Date();
     Future<Integer> future = Future.future();
-    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-    simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-    Date now = new Date();
-    String nowDateString = simpleDateFormat.format(now);
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
     pgClient.setIdField("_id");
     String query = String.format(
       String.format("%s OR %s", QUERY_TO_LOOK_FOR_EXPIRED_UNFILLED, QUERY_TO_LOOK_FOR_EXPIRED_AWAITING_PICKUP),
-      OPEN_NOT_YET_FILLED.value(), nowDateString, OPEN_AWAITING_PICKUP.value(), nowDateString);
+      OPEN_NOT_YET_FILLED.value(), getNowString(currentDate), OPEN_AWAITING_PICKUP.value(), getNowString(currentDate));
     try {
       pgClient.get(REQUEST_TABLE, Request.class, new String[]{"*"}, initCqlWrapper(query), true, false, reply -> {
         if (reply.failed()) {
@@ -72,7 +71,7 @@ public class ExpirationTool {
           future.tryComplete();
         } else {
           List<Request> requestList = reply.result().getResults();
-          List<Future> futureList = closeRequests(vertx, tenant, requestList, now);
+          List<Future> futureList = closeRequests(vertx, tenant, requestList, currentDate);
           CompositeFuture.join(futureList)
             .setHandler(compRes -> future.complete(countSucceeded(futureList)));
         }
@@ -83,14 +82,20 @@ public class ExpirationTool {
     return future;
   }
 
+  private static String getNowString(Date currentDate) {
+    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+    simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+    return simpleDateFormat.format(currentDate);
+  }
+
   /* For each expired request set Closed status and remove position*/
-  private static List<Future> closeRequests(Vertx vertx, String tenant, List<Request> requestList, Date now) {
+  private static List<Future> closeRequests(Vertx vertx, String tenant, List<Request> requestList, Date currentDate) {
 
     return requestList.stream()
       .map(ExpirationTool::changeRequestStatus)
       .map(ExpirationTool::changeRequestPosition)
       .map(req -> saveRequest(vertx, tenant, req)
-        .compose(v -> updateRequestQueue(vertx, tenant, req, now)))
+        .compose(v -> updateRequestQueue(vertx, tenant, req, currentDate)))
       .collect(Collectors.toList());
   }
 
@@ -108,26 +113,26 @@ public class ExpirationTool {
   }
 
   /* update request queue, request positions adjustment with same itemId */
-  private static Future<Void> updateRequestQueue(Vertx vertx, String tenant, Request request, Date now) {
+  private static Future<Void> updateRequestQueue(Vertx vertx, String tenant, Request request, Date currentDate) {
     Future<Void> future = Future.future();
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
     pgClient.setIdField("_id");
-    String requestQueueQuery = String.format(
-      "itemId==%s and status==(\"%s\" or \"%s\" or \"%s\") sortBy position/sort.ascending",
-      request.getItemId(),
-      OPEN_AWAITING_PICKUP.value(),
-      OPEN_NOT_YET_FILLED.value(),
-      OPEN_IN_TRANSIT.value());
     try {
-      pgClient.get(REQUEST_TABLE, Request.class, new String[]{"*"}, initCqlWrapper(requestQueueQuery), true, false, res -> {
+      pgClient.get(REQUEST_TABLE, Request.class, new String[]{"*"}, initCqlWrapper(getQueueQuery(request.getItemId())), true, false, res -> {
         if (!res.failed()) {
           List<Request> list = res.result().getResults();
           List<Request> listNonExpired = new ArrayList<>();
           for (Request req : list) {
             /* exclude expired requests from list */
             if (
-              !(req.getStatus() != null && req.getHoldShelfExpirationDate() != null && req.getStatus() == OPEN_AWAITING_PICKUP && req.getHoldShelfExpirationDate().before(now)) &&
-              !(req.getStatus() != null && req.getRequestExpirationDate() != null && req.getStatus() == OPEN_NOT_YET_FILLED && req.getRequestExpirationDate().before(now))) {
+              !(req.getStatus() != null &&
+                req.getHoldShelfExpirationDate() != null &&
+                req.getStatus() == OPEN_AWAITING_PICKUP &&
+                req.getHoldShelfExpirationDate().before(currentDate)) &&
+              !(req.getStatus() != null &&
+                req.getRequestExpirationDate() != null &&
+                req.getStatus() == OPEN_NOT_YET_FILLED &&
+                req.getRequestExpirationDate().before(currentDate))) {
               listNonExpired.add(req);
             }
           }
@@ -152,6 +157,15 @@ public class ExpirationTool {
       future.fail(e.getLocalizedMessage());
     }
     return future;
+  }
+
+  private static String getQueueQuery(String itemId) {
+    return String.format(
+      "itemId==%s and status==(\"%s\" or \"%s\" or \"%s\") sortBy position/sort.ascending",
+      itemId,
+      OPEN_AWAITING_PICKUP.value(),
+      OPEN_NOT_YET_FILLED.value(),
+      OPEN_IN_TRANSIT.value());
   }
 
   /* positions should be removed for each request with itemId before adjustment due to itemId-position unique index */
