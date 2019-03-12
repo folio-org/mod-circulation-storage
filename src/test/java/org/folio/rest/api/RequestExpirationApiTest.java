@@ -288,7 +288,21 @@ public class RequestExpirationApiTest extends ApiTests {
     UUID id1_4 = UUID.randomUUID();
     UUID id1_5 = UUID.randomUUID();
     UUID id1_6 = UUID.randomUUID();
+    UUID id2_1 = UUID.randomUUID();
+    UUID id2_2 = UUID.randomUUID();
+    UUID id2_3 = UUID.randomUUID();
+    UUID id2_4 = UUID.randomUUID();
+    UUID id2_5 = UUID.randomUUID();
+    UUID id2_6 = UUID.randomUUID();
+    UUID id3_1 = UUID.randomUUID();
+    UUID id3_2 = UUID.randomUUID();
+    UUID id3_3 = UUID.randomUUID();
+    UUID id3_4 = UUID.randomUUID();
+    UUID id3_5 = UUID.randomUUID();
+    UUID id3_6 = UUID.randomUUID();
     UUID itemId1 = UUID.randomUUID();
+    UUID itemId2 = UUID.randomUUID();
+    UUID itemId3 = UUID.randomUUID();
 
     createEntity(
       new RequestRequestBuilder()
@@ -357,6 +371,141 @@ public class RequestExpirationApiTest extends ApiTests {
       .create(),
       requestStorageUrl());
 
+    createEntity(
+      new RequestRequestBuilder()
+        .hold()
+        .withId(id2_1)
+        .withRequestExpiration(new DateTime(9999, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+        .withItemId(itemId2)
+        .withPosition(1)
+        .withStatus(OPEN_NOT_YET_FILLED)
+        .create(),
+      requestStorageUrl());
+
+    /* Expired */
+    createEntity(
+      new RequestRequestBuilder()
+        .hold()
+        .withId(id2_2)
+        .withItemId(itemId2)
+        .withPosition(2)
+        .withRequestExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+        .withStatus(OPEN_NOT_YET_FILLED)
+        .create(),
+      requestStorageUrl());
+
+    /* Expired */
+    createEntity(
+      new RequestRequestBuilder()
+        .hold()
+        .withId(id2_3)
+        .withItemId(itemId2)
+        .withPosition(3)
+        .withRequestExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+        .withStatus(OPEN_NOT_YET_FILLED)
+        .create(),
+      requestStorageUrl());
+
+    createEntity(
+      new RequestRequestBuilder()
+        .hold()
+        .withId(id2_4)
+        .withItemId(itemId2)
+        .withPosition(4)
+        .withStatus(OPEN_NOT_YET_FILLED)
+        .create(),
+      requestStorageUrl());
+
+    createEntity(
+      new RequestRequestBuilder()
+        .hold()
+        .withId(id2_5)
+        .withItemId(itemId2)
+        .withPosition(5)
+        .withStatus(OPEN_NOT_YET_FILLED)
+        .create(),
+      requestStorageUrl());
+
+    /* Expired */
+    createEntity(
+      new RequestRequestBuilder()
+        .hold()
+        .withId(id2_6)
+        .withItemId(itemId2)
+        .withPosition(6)
+        .withRequestExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+        .withStatus(OPEN_NOT_YET_FILLED)
+        .create(),
+      requestStorageUrl());
+
+    createEntity(
+      new RequestRequestBuilder()
+        .hold()
+        .withId(id3_1)
+        .withRequestExpiration(new DateTime(9999, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+        .withItemId(itemId3)
+        .withPosition(1)
+        .withStatus(OPEN_NOT_YET_FILLED)
+        .create(),
+      requestStorageUrl());
+
+    /* Expired */
+    createEntity(
+      new RequestRequestBuilder()
+        .hold()
+        .withId(id3_2)
+        .withItemId(itemId3)
+        .withPosition(2)
+        .withRequestExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+        .withStatus(OPEN_NOT_YET_FILLED)
+        .create(),
+      requestStorageUrl());
+
+    /* Expired */
+    createEntity(
+      new RequestRequestBuilder()
+        .hold()
+        .withId(id3_3)
+        .withItemId(itemId3)
+        .withPosition(3)
+        .withRequestExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+        .withStatus(OPEN_NOT_YET_FILLED)
+        .create(),
+      requestStorageUrl());
+
+    createEntity(
+      new RequestRequestBuilder()
+        .hold()
+        .withId(id3_4)
+        .withItemId(itemId3)
+        .withPosition(4)
+        .withStatus(OPEN_NOT_YET_FILLED)
+        .create(),
+      requestStorageUrl());
+
+    createEntity(
+      new RequestRequestBuilder()
+        .hold()
+        .withId(id3_5)
+        .withItemId(itemId3)
+        .withPosition(5)
+        .withHoldShelfExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+        .withStatus(OPEN_AWAITING_PICKUP)
+        .create(),
+      requestStorageUrl());
+
+    /* Expired */
+    createEntity(
+      new RequestRequestBuilder()
+        .hold()
+        .withId(id3_6)
+        .withItemId(itemId3)
+        .withPosition(6)
+        .withRequestExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+        .withStatus(OPEN_NOT_YET_FILLED)
+        .create(),
+      requestStorageUrl());
+
     expireRequests();
 
     JsonObject response1_1 = getById(requestStorageUrl(String.format("/%s", id1_1)));
@@ -365,6 +514,20 @@ public class RequestExpirationApiTest extends ApiTests {
     JsonObject response1_4 = getById(requestStorageUrl(String.format("/%s", id1_4)));
     JsonObject response1_5 = getById(requestStorageUrl(String.format("/%s", id1_5)));
     JsonObject response1_6 = getById(requestStorageUrl(String.format("/%s", id1_6)));
+
+    JsonObject response2_1 = getById(requestStorageUrl(String.format("/%s", id2_1)));
+    JsonObject response2_2 = getById(requestStorageUrl(String.format("/%s", id2_2)));
+    JsonObject response2_3 = getById(requestStorageUrl(String.format("/%s", id2_3)));
+    JsonObject response2_4 = getById(requestStorageUrl(String.format("/%s", id2_4)));
+    JsonObject response2_5 = getById(requestStorageUrl(String.format("/%s", id2_5)));
+    JsonObject response2_6 = getById(requestStorageUrl(String.format("/%s", id2_6)));
+
+    JsonObject response3_1 = getById(requestStorageUrl(String.format("/%s", id3_1)));
+    JsonObject response3_2 = getById(requestStorageUrl(String.format("/%s", id3_2)));
+    JsonObject response3_3 = getById(requestStorageUrl(String.format("/%s", id3_3)));
+    JsonObject response3_4 = getById(requestStorageUrl(String.format("/%s", id3_4)));
+    JsonObject response3_5 = getById(requestStorageUrl(String.format("/%s", id3_5)));
+    JsonObject response3_6 = getById(requestStorageUrl(String.format("/%s", id3_6)));
 
     assertThat(response1_1.getString("status"), is(OPEN_NOT_YET_FILLED));
     assertThat(response1_1.getInteger("position"), is(1));
@@ -383,6 +546,42 @@ public class RequestExpirationApiTest extends ApiTests {
 
     assertThat(response1_6.getString("status"), is(CLOSED_UNFILLED));
     assertThat(response1_6.containsKey("position"), is(false));
+
+    assertThat(response2_1.getString("status"), is(OPEN_NOT_YET_FILLED));
+    assertThat(response2_1.getInteger("position"), is(1));
+
+    assertThat(response2_2.getString("status"), is(CLOSED_UNFILLED));
+    assertThat(response2_2.containsKey("position"), is(false));
+
+    assertThat(response2_3.getString("status"), is(CLOSED_UNFILLED));
+    assertThat(response2_3.containsKey("position"), is(false));
+
+    assertThat(response2_4.getString("status"), is(OPEN_NOT_YET_FILLED));
+    assertThat(response2_4.getInteger("position"), is(2));
+
+    assertThat(response2_5.getString("status"), is(OPEN_NOT_YET_FILLED));
+    assertThat(response2_5.getInteger("position"), is(3));
+
+    assertThat(response2_6.getString("status"), is(CLOSED_UNFILLED));
+    assertThat(response2_6.containsKey("position"), is(false));
+
+    assertThat(response3_1.getString("status"), is(OPEN_NOT_YET_FILLED));
+    assertThat(response3_1.getInteger("position"), is(1));
+
+    assertThat(response3_2.getString("status"), is(CLOSED_UNFILLED));
+    assertThat(response3_2.containsKey("position"), is(false));
+
+    assertThat(response3_3.getString("status"), is(CLOSED_UNFILLED));
+    assertThat(response3_3.containsKey("position"), is(false));
+
+    assertThat(response3_4.getString("status"), is(OPEN_NOT_YET_FILLED));
+    assertThat(response3_4.getInteger("position"), is(2));
+
+    assertThat(response3_5.getString("status"), is(CLOSED_PICKUP_EXPIRED));
+    assertThat(response3_5.containsKey("position"), is(false));
+
+    assertThat(response3_6.getString("status"), is(CLOSED_UNFILLED));
+    assertThat(response3_6.containsKey("position"), is(false));
   }
 
   @Test

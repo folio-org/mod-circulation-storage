@@ -32,6 +32,8 @@ public class ExpirationTool {
 
   private static final String QUERY_TO_LOOK_FOR_EXPIRED_UNFILLED = "(status == \"%s\" AND requestExpirationDate < \"%s\")";
   private static final String QUERY_TO_LOOK_FOR_EXPIRED_AWAITING_PICKUP = "(status == \"%s\" AND holdShelfExpirationDate < \"%s\")";
+  private static final List<String> itemIds = new ArrayList<>();
+  private static final List<String> requestIds = new ArrayList<>();
 
   private ExpirationTool() {
     //do nothing
@@ -55,7 +57,8 @@ public class ExpirationTool {
     Future<Integer> future = Future.future();
     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
     simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-    String nowDateString = simpleDateFormat.format(new Date());
+    Date now = new Date();
+    String nowDateString = simpleDateFormat.format(now);
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
     pgClient.setIdField("_id");
     String query = String.format(
@@ -69,7 +72,7 @@ public class ExpirationTool {
           future.tryComplete();
         } else {
           List<Request> requestList = reply.result().getResults();
-          List<Future> futureList = closeRequests(vertx, tenant, requestList);
+          List<Future> futureList = closeRequests(vertx, tenant, requestList, now);
           CompositeFuture.join(futureList)
             .setHandler(compRes -> future.complete(countSucceeded(futureList)));
         }
@@ -81,13 +84,13 @@ public class ExpirationTool {
   }
 
   /* For each expired request set Closed status and remove position*/
-  private static List<Future> closeRequests(Vertx vertx, String tenant, List<Request> requestList) {
+  private static List<Future> closeRequests(Vertx vertx, String tenant, List<Request> requestList, Date now) {
 
     return requestList.stream()
       .map(ExpirationTool::changeRequestStatus)
       .map(req -> req.withPosition(null))
       .map(req -> saveRequest(vertx, tenant, req)
-        .compose(v -> updateRequestQueue(vertx, tenant, req)))
+        .compose(v -> updateRequestQueue(vertx, tenant, req, now)))
       .collect(Collectors.toList());
   }
 
@@ -101,7 +104,7 @@ public class ExpirationTool {
   }
 
   /* update request queue, request positions adjustment with same itemId */
-  private static Future<Void> updateRequestQueue(Vertx vertx, String tenant, Request request) {
+  private static Future<Void> updateRequestQueue(Vertx vertx, String tenant, Request request, Date now) {
     Future<Void> future = Future.future();
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
     pgClient.setIdField("_id");
@@ -115,13 +118,22 @@ public class ExpirationTool {
       pgClient.get(REQUEST_TABLE, Request.class, new String[]{"*"}, initCqlWrapper(requestQueueQuery), true, false, res -> {
         if (!res.failed()) {
           List<Request> list = res.result().getResults();
-          if (list.isEmpty()) {
+          List<Request> listNonExpired = new ArrayList<>();
+          for (Request req : list) {
+            /* exclude expired requests from list */
+            if (
+              !(req.getStatus() != null && req.getHoldShelfExpirationDate() != null && req.getStatus() == OPEN_AWAITING_PICKUP && req.getHoldShelfExpirationDate().before(now)) &&
+              !(req.getStatus() != null && req.getRequestExpirationDate() != null && req.getStatus() == OPEN_NOT_YET_FILLED && req.getRequestExpirationDate().before(now))) {
+              listNonExpired.add(req);
+            }
+          }
+          if (listNonExpired.isEmpty()) {
             future.tryComplete();
           } else {
             Future<Void> cleanFuture = cleanRequestPositions(vertx, tenant, request.getItemId());
             cleanFuture.setHandler(cleanReply -> {
               if (cleanReply.succeeded()) {
-                List<Future> reorderList = reorderRequests(vertx, tenant, res.result().getResults());
+                List<Future> reorderList = reorderRequests(vertx, tenant, listNonExpired);
                 CompositeFuture.join(reorderList).setHandler(compRes -> future.complete());
               } else {
                 future.fail(cleanReply.cause());
@@ -140,8 +152,13 @@ public class ExpirationTool {
 
   /* positions should be removed for each request with itemId before adjustment due to itemId-position unique index */
   private static Future<Void> cleanRequestPositions(Vertx vertx, String tenant, String itemId) {
+    if (itemIds.contains(itemId)) {
+      return Future.succeededFuture();
+    } else {
+      itemIds.add(itemId);
+    }
+
     Future<Void> future = Future.future();
-    //Get a list of tenants
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
     String cleanQuery = String.format("UPDATE %1$s.%2$s SET jsonb = jsonb - 'position' WHERE jsonb->>'itemId' = '%3$s'",
       PostgresClient.convertToPsqlStandard(tenant), REQUEST_TABLE, itemId);
@@ -168,6 +185,11 @@ public class ExpirationTool {
   }
 
   private static Future<Void> saveRequest(Vertx vertx, String tenant, Request request) {
+    if (requestIds.contains(request.getId())) {
+      return Future.succeededFuture();
+    } else {
+      requestIds.add(request.getId());
+    }
     Future<Void> future = Future.future();
     try {
       PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
