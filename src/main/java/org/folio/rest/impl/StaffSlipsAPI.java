@@ -288,7 +288,6 @@ public class StaffSlipsAPI implements StaffSlipsStorage {
           postgresClient.get(STAFF_SLIP_TABLE, STAFF_SLIP_CLASS, criterion, true, false, reply -> {
             if (reply.succeeded()) {
 
-              @SuppressWarnings("unchecked")
               List<StaffSlip> staffSlips = (List<StaffSlip>) reply.result().getResults();
 
               if (staffSlips.size() == 1) {
