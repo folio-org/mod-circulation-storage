@@ -623,10 +623,6 @@ public class RequestPoliciesApiTest extends ApiTests {
     assertThat("Request should have created user",
       metadata.getString("createdByUserId"), is(creatorId));
 
-    assertThat("Request should have created date close to when request was made",
-      metadata.getString("createdDate"),
-      is(withinSecondsAfter(Seconds.seconds(2), requestMade)));
-
     //RAML-Module-Builder also populates updated information at creation time
     assertThat("Request should have updated user",
       metadata.getString("updatedByUserId"), is(creatorId));

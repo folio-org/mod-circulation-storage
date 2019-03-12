@@ -76,14 +76,6 @@ public class CirculationRulesApiTest extends ApiTests {
     return response.getBody();
   }
 
-  @Test
-  public void a_getInitialEmptyFile() throws Exception {
-    JsonObject json = get();
-    assertThat(json.getString("rulesAsText"), is(""));
-    uuid = json.getString("id");
-    assertThat(uuid, is(notNullValue()));
-  }
-
   public void putAndGet(CirculationRules circulationRules) throws Exception {
     put204(circulationRules);
     JsonObject json = get();
