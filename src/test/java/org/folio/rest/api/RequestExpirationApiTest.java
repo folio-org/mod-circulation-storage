@@ -32,7 +32,8 @@ public class RequestExpirationApiTest extends ApiTests {
   private static final String REQUEST_TABLE = "request";
 
   @Before
-  public void beforeEach() throws MalformedURLException {
+  public void beforeEach()
+    throws MalformedURLException {
 
     StorageTestSuite.deleteAll(requestStorageUrl());
   }
@@ -43,13 +44,24 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void canExpireASingleOpenUnfilledRequest() throws InterruptedException, MalformedURLException, TimeoutException,
-      ExecutionException {
+  public void canExpireASingleOpenUnfilledRequest()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
 
-    createEntity(new RequestRequestBuilder().hold().withId(id).withRequestExpiration(new DateTime(2017, 7, 30, 10, 22, 54,
-        DateTimeZone.UTC)).withItemId(itemId).withPosition(1).withStatus(OPEN_NOT_YET_FILLED).create(), requestStorageUrl());
+    createEntity(
+      new RequestRequestBuilder()
+      .hold()
+      .withId(id)
+      .withRequestExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+      .withItemId(itemId)
+      .withPosition(1)
+      .withStatus(OPEN_NOT_YET_FILLED)
+      .create(),
+      requestStorageUrl());
 
     expireRequests();
 
@@ -60,15 +72,25 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void canExpireASingleOpenAwaitingPickupRequest() throws InterruptedException, MalformedURLException,
-      TimeoutException, ExecutionException {
+  public void canExpireASingleOpenAwaitingPickupRequest()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
 
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
 
-    createEntity(new RequestRequestBuilder().hold().withId(id).withHoldShelfExpiration(new DateTime(2017, 7, 30, 10, 22, 54,
-        DateTimeZone.UTC)).withItemId(itemId).withPosition(1).withStatus(OPEN_AWAITING_PICKUP).create(),
-        requestStorageUrl());
+    createEntity(
+      new RequestRequestBuilder()
+      .hold()
+      .withId(id)
+      .withHoldShelfExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+      .withItemId(itemId)
+      .withPosition(1)
+      .withStatus(OPEN_AWAITING_PICKUP)
+      .create(),
+      requestStorageUrl());
 
     expireRequests();
 
@@ -79,8 +101,11 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void canExpireAnFirstAwaitingPickupRequest() throws InterruptedException, MalformedURLException, TimeoutException,
-      ExecutionException {
+  public void canExpireAnFirstAwaitingPickupRequest()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
 
     UUID id1 = UUID.randomUUID();
     UUID id2 = UUID.randomUUID();
@@ -88,17 +113,40 @@ public class RequestExpirationApiTest extends ApiTests {
     UUID itemId = UUID.randomUUID();
 
     /* Status "Open - Awaiting pickup" and hold shelf expiration date in the past - should be expired */
-    createEntity(new RequestRequestBuilder().hold().withId(id1).withHoldShelfExpiration(new DateTime(2017, 7, 30, 10, 22, 54,
-        DateTimeZone.UTC)).withItemId(itemId).withPosition(1).withStatus(OPEN_AWAITING_PICKUP).create(),
-        requestStorageUrl());
+    createEntity(
+      new RequestRequestBuilder()
+      .hold()
+      .withId(id1)
+      .withHoldShelfExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+      .withItemId(itemId)
+      .withPosition(1)
+      .withStatus(OPEN_AWAITING_PICKUP)
+      .create(),
+      requestStorageUrl());
 
     /* Status "Open - not yet filled" and request expiration date in the future - should NOT be expired */
-    createEntity(new RequestRequestBuilder().hold().withId(id2).withHoldShelfExpiration(new DateTime(2017, 7, 30, 10, 22, 54,
-        DateTimeZone.UTC)).withItemId(itemId).withPosition(2).withStatus(OPEN_NOT_YET_FILLED).create(), requestStorageUrl());
+    createEntity(
+      new RequestRequestBuilder()
+      .hold()
+      .withId(id2)
+      .withHoldShelfExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+      .withItemId(itemId)
+      .withPosition(2)
+      .withStatus(OPEN_NOT_YET_FILLED)
+      .create(),
+      requestStorageUrl());
 
     /* Status "Open - Awaiting pickup" and hold shelf expiration date in the future - should NOT be expired */
-    createEntity(new RequestRequestBuilder().hold().withId(id3).withHoldShelfExpiration(new DateTime(9999, 7, 30, 10, 22, 54,
-        DateTimeZone.UTC)).withItemId(itemId).withPosition(3).withStatus(OPEN_NOT_YET_FILLED).create(), requestStorageUrl());
+    createEntity(
+      new RequestRequestBuilder()
+      .hold()
+      .withId(id3)
+      .withHoldShelfExpiration(new DateTime(9999, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+      .withItemId(itemId)
+      .withPosition(3)
+      .withStatus(OPEN_NOT_YET_FILLED)
+      .create(),
+      requestStorageUrl());
 
     expireRequests();
 
@@ -117,8 +165,11 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void canExpireAnFirstOpenUnfilledRequest() throws InterruptedException, MalformedURLException, TimeoutException,
-      ExecutionException {
+  public void canExpireAnFirstOpenUnfilledRequest()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
 
     UUID id1_1 = UUID.randomUUID();
     UUID id1_2 = UUID.randomUUID();
@@ -129,30 +180,72 @@ public class RequestExpirationApiTest extends ApiTests {
     UUID itemId1 = UUID.randomUUID();
 
     /* Status "Open - not yet filled" and request expiration date in the past - should be expired */
-    createEntity(new RequestRequestBuilder().hold().withId(id1_1).withRequestExpiration(new DateTime(2017, 7, 30, 10, 22, 54,
-        DateTimeZone.UTC)).withItemId(itemId1).withPosition(1).withStatus(OPEN_NOT_YET_FILLED).create(),
-        requestStorageUrl());
+    createEntity(
+      new RequestRequestBuilder()
+      .hold()
+      .withId(id1_1)
+      .withRequestExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+      .withItemId(itemId1)
+      .withPosition(1)
+      .withStatus(OPEN_NOT_YET_FILLED)
+      .create(),
+      requestStorageUrl());
 
     /* Status "Open - Awaiting pickup" and request expiration date in the past - should NOT be expired */
-    createEntity(new RequestRequestBuilder().hold().withId(id1_2).withItemId(itemId1).withPosition(2).withStatus(
-        OPEN_NOT_YET_FILLED).create(), requestStorageUrl());
+    createEntity(
+      new RequestRequestBuilder()
+      .hold()
+      .withId(id1_2)
+      .withItemId(itemId1)
+      .withPosition(2)
+      .withStatus(OPEN_NOT_YET_FILLED)
+      .create(),
+      requestStorageUrl());
 
     /* Status "Open - not yet filled" and hold shelf expiration date in the past - should NOT be expired */
-    createEntity(new RequestRequestBuilder().hold().withId(id1_3).withHoldShelfExpiration(new DateTime(2017, 7, 30, 10, 22,
-        54, DateTimeZone.UTC)).withItemId(itemId1).withPosition(3).withStatus(OPEN_NOT_YET_FILLED).create(),
-        requestStorageUrl());
+    createEntity(
+      new RequestRequestBuilder()
+      .hold()
+      .withId(id1_3)
+      .withHoldShelfExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+      .withItemId(itemId1)
+      .withPosition(3)
+      .withStatus(OPEN_NOT_YET_FILLED)
+      .create(),
+      requestStorageUrl());
 
-    createEntity(new RequestRequestBuilder().hold().withId(id1_4).withHoldShelfExpiration(new DateTime(2017, 7, 30, 10, 22,
-        54, DateTimeZone.UTC)).withItemId(itemId1).withPosition(4).withStatus(OPEN_NOT_YET_FILLED).create(),
-        requestStorageUrl());
+    createEntity(
+      new RequestRequestBuilder()
+      .hold()
+      .withId(id1_4)
+      .withHoldShelfExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+      .withItemId(itemId1)
+      .withPosition(4)
+      .withStatus(OPEN_NOT_YET_FILLED)
+      .create(),
+      requestStorageUrl());
 
-    createEntity(new RequestRequestBuilder().hold().withId(id1_5).withHoldShelfExpiration(new DateTime(2017, 7, 30, 10, 22,
-        54, DateTimeZone.UTC)).withItemId(itemId1).withPosition(5).withStatus(OPEN_NOT_YET_FILLED).create(),
-        requestStorageUrl());
+    createEntity(
+      new RequestRequestBuilder()
+      .hold()
+      .withId(id1_5)
+      .withHoldShelfExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+      .withItemId(itemId1)
+      .withPosition(5)
+      .withStatus(OPEN_NOT_YET_FILLED)
+      .create(),
+      requestStorageUrl());
 
-    createEntity(new RequestRequestBuilder().hold().withId(id1_6).withHoldShelfExpiration(new DateTime(2017, 7, 30, 10, 22,
-        54, DateTimeZone.UTC)).withItemId(itemId1).withPosition(6).withStatus(OPEN_NOT_YET_FILLED).create(),
-        requestStorageUrl());
+    createEntity(
+      new RequestRequestBuilder()
+      .hold()
+      .withId(id1_6)
+      .withHoldShelfExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+      .withItemId(itemId1)
+      .withPosition(6)
+      .withStatus(OPEN_NOT_YET_FILLED)
+      .create(),
+      requestStorageUrl());
 
     expireRequests();
 
@@ -183,8 +276,11 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void canExpireOpenUnfilledRequestsInTheMiddleOfAQueue() throws InterruptedException, MalformedURLException,
-      TimeoutException, ExecutionException {
+  public void canExpireOpenUnfilledRequestsInTheMiddleOfAQueue()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
 
     UUID id1_1 = UUID.randomUUID();
     UUID id1_2 = UUID.randomUUID();
@@ -194,30 +290,72 @@ public class RequestExpirationApiTest extends ApiTests {
     UUID id1_6 = UUID.randomUUID();
     UUID itemId1 = UUID.randomUUID();
 
-    createEntity(new RequestRequestBuilder().hold().withId(id1_1).withRequestExpiration(new DateTime(9999, 7, 30, 10, 22, 54,
-        DateTimeZone.UTC)).withItemId(itemId1).withPosition(1).withStatus(OPEN_NOT_YET_FILLED).create(),
-        requestStorageUrl());
+    createEntity(
+      new RequestRequestBuilder()
+      .hold()
+      .withId(id1_1)
+      .withRequestExpiration(new DateTime(9999, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+      .withItemId(itemId1)
+      .withPosition(1)
+      .withStatus(OPEN_NOT_YET_FILLED)
+      .create(),
+      requestStorageUrl());
 
     /* Expired */
-    createEntity(new RequestRequestBuilder().hold().withId(id1_2).withRequestExpiration(new DateTime(2000, 7, 30, 10, 22, 54,
-        DateTimeZone.UTC)).withItemId(itemId1).withPosition(2).withStatus(OPEN_NOT_YET_FILLED).create(),
-        requestStorageUrl());
+    createEntity(
+      new RequestRequestBuilder()
+      .hold()
+      .withId(id1_2)
+      .withRequestExpiration(new DateTime(2000, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+      .withItemId(itemId1)
+      .withPosition(2)
+      .withStatus(OPEN_NOT_YET_FILLED)
+      .create(),
+      requestStorageUrl());
 
     /* Expired */
-    createEntity(new RequestRequestBuilder().hold().withId(id1_3).withRequestExpiration(new DateTime(2001, 7, 30, 10, 22, 54,
-        DateTimeZone.UTC)).withItemId(itemId1).withPosition(3).withStatus(OPEN_NOT_YET_FILLED).create(),
-        requestStorageUrl());
+    createEntity(
+      new RequestRequestBuilder()
+      .hold()
+      .withId(id1_3)
+      .withRequestExpiration(new DateTime(2001, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+      .withItemId(itemId1)
+      .withPosition(3)
+      .withStatus(OPEN_NOT_YET_FILLED)
+      .create(),
+      requestStorageUrl());
 
-    createEntity(new RequestRequestBuilder().hold().withId(id1_4).withItemId(itemId1).withPosition(4).withStatus(
-        OPEN_NOT_YET_FILLED).create(), requestStorageUrl());
+    createEntity(
+      new RequestRequestBuilder()
+      .hold()
+      .withId(id1_4)
+      .withItemId(itemId1)
+      .withPosition(4)
+      .withStatus(OPEN_NOT_YET_FILLED)
+      .create(),
+      requestStorageUrl());
 
-    createEntity(new RequestRequestBuilder().hold().withId(id1_5).withItemId(itemId1).withPosition(5).withStatus(
-        OPEN_NOT_YET_FILLED).create(), requestStorageUrl());
+    createEntity(
+      new RequestRequestBuilder()
+      .hold()
+      .withId(id1_5)
+      .withItemId(itemId1)
+      .withPosition(5)
+      .withStatus(OPEN_NOT_YET_FILLED)
+      .create(),
+      requestStorageUrl());
 
     /* Expired */
-    createEntity(new RequestRequestBuilder().hold().withId(id1_6).withRequestExpiration(new DateTime(2001, 7, 30, 10, 22, 54,
-        DateTimeZone.UTC)).withItemId(itemId1).withPosition(6).withStatus(OPEN_NOT_YET_FILLED).create(),
-        requestStorageUrl());
+    createEntity(
+      new RequestRequestBuilder()
+      .hold()
+      .withId(id1_6)
+      .withRequestExpiration(new DateTime(2001, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+      .withItemId(itemId1)
+      .withPosition(6)
+      .withStatus(OPEN_NOT_YET_FILLED)
+      .create(),
+      requestStorageUrl());
 
     expireRequests();
 
@@ -248,14 +386,25 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void canExpireOpenUnfilledWithNoExpirationDate() throws InterruptedException, MalformedURLException,
-      TimeoutException, ExecutionException {
+  public void canExpireOpenUnfilledWithNoExpirationDate()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
 
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
 
-    createEntity(new RequestRequestBuilder().hold().withId(id).withHoldShelfExpiration(new DateTime(2017, 7, 30, 10, 22, 54,
-        DateTimeZone.UTC)).withItemId(itemId).withPosition(1).withStatus(OPEN_NOT_YET_FILLED).create(), requestStorageUrl());
+    createEntity(
+      new RequestRequestBuilder()
+      .hold()
+      .withId(id)
+      .withHoldShelfExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+      .withItemId(itemId)
+      .withPosition(1)
+      .withStatus(OPEN_NOT_YET_FILLED)
+      .create(),
+      requestStorageUrl());
 
     expireRequests();
 
@@ -266,15 +415,25 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void canExpireOpenAwaitingWithNoHoldShelfExpirationDate() throws InterruptedException, MalformedURLException,
-      TimeoutException, ExecutionException {
+  public void canExpireOpenAwaitingWithNoHoldShelfExpirationDate()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
 
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
 
-    createEntity(new RequestRequestBuilder().hold().withId(id).withRequestExpiration(new DateTime(2017, 7, 30, 10, 22, 54,
-        DateTimeZone.UTC)).withItemId(itemId).withPosition(1).withStatus(OPEN_AWAITING_PICKUP).create(),
-        requestStorageUrl());
+    createEntity(
+      new RequestRequestBuilder()
+      .hold()
+      .withId(id)
+      .withRequestExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+      .withItemId(itemId)
+      .withPosition(1)
+      .withStatus(OPEN_AWAITING_PICKUP)
+      .create(),
+      requestStorageUrl());
 
     expireRequests();
 
