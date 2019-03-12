@@ -88,7 +88,7 @@ public class ExpirationTool {
 
     return requestList.stream()
       .map(ExpirationTool::changeRequestStatus)
-      .map(req -> req.withPosition(null))
+      .map(ExpirationTool::changeRequestPosition)
       .map(req -> saveRequest(vertx, tenant, req)
         .compose(v -> updateRequestQueue(vertx, tenant, req, now)))
       .collect(Collectors.toList());
@@ -101,6 +101,10 @@ public class ExpirationTool {
       request.setStatus(CLOSED_PICKUP_EXPIRED);
     }
     return request;
+  }
+
+  private static Request changeRequestPosition(Request request) {
+    return request.withPosition(null);
   }
 
   /* update request queue, request positions adjustment with same itemId */
