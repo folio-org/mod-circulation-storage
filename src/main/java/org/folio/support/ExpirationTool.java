@@ -147,8 +147,7 @@ public class ExpirationTool {
 
     String fullTableName = String.format("%s.%s", PostgresClient.convertToPsqlStandard(tenant), REQUEST_TABLE);
 
-    String query = String.format("UPDATE %1$s SET jsonb = jsonb - 'position' " +
-        "WHERE " +
+    String query = String.format("UPDATE %1$s SET jsonb = jsonb - 'position' WHERE " +
         "jsonb->>'status' = '%2$s' OR " +
         "jsonb->>'status' = '%3$s' OR " +
         "jsonb->>'status' = '%4$s'",
