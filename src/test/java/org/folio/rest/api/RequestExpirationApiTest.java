@@ -282,92 +282,92 @@ public class RequestExpirationApiTest extends ApiTests {
     TimeoutException,
     ExecutionException {
 
-    UUID id1_1 = UUID.randomUUID();
-    UUID id1_2 = UUID.randomUUID();
-    UUID id1_3 = UUID.randomUUID();
-    UUID id1_4 = UUID.randomUUID();
-    UUID id1_5 = UUID.randomUUID();
-    UUID id1_6 = UUID.randomUUID();
-    UUID id2_1 = UUID.randomUUID();
-    UUID id2_2 = UUID.randomUUID();
-    UUID id2_3 = UUID.randomUUID();
-    UUID id2_4 = UUID.randomUUID();
-    UUID id2_5 = UUID.randomUUID();
-    UUID id2_6 = UUID.randomUUID();
-    UUID id3_1 = UUID.randomUUID();
-    UUID id3_2 = UUID.randomUUID();
-    UUID id3_3 = UUID.randomUUID();
-    UUID id3_4 = UUID.randomUUID();
-    UUID id3_5 = UUID.randomUUID();
-    UUID id3_6 = UUID.randomUUID();
-    UUID itemId1 = UUID.randomUUID();
-    UUID itemId2 = UUID.randomUUID();
-    UUID itemId3 = UUID.randomUUID();
+    UUID id1_1 = UUID.fromString("b272d1d0-cf06-45c4-9b6d-0c42a45e5084");
+    UUID id1_2 = UUID.fromString("1f4ddc2a-f247-40d6-811b-cadecf0021e2");
+    UUID id1_3 = UUID.fromString("d4b1458a-8b30-4122-bdf8-58b30364b407");
+    UUID id1_4 = UUID.fromString("f0748267-35ce-411e-88dc-819a3d392a0d");
+    UUID id1_5 = UUID.fromString("76b4c3f2-0d4b-44f9-96b6-05d48925fd6d");
+    UUID id1_6 = UUID.fromString("a5c7c550-33b7-4927-bf0a-dfae4a820359");
+    UUID id2_1 = UUID.fromString("3b6066fd-f338-4743-a4b9-2ed36203923d");
+    UUID id2_2 = UUID.fromString("61318d02-647a-4093-b3d7-7133e5b82136");
+    UUID id2_3 = UUID.fromString("36ae7cf9-0d72-4ab6-b138-27ecc4e1afd1");
+    UUID id2_4 = UUID.fromString("94e23f6a-6c24-4307-b6ce-228c3d4585ca");
+    UUID id2_5 = UUID.fromString("08f93e44-54f2-4b28-b1ca-c665d4c8fa95");
+    UUID id2_6 = UUID.fromString("cab0d674-3fc6-49ad-8421-1f6e4536cc5f");
+    UUID id3_1 = UUID.fromString("0af2c646-cd86-4cc1-8f70-45ba28db7cf3");
+    UUID id3_2 = UUID.fromString("ae06cfad-c7fe-4683-92f4-f814341dde5c");
+    UUID id3_3 = UUID.fromString("5953a293-1383-45f4-aec5-c8cb35bd74f3");
+    UUID id3_4 = UUID.fromString("6df7af12-6e69-497d-b4e9-ce45549166df");
+    UUID id3_5 = UUID.fromString("56e4db24-6410-4c86-ad4d-ffc972dae57a");
+    UUID id3_6 = UUID.fromString("f1e0abe0-e060-470d-9f70-2e49cced2793");
+    UUID itemId1 = UUID.fromString("d64495e6-0cde-45d1-affc-8b602ceccc95");
+    UUID itemId2 = UUID.fromString("f75d5aa8-a161-4a48-b242-dc021d3715fb");
+    UUID itemId3 = UUID.fromString("f9a58c45-7f3a-4e99-a556-986b8f9d1bd8");
 
     createEntity(
       new RequestRequestBuilder()
-      .hold()
-      .withId(id1_1)
-      .withRequestExpiration(new DateTime(9999, 7, 30, 10, 22, 54, DateTimeZone.UTC))
-      .withItemId(itemId1)
-      .withPosition(1)
-      .withStatus(OPEN_NOT_YET_FILLED)
-      .create(),
+        .hold()
+        .withId(id1_1)
+        .withRequestExpiration(new DateTime(9999, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+        .withItemId(itemId1)
+        .withPosition(1)
+        .withStatus(OPEN_NOT_YET_FILLED)
+        .create(),
       requestStorageUrl());
 
     /* Expired */
     createEntity(
       new RequestRequestBuilder()
-      .hold()
-      .withId(id1_2)
-      .withRequestExpiration(new DateTime(2000, 7, 30, 10, 22, 54, DateTimeZone.UTC))
-      .withItemId(itemId1)
-      .withPosition(2)
-      .withStatus(OPEN_NOT_YET_FILLED)
-      .create(),
+        .hold()
+        .withId(id1_2)
+        .withRequestExpiration(new DateTime(2000, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+        .withItemId(itemId1)
+        .withPosition(2)
+        .withStatus(OPEN_NOT_YET_FILLED)
+        .create(),
       requestStorageUrl());
 
     /* Expired */
     createEntity(
       new RequestRequestBuilder()
-      .hold()
-      .withId(id1_3)
-      .withRequestExpiration(new DateTime(2001, 7, 30, 10, 22, 54, DateTimeZone.UTC))
-      .withItemId(itemId1)
-      .withPosition(3)
-      .withStatus(OPEN_NOT_YET_FILLED)
-      .create(),
+        .hold()
+        .withId(id1_3)
+        .withRequestExpiration(new DateTime(2001, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+        .withItemId(itemId1)
+        .withPosition(3)
+        .withStatus(OPEN_NOT_YET_FILLED)
+        .create(),
       requestStorageUrl());
 
     createEntity(
       new RequestRequestBuilder()
-      .hold()
-      .withId(id1_4)
-      .withItemId(itemId1)
-      .withPosition(4)
-      .withStatus(OPEN_NOT_YET_FILLED)
-      .create(),
+        .hold()
+        .withId(id1_4)
+        .withItemId(itemId1)
+        .withPosition(4)
+        .withStatus(OPEN_NOT_YET_FILLED)
+        .create(),
       requestStorageUrl());
 
     createEntity(
       new RequestRequestBuilder()
-      .hold()
-      .withId(id1_5)
-      .withItemId(itemId1)
-      .withPosition(5)
-      .withStatus(OPEN_NOT_YET_FILLED)
-      .create(),
+        .hold()
+        .withId(id1_5)
+        .withItemId(itemId1)
+        .withPosition(5)
+        .withStatus(OPEN_NOT_YET_FILLED)
+        .create(),
       requestStorageUrl());
 
     /* Expired */
     createEntity(
       new RequestRequestBuilder()
-      .hold()
-      .withId(id1_6)
-      .withRequestExpiration(new DateTime(2001, 7, 30, 10, 22, 54, DateTimeZone.UTC))
-      .withItemId(itemId1)
-      .withPosition(6)
-      .withStatus(OPEN_NOT_YET_FILLED)
+        .hold()
+        .withId(id1_6)
+        .withRequestExpiration(new DateTime(2001, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+        .withItemId(itemId1)
+        .withPosition(6)
+        .withStatus(OPEN_NOT_YET_FILLED)
       .create(),
       requestStorageUrl());
 
@@ -645,6 +645,6 @@ public class RequestExpirationApiTest extends ApiTests {
   private void expireRequests() throws InterruptedException, ExecutionException, TimeoutException {
     CompletableFuture<Void> expirationCompleted = new CompletableFuture<>();
     ExpirationTool.doRequestExpiration(StorageTestSuite.getVertx()).setHandler(res -> expirationCompleted.complete(null));
-    expirationCompleted.get(20, TimeUnit.SECONDS);
+    expirationCompleted.get(5, TimeUnit.SECONDS);
   }
 }

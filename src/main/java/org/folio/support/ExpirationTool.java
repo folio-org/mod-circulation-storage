@@ -32,18 +32,13 @@ public class ExpirationTool {
 
   private static final String QUERY_TO_LOOK_FOR_EXPIRED_UNFILLED = "(status == \"%s\" AND requestExpirationDate < \"%s\")";
   private static final String QUERY_TO_LOOK_FOR_EXPIRED_AWAITING_PICKUP = "(status == \"%s\" AND holdShelfExpirationDate < \"%s\")";
-  private static List<String> itemIds = null;
-  private static List<String> requestIds = null;
 
   private ExpirationTool() {
     //do nothing
   }
 
   public static Future<Void> doRequestExpiration(Vertx vertx) {
-    itemIds = new ArrayList<>();
-    requestIds = new ArrayList<>();
     Future<ResultSet> future = Future.future();
-
     PostgresClient pgClient = PostgresClient.getInstance(vertx);
     String tenantQuery = "select nspname from pg_catalog.pg_namespace where nspname LIKE '%_mod_circulation_storage';";
     pgClient.select(tenantQuery, future.completer());
@@ -57,6 +52,9 @@ public class ExpirationTool {
 
   private static Future<Integer> doRequestExpirationForTenant(Vertx vertx, String tenant) {
     Date currentDate = new Date();
+    List<String> itemIds = new ArrayList<>();
+    List<String> itemIdsForQueue = new ArrayList<>();
+    List<String> requestIds = new ArrayList<>();
     Future<Integer> future = Future.future();
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
     pgClient.setIdField("_id");
@@ -71,7 +69,7 @@ public class ExpirationTool {
           future.tryComplete();
         } else {
           List<Request> requestList = reply.result().getResults();
-          List<Future> futureList = closeRequests(vertx, tenant, requestList, currentDate);
+          List<Future> futureList = closeRequests(vertx, tenant, requestList, currentDate, itemIds, itemIdsForQueue, requestIds);
           CompositeFuture.join(futureList)
             .setHandler(compRes -> future.complete(countSucceeded(futureList)));
         }
@@ -89,13 +87,13 @@ public class ExpirationTool {
   }
 
   /* For each expired request set Closed status and remove position*/
-  private static List<Future> closeRequests(Vertx vertx, String tenant, List<Request> requestList, Date currentDate) {
-
+  private static List<Future> closeRequests(Vertx vertx, String tenant, List<Request> requestList, Date currentDate, List<String> itemIds, List<String> itemIdsForQueue, List<String> requestIds) {
     return requestList.stream()
       .map(ExpirationTool::changeRequestStatus)
       .map(ExpirationTool::changeRequestPosition)
-      .map(req -> saveRequest(vertx, tenant, req)
-        .compose(v -> updateRequestQueue(vertx, tenant, req, currentDate)))
+      .map(req -> saveRequest(vertx, tenant, req, requestIds)
+        .compose(v -> cleanRequestPositions(vertx, tenant, req.getItemId(), itemIds))
+        .compose(v -> updateRequestQueue(vertx, tenant, req.getItemId(), currentDate, itemIdsForQueue, requestIds)))
       .collect(Collectors.toList());
   }
 
@@ -113,48 +111,46 @@ public class ExpirationTool {
   }
 
   /* update request queue, request positions adjustment with same itemId */
-  private static Future<Void> updateRequestQueue(Vertx vertx, String tenant, Request request, Date currentDate) {
+  private static Future<Void> updateRequestQueue(Vertx vertx, String tenant, String itemId, Date currentDate, List<String> itemIdsForQueue, List<String> requestIds) {
     Future<Void> future = Future.future();
-    PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
-    pgClient.setIdField("_id");
-    try {
-      pgClient.get(REQUEST_TABLE, Request.class, new String[]{"*"}, initCqlWrapper(getQueueQuery(request.getItemId())), true, false, res -> {
-        if (!res.failed()) {
-          List<Request> list = res.result().getResults();
-          List<Request> listNonExpired = new ArrayList<>();
-          for (Request req : list) {
-            /* exclude expired requests from list */
-            if (
-              !(req.getStatus() != null &&
-                req.getHoldShelfExpirationDate() != null &&
-                req.getStatus() == OPEN_AWAITING_PICKUP &&
-                req.getHoldShelfExpirationDate().before(currentDate)) &&
-              !(req.getStatus() != null &&
-                req.getRequestExpirationDate() != null &&
-                req.getStatus() == OPEN_NOT_YET_FILLED &&
-                req.getRequestExpirationDate().before(currentDate))) {
-              listNonExpired.add(req);
-            }
-          }
-          if (listNonExpired.isEmpty()) {
-            future.tryComplete();
-          } else {
-            Future<Void> cleanFuture = cleanRequestPositions(vertx, tenant, request.getItemId());
-            cleanFuture.setHandler(cleanReply -> {
-              if (cleanReply.succeeded()) {
-                List<Future> reorderList = reorderRequests(vertx, tenant, listNonExpired);
-                CompositeFuture.join(reorderList).setHandler(compRes -> future.complete());
-              } else {
-                future.fail(cleanReply.cause());
+    if (itemIdsForQueue.contains(itemId)) {
+      future.tryComplete();
+    } else {
+      itemIdsForQueue.add(itemId);
+      PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
+      pgClient.setIdField("_id");
+      try {
+        pgClient.get(REQUEST_TABLE, Request.class, new String[]{"*"}, initCqlWrapper(getQueueQuery(itemId)), true, false, res -> {
+          if (!res.failed()) {
+            List<Request> list = res.result().getResults();
+            List<Request> listNonExpired = new ArrayList<>();
+            for (Request req : list) {
+              /* exclude expired requests from list */
+              if (
+                !(req.getStatus() != null &&
+                  req.getHoldShelfExpirationDate() != null &&
+                  req.getStatus() == OPEN_AWAITING_PICKUP &&
+                  req.getHoldShelfExpirationDate().before(currentDate)) &&
+                  !(req.getStatus() != null &&
+                    req.getRequestExpirationDate() != null &&
+                    req.getStatus() == OPEN_NOT_YET_FILLED &&
+                    req.getRequestExpirationDate().before(currentDate))) {
+                listNonExpired.add(req);
               }
-            });
+            }
+            if (listNonExpired.isEmpty()) {
+              future.tryComplete();
+            } else {
+              List<Future> reorderList = reorderRequests(vertx, tenant, listNonExpired, requestIds);
+              CompositeFuture.join(reorderList).setHandler(compRes -> future.complete());
+            }
+          } else {
+            future.fail(res.cause());
           }
-        } else {
-          future.fail(res.cause());
-        }
-      });
-    } catch (FieldException e) {
-      future.fail(e.getLocalizedMessage());
+        });
+      } catch (FieldException e) {
+        future.fail(e.getLocalizedMessage());
+      }
     }
     return future;
   }
@@ -169,62 +165,61 @@ public class ExpirationTool {
   }
 
   /* positions should be removed for each request with itemId before adjustment due to itemId-position unique index */
-  private static Future<Void> cleanRequestPositions(Vertx vertx, String tenant, String itemId) {
+  private static Future<Void> cleanRequestPositions(Vertx vertx, String tenant, String itemId, List<String> itemIds) {
+    Future<Void> future = Future.future();
     if (itemIds.contains(itemId)) {
-      return Future.succeededFuture();
+      future.tryComplete();
     } else {
       itemIds.add(itemId);
+      PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
+      String cleanQuery = String.format("UPDATE %1$s.%2$s SET jsonb = jsonb - 'position' WHERE jsonb->>'itemId' = '%3$s'",
+        PostgresClient.convertToPsqlStandard(tenant), REQUEST_TABLE, itemId);
+      pgClient.execute(cleanQuery, reply -> {
+        if (reply.failed()) {
+          future.fail(reply.cause());
+        } else {
+          future.complete();
+        }
+      });
     }
-
-    Future<Void> future = Future.future();
-    PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
-    String cleanQuery = String.format("UPDATE %1$s.%2$s SET jsonb = jsonb - 'position' WHERE jsonb->>'itemId' = '%3$s'",
-      PostgresClient.convertToPsqlStandard(tenant), REQUEST_TABLE, itemId);
-    pgClient.execute(cleanQuery, reply -> {
-      if (reply.failed()) {
-        future.fail(reply.cause());
-      } else {
-        future.complete();
-      }
-    });
     return future;
   }
 
-  private static List<Future> reorderRequests(Vertx vertx, String tenant, List<Request> requestList) {
+  private static List<Future> reorderRequests(Vertx vertx, String tenant, List<Request> requestList, List<String> requestIds) {
     List<Future> futureList = new ArrayList<>();
     int currentPosition = 1;
     for (Request request : requestList) {
       final int position = currentPosition;
-      Future<Void> saveFuture = saveRequest(vertx, tenant, request.withPosition(position));
+      Future<Void> saveFuture = saveRequest(vertx, tenant, request.withPosition(position), requestIds);
       futureList.add(saveFuture);
       currentPosition++;
     }
     return futureList;
   }
 
-  private static Future<Void> saveRequest(Vertx vertx, String tenant, Request request) {
+  private static Future<Void> saveRequest(Vertx vertx, String tenant, Request request, List<String> requestIds) {
+    Future<Void> future = Future.future();
     if (requestIds.contains(request.getId())) {
-      return Future.succeededFuture();
+      future.tryComplete();
     } else {
       requestIds.add(request.getId());
-    }
-    Future<Void> future = Future.future();
-    try {
-      PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
-      pgClient.setIdField("_id");
-      Criteria idCrit = new Criteria("ramls/request.json");
-      idCrit.addField("'id'").setOperation("=").setValue(request.getId());
-      Criterion criterion = new Criterion(idCrit);
+      try {
+        PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
+        pgClient.setIdField("_id");
+        Criteria idCrit = new Criteria("ramls/request.json");
+        idCrit.addField("'id'").setOperation("=").setValue(request.getId());
+        Criterion criterion = new Criterion(idCrit);
 
-      pgClient.update(REQUEST_TABLE, request, criterion, true, updateReply -> {
-        if (updateReply.failed()) {
-          future.fail(updateReply.cause());
-        } else {
-          future.complete();
-        }
-      });
-    } catch (Exception e) {
-      future.tryFail(e);
+        pgClient.update(REQUEST_TABLE, request, criterion, true, updateReply -> {
+          if (updateReply.failed()) {
+            future.fail(updateReply.cause());
+          } else {
+            future.complete();
+          }
+        });
+      } catch (Exception e) {
+        future.tryFail(e);
+      }
     }
     return future;
   }
