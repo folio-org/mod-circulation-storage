@@ -20,6 +20,28 @@
           "removeAccents": true,
           "whereClause": "WHERE lower(f_unaccent((jsonb->'status'->>'name'))) LIKE 'open'"
         }
+      ],
+      "ginIndex": [
+        {
+          "fieldName": "userId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "itemId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        }
+      ],
+      "index": [
+        {
+          "fieldName": "id",
+          "tOps": "ADD",
+          "caseSensitive": true,
+          "removeAccents": false
+        }
       ]
     },
     {
