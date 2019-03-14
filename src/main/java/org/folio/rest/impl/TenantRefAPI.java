@@ -29,7 +29,8 @@ public class TenantRefAPI extends TenantAPI {
         .withIdContent()
         .add("loan-policy-storage/loan-policies")
         .add("request-policy-storage/request-policies")
-        .add("patron-notice-policy-storage/notice-policies")
+        .add("notice-policy-storage/notice-policies",
+          "patron-notice-policy-storage/patron-notice-policies")
         .add("staff-slips-storage/staff-slips")
         .withIdRaw()
         .add("circulation-rules-storage")
