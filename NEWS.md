@@ -1,3 +1,26 @@
+## 7.0.0 2019-03-15
+
+* Expires unfulfilled requests  (CIRCSTORE-108, CIRCSTORE-107, CIRCSTORE-113) 
+* Expires requests on the hold shelf (CIRCSTORE-109, CIRCSTORE-107, CIRCSTORE-113)
+* Introduces request policies (CIRCSTORE-97)
+* Introduces initial patron notice policies (CIRCSTORE-89, CIRCSTORE-90, CIRCSTORE-91, CIRCSTORE-92, CIRCSTORE-93, CIRCSTORE-100, CIRCSTORE-111, CIRCSTORE-112) 
+* Renames loan rules storage to circulation rules storage (CIRCSTORE-102)
+* Introduces `Closed - Unfilled`, `Closed - Pickup expired` and `Open - In transit` request states ( CIRCSTORE-101, CIRCSTORE-109, CIRCSTORE-110)
+* Adds `opening time offset period` to loan policy (CIRCSTORE-64)
+* Adds `tags` to requests (CIRCSTORE-99)
+* Improves CQL Query performance improvements (CIRCSTORE-114)
+* Removes `alternative loan period for items with requests` from loan policy (CIRCSTORE-96)
+* Adds `action comment` to loans (CIRCSTORE-87)
+* Loads reference and sample records during tenant initialization (CIRCSTORE-103, CIRCSTORE-116, FOLIO-1782)
+* Upgrades to `RAML Module Builder 23.11.0`
+* Provides `loan-stotage 5.3`
+* Provides `circulation-rules-storage 1.0` (instead of `loan-rules-storage 1.0`)
+* Provides `loan-policy-storage 2.0`
+* Provides `request-storage 3.0`
+* Provides `patron-notice-policy-storage 0.7`
+* Provides `request-policy-storage 1.0`
+* Provides `_tenant 1.2`
+
 ## 6.2.0 2018-11-23
 
 * Adds `checkinServicePointId` and `checkoutServicePointId` to a loan (CIRCSTORE-77)
