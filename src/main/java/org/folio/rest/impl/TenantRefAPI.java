@@ -37,7 +37,7 @@ public class TenantRefAPI extends TenantAPI {
         .withIdContent()
         .add("cancellation-reason-storage/cancellation-reasons")
         .withKey("loadSample").withLead("sample-data")
-        .add("items", "loans-storage/loans")
+        .add("loans", "loan-storage/loans")
         .add("requests", "request-storage/requests")
         .perform(ta, headers, vertx, res1 -> {
           if (res1.failed()) {
