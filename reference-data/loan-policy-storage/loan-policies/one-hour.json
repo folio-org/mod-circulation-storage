@@ -8,7 +8,7 @@
       "duration" : 1,
       "intervalId" : "Hours"
     },
-    "closedLibraryDueDateManagementId" : "KEEP_CURRENT_DATE"
+    "closedLibraryDueDateManagementId" : "CURRENT_DUE_DATE"
   },
   "renewable" : true,
   "renewalsPolicy" : {
