@@ -9,7 +9,7 @@
       "duration": 1,
       "intervalId": "Months"
     },
-    "closedLibraryDueDateManagementId": "KEEP_CURRENT_DATE",
+    "closedLibraryDueDateManagementId": "CURRENT_DUE_DATE",
     "gracePeriod": {
       "duration": 7,
       "intervalId": "Days"
