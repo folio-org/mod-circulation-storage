@@ -20,7 +20,7 @@ import java.util.Map;
 
 public class CirculationRulesAPI implements CirculationRulesStorage {
   private static final Logger log = LoggerFactory.getLogger(CirculationRulesStorage.class);
-  private static final String CIRCULATION_RULES_TABLE = "circulation_rules";
+  static final String CIRCULATION_RULES_TABLE = "circulation_rules";
 
   private void internalErrorGet(Handler<AsyncResult<Response>> asyncResultHandler, Throwable e) {
     log.error(e);

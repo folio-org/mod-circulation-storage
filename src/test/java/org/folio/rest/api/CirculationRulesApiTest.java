@@ -24,7 +24,7 @@ public class CirculationRulesApiTest extends ApiTests {
   private static final int HTTP_VALIDATION_ERROR = 422;
   private String uuid;
 
-  private static URL rulesStorageUrl() throws MalformedURLException {
+  public static URL rulesStorageUrl() throws MalformedURLException {
     return rulesStorageUrl("");
   }
 

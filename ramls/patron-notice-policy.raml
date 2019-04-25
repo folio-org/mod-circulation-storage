@@ -82,6 +82,11 @@ traits:
         responses:
           204:
             description: "Source record deleted"
+          422:
+            description: "Unprocessable entity"
+            body:
+              application/json:
+                type: errors
           404:
             description: "There is no source record for that patronNoticePolicyId"
             body:

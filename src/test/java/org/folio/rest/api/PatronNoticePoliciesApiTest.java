@@ -4,6 +4,8 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.collection.IsArrayContainingInAnyOrder.arrayContainingInAnyOrder;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
+import static org.folio.rest.api.CirculationRulesApiTest.rulesStorageUrl;
+import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.impl.PatronNoticePoliciesAPI.IN_USE_POLICY_ERROR_MESSAGE;
 import static org.folio.rest.impl.PatronNoticePoliciesAPI.NOT_FOUND;
 import static org.folio.rest.impl.PatronNoticePoliciesAPI.PATRON_NOTICE_POLICY_TABLE;
@@ -26,6 +28,7 @@ import io.vertx.ext.sql.UpdateResult;
 import org.junit.After;
 import org.junit.Test;
 
+import org.folio.rest.jaxrs.model.CirculationRules;
 import org.folio.rest.jaxrs.model.LoanNotice;
 import org.folio.rest.jaxrs.model.PatronNoticePolicy;
 import org.folio.rest.jaxrs.model.RequestNotice;
@@ -56,7 +59,7 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
   public void cleanUp() {
     CompletableFuture<UpdateResult> future = new CompletableFuture<>();
     PostgresClient
-      .getInstance(StorageTestSuite.getVertx(), StorageTestSuite.TENANT_ID)
+      .getInstance(StorageTestSuite.getVertx(), TENANT_ID)
       .delete(PATRON_NOTICE_POLICY_TABLE, new Criterion(), del -> future.complete(del.result()));
     future.join();
   }
@@ -145,7 +148,7 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
 
     CompletableFuture<JsonResponse> getAllCompleted = new CompletableFuture<>();
 
-    client.get(patronNoticePoliciesStorageUrl(), StorageTestSuite.TENANT_ID, ResponseHandler.json(getAllCompleted));
+    client.get(patronNoticePoliciesStorageUrl(), TENANT_ID, ResponseHandler.json(getAllCompleted));
 
     JsonResponse response = getAllCompleted.get(5, TimeUnit.SECONDS);
 
@@ -172,7 +175,7 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
 
     CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
 
-    client.get(patronNoticePoliciesStorageUrl("/" + id), StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
+    client.get(patronNoticePoliciesStorageUrl("/" + id), TENANT_ID, ResponseHandler.json(getCompleted));
 
     JsonResponse response = getCompleted.get(5, TimeUnit.SECONDS);
 
@@ -188,7 +191,7 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
     CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
 
     client.get(patronNoticePoliciesStorageUrl("/" + nonexistentPolicy.getId()),
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
+      TENANT_ID, ResponseHandler.json(getCompleted));
 
     JsonResponse response = getCompleted.get(5, TimeUnit.SECONDS);
 
@@ -221,6 +224,13 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
   public void cannotDeleteInUsePatronNoticePolicy() throws InterruptedException, MalformedURLException,
     TimeoutException, ExecutionException {
 
+    CirculationRules circulationRules = new CirculationRules()
+      .withRulesAsText(IN_USE_NOTICE_POLICY_ID);
+
+    CompletableFuture<JsonResponse> putCompleted = new CompletableFuture<>();
+    client.put(rulesStorageUrl(), circulationRules, TENANT_ID, ResponseHandler.json(putCompleted));
+    putCompleted.join();
+
     JsonResponse response = deletePatronNoticePolicy(IN_USE_NOTICE_POLICY_ID);
     String message = response.getJson().getJsonArray("errors").getJsonObject(0).getString("message");
 
@@ -233,7 +243,7 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
-    client.post(patronNoticePoliciesStorageUrl(), entity, StorageTestSuite.TENANT_ID,
+    client.post(patronNoticePoliciesStorageUrl(), entity, TENANT_ID,
       ResponseHandler.json(createCompleted));
 
     return createCompleted.get(5, TimeUnit.SECONDS);
@@ -244,7 +254,7 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
 
     CompletableFuture<JsonResponse> updateCompleted = new CompletableFuture<>();
 
-    client.put(patronNoticePoliciesStorageUrl("/" + entity.getId()), entity, StorageTestSuite.TENANT_ID,
+    client.put(patronNoticePoliciesStorageUrl("/" + entity.getId()), entity, TENANT_ID,
       ResponseHandler.json(updateCompleted));
 
     return updateCompleted.get(5, TimeUnit.SECONDS);
@@ -255,7 +265,7 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
 
     CompletableFuture<JsonResponse> deleteCompleted = new CompletableFuture<>();
 
-    client.delete(patronNoticePoliciesStorageUrl("/" + patronNoticePolicyId), StorageTestSuite.TENANT_ID,
+    client.delete(patronNoticePoliciesStorageUrl("/" + patronNoticePolicyId), TENANT_ID,
       ResponseHandler.json(deleteCompleted));
 
     return deleteCompleted.get(5, TimeUnit.SECONDS);
