@@ -1,21 +1,13 @@
 package org.folio.rest.api;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.sql.UpdateResult;
-import org.folio.rest.jaxrs.model.LoanNotice;
-import org.folio.rest.jaxrs.model.PatronNoticePolicy;
-import org.folio.rest.jaxrs.model.RequestNotice;
-import org.folio.rest.jaxrs.model.SendOptions;
-import org.folio.rest.jaxrs.model.SendOptions__;
-import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.support.ApiTests;
-import org.folio.rest.support.JsonResponse;
-import org.folio.rest.support.Response;
-import org.folio.rest.support.ResponseHandler;
-import org.junit.After;
-import org.junit.Test;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.collection.IsArrayContainingInAnyOrder.arrayContainingInAnyOrder;
+import static org.hamcrest.junit.MatcherAssert.assertThat;
+
+import static org.folio.rest.impl.PatronNoticePoliciesAPI.IN_USE_POLICY_ERROR_MESSAGE;
+import static org.folio.rest.impl.PatronNoticePoliciesAPI.NOT_FOUND;
+import static org.folio.rest.impl.PatronNoticePoliciesAPI.PATRON_NOTICE_POLICY_TABLE;
+import static org.folio.rest.impl.PatronNoticePoliciesAPI.STATUS_CODE_DUPLICATE_NAME;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -27,10 +19,24 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.folio.rest.impl.PatronNoticePoliciesAPI.*;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.collection.IsArrayContainingInAnyOrder.arrayContainingInAnyOrder;
-import static org.hamcrest.junit.MatcherAssert.assertThat;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.sql.UpdateResult;
+
+import org.junit.After;
+import org.junit.Test;
+
+import org.folio.rest.jaxrs.model.LoanNotice;
+import org.folio.rest.jaxrs.model.PatronNoticePolicy;
+import org.folio.rest.jaxrs.model.RequestNotice;
+import org.folio.rest.jaxrs.model.SendOptions;
+import org.folio.rest.jaxrs.model.SendOptions__;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.Criteria.Criterion;
+import org.folio.rest.support.ApiTests;
+import org.folio.rest.support.JsonResponse;
+import org.folio.rest.support.Response;
+import org.folio.rest.support.ResponseHandler;
 
 public class PatronNoticePoliciesApiTest extends ApiTests {
 
@@ -43,6 +49,8 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
   private PatronNoticePolicy nonexistentPolicy = new PatronNoticePolicy()
     .withId("0f612a84-dc0f-4670-9017-62981ba63644")
     .withName("nonexistentPolicy");
+
+  private static final String IN_USE_NOTICE_POLICY_ID = "16b88363-0d93-464a-967a-ad5ad0f9187c";
 
   @After
   public void cleanUp() {
@@ -207,6 +215,17 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
 
     assertThat(response.getStatusCode(), is(404));
     assertThat(response.getBody(), is(NOT_FOUND));
+  }
+
+  @Test
+  public void cannotDeleteInUsePatronNoticePolicy() throws InterruptedException, MalformedURLException,
+    TimeoutException, ExecutionException {
+
+    JsonResponse response = deletePatronNoticePolicy(IN_USE_NOTICE_POLICY_ID);
+    String message = response.getJson().getJsonArray("errors").getJsonObject(0).getString("message");
+
+    assertThat(response.getStatusCode(), is(422));
+    assertThat(message, is(IN_USE_POLICY_ERROR_MESSAGE));
   }
 
   private JsonResponse createPatronNoticePolicy(PatronNoticePolicy entity) throws MalformedURLException,
