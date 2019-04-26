@@ -163,8 +163,8 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
 
     findCirculationRules(pgClient)
       .map(CirculationRules::getRulesAsText)
-      .map(text -> text.indexOf(patronNoticePolicyId))
-      .compose(index -> index == -1 ? succeededFuture() : failedFuture(new NoticePolicyInUseException(IN_USE_POLICY_ERROR_MESSAGE)))
+      .map(text -> text.contains(patronNoticePolicyId))
+      .compose(contains -> contains ? failedFuture(new NoticePolicyInUseException(IN_USE_POLICY_ERROR_MESSAGE)) : succeededFuture())
       .compose(v -> deleteNoticePolicyById(pgClient, patronNoticePolicyId))
       .map(v -> DeletePatronNoticePolicyStoragePatronNoticePoliciesByPatronNoticePolicyIdResponse.respond204())
       .map(Response.class::cast)
