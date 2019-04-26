@@ -5,7 +5,6 @@ import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 
 import static org.folio.rest.impl.CirculationRulesAPI.CIRCULATION_RULES_TABLE;
@@ -258,12 +257,9 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
     }
 
     if (t.getClass() == NoticePolicyInUseException.class) {
-      Error error = new Error().withMessage(t.getMessage());
-      Errors errors = new Errors().withErrors(singletonList(error));
-
-      return Response.status(422)
-        .header(CONTENT_TYPE, APPLICATION_JSON)
-        .entity(errors)
+      return Response.status(400)
+        .header(CONTENT_TYPE, TEXT_PLAIN)
+        .entity(t.getMessage())
         .build();
     }
 

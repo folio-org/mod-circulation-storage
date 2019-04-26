@@ -39,6 +39,7 @@ import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.TextResponse;
 
 public class PatronNoticePoliciesApiTest extends ApiTests {
 
@@ -231,14 +232,14 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
     CirculationRules circulationRules = new CirculationRules()
       .withRulesAsText(rulesAsText);
 
-    CompletableFuture<JsonResponse> putCompleted = new CompletableFuture<>();
-    client.put(rulesStorageUrl(), circulationRules, TENANT_ID, ResponseHandler.json(putCompleted));
+    CompletableFuture<TextResponse> putCompleted = new CompletableFuture<>();
+    client.put(rulesStorageUrl(), circulationRules, TENANT_ID, ResponseHandler.text(putCompleted));
     putCompleted.get(5, TimeUnit.SECONDS);
 
     JsonResponse response = deletePatronNoticePolicy(inUsePolicyId);
-    String message = response.getJson().getJsonArray("errors").getJsonObject(0).getString("message");
+    String message = response.getBody();
 
-    assertThat(response.getStatusCode(), is(422));
+    assertThat(response.getStatusCode(), is(400));
     assertThat(message, is("Cannot delete in use notice policy"));
   }
 
