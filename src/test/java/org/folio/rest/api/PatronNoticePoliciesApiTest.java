@@ -6,7 +6,6 @@ import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import static org.folio.rest.api.CirculationRulesApiTest.rulesStorageUrl;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
-import static org.folio.rest.impl.PatronNoticePoliciesAPI.IN_USE_POLICY_ERROR_MESSAGE;
 import static org.folio.rest.impl.PatronNoticePoliciesAPI.NOT_FOUND;
 import static org.folio.rest.impl.PatronNoticePoliciesAPI.PATRON_NOTICE_POLICY_TABLE;
 import static org.folio.rest.impl.PatronNoticePoliciesAPI.STATUS_CODE_DUPLICATE_NAME;
@@ -240,7 +239,7 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
     String message = response.getJson().getJsonArray("errors").getJsonObject(0).getString("message");
 
     assertThat(response.getStatusCode(), is(422));
-    assertThat(message, is(IN_USE_POLICY_ERROR_MESSAGE));
+    assertThat(message, is("Cannot delete in use notice policy"));
   }
 
   private JsonResponse createPatronNoticePolicy(PatronNoticePolicy entity) throws MalformedURLException,

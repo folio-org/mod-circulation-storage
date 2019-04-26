@@ -53,7 +53,7 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
   public static final String STATUS_CODE_DUPLICATE_NAME = "duplicate.name";
   public static final String NOT_FOUND = "Not found";
   private static final String INTERNAL_SERVER_ERROR = "Internal server error";
-  public static final String IN_USE_POLICY_ERROR_MESSAGE = "Cannot delete in use notice policy";
+  private static final String IN_USE_POLICY_ERROR_MESSAGE = "Cannot delete in use notice policy";
 
   @Override
   public void getPatronNoticePolicyStoragePatronNoticePolicies(
