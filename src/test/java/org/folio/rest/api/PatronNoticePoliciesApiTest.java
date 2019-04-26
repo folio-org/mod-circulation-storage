@@ -233,7 +233,7 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
 
     CompletableFuture<JsonResponse> putCompleted = new CompletableFuture<>();
     client.put(rulesStorageUrl(), circulationRules, TENANT_ID, ResponseHandler.json(putCompleted));
-    putCompleted.join();
+    putCompleted.get(5, TimeUnit.SECONDS);
 
     JsonResponse response = deletePatronNoticePolicy(inUsePolicyId);
     String message = response.getJson().getJsonArray("errors").getJsonObject(0).getString("message");
