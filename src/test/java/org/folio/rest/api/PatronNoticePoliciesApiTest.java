@@ -53,8 +53,6 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
     .withId("0f612a84-dc0f-4670-9017-62981ba63644")
     .withName("nonexistentPolicy");
 
-  private static final String IN_USE_NOTICE_POLICY_ID = "16b88363-0d93-464a-967a-ad5ad0f9187c";
-
   @After
   public void cleanUp() {
     CompletableFuture<UpdateResult> future = new CompletableFuture<>();
@@ -224,14 +222,21 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
   public void cannotDeleteInUsePatronNoticePolicy() throws InterruptedException, MalformedURLException,
     TimeoutException, ExecutionException {
 
+    String inUsePolicyId = "16b88363-0d93-464a-967a-ad5ad0f9187c";
+
+    String rulesAsText = "priority: t, s, c, b, a, m, g" +
+      "fallback-policy: l 43198de5-f56a-4a53-a0bd-5a324418967a r 4c6e1fb0-2ef1-4666-bd15-f9190ff89060 " +
+      "n 122b3d2b-4788-4f1e-9117-56daa91cb75c m 1a54b431-2e4f-452d-9cae-9cee66c9a892: " +
+      "l d9cd0bed-1b49-4b5e-a7bd-064b8d177231 r 334e5a9e-94f9-4673-8d1d-ab552863886b n " + inUsePolicyId;
+
     CirculationRules circulationRules = new CirculationRules()
-      .withRulesAsText(IN_USE_NOTICE_POLICY_ID);
+      .withRulesAsText(rulesAsText);
 
     CompletableFuture<JsonResponse> putCompleted = new CompletableFuture<>();
     client.put(rulesStorageUrl(), circulationRules, TENANT_ID, ResponseHandler.json(putCompleted));
     putCompleted.join();
 
-    JsonResponse response = deletePatronNoticePolicy(IN_USE_NOTICE_POLICY_ID);
+    JsonResponse response = deletePatronNoticePolicy(inUsePolicyId);
     String message = response.getJson().getJsonArray("errors").getJsonObject(0).getString("message");
 
     assertThat(response.getStatusCode(), is(422));
