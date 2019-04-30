@@ -1,6 +1,6 @@
 #%RAML 1.0
 title: Patron Notice Policies
-version: v0.7
+version: v0.8
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost:9130
 
@@ -82,6 +82,11 @@ traits:
         responses:
           204:
             description: "Source record deleted"
+          400:
+            description: "Bad request, e.g. malformed request body, query parameter or constraint violation."
+            body:
+              text/plain:
+                example: "Cannot delete in use notice policy"
           404:
             description: "There is no source record for that patronNoticePolicyId"
             body:
