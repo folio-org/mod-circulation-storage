@@ -1,7 +1,9 @@
 ## 8.0.0 2019-05-07
 
-* Consistent closed due date management setting in sample policies CIRCSTORE-123
+* Consistent closed due date management setting in sample policies CIRCSTORE-123, CIRCSTORE-120
 * Use correct path for loading sample patron notice policies CIRCSTORE-117
+* Disallow deletion of patron notice policy when used in rules CIRCSTORE-119
+
 
 ## 7.0.0 2019-03-15
 
