@@ -1,3 +1,8 @@
+## 8.0.0 2019-05-07
+
+* Consistent closed due date management setting in sample policies CIRCSTORE-123
+* Use correct path for loading sample patron notice policies CIRCSTORE-117
+
 ## 7.0.0 2019-03-15
 
 * Expires unfulfilled requests  (CIRCSTORE-108, CIRCSTORE-107, CIRCSTORE-113) 
