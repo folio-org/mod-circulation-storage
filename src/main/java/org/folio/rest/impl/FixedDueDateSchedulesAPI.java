@@ -3,7 +3,6 @@ package org.folio.rest.impl;
 import io.vertx.core.*;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.apache.commons.io.IOUtils;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.FixedDueDateSchedule;
@@ -27,7 +26,6 @@ import org.z3950.zing.cql.cql2pgjson.FieldException;
 import org.z3950.zing.cql.cql2pgjson.SchemaException;
 
 import javax.ws.rs.core.Response;
-import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -38,27 +36,10 @@ import static org.folio.rest.impl.Headers.TENANT_HEADER;
 public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorage {
 
   private static final Logger       log               = LoggerFactory.getLogger(FixedDueDateSchedulesAPI.class);
-  private static final String       SCHEMA_NAME       = "apidocs/raml/fixed-due-date-schedule.json";
   private static final String       FIXED_SCHEDULE_TABLE  = "fixed_due_date_schedule";
   private static final String       INVALID_DATE_MSG  = "Unable to save fixed loan date. Date range not valid";
 
-  private static String             schema      =  null;
   private static final Class<FixedDueDateSchedule> DUE_DATE_SCHEDULE_CLASS = FixedDueDateSchedule.class;
-
-
-  public FixedDueDateSchedulesAPI(Vertx vertx, String tenantId) {
-    if(schema == null){
-      initCQLValidation();
-    }
-  }
-
-  private static void initCQLValidation() {
-    try {
-      schema = IOUtils.toString(FixedDueDateSchedulesAPI.class.getClassLoader().getResourceAsStream(SCHEMA_NAME), "UTF-8");
-    } catch (Exception e) {
-      log.error("unable to load schema - " +SCHEMA_NAME+ ", validation of query fields will not be active");
-    }
-  }
 
   @Override
   @Validate
@@ -121,7 +102,7 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorage {
 
           String[] fieldList = { "*" };
 
-          CQLWrapper cql = getCQL(query, limit, offset, schema);
+          CQLWrapper cql = getCQL(query, limit, offset);
           postgresClient.get(FIXED_SCHEDULE_TABLE, DUE_DATE_SCHEDULE_CLASS, fieldList, cql, true, false, reply -> {
             try {
               if (reply.succeeded()) {
@@ -271,7 +252,7 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorage {
       PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
           TenantTool.calculateTenantId(tenantId));
 
-      Criteria a = new Criteria(SCHEMA_NAME);
+      Criteria a = new Criteria();
 
       a.addField("'id'");
       a.setOperation("=");
@@ -533,15 +514,10 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorage {
     }
   }
 
-  private CQLWrapper getCQL(String query, int limit, int offset, String schema)
-    throws FieldException, IOException, SchemaException {
+  private CQLWrapper getCQL(String query, int limit, int offset)
+    throws FieldException, SchemaException {
 
-    CQL2PgJSON cql2pgJson = null;
-    if(schema != null){
-      cql2pgJson = new CQL2PgJSON("fixed_due_date_schedule.jsonb", schema);
-    } else {
-      cql2pgJson = new CQL2PgJSON("fixed_due_date_schedule.jsonb");
-    }
+    CQL2PgJSON cql2pgJson = new CQL2PgJSON("fixed_due_date_schedule.jsonb");
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
   }
 
