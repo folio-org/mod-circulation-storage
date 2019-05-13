@@ -23,7 +23,6 @@ import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
-import org.z3950.zing.cql.cql2pgjson.SchemaException;
 
 import javax.ws.rs.core.Response;
 import java.util.Date;
@@ -308,6 +307,15 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorage {
     }
   }
 
+
+  private Criterion getFixedDueDateScheduleId(String fixedDueDateScheduleId) {
+    Criteria a = new Criteria();
+    a.addField("'id'");
+    a.setOperation("=");
+    a.setValue(fixedDueDateScheduleId);
+    return new Criterion(a);
+  }
+
   @Override
   @Validate
   public void deleteFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleId(
@@ -325,13 +333,7 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorage {
       PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
           TenantTool.calculateTenantId(tenantId));
 
-      Criteria a = new Criteria();
-
-      a.addField("'id'");
-      a.setOperation("=");
-      a.setValue(fixedDueDateScheduleId);
-
-      Criterion criterion = new Criterion(a);
+      Criterion criterion = getFixedDueDateScheduleId(fixedDueDateScheduleId);
 
       vertxContext.runOnContext(v -> {
         try {
@@ -400,13 +402,7 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorage {
       PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
           TenantTool.calculateTenantId(tenantId));
 
-      Criteria a = new Criteria();
-
-      a.addField("'id'");
-      a.setOperation("=");
-      a.setValue(fixedDueDateScheduleId);
-
-      Criterion criterion = new Criterion(a);
+      Criterion criterion = getFixedDueDateScheduleId(fixedDueDateScheduleId);
 
       vertxContext.runOnContext(v -> {
         try {
@@ -515,7 +511,7 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorage {
   }
 
   private CQLWrapper getCQL(String query, int limit, int offset)
-    throws FieldException, SchemaException {
+    throws FieldException {
 
     CQL2PgJSON cql2pgJson = new CQL2PgJSON("fixed_due_date_schedule.jsonb");
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
