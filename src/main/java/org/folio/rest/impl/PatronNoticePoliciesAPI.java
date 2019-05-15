@@ -8,7 +8,6 @@ import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 
 import static org.folio.rest.impl.CirculationRulesAPI.CIRCULATION_RULES_TABLE;
-import static org.folio.rest.persist.Criteria.Criteria.OP_EQUAL;
 
 import java.util.Map;
 import java.util.UUID;
@@ -237,7 +236,7 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
 
     Criteria criteria = new Criteria()
       .addField("'id'")
-      .setOperation(OP_EQUAL)
+      .setOperation("=")
       .setValue("'" + id + "'");
 
     Future<UpdateResult> future = Future.future();

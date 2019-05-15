@@ -234,7 +234,7 @@ public class FixedDueDateApiTest extends ApiTests {
       updateCompleted4Response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));*/
 
     ////////////////////////////////////////////
-    //get with bad cql - should be validated server side
+    //get with non-existing field now returns 200 / OK
     CompletableFuture<JsonResponse> getCQLCompleted2 = new CompletableFuture<>();
     URL url3 = dueDateURL("?query=name=fielddoesntexist=hi");
     System.out.println(url3.toString());
@@ -243,7 +243,7 @@ public class FixedDueDateApiTest extends ApiTests {
     JsonResponse getCQLResponse2 = getCQLCompleted2.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Failed to get schedule: %s", getCQLResponse2.getJson().encodePrettily()),
-      getCQLResponse2.getStatusCode(), is(422));
+      getCQLResponse2.getStatusCode(), is(200));
     //////////////////////////////////////////////////////////
 
     //// get by id ///////////////////////
