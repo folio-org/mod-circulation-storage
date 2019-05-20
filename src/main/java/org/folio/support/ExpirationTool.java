@@ -1,5 +1,7 @@
 package org.folio.support;
 
+import static java.lang.String.format;
+
 import static org.folio.rest.impl.RequestsAPI.REQUEST_TABLE;
 import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_PICKUP_EXPIRED;
 import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_UNFILLED;
@@ -16,15 +18,17 @@ import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.ResultSet;
+import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.sql.UpdateResult;
 
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.interfaces.Results;
 
 public class ExpirationTool {
 
@@ -32,7 +36,7 @@ public class ExpirationTool {
     //do nothing
   }
 
-  public static Future<CompositeFuture> doRequestExpiration(Vertx vertx) {
+  public static Future<Void> doRequestExpiration(Vertx vertx) {
 
     Future<ResultSet> future = Future.future();
     PostgresClient pgClient = PostgresClient.getInstance(vertx);
@@ -42,26 +46,40 @@ public class ExpirationTool {
     return future.compose(rs -> CompositeFuture.all(rs.getRows()
       .stream()
       .map(row -> doRequestExpirationForTenant(vertx, getTenant(row.getString("nspname"))))
-      .collect(Collectors.toList())));
+      .collect(Collectors.toList()))
+      .map(all -> null));
   }
 
-  private static Future<CompositeFuture> doRequestExpirationForTenant(Vertx vertx, String tenant) {
+  private static Future<Void> doRequestExpirationForTenant(Vertx vertx, String tenant) {
 
-    return getExpiredRequests(vertx, tenant)
-      .compose(requests -> closeRequests(vertx, tenant, requests))
-      .compose(v -> getOpenRequests(vertx, tenant))
-      .compose(requests -> reorderRequests(vertx, tenant, requests));
+    Future<Void> future = Future.future();
+
+    PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
+
+    pgClient.startTx(conn -> getExpiredRequests(conn, vertx, tenant)
+      .compose(requests -> closeRequests(conn, vertx, tenant, requests))
+      .compose(v -> getOpenRequests(conn, vertx, tenant))
+      .compose(requests -> reorderRequests(conn, vertx, tenant, requests))
+      .setHandler(v -> {
+        if (v.failed()) {
+          pgClient.rollbackTx(conn, done -> future.fail(v.cause()));
+        } else {
+          pgClient.endTx(conn, done -> future.complete());
+        }
+      }));
+
+    return future;
   }
 
-  private static Future<List<Request>> getExpiredRequests(Vertx vertx, String tenant) {
+  private static Future<List<Request>> getExpiredRequests(AsyncResult<SQLConnection> conn, Vertx vertx, String tenant) {
 
     SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
     df.setTimeZone(TimeZone.getTimeZone(ZoneOffset.UTC));
 
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
-    Future<Results<Request>> future = Future.future();
+    Future<ResultSet> future = Future.future();
 
-    String where = String.format("WHERE " +
+    String where = format("WHERE " +
         "(jsonb->>'status' = '%1$s' AND jsonb->>'requestExpirationDate' < '%3$s') OR " +
         "(jsonb->>'status' = '%2$s' AND jsonb->>'holdShelfExpirationDate' < '%3$s')",
 
@@ -69,17 +87,26 @@ public class ExpirationTool {
       OPEN_AWAITING_PICKUP.value(),
       df.format(new Date()));
 
-    pgClient.get(REQUEST_TABLE, Request.class, "jsonb", where, false, false, false, future.completer());
 
-    return future.map(Results::getResults);
+    String fullTableName = format("%s.%s", PostgresClient.convertToPsqlStandard(tenant), REQUEST_TABLE);
+    String query = format("SELECT jsonb FROM %s %s", fullTableName, where);
+    pgClient.select(conn, query, future);
+
+    return future.map(ResultSet::getRows)
+      .map(rows -> rows.stream()
+        .map(row -> row.getString("jsonb"))
+        .map(JsonObject::new)
+        .map(json -> json.mapTo(Request.class))
+        .collect(Collectors.toList()));
+
   }
 
-  private static Future<List<Request>> getOpenRequests(Vertx vertx, String tenant) {
+  private static Future<List<Request>> getOpenRequests(AsyncResult<SQLConnection> conn, Vertx vertx, String tenant) {
 
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
-    Future<Results<Request>> future = Future.future();
+    Future<ResultSet> future = Future.future();
 
-    String where = String.format("WHERE " +
+    String where = format("WHERE " +
         "jsonb->>'status' = '%1$s' OR " +
         "jsonb->>'status' = '%2$s' OR " +
         "jsonb->>'status' = '%3$s' " +
@@ -89,9 +116,16 @@ public class ExpirationTool {
       OPEN_AWAITING_PICKUP.value(),
       OPEN_IN_TRANSIT.value());
 
-    pgClient.get(REQUEST_TABLE, Request.class, "jsonb", where, false, false, false, future.completer());
+    String fullTableName = format("%s.%s", PostgresClient.convertToPsqlStandard(tenant), REQUEST_TABLE);
+    String sql = format("SELECT jsonb FROM %s %s", fullTableName, where);
+    pgClient.select(conn, sql, future.completer());
 
-    return future.map(Results::getResults);
+    return future.map(ResultSet::getRows)
+      .map(rows -> rows.stream()
+        .map(row -> row.getString("jsonb"))
+        .map(JsonObject::new)
+        .map(json -> json.mapTo(Request.class))
+        .collect(Collectors.toList()));
   }
 
   private static Request changeRequestStatus(Request request) {
@@ -103,51 +137,61 @@ public class ExpirationTool {
     return request;
   }
 
-  private static Request eraseRequestPosition(Request request) {
-    return request.withPosition(null);
+  private static Future<Void> reorderRequests(AsyncResult<SQLConnection> conn, Vertx vertx,
+                                              String tenant,List<Request> requests) {
+
+    return resetPositionsForOpenRequests(conn, vertx, tenant)
+      .compose(v -> reorderRequestsForEachItem(conn, vertx, tenant, requests));
   }
 
-  private static Future<CompositeFuture> reorderRequests(Vertx vertx, String tenant, List<Request> requests) {
-
-    return resetPositionsForOpenRequests(vertx, tenant)
-      .compose(v -> reorderRequestsForEachItem(vertx, tenant, requests));
-  }
-
-  private static Future<CompositeFuture> reorderRequestsForEachItem(Vertx vertx, String tenant, List<Request> requests) {
+  private static Future<Void> reorderRequestsForEachItem(AsyncResult<SQLConnection> conn, Vertx vertx,
+                                                         String tenant, List<Request> requests) {
 
     Map<String, List<Request>> map = requests.stream()
       .collect(Collectors.groupingBy(Request::getItemId));
 
-    return CompositeFuture.all(map.entrySet()
-      .stream()
-      .map(entry -> updateRequestsPositions(vertx, tenant, entry.getValue()))
-      .collect(Collectors.toList()));
+    Future<Void> future = Future.succeededFuture();
+    for (Map.Entry<String, List<Request>> entry : map.entrySet()) {
+      future = future.compose(v -> updateRequestsPositions(conn, vertx, tenant, entry.getValue()));
+    }
+
+    return future;
   }
 
-  private static Future<CompositeFuture> updateRequestsPositions(Vertx vertx, String tenant, List<Request> requests) {
+  private static Future<Void> updateRequestsPositions(AsyncResult<SQLConnection> conn, Vertx vertx,
+                                                      String tenant, List<Request> requests) {
 
     AtomicInteger pos = new AtomicInteger(1);
+    Future<Void> future = Future.succeededFuture();
 
-    return CompositeFuture.all(requests.stream()
-      .map(request -> updateRequest(vertx, tenant, request.withPosition(pos.getAndIncrement())))
-      .collect(Collectors.toList()));
+    for (Request request : requests) {
+      future = future.compose(v -> updateRequest(conn, vertx, tenant, request.withPosition(pos.getAndIncrement())));
+    }
+
+    return future;
   }
 
 
-  private static Future<CompositeFuture> closeRequests(Vertx vertx, String tenant, List<Request> requests) {
+  private static Future<Void> closeRequests(AsyncResult<SQLConnection> conn, Vertx vertx,
+                                            String tenant, List<Request> requests) {
 
-    return CompositeFuture.all(requests.stream()
-      .map(ExpirationTool::changeRequestStatus)
-      .map(ExpirationTool::eraseRequestPosition)
-      .map(request -> updateRequest(vertx, tenant, request))
-      .collect(Collectors.toList()));
+
+    Future<Void> future = Future.succeededFuture();
+
+    for (Request request : requests) {
+      Request updatedRequest = changeRequestStatus(request).withPosition(null);
+      future = future.compose(v -> updateRequest(conn, vertx, tenant, updatedRequest));
+    }
+
+    return future;
   }
 
-  private static Future<UpdateResult> resetPositionsForOpenRequests(Vertx vertx, String tenant) {
+  private static Future<UpdateResult> resetPositionsForOpenRequests(AsyncResult<SQLConnection> conn, Vertx vertx,
+                                                                    String tenant) {
 
-    String fullTableName = String.format("%s.%s", PostgresClient.convertToPsqlStandard(tenant), REQUEST_TABLE);
+    String fullTableName = format("%s.%s", PostgresClient.convertToPsqlStandard(tenant), REQUEST_TABLE);
 
-    String query = String.format("UPDATE %1$s SET jsonb = jsonb - 'position' WHERE " +
+    String sql = format("UPDATE %1$s SET jsonb = jsonb - 'position' WHERE " +
         "jsonb->>'status' = '%2$s' OR " +
         "jsonb->>'status' = '%3$s' OR " +
         "jsonb->>'status' = '%4$s'",
@@ -159,18 +203,21 @@ public class ExpirationTool {
 
     Future<UpdateResult> future = Future.future();
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
-    pgClient.execute(query,future.completer());
+    pgClient.execute(conn, sql, future.completer());
 
     return future;
   }
 
-  private static Future<UpdateResult> updateRequest(Vertx vertx, String tenant, Request request) {
+  private static Future<Void> updateRequest(AsyncResult<SQLConnection> conn, Vertx vertx,
+                                                    String tenant, Request request) {
 
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
     Future<UpdateResult> future = Future.future();
-    pgClient.update(REQUEST_TABLE, request, request.getId(), future.completer());
 
-    return future;
+    String where = format("WHERE jsonb->>'id' = '%s'", request.getId());
+    pgClient.update(conn, REQUEST_TABLE, request, "jsonb", where, false, future.completer());
+
+    return future.map(ur -> null);
   }
 
   private static String getTenant(String nsTenant) {
