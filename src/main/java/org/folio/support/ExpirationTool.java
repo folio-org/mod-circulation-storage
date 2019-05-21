@@ -15,6 +15,7 @@ import static org.folio.rest.jaxrs.model.Request.Status.OPEN_NOT_YET_FILLED;
 
 import java.text.SimpleDateFormat;
 import java.time.ZoneOffset;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -96,7 +97,7 @@ public class ExpirationTool {
 
     String fullTableName = format("%s.%s", PostgresClient.convertToPsqlStandard(tenant), REQUEST_TABLE);
     String query = format("SELECT jsonb FROM %s %s", fullTableName, where);
-    pgClient.select(conn, query, future);
+    pgClient.select(conn, query, future.completer());
 
     return future.map(ResultSet::getRows)
       .map(rows -> rows.stream()
@@ -182,6 +183,7 @@ public class ExpirationTool {
   private static Future<Void> updateRequestsPositions(AsyncResult<SQLConnection> conn, Vertx vertx,
                                                       String tenant, List<Request> requests) {
 
+    requests.sort(Comparator.comparingInt(Request::getPosition));
     AtomicInteger pos = new AtomicInteger(1);
     Future<Void> future = succeededFuture();
 
