@@ -76,7 +76,8 @@
           "fieldName": "itemId, position",
           "tOps": "ADD"
         }
-      ]
+      ],
+      "customSnippetPath": "requestUpdateTrigger.sql"
     },
     {
       "tableName": "fixed_due_date_schedule",
