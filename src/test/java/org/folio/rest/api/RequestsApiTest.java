@@ -2,6 +2,15 @@ package org.folio.rest.api;
 
 import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.util.Arrays.asList;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.hamcrest.core.IsNull.nullValue;
+
+import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_CANCELLED;
 import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_FILLED;
 import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_PICKUP_EXPIRED;
@@ -13,12 +22,6 @@ import static org.folio.rest.support.matchers.TextDateTimeMatcher.equivalentTo;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
 import static org.folio.rest.support.matchers.ValidationResponseMatchers.isValidationResponseWhich;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNull.notNullValue;
 
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
@@ -33,14 +36,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import org.folio.rest.jaxrs.model.Tags;
-import org.folio.rest.support.ApiTests;
-import org.folio.rest.support.IndividualResource;
-import org.folio.rest.support.JsonArrayHelper;
-import org.folio.rest.support.JsonResponse;
-import org.folio.rest.support.ResponseHandler;
-import org.folio.rest.support.TextResponse;
-import org.folio.rest.support.builders.RequestRequestBuilder;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+
 import org.hamcrest.junit.MatcherAssert;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -51,10 +51,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
+import org.folio.rest.jaxrs.model.Tags;
+import org.folio.rest.support.ApiTests;
+import org.folio.rest.support.IndividualResource;
+import org.folio.rest.support.JsonArrayHelper;
+import org.folio.rest.support.JsonResponse;
+import org.folio.rest.support.Response;
+import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.TextResponse;
+import org.folio.rest.support.builders.RequestRequestBuilder;
 
 @RunWith(JUnitParamsRunner.class)
 public class RequestsApiTest extends ApiTests {
@@ -208,7 +213,7 @@ public class RequestsApiTest extends ApiTests {
       .create();
 
     client.post(requestStorageUrl(),
-      requestRequest, StorageTestSuite.TENANT_ID,
+      requestRequest, TENANT_ID,
       ResponseHandler.json(createCompleted));
 
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
@@ -246,7 +251,7 @@ public class RequestsApiTest extends ApiTests {
     CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
 
     client.get(requestStorageUrl() + String.format("/%s", representation.getString("id")),
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
+      TENANT_ID, ResponseHandler.json(getCompleted));
 
     JsonResponse getResponse = getCompleted.get(5, TimeUnit.SECONDS);
 
@@ -311,7 +316,7 @@ public class RequestsApiTest extends ApiTests {
     DateTime requestMade = DateTime.now();
 
     client.post(requestStorageUrl(),
-      new RequestRequestBuilder().create(), StorageTestSuite.TENANT_ID,
+      new RequestRequestBuilder().create(), TENANT_ID,
       creatorId, ResponseHandler.json(createCompleted));
 
     JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
@@ -452,7 +457,7 @@ public class RequestsApiTest extends ApiTests {
       .create();
 
     client.post(requestStorageUrl(),
-      secondRequest, StorageTestSuite.TENANT_ID,
+      secondRequest, TENANT_ID,
       ResponseHandler.json(createCompleted));
 
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
@@ -601,7 +606,7 @@ public class RequestsApiTest extends ApiTests {
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     client.put(requestStorageUrl(String.format("/%s", secondRequestId)),
-      secondRequest, StorageTestSuite.TENANT_ID,
+      secondRequest, TENANT_ID,
       ResponseHandler.json(createCompleted));
 
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
@@ -662,7 +667,7 @@ public class RequestsApiTest extends ApiTests {
       .put("holdShelfExpirationDate", holdShelfExpirationDate.toString(ISODateTimeFormat.dateTime()));
 
     client.put(requestStorageUrl(String.format("/%s", id)),
-      updateRequestRequest, StorageTestSuite.TENANT_ID,
+      updateRequestRequest, TENANT_ID,
       ResponseHandler.text(updateCompleted));
 
     TextResponse response = updateCompleted.get(5, TimeUnit.SECONDS);
@@ -753,7 +758,7 @@ public class RequestsApiTest extends ApiTests {
       .put("status", status);
 
     client.put(requestStorageUrl(String.format("/%s", id)),
-      updateRequestRequest, StorageTestSuite.TENANT_ID,
+      updateRequestRequest, TENANT_ID,
       ResponseHandler.text(updateCompleted));
 
     TextResponse response = updateCompleted.get(5, TimeUnit.SECONDS);
@@ -805,7 +810,7 @@ public class RequestsApiTest extends ApiTests {
       .put("status", status);
 
     client.put(requestStorageUrl(String.format("/%s", id)),
-      updateRequestRequest, StorageTestSuite.TENANT_ID,
+      updateRequestRequest, TENANT_ID,
       ResponseHandler.text(updateCompleted));
 
     TextResponse response = updateCompleted.get(5, TimeUnit.SECONDS);
@@ -847,7 +852,7 @@ public class RequestsApiTest extends ApiTests {
     CompletableFuture<JsonResponse> updateCompleted = new CompletableFuture<>();
 
     client.put(requestStorageUrl(String.format("/%s", secondRequest.getId())),
-      changedSecondRequest, StorageTestSuite.TENANT_ID,
+      changedSecondRequest, TENANT_ID,
       ResponseHandler.json(updateCompleted));
 
     JsonResponse response = updateCompleted.get(5, TimeUnit.SECONDS);
@@ -881,7 +886,7 @@ public class RequestsApiTest extends ApiTests {
     DateTime requestMade = DateTime.now();
 
     client.put(requestStorageUrl(String.format("/%s", id)),
-      request, StorageTestSuite.TENANT_ID, updaterId,
+      request, TENANT_ID, updaterId,
       ResponseHandler.text(updateCompleted));
 
     TextResponse response = updateCompleted.get(5, TimeUnit.SECONDS);
@@ -933,7 +938,7 @@ public class RequestsApiTest extends ApiTests {
     CompletableFuture<TextResponse> updateCompleted = new CompletableFuture<>();
 
     client.put(requestStorageUrl(String.format("/%s", id)),
-      request, StorageTestSuite.TENANT_ID, null,
+      request, TENANT_ID, null,
       ResponseHandler.text(updateCompleted));
 
     TextResponse response = updateCompleted.get(5, TimeUnit.SECONDS);
@@ -1024,10 +1029,10 @@ public class RequestsApiTest extends ApiTests {
     CompletableFuture<JsonResponse> firstPageCompleted = new CompletableFuture<>();
     CompletableFuture<JsonResponse> secondPageCompleted = new CompletableFuture<>();
 
-    client.get(requestStorageUrl() + "?limit=4", StorageTestSuite.TENANT_ID,
+    client.get(requestStorageUrl() + "?limit=4", TENANT_ID,
       ResponseHandler.json(firstPageCompleted));
 
-    client.get(requestStorageUrl() + "?limit=4&offset=4", StorageTestSuite.TENANT_ID,
+    client.get(requestStorageUrl() + "?limit=4&offset=4", TENANT_ID,
       ResponseHandler.json(secondPageCompleted));
 
     JsonResponse firstPageResponse = firstPageCompleted.get(5, TimeUnit.SECONDS);
@@ -1075,7 +1080,7 @@ public class RequestsApiTest extends ApiTests {
     CompletableFuture<JsonResponse> getRequestsCompleted = new CompletableFuture<>();
 
     client.get(requestStorageUrl() + String.format("?query=requesterId=%s", secondRequester),
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(getRequestsCompleted));
+      TENANT_ID, ResponseHandler.json(getRequestsCompleted));
 
     JsonResponse getRequestsResponse = getRequestsCompleted.get(5, TimeUnit.SECONDS);
 
@@ -1104,7 +1109,7 @@ public class RequestsApiTest extends ApiTests {
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     client.post(requestStorageUrl(),
-      j1, StorageTestSuite.TENANT_ID,
+      j1, TENANT_ID,
       ResponseHandler.json(createCompleted));
 
     JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
@@ -1133,7 +1138,7 @@ public class RequestsApiTest extends ApiTests {
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     client.put(requestStorageUrl("/"+requestId.toString()),
-      j1, StorageTestSuite.TENANT_ID,
+      j1, TENANT_ID,
       ResponseHandler.json(createCompleted));
 
     JsonResponse putResponse = createCompleted.get(5, TimeUnit.SECONDS);
@@ -1170,7 +1175,7 @@ public class RequestsApiTest extends ApiTests {
     CompletableFuture<JsonResponse> getRequestsCompleted = new CompletableFuture<>();
 
     client.get(requestStorageUrl() + String.format("?query=proxyUserId=%s", userProxy1),
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(getRequestsCompleted));
+      TENANT_ID, ResponseHandler.json(getRequestsCompleted));
 
     JsonResponse getRequestsResponse = getRequestsCompleted.get(5, TimeUnit.SECONDS);
 
@@ -1186,7 +1191,7 @@ public class RequestsApiTest extends ApiTests {
     CompletableFuture<JsonResponse> getRequestsCompleted2 = new CompletableFuture<>();
 
     client.get(requestStorageUrl() + String.format("?query=proxyUserId<>%s", UUID.randomUUID().toString()),
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(getRequestsCompleted2));
+      TENANT_ID, ResponseHandler.json(getRequestsCompleted2));
 
     JsonResponse getRequestsResponse2 = getRequestsCompleted2.get(5, TimeUnit.SECONDS);
 
@@ -1234,7 +1239,7 @@ public class RequestsApiTest extends ApiTests {
     CompletableFuture<JsonResponse> getRequestsCompleted = new CompletableFuture<>();
 
     client.get(requestStorageUrl() + String.format("?query=itemId==%s", itemId),
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(getRequestsCompleted));
+      TENANT_ID, ResponseHandler.json(getRequestsCompleted));
 
     JsonResponse getRequestsResponse = getRequestsCompleted.get(5, TimeUnit.SECONDS);
 
@@ -1314,7 +1319,7 @@ public class RequestsApiTest extends ApiTests {
       "UTF-8");
 
     client.get(requestStorageUrl() + String.format("?query=%s", query),
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(getRequestsCompleted));
+      TENANT_ID, ResponseHandler.json(getRequestsCompleted));
 
     JsonResponse getRequestsResponse = getRequestsCompleted.get(5, TimeUnit.SECONDS);
 
@@ -1376,7 +1381,7 @@ public class RequestsApiTest extends ApiTests {
       "UTF-8");
 
     client.get(requestStorageUrl() + String.format("?query=%s", query),
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(getRequestsCompleted));
+      TENANT_ID, ResponseHandler.json(getRequestsCompleted));
 
     JsonResponse getRequestsResponse = getRequestsCompleted.get(5, TimeUnit.SECONDS);
 
@@ -1450,7 +1455,7 @@ public class RequestsApiTest extends ApiTests {
       "UTF-8");
 
     client.get(requestStorageUrl() + String.format("?query=%s", query),
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(getRequestsCompleted));
+      TENANT_ID, ResponseHandler.json(getRequestsCompleted));
 
     JsonResponse getRequestsResponse = getRequestsCompleted.get(5, TimeUnit.SECONDS);
 
@@ -1489,7 +1494,7 @@ public class RequestsApiTest extends ApiTests {
       requestStorageUrl());
 
     client.delete(requestStorageUrl(String.format("/%s", id)),
-      StorageTestSuite.TENANT_ID,
+      TENANT_ID,
       ResponseHandler.json(createCompleted));
 
     JsonResponse createResponse = createCompleted.get(5, TimeUnit.SECONDS);
@@ -1498,6 +1503,66 @@ public class RequestsApiTest extends ApiTests {
       createResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
     checkNotFound(requestStorageUrl(String.format("/%s", id)));
+  }
+
+  @Test
+  public void awaitingPickupRequestClosedDateIsPresentAfterStatusUpdateFromOpenAwaitingPickupToClosedPickupExpired()
+    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+
+    JsonObject request = new RequestRequestBuilder()
+      .withStatus(OPEN_AWAITING_PICKUP)
+      .create();
+
+    String requestId = createEntity(request, requestStorageUrl()).getJson().getString("id");
+    request.put("status", CLOSED_PICKUP_EXPIRED);
+
+    CompletableFuture<Response> putCompleted = new CompletableFuture<>();
+    client.put(requestStorageUrl("/" + requestId), request, TENANT_ID, ResponseHandler.empty(putCompleted));
+    putCompleted.get(5, TimeUnit.SECONDS);
+
+    JsonObject updatedRequest = getById(requestStorageUrl("/" + requestId));
+
+    assertThat(updatedRequest.getString("awaitingPickupRequestClosedDate"), is(notNullValue()));
+  }
+
+  @Test
+  public void awaitingPickupRequestClosedDateIsPresentAfterStatusUpdateFromOpenAwaitingPickupToClosedCancelled()
+    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+
+    JsonObject request = new RequestRequestBuilder()
+      .withStatus(OPEN_AWAITING_PICKUP)
+      .create();
+
+    String requestId = createEntity(request, requestStorageUrl()).getJson().getString("id");
+    request.put("status", CLOSED_CANCELLED);
+
+    CompletableFuture<Response> putCompleted = new CompletableFuture<>();
+    client.put(requestStorageUrl("/" + requestId), request, TENANT_ID, ResponseHandler.empty(putCompleted));
+    putCompleted.get(5, TimeUnit.SECONDS);
+
+    JsonObject updatedRequest = getById(requestStorageUrl("/" + requestId));
+
+    assertThat(updatedRequest.getString("awaitingPickupRequestClosedDate"), is(notNullValue()));
+  }
+
+  @Test
+  public void awaitingPickupRequestClosedDateIsNotPresentAfterStatusUpdateFromOpenNotYetFilledToClosedCancelled()
+    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+
+    JsonObject request = new RequestRequestBuilder()
+      .withStatus(OPEN_NOT_YET_FILLED)
+      .create();
+
+    String requestId = createEntity(request, requestStorageUrl()).getJson().getString("id");
+    request.put("status", CLOSED_CANCELLED);
+
+    CompletableFuture<Response> putCompleted = new CompletableFuture<>();
+    client.put(requestStorageUrl("/" + requestId), request, TENANT_ID, ResponseHandler.empty(putCompleted));
+    putCompleted.get(5, TimeUnit.SECONDS);
+
+    JsonObject updatedRequest = getById(requestStorageUrl("/" + requestId));
+
+    assertThat(updatedRequest.getString("awaitingPickupRequestClosedDate"), is(nullValue()));
   }
 
   private IndividualResource createCancellationReason(
@@ -1516,7 +1581,7 @@ public class RequestsApiTest extends ApiTests {
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
-    client.post(cancelReasonURL(), body, StorageTestSuite.TENANT_ID,
+    client.post(cancelReasonURL(), body, TENANT_ID,
       ResponseHandler.json(createCompleted));
 
     JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
