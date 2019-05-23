@@ -50,16 +50,15 @@ class RequestUpdateTriggerTest {
 
   @ParameterizedTest
   @CsvSource(value = {
-    "Open - Awaiting pickup | Closed - Pickup expired | 1 | true",
-    "Open - Awaiting pickup | Closed - Pickup expired | 2 | false",
-    "Open - Awaiting pickup | Closed - Cancelled      | 1 | true",
-    "Open - Awaiting pickup | Closed - Cancelled      | 2 | false",
-    "Open - Not yet filled  | Closed - Unfilled       | 1 | false",
-    "Open - Not yet filled  | Closed - Filled         | 1 | false",
+    "Open - Awaiting pickup | Closed - Pickup expired | true",
+    "Open - Awaiting pickup | Closed - Cancelled      | true",
+    "Open - Awaiting pickup | Open - Not yet filled   | false",
+    "Open - Awaiting pickup | Open - In transit       | false",
+    "Open - Not yet filled  | Closed - Unfilled       | false",
+    "Open - Not yet filled  | Closed - Filled         | false",
   }, delimiter = '|')
   void updateRequestTriggerTest(String oldStatus,
                                 String newStatus,
-                                Integer oldPosition,
                                 boolean awaitingPickupRequestClosedDatePresent)
     throws InterruptedException, ExecutionException, TimeoutException {
 
@@ -68,8 +67,7 @@ class RequestUpdateTriggerTest {
     String id = "3a57dc83-e70d-404b-b1f1-442b88760331";
 
     Request request = new Request()
-      .withStatus(fromValue(oldStatus))
-      .withPosition(oldPosition);
+      .withStatus(fromValue(oldStatus));
 
     saveRequest(id, request)
       .compose(v -> updateRequest(id, request.withStatus(fromValue(newStatus))))
