@@ -1,0 +1,12 @@
+{
+  "id": "4413b99a-111a-48c0-a818-fa478cb0958e",
+  "loanId": "188522a4-a2df-4a48-ab3d-44b62daef27f",
+  "nextRunTime": 1557981117909,
+  "noticeConfig": {
+    "timing": "Before",
+    "recurringPeriod": 1117909,
+    "templateId": "15cdf026-dbf5-4442-8e1b-fbc900256b56",
+    "format": "Email",
+    "sendInRealTime": true
+  }
+}

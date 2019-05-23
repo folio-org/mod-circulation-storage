@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "UUID of scheduled task"
+    },
+    "loanId": {
+      "type": "string",
+      "description": "UUID of related loan for loan notices"
+    },
+    "requestId": {
+      "type": "string",
+      "description": "UUID of related request for request notices"
+    },
+    "nextRunTime": {
+      "type": "number",
+      "description": "Next run time in millis",
+      "minimum": 0
+    },
+    "noticeConfig": {
+      "type": "object",
+      "properties": {
+        "timing": {
+          "type": "string",
+          "description": "Timing represents when we need to send notice, before, at or after loan due date",
+          "enum": [
+            "Upon At",
+            "Before",
+            "After"
+          ]
+        },
+        "recurringPeriod": {
+          "type": "number",
+          "description": "Interval in millis for recurring events",
+          "minimum": 0
+        },
+        "templateId": {
+          "type": "string",
+          "description": "UUID of related template"
+        },
+        "format": {
+          "type": "string",
+          "description": "Notice format",
+          "enum": [
+            "Email",
+            "SMS",
+            "Print"
+          ]
+        },
+        "sendInRealTime": {
+          "type": "boolean",
+          "description": "Real time notice flag"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "timing",
+        "recurringPeriod",
+        "templateId",
+        "format"
+      ]
+    },
+    "metadata": {
+      "$ref": "raml-util/schemas/metadata.schema",
+      "readonly": true
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "nextRunTime",
+    "noticeConfig"
+  ]
+}
