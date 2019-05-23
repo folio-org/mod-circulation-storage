@@ -125,3 +125,13 @@ at the [FOLIO issue tracker](https://dev.folio.org/guidelines/issue-tracker/).
 See the built `target/ModuleDescriptor.json` for the interfaces that this module
 requires and provides, the permissions, and the additional module metadata.
 
+## Design notes
+
+### Request status transition
+
+There is database trigger for request update. It works in the following way:
+
+Given request with status 'Open - Awaiting pickup'.
+The request is updated and new status is 'Closed - Pickup expired' or 'Closed - Cancelled'.
+Than an update trigger adds new property 'awaitingPickupRequestClosedDate' to the request jsonb.
+
