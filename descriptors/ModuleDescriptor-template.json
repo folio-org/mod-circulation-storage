@@ -613,6 +613,10 @@
       "description": "Delete individual request policy from storage"
     }
   ],
+  "metadata": {
+    "containerMemory": "256",
+    "databaseConnection": "true"
+  },
   "launchDescriptor": {
     "dockerImage" : "${artifactId}:${version}",
     "dockerArgs" : {
