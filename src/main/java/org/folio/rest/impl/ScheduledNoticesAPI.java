@@ -1,21 +1,39 @@
 package org.folio.rest.impl;
 
+import static io.vertx.core.Future.failedFuture;
+import static io.vertx.core.Future.succeededFuture;
+import static java.lang.String.format;
+import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
+import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
+
+import static org.folio.rest.persist.PostgresClient.convertToPsqlStandard;
+
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.ext.sql.UpdateResult;
 
+import org.apache.commons.lang3.StringUtils;
+import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
+import org.z3950.zing.cql.cql2pgjson.FieldException;
+import org.z3950.zing.cql.cql2pgjson.QueryValidationException;
+
+import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.ScheduledNotice;
 import org.folio.rest.jaxrs.model.ScheduledNotices;
 import org.folio.rest.jaxrs.resource.ScheduledNoticeStorage;
 import org.folio.rest.persist.PgUtil;
+import org.folio.rest.persist.PostgresClient;
 
 public class ScheduledNoticesAPI implements ScheduledNoticeStorage {
 
   private static final String SCHEDULED_NOTICE_TABLE = "scheduled_notice";
+  private static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
 
   @Override
   public void getScheduledNoticeStorageScheduledNotices(int offset,
@@ -28,6 +46,23 @@ public class ScheduledNoticesAPI implements ScheduledNoticeStorage {
 
     PgUtil.get(SCHEDULED_NOTICE_TABLE, ScheduledNotice.class, ScheduledNotices.class, query, offset, limit,
       okapiHeaders, vertxContext, GetScheduledNoticeStorageScheduledNoticesResponse.class, asyncResultHandler);
+  }
+
+  @Override
+  public void deleteScheduledNoticeStorageScheduledNotices(String query,
+                                                           Map<String, String> okapiHeaders,
+                                                           Handler<AsyncResult<Response>> asyncResultHandler,
+                                                           Context vertxContext) {
+    
+      
+      PostgresClient pgClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
+
+      clqToSqlDeleteQuery(query, okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT))
+        .compose(sql -> executeSql(pgClient, sql))
+        .map(v -> DeleteScheduledNoticeStorageScheduledNoticesResponse.respond204())
+        .map(Response.class::cast)
+        .otherwise(this::mapExceptionToResponse)
+        .setHandler(asyncResultHandler);
   }
 
   @Override
@@ -74,5 +109,48 @@ public class ScheduledNoticesAPI implements ScheduledNoticeStorage {
     PgUtil.put(SCHEDULED_NOTICE_TABLE, entity, scheduledNoticeId, okapiHeaders, vertxContext,
       PutScheduledNoticeStorageScheduledNoticesByScheduledNoticeIdResponse.class, asyncResultHandler);
 
+  }
+
+  private Future<UpdateResult> executeSql(PostgresClient pgClient, String sql) {
+
+    Future<UpdateResult> future = Future.future();
+    pgClient.execute(sql, future.completer());
+    return future;
+  }
+
+  private Future<String> clqToSqlDeleteQuery(String cql, String tenant) {
+
+    String sql = format("DELETE FROM %s.%s", convertToPsqlStandard(tenant), SCHEDULED_NOTICE_TABLE);
+
+    if (StringUtils.isEmpty(cql)) {
+      return succeededFuture(sql);
+    } else {
+      return getSqlQuery(cql)
+        .map(where -> sql + " WHERE " + where);
+    }
+  }
+
+  private Future<String> getSqlQuery(String cql) {
+
+    try {
+      return succeededFuture(new CQL2PgJSON("jsonb").cql2pgJson(cql));
+    } catch (FieldException | QueryValidationException e) {
+      return failedFuture(e);
+    }
+  }
+
+  private Response mapExceptionToResponse(Throwable t) {
+
+    if (t.getClass() == QueryValidationException.class) {
+      return Response.status(400)
+        .header(CONTENT_TYPE, TEXT_PLAIN)
+        .entity(t.getMessage())
+        .build();
+    }
+
+    return Response.status(500)
+      .header(CONTENT_TYPE, TEXT_PLAIN)
+      .entity(INTERNAL_SERVER_ERROR)
+      .build();
   }
 }

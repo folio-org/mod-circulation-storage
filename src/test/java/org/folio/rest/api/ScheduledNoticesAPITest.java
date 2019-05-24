@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
@@ -9,7 +10,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import io.vertx.core.json.JsonObject;
@@ -20,8 +20,6 @@ import org.junit.Test;
 import org.folio.rest.jaxrs.model.NoticeConfig;
 import org.folio.rest.jaxrs.model.ScheduledNotice;
 import org.folio.rest.jaxrs.model.ScheduledNotices;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.Response;
@@ -29,77 +27,110 @@ import org.folio.rest.support.ResponseHandler;
 
 public class ScheduledNoticesAPITest extends ApiTests {
 
-  private static final String SCHEDULED_NOTICE_TABLE = "scheduled_notice";
-
-  private NoticeConfig config = new NoticeConfig()
-    .withTiming(NoticeConfig.Timing.BEFORE)
-    .withRecurringPeriod(1117909.0)
-    .withTemplateId("a0d83326-d47e-43c6-8da6-f972015c3b52")
-    .withFormat(NoticeConfig.Format.EMAIL);
-
-  private ScheduledNotice notice = new ScheduledNotice()
-    .withNextRunTime(1557981117909.0)
-    .withNoticeConfig(config);
-
   @Before
-  public void beforeEach() throws InterruptedException, ExecutionException, TimeoutException {
-
-    PostgresClient pgClient = PostgresClient.getInstance(StorageTestSuite.getVertx(), TENANT_ID);
-    CompletableFuture<Void> deleteCompleted = new CompletableFuture<>();
-    pgClient.delete(SCHEDULED_NOTICE_TABLE, new Criterion(), delete -> deleteCompleted.complete(null));
-    deleteCompleted.get(5, TimeUnit.SECONDS);
+  public void beforeEach() throws MalformedURLException {
+    StorageTestSuite.deleteAll(scheduledNoticesStorageUrl());
   }
 
   @Test
   public void canCreateScheduledNotice() throws MalformedURLException,InterruptedException, ExecutionException,
     TimeoutException {
 
-    ScheduledNotice createdNotice = createEntity(JsonObject.mapFrom(notice), scheduledNoticesStorageUrl())
-      .getJson().mapTo(ScheduledNotice.class);
+    Double nextRunTime = 1557981117909.0;
+    NoticeConfig.Timing timing = NoticeConfig.Timing.BEFORE;
+    Double recurringPeriod = 1117909.0;
+    String templateId = "a0d83326-d47e-43c6-8da6-f972015c3b52";
+    NoticeConfig.Format format = NoticeConfig.Format.EMAIL;
+
+    String createdNoticeId = createScheduledNotice(nextRunTime, timing, recurringPeriod, templateId, format).getId();
+
+    ScheduledNotice createdNotice = getById(scheduledNoticesStorageUrl("/" + createdNoticeId))
+      .mapTo(ScheduledNotice.class);
     NoticeConfig createdConfig = createdNotice.getNoticeConfig();
 
-    assertThat(createdNotice.getNextRunTime(), is(notice.getNextRunTime()));
-    assertThat(createdConfig.getTiming(), is(config.getTiming()));
-    assertThat(createdConfig.getRecurringPeriod(), is(config.getRecurringPeriod()));
-    assertThat(createdConfig.getTemplateId(), is(config.getTemplateId()));
-    assertThat(createdConfig.getFormat(), is(config.getFormat()));
+    assertThat(createdNotice.getNextRunTime(), is(nextRunTime));
+    assertThat(createdConfig.getTiming(), is(timing));
+    assertThat(createdConfig.getRecurringPeriod(), is(recurringPeriod));
+    assertThat(createdConfig.getTemplateId(), is(templateId));
+    assertThat(createdConfig.getFormat(), is(format));
   }
 
   @Test
   public void canGetScheduledNoticesCollection() throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    createEntity(JsonObject.mapFrom(notice), scheduledNoticesStorageUrl());
+    createScheduledNotice(1557981117909.0, NoticeConfig.Timing.BEFORE, 1117909.0,
+      "a0d83326-d47e-43c6-8da6-f972015c3b52", NoticeConfig.Format.EMAIL);
+
+    createScheduledNotice(1777983337909.0, NoticeConfig.Timing.AFTER, 2224355.0,
+      "b84b721e-76ca-49ef-b486-f3debd92371d", NoticeConfig.Format.SMS);
+
 
     CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
     client.get(scheduledNoticesStorageUrl(), TENANT_ID, ResponseHandler.json(getCompleted));
-    JsonResponse response = getCompleted.get(5, TimeUnit.SECONDS);
+    JsonResponse response = getCompleted.get(5, SECONDS);
     ScheduledNotices scheduledNotices = response.getJson().mapTo(ScheduledNotices.class);
 
-    assertThat(scheduledNotices.getTotalRecords(), is(1));
+    assertThat(scheduledNotices.getScheduledNotices().size(), is(2));
+    assertThat(scheduledNotices.getTotalRecords(), is(2));
+  }
+
+  @Test
+  public void canGetScheduledNoticesCollectionByQuery() throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    String templateId = "b84b721e-76ca-49ef-b486-f3debd92371d";
+
+    createScheduledNotice(1557981117909.0, NoticeConfig.Timing.BEFORE, 1117909.0,
+      "a0d83326-d47e-43c6-8da6-f972015c3b52", NoticeConfig.Format.EMAIL);
+
+    createScheduledNotice(1777983337911.0, NoticeConfig.Timing.AFTER, 2224355.0,
+      templateId, NoticeConfig.Format.SMS);
+
+    createScheduledNotice(2883982217988.0, NoticeConfig.Timing.UPON_AT, 3337909.0,
+      templateId, NoticeConfig.Format.SMS);
+
+    String query = "?query=noticeConfig.templateId=" + templateId;
+
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
+    client.get(scheduledNoticesStorageUrl(query), TENANT_ID, ResponseHandler.json(getCompleted));
+    JsonResponse response = getCompleted.get(5, SECONDS);
+
+    ScheduledNotices scheduledNotices = response.getJson().mapTo(ScheduledNotices.class);
+
+    assertThat(scheduledNotices.getScheduledNotices().size(), is(2));
+    assertThat(scheduledNotices.getTotalRecords(), is(2));
   }
 
   @Test
   public void canGetScheduledNoticeById() throws MalformedURLException, InterruptedException,ExecutionException,
     TimeoutException {
 
-    ScheduledNotice createdNotice = createScheduledNotice();
-    ScheduledNotice receivedNotice = getById(scheduledNoticesStorageUrl("/" + createdNotice.getId()))
-      .mapTo(ScheduledNotice.class);
-    NoticeConfig recievedConfig = receivedNotice.getNoticeConfig();
+    Double nextRunTime = 1557981117909.0;
+    NoticeConfig.Timing timing = NoticeConfig.Timing.BEFORE;
+    Double recurringPeriod = 1117909.0;
+    String templateId = "a0d83326-d47e-43c6-8da6-f972015c3b52";
+    NoticeConfig.Format format = NoticeConfig.Format.EMAIL;
 
-    assertThat(createdNotice.getNextRunTime(), is(notice.getNextRunTime()));
-    assertThat(recievedConfig.getTiming(), is(config.getTiming()));
-    assertThat(recievedConfig.getRecurringPeriod(), is(config.getRecurringPeriod()));
-    assertThat(recievedConfig.getTemplateId(), is(config.getTemplateId()));
-    assertThat(recievedConfig.getFormat(), is(config.getFormat()));
+    String createdNoticeId = createScheduledNotice(nextRunTime, timing, recurringPeriod, templateId, format).getId();
+
+    ScheduledNotice receivedNotice = getById(scheduledNoticesStorageUrl("/" + createdNoticeId))
+      .mapTo(ScheduledNotice.class);
+    NoticeConfig receivedConfig = receivedNotice.getNoticeConfig();
+
+    assertThat(receivedNotice.getNextRunTime(), is(nextRunTime));
+    assertThat(receivedConfig.getTiming(), is(timing));
+    assertThat(receivedConfig.getRecurringPeriod(), is(recurringPeriod));
+    assertThat(receivedConfig.getTemplateId(), is(templateId));
+    assertThat(receivedConfig.getFormat(), is(format));
   }
 
   @Test
   public void canUpdateScheduledNoticeById() throws MalformedURLException, InterruptedException,ExecutionException,
     TimeoutException {
 
-    String noticeId = createScheduledNotice().getId();
+    String noticeId = createScheduledNotice(1557981117909.0, NoticeConfig.Timing.BEFORE, 1117909.0,
+      "a0d83326-d47e-43c6-8da6-f972015c3b52", NoticeConfig.Format.EMAIL).getId();
 
     NoticeConfig newConfig = new NoticeConfig()
       .withTiming(NoticeConfig.Timing.AFTER)
@@ -114,7 +145,7 @@ public class ScheduledNoticesAPITest extends ApiTests {
     CompletableFuture<Response> putCompleted = new CompletableFuture<>();
     client.put(scheduledNoticesStorageUrl("/" + noticeId), JsonObject.mapFrom(newNotice),
       TENANT_ID, ResponseHandler.empty(putCompleted));
-    putCompleted.get(5, TimeUnit.SECONDS);
+    putCompleted.get(5, SECONDS);
 
     ScheduledNotice updatedNotice = getById(scheduledNoticesStorageUrl("/" + noticeId)).mapTo(ScheduledNotice.class);
     NoticeConfig updatedConfig = updatedNotice.getNoticeConfig();
@@ -130,21 +161,103 @@ public class ScheduledNoticesAPITest extends ApiTests {
   public void canDeleteScheduledNoticeById() throws InterruptedException, MalformedURLException, TimeoutException,
     ExecutionException {
 
-    String noticeId = createScheduledNotice().getId();
+    String noticeId = createScheduledNotice(1557981117909.0, NoticeConfig.Timing.BEFORE, 1117909.0,
+      "a0d83326-d47e-43c6-8da6-f972015c3b52", NoticeConfig.Format.EMAIL).getId();
 
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
     client.delete(scheduledNoticesStorageUrl("/" + noticeId), TENANT_ID, ResponseHandler.empty(deleteCompleted));
-    deleteCompleted.get(5, TimeUnit.SECONDS);
+    deleteCompleted.get(5, SECONDS);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     client.get(scheduledNoticesStorageUrl("/" + noticeId), TENANT_ID, ResponseHandler.empty(getCompleted));
-    Response response = getCompleted.get(5, TimeUnit.SECONDS);
+    Response response = getCompleted.get(5, SECONDS);
 
     assertThat(response.getStatusCode(), is(404));
   }
 
-  private ScheduledNotice createScheduledNotice() throws MalformedURLException, InterruptedException,
+  @Test
+  public void canDeleteAllScheduledNotices() throws InterruptedException, MalformedURLException, TimeoutException,
+    ExecutionException {
+
+    createScheduledNotice(1557981117909.0, NoticeConfig.Timing.BEFORE, 1117909.0,
+      "a0d83326-d47e-43c6-8da6-f972015c3b52", NoticeConfig.Format.EMAIL);
+
+    createScheduledNotice(1777983337909.0, NoticeConfig.Timing.AFTER, 2224355.0,
+      "b84b721e-76ca-49ef-b486-f3debd92371d", NoticeConfig.Format.SMS);
+
+    CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
+    client.delete(scheduledNoticesStorageUrl(), TENANT_ID, ResponseHandler.empty(deleteCompleted));
+    deleteCompleted.get(5, SECONDS);
+
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
+    client.get(scheduledNoticesStorageUrl(), TENANT_ID, ResponseHandler.json(getCompleted));
+    JsonResponse response = getCompleted.get(5, SECONDS);
+    ScheduledNotices scheduledNotices = response.getJson().mapTo(ScheduledNotices.class);
+
+    assertThat(scheduledNotices.getScheduledNotices().size(), is(0));
+    assertThat(scheduledNotices.getTotalRecords(), is(0));
+  }
+
+  @Test
+  public void canDeleteScheduledNoticesByQuery() throws Exception {
+
+    String templateId = "b84b721e-76ca-49ef-b486-f3debd92371d";
+
+    createScheduledNotice(1557981117909.0, NoticeConfig.Timing.BEFORE, 1117909.0,
+      "a0d83326-d47e-43c6-8da6-f972015c3b52", NoticeConfig.Format.EMAIL);
+
+    createScheduledNotice(1777983337911.0, NoticeConfig.Timing.AFTER, 2224355.0,
+      templateId, NoticeConfig.Format.SMS);
+
+    createScheduledNotice(2883982217988.0, NoticeConfig.Timing.UPON_AT, 3337909.0,
+      templateId, NoticeConfig.Format.SMS);
+
+    String query = "?query=noticeConfig.templateId=" + templateId;
+
+    CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
+    client.delete(scheduledNoticesStorageUrl(query), TENANT_ID, ResponseHandler.empty(deleteCompleted));
+    deleteCompleted.get(5, SECONDS);
+
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
+    client.get(scheduledNoticesStorageUrl(query), TENANT_ID, ResponseHandler.json(getCompleted));
+    JsonResponse response = getCompleted.get(5, SECONDS);
+
+    ScheduledNotices scheduledNotices = response.getJson().mapTo(ScheduledNotices.class);
+
+    assertThat(scheduledNotices.getScheduledNotices().size(), is(0));
+    assertThat(scheduledNotices.getTotalRecords(), is(0));
+  }
+
+  @Test
+  public void cannotDeleteScheduledNoticesWithInvalidQuery() throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
+
+    String query = "?query=invalidQuery";
+
+    CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
+    client.delete(scheduledNoticesStorageUrl(query), TENANT_ID, ResponseHandler.empty(deleteCompleted));
+    Response response = deleteCompleted.get(5, SECONDS);
+
+    assertThat(response.getStatusCode(), is(400));
+  }
+
+  private ScheduledNotice createScheduledNotice(Double nextRunTime,
+                                                NoticeConfig.Timing timing,
+                                                Double recurringPeriod,
+                                                String templateId,
+                                                NoticeConfig.Format format)
+    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+
+    NoticeConfig config = new NoticeConfig()
+      .withTiming(timing)
+      .withRecurringPeriod(recurringPeriod)
+      .withTemplateId(templateId)
+      .withFormat(format);
+
+    ScheduledNotice notice = new ScheduledNotice()
+      .withNextRunTime(nextRunTime)
+      .withNoticeConfig(config);
+
     return createEntity(JsonObject.mapFrom(notice), scheduledNoticesStorageUrl())
       .getJson()
       .mapTo(ScheduledNotice.class);
