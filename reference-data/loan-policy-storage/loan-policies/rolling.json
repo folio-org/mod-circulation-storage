@@ -6,8 +6,8 @@
   "loansPolicy" : {
     "profileId" : "Rolling",
     "period" : {
-      "duration" : 1,
-      "intervalId" : "Months"
+      "duration" : 60,
+      "intervalId" : "Days"
     },
     "closedLibraryDueDateManagementId" : "CURRENT_DUE_DATE",
     "gracePeriod" : {
@@ -23,6 +23,18 @@
     "period" : {
       "duration" : 30,
       "intervalId" : "Days"
+    }
+  },
+  "requestManagement": {
+    "recalls": {
+      "minimumGuaranteedLoanPeriod": {
+        "duration" : 30,
+        "intervalId" : "Days"
+      },
+      "recallReturnInterval": {
+        "duration" : 5,
+        "intervalId" : "Days"
+      }
     }
   }
 }
