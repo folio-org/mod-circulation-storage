@@ -166,19 +166,7 @@
       "generateId": false,
       "pkColumnName": "_id",
       "withMetadata": true,
-      "withAuditing": false,
-      "foreignKeys": [
-        {
-          "fieldName": "loanId",
-          "targetTable": "loan",
-          "tOps": "ADD"
-        },
-        {
-          "fieldName": "requestId",
-          "targetTable": "request",
-          "tOps": "ADD"
-        }
-      ]
+      "withAuditing": false
     }
   ]
 }
