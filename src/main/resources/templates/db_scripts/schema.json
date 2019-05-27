@@ -163,7 +163,7 @@
     },
     {
       "tableName": "scheduled_notice",
-      "generateId": false,
+      "generateId": true,
       "pkColumnName": "_id",
       "withMetadata": true,
       "withAuditing": false

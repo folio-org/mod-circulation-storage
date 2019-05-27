@@ -18,7 +18,6 @@
   },
   "additionalProperties": false,
   "required": [
-    "scheduledNotices",
-    "totalRecords"
+    "scheduledNotices"
   ]
 }

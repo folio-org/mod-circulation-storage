@@ -8,7 +8,9 @@ import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 
 import static org.folio.rest.persist.PostgresClient.convertToPsqlStandard;
 
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.ws.rs.core.Response;
 
@@ -16,6 +18,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.ext.sql.ResultSet;
 import io.vertx.ext.sql.UpdateResult;
 
 import org.apache.commons.lang3.StringUtils;
@@ -111,11 +114,35 @@ public class ScheduledNoticesAPI implements ScheduledNoticeStorage {
 
   }
 
-  private Future<UpdateResult> executeSql(PostgresClient pgClient, String sql) {
+  @Override
+  public void postScheduledNoticeStorageBulkSave(ScheduledNotices entity,
+                                                 Map<String, String> okapiHeaders,
+                                                 Handler<AsyncResult<Response>> asyncResultHandler,
+                                                 Context vertxContext) {
+
+    List<ScheduledNotice> scheduledNotices = entity.getScheduledNotices();
+    scheduledNotices.forEach(notice -> notice.setId(UUID.randomUUID().toString()));
+    PostgresClient pgClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
+
+    saveScheduledNotices(pgClient, scheduledNotices)
+      .map(v -> PostScheduledNoticeStorageBulkSaveResponse.respond201WithApplicationJson(entity))
+      .map(Response.class::cast)
+      .otherwise(this::mapExceptionToResponse)
+      .setHandler(asyncResultHandler);
+  }
+
+  private Future<Void> saveScheduledNotices(PostgresClient pgClient, List<ScheduledNotice> scheduledNotices) {
+
+    Future<ResultSet> future = Future.future();
+    pgClient.saveBatch(SCHEDULED_NOTICE_TABLE, scheduledNotices, future.completer());
+    return future.map(rs -> null);
+  }
+
+  private Future<Void> executeSql(PostgresClient pgClient, String sql) {
 
     Future<UpdateResult> future = Future.future();
     pgClient.execute(sql, future.completer());
-    return future;
+    return future.map(ur -> null);
   }
 
   private Future<String> clqToSqlDeleteQuery(String cql, String tenant) {
@@ -125,12 +152,12 @@ public class ScheduledNoticesAPI implements ScheduledNoticeStorage {
     if (StringUtils.isEmpty(cql)) {
       return succeededFuture(sql);
     } else {
-      return getSqlQuery(cql)
+      return cqlToSqlQuery(cql)
         .map(where -> sql + " WHERE " + where);
     }
   }
 
-  private Future<String> getSqlQuery(String cql) {
+  private Future<String> cqlToSqlQuery(String cql) {
 
     try {
       return succeededFuture(new CQL2PgJSON("jsonb").cql2pgJson(cql));

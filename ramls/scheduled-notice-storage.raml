@@ -51,6 +51,22 @@ resourceTypes:
         collection-item:
           schema: scheduled-notice
           exampleItem: !include examples/scheduled-notice.json
+  /bulk-save:
+    post:
+      is: [validate]
+      description: "Save scheduled notice collection"
+      body:
+        application/json:
+          type: scheduled-notices
+      responses:
+        201:
+          description: "Returns a newly created items with populated UUIDs"
+          body:
+            application/json:
+              type: scheduled-notices
+
+
+
 
 
 
