@@ -284,6 +284,47 @@
       ]
     },
     {
+      "id": "scheduled-notice-storage",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/scheduled-notice-storage/scheduled-notices",
+          "permissionsRequired": ["scheduled-notice-storage.scheduled-notices.collection.get"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/scheduled-notice-storage/scheduled-notices/{id}",
+          "permissionsRequired": ["scheduled-notice-storage.scheduled-notices.item.get"]
+        },
+        {
+          "methods": ["POST"],
+          "pathPattern": "/scheduled-notice-storage/scheduled-notices",
+          "permissionsRequired": ["scheduled-notice-storage.scheduled-notices.item.post"]
+        },
+        {
+          "methods": ["POST"],
+          "pathPattern": "/scheduled-notice-storage/bulk-save",
+          "permissionsRequired": ["scheduled-notice-storage.bulk-save"]
+        },
+        {
+          "methods": ["PUT"],
+          "pathPattern": "/scheduled-notice-storage/scheduled-notices/{id}",
+          "permissionsRequired": ["scheduled-notice-storage.scheduled-notices.item.put"]
+        },
+        {
+          "methods": ["DELETE"],
+          "pathPattern": "/scheduled-notice-storage/scheduled-notices",
+          "permissionsRequired": ["scheduled-notice-storage.scheduled-notices.item.delete"]
+        },
+        {
+          "methods": ["DELETE"],
+          "pathPattern": "/scheduled-notice-storage/scheduled-notices/{id}",
+          "permissionsRequired": ["scheduled-notice-storage.scheduled-notices.collection.delete"]
+        }
+      ]
+    },
+    {
       "id": "_tenant",
       "version": "1.2",
       "interfaceType": "system",
@@ -525,6 +566,41 @@
       "description": "Get individual patron notice policy by id"
     },
     {
+      "permissionName": "scheduled-notice-storage.scheduled-notices.collection.get",
+      "displayName": "Circulation storage - get scheduled notice collection",
+      "description": "Get scheduled notice collection from storage"
+    },
+    {
+      "permissionName": "scheduled-notice-storage.scheduled-notices.item.get",
+      "displayName": "Circulation storage - get individual scheduled notice",
+      "description": "Get individual scheduled notice by id"
+    },
+    {
+      "permissionName": "scheduled-notice-storage.scheduled-notices.item.post",
+      "displayName": "Circulation storage - post individual scheduled notice",
+      "description": "Create individual scheduled notice"
+    },
+    {
+      "permissionName": "scheduled-notice-storage.bulk-save",
+      "displayName": "Circulation storage - create scheduled notice collection",
+      "description": "Create scheduled notice collection"
+    },
+    {
+      "permissionName": "scheduled-notice-storage.scheduled-notices.item.put",
+      "displayName": "Circulation storage - put individual scheduled notice",
+      "description": "Put individual scheduled notice by id"
+    },
+    {
+      "permissionName": "scheduled-notice-storage.scheduled-notices.item.delete",
+      "displayName": "Circulation storage - delete individual scheduled notice",
+      "description": "Delete individual scheduled notice by id"
+    },
+    {
+      "permissionName": "scheduled-notice-storage.scheduled-notices.collection.delete",
+      "displayName": "Circulation storage - delete all scheduled notices",
+      "description": "Delete all scheduled notices from storage"
+    },
+    {
       "permissionName": "circulation-storage.all",
       "displayName": "Circulation storage module - all permissions",
       "description": "Entire set of permissions needed to use the circulation storage module",
@@ -579,7 +655,14 @@
         "circulation-storage.request-policies.collection.delete",
         "circulation-storage.request-policies.item.delete",
         "circulation-storage.request-policies.item.post",
-        "circulation-storage.request-policies.item.put"
+        "circulation-storage.request-policies.item.put",
+        "scheduled-notice-storage.scheduled-notices.collection.get",
+        "scheduled-notice-storage.scheduled-notices.item.get",
+        "scheduled-notice-storage.scheduled-notices.item.post",
+        "scheduled-notice-storage.bulk-save",
+        "scheduled-notice-storage.scheduled-notices.item.put",
+        "scheduled-notice-storage.scheduled-notices.item.delete",
+        "scheduled-notice-storage.scheduled-notices.collection.delete"
       ]
     },
     {
