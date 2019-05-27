@@ -18,6 +18,8 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.sql.ResultSet;
 import io.vertx.ext.sql.UpdateResult;
 
@@ -34,6 +36,8 @@ import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 
 public class ScheduledNoticesAPI implements ScheduledNoticeStorage {
+
+  private static final Logger logger = LoggerFactory.getLogger(ScheduledNoticeStorage.class);
 
   private static final String SCHEDULED_NOTICE_TABLE = "scheduled_notice";
   private static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
@@ -167,6 +171,8 @@ public class ScheduledNoticesAPI implements ScheduledNoticeStorage {
   }
 
   private Response mapExceptionToResponse(Throwable t) {
+
+    logger.error(t.getMessage(), t);
 
     if (t.getClass() == QueryValidationException.class) {
       return Response.status(400)
