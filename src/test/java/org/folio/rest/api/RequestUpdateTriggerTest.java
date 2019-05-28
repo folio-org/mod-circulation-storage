@@ -2,6 +2,7 @@ package org.folio.rest.api;
 
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
 
@@ -54,16 +55,10 @@ class RequestUpdateTriggerTest {
 
   @ParameterizedTest
   @CsvSource(value = {
-    "Open - Awaiting pickup | Closed - Pickup expired | true",
-    "Open - Awaiting pickup | Closed - Cancelled      | true",
-    "Open - Awaiting pickup | Open - Not yet filled   | false",
-    "Open - Awaiting pickup | Open - In transit       | false",
-    "Open - Not yet filled  | Closed - Unfilled       | false",
-    "Open - Not yet filled  | Closed - Filled         | false",
+    "Open - Awaiting pickup | Closed - Pickup expired",
+    "Open - Awaiting pickup | Closed - Cancelled     "
   }, delimiter = '|')
-  void updateRequestTriggerTest(String oldStatus,
-                                String newStatus,
-                                boolean awaitingPickupRequestClosedDatePresent)
+  void awaitingPickupRequestClosedDateShouldBePresentAfterStatusTransition(String oldStatus, String newStatus)
     throws InterruptedException, ExecutionException, TimeoutException {
 
     CompletableFuture<JsonObject> future = new CompletableFuture<>();
@@ -82,14 +77,44 @@ class RequestUpdateTriggerTest {
 
     JsonObject updatedRequest = future.get(5, TimeUnit.SECONDS);
 
+    assertThat(updatedRequest.getString("awaitingPickupRequestClosedDate"),
+      is(notNullValue()));
 
-    if (awaitingPickupRequestClosedDatePresent) {
-      assertThat(updatedRequest.getString("awaitingPickupRequestClosedDate"),
-        is(withinSecondsAfter(Seconds.seconds(2), requestUpdatedDate)));
-    } else {
-      assertThat(updatedRequest.getString("awaitingPickupRequestClosedDate"),
-        is(nullValue()));
-    }
+    assertThat(updatedRequest.getString("awaitingPickupRequestClosedDate"),
+      is(withinSecondsAfter(Seconds.seconds(2), requestUpdatedDate)));
+  }
+
+  @ParameterizedTest
+  @CsvSource(value = {
+    "Open - Not yet filled  | Closed - Filled       ",
+    "Open - Not yet filled  | Closed - Cancelled    ",
+    "Open - Not yet filled  | Closed - Unfilled     ",
+    "Open - Not yet filled  | Open - In transit     ",
+    "Open - Not yet filled  | Open - Awaiting pickup",
+    "Open - Awaiting pickup | Open - In transit     ",
+    "Open - In transit      | Closed - Cancelled    ",
+    "Open - In transit      | Open - Awaiting pickup",
+    "Open - In transit      | Open - Not yet filled "
+  }, delimiter = '|')
+  void awaitingPickupRequestClosedDateShouldNotBePresentAfterStatusTransition(String oldStatus, String newStatus)
+    throws InterruptedException, ExecutionException, TimeoutException {
+
+    CompletableFuture<JsonObject> future = new CompletableFuture<>();
+
+    String id = "3a57dc83-e70d-404b-b1f1-442b88760331";
+
+    Request request = new Request()
+      .withStatus(fromValue(oldStatus));
+
+    saveRequest(id, request)
+      .compose(v -> updateRequest(id, request.withStatus(fromValue(newStatus))))
+      .compose(v -> getRequest(id))
+      .setHandler(updatedRequest -> future.complete(updatedRequest.result()));
+
+    JsonObject updatedRequest = future.get(5, TimeUnit.SECONDS);
+
+    assertThat(updatedRequest.getString("awaitingPickupRequestClosedDate"),
+      is(nullValue()));
   }
 
   private Future<Void> saveRequest(String id, Request request) {
