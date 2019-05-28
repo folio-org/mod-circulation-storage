@@ -3,9 +3,11 @@ package org.folio.rest.api;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.nullValue;
 
 import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
 import static org.folio.rest.jaxrs.model.Request.Status.fromValue;
+import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -18,6 +20,8 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.UpdateResult;
 
+import org.joda.time.DateTime;
+import org.joda.time.Seconds;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -62,21 +66,30 @@ class RequestUpdateTriggerTest {
                                 boolean awaitingPickupRequestClosedDatePresent)
     throws InterruptedException, ExecutionException, TimeoutException {
 
-    CompletableFuture<Request> future = new CompletableFuture<>();
+    CompletableFuture<JsonObject> future = new CompletableFuture<>();
 
     String id = "3a57dc83-e70d-404b-b1f1-442b88760331";
 
     Request request = new Request()
       .withStatus(fromValue(oldStatus));
 
+    DateTime requestUpdatedDate = DateTime.now();
+
     saveRequest(id, request)
       .compose(v -> updateRequest(id, request.withStatus(fromValue(newStatus))))
       .compose(v -> getRequest(id))
       .setHandler(updatedRequest -> future.complete(updatedRequest.result()));
 
-    Request updatedRequest = future.get(5, TimeUnit.SECONDS);
+    JsonObject updatedRequest = future.get(5, TimeUnit.SECONDS);
 
-    assertThat(updatedRequest.getAwaitingPickupRequestClosedDate() != null, is(awaitingPickupRequestClosedDatePresent));
+
+    if (awaitingPickupRequestClosedDatePresent) {
+      assertThat(updatedRequest.getString("awaitingPickupRequestClosedDate"),
+        is(withinSecondsAfter(Seconds.seconds(2), requestUpdatedDate)));
+    } else {
+      assertThat(updatedRequest.getString("awaitingPickupRequestClosedDate"),
+        is(nullValue()));
+    }
   }
 
   private Future<Void> saveRequest(String id, Request request) {
@@ -95,11 +108,11 @@ class RequestUpdateTriggerTest {
     return future.map(ur -> null);
   }
 
-  private Future<Request> getRequest(String id) {
+  private Future<JsonObject> getRequest(String id) {
 
     Future<JsonObject> future = Future.future();
     pgClient.getById(REQUEST_TABLE, id, future.completer());
 
-    return future.map(json -> json.mapTo(Request.class));
+    return future;
   }
 }
