@@ -1516,6 +1516,7 @@ public class RequestsApiTest extends ApiTests {
     String requestId = createEntity(request, requestStorageUrl()).getJson().getString("id");
     request.put("status", CLOSED_PICKUP_EXPIRED);
 
+    DateTime requestUpdatedDate = DateTime.now();
     CompletableFuture<Response> putCompleted = new CompletableFuture<>();
     client.put(requestStorageUrl("/" + requestId), request, TENANT_ID, ResponseHandler.empty(putCompleted));
     putCompleted.get(5, TimeUnit.SECONDS);
@@ -1523,6 +1524,8 @@ public class RequestsApiTest extends ApiTests {
     JsonObject updatedRequest = getById(requestStorageUrl("/" + requestId));
 
     assertThat(updatedRequest.getString("awaitingPickupRequestClosedDate"), is(notNullValue()));
+    assertThat(updatedRequest.getString("awaitingPickupRequestClosedDate"),
+      is(withinSecondsAfter(Seconds.seconds(2), requestUpdatedDate)));
   }
 
   @Test
@@ -1536,6 +1539,7 @@ public class RequestsApiTest extends ApiTests {
     String requestId = createEntity(request, requestStorageUrl()).getJson().getString("id");
     request.put("status", CLOSED_CANCELLED);
 
+    DateTime requestUpdatedDate = DateTime.now();
     CompletableFuture<Response> putCompleted = new CompletableFuture<>();
     client.put(requestStorageUrl("/" + requestId), request, TENANT_ID, ResponseHandler.empty(putCompleted));
     putCompleted.get(5, TimeUnit.SECONDS);
@@ -1543,6 +1547,8 @@ public class RequestsApiTest extends ApiTests {
     JsonObject updatedRequest = getById(requestStorageUrl("/" + requestId));
 
     assertThat(updatedRequest.getString("awaitingPickupRequestClosedDate"), is(notNullValue()));
+    assertThat(updatedRequest.getString("awaitingPickupRequestClosedDate"),
+      is(withinSecondsAfter(Seconds.seconds(2), requestUpdatedDate)));
   }
 
   @Test
