@@ -315,12 +315,12 @@
         {
           "methods": ["DELETE"],
           "pathPattern": "/scheduled-notice-storage/scheduled-notices",
-          "permissionsRequired": ["scheduled-notice-storage.scheduled-notices.item.delete"]
+          "permissionsRequired": ["scheduled-notice-storage.scheduled-notices.collection.delete"]
         },
         {
           "methods": ["DELETE"],
           "pathPattern": "/scheduled-notice-storage/scheduled-notices/{id}",
-          "permissionsRequired": ["scheduled-notice-storage.scheduled-notices.collection.delete"]
+          "permissionsRequired": ["scheduled-notice-storage.scheduled-notices.item.delete"]
         }
       ]
     },
