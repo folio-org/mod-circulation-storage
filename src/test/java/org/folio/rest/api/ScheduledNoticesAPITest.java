@@ -8,7 +8,6 @@ import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -253,36 +252,6 @@ public class ScheduledNoticesAPITest extends ApiTests {
     Response response = deleteCompleted.get(5, SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
-  }
-
-  @Test
-  public void canSaveScheduledNoticeCollection() throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
-
-    ScheduledNotice notice1 = buildScheduledNotice(NoticeConfig.Timing.UPON_AT, ONE_DAY_PERIOD,
-      "b84b721e-76ca-49ef-b486-f3debd92371d", NoticeConfig.Format.SMS);
-
-    ScheduledNotice notice2 = buildScheduledNotice(NoticeConfig.Timing.BEFORE, ONE_DAY_PERIOD,
-      "a0d83326-d47e-43c6-8da6-f972015c3b52", NoticeConfig.Format.EMAIL);
-
-    ScheduledNotice notice3 = buildScheduledNotice(NoticeConfig.Timing.AFTER, ONE_MONTH_PERIOD,
-      "b84b721e-76ca-49ef-b486-f3debd92371d", NoticeConfig.Format.SMS);
-
-    ScheduledNotices collection = new ScheduledNotices()
-      .withScheduledNotices(Arrays.asList(notice1, notice2, notice3));
-
-    CompletableFuture<JsonResponse> saveCompleted = new CompletableFuture<>();
-    client.post(scheduledNoticesStorageUrl("/bulk-save"), JsonObject.mapFrom(collection), TENANT_ID,
-      ResponseHandler.json(saveCompleted));
-    saveCompleted.get(5, SECONDS);
-
-    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
-    client.get(scheduledNoticesStorageUrl("/scheduled-notices"), TENANT_ID, ResponseHandler.json(getCompleted));
-    JsonResponse response = getCompleted.get(5, SECONDS);
-    ScheduledNotices scheduledNotices = response.getJson().mapTo(ScheduledNotices.class);
-
-    assertThat(scheduledNotices.getScheduledNotices().size(), is(3));
-    assertThat(scheduledNotices.getTotalRecords(), is(3));
   }
 
   private ScheduledNotice createScheduledNotice(Date nextRunTime,

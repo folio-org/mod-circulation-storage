@@ -303,11 +303,6 @@
           "permissionsRequired": ["scheduled-notice-storage.scheduled-notices.item.post"]
         },
         {
-          "methods": ["POST"],
-          "pathPattern": "/scheduled-notice-storage/bulk-save",
-          "permissionsRequired": ["scheduled-notice-storage.bulk-save"]
-        },
-        {
           "methods": ["PUT"],
           "pathPattern": "/scheduled-notice-storage/scheduled-notices/{id}",
           "permissionsRequired": ["scheduled-notice-storage.scheduled-notices.item.put"]
@@ -581,11 +576,6 @@
       "description": "Create individual scheduled notice"
     },
     {
-      "permissionName": "scheduled-notice-storage.bulk-save",
-      "displayName": "Circulation storage - create scheduled notice collection",
-      "description": "Create scheduled notice collection"
-    },
-    {
       "permissionName": "scheduled-notice-storage.scheduled-notices.item.put",
       "displayName": "Circulation storage - put individual scheduled notice",
       "description": "Put individual scheduled notice by id"
@@ -659,7 +649,6 @@
         "scheduled-notice-storage.scheduled-notices.collection.get",
         "scheduled-notice-storage.scheduled-notices.item.get",
         "scheduled-notice-storage.scheduled-notices.item.post",
-        "scheduled-notice-storage.bulk-save",
         "scheduled-notice-storage.scheduled-notices.item.put",
         "scheduled-notice-storage.scheduled-notices.item.delete",
         "scheduled-notice-storage.scheduled-notices.collection.delete"
