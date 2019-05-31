@@ -88,7 +88,8 @@ public class ExpirationTool {
 
     String where = format("WHERE " +
         "(jsonb->>'status' = '%1$s' AND jsonb->>'requestExpirationDate' < '%3$s') OR " +
-        "(jsonb->>'status' = '%2$s' AND jsonb->>'holdShelfExpirationDate' < '%3$s')",
+        "(jsonb->>'status' = '%2$s' AND jsonb->>'holdShelfExpirationDate' < '%3$s') " +
+        "LIMIT 150",
 
       OPEN_NOT_YET_FILLED.value(),
       OPEN_AWAITING_PICKUP.value(),
