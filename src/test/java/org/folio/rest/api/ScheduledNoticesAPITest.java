@@ -9,6 +9,7 @@ import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Date;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -48,7 +49,7 @@ public class ScheduledNoticesAPITest extends ApiTests {
 
     Date nextRunTime = new Date();
     NoticeConfig.Timing timing = NoticeConfig.Timing.BEFORE;
-    String templateId = "a0d83326-d47e-43c6-8da6-f972015c3b52";
+    String templateId = UUID.randomUUID().toString();
     NoticeConfig.Format format = NoticeConfig.Format.EMAIL;
 
     String createdNoticeId = createScheduledNotice(nextRunTime, timing, ONE_DAY_PERIOD, templateId, format).getId();
@@ -70,10 +71,10 @@ public class ScheduledNoticesAPITest extends ApiTests {
     ExecutionException, TimeoutException {
 
     createScheduledNotice(NoticeConfig.Timing.BEFORE, ONE_DAY_PERIOD,
-      "a0d83326-d47e-43c6-8da6-f972015c3b52", NoticeConfig.Format.EMAIL);
+      UUID.randomUUID().toString(), NoticeConfig.Format.EMAIL);
 
     createScheduledNotice(NoticeConfig.Timing.AFTER, ONE_MONTH_PERIOD,
-      "b84b721e-76ca-49ef-b486-f3debd92371d", NoticeConfig.Format.SMS);
+      UUID.randomUUID().toString(), NoticeConfig.Format.SMS);
 
 
     CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
@@ -89,10 +90,10 @@ public class ScheduledNoticesAPITest extends ApiTests {
   public void canGetScheduledNoticesCollectionByQuery() throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    String templateId = "b84b721e-76ca-49ef-b486-f3debd92371d";
+    String templateId = UUID.randomUUID().toString();
 
     createScheduledNotice(NoticeConfig.Timing.BEFORE, ONE_DAY_PERIOD,
-      "a0d83326-d47e-43c6-8da6-f972015c3b52", NoticeConfig.Format.EMAIL);
+      UUID.randomUUID().toString(), NoticeConfig.Format.EMAIL);
 
     createScheduledNotice(NoticeConfig.Timing.AFTER, ONE_DAY_PERIOD,
       templateId, NoticeConfig.Format.SMS);
@@ -118,7 +119,7 @@ public class ScheduledNoticesAPITest extends ApiTests {
 
     Date nextRunTime = new Date();
     NoticeConfig.Timing timing = NoticeConfig.Timing.BEFORE;
-    String templateId = "a0d83326-d47e-43c6-8da6-f972015c3b52";
+    String templateId = UUID.randomUUID().toString();
     NoticeConfig.Format format = NoticeConfig.Format.EMAIL;
 
     String createdNoticeId = createScheduledNotice(nextRunTime, timing, ONE_DAY_PERIOD, templateId, format).getId();
@@ -140,7 +141,7 @@ public class ScheduledNoticesAPITest extends ApiTests {
     TimeoutException {
 
     String noticeId = createScheduledNotice(NoticeConfig.Timing.BEFORE, ONE_DAY_PERIOD,
-      "a0d83326-d47e-43c6-8da6-f972015c3b52", NoticeConfig.Format.EMAIL).getId();
+      UUID.randomUUID().toString(), NoticeConfig.Format.EMAIL).getId();
 
     RecurringPeriod period = new RecurringPeriod()
       .withDuration(1)
@@ -149,7 +150,7 @@ public class ScheduledNoticesAPITest extends ApiTests {
     NoticeConfig newConfig = new NoticeConfig()
       .withTiming(NoticeConfig.Timing.AFTER)
       .withRecurringPeriod(period)
-      .withTemplateId("9e249cc2-fca6-46e0-b3bb-803489c7726b")
+      .withTemplateId(UUID.randomUUID().toString())
       .withFormat(NoticeConfig.Format.SMS);
 
     ScheduledNotice newNotice = new ScheduledNotice()
@@ -175,7 +176,7 @@ public class ScheduledNoticesAPITest extends ApiTests {
     ExecutionException {
 
     String noticeId = createScheduledNotice(NoticeConfig.Timing.BEFORE, ONE_DAY_PERIOD,
-      "a0d83326-d47e-43c6-8da6-f972015c3b52", NoticeConfig.Format.EMAIL).getId();
+      UUID.randomUUID().toString(), NoticeConfig.Format.EMAIL).getId();
 
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
     client.delete(scheduledNoticesStorageUrl("/scheduled-notices/" + noticeId), TENANT_ID, ResponseHandler.empty(deleteCompleted));
@@ -193,10 +194,10 @@ public class ScheduledNoticesAPITest extends ApiTests {
     ExecutionException {
 
     createScheduledNotice(NoticeConfig.Timing.BEFORE, ONE_DAY_PERIOD,
-      "a0d83326-d47e-43c6-8da6-f972015c3b52", NoticeConfig.Format.EMAIL);
+      UUID.randomUUID().toString(), NoticeConfig.Format.EMAIL);
 
     createScheduledNotice(NoticeConfig.Timing.AFTER, ONE_MONTH_PERIOD,
-      "b84b721e-76ca-49ef-b486-f3debd92371d", NoticeConfig.Format.SMS);
+      UUID.randomUUID().toString(), NoticeConfig.Format.SMS);
 
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
     client.delete(scheduledNoticesStorageUrl("/scheduled-notices"), TENANT_ID, ResponseHandler.empty(deleteCompleted));
@@ -214,10 +215,10 @@ public class ScheduledNoticesAPITest extends ApiTests {
   @Test
   public void canDeleteScheduledNoticesByQuery() throws Exception {
 
-    String templateId = "b84b721e-76ca-49ef-b486-f3debd92371d";
+    String templateId = UUID.randomUUID().toString();
 
     createScheduledNotice(NoticeConfig.Timing.BEFORE, ONE_DAY_PERIOD,
-      "a0d83326-d47e-43c6-8da6-f972015c3b52", NoticeConfig.Format.EMAIL);
+      UUID.randomUUID().toString(), NoticeConfig.Format.EMAIL);
 
     createScheduledNotice(NoticeConfig.Timing.AFTER, ONE_DAY_PERIOD,
       templateId, NoticeConfig.Format.SMS);
