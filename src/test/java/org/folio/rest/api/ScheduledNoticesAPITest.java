@@ -295,14 +295,6 @@ public class ScheduledNoticesAPITest extends ApiTests {
       .withNoticeConfig(config);
   }
 
-  private ScheduledNotice buildScheduledNotice(NoticeConfig.Timing timing,
-                                               RecurringPeriod recurringPeriod,
-                                               String templateId,
-                                               NoticeConfig.Format format) {
-
-    return buildScheduledNotice(new Date(), timing, recurringPeriod, templateId, format);
-  }
-
   private static URL scheduledNoticesStorageUrl(String subPath) throws MalformedURLException {
     return StorageTestSuite.storageUrl("/scheduled-notice-storage" + subPath);
   }
