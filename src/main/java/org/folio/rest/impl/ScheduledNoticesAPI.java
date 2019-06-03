@@ -61,7 +61,7 @@ public class ScheduledNoticesAPI implements ScheduledNoticeStorage {
       
       PostgresClient pgClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
 
-      clqToSqlDeleteQuery(query, okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT))
+      cqlToSqlDeleteQuery(query, okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT))
         .compose(sql -> executeSql(pgClient, sql))
         .map(v -> DeleteScheduledNoticeStorageScheduledNoticesResponse.respond204())
         .map(Response.class::cast)
@@ -122,7 +122,7 @@ public class ScheduledNoticesAPI implements ScheduledNoticeStorage {
     return future.map(ur -> null);
   }
 
-  private Future<String> clqToSqlDeleteQuery(String cql, String tenant) {
+  private Future<String> cqlToSqlDeleteQuery(String cql, String tenant) {
 
     String sql = format("DELETE FROM %s.%s", convertToPsqlStandard(tenant), SCHEDULED_NOTICE_TABLE);
 
