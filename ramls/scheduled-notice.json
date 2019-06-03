@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "UUID of scheduled task",
+      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+    },
+    "loanId": {
+      "type": "string",
+      "description": "UUID of related loan for loan notices",
+      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+    },
+    "requestId": {
+      "type": "string",
+      "description": "UUID of related request for request notices",
+      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+    },
+    "nextRunTime": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Next run time"
+    },
+    "noticeConfig": {
+      "type": "object",
+      "properties": {
+        "timing": {
+          "type": "string",
+          "description": "Timing represents when we need to send notice, before, at or after loan due date",
+          "enum": [
+            "Upon At",
+            "Before",
+            "After"
+          ]
+        },
+        "recurringPeriod": {
+          "type": "object",
+          "$ref": "period.json",
+          "description": "Interval for recurring events"
+        },
+        "templateId": {
+          "type": "string",
+          "description": "UUID of related template",
+          "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+        },
+        "format": {
+          "type": "string",
+          "description": "Notice format",
+          "enum": [
+            "Email",
+            "SMS",
+            "Print"
+          ]
+        },
+        "sendInRealTime": {
+          "type": "boolean",
+          "description": "Real time notice flag"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "timing",
+        "templateId",
+        "format"
+      ]
+    },
+    "metadata": {
+      "$ref": "raml-util/schemas/metadata.schema",
+      "readonly": true
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "nextRunTime",
+    "noticeConfig"
+  ]
+}

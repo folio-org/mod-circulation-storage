@@ -1,0 +1,57 @@
+#%RAML 1.0
+title: Scheduled Notice Storage
+version: v0.1
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost:9130
+
+documentation:
+  - title: Scheduled Notice Storage API
+    content: <b>Storage for scheduled notices</b>
+
+types:
+  scheduled-notice: !include scheduled-notice.json
+  scheduled-notices: !include scheduled-notices.json
+  errors: !include raml-util/schemas/errors.schema
+  parameters: !include raml-util/schemas/parameters.schema
+
+traits:
+  language: !include raml-util/traits/language.raml
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+
+/scheduled-notice-storage:
+  /scheduled-notices:
+    displayName: Scheduled Notices
+    type:
+      collection:
+        schemaItem: scheduled-notice
+        schemaCollection: scheduled-notices
+        exampleItem: !include examples/scheduled-notice.json
+        exampleCollection: !include examples/scheduled-notices.json
+    get:
+      is: [pageable, searchable: {description: "with valid searchable fields", example: "loanId=188522a4-a2df-4a48-ab3d-44b62daef27f"}]
+    post:
+      is: [validate]
+    delete:
+      description: "Delete scheduled notices by cql query"
+      is: [searchable: {description: "with valid searchable fields", example: "loanId=188522a4-a2df-4a48-ab3d-44b62daef27f"}]
+      responses:
+        204:
+          description: "Successful deletion"
+        500:
+          description: "Internal server error, e.g. due to misconfiguration"
+          body:
+            text/plain:
+              example: "Internal server error, contact administrator"
+    /{scheduled-noticeId}:
+      type:
+        collection-item:
+          schema: scheduled-notice
+          exampleItem: !include examples/scheduled-notice.json
+      put:
+        is: [validate]
