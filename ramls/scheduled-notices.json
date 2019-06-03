@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Collection of scheduled notices",
+  "type": "object",
+  "properties": {
+    "scheduledNotices": {
+      "description": "List of items",
+      "id": "scheduledNotices",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "scheduled-notice.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "scheduledNotices"
+  ]
+}

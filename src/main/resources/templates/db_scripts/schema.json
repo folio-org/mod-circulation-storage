@@ -161,6 +161,13 @@
           "caseSensitive": false
         }
       ]
+    },
+    {
+      "tableName": "scheduled_notice",
+      "generateId": true,
+      "pkColumnName": "_id",
+      "withMetadata": true,
+      "withAuditing": false
     }
   ]
 }

@@ -47,7 +47,8 @@ import io.vertx.ext.sql.ResultSet;
   CancellationReasonsApiTest.class,
   PatronNoticePoliciesApiTest.class,
   RequestPoliciesApiTest.class,
-  RequestExpirationApiTest.class
+  RequestExpirationApiTest.class,
+  ScheduledNoticesAPITest.class
 })
 
 public class StorageTestSuite {
