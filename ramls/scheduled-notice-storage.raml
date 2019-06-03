@@ -35,6 +35,8 @@ resourceTypes:
         exampleCollection: !include examples/scheduled-notices.json
     get:
       is: [pageable, searchable: {description: "with valid searchable fields", example: "loanId=188522a4-a2df-4a48-ab3d-44b62daef27f"}]
+    post:
+      is: [validate]
     delete:
       description: "Delete scheduled notices by cql query"
       is: [searchable: {description: "with valid searchable fields", example: "loanId=188522a4-a2df-4a48-ab3d-44b62daef27f"}]
@@ -51,3 +53,5 @@ resourceTypes:
         collection-item:
           schema: scheduled-notice
           exampleItem: !include examples/scheduled-notice.json
+      put:
+        is: [validate]
