@@ -232,14 +232,23 @@ public class ScheduledNoticesAPITest extends ApiTests {
     client.delete(scheduledNoticesStorageUrl("/scheduled-notices?" + query), TENANT_ID, ResponseHandler.empty(deleteCompleted));
     deleteCompleted.get(5, SECONDS);
 
-    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
-    client.get(scheduledNoticesStorageUrl("/scheduled-notices?" + query), TENANT_ID, ResponseHandler.json(getCompleted));
-    JsonResponse response = getCompleted.get(5, SECONDS);
+    CompletableFuture<JsonResponse> getByQueryCompleted = new CompletableFuture<>();
+    client.get(scheduledNoticesStorageUrl("/scheduled-notices?" + query), TENANT_ID, ResponseHandler.json(getByQueryCompleted));
 
-    ScheduledNotices scheduledNotices = response.getJson().mapTo(ScheduledNotices.class);
+    CompletableFuture<JsonResponse> getAllCompleted = new CompletableFuture<>();
+    client.get(scheduledNoticesStorageUrl("/scheduled-notices"), TENANT_ID, ResponseHandler.json(getAllCompleted));
+
+    ScheduledNotices scheduledNotices = getByQueryCompleted.get(5, SECONDS)
+      .getJson()
+      .mapTo(ScheduledNotices.class);
+
+    ScheduledNotices allScheduledNotices = getAllCompleted.get(5, SECONDS)
+      .getJson()
+      .mapTo(ScheduledNotices.class);
 
     assertThat(scheduledNotices.getScheduledNotices().size(), is(0));
     assertThat(scheduledNotices.getTotalRecords(), is(0));
+    assertThat(allScheduledNotices.getTotalRecords(), is(1));
   }
 
   @Test
