@@ -10,7 +10,7 @@ END;
 $$ LANGUAGE 'plpgsql';
 
 
-DROP TRIGGER IF EXISTS ${table.tableName}_update_trigger ON ${myuniversity}_${mymodule}.${table.tableName} CASCADE;
+DROP TRIGGER IF EXISTS ${table.tableName}_update_trigger ON ${myuniversity}_${mymodule}.${table.tableName};
 
 
 CREATE TRIGGER ${table.tableName}_update_trigger
