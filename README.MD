@@ -145,7 +145,10 @@ and the [Docker image](https://hub.docker.com/r/folioorg/mod-circulation-storage
 
 There is database trigger for request update. It works in the following way:
 
-Given request with status 'Open - Awaiting pickup'.
-The request is updated and new status is 'Closed - Pickup expired' or 'Closed - Cancelled'.
-Than an update trigger adds new property 'awaitingPickupRequestClosedDate' to the request jsonb.
+Given a request with status 'Open - Awaiting pickup'<br/>
+When the request is updated and new status is 'Closed - Pickup expired' or 'Closed - Cancelled'<br/>
+Then an update trigger adds the property 'awaitingPickupRequestClosedDate' to the request JSONB<br/>
+
+Such behavior is required by Expired Holds Report CSV functionality in mod-circulation<br/>
+See [CIRC-320](https://issues.folio.org/browse/CIRC-320)
 
