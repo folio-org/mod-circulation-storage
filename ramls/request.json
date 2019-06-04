@@ -174,7 +174,8 @@
     "awaitingPickupRequestClosedDate": {
       "description": "A date when the request with awaiting pickup status was closed",
       "type": "string",
-      "format": "date-time"
+      "format": "date-time",
+      "readonly" : true
     }
   },
   "additionalProperties": false,
