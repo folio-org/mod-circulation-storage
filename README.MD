@@ -139,3 +139,16 @@ The built artifacts for this module are available.
 See [configuration](https://dev.folio.org/download/artifacts) for repository access,
 and the [Docker image](https://hub.docker.com/r/folioorg/mod-circulation-storage/).
 
+## Design notes
+
+### Request status transition
+
+There is database trigger for request update. It works in the following way:
+
+Given a request with status 'Open - Awaiting pickup'<br/>
+When the request is updated and new status is 'Closed - Pickup expired' or 'Closed - Cancelled'<br/>
+Then an update trigger adds the property 'awaitingPickupRequestClosedDate' to the request JSONB<br/>
+
+Such behavior is required by Expired Holds Report CSV functionality in mod-circulation<br/>
+See [CIRC-320](https://issues.folio.org/browse/CIRC-320)
+
