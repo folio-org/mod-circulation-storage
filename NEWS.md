@@ -1,3 +1,16 @@
+## 8.1.0 2019-06-10
+
+* Store when a request expires or is cancelled whilst awaiting pickup (CIRCSTORE-127)
+* Introduces storage of scheduled notices (CIRSTORE-132)
+* Executes the request expiration task every 2 minutes (CIRCSTORE-133)
+* Uses databases transactions during request expiration (CIRCSTORE-126)    
+* Simplifies default circulation rules and policies (CIRCSTORE-130)
+* Removes sample request records (CIRCSTORE-129)
+* Upgrades RAML Module Builder to 24.0.0 (CIRCSTORE-122)
+* Includes technical metadata in module descriptor (FOLIO-2003)
+* Provides `scheduled-notice-storage 0.1` (CIRCSTORE-132)
+* Provides `request-storage 8.1` (CIRCSTORE-127)
+
 ## 8.0.0 2019-05-07
 
 * Consistent closed due date management setting in sample policies CIRCSTORE-123, CIRCSTORE-120
