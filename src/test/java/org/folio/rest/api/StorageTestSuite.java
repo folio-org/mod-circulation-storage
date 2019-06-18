@@ -208,7 +208,7 @@ public class StorageTestSuite {
     CompletableFuture<ResultSet> selectCompleted = new CompletableFuture<>();
 
     String sql = String.format(
-      "SELECT null FROM %s_%s.%s" + " WHERE CAST(_id AS VARCHAR(50)) != jsonb->>'id'",
+      "SELECT null FROM %s_%s.%s" + " WHERE CAST(id AS VARCHAR(50)) != jsonb->>'id'",
       tenantId, "mod_circulation_storage", tableName);
 
     postgresClient.select(sql, result -> {

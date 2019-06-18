@@ -21,10 +21,9 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.sql.UpdateResult;
 
 import org.apache.commons.lang3.StringUtils;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
-import org.z3950.zing.cql.cql2pgjson.FieldException;
-import org.z3950.zing.cql.cql2pgjson.QueryValidationException;
-
+import org.folio.cql2pgjson.CQL2PgJSON;
+import org.folio.cql2pgjson.exception.FieldException;
+import org.folio.cql2pgjson.exception.QueryValidationException;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.ScheduledNotice;
 import org.folio.rest.jaxrs.model.ScheduledNotices;
@@ -57,8 +56,8 @@ public class ScheduledNoticesAPI implements ScheduledNoticeStorage {
                                                            Map<String, String> okapiHeaders,
                                                            Handler<AsyncResult<Response>> asyncResultHandler,
                                                            Context vertxContext) {
-    
-      
+
+
       PostgresClient pgClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
 
       cqlToSqlDeleteQuery(query, okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT))

@@ -8,6 +8,7 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.format.ISODateTimeFormat;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.UnsupportedEncodingException;
@@ -28,6 +29,7 @@ import static java.net.HttpURLConnection.HTTP_OK;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
+@Ignore("Requires bug fix in rmb audit table generation (id, orig_id): RMB-402")
 public class LoansApiHistoryTest extends ApiTests {
   @Before
   public void beforeEach()

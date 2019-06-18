@@ -1,7 +1,7 @@
 package org.folio.rest.api;
 
-
 import static org.folio.rest.support.matchers.periodJsonObjectMatcher.matchesPeriod;
+import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
@@ -23,6 +23,7 @@ import org.folio.rest.support.JsonArrayHelper;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.TextResponse;
 import org.folio.rest.support.builders.LoanPolicyRequestBuilder;
 import org.hamcrest.junit.MatcherAssert;
 import org.junit.After;
@@ -118,8 +119,7 @@ public class LoanPoliciesApiTest extends ApiTests {
       badLoanPolicyRequest, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createBadLPCompleted));
     JsonResponse badlpResponse = createBadLPCompleted.get(5, TimeUnit.SECONDS);
-    assertThat(String.format("Failed to create loan policy: %s", badlpResponse.getBody()),
-      badlpResponse.getStatusCode(), is(500));
+    assertThat(String.format("Non-existent foreign key: %s", badlpResponse.getBody()), badlpResponse, isBadRequest());
     //////////////////////////////////////////
 
     ///////////bad foreign key
@@ -136,8 +136,7 @@ public class LoanPoliciesApiTest extends ApiTests {
       bad2LoanPolicyRequest, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createBadLP2Completed));
     JsonResponse badlpResponse2 = createBadLP2Completed.get(5, TimeUnit.SECONDS);
-    assertThat(String.format("Failed to create loan policy: %s", badlpResponse2.getBody()),
-      badlpResponse2.getStatusCode(), is(500));
+    assertThat("Bad foreign key", badlpResponse2, isBadRequest());
     //////////////////////////////////////////
 
     id2 = UUID.randomUUID();
@@ -174,14 +173,14 @@ public class LoanPoliciesApiTest extends ApiTests {
       updateV2response.getStatusCode(), is(422));
 
     //update alternateFixedDueDateScheduleId with a bad (non existent) id
-    CompletableFuture<Response> updateCompleted = new CompletableFuture<>();
+    CompletableFuture<TextResponse> updateCompleted = new CompletableFuture<>();
     renewalsPolicy.put("alternateFixedDueDateScheduleId", "ab201cd6-296c-4457-9ac4-617d9584e27b");
     client.put(loanPolicyStorageUrl("/"+id2),
       loanPolicyRequest4, StorageTestSuite.TENANT_ID,
-      ResponseHandler.empty(updateCompleted));
-    Response updateResponse = updateCompleted.get(5, TimeUnit.SECONDS);
-    assertThat(String.format("Failed to create due date: %s", loanPolicyRequest4.encodePrettily()),
-      updateResponse.getStatusCode(), is(500));
+      ResponseHandler.text(updateCompleted));
+    TextResponse updateResponse = updateCompleted.get(5, TimeUnit.SECONDS);
+    assertThat("update loanPolicy: set alternateFixedDueDateScheduleId = non existent id",
+        updateResponse, isBadRequest());
     ////////////////////////////////////////////////////////
 
     //delete loan policy //////////////////

@@ -9,13 +9,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.StringJoiner;
-import java.util.UUID;
 import java.util.function.Function;
 
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
@@ -23,10 +23,10 @@ import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.Loans;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.jaxrs.resource.LoanStorage;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
+import org.folio.rest.persist.MyPgUtil;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.utils.TenantTool;
@@ -36,14 +36,9 @@ import org.folio.support.ServerErrorResponder;
 import org.folio.support.UUIDValidation;
 import org.folio.support.VertxContextRunner;
 import org.joda.time.DateTime;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
-
-import com.github.mauricio.async.db.postgresql.exceptions.GenericDatabaseException;
-
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
@@ -57,10 +52,6 @@ public class LoansAPI implements LoanStorage {
 
   private static final Class<Loan> LOAN_CLASS = Loan.class;
   private static final String OPEN_LOAN_STATUS = "Open";
-
-  public LoansAPI(Vertx vertx, String tenantId) {
-    PostgresClient.getInstance(vertx, tenantId).setIdField("_id");
-  }
 
   @Override
   public void deleteLoanStorageLoans(
@@ -76,7 +67,7 @@ public class LoansAPI implements LoanStorage {
         PostgresClient postgresClient = PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-        postgresClient.mutate(String.format("TRUNCATE TABLE %s_%s.loan",
+        postgresClient.execute(String.format("TRUNCATE TABLE %s_%s.loan",
           tenantId, MODULE_NAME),
           reply -> asyncResultHandler.handle(succeededFuture(
             DeleteLoanStorageLoansResponse.respond204())));
@@ -100,63 +91,8 @@ public class LoansAPI implements LoanStorage {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = okapiHeaders.get(TENANT_HEADER);
-
-    try {
-      vertxContext.runOnContext(v -> {
-        try {
-          PostgresClient postgresClient = PostgresClient.getInstance(
-            vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
-
-          log.info("CQL Query: " + query);
-
-          String[] fieldList = {"*"};
-
-          CQL2PgJSON cql2pgJson = new CQL2PgJSON("loan.jsonb");
-          CQLWrapper cql = new CQLWrapper(cql2pgJson, query)
-            .setLimit(new Limit(limit))
-            .setOffset(new Offset(offset));
-
-          postgresClient.get(LOAN_TABLE, LOAN_CLASS, fieldList, cql,
-            true, false, reply -> {
-              try {
-                if(reply.succeeded()) {
-                  @SuppressWarnings("unchecked")
-                  List<Loan> loans = (List<Loan>) reply.result().getResults();
-
-                  Loans pagedLoans = new Loans();
-                  pagedLoans.setLoans(loans);
-                  pagedLoans.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-
-                  asyncResultHandler.handle(succeededFuture(
-                    LoanStorage.GetLoanStorageLoansResponse.
-                      respond200WithApplicationJson(pagedLoans)));
-                }
-                else {
-                  asyncResultHandler.handle(succeededFuture(
-                    LoanStorage.GetLoanStorageLoansResponse.
-                      respond500WithTextPlain(reply.cause().getMessage())));
-                }
-              } catch (Exception e) {
-                log.error(e);
-                asyncResultHandler.handle(succeededFuture(
-                  LoanStorage.GetLoanStorageLoansResponse.
-                    respond500WithTextPlain(e.getMessage())));
-              }
-            });
-        } catch (Exception e) {
-          log.error(e);
-          asyncResultHandler.handle(succeededFuture(
-            LoanStorage.GetLoanStorageLoansResponse.
-              respond500WithTextPlain(e.getMessage())));
-        }
-      });
-    } catch (Exception e) {
-      log.error(e);
-      asyncResultHandler.handle(succeededFuture(
-        LoanStorage.GetLoanStorageLoansResponse.
-          respond500WithTextPlain(e.getMessage())));
-    }
+    PgUtil.get(LOAN_TABLE, LOAN_CLASS, Loans.class, query, offset, limit, okapiHeaders, vertxContext,
+        GetLoanStorageLoansResponse.class, asyncResultHandler);
   }
 
   @Override
@@ -167,13 +103,11 @@ public class LoansAPI implements LoanStorage {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = okapiHeaders.get(TENANT_HEADER);
-
-    if(loan.getStatus() == null) {
+    if (loan.getStatus() == null) {
       loan.setStatus(new Status().withName(OPEN_LOAN_STATUS));
     }
 
-    if(isOpenAndHasNoUserId(loan)) {
+    if (isOpenAndHasNoUserId(loan)) {
       respondWithError(asyncResultHandler,
         PostLoanStorageLoansResponse::respond422WithApplicationJson,
         "Open loan must have a user ID");
@@ -183,7 +117,7 @@ public class LoansAPI implements LoanStorage {
     //TODO: Convert this to use validation responses (422 and error of errors)
     ImmutablePair<Boolean, String> validationResult = validateLoan(loan);
 
-    if(!validationResult.getLeft()) {
+    if (! validationResult.getLeft()) {
       asyncResultHandler.handle(
         succeededFuture(
           LoanStorage.PostLoanStorageLoansResponse
@@ -193,62 +127,15 @@ public class LoansAPI implements LoanStorage {
       return;
     }
 
-    try {
-      PostgresClient postgresClient =
-        PostgresClient.getInstance(
-          vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
-
-      vertxContext.runOnContext(v -> {
-        try {
-
-          if(loan.getId() == null) {
-            loan.setId(UUID.randomUUID().toString());
-          }
-
-          postgresClient.save(LOAN_TABLE, loan.getId(), loan,
-            reply -> {
-              try {
-                if(reply.succeeded()) {
-                  asyncResultHandler.handle(
-                    succeededFuture(
-                      LoanStorage.PostLoanStorageLoansResponse
-                        .respond201WithApplicationJson(loan,
-                          PostLoanStorageLoansResponse.headersFor201().withLocation(reply.result()))));
-                }
-                else {
-                  if(isMultipleOpenLoanError(reply)) {
-                    asyncResultHandler.handle(
-                      succeededFuture(LoanStorage.PostLoanStorageLoansResponse
-                      .respond422WithApplicationJson(moreThanOneOpenLoanError(loan))));
-                  }
-                  else {
-                    asyncResultHandler.handle(
-                      succeededFuture(
-                        LoanStorage.PostLoanStorageLoansResponse
-                          .respond500WithTextPlain(reply.cause().toString())));
-                  }
-                }
-              } catch (Exception e) {
-                log.error(e);
-                asyncResultHandler.handle(
-                  succeededFuture(
-                    LoanStorage.PostLoanStorageLoansResponse
-                      .respond500WithTextPlain(e.getMessage())));
-              }
-            });
-        } catch (Exception e) {
-          log.error(e);
-          asyncResultHandler.handle(succeededFuture(
-            LoanStorage.PostLoanStorageLoansResponse
-              .respond500WithTextPlain(e.getMessage())));
-        }
-      });
-    } catch (Exception e) {
-      log.error(e);
-      asyncResultHandler.handle(succeededFuture(
-        LoanStorage.PostLoanStorageLoansResponse
-          .respond500WithTextPlain(e.getMessage())));
-    }
+    PgUtil.post(LOAN_TABLE, loan, okapiHeaders, vertxContext, PostLoanStorageLoansResponse.class, reply -> {
+      if (isMultipleOpenLoanError(reply)) {
+        asyncResultHandler.handle(
+            succeededFuture(LoanStorage.PostLoanStorageLoansResponse
+            .respond422WithApplicationJson(moreThanOneOpenLoanError(loan))));
+        return;
+      }
+      asyncResultHandler.handle(reply);
+    });
   }
 
   @Override
@@ -303,70 +190,8 @@ public class LoansAPI implements LoanStorage {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = okapiHeaders.get(TENANT_HEADER);
-
-    try {
-      PostgresClient postgresClient = PostgresClient.getInstance(
-        vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
-
-      Criteria a = new Criteria();
-
-      a.addField("'id'");
-      a.setOperation("=");
-      a.setValue(loanId);
-
-      Criterion criterion = new Criterion(a);
-
-      vertxContext.runOnContext(v -> {
-        try {
-          postgresClient.get(LOAN_TABLE, LOAN_CLASS, criterion, true, false,
-            reply -> {
-              try {
-                if (reply.succeeded()) {
-                  @SuppressWarnings("unchecked")
-                  List<Loan> loans = (List<Loan>) reply.result().getResults();
-
-                  if (loans.size() == 1) {
-                    Loan loan = loans.get(0);
-
-                    asyncResultHandler.handle(
-                      succeededFuture(
-                        LoanStorage.GetLoanStorageLoansByLoanIdResponse.
-                          respond200WithApplicationJson(loan)));
-                  }
-                  else {
-                    asyncResultHandler.handle(
-                      succeededFuture(
-                        LoanStorage.GetLoanStorageLoansByLoanIdResponse.
-                          respond404WithTextPlain("Not Found")));
-                  }
-                } else {
-                  asyncResultHandler.handle(
-                    succeededFuture(
-                      LoanStorage.GetLoanStorageLoansByLoanIdResponse.
-                        respond500WithTextPlain(reply.cause().getMessage())));
-
-                }
-              } catch (Exception e) {
-                log.error(e);
-                asyncResultHandler.handle(succeededFuture(
-                  LoanStorage.GetLoanStorageLoansByLoanIdResponse.
-                    respond500WithTextPlain(e.getMessage())));
-              }
-            });
-        } catch (Exception e) {
-          log.error(e);
-          asyncResultHandler.handle(succeededFuture(
-            LoanStorage.GetLoanStorageLoansByLoanIdResponse.
-              respond500WithTextPlain(e.getMessage())));
-        }
-      });
-    } catch (Exception e) {
-      log.error(e);
-      asyncResultHandler.handle(succeededFuture(
-        LoanStorage.GetLoanStorageLoansByLoanIdResponse.
-          respond500WithTextPlain(e.getMessage())));
-    }
+    PgUtil.getById(LOAN_TABLE, LOAN_CLASS, loanId, okapiHeaders, vertxContext,
+        GetLoanStorageLoansByLoanIdResponse.class, asyncResultHandler);
   }
 
   @Override
@@ -377,48 +202,8 @@ public class LoansAPI implements LoanStorage {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = okapiHeaders.get(TENANT_HEADER);
-
-    try {
-      PostgresClient postgresClient =
-        PostgresClient.getInstance(
-          vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
-
-      Criteria a = new Criteria();
-
-      a.addField("'id'");
-      a.setOperation("=");
-      a.setValue(loanId);
-
-      Criterion criterion = new Criterion(a);
-
-      vertxContext.runOnContext(v -> {
-        try {
-          postgresClient.delete(LOAN_TABLE, criterion,
-            reply -> {
-              if(reply.succeeded()) {
-                asyncResultHandler.handle(
-                  succeededFuture(
-                    DeleteLoanStorageLoansByLoanIdResponse
-                      .respond204()));
-              }
-              else {
-                asyncResultHandler.handle(succeededFuture(
-                  DeleteLoanStorageLoansByLoanIdResponse
-                    .respond500WithTextPlain(reply.cause().getMessage())));
-              }
-            });
-        } catch (Exception e) {
-          asyncResultHandler.handle(succeededFuture(
-            DeleteLoanStorageLoansByLoanIdResponse
-              .respond500WithTextPlain(e.getMessage())));
-        }
-      });
-    } catch (Exception e) {
-      asyncResultHandler.handle(succeededFuture(
-        DeleteLoanStorageLoansByLoanIdResponse
-          .respond500WithTextPlain(e.getMessage())));
-    }
+    PgUtil.deleteById(LOAN_TABLE, loanId, okapiHeaders, vertxContext,
+        DeleteLoanStorageLoansByLoanIdResponse.class, asyncResultHandler);
   }
 
   @Override
@@ -430,15 +215,13 @@ public class LoansAPI implements LoanStorage {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = okapiHeaders.get(TENANT_HEADER);
-
-    if(loan.getStatus() == null) {
+    if (loan.getStatus() == null) {
       loan.setStatus(new Status().withName(OPEN_LOAN_STATUS));
     }
 
     ImmutablePair<Boolean, String> validationResult = validateLoan(loan);
 
-    if(!validationResult.getLeft()) {
+    if (! validationResult.getLeft()) {
       asyncResultHandler.handle(
         succeededFuture(
           LoanStorage.PutLoanStorageLoansByLoanIdResponse
@@ -448,130 +231,25 @@ public class LoansAPI implements LoanStorage {
       return;
     }
 
-    if(isOpenAndHasNoUserId(loan)) {
+    if (isOpenAndHasNoUserId(loan)) {
       respondWithError(asyncResultHandler,
         PutLoanStorageLoansByLoanIdResponse::respond422WithApplicationJson,
         "Open loan must have a user ID");
       return;
     }
 
-    try {
-      PostgresClient postgresClient =
-        PostgresClient.getInstance(
-          vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
-
-      Criteria a = new Criteria();
-
-      a.addField("'id'");
-      a.setOperation("=");
-      a.setValue(loanId);
-
-      Criterion criterion = new Criterion(a);
-
-      vertxContext.runOnContext(v -> {
-        try {
-          postgresClient.get(LOAN_TABLE, LOAN_CLASS, criterion, true, false,
-            reply -> {
-              if(reply.succeeded()) {
-                @SuppressWarnings("unchecked")
-                List<Loan> loanList = (List<Loan>) reply.result().getResults();
-
-                if (loanList.size() == 1) {
-                  try {
-                    postgresClient.update(LOAN_TABLE, loan, criterion,
-                      true,
-                      update -> {
-                        try {
-                          if(update.succeeded()) {
-                            asyncResultHandler.handle(
-                              succeededFuture(
-                                PutLoanStorageLoansByLoanIdResponse
-                                  .respond204()));
-                          }
-                          else {
-                            if(isMultipleOpenLoanError(update)) {
-                              asyncResultHandler.handle(
-                                succeededFuture(
-                                  LoanStorage.PutLoanStorageLoansByLoanIdResponse
-                                  .respond422WithApplicationJson(
-                                    moreThanOneOpenLoanError(loan))));
-                            }
-                            else {
-                              asyncResultHandler.handle(
-                                succeededFuture(
-                                  LoanStorage.PutLoanStorageLoansByLoanIdResponse
-                                    .respond500WithTextPlain(update.cause().toString())));
-                            }
-                          }
-                        } catch (Exception e) {
-                          asyncResultHandler.handle(
-                            succeededFuture(
-                              PutLoanStorageLoansByLoanIdResponse
-                                .respond500WithTextPlain(e.getMessage())));
-                        }
-                      });
-                  } catch (Exception e) {
-                    asyncResultHandler.handle(succeededFuture(
-                      PutLoanStorageLoansByLoanIdResponse
-                        .respond500WithTextPlain(e.getMessage())));
-                  }
-                }
-                else {
-                  try {
-                    postgresClient.save(LOAN_TABLE, loan.getId(), loan,
-                      save -> {
-                        try {
-                          if(save.succeeded()) {
-                            asyncResultHandler.handle(
-                              succeededFuture(
-                                PutLoanStorageLoansByLoanIdResponse
-                                  .respond204()));
-                          }
-                          else {
-                            if(isMultipleOpenLoanError(save)) {
-                              asyncResultHandler.handle(
-                                succeededFuture(
-                                  LoanStorage.PutLoanStorageLoansByLoanIdResponse
-                                  .respond422WithApplicationJson(
-                                    moreThanOneOpenLoanError(loan))));
-                            }
-                            else {
-                              asyncResultHandler.handle(
-                                succeededFuture(
-                                  LoanStorage.PostLoanStorageLoansResponse
-                                    .respond500WithTextPlain(save.cause().toString())));
-                            }
-                          }
-                        } catch (Exception e) {
-                          asyncResultHandler.handle(
-                            succeededFuture(
-                              PutLoanStorageLoansByLoanIdResponse
-                                .respond500WithTextPlain(e.getMessage())));
-                        }
-                      });
-                  } catch (Exception e) {
-                    asyncResultHandler.handle(succeededFuture(
-                      PutLoanStorageLoansByLoanIdResponse
-                        .respond500WithTextPlain(e.getMessage())));
-                  }
-                }
-              } else {
-                asyncResultHandler.handle(succeededFuture(
-                  PutLoanStorageLoansByLoanIdResponse
-                    .respond500WithTextPlain(reply.cause().getMessage())));
-              }
-            });
-        } catch (Exception e) {
-          asyncResultHandler.handle(succeededFuture(
-            PutLoanStorageLoansByLoanIdResponse
-              .respond500WithTextPlain(e.getMessage())));
-        }
-      });
-    } catch (Exception e) {
-      asyncResultHandler.handle(succeededFuture(
-        PutLoanStorageLoansByLoanIdResponse
-          .respond500WithTextPlain(e.getMessage())));
-    }
+    MyPgUtil.putUpsert204(LOAN_TABLE, loan, loanId, okapiHeaders, vertxContext,
+        PutLoanStorageLoansByLoanIdResponse.class, reply -> {
+          if (isMultipleOpenLoanError(reply)) {
+            asyncResultHandler.handle(
+                succeededFuture(
+                  LoanStorage.PutLoanStorageLoansByLoanIdResponse
+                  .respond422WithApplicationJson(
+                    moreThanOneOpenLoanError(loan))));
+            return;
+          }
+          asyncResultHandler.handle(reply);
+        });
   }
 
   private ImmutablePair<Boolean, String> validateLoan(Loan loan) {
@@ -695,10 +373,10 @@ public class LoansAPI implements LoanStorage {
       "Cannot have more than one open loan for the same item");
   }
 
-  private <T> boolean isMultipleOpenLoanError(AsyncResult<T> reply) {
-    return reply.cause() instanceof GenericDatabaseException &&
-      ((GenericDatabaseException) reply.cause()).errorMessage().message()
-        .contains("loan_itemid_idx_unique");
+  private boolean isMultipleOpenLoanError(AsyncResult<Response> reply) {
+    return reply.succeeded()
+        && reply.result().getStatus() == 400
+        && reply.result().getEntity().toString().contains("loan_itemid_idx_unique");
   }
 
   private boolean isOpenAndHasNoUserId(Loan loan) {
