@@ -345,14 +345,14 @@ public class LoansAnonymizationApiTest extends ApiTests {
 
     final CompletableFuture<JsonResponse> fetchHistoryCompleted = new CompletableFuture<>();
 
-    client.get(StorageTestSuite.storageUrl("/loan-storage/loan-history"),
-      String.format("query=userId==%s", userId),
+    client.get(StorageTestSuite.storageUrl("/loan-storage/loan-history",
+        "query", String.format("loan.userId==%s", userId)),
       StorageTestSuite.TENANT_ID,
       ResponseHandler.json(fetchHistoryCompleted));
 
     final JsonResponse historyResponse = fetchHistoryCompleted.get(5, TimeUnit.SECONDS);
 
-    return MultipleRecords.fromJson(historyResponse.getJson(), "loans");
+    return MultipleRecords.fromJson(historyResponse.getJson(), "loans-history");
   }
 
   private void hasOpenLoansForUser(UUID userId, String... openLoanIds)
@@ -391,7 +391,7 @@ public class LoansAnonymizationApiTest extends ApiTests {
     //Needs to be distinct as could be multiple entries per loan
     final List<String> fetchedLoanHistoryIds = fetchedLoanActionHistoryEntries
       .stream()
-      .map(entry -> entry.getString("id"))
+      .map(entry -> entry.getJsonObject("loan").getString("id"))
       .distinct()
       .collect(Collectors.toList());
 

@@ -5,7 +5,6 @@ import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.StringJoiner;
@@ -14,21 +13,20 @@ import java.util.function.Function;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.Loans;
+import org.folio.rest.jaxrs.model.LoansHistoryItem;
+import org.folio.rest.jaxrs.model.LoansHistoryItems;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.jaxrs.resource.LoanStorage;
-import org.folio.rest.persist.Criteria.Limit;
-import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.MyPgUtil;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
 import org.folio.support.ResultHandlerFactory;
@@ -36,6 +34,7 @@ import org.folio.support.ServerErrorResponder;
 import org.folio.support.UUIDValidation;
 import org.folio.support.VertxContextRunner;
 import org.joda.time.DateTime;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
@@ -285,86 +284,15 @@ public class LoansAPI implements LoanStorage {
   public void getLoanStorageLoanHistory(int offset, int limit, String query, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
-
-    String tenantId = okapiHeaders.get(TENANT_HEADER);
-
-    try {
-      vertxContext.runOnContext(v -> {
-        try {
-          PostgresClient postgresClient = PostgresClient.getInstance(
-            vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
-
-          String[] fieldList = {"*"};
-          CQLWrapper cql = null;
-          String adjustedQuery = null;
-          CQL2PgJSON cql2pgJson = new CQL2PgJSON(LOAN_HISTORY_TABLE+".jsonb");
-          if(query != null){
-            //a bit of a hack, assume that <space>sortBy<space>
-            //is a sort request that is received as part of the cql , and hence pass
-            //the cql as is. If no sorting is requested, sort by created_date column
-            //in the loan history table which represents the date the entry was created
-            //aka the date an action was made on the loan
-            if(!query.contains(" sortBy ")){
-              cql = new CQLWrapper(cql2pgJson, query);
-              adjustedQuery = cql.toString() + " order by created_date desc ";
-              adjustedQuery = adjustedQuery + new Limit(limit).toString() + " " +new Offset(offset).toString();
-            } else{
-              cql = new CQLWrapper(cql2pgJson, query)
-                  .setLimit(new Limit(limit))
-                  .setOffset(new Offset(offset));
-              adjustedQuery = cql.toString();
-            }
-
-            log.debug("CQL Query: " + cql.toString());
-
-          } else {
-            cql = new CQLWrapper(cql2pgJson, query)
-                  .setLimit(new Limit(limit))
-                  .setOffset(new Offset(offset));
-            adjustedQuery = cql.toString();
-          }
-
-          postgresClient.get(LOAN_HISTORY_TABLE, LOAN_CLASS, fieldList, adjustedQuery,
-            true, false, reply -> {
-              try {
-                if(reply.succeeded()) {
-                  @SuppressWarnings("unchecked")
-                  List<Loan> loans = (List<Loan>) reply.result().getResults();
-
-                  Loans pagedLoans = new Loans();
-                  pagedLoans.setLoans(loans);
-                  pagedLoans.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-
-                  asyncResultHandler.handle(succeededFuture(
-                    GetLoanStorageLoanHistoryResponse.
-                      respond200WithApplicationJson(pagedLoans)));
-                }
-                else {
-                  log.error(reply.cause().getMessage(), reply.cause());
-                  asyncResultHandler.handle(succeededFuture(
-                    GetLoanStorageLoanHistoryResponse.
-                      respond500WithTextPlain(reply.cause().getMessage())));
-                }
-              } catch (Exception e) {
-                log.error(e.getMessage(), e);
-                asyncResultHandler.handle(succeededFuture(
-                  GetLoanStorageLoanHistoryResponse.
-                    respond500WithTextPlain(e.getMessage())));
-              }
-            });
-        } catch (Exception e) {
-          log.error(e.getMessage(), e);
-          asyncResultHandler.handle(succeededFuture(
-            GetLoanStorageLoanHistoryResponse.
-              respond500WithTextPlain(e.getMessage())));
-        }
-      });
-    } catch (Exception e) {
-      log.error(e.getMessage(), e);
-      asyncResultHandler.handle(succeededFuture(
-        GetLoanStorageLoanHistoryResponse.
-          respond500WithTextPlain(e.getMessage())));
+    String cql = query;
+    if (StringUtils.isBlank(cql)) {
+      cql = "cql.allRecords=1";
     }
+    if (! cql.toLowerCase().contains(" sortby ")) {
+      cql += " sortBy createdDate/sort.descending";
+    }
+    PgUtil.get(LOAN_HISTORY_TABLE, LoansHistoryItem.class, LoansHistoryItems.class, cql, offset, limit, okapiHeaders,
+        vertxContext, GetLoanStorageLoanHistoryResponse.class, asyncResultHandler);
   }
 
   private Errors moreThanOneOpenLoanError(Loan entity) {
@@ -405,7 +333,8 @@ public class LoansAPI implements LoanStorage {
     String tenantId) {
 
     final String anonymizeLoansSql = String.format(
-      "UPDATE %s_%s.loan SET jsonb = jsonb - 'userId'"
+      "UPDATE %s_%s.loan"
+        + " SET jsonb = jsonb - 'userId'"
         + " WHERE jsonb->>'userId' = '" + userId + "'"
         + " AND jsonb->'status'->>'name' = 'Closed'",
       tenantId, MODULE_NAME);
@@ -413,11 +342,13 @@ public class LoansAPI implements LoanStorage {
     //Only anonymize the history for loans that are currently closed
     //meaning that we need to refer to loans in this query
     final String anonymizeLoansActionHistorySql = String.format(
-      "UPDATE %s_%s.%s SET jsonb = jsonb - 'userId'"
-        + " WHERE jsonb->>'userId' = '" + userId + "'"
-        + " AND jsonb->>'id' IN (SELECT l.jsonb->>'id'" +
-        " FROM %s_%s.loan l WHERE l.jsonb->>'userId' = '" + userId + "'"
-        + " AND l.jsonb->'status'->>'name' = 'Closed')",
+      "UPDATE %s_%s.%s"
+        + " SET jsonb = jsonb #- '{loan,userId}'"
+        + " WHERE jsonb->'loan'->>'id' IN"
+        + "   (SELECT l.jsonb->>'id'"
+        + "    FROM %s_%s.loan l"
+        + "    WHERE l.jsonb->>'userId' = '" + userId + "'"
+        + "      AND l.jsonb->'status'->>'name' = 'Closed')",
       tenantId, MODULE_NAME, LOAN_HISTORY_TABLE,
       tenantId, MODULE_NAME);
 

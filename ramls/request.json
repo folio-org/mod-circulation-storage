@@ -70,17 +70,7 @@
     "item": {
       "description": "Copy of some item metadata (used for searching and sorting)",
       "type": "object",
-      "properties": {
-        "title": {
-          "description": "title of the item",
-          "type": "string"
-        },
-        "barcode": {
-          "description": "barcode of the item",
-          "type": "string"
-        }
-      },
-      "additionalProperties": false
+      "$ref": "request-itemdata.json"
     },
     "requester": {
       "description": "Copy of some requesting patron metadata (used for searching and sorting)",

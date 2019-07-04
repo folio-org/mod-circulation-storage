@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Copy of some item metadata (used for searching and sorting)",
+  "type": "object",
+  "properties": {
+    "title": {
+      "description": "title of the item",
+      "type": "string"
+    },
+    "barcode": {
+      "description": "barcode of the item",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

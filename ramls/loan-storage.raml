@@ -9,8 +9,10 @@ documentation:
     content: <b>Storage for loans</b>
 
 types:
-  loan: !include loan.json
-  loans: !include loans.json
+  loan:                !include loan.json
+  loans:               !include loans.json
+  loans-history-item:  !include loans-history-item.json
+  loans-history-items: !include loans-history-items.json
   errors: !include raml-util/schemas/errors.schema
   parameters: !include raml-util/schemas/parameters.schema
 
@@ -91,11 +93,11 @@ resourceTypes:
     displayName: Loan-history
     type:
       get-only:
-        exampleCollection: !include examples/loans.json
-        schema: loans
+        exampleCollection: !include examples/loans-history-items.json
+        schema: loans-history-items
     get:
       is: [
         pageable,
-        searchable: {description: "by title (using CQL)",
-                        example: "userId=\"cf23adf0-61ba-4887-bf82-956c4aae2260\""}
+        searchable: {description: "using CQL",
+                        example: "loan.status.name==Closed"}
         ]

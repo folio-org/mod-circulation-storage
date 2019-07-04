@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A snapshot of a loan record",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "Unique ID (generated UUID) of the snapshot of the loan record",
+      "type": "string"
+    },
+    "operation": {
+      "description": "Type of change that triggered this loan record snapshot: I for insert, U for update, D for delete",
+      "type": "string"
+    },
+    "creationDate": {
+      "description": "When this snapshot was created",
+      "type": "string"
+    },
+    "loan": {
+      "description": "The snapshot of the loan record",
+      "type": "object",
+      "$ref": "loan.json"
+    }
+  },
+  "required": [
+    "id",
+    "operation",
+    "creationDate",
+    "loan"
+  ]
+}

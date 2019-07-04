@@ -4,9 +4,13 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.lang.invoke.MethodHandles;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidParameterException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -61,8 +65,33 @@ public class StorageTestSuite {
   private static int port;
   private static boolean initialised = false;
 
-  public static URL storageUrl(String path) throws MalformedURLException {
-    return new URL("http", "localhost", port, path);
+  /**
+   * Return a URL for the path and the parameters.
+   *
+   * <p>Example: storageUrl("/foo", "year", "2019", "name", "A & Co") may return an URL for
+   * http://localhost:46131/foo?year=2019&name=A%20%26%20Co
+   */
+  public static URL storageUrl(String path, String ... parameterKeyValue) throws MalformedURLException {
+    if (parameterKeyValue.length == 0) {
+      return new URL("http", "localhost", port, path);
+    }
+    if (parameterKeyValue.length % 2 == 1) {
+      throw new InvalidParameterException("Expected even number of key/value strings, found "
+          + parameterKeyValue.length + ": " + String.join(", ", parameterKeyValue));
+    }
+    try {
+      StringBuilder completePath = new StringBuilder(path);
+      for (int i = 0; i < parameterKeyValue.length; i += 2) {
+        completePath
+          .append(i == 0 ? "?" : "&")
+          .append(URLEncoder.encode(parameterKeyValue[i], StandardCharsets.UTF_8.name()))
+          .append('=')
+          .append(URLEncoder.encode(parameterKeyValue[i+1], StandardCharsets.UTF_8.name()));
+      }
+      return new URL("http", "localhost", port, completePath.toString());
+    } catch (UnsupportedEncodingException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public static Vertx getVertx() {

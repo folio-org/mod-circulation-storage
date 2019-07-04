@@ -190,15 +190,15 @@ public class RequestPoliciesApiTest extends ApiTests {
     TimeoutException,
     ExecutionException {
 
-    CompletableFuture<JsonResponse> getCommpleted = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
 
     RequestPolicy requestPolicy1 = createDefaultRequestPolicy();
 
     //Get the newly created request policies
     client.get(requestPolicyStorageUrl("?query=id="+ requestPolicy1.getId()), StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(getCommpleted));
+      ResponseHandler.json(getCompleted));
 
-    JsonResponse responseGet = getCommpleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
+    JsonResponse responseGet = getCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
     JsonObject responseJson = responseGet.getJson();
 
     JsonArray requestPolicies = responseJson.getJsonArray("requestPolicies");
@@ -210,21 +210,43 @@ public class RequestPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotGetRequestPoliciesByUsingInvalidOffsetAndLimit()
+  public void cannotGetRequestPoliciesByUsingNegativeLimit()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
     ExecutionException {
 
-    CompletableFuture<JsonResponse> getCommpleted = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
 
     RequestPolicy requestPolicy = createDefaultRequestPolicy();
 
     //Get the newly created request policies
-    client.get(requestPolicyStorageUrl("?limit=-1&query=(name=" + requestPolicy.getId() + ")&limit=-1&offset=-230"), StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(getCommpleted));
+    client.get(requestPolicyStorageUrl("", "query", "(name=" + requestPolicy.getId() + ")", "limit", "-230"),
+        StorageTestSuite.TENANT_ID,
+        ResponseHandler.json(getCompleted));
 
-    JsonResponse responseGet = getCommpleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
+    JsonResponse responseGet = getCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
+    assertThat(responseGet, isBadRequest());
+    assertThat("expected error message not found", responseGet.getBody().toLowerCase(), containsString("limit"));
+  }
+
+  @Test
+  public void cannotGetRequestPoliciesByUsingNegativeOffset()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
+
+    RequestPolicy requestPolicy = createDefaultRequestPolicy();
+
+    //Get the newly created request policies
+    client.get(requestPolicyStorageUrl("", "query", "(name=" + requestPolicy.getId() + ")", "offset", "-230"),
+        StorageTestSuite.TENANT_ID,
+        ResponseHandler.json(getCompleted));
+
+    JsonResponse responseGet = getCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
     assertThat(responseGet, isBadRequest());
     assertThat("expected error message not found", responseGet.getBody().toLowerCase(), containsString("offset"));
   }
@@ -236,15 +258,15 @@ public class RequestPoliciesApiTest extends ApiTests {
     TimeoutException,
     ExecutionException {
 
-    CompletableFuture<JsonResponse> getCommpleted = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
 
     RequestPolicy requestPolicy = createDefaultRequestPolicy();
 
     //Get the newly created request policies
     client.get(requestPolicyStorageUrl("?query=name=" + requestPolicy.getName() + "blabblabla"), StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(getCommpleted));
+      ResponseHandler.json(getCompleted));
 
-    JsonResponse responseGet = getCommpleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
+    JsonResponse responseGet = getCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
     assertThat("Failed to not get request-policy", responseGet.getStatusCode(), is(HttpURLConnection.HTTP_OK));
 
     JsonObject getResultsJson = responseGet.getJson();
@@ -258,7 +280,7 @@ public class RequestPoliciesApiTest extends ApiTests {
     TimeoutException,
     ExecutionException {
 
-    CompletableFuture<JsonResponse> getCommpleted = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
 
     //create a couple of RequestPolicies
     createDefaultRequestPolicy();
@@ -266,9 +288,9 @@ public class RequestPoliciesApiTest extends ApiTests {
 
     //Get the latter created request policy by name
     client.get(requestPolicyStorageUrl("?query=name=" + requestPolicy2.getName()), StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(getCommpleted));
+      ResponseHandler.json(getCompleted));
 
-    JsonResponse responseGet = getCommpleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
+    JsonResponse responseGet = getCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
     JsonObject getResultsJson = responseGet.getJson();
 
     JsonArray requestPolicies = getResultsJson.getJsonArray("requestPolicies");
@@ -286,7 +308,7 @@ public class RequestPoliciesApiTest extends ApiTests {
     TimeoutException,
     ExecutionException {
 
-    CompletableFuture<JsonResponse> getCommpleted = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
     List<RequestType> requestTypes = Arrays.asList( RequestType.HOLD, RequestType.RECALL);
 
     createDefaultRequestPolicy();
@@ -295,9 +317,9 @@ public class RequestPoliciesApiTest extends ApiTests {
 
     //Get the newly created request policies
     client.get(requestPolicyStorageUrl("/" + req2.getId()), StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(getCommpleted));
+      ResponseHandler.json(getCompleted));
 
-    JsonResponse responseGet = getCommpleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
+    JsonResponse responseGet = getCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
     JsonObject aPolicy = responseGet.getJson();
 
     validateRequestPolicy(req2, aPolicy);
@@ -633,9 +655,8 @@ public class RequestPoliciesApiTest extends ApiTests {
       is(withinSecondsAfter(Seconds.seconds(2), requestMade)));
   }
 
-  private URL requestPolicyStorageUrl(String path) throws MalformedURLException {
-    String completePath = "/request-policy-storage/request-policies" + path;
-    return StorageTestSuite.storageUrl(completePath);
+  private URL requestPolicyStorageUrl(String path, String... parameterKeyValue) throws MalformedURLException {
+    return StorageTestSuite.storageUrl("/request-policy-storage/request-policies" + path, parameterKeyValue);
   }
 
   private RequestPolicy createDefaultRequestPolicy()  throws InterruptedException,
@@ -656,7 +677,7 @@ public class RequestPoliciesApiTest extends ApiTests {
     TimeoutException,
     ExecutionException {
 
-    CompletableFuture<JsonResponse> createCommpleted = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     RequestPolicy requestPolicy = new RequestPolicy();
     requestPolicy.withDescription(descr);
@@ -669,9 +690,9 @@ public class RequestPoliciesApiTest extends ApiTests {
     client.post(requestPolicyStorageUrl(""),
       requestPolicy,
       StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(createCommpleted));
+      ResponseHandler.json(createCompleted));
 
-    JsonResponse response = createCommpleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
+    JsonResponse response = createCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
     assertThat("Failed to create new request-policy", response, isCreated());
 
     JsonObject representation = response.getJson();
