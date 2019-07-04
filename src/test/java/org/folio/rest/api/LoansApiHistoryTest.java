@@ -83,7 +83,7 @@ public class LoansApiHistoryTest extends ApiTests {
     assertThat(historyResponse.getStatusCode(), is(HTTP_OK));
 
     List<JsonObject> entries = JsonArrayHelper.toList(
-      historyResponse.getJson().getJsonArray("loans-history"));
+      historyResponse.getJson().getJsonArray("loansHistory"));
 
     assertThat("Incorrect number of entries in loan history for id: " + id.toString(),
       entries.size(), is(1));
@@ -166,7 +166,7 @@ public class LoansApiHistoryTest extends ApiTests {
     JsonResponse historyResponse = getCompleted.get(5, TimeUnit.SECONDS);
 
     List<JsonObject> entries = JsonArrayHelper.toList(
-      historyResponse.getJson().getJsonArray("loans-history"));
+      historyResponse.getJson().getJsonArray("loansHistory"));
 
     assertThat("Incorrect number of entries in loan history for id: " + id.toString(),
       entries.size(), is(2));
@@ -306,21 +306,21 @@ public class LoansApiHistoryTest extends ApiTests {
     assertThat(finalRes4.getStatusCode(), is(HTTP_OK));
 
     assertThat("Should have array property",
-      finalRes.getJson().containsKey("loans-history"), is(true));
+      finalRes.getJson().containsKey("loansHistory"), is(true));
 
     assertThat("Incorrect number of entries in loan history for id: " + id.toString(),
-      finalRes.getJson().getJsonArray("loans-history").size(), is(4));
+      finalRes.getJson().getJsonArray("loansHistory").size(), is(4));
 
     // Trigger used to have a special case for delete, it looks like standard audit implementation does not have this
     // Checks schema.json tables loan auditingSnippet that sets loan.action = "deleted"
     assertThat("Incorrect value of first loan in res set - should be deleted " + id.toString(),
-      finalRes.getJson().getJsonArray("loans-history").getJsonObject(0).getJsonObject("loan").getString("action"), is("deleted"));
+      finalRes.getJson().getJsonArray("loansHistory").getJsonObject(0).getJsonObject("loan").getString("action"), is("deleted"));
 
     assertThat("Incorrect number of entries in loan history for userId: " + userId.toString(),
-      finalRes2.getJson().getJsonArray("loans-history").size(), is(4));
+      finalRes2.getJson().getJsonArray("loansHistory").size(), is(4));
 
     assertThat("Incorrect value oof first loan in res set - should be checkedin " + id.toString(),
-      finalRes4.getJson().getJsonArray("loans-history").getJsonObject(0).getJsonObject("loan").getString("action"), is("checkedin"));
+      finalRes4.getJson().getJsonArray("loansHistory").getJsonObject(0).getJsonObject("loan").getString("action"), is("checkedin"));
   }
 
   private static URL loanStorageUrl() throws MalformedURLException {

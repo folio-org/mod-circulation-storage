@@ -3,9 +3,9 @@
   "description": "Collection of loan history items",
   "type": "object",
   "properties": {
-    "loans-history": {
+    "loansHistory": {
       "description": "List of loan history items",
-      "id": "loans-history",
+      "id": "loansHistory",
       "type": "array",
       "items": {
         "type": "object",
@@ -17,7 +17,7 @@
     }
   },
   "required": [
-    "loans-history",
+    "loansHistory",
     "totalRecords"
   ]
 }

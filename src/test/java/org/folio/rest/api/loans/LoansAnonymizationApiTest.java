@@ -352,7 +352,7 @@ public class LoansAnonymizationApiTest extends ApiTests {
 
     final JsonResponse historyResponse = fetchHistoryCompleted.get(5, TimeUnit.SECONDS);
 
-    return MultipleRecords.fromJson(historyResponse.getJson(), "loans-history");
+    return MultipleRecords.fromJson(historyResponse.getJson(), "loansHistory");
   }
 
   private void hasOpenLoansForUser(UUID userId, String... openLoanIds)
