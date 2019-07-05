@@ -10,22 +10,11 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.CancellationReason;
 import org.folio.rest.jaxrs.model.CancellationReasons;
 import org.folio.rest.jaxrs.resource.CancellationReasonStorage;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.Criteria.Limit;
-import org.folio.rest.persist.Criteria.Offset;
-import org.folio.rest.persist.PgExceptionUtil;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.PomReader;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
-import org.z3950.zing.cql.cql2pgjson.FieldException;
-
 import javax.ws.rs.core.Response;
-import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
 /**
@@ -37,13 +26,6 @@ public class CancellationReasonsAPI implements CancellationReasonStorage {
   private static final Logger logger = LoggerFactory.getLogger(CancellationReasonsAPI.class);
   private static final String TABLE_NAME = "cancellation_reason";
   private boolean suppressErrorResponse = false;
-  private static final String ID_FIELD = "'id'";
-
-  private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
-    CQL2PgJSON cql2pgJson = new CQL2PgJSON(TABLE_NAME + ".jsonb");
-    return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit))
-        .setOffset(new Offset(offset));
-  }
 
   private String logAndSaveError(Throwable err) {
     String message = err.getLocalizedMessage();
@@ -58,16 +40,6 @@ public class CancellationReasonsAPI implements CancellationReasonStorage {
     return response;
   }
 
-  private boolean isDuplicate(String errorMessage){
-    return errorMessage != null
-      && errorMessage.contains("duplicate key value violates unique constraint");
-  }
-
-  private boolean isStillReferenced(String errorMessage){
-    return errorMessage != null
-      && errorMessage.contains("violates foreign key constraint");
-  }
-
   @Override
   public void deleteCancellationReasonStorageCancellationReasons(String lang,
       Map<String, String> okapiHeaders,
@@ -77,7 +49,7 @@ public class CancellationReasonsAPI implements CancellationReasonStorage {
       String tenantId = okapiHeaders.get(TENANT_HEADER);
       String deleteAllQuery = String.format("DELETE FROM %s_%s.%s", tenantId,
           PomReader.INSTANCE.getModuleName(), TABLE_NAME);
-      PostgresClient.getInstance(vertxContext.owner(), tenantId).mutate(deleteAllQuery,
+      PostgresClient.getInstance(vertxContext.owner(), tenantId).execute(deleteAllQuery,
           mutateReply -> {
         if(mutateReply.failed()) {
           String message = logAndSaveError(mutateReply.cause());
@@ -102,41 +74,9 @@ public class CancellationReasonsAPI implements CancellationReasonStorage {
   public void getCancellationReasonStorageCancellationReasons(int offset,
       int limit, String query, String lang, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    try {
-      String tenantId = okapiHeaders.get(TENANT_HEADER);
-      CQLWrapper cql = getCQL(query, limit, offset);
-      PostgresClient.getInstance(vertxContext.owner(), tenantId)
-          .get(TABLE_NAME, CancellationReason.class, new String[]{"*"},
-          cql, true, true, getReply -> {
-        try {
-          if(getReply.failed()) {
-            String message = logAndSaveError(getReply.cause());
-            asyncResultHandler.handle(Future.succeededFuture(
-                GetCancellationReasonStorageCancellationReasonsResponse
-                .respond500WithTextPlain(getErrorResponse(message))));
-          } else {
-            CancellationReasons collection = new CancellationReasons();
-            List<CancellationReason> crList = (List<CancellationReason>)
-                getReply.result().getResults();
-            collection.setCancellationReasons(crList);
-            collection.setTotalRecords(getReply.result().getResultInfo().getTotalRecords());
-            asyncResultHandler.handle(Future.succeededFuture(
-                GetCancellationReasonStorageCancellationReasonsResponse
-                .respond200WithApplicationJson(collection)));
-          }
-        } catch(Exception e) {
-          String message = logAndSaveError(e);
-          asyncResultHandler.handle(Future.succeededFuture(
-              GetCancellationReasonStorageCancellationReasonsResponse
-              .respond500WithTextPlain(getErrorResponse(message))));
-        }
-      });
-    } catch(Exception e) {
-      String message = logAndSaveError(e);
-      asyncResultHandler.handle(Future.succeededFuture(
-          GetCancellationReasonStorageCancellationReasonsResponse
-          .respond500WithTextPlain(getErrorResponse(message))));
-    }
+    PgUtil.get(TABLE_NAME, CancellationReason.class, CancellationReasons.class,
+        query, offset, limit, okapiHeaders, vertxContext,
+        GetCancellationReasonStorageCancellationReasonsResponse.class, asyncResultHandler);
   }
 
   @Override
@@ -144,124 +84,24 @@ public class CancellationReasonsAPI implements CancellationReasonStorage {
   public void postCancellationReasonStorageCancellationReasons(String lang,
       CancellationReason entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    try {
-      String tenantId = okapiHeaders.get(TENANT_HEADER);
-      String id = entity.getId();
-      if(id == null) {
-        id = UUID.randomUUID().toString();
-        entity.setId(id);
-      }
-      PostgresClient pgClient = PostgresClient.getInstance(vertxContext.owner(),
-          tenantId);
-      pgClient.save(TABLE_NAME, id, entity, reply -> {
-        try {
-          if(reply.failed()) {
-            String message = logAndSaveError(reply.cause());
-            if(isDuplicate(message)) {
-              asyncResultHandler.handle(Future.succeededFuture(
-                  PostCancellationReasonStorageCancellationReasonsResponse
-                  .respond400WithTextPlain(PgExceptionUtil.badRequestMessage(reply.cause()))));
-            } else {
-              asyncResultHandler.handle(Future.succeededFuture(
-                  PostCancellationReasonStorageCancellationReasonsResponse
-                  .respond500WithTextPlain(getErrorResponse(message))));
-            }
-          } else {
-            asyncResultHandler.handle(Future.succeededFuture(
-                PostCancellationReasonStorageCancellationReasonsResponse
-                  .respond201WithApplicationJson(entity, 
-                    PostCancellationReasonStorageCancellationReasonsResponse.
-                      headersFor201().withLocation(reply.result()))));
-          }
-        } catch(Exception e) {
-          String message = logAndSaveError(e);
-          asyncResultHandler.handle(Future.succeededFuture(
-              PostCancellationReasonStorageCancellationReasonsResponse
-              .respond500WithTextPlain(getErrorResponse(message))));
-        }
-      });
-    } catch(Exception e) {
-      String message = logAndSaveError(e);
-      asyncResultHandler.handle(Future.succeededFuture(
-          PostCancellationReasonStorageCancellationReasonsResponse
-          .respond500WithTextPlain(getErrorResponse(message))));
-    }
+    PgUtil.post(TABLE_NAME, entity, okapiHeaders, vertxContext,
+        PostCancellationReasonStorageCancellationReasonsResponse.class, asyncResultHandler);
   }
 
   @Override
   public void getCancellationReasonStorageCancellationReasonsByCancellationReasonId(
       String cancellationReasonId, String lang, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    try {
-      Criteria idCrit = new Criteria().setOperation("=")
-          .setValue(cancellationReasonId).addField(ID_FIELD);
-      String tenantId = okapiHeaders.get(TENANT_HEADER);
-      PostgresClient.getInstance(vertxContext.owner(), tenantId).get(TABLE_NAME,
-          CancellationReason.class, new Criterion(idCrit), true, false, getReply -> {
-        if(getReply.failed()) {
-          String message = logAndSaveError(getReply.cause());
-          asyncResultHandler.handle(Future.succeededFuture(
-              GetCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
-              .respond500WithTextPlain(getErrorResponse(message))));
-        } else {
-          List<CancellationReason> reasons = (List<CancellationReason>) getReply.result().getResults();
-          if(reasons.isEmpty()) {
-            asyncResultHandler.handle(Future.succeededFuture(
-              GetCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
-                  .respond404WithTextPlain("No record with that id")));
-          } else {
-           asyncResultHandler.handle(Future.succeededFuture(
-              GetCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
-                  .respond200WithApplicationJson(reasons.get(0))));
-          }
-        }
-      });
-    } catch(Exception e) {
-      String message = logAndSaveError(e);
-      asyncResultHandler.handle(Future.succeededFuture(
-          GetCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
-          .respond500WithTextPlain(getErrorResponse(message))));
-    }
+    PgUtil.getById(TABLE_NAME, CancellationReason.class, cancellationReasonId, okapiHeaders, vertxContext,
+        GetCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse.class, asyncResultHandler);
   }
 
   @Override
   public void deleteCancellationReasonStorageCancellationReasonsByCancellationReasonId(
       String cancellationReasonId, String lang, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    try {
-      Criteria idCrit = new Criteria().setOperation("=")
-          .setValue(cancellationReasonId).addField(ID_FIELD);
-      String tenantId = okapiHeaders.get(TENANT_HEADER);
-      PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(TABLE_NAME,
-          new Criterion(idCrit), deleteReply -> {
-        if(deleteReply.failed()) {
-          String message = logAndSaveError(deleteReply.cause());
-          if(isStillReferenced(message)) {
-            asyncResultHandler.handle(Future.succeededFuture(DeleteCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
-                .respond400WithTextPlain(PgExceptionUtil.badRequestMessage(deleteReply.cause()))));
-          } else {
-            asyncResultHandler.handle(Future.succeededFuture(
-                DeleteCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
-                .respond500WithTextPlain(getErrorResponse(message))));
-          }
-        } else {
-          if(deleteReply.result().getUpdated() < 1) {
-            asyncResultHandler.handle(Future.succeededFuture(
-              DeleteCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
-                  .respond404WithTextPlain("Record not found")));
-          } else {
-            asyncResultHandler.handle(Future.succeededFuture(
-              DeleteCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
-                  .respond204()));
-          }
-        }
-      });
-    } catch(Exception e) {
-      String message = logAndSaveError(e);
-      asyncResultHandler.handle(Future.succeededFuture(
-          DeleteCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
-          .respond500WithTextPlain(getErrorResponse(message))));
-    }
+    PgUtil.deleteById(TABLE_NAME, cancellationReasonId, okapiHeaders, vertxContext,
+        DeleteCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse.class, asyncResultHandler);
   }
 
   @Override
@@ -271,40 +111,7 @@ public class CancellationReasonsAPI implements CancellationReasonStorage {
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
-    try {
-      Criteria idCrit = new Criteria().setOperation("=")
-          .setValue(cancellationReasonId).addField(ID_FIELD);
-      String tenantId = okapiHeaders.get(TENANT_HEADER);
-      PostgresClient.getInstance(vertxContext.owner(), tenantId).update(TABLE_NAME,
-          entity, new Criterion(idCrit), true, putHandler -> {
-        if(putHandler.failed()) {
-          String message = logAndSaveError(putHandler.cause());
-          if(isDuplicate(message)) {
-            asyncResultHandler.handle(Future.succeededFuture(
-                PutCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
-                .respond400WithTextPlain(PgExceptionUtil.badRequestMessage(putHandler.cause()))));
-          } else {
-            asyncResultHandler.handle(Future.succeededFuture(
-                PutCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
-                .respond500WithTextPlain(getErrorResponse(message))));
-          }
-        } else {
-          if(putHandler.result().getUpdated() < 1) {
-            asyncResultHandler.handle(Future.succeededFuture(
-                PutCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
-                .respond404WithTextPlain("Record not found")));
-          } else {
-            asyncResultHandler.handle(Future.succeededFuture(
-                PutCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
-                .respond204()));
-          }
-        }
-      });
-    } catch(Exception e) {
-      String message = logAndSaveError(e);
-      asyncResultHandler.handle(Future.succeededFuture(
-          PutCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse
-          .respond500WithTextPlain(getErrorResponse(message))));
-    }
+    PgUtil.put(TABLE_NAME, entity, cancellationReasonId, okapiHeaders, vertxContext,
+        PutCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse.class, asyncResultHandler);
   }
 }

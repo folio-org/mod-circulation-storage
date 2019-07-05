@@ -1,0 +1,42 @@
+{
+  "loansHistory": [
+    {
+      "id": "29abc628-3712-48ba-b01f-f8b00c15dd61",
+      "operation": "I",
+      "createdDate": "2017-03-01T22:34:11+00",
+      "loan": {
+        "id": "cf23adf0-61ba-4887-bf82-956c4aae2260",
+        "userId": "df7f4993-8c14-4a0f-ab63-93975ab01c76",
+        "proxyUserId": "346ad017-dac1-417d-9ed8-0ac7eeb886aa",
+        "itemId": "cb20f34f-b773-462f-a091-b233cc96b9e6",
+        "loanDate": "2017-03-01T22:34:11+00:00",
+        "dueDate": "2017-04-15T22:34:11+00:00",
+        "status": {
+          "name": "Open"
+        },
+        "action": "renewed",
+        "itemStatus": "Checked out",
+        "renewalCount": 1
+      }
+    },
+    {
+      "id": "30f18231-3712-48ba-b01f-f8b00c15d333",
+      "operation": "I",
+      "createdDate": "2017-01-16T09:15:23+00",
+      "loan": {
+        "id": "1d09af65-aeaa-499c-80cb-d52847b75a60",
+        "userId": "15054e48-03e8-4ed5-810b-7192b86accab",
+        "itemId": "94838fa2-288a-45c2-ad19-9102f5645127",
+        "loanDate": "2017-01-14T19:14:36+00:00",
+        "dueDate": "2017-01-29T19:14:36+00:00",
+        "returnDate": "2017-01-16T09:15:23+00:00",
+        "status": {
+          "name": "Closed"
+        },
+        "action": "checkedin",
+        "itemStatus": "Available"
+      }
+    }
+  ],
+  "totalRecords": 2
+}

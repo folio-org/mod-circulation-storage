@@ -9,6 +9,7 @@ import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasParameter;
 import static org.folio.rest.support.matchers.ValidationResponseMatchers.isValidationResponseWhich;
 import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
@@ -369,7 +370,7 @@ public class LoansApiTest extends ApiTests {
     JsonResponse response = loansClient.attemptCreate(loanRequest);
 
     assertThat(response, isValidationResponseWhich(allOf(
-      hasMessage("may not be null"),
+      anyOf(hasMessage("may not be null"), hasMessage("darf nicht null sein")),  // any server language
       hasParameter("action", "null"))));
   }
 

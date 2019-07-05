@@ -235,7 +235,7 @@ public class CancellationReasonsApiTest extends ApiTests {
         .put("description", "Item burnt");
     assertCreateCancellationReason(request);
     assertCreateCancellationReason(request2);
-    JsonResponse response = getCancellationReasonCollection("description=*burnt");
+    JsonResponse response = getCancellationReasonCollection("description=burnt");
     assertTrue(response.getJson().containsKey("totalRecords"));
     assertTrue(response.getJson().getInteger("totalRecords").equals(1));
     assertEquals("fire", response.getJson().getJsonArray("cancellationReasons")

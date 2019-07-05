@@ -25,13 +25,13 @@ public class TextDateTimeMatcher {
     };
   }
 
-  public static Matcher<String> withinSecondsAfter(Seconds seconds, DateTime after) {
+  public static Matcher<String> withinSecondsAfter(Seconds seconds, DateTime start) {
       return new TypeSafeMatcher<String>() {
         @Override
         public void describeTo(Description description) {
           description.appendText(String.format(
             "a date time within %s seconds after %s",
-            seconds.getSeconds(), after.toString()));
+            seconds.getSeconds(), start.toString()));
         }
 
         @Override
@@ -39,8 +39,8 @@ public class TextDateTimeMatcher {
           //response representation might vary from request representation
           DateTime actual = DateTime.parse(textRepresentation);
 
-          return actual.isAfter(after) &&
-            Seconds.secondsBetween(after, actual).isLessThan(seconds);
+          return ! actual.isBefore(start) &&   // actual must be equal or after start
+            Seconds.secondsBetween(start, actual).isLessThan(seconds);
         }
       };
   }
