@@ -921,33 +921,6 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void updateRequestWithoutUserHeaderFails()
-    throws InterruptedException,
-    MalformedURLException,
-    TimeoutException,
-    ExecutionException {
-
-    UUID id = UUID.randomUUID();
-
-    JsonObject request = new RequestRequestBuilder().withId(id).create();
-
-    createEntity(
-      request,
-      requestStorageUrl());
-
-    CompletableFuture<TextResponse> updateCompleted = new CompletableFuture<>();
-
-    client.put(requestStorageUrl(String.format("/%s", id)),
-      request, TENANT_ID, null,
-      ResponseHandler.text(updateCompleted));
-
-    TextResponse response = updateCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat("No user header causes JSON to be null when saved",
-      response.getStatusCode(), is(500));
-  }
-
-  @Test
   public void canGetARequestById()
     throws InterruptedException,
     MalformedURLException,

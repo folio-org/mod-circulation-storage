@@ -1,23 +1,20 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
+import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.*;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.collection.IsArrayContainingInAnyOrder.arrayContainingInAnyOrder;
 import static org.hamcrest.core.Is.*;
 import static org.junit.Assert.assertThat;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.Response;
@@ -68,10 +65,8 @@ public class StaffSlipsApiTest extends ApiTests {
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
 
     JsonArray slipsJsonArray = getResponse.getJson().getJsonArray("staffSlips");
-    assertThat(slipsJsonArray.size(), is(2));
-    Set<String> keys = new HashSet<>(Arrays.asList("Hold", "Transit"));
-    assertThat(keys.remove(slipsJsonArray.getJsonObject(0).getString(NAME_KEY)), is(true));
-    assertThat(keys.remove(slipsJsonArray.getJsonObject(1).getString(NAME_KEY)), is(true));
+    Object [] names = slipsJsonArray.stream().map(o -> ((JsonObject) o).getString(NAME_KEY)).toArray();
+    assertThat(names, arrayContainingInAnyOrder("Hold", "Transit"));
   }
 
   /* Begin Tests */
@@ -99,7 +94,7 @@ public class StaffSlipsApiTest extends ApiTests {
     JsonResponse creationResponse = makeStaffSlip(new StaffSlipRequestBuilder().withName(null).create());
 
     assertThat(String.format("Creating the loan should fail: %s", creationResponse.getBody()),
-      creationResponse.getStatusCode(), is(UNPROCESSABLE_ENTITY));
+      creationResponse, isUnprocessableEntity());
 
   }
 
@@ -122,7 +117,7 @@ public class StaffSlipsApiTest extends ApiTests {
     JsonResponse creationAttemptResponse = makeStaffSlip(
       new StaffSlipRequestBuilder().withName(TEST_STAFF_SLIP_1_NAME).create());
 
-    assertThat(creationAttemptResponse.getStatusCode(), is(HttpURLConnection.HTTP_INTERNAL_ERROR));
+    assertThat(creationAttemptResponse, isBadRequest());
 
   }
 

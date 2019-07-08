@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Collection of loan history items",
+  "type": "object",
+  "properties": {
+    "loansHistory": {
+      "description": "List of loan history items",
+      "id": "loansHistory",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "loans-history-item.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "loansHistory",
+    "totalRecords"
+  ]
+}

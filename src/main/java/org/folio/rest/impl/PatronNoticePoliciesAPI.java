@@ -23,8 +23,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.sql.UpdateResult;
 
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
-
+import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.CirculationRules;
 import org.folio.rest.jaxrs.model.Error;
@@ -34,7 +33,6 @@ import org.folio.rest.jaxrs.model.PatronNoticePolicy;
 import org.folio.rest.jaxrs.resource.PatronNoticePolicyStorage;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
@@ -234,13 +232,8 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
 
   private Future<Void> deleteNoticePolicyById(PostgresClient pgClient, String id) {
 
-    Criteria criteria = new Criteria()
-      .addField("'id'")
-      .setOperation("=")
-      .setValue("'" + id + "'");
-
     Future<UpdateResult> future = Future.future();
-    pgClient.delete(PATRON_NOTICE_POLICY_TABLE, new Criterion(criteria), future.completer());
+    pgClient.delete(PATRON_NOTICE_POLICY_TABLE, id, future.completer());
 
     return future.map(UpdateResult::getUpdated)
       .compose(updated -> updated > 0 ? succeededFuture() : failedFuture(new NotFoundException(NOT_FOUND)));

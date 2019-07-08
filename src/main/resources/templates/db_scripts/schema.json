@@ -2,14 +2,13 @@
   "tables": [
     {
       "tableName": "loan",
-      "generateId": false,
-      "pkColumnName": "_id",
       "withMetadata": true,
       "withAuditing": true,
+      "auditingTableName": "audit_loan",
+      "auditingFieldName": "loan",
       "auditingSnippet": {
         "delete": {
-          "declare": "injectedAction text;",
-          "statement": "injectedAction = '\"deleted\"';OLD.jsonb = jsonb_set(OLD.jsonb, '{action}' , injectedAction::jsonb , false);"
+          "statement": "jsonb = jsonb_set(jsonb, '{loan,action}', '\"deleted\"', false);"
         }
       },
       "uniqueIndex": [
@@ -46,8 +45,6 @@
     },
     {
       "tableName": "cancellation_reason",
-      "generateId": false,
-      "pkColumnName": "_id",
       "withMetadata": true,
       "withAuditing": false,
       "uniqueIndex": [
@@ -60,8 +57,6 @@
     },
     {
       "tableName": "request",
-      "generateId": false,
-      "pkColumnName": "_id",
       "withMetadata": true,
       "withAuditing": false,
       "foreignKeys": [
@@ -81,8 +76,6 @@
     },
     {
       "tableName": "fixed_due_date_schedule",
-      "generateId": false,
-      "pkColumnName": "_id",
       "withMetadata": false,
       "withAuditing": false,
       "uniqueIndex": [
@@ -95,8 +88,6 @@
     },
     {
       "tableName": "loan_policy",
-      "generateId": false,
-      "pkColumnName": "_id",
       "withMetadata": true,
       "withAuditing": false,
       "foreignKeys": [
@@ -114,8 +105,6 @@
     },
     {
       "tableName": "request_policy",
-      "generateId": false,
-      "pkColumnName": "_id",
       "withMetadata": true,
       "withAuditing": false,
       "uniqueIndex": [
@@ -128,16 +117,12 @@
     },
     {
       "tableName": "circulation_rules",
-      "generateId": false,
-      "pkColumnName": "_id",
       "withMetadata": false,
       "withAuditing": false,
       "customSnippetPath": "insertEmptyCirculationRulesRecord.sql"
     },
     {
       "tableName": "staff_slips",
-      "generateId": false,
-      "pkColumnName": "_id",
       "withMetadata": true,
       "withAuditing": false,
       "uniqueIndex": [
@@ -150,8 +135,6 @@
     },
     {
       "tableName": "patron_notice_policy",
-      "generateId": false,
-      "pkColumnName": "_id",
       "withMetadata": true,
       "withAuditing": false,
       "uniqueIndex": [
@@ -164,8 +147,6 @@
     },
     {
       "tableName": "scheduled_notice",
-      "generateId": true,
-      "pkColumnName": "_id",
       "withMetadata": true,
       "withAuditing": false
     }

@@ -9,27 +9,18 @@ import org.folio.rest.jaxrs.model.FixedDueDateSchedule;
 import org.folio.rest.jaxrs.model.FixedDueDateSchedules;
 import org.folio.rest.jaxrs.model.Schedule;
 import org.folio.rest.jaxrs.resource.FixedDueDateScheduleStorage;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.Criteria.Limit;
-import org.folio.rest.persist.Criteria.Offset;
-import org.folio.rest.persist.PgExceptionUtil;
+import org.folio.rest.persist.MyPgUtil;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.cql.CQLQueryValidationException;
-import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.PomReader;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
-import org.z3950.zing.cql.cql2pgjson.FieldException;
+import org.folio.support.UUIDValidation;
 
 import javax.ws.rs.core.Response;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
 public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorage {
@@ -56,7 +47,7 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorage {
         PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
             TenantTool.calculateTenantId(tenantId));
 
-        postgresClient.mutate(
+        postgresClient.execute(
             String.format("DELETE FROM %s_%s.%s", tenantId,
               PomReader.INSTANCE.getModuleName(), FIXED_SCHEDULE_TABLE), reply -> {
                 if(reply.succeeded()){
@@ -90,75 +81,10 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorage {
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
-
-    String tenantId = okapiHeaders.get(TENANT_HEADER);
-
-    try {
-      vertxContext.runOnContext(v -> {
-        try {
-          PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
-              TenantTool.calculateTenantId(tenantId));
-
-          String[] fieldList = { "*" };
-
-          CQLWrapper cql = getCQL(query, limit, offset);
-          postgresClient.get(FIXED_SCHEDULE_TABLE, DUE_DATE_SCHEDULE_CLASS, fieldList, cql, true, false, reply -> {
-            try {
-              if (reply.succeeded()) {
-                @SuppressWarnings("unchecked")
-                List<FixedDueDateSchedule> dueDateSchedules = (List<FixedDueDateSchedule>) reply.result().getResults();
-
-                FixedDueDateSchedules pagedSchedules = new FixedDueDateSchedules();
-                pagedSchedules.setFixedDueDateSchedules(dueDateSchedules);
-                pagedSchedules.setTotalRecords((Integer) reply.result().getResultInfo().getTotalRecords());
-
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                    FixedDueDateScheduleStorage.GetFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
-                        .respond200WithApplicationJson(pagedSchedules)));
-              } else {
-                log.error(reply.cause());
-
-                if(reply.cause() instanceof CQLQueryValidationException) {
-                  CQLQueryValidationException exception = (CQLQueryValidationException)reply.cause();
-
-                  String field = exception.getMessage();
-                  int start = field.indexOf('\'');
-                  int end = field.lastIndexOf('\'');
-                  if(start != -1 && end != -1){
-                    field = field.substring(start+1, end);
-                  }
-                  Errors e = ValidationHelper.createValidationErrorMessage(field, "", exception.getMessage());
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                    GetFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
-                      .respond422WithApplicationJson(e)));
-                }
-                else {
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                      FixedDueDateScheduleStorage.GetFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
-                          .respond500WithTextPlain(reply.cause().getMessage())));
-                }
-              }
-            } catch (Exception e) {
-              log.error(e);
-              asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                  FixedDueDateScheduleStorage.GetFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
-                      .respond500WithTextPlain(e.getMessage())));
-            }
-          });
-        }
-        catch (Exception e) {
-          log.error(e);
-          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-              FixedDueDateScheduleStorage.GetFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
-                  .respond500WithTextPlain(e.getMessage())));
-        }
-      });
-    } catch (Exception e) {
-      log.error(e);
-      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-          FixedDueDateScheduleStorage.GetFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
-              .respond500WithTextPlain(e.getMessage())));
-    }
+    PgUtil.get(FIXED_SCHEDULE_TABLE, DUE_DATE_SCHEDULE_CLASS, FixedDueDateSchedules.class,
+        query, offset, limit, okapiHeaders, vertxContext,
+        FixedDueDateScheduleStorage.GetFixedDueDateScheduleStorageFixedDueDateSchedulesResponse.class,
+        asyncResultHandler);
   }
 
   @Override
@@ -170,70 +96,17 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorage {
       Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
 
-    String tenantId = okapiHeaders.get(TENANT_HEADER);
-
-    try {
-
-      Errors errors = isDateRangeValid(entity.getSchedules());
-      if(entity != null && errors != null){
-        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-          FixedDueDateScheduleStorage.PostFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
-              .respond422WithApplicationJson(errors)));
-        return;
-      }
-
-      PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
-          TenantTool.calculateTenantId(tenantId));
-
-      vertxContext.runOnContext(v -> {
-        try {
-          if (entity.getId() == null) {
-            entity.setId(UUID.randomUUID().toString());
-          }
-
-          postgresClient.save(FIXED_SCHEDULE_TABLE, entity.getId(), entity, reply -> {
-            try {
-              if (reply.succeeded()) {
-                OutStream stream = new OutStream();
-                stream.setData(entity);
-
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                    FixedDueDateScheduleStorage.PostFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
-                      .respond201WithApplicationJson(entity, 
-                        PostFixedDueDateScheduleStorageFixedDueDateSchedulesResponse.headersFor201().withLocation(reply.result()))));
-              } else {
-                log.error(reply.cause());
-                if(isUniqueViolation(reply.cause())){
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                    FixedDueDateScheduleStorage.PostFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
-                        .respond400WithTextPlain(PgExceptionUtil.badRequestMessage(reply.cause()))));
-                }
-                else{
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                    FixedDueDateScheduleStorage.PostFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
-                        .respond500WithTextPlain(reply.cause().getMessage())));
-                }
-              }
-            } catch (Exception e) {
-              log.error(e);
-              asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                FixedDueDateScheduleStorage.PostFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
-                    .respond500WithTextPlain(e.getMessage())));
-            }
-          });
-        } catch (Exception e) {
-          log.error(e);
-          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-              FixedDueDateScheduleStorage.PostFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
-                  .respond500WithTextPlain(e.getMessage())));
-        }
-      });
-    } catch (Exception e) {
-      log.error(e);
+    Errors errors = isDateRangeValid(entity.getSchedules());
+    if (errors != null){
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-          FixedDueDateScheduleStorage.PostFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
-              .respond500WithTextPlain(e.getMessage())));
+        FixedDueDateScheduleStorage.PostFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
+            .respond422WithApplicationJson(errors)));
+      return;
     }
+
+    PgUtil.post(FIXED_SCHEDULE_TABLE, entity, okapiHeaders, vertxContext,
+        FixedDueDateScheduleStorage.PostFixedDueDateScheduleStorageFixedDueDateSchedulesResponse.class,
+        asyncResultHandler);
   }
 
   @Override
@@ -245,75 +118,17 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorage {
       Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
 
-    String tenantId = okapiHeaders.get(TENANT_HEADER);
-
-    try {
-      PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
-          TenantTool.calculateTenantId(tenantId));
-
-      Criteria a = new Criteria();
-
-      a.addField("'id'");
-      a.setOperation("=");
-      a.setValue(fixedDueDateScheduleId);
-
-      Criterion criterion = new Criterion(a);
-
-      vertxContext.runOnContext(v -> {
-        try {
-          postgresClient.get(FIXED_SCHEDULE_TABLE, DUE_DATE_SCHEDULE_CLASS, criterion, true, false, reply -> {
-            try {
-              if (reply.succeeded()) {
-                @SuppressWarnings({ "unchecked" })
-                List<FixedDueDateSchedule> dueDateSchedules = (List<FixedDueDateSchedule>) reply.result().getResults();
-
-                if (dueDateSchedules.size() == 1) {
-                  FixedDueDateSchedule dueDateSchedule = dueDateSchedules.get(0);
-
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                      FixedDueDateScheduleStorage.GetFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
-                          .respond200WithApplicationJson(dueDateSchedule)));
-                } else {
-                  asyncResultHandler.handle(Future.succeededFuture(
-                      FixedDueDateScheduleStorage.GetFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
-                          .respond404WithTextPlain(PgExceptionUtil.badRequestMessage(reply.cause()))));
-                }
-              } else {
-                log.error(reply.cause());
-                asyncResultHandler.handle(Future.succeededFuture(
-                    FixedDueDateScheduleStorage.GetFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
-                        .respond500WithTextPlain(reply.cause().getMessage())));
-
-              }
-            } catch (Exception e) {
-              log.error(e);
-              asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                  FixedDueDateScheduleStorage.GetFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
-                      .respond500WithTextPlain(e.getMessage())));
-            }
-          });
-        } catch (Exception e) {
-          log.error(e);
-          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-              FixedDueDateScheduleStorage.GetFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
-                  .respond500WithTextPlain(e.getMessage())));
-        }
-      });
-    } catch (Exception e) {
-      log.error(e);
-      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-          FixedDueDateScheduleStorage.GetFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
-              .respond500WithTextPlain(e.getMessage())));
+    // TODO: do we really need this special check?
+    // A 404 "Not found" from PgUtil.getById without "invalid UUID format" is good enough, isn't it?
+    if (! UUIDValidation.isValidUUID(fixedDueDateScheduleId)) {
+      asyncResultHandler.handle(Future.succeededFuture(
+          GetFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
+          .respond404WithTextPlain("Not found, invalid UUID format")));
+      return;
     }
-  }
-
-
-  private Criterion getFixedDueDateScheduleId(String fixedDueDateScheduleId) {
-    Criteria a = new Criteria();
-    a.addField("'id'");
-    a.setOperation("=");
-    a.setValue(fixedDueDateScheduleId);
-    return new Criterion(a);
+    PgUtil.getById(FIXED_SCHEDULE_TABLE, DUE_DATE_SCHEDULE_CLASS, fixedDueDateScheduleId, okapiHeaders, vertxContext,
+        GetFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse.class,
+        asyncResultHandler);
   }
 
   @Override
@@ -326,54 +141,9 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorage {
       Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext
       )  {
-
-    String tenantId = okapiHeaders.get(TENANT_HEADER);
-
-    try {
-      PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
-          TenantTool.calculateTenantId(tenantId));
-
-      Criterion criterion = getFixedDueDateScheduleId(fixedDueDateScheduleId);
-
-      vertxContext.runOnContext(v -> {
-        try {
-          postgresClient.delete(FIXED_SCHEDULE_TABLE, criterion, reply -> {
-            if (reply.succeeded()) {
-              asyncResultHandler.handle(Future.succeededFuture(
-                  DeleteFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
-                      .respond204()));
-            } else {
-              log.error(reply.cause());
-              if(isBadId(reply.cause())){
-                asyncResultHandler.handle(Future.succeededFuture(
-                  DeleteFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
-                      .respond404WithTextPlain(PgExceptionUtil.badRequestMessage(reply.cause()))));
-              }
-              else if(iStillReferenced(reply.cause())){
-                asyncResultHandler.handle(Future.succeededFuture(
-                  DeleteFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
-                      .respond400WithTextPlain(PgExceptionUtil.badRequestMessage(reply.cause()))));
-              }
-              else{
-                asyncResultHandler.handle(Future.succeededFuture(
-                  DeleteFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
-                      .respond500WithTextPlain(reply.cause().getMessage())));
-              }
-            }
-          });
-        } catch (Exception e) {
-          log.error(e);
-          asyncResultHandler.handle(Future
-              .succeededFuture(DeleteFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
-                  .respond500WithTextPlain(e.getMessage())));
-        }
-      });
-    } catch (Exception e) {
-      log.error(e);
-      asyncResultHandler.handle(
-          Future.succeededFuture(DeleteFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
-              .respond500WithTextPlain(e.getMessage())));
-    }
+    PgUtil.deleteById(FIXED_SCHEDULE_TABLE, fixedDueDateScheduleId, okapiHeaders, vertxContext,
+        DeleteFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse.class,
+        asyncResultHandler);
   }
 
   @Override
@@ -387,137 +157,17 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorage {
       Context vertxContext
       ) {
 
-    String tenantId = okapiHeaders.get(TENANT_HEADER);
-
-    try {
-
-      Errors errors = isDateRangeValid(entity.getSchedules());
-      if(entity != null && errors != null){
-        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-          FixedDueDateScheduleStorage.PostFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
-              .respond422WithApplicationJson(errors)));
-        return;
-      }
-
-      PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
-          TenantTool.calculateTenantId(tenantId));
-
-      Criterion criterion = getFixedDueDateScheduleId(fixedDueDateScheduleId);
-
-      vertxContext.runOnContext(v -> {
-        try {
-          postgresClient.get(FIXED_SCHEDULE_TABLE, DUE_DATE_SCHEDULE_CLASS, criterion, true, false, reply -> {
-            if (reply.succeeded()) {
-              @SuppressWarnings("unchecked")
-              List<FixedDueDateSchedule> dueDateSchedules = (List<FixedDueDateSchedule>) reply.result().getResults();
-
-              if (dueDateSchedules.size() == 1) {
-                try {
-                  postgresClient.update(FIXED_SCHEDULE_TABLE, entity, criterion, true, update -> {
-                    try {
-                      if (update.succeeded()) {
-                        OutStream stream = new OutStream();
-                        stream.setData(entity);
-
-                        asyncResultHandler.handle(Future.succeededFuture(
-                            PutFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
-                                .respond204()));
-                      } else {
-                        log.error(update.cause());
-                        if(isUniqueViolation(update.cause())){
-                          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                            FixedDueDateScheduleStorage.
-                              PutFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
-                                .respond400WithTextPlain(PgExceptionUtil.badRequestMessage(update.cause()))));
-                        }
-                        else{
-                          log.error(update.cause());
-                          asyncResultHandler.handle(Future.succeededFuture(
-                            PutFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
-                                .respond500WithTextPlain(update.cause().getMessage())));
-                        }
-                      }
-                    } catch (Exception e) {
-                      log.error(e);
-                      asyncResultHandler.handle(Future.succeededFuture(
-                          PutFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
-                              .respond500WithTextPlain(e.getMessage())));
-                    }
-                  });
-                } catch (Exception e) {
-                  log.error(e);
-                  asyncResultHandler.handle(Future.succeededFuture(
-                      PutFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
-                          .respond500WithTextPlain(e.getMessage())));
-                }
-              } else {
-                try {
-                  postgresClient.save(FIXED_SCHEDULE_TABLE, entity.getId(), entity, save -> {
-                    try {
-                      if (save.succeeded()) {
-                        OutStream stream = new OutStream();
-                        stream.setData(entity);
-
-                        asyncResultHandler.handle(Future.succeededFuture(
-                            PutFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
-                                .respond204()));
-                      } else {
-                          log.error(save.cause());
-                          asyncResultHandler.handle(Future.succeededFuture(
-                              PutFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
-                                  .respond500WithTextPlain(save.cause().getMessage())));
-                      }
-                    } catch (Exception e) {
-                      log.error(e);
-                      asyncResultHandler.handle(Future.succeededFuture(
-                          PutFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
-                              .respond500WithTextPlain(e.getMessage())));
-                    }
-                  });
-                } catch (Exception e) {
-                    log.error(e);
-                    asyncResultHandler.handle(Future.succeededFuture(
-                      PutFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
-                          .respond500WithTextPlain(e.getMessage())));
-                }
-              }
-            } else {
-              log.error(reply.cause());
-              if(isBadId(reply.cause())){
-                asyncResultHandler.handle(Future
-                  .succeededFuture(PutFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
-                      .respond404WithTextPlain(PgExceptionUtil.badRequestMessage(reply.cause()))));
-              }
-              else{
-                asyncResultHandler.handle(Future
-                  .succeededFuture(PutFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
-                      .respond500WithTextPlain(reply.cause().getMessage())));
-              }
-            }
-          });
-        } catch (Exception e) {
-          log.error(e);
-          asyncResultHandler.handle(
-              Future.succeededFuture(PutFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
-                  .respond500WithTextPlain(e.getMessage())));
-        }
-      });
-    } catch (Exception e) {
-      log.error(e);
-      asyncResultHandler.handle(
-          Future.succeededFuture(PutFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse
-              .respond500WithTextPlain(e.getMessage())));
+    Errors errors = isDateRangeValid(entity.getSchedules());
+    if (errors != null){
+      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+        FixedDueDateScheduleStorage.PostFixedDueDateScheduleStorageFixedDueDateSchedulesResponse
+            .respond422WithApplicationJson(errors)));
+      return;
     }
+
+    MyPgUtil.putUpsert204(FIXED_SCHEDULE_TABLE, entity, fixedDueDateScheduleId, okapiHeaders, vertxContext,
+        PutFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse.class, asyncResultHandler);
   }
-
-  private CQLWrapper getCQL(String query, int limit, int offset)
-    throws FieldException {
-
-    CQL2PgJSON cql2pgJson = new CQL2PgJSON("fixed_due_date_schedule.jsonb");
-    return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
-  }
-
-
 
   private Errors isDateRangeValid(List<Schedule> schedules) {
 
@@ -553,20 +203,5 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorage {
       log.error(e.getMessage(), e);
     }
     return errors;
-  }
-
-  private boolean isUniqueViolation(Throwable e){
-    return e != null
-      && e.getMessage().contains("duplicate key value violates unique constraint");
-  }
-
-  private boolean isBadId(Throwable e){
-    return e != null
-      && e.getMessage().contains("invalid input syntax for type numeric");
-  }
-
-  private boolean iStillReferenced(Throwable e){
-    return e != null
-      && e.getMessage().contains("violates foreign key constraint");
   }
 }

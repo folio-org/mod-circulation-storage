@@ -14,7 +14,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -65,7 +64,7 @@ public class LoansApiHistoryTest extends ApiTests {
       .withDueDate(new DateTime(2017, 7, 27, 10, 23, 43, DateTimeZone.UTC))
       .create();
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     client.post(loanStorageUrl(), loanRequest, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createCompleted));
@@ -75,20 +74,21 @@ public class LoansApiHistoryTest extends ApiTests {
     assertThat(String.format("Failed to create loan: %s", createResponse.getBody()),
       createResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
 
-    client.get(loanStorageHistoryUrl("?query=id="+id.toString()),
+    client.get(loanStorageHistoryUrl("", "query", "loan.id=="+id.toString()),
       StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
 
     JsonResponse historyResponse = getCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(historyResponse.getStatusCode(), is(HTTP_OK));
 
     List<JsonObject> entries = JsonArrayHelper.toList(
-      historyResponse.getJson().getJsonArray("loans"));
+      historyResponse.getJson().getJsonArray("loansHistory"));
 
     assertThat("Incorrect number of entries in loan history for id: " + id.toString(),
       entries.size(), is(1));
 
-    JsonObject loan = entries.get(0);
+    JsonObject loan = entries.get(0).getJsonObject("loan");
 
     assertThat("id does not match",
       loan.getString("id"), is(id.toString()));
@@ -129,7 +129,7 @@ public class LoansApiHistoryTest extends ApiTests {
 
     UUID id = UUID.randomUUID();
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     client.post(loanStorageUrl(), new LoanRequestBuilder().withId(id).create(),
       StorageTestSuite.TENANT_ID, ResponseHandler.json(createCompleted));
@@ -148,7 +148,7 @@ public class LoansApiHistoryTest extends ApiTests {
       .put("itemStatus", "Checked out")
       .put("renewalCount", 1);
 
-    CompletableFuture<JsonResponse> putCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> putCompleted = new CompletableFuture<>();
 
     client.put(loanStorageUrl(String.format("/%s", id)), updatedLoanRequest,
       StorageTestSuite.TENANT_ID, ResponseHandler.json(putCompleted));
@@ -158,20 +158,20 @@ public class LoansApiHistoryTest extends ApiTests {
     assertThat(String.format("Failed to update loan: %s", putResponse.getBody()),
       putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
 
-    client.get(loanStorageHistoryUrl("?query=id="+id.toString()),
+    client.get(loanStorageHistoryUrl("", "query", "loan.id=="+id.toString()),
       StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
 
     JsonResponse historyResponse = getCompleted.get(5, TimeUnit.SECONDS);
 
     List<JsonObject> entries = JsonArrayHelper.toList(
-      historyResponse.getJson().getJsonArray("loans"));
+      historyResponse.getJson().getJsonArray("loansHistory"));
 
     assertThat("Incorrect number of entries in loan history for id: " + id.toString(),
       entries.size(), is(2));
 
-    JsonObject entry = entries.get(0);
+    JsonObject entry = entries.get(0).getJsonObject("loan");
 
     //The RAML-Module-Builder converts all date-time formatted strings to UTC
     //and presents the offset as +0000 (which is ISO8601 compatible, but not RFC3339)
@@ -201,9 +201,7 @@ public class LoansApiHistoryTest extends ApiTests {
 
     CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
 
-    URL url = loanStorageHistoryUrl();
-
-    client.get(url, StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
+    client.get(loanStorageHistoryUrl(), StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
 
     JsonResponse j = getCompleted.get(5, TimeUnit.SECONDS);
 
@@ -286,21 +284,21 @@ public class LoansApiHistoryTest extends ApiTests {
     CompletableFuture<JsonResponse> getCompleted3 = new CompletableFuture<>();
     CompletableFuture<JsonResponse> getCompleted4 = new CompletableFuture<>();
 
-    client.get(url + "?query=id="+id.toString(),
+    client.get(loanStorageHistoryUrl("", "query", "loan.id=="+id.toString()),
       StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted2));
 
     JsonResponse finalRes = getCompleted2.get(5, TimeUnit.SECONDS);
 
     assertThat(finalRes.getStatusCode(), is(HTTP_OK));
 
-    client.get(url + "?query="+ URLEncoder.encode("userId="+userId.toString(), "UTF8"),
+    client.get(loanStorageHistoryUrl("", "query", "loan.userId=="+userId.toString()),
       StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted3));
 
     JsonResponse finalRes2 = getCompleted3.get(5, TimeUnit.SECONDS);
 
     assertThat(finalRes2.getStatusCode(), is(HTTP_OK));
 
-    client.get(url + "?query=" + URLEncoder.encode("userId="+userId.toString()+" sortBy action", "UTF8"),
+    client.get(loanStorageHistoryUrl("", "query", "loan.userId=="+userId.toString()+" sortBy loan.action"),
       StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted4));
 
     JsonResponse finalRes4 = getCompleted4.get(5, TimeUnit.SECONDS);
@@ -308,20 +306,21 @@ public class LoansApiHistoryTest extends ApiTests {
     assertThat(finalRes4.getStatusCode(), is(HTTP_OK));
 
     assertThat("Should have array property",
-      finalRes.getJson().containsKey("loans"), is(true));
+      finalRes.getJson().containsKey("loansHistory"), is(true));
 
     assertThat("Incorrect number of entries in loan history for id: " + id.toString(),
-      finalRes.getJson().getJsonArray("loans").size(), is(4));
+      finalRes.getJson().getJsonArray("loansHistory").size(), is(4));
 
-    //Trigger used to have a special case for delete, it looks like standard audit implementation does not have this
+    // Trigger used to have a special case for delete, it looks like standard audit implementation does not have this
+    // Checks schema.json tables loan auditingSnippet that sets loan.action = "deleted"
     assertThat("Incorrect value of first loan in res set - should be deleted " + id.toString(),
-      finalRes.getJson().getJsonArray("loans").getJsonObject(0).getString("action"), is("deleted"));
+      finalRes.getJson().getJsonArray("loansHistory").getJsonObject(0).getJsonObject("loan").getString("action"), is("deleted"));
 
     assertThat("Incorrect number of entries in loan history for userId: " + userId.toString(),
-      finalRes2.getJson().getJsonArray("loans").size(), is(4));
+      finalRes2.getJson().getJsonArray("loansHistory").size(), is(4));
 
     assertThat("Incorrect value oof first loan in res set - should be checkedin " + id.toString(),
-      finalRes4.getJson().getJsonArray("loans").getJsonObject(0).getString("action"), is("checkedin"));
+      finalRes4.getJson().getJsonArray("loansHistory").getJsonObject(0).getJsonObject("loan").getString("action"), is("checkedin"));
   }
 
   private static URL loanStorageUrl() throws MalformedURLException {
@@ -338,9 +337,9 @@ public class LoansApiHistoryTest extends ApiTests {
     return loanStorageHistoryUrl("");
   }
 
-  private static URL loanStorageHistoryUrl(String subPath)
+  private static URL loanStorageHistoryUrl(String subPath, String ...parameterKeyValue)
     throws MalformedURLException {
 
-    return StorageTestSuite.storageUrl("/loan-storage/loan-history" + subPath);
+    return StorageTestSuite.storageUrl("/loan-storage/loan-history" + subPath, parameterKeyValue);
   }
 }
