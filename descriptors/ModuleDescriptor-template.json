@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "loan-storage",
-      "version": "6.0",
+      "version": "6.1",
       "handlers": [
         {
           "methods": ["GET"],
