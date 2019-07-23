@@ -1,3 +1,10 @@
+## 9.0.0 2019-07-23
+
+* Can store the patron group for the borrower at check out (CIRCSTORE-135)
+* loans history is represented differently (due to changes to audit tables in RAML Module Builder, CIRCSTORE-134)
+* Upgrades RAML Module Builder to 26.2.1 (CIRCSTORE-134, CIRCSTORE-136)
+* Provides `loan-storage 6.1` (CIRCSTORE-134, CIRCSTORE-135)
+
 ## 8.1.0 2019-06-10
 
 * Store when a request expires or is cancelled whilst awaiting pickup (CIRCSTORE-127)
