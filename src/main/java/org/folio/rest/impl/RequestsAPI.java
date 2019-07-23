@@ -60,7 +60,7 @@ public class RequestsAPI implements RequestStorage {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    PgUtil.get(REQUEST_TABLE, Request.class, Requests.class, query, offset, limit, okapiHeaders, vertxContext,
+    PgUtil.get(REQUEST_TABLE, Request.class, Requests.class, query.replace("-", ""), offset, limit, okapiHeaders, vertxContext,
         GetRequestStorageRequestsResponse.class, asyncResultHandler);
   }
 
