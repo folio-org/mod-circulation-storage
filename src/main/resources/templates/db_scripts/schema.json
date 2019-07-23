@@ -75,9 +75,7 @@
       "fullTextIndex": [
         {
           "fieldName": "status",
-          "tOps": "ADD",
-          "caseSensitive": true,
-          "removeAccents": false
+          "tOps": "ADD"
         }
       ],
       "customSnippetPath": "requestUpdateTrigger.sql"
