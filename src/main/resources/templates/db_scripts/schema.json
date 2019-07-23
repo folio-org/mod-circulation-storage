@@ -72,6 +72,14 @@
           "tOps": "ADD"
         }
       ],
+      "fullTextIndex": [
+        {
+          "fieldName": "status",
+          "tOps": "ADD",
+          "caseSensitive": true,
+          "removeAccents": false
+        }
+      ],
       "customSnippetPath": "requestUpdateTrigger.sql"
     },
     {

@@ -1307,6 +1307,84 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
+  public void canFilterByRequestStatus()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException, UnsupportedEncodingException {
+
+    UUID itemId = UUID.randomUUID();
+    UUID otherItemId = UUID.randomUUID();
+
+    createEntity(
+      new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withPosition(1)
+      .withStatus(OPEN_NOT_YET_FILLED).create(),
+      requestStorageUrl());
+
+    createEntity(
+      new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withPosition(2)
+      .withStatus(OPEN_AWAITING_PICKUP).create(),
+      requestStorageUrl());
+
+    createEntity(
+      new RequestRequestBuilder()
+      .withItemId(itemId)
+      .withNoPosition()
+      .withStatus(CLOSED_FILLED).create(),
+      requestStorageUrl());
+
+    createEntity(
+      new RequestRequestBuilder()
+      .withItemId(otherItemId)
+      .withPosition(1)
+      .withStatus(OPEN_NOT_YET_FILLED).create(),
+      requestStorageUrl());
+
+    createEntity(
+      new RequestRequestBuilder()
+      .withItemId(otherItemId)
+      .withPosition(2)
+      .withStatus(OPEN_AWAITING_PICKUP).create(),
+      requestStorageUrl());
+
+    createEntity(
+      new RequestRequestBuilder()
+        .withItemId(itemId)
+        .withPosition(3)
+        .withStatus(OPEN_IN_TRANSIT).create(),
+      requestStorageUrl());
+
+    createEntity(
+      new RequestRequestBuilder()
+      .withItemId(otherItemId)
+      .withNoPosition()
+      .withStatus(CLOSED_FILLED).create(),
+      requestStorageUrl());
+
+    CompletableFuture<JsonResponse> getRequestsCompleted = new CompletableFuture<>();
+
+    String query = URLEncoder.encode(String.format("status=\"%s\"", OPEN_NOT_YET_FILLED), "UTF-8");
+
+    client.get(requestStorageUrl() + String.format("?query=%s", query),
+      TENANT_ID, ResponseHandler.json(getRequestsCompleted));
+
+    JsonResponse getRequestsResponse = getRequestsCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to get requests: %s",
+      getRequestsResponse.getBody()),
+      getRequestsResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject wrappedRequests = getRequestsResponse.getJson();
+
+    assertThat(wrappedRequests.getJsonArray("requests").size(), is(2));
+    assertThat(wrappedRequests.getInteger("totalRecords"), is(2));
+  }
+
+  @Test
   public void canSortRequestsByAscendingRequestDate()
     throws MalformedURLException,
     InterruptedException,
