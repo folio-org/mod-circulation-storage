@@ -8,13 +8,13 @@ import org.joda.time.DateTimeZone;
 import java.util.UUID;
 
 public class RequestRequestBuilder extends JsonBuilder {
-  public static final String OPEN_NOT_YET_FILLED = "Open - Not yet filled";
-  public static final String OPEN_AWAITING_PICKUP = "Open - Awaiting pickup";
-  public static final String OPEN_IN_TRANSIT = "Open - In transit";
-  public static final String CLOSED_FILLED = "Closed - Filled";
-  public static final String CLOSED_CANCELLED = "Closed - Cancelled";
-  public static final String CLOSED_UNFILLED = "Closed - Unfilled";
-  public static final String CLOSED_PICKUP_EXPIRED = "Closed - Pickup expired";
+  public static final String OPEN_NOT_YET_FILLED = "Open: Not yet filled";
+  public static final String OPEN_AWAITING_PICKUP = "Open: Awaiting pickup";
+  public static final String OPEN_IN_TRANSIT = "Open: In transit";
+  public static final String CLOSED_FILLED = "Closed: Filled";
+  public static final String CLOSED_CANCELLED = "Closed: Cancelled";
+  public static final String CLOSED_UNFILLED = "Closed: Unfilled";
+  public static final String CLOSED_PICKUP_EXPIRED = "Closed: Pickup expired";
 
   private final UUID id;
   private final String requestType;
@@ -52,7 +52,7 @@ public class RequestRequestBuilder extends JsonBuilder {
       null,
       null,
       null,
-      "Open - Not yet filled",
+      "Open: Not yet filled",
       null,
       null,
       null,

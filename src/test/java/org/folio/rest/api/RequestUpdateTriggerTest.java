@@ -55,8 +55,8 @@ class RequestUpdateTriggerTest {
 
   @ParameterizedTest
   @CsvSource(value = {
-    "Open - Awaiting pickup | Closed - Pickup expired",
-    "Open - Awaiting pickup | Closed - Cancelled     "
+    "Open: Awaiting pickup | Closed: Pickup expired",
+    "Open: Awaiting pickup | Closed: Cancelled     "
   }, delimiter = '|')
   void awaitingPickupRequestClosedDateShouldBePresentAfterStatusTransition(String oldStatus, String newStatus)
     throws InterruptedException, ExecutionException, TimeoutException {
@@ -86,15 +86,15 @@ class RequestUpdateTriggerTest {
 
   @ParameterizedTest
   @CsvSource(value = {
-    "Open - Not yet filled  | Closed - Filled       ",
-    "Open - Not yet filled  | Closed - Cancelled    ",
-    "Open - Not yet filled  | Closed - Unfilled     ",
-    "Open - Not yet filled  | Open - In transit     ",
-    "Open - Not yet filled  | Open - Awaiting pickup",
-    "Open - Awaiting pickup | Open - In transit     ",
-    "Open - In transit      | Closed - Cancelled    ",
-    "Open - In transit      | Open - Awaiting pickup",
-    "Open - In transit      | Open - Not yet filled "
+    "Open: Not yet filled  | Closed: Filled       ",
+    "Open: Not yet filled  | Closed: Cancelled    ",
+    "Open: Not yet filled  | Closed: Unfilled     ",
+    "Open: Not yet filled  | Open: In transit     ",
+    "Open: Not yet filled  | Open: Awaiting pickup",
+    "Open: Awaiting pickup | Open: In transit     ",
+    "Open: In transit      | Closed: Cancelled    ",
+    "Open: In transit      | Open: Awaiting pickup",
+    "Open: In transit      | Open: Not yet filled "
   }, delimiter = '|')
   void awaitingPickupRequestClosedDateShouldNotBePresentAfterStatusTransition(String oldStatus, String newStatus)
     throws InterruptedException, ExecutionException, TimeoutException {
