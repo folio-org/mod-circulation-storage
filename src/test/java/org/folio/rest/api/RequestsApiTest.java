@@ -721,8 +721,8 @@ public class RequestsApiTest extends ApiTests {
 
   @Test
   @Parameters({
-    "Open: Awaiting pickup",
-    "Closed: Filled"
+    "Open - Awaiting pickup",
+    "Closed - Filled"
   })
   public void canUpdateARequestWithValidStatus(String status)
     throws InterruptedException,
@@ -745,7 +745,7 @@ public class RequestsApiTest extends ApiTests {
       .toHoldShelf()
       .withItem("Nod", "565578437802")
       .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
-      .withStatus("Open: Not yet filled")
+      .withStatus("Open - Not yet filled")
       .create(),
       requestStorageUrl());
 
@@ -797,7 +797,7 @@ public class RequestsApiTest extends ApiTests {
       .toHoldShelf()
       .withItem("Nod", "565578437802")
       .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
-      .withStatus("Open: Not yet filled")
+      .withStatus("Open - Not yet filled")
       .create(),
       requestStorageUrl());
 
@@ -820,7 +820,7 @@ public class RequestsApiTest extends ApiTests {
 
     JsonObject representation = getById(requestStorageUrl(String.format("/%s", id)));
 
-    assertThat(representation.getString("status"), is("Open: Not yet filled"));
+    assertThat(representation.getString("status"), is("Open - Not yet filled"));
   }
 
   @Test

@@ -49,7 +49,7 @@ same `itemId` and the `status` of `Open` should be rejected with a error (422) r
 
 ### Unique Position in per-item Request Queue
 
-This implementation introduces the constraint that only one open (e.g. `Open: Not yet filled`) request
+This implementation introduces the constraint that only one open (e.g. `Open - Not yet filled`) request
 for a given item can be at a particular position in the request queue for that item.
 
 HTTP Requests (either POST or PUT) which could result two open requests with the
@@ -145,8 +145,8 @@ and the [Docker image](https://hub.docker.com/r/folioorg/mod-circulation-storage
 
 There is database trigger for request update. It works in the following way:
 
-Given a request with status 'Open: Awaiting pickup'<br/>
-When the request is updated and new status is 'Closed: Pickup expired' or 'Closed: Cancelled'<br/>
+Given a request with status 'Open - Awaiting pickup'<br/>
+When the request is updated and new status is 'Closed - Pickup expired' or 'Closed - Cancelled'<br/>
 Then an update trigger adds the property 'awaitingPickupRequestClosedDate' to the request JSONB<br/>
 
 Such behavior is required by Expired Holds Report CSV functionality in mod-circulation<br/>

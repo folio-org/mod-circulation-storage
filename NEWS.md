@@ -32,7 +32,7 @@
 * Introduces request policies (CIRCSTORE-97)
 * Introduces initial patron notice policies (CIRCSTORE-89, CIRCSTORE-90, CIRCSTORE-91, CIRCSTORE-92, CIRCSTORE-93, CIRCSTORE-100, CIRCSTORE-111, CIRCSTORE-112) 
 * Renames loan rules storage to circulation rules storage (CIRCSTORE-102)
-* Introduces `Closed: Unfilled`, `Closed: Pickup expired` and `Open: In transit` request states ( CIRCSTORE-101, CIRCSTORE-109, CIRCSTORE-110)
+* Introduces `Closed - Unfilled`, `Closed - Pickup expired` and `Open - In transit` request states ( CIRCSTORE-101, CIRCSTORE-109, CIRCSTORE-110)
 * Adds `opening time offset period` to loan policy (CIRCSTORE-64)
 * Adds `tags` to requests (CIRCSTORE-99)
 * Improves CQL Query performance improvements (CIRCSTORE-114)
@@ -91,7 +91,7 @@
 
 ## 5.2.0 2018-06-27
 
-* Adds `Closed: Cancelled` request status enum (CIRCSTORE-59)
+* Adds `Closed - Cancelled` request status enum (CIRCSTORE-59)
 * Adds cancellation properties to requests (CIRCSTORE-47)
 * Introduces cancellation reasons API (CIRCSTORE-57)
 * Provides `cancellation-reason-storage` interface 1.0 (CIRCSTORE-57)

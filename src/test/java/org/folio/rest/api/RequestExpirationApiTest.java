@@ -112,7 +112,7 @@ public class RequestExpirationApiTest extends ApiTests {
     UUID id3 = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
 
-    /* Status "Open: Awaiting pickup" and hold shelf expiration date in the past - should be expired */
+    /* Status "Open - Awaiting pickup" and hold shelf expiration date in the past - should be expired */
     createEntity(
       new RequestRequestBuilder()
       .hold()
@@ -124,7 +124,7 @@ public class RequestExpirationApiTest extends ApiTests {
       .create(),
       requestStorageUrl());
 
-    /* Status "Open: not yet filled" and request expiration date in the future - should NOT be expired */
+    /* Status "Open - not yet filled" and request expiration date in the future - should NOT be expired */
     createEntity(
       new RequestRequestBuilder()
       .hold()
@@ -136,7 +136,7 @@ public class RequestExpirationApiTest extends ApiTests {
       .create(),
       requestStorageUrl());
 
-    /* Status "Open: Awaiting pickup" and hold shelf expiration date in the future - should NOT be expired */
+    /* Status "Open - Awaiting pickup" and hold shelf expiration date in the future - should NOT be expired */
     createEntity(
       new RequestRequestBuilder()
       .hold()
@@ -179,7 +179,7 @@ public class RequestExpirationApiTest extends ApiTests {
     UUID id1_6 = UUID.randomUUID();
     UUID itemId1 = UUID.randomUUID();
 
-    /* Status "Open: not yet filled" and request expiration date in the past - should be expired */
+    /* Status "Open - not yet filled" and request expiration date in the past - should be expired */
     createEntity(
       new RequestRequestBuilder()
       .hold()
@@ -191,7 +191,7 @@ public class RequestExpirationApiTest extends ApiTests {
       .create(),
       requestStorageUrl());
 
-    /* Status "Open: Awaiting pickup" and request expiration date in the past - should NOT be expired */
+    /* Status "Open - Awaiting pickup" and request expiration date in the past - should NOT be expired */
     createEntity(
       new RequestRequestBuilder()
       .hold()
@@ -202,7 +202,7 @@ public class RequestExpirationApiTest extends ApiTests {
       .create(),
       requestStorageUrl());
 
-    /* Status "Open: not yet filled" and hold shelf expiration date in the past - should NOT be expired */
+    /* Status "Open - not yet filled" and hold shelf expiration date in the past - should NOT be expired */
     createEntity(
       new RequestRequestBuilder()
       .hold()
