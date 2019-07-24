@@ -1,6 +1,6 @@
 ## 9.1.0 2019-07-24
 
-* Support hyphens in request status when using CQL = relation CIRCSTORE-138
+* Support hyphens in request status when using CQL = relation (CIRCSTORE-138)
 
 ## 9.0.0 2019-07-23
 
