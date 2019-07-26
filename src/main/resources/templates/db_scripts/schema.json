@@ -32,6 +32,12 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
+        },
+        {
+          "fieldName": "status.name",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
         }
       ],
       "index": [
@@ -40,6 +46,14 @@
           "tOps": "ADD",
           "caseSensitive": true,
           "removeAccents": false
+        }
+      ],
+      "fullTextIndex": [
+        {
+          "fieldName": "userId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
         }
       ]
     },
@@ -70,6 +84,26 @@
         {
           "fieldName": "itemId, position",
           "tOps": "ADD"
+        }
+      ],
+      "ginIndex": [
+        {
+          "fieldName": "itemId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "requestType",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "status",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
         }
       ],
       "customSnippetPath": "requestUpdateTrigger.sql"
