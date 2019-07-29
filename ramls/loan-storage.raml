@@ -15,6 +15,7 @@ types:
   loans-history-items: !include loans-history-items.json
   errors: !include raml-util/schemas/errors.schema
   parameters: !include raml-util/schemas/parameters.schema
+  anonymize-loans-response: !include anonymize-loans-response.json
 
 traits:
   language: !include raml-util/traits/language.raml
@@ -28,6 +29,27 @@ resourceTypes:
   get-only: !include raml-util/rtypes/get-only.raml
 
 /loan-storage:
+  /anonymizeloans:
+    post:
+      is: [validate]
+      body:
+        application/json:
+          type: string[]
+      responses:
+        200:
+          description: "Number of closed loans for this user that have been anonymized"
+          body:
+            application/json:
+              type: anonymize-loans-response
+        422:
+          description: "Closed loans for this user have been anonymized"
+          body:
+            application/json:
+        500:
+          description: "Internal server error, e.g. due to misconfiguration"
+          body:
+            text/plain:
+              example: "Internal server error, contact administrator"
   /loans:
     displayName: Loans
     type:

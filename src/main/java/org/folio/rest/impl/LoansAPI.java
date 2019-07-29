@@ -1,21 +1,17 @@
 package org.folio.rest.impl;
 
-import static io.vertx.core.Future.succeededFuture;
-import static org.folio.rest.impl.Headers.TENANT_HEADER;
-
-import java.lang.invoke.MethodHandles;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Objects;
-import java.util.StringJoiner;
-import java.util.function.Function;
-
-import javax.validation.constraints.NotNull;
-import javax.ws.rs.core.Response;
-
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.json.Json;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+import io.vertx.ext.sql.UpdateResult;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.folio.rest.annotations.Validate;
+import org.folio.rest.jaxrs.model.AnonymizeLoansResponse;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Loan;
@@ -35,11 +31,21 @@ import org.folio.support.UUIDValidation;
 import org.folio.support.VertxContextRunner;
 import org.joda.time.DateTime;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.core.Response;
+import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.StringJoiner;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static io.vertx.core.Future.succeededFuture;
+import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
 public class LoansAPI implements LoanStorage {
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -178,6 +184,63 @@ public class LoansAPI implements LoanStorage {
             PostLoanStorageLoansAnonymizeByUserIdResponse.respond204())),
           serverErrorResponder::withError));
     });
+  }
+
+  @Override
+  public void postLoanStorageAnonymizeloans(List<String> loanIds,
+                                            Map<String, String> okapiHeaders,
+                                            Handler<AsyncResult<Response>> responseHandler,
+                                            Context vertxContext) {
+
+    final ServerErrorResponder serverErrorResponder =
+      new ServerErrorResponder(PostLoanStorageLoansAnonymizeByUserIdResponse
+        ::respond500WithTextPlain, responseHandler, log);
+
+    final VertxContextRunner runner = new VertxContextRunner(
+      vertxContext, serverErrorResponder::withError);
+    AnonymizeLoansResponse response = new AnonymizeLoansResponse();
+    runner.runOnContext(() -> {
+      final Set<String> invalidUuids = loanIds.stream()
+        .filter(id -> !UUIDValidation.isValidUUID(id))
+        .collect(Collectors.toSet());
+
+      if (!invalidUuids.isEmpty()) {
+        final Errors errors = ValidationHelper.createValidationErrorMessage(
+          "invalidLoanIds",
+          Json.encode(invalidUuids),
+          "Loan IDs should be a valid UUID");
+        responseHandler.handle(succeededFuture(
+          PostLoanStorageLoansAnonymizeByUserIdResponse
+            .respond422WithApplicationJson(errors)));
+        return;
+      }
+
+      final String tenantId = TenantTool.tenantId(okapiHeaders);
+      final PostgresClient postgresClient = PostgresClient.getInstance(
+        vertxContext.owner(), tenantId);
+
+      final String combinedAnonymizationSql = createAnonymizationSQL(loanIds,
+        tenantId);
+      log.info(String.format("Anonymization SQL: %s", combinedAnonymizationSql));
+      update(postgresClient, combinedAnonymizationSql)
+        .map(updateResult -> {
+          response.setUpdatedCount(updateResult.getUpdated());
+          return PostLoanStorageAnonymizeloansResponse.respond200WithApplicationJson(response);
+        })
+        .map(Response.class::cast)
+        .otherwise(this::mapExceptionToResponse)
+        .setHandler(responseHandler);
+    });
+  }
+
+  private Response mapExceptionToResponse(Throwable t) {
+    return PostLoanStorageAnonymizeloansResponse.respond500WithTextPlain(t.getMessage());
+  }
+
+  private Future<UpdateResult> update(PostgresClient postgresClient, String sql) {
+    Future<UpdateResult> future = Future.future();
+    postgresClient.execute(sql, future);
+    return future;
   }
 
   @Validate
@@ -326,6 +389,39 @@ public class LoansAPI implements LoanStorage {
 
     asyncResultHandler.handle(succeededFuture(
       responseCreator.apply(errors)));
+  }
+
+  private String createAnonymizationSQL(@NotNull Collection<String> loanIdList,
+                                        String tenantId) {
+
+    String loanIds = loanIdList.stream()
+      .map(s -> "\'" + s + "\'")
+      .collect(Collectors.joining(",", "(", ")"));
+
+    final String anonymizeLoansSql = String.format(
+      "UPDATE %s_%s.loan "
+        + " SET jsonb = jsonb - 'userId'"
+        + " WHERE loan.id in " + loanIds
+        + " AND loan.jsonb->'status'->>'name' = 'Closed'"
+        + "AND  loan.jsonb->'userId' is NOT null",
+      tenantId, MODULE_NAME);
+
+    //Only anonymize the history for loans that are currently closed
+    //meaning that we need to refer to loans in this query
+    final String anonymizeLoansActionHistorySql = String.format(
+      "UPDATE %s_%s.%s l"
+        + " SET jsonb = jsonb #- '{loan,userId}'"
+        + " WHERE jsonb->'loan'->>'id' IN"
+        + " (SELECT l.jsonb->>'id'"
+        + " FROM %s_%s.loan l"
+        + " WHERE l.id in " + loanIds
+        + " AND l.jsonb->'status'->>'name' = 'Closed')"
+        + "AND  l.jsonb->'userId' is NOT NULL",
+      tenantId, MODULE_NAME, LOAN_HISTORY_TABLE,
+      tenantId, MODULE_NAME);
+
+    //Loan action history needs to go first, as needs to be for specific loans
+    return anonymizeLoansActionHistorySql + "; " + anonymizeLoansSql;
   }
 
   private String createAnonymizationSQL(

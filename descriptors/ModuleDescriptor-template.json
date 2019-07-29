@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "loan-storage",
-      "version": "6.1",
+      "version": "6.2",
       "handlers": [
         {
           "methods": ["GET"],
@@ -38,6 +38,11 @@
           "methods": ["POST"],
           "pathPattern": "/loan-storage/loans/anonymize/{userId}",
           "permissionsRequired": ["circulation-storage.loans.collection.anonymize.user.post"]
+        },
+        {
+          "methods": ["POST"],
+          "pathPattern": "/loan-storage/anonymizeloans",
+          "permissionsRequired": ["circulation-storage.anonymizeloans.post"]
         }
       ]
     },
@@ -369,6 +374,11 @@
       "permissionName": "circulation-storage.loans.collection.anonymize.user.post",
       "displayName": "Circulation storage - anonymize loans for a user",
       "description": "Anonymize closed loans for a single user"
+    },
+    {
+      "permissionName": "circulation-storage.anonymizeloans.post",
+      "displayName": "circulation - anonymize loans",
+      "description": "anonymize a list of loans"
     },
     {
       "permissionName": "circulation-storage.circulation-rules.get",

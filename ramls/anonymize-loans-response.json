@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Response schema for anonymize loans request",
+  "type": "object",
+  "properties": {
+    "updatedCount": {
+      "description": "The Number of successfully anonymized loans",
+      "type": "integer"
+    }
+  },
+  "additionalProperties": false
+}
