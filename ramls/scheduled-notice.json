@@ -22,6 +22,11 @@
       "format": "date-time",
       "description": "Next run time"
     },
+    "triggeringEvent": {
+      "type": "string",
+      "description": "Scheduled notice triggering event",
+      "enum": ["Hold Expiration", "Request Expiration"]
+    },
     "noticeConfig": {
       "type": "object",
       "properties": {
