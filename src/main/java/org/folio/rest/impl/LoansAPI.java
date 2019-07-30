@@ -11,6 +11,7 @@ import io.vertx.ext.sql.UpdateResult;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.folio.rest.annotations.Validate;
+import org.folio.rest.jaxrs.model.AnonymizeLoansRequest;
 import org.folio.rest.jaxrs.model.AnonymizeLoansResponse;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
@@ -187,13 +188,14 @@ public class LoansAPI implements LoanStorage {
   }
 
   @Override
-  public void postLoanStorageAnonymizeLoans(List<String> loanIds,
+  public void postLoanStorageAnonymizeLoans(AnonymizeLoansRequest request,
                                             Map<String, String> okapiHeaders,
                                             Handler<AsyncResult<Response>> responseHandler,
                                             Context vertxContext) {
 
     AnonymizeLoansResponse response = new AnonymizeLoansResponse();
 
+    List<String> loanIds = request.getLoanIds();
     final Set<String> invalidUuids = loanIds.stream()
       .filter(id -> !UUIDValidation.isValidUUID(id))
       .collect(Collectors.toSet());

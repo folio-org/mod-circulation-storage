@@ -92,8 +92,8 @@ public class LoansApiTest extends ApiTests {
     String loanId2 = loan2.getValue("id").toString();
     String loanId1 = loan1.getValue("id").toString();
 
-    JsonArray requestBody = new JsonArray().add(loanId1).add(loanId2);
-
+    JsonArray ids = new JsonArray().add(loanId1).add(loanId2);
+    JsonObject requestBody = new JsonObject().put("loanIds", ids);
     CompletableFuture<JsonResponse> completed = new CompletableFuture<>();
 
     client.post(anonymizeLoansURL(), requestBody, StorageTestSuite.TENANT_ID,

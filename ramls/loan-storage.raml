@@ -16,6 +16,7 @@ types:
   errors: !include raml-util/schemas/errors.schema
   parameters: !include raml-util/schemas/parameters.schema
   anonymize-loans-response: !include anonymize-loans-response.json
+  anonymize-loans-request: !include anonymize-loans-request.json
 
 traits:
   language: !include raml-util/traits/language.raml
@@ -34,7 +35,7 @@ resourceTypes:
       is: [validate]
       body:
         application/json:
-          type: string[]
+          type: anonymize-loans-request
       responses:
         200:
           description: "Number of closed loans for this user that have been anonymized"
