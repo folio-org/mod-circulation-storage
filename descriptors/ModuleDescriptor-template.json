@@ -41,7 +41,7 @@
         },
         {
           "methods": ["POST"],
-          "pathPattern": "/loan-storage/anonymizeloans",
+          "pathPattern": "/loan-storage/anonymize-loans",
           "permissionsRequired": ["circulation-storage.anonymizeloans.post"]
         }
       ]
@@ -661,7 +661,8 @@
         "scheduled-notice-storage.scheduled-notices.item.post",
         "scheduled-notice-storage.scheduled-notices.item.put",
         "scheduled-notice-storage.scheduled-notices.item.delete",
-        "scheduled-notice-storage.scheduled-notices.collection.delete"
+        "scheduled-notice-storage.scheduled-notices.collection.delete",
+        "circulation-storage.anonymizeloans.post"
       ]
     },
     {

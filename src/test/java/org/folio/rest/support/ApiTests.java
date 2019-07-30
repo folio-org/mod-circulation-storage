@@ -16,6 +16,7 @@ import java.util.concurrent.TimeoutException;
 
 import static java.net.HttpURLConnection.HTTP_CREATED;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 
 public class ApiTests {
@@ -97,4 +98,11 @@ public class ApiTests {
 
     assertThat(statusCode, is(HttpURLConnection.HTTP_NOT_FOUND));
   }
+
+  protected void doesNotHaveProperty(String property, JsonObject resource, String type) {
+    org.hamcrest.junit.MatcherAssert.assertThat(String.format("%s should NOT have an %s: %s",
+      type, property, resource),
+      resource.getValue(property), is(nullValue()));
+  }
+
 }

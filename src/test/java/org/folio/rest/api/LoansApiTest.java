@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.support.http.InterfaceUrls.anonymizeLoansURL;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isBadRequest;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNotFound;
 import static org.folio.rest.support.matchers.LoanStatusMatchers.isClosed;
@@ -66,6 +67,43 @@ public class LoansApiTest extends ApiTests {
   @After
   public void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("loan");
+  }
+
+  @Test
+  public void canAnonymizeLoans() throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+
+    UUID itemId = UUID.randomUUID();
+    UUID userId = UUID.randomUUID();
+
+    JsonObject loan1 = loansClient.create(new LoanRequestBuilder()
+      .withId(UUID.randomUUID())
+      .withItemId(itemId)
+      .withUserId(userId)
+      .closed()
+      .create()).getJson();
+
+    JsonObject loan2 = loansClient.create(new LoanRequestBuilder()
+      .withId(UUID.randomUUID())
+      .withItemId(itemId)
+      .withUserId(userId)
+      .closed()
+      .create()).getJson();
+
+    String loanId2 = loan2.getValue("id").toString();
+    String loanId1 = loan1.getValue("id").toString();
+
+    JsonArray requestBody = new JsonArray().add(loanId1).add(loanId2);
+
+    CompletableFuture<JsonResponse> completed = new CompletableFuture<>();
+
+    client.post(anonymizeLoansURL(), requestBody, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(completed));
+
+    JsonResponse response = completed.get(5, TimeUnit.SECONDS);
+    assertThat(response.getJson().getInteger("updatedCount"), is(2));
+
+    doesNotHaveProperty("userId", loansClient.getById(loanId1).getJson(), "userId");
+    doesNotHaveProperty("userId", loansClient.getById(loanId2).getJson(), "userId");
   }
 
   @Test
@@ -1087,31 +1125,31 @@ public class LoansApiTest extends ApiTests {
     UUID id3 = UUID.randomUUID();
 
     JsonObject j1 = new JsonObject()
-    .put("id", id1.toString())
-    .put("userId", userId.toString())
-    .put("itemId", itemId.toString())
-    .put("action", "checkedout")
-    .put("loanDate", DateTime.parse("2017-03-06T16:04:43.000+02:00",
-      ISODateTimeFormat.dateTime()).toString())
-    .put("status", new JsonObject().put("name", "Closed"));
+      .put("id", id1.toString())
+      .put("userId", userId.toString())
+      .put("itemId", itemId.toString())
+      .put("action", "checkedout")
+      .put("loanDate", DateTime.parse("2017-03-06T16:04:43.000+02:00",
+        ISODateTimeFormat.dateTime()).toString())
+      .put("status", new JsonObject().put("name", "Closed"));
 
     JsonObject j2 = new JsonObject()
-    .put("id", id2.toString())
-    .put("userId", userId.toString())
-    .put("itemId", itemId.toString())
-    .put("action", "renewal")
-    .put("loanDate", DateTime.parse("2017-03-06T16:05:43.000+02:00",
-      ISODateTimeFormat.dateTime()).toString())
-    .put("status", new JsonObject().put("name", "Opened"));
+      .put("id", id2.toString())
+      .put("userId", userId.toString())
+      .put("itemId", itemId.toString())
+      .put("action", "renewal")
+      .put("loanDate", DateTime.parse("2017-03-06T16:05:43.000+02:00",
+        ISODateTimeFormat.dateTime()).toString())
+      .put("status", new JsonObject().put("name", "Opened"));
 
     JsonObject j3 = new JsonObject()
-    .put("id", id3.toString())
-    .put("userId", userId.toString())
-    .put("itemId", itemId.toString())
-    .put("action", "renewal")
-    .put("loanDate", DateTime.parse("2017-03-06T16:05:43.000+02:00",
-      ISODateTimeFormat.dateTime()).toString())
-    .put("status", new JsonObject().put("name", "Opened"));
+      .put("id", id3.toString())
+      .put("userId", userId.toString())
+      .put("itemId", itemId.toString())
+      .put("action", "renewal")
+      .put("loanDate", DateTime.parse("2017-03-06T16:05:43.000+02:00",
+        ISODateTimeFormat.dateTime()).toString())
+      .put("status", new JsonObject().put("name", "Opened"));
     Metadata md = new Metadata();
     md.setCreatedByUserId("af23adf0-61ba-4887-bf82-956c4aae2260");
     md.setUpdatedByUserId("af23adf0-61ba-4887-bf82-956c4aae2260");
@@ -1127,11 +1165,11 @@ public class LoansApiTest extends ApiTests {
     j3.put("metadata", new JsonObject(PostgresClient.pojo2json(md)));
 
     CompletableFuture<JsonResponse> create1 = new CompletableFuture<>();
-    CompletableFuture<JsonResponse> get1    = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> get1 = new CompletableFuture<>();
     CompletableFuture<JsonResponse> create2 = new CompletableFuture<>();
-    CompletableFuture<JsonResponse> get2    = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> get2 = new CompletableFuture<>();
     CompletableFuture<JsonResponse> create3 = new CompletableFuture<>();
-    CompletableFuture<JsonResponse> get3    = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> get3 = new CompletableFuture<>();
 
     ///////////////post loan//////////////////////
     client.post(InterfaceUrls.loanStorageUrl(), j1, StorageTestSuite.TENANT_ID,
@@ -1140,7 +1178,7 @@ public class LoansApiTest extends ApiTests {
     create1.get(5, TimeUnit.SECONDS);
 
     //////////////get loan/////////////////////
-    client.get(InterfaceUrls.loanStorageUrl("/"+id1.toString()), StorageTestSuite.TENANT_ID,
+    client.get(InterfaceUrls.loanStorageUrl("/" + id1.toString()), StorageTestSuite.TENANT_ID,
       ResponseHandler.json(get1));
 
     JsonResponse response2 = get1.get(5, TimeUnit.SECONDS);
@@ -1155,7 +1193,7 @@ public class LoansApiTest extends ApiTests {
     create2.get(5, TimeUnit.SECONDS);
 
     //////////////get loan/////////////////////
-    client.get(InterfaceUrls.loanStorageUrl("/"+id2.toString()), StorageTestSuite.TENANT_ID,
+    client.get(InterfaceUrls.loanStorageUrl("/" + id2.toString()), StorageTestSuite.TENANT_ID,
       ResponseHandler.json(get2));
 
     JsonResponse response4 = get2.get(5, TimeUnit.SECONDS);
@@ -1170,7 +1208,7 @@ public class LoansApiTest extends ApiTests {
     create3.get(5, TimeUnit.SECONDS);
 
     //////////////get loan/////////////////////
-    client.get(InterfaceUrls.loanStorageUrl("/"+id3.toString()), StorageTestSuite.TENANT_ID,
+    client.get(InterfaceUrls.loanStorageUrl("/" + id3.toString()), StorageTestSuite.TENANT_ID,
       ResponseHandler.json(get3));
 
     JsonResponse response6 = get3.get(5, TimeUnit.SECONDS);

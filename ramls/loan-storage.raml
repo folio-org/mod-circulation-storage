@@ -29,7 +29,7 @@ resourceTypes:
   get-only: !include raml-util/rtypes/get-only.raml
 
 /loan-storage:
-  /anonymizeloans:
+  /anonymize-loans:
     post:
       is: [validate]
       body:
@@ -41,10 +41,6 @@ resourceTypes:
           body:
             application/json:
               type: anonymize-loans-response
-        422:
-          description: "Closed loans for this user have been anonymized"
-          body:
-            application/json:
         500:
           description: "Internal server error, e.g. due to misconfiguration"
           body:

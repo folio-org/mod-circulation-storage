@@ -158,7 +158,7 @@ public class LoansAPI implements LoanStorage {
       vertxContext, serverErrorResponder::withError);
 
     runner.runOnContext(() -> {
-      if(!UUIDValidation.isValidUUID(userId)) {
+      if (!UUIDValidation.isValidUUID(userId)) {
         final Errors errors = ValidationHelper.createValidationErrorMessage(
           "userId", userId, "Invalid user ID, should be a UUID");
 
@@ -187,57 +187,51 @@ public class LoansAPI implements LoanStorage {
   }
 
   @Override
-  public void postLoanStorageAnonymizeloans(List<String> loanIds,
+  public void postLoanStorageAnonymizeLoans(List<String> loanIds,
                                             Map<String, String> okapiHeaders,
                                             Handler<AsyncResult<Response>> responseHandler,
                                             Context vertxContext) {
 
-    final ServerErrorResponder serverErrorResponder =
-      new ServerErrorResponder(PostLoanStorageLoansAnonymizeByUserIdResponse
-        ::respond500WithTextPlain, responseHandler, log);
-
-    final VertxContextRunner runner = new VertxContextRunner(
-      vertxContext, serverErrorResponder::withError);
     AnonymizeLoansResponse response = new AnonymizeLoansResponse();
-    runner.runOnContext(() -> {
-      final Set<String> invalidUuids = loanIds.stream()
-        .filter(id -> !UUIDValidation.isValidUUID(id))
-        .collect(Collectors.toSet());
 
-      if (!invalidUuids.isEmpty()) {
-        final Errors errors = ValidationHelper.createValidationErrorMessage(
-          "invalidLoanIds",
-          Json.encode(invalidUuids),
-          "Loan IDs should be a valid UUID");
-        responseHandler.handle(succeededFuture(
-          PostLoanStorageLoansAnonymizeByUserIdResponse
-            .respond422WithApplicationJson(errors)));
-        return;
-      }
+    final Set<String> invalidUuids = loanIds.stream()
+      .filter(id -> !UUIDValidation.isValidUUID(id))
+      .collect(Collectors.toSet());
 
-      final String tenantId = TenantTool.tenantId(okapiHeaders);
-      final PostgresClient postgresClient = PostgresClient.getInstance(
-        vertxContext.owner(), tenantId);
+    if (!invalidUuids.isEmpty()) {
+      final Errors errors = ValidationHelper.createValidationErrorMessage(
+        "invalidLoanIds",
+        Json.encode(invalidUuids),
+        "Loan IDs should be a valid UUID");
+      responseHandler.handle(succeededFuture(
+        PostLoanStorageLoansAnonymizeByUserIdResponse
+          .respond422WithApplicationJson(errors)));
+      return;
+    }
 
-      final String combinedAnonymizationSql = createAnonymizationSQL(loanIds,
-        tenantId);
-      log.info(String.format("Anonymization SQL: %s", combinedAnonymizationSql));
-      update(postgresClient, combinedAnonymizationSql)
-        .map(updateResult -> {
-          response.setUpdatedCount(updateResult.getUpdated());
-          return PostLoanStorageAnonymizeloansResponse.respond200WithApplicationJson(response);
-        })
-        .map(Response.class::cast)
-        .otherwise(this::mapExceptionToResponse)
-        .setHandler(responseHandler);
-    });
+    final String tenantId = TenantTool.tenantId(okapiHeaders);
+    final PostgresClient postgresClient = PgUtil.postgresClient(vertxContext,
+      okapiHeaders);
+
+    final String combinedAnonymizationSql = createAnonymizationSQL(loanIds,
+      tenantId);
+    log.info(String.format("Anonymization SQL: %s", combinedAnonymizationSql));
+
+    executeSql(postgresClient, combinedAnonymizationSql)
+      .map(updateResult -> PostLoanStorageAnonymizeLoansResponse.
+        respond200WithApplicationJson(response.withUpdatedCount(
+          updateResult.getUpdated())))
+      .map(Response.class::cast)
+      .otherwise(this::mapExceptionToResponse)
+      .setHandler(responseHandler);
+
   }
 
   private Response mapExceptionToResponse(Throwable t) {
-    return PostLoanStorageAnonymizeloansResponse.respond500WithTextPlain(t.getMessage());
+    return PostLoanStorageAnonymizeLoansResponse.respond500WithTextPlain(t.getMessage());
   }
 
-  private Future<UpdateResult> update(PostgresClient postgresClient, String sql) {
+  private Future<UpdateResult> executeSql(PostgresClient postgresClient, String sql) {
     Future<UpdateResult> future = Future.future();
     postgresClient.execute(sql, future);
     return future;
