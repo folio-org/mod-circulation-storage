@@ -285,7 +285,7 @@
     },
     {
       "id": "scheduled-notice-storage",
-      "version": "0.2",
+      "version": "0.3",
       "handlers": [
         {
           "methods": ["GET"],
@@ -316,6 +316,11 @@
           "methods": ["DELETE"],
           "pathPattern": "/scheduled-notice-storage/scheduled-notices/{id}",
           "permissionsRequired": ["scheduled-notice-storage.scheduled-notices.item.delete"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/scheduled-notice-storage/scheduled-notice-groups",
+          "permissionsRequired": ["scheduled-notice-storage.scheduled-notice-groups.collection.get"]
         }
       ]
     },
@@ -591,6 +596,11 @@
       "description": "Delete all scheduled notices from storage"
     },
     {
+      "permissionName": "scheduled-notice-storage.scheduled-notice-groups.collection.get",
+      "displayName": "Circulation storage - get scheduled notice groups",
+      "description": "Get scheduled notice groups"
+    },
+    {
       "permissionName": "circulation-storage.all",
       "displayName": "Circulation storage module - all permissions",
       "description": "Entire set of permissions needed to use the circulation storage module",
@@ -651,7 +661,8 @@
         "scheduled-notice-storage.scheduled-notices.item.post",
         "scheduled-notice-storage.scheduled-notices.item.put",
         "scheduled-notice-storage.scheduled-notices.item.delete",
-        "scheduled-notice-storage.scheduled-notices.collection.delete"
+        "scheduled-notice-storage.scheduled-notices.collection.delete",
+        "scheduled-notice-storage.scheduled-notice-groups.collection.get"
       ]
     },
     {

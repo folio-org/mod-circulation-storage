@@ -1,0 +1,10 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "string",
+  "description": "Scheduled notice triggering event",
+  "enum": [
+    "Due date",
+    "Hold Expiration",
+    "Request Expiration"
+  ]
+}

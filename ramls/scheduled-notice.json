@@ -17,6 +17,11 @@
       "description": "UUID of related request for request notices",
       "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
     },
+    "userId": {
+      "type": "string",
+      "description": "Id of the user to whom this notice should be sent to",
+      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+    },
     "nextRunTime": {
       "type": "string",
       "format": "date-time",
@@ -24,20 +29,14 @@
     },
     "triggeringEvent": {
       "type": "string",
-      "description": "Scheduled notice triggering event",
-      "enum": ["Hold Expiration", "Request Expiration"]
+      "$ref": "scheduled-notice-triggering-event.json"
     },
     "noticeConfig": {
       "type": "object",
       "properties": {
         "timing": {
           "type": "string",
-          "description": "Timing represents when we need to send notice, before, at or after loan due date",
-          "enum": [
-            "Upon At",
-            "Before",
-            "After"
-          ]
+          "$ref": "patron-notice-timing.json"
         },
         "recurringPeriod": {
           "type": "object",
@@ -51,12 +50,7 @@
         },
         "format": {
           "type": "string",
-          "description": "Notice format",
-          "enum": [
-            "Email",
-            "SMS",
-            "Print"
-          ]
+          "$ref": "patron-notice-format.json"
         },
         "sendInRealTime": {
           "type": "boolean",

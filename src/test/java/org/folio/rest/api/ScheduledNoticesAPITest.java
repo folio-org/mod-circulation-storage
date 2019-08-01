@@ -16,6 +16,7 @@ import java.util.concurrent.TimeoutException;
 
 import io.vertx.core.json.JsonObject;
 
+import org.folio.rest.jaxrs.model.NoticeGroup;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -48,9 +49,9 @@ public class ScheduledNoticesAPITest extends ApiTests {
     TimeoutException {
 
     Date nextRunTime = new Date();
-    NoticeConfig.Timing timing = NoticeConfig.Timing.BEFORE;
+    NoticeGroup.Timing timing = NoticeGroup.Timing.BEFORE;
     String templateId = UUID.randomUUID().toString();
-    NoticeConfig.Format format = NoticeConfig.Format.EMAIL;
+    NoticeGroup.Format format = NoticeGroup.Format.EMAIL;
 
     String createdNoticeId = createScheduledNotice(nextRunTime, timing, ONE_DAY_PERIOD, templateId, format).getId();
 
@@ -70,11 +71,11 @@ public class ScheduledNoticesAPITest extends ApiTests {
   public void canGetScheduledNoticesCollection() throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    createScheduledNotice(NoticeConfig.Timing.BEFORE, ONE_DAY_PERIOD,
-      UUID.randomUUID().toString(), NoticeConfig.Format.EMAIL);
+    createScheduledNotice(NoticeGroup.Timing.BEFORE, ONE_DAY_PERIOD,
+      UUID.randomUUID().toString(), NoticeGroup.Format.EMAIL);
 
-    createScheduledNotice(NoticeConfig.Timing.AFTER, ONE_MONTH_PERIOD,
-      UUID.randomUUID().toString(), NoticeConfig.Format.SMS);
+    createScheduledNotice(NoticeGroup.Timing.AFTER, ONE_MONTH_PERIOD,
+      UUID.randomUUID().toString(), NoticeGroup.Format.SMS);
 
 
     CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
@@ -92,14 +93,14 @@ public class ScheduledNoticesAPITest extends ApiTests {
 
     String templateId = UUID.randomUUID().toString();
 
-    createScheduledNotice(NoticeConfig.Timing.BEFORE, ONE_DAY_PERIOD,
-      UUID.randomUUID().toString(), NoticeConfig.Format.EMAIL);
+    createScheduledNotice(NoticeGroup.Timing.BEFORE, ONE_DAY_PERIOD,
+      UUID.randomUUID().toString(), NoticeGroup.Format.EMAIL);
 
-    createScheduledNotice(NoticeConfig.Timing.AFTER, ONE_DAY_PERIOD,
-      templateId, NoticeConfig.Format.SMS);
+    createScheduledNotice(NoticeGroup.Timing.AFTER, ONE_DAY_PERIOD,
+      templateId, NoticeGroup.Format.SMS);
 
-    createScheduledNotice(NoticeConfig.Timing.UPON_AT, ONE_MONTH_PERIOD,
-      templateId, NoticeConfig.Format.SMS);
+    createScheduledNotice(NoticeGroup.Timing.UPON_AT, ONE_MONTH_PERIOD,
+      templateId, NoticeGroup.Format.SMS);
 
     String query = "query=noticeConfig.templateId=" + templateId;
 
@@ -118,9 +119,9 @@ public class ScheduledNoticesAPITest extends ApiTests {
     TimeoutException {
 
     Date nextRunTime = new Date();
-    NoticeConfig.Timing timing = NoticeConfig.Timing.BEFORE;
+    NoticeGroup.Timing timing = NoticeGroup.Timing.BEFORE;
     String templateId = UUID.randomUUID().toString();
-    NoticeConfig.Format format = NoticeConfig.Format.EMAIL;
+    NoticeGroup.Format format = NoticeGroup.Format.EMAIL;
 
     String createdNoticeId = createScheduledNotice(nextRunTime, timing, ONE_DAY_PERIOD, templateId, format).getId();
 
@@ -140,18 +141,18 @@ public class ScheduledNoticesAPITest extends ApiTests {
   public void canUpdateScheduledNoticeById() throws MalformedURLException, InterruptedException,ExecutionException,
     TimeoutException {
 
-    String noticeId = createScheduledNotice(NoticeConfig.Timing.BEFORE, ONE_DAY_PERIOD,
-      UUID.randomUUID().toString(), NoticeConfig.Format.EMAIL).getId();
+    String noticeId = createScheduledNotice(NoticeGroup.Timing.BEFORE, ONE_DAY_PERIOD,
+      UUID.randomUUID().toString(), NoticeGroup.Format.EMAIL).getId();
 
     RecurringPeriod period = new RecurringPeriod()
       .withDuration(1)
       .withIntervalId(RecurringPeriod.IntervalId.DAYS);
 
     NoticeConfig newConfig = new NoticeConfig()
-      .withTiming(NoticeConfig.Timing.AFTER)
+      .withTiming(NoticeGroup.Timing.AFTER)
       .withRecurringPeriod(period)
       .withTemplateId(UUID.randomUUID().toString())
-      .withFormat(NoticeConfig.Format.SMS);
+      .withFormat(NoticeGroup.Format.SMS);
 
     ScheduledNotice newNotice = new ScheduledNotice()
       .withNextRunTime(new Date())
@@ -175,8 +176,8 @@ public class ScheduledNoticesAPITest extends ApiTests {
   public void canDeleteScheduledNoticeById() throws InterruptedException, MalformedURLException, TimeoutException,
     ExecutionException {
 
-    String noticeId = createScheduledNotice(NoticeConfig.Timing.BEFORE, ONE_DAY_PERIOD,
-      UUID.randomUUID().toString(), NoticeConfig.Format.EMAIL).getId();
+    String noticeId = createScheduledNotice(NoticeGroup.Timing.BEFORE, ONE_DAY_PERIOD,
+      UUID.randomUUID().toString(), NoticeGroup.Format.EMAIL).getId();
 
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
     client.delete(scheduledNoticesStorageUrl("/scheduled-notices/" + noticeId), TENANT_ID, ResponseHandler.empty(deleteCompleted));
@@ -193,11 +194,11 @@ public class ScheduledNoticesAPITest extends ApiTests {
   public void canDeleteAllScheduledNotices() throws InterruptedException, MalformedURLException, TimeoutException,
     ExecutionException {
 
-    createScheduledNotice(NoticeConfig.Timing.BEFORE, ONE_DAY_PERIOD,
-      UUID.randomUUID().toString(), NoticeConfig.Format.EMAIL);
+    createScheduledNotice(NoticeGroup.Timing.BEFORE, ONE_DAY_PERIOD,
+      UUID.randomUUID().toString(), NoticeGroup.Format.EMAIL);
 
-    createScheduledNotice(NoticeConfig.Timing.AFTER, ONE_MONTH_PERIOD,
-      UUID.randomUUID().toString(), NoticeConfig.Format.SMS);
+    createScheduledNotice(NoticeGroup.Timing.AFTER, ONE_MONTH_PERIOD,
+      UUID.randomUUID().toString(), NoticeGroup.Format.SMS);
 
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
     client.delete(scheduledNoticesStorageUrl("/scheduled-notices"), TENANT_ID, ResponseHandler.empty(deleteCompleted));
@@ -217,14 +218,14 @@ public class ScheduledNoticesAPITest extends ApiTests {
 
     String templateId = UUID.randomUUID().toString();
 
-    createScheduledNotice(NoticeConfig.Timing.BEFORE, ONE_DAY_PERIOD,
-      UUID.randomUUID().toString(), NoticeConfig.Format.EMAIL);
+    createScheduledNotice(NoticeGroup.Timing.BEFORE, ONE_DAY_PERIOD,
+      UUID.randomUUID().toString(), NoticeGroup.Format.EMAIL);
 
-    createScheduledNotice(NoticeConfig.Timing.AFTER, ONE_DAY_PERIOD,
-      templateId, NoticeConfig.Format.SMS);
+    createScheduledNotice(NoticeGroup.Timing.AFTER, ONE_DAY_PERIOD,
+      templateId, NoticeGroup.Format.SMS);
 
-    createScheduledNotice(NoticeConfig.Timing.UPON_AT, ONE_MONTH_PERIOD,
-      templateId, NoticeConfig.Format.SMS);
+    createScheduledNotice(NoticeGroup.Timing.UPON_AT, ONE_MONTH_PERIOD,
+      templateId, NoticeGroup.Format.SMS);
 
     String query = "query=noticeConfig.templateId=" + templateId;
 
@@ -265,10 +266,10 @@ public class ScheduledNoticesAPITest extends ApiTests {
   }
 
   private ScheduledNotice createScheduledNotice(Date nextRunTime,
-                                                NoticeConfig.Timing timing,
+                                                NoticeGroup.Timing timing,
                                                 RecurringPeriod recurringPeriod,
                                                 String templateId,
-                                                NoticeConfig.Format format)
+                                                NoticeGroup.Format format)
     throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 
     ScheduledNotice notice = buildScheduledNotice(nextRunTime, timing, recurringPeriod, templateId, format);
@@ -278,20 +279,20 @@ public class ScheduledNoticesAPITest extends ApiTests {
       .mapTo(ScheduledNotice.class);
   }
 
-  private ScheduledNotice createScheduledNotice(NoticeConfig.Timing timing,
+  private ScheduledNotice createScheduledNotice(NoticeGroup.Timing timing,
                                                 RecurringPeriod recurringPeriod,
                                                 String templateId,
-                                                NoticeConfig.Format format)
+                                                NoticeGroup.Format format)
     throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 
     return createScheduledNotice(new Date(), timing, recurringPeriod, templateId, format);
   }
 
   private ScheduledNotice buildScheduledNotice(Date nextRunTime,
-                                               NoticeConfig.Timing timing,
+                                               NoticeGroup.Timing timing,
                                                RecurringPeriod recurringPeriod,
                                                String templateId,
-                                               NoticeConfig.Format format) {
+                                               NoticeGroup.Format format) {
 
     NoticeConfig config = new NoticeConfig()
       .withTiming(timing)

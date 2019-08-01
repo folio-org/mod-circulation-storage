@@ -98,7 +98,7 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
     assertThat("Failed to update patron notice policy", response.getStatusCode(), is(204));
     assertThat(firstPolicy.getRequestNotices().size(), is(1));
     assertThat(firstPolicy.getRequestNotices().get(0).getName(), is("Test request name"));
-    assertThat(firstPolicy.getRequestNotices().get(0).getFormat(), is(RequestNotice.Format.EMAIL));
+    assertThat(firstPolicy.getRequestNotices().get(0).getFormat(), is(LoanNotice.Format.EMAIL));
     assertThat(firstPolicy.getRequestNotices().get(0).getFrequency(), is(RequestNotice.Frequency.ONE_TIME));
     assertThat(firstPolicy.getRequestNotices().get(0).getSendOptions().getSendWhen(), is(SendOptions__.SendWhen.RECALL_REQUEST));
 
@@ -289,10 +289,10 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
     requestNotice.setName("Test request name");
     requestNotice.setTemplateId(UUID.randomUUID().toString());
     requestNotice.setTemplateName("Test template name");
-    requestNotice.setFormat(RequestNotice.Format.EMAIL);
+    requestNotice.setFormat(LoanNotice.Format.EMAIL);
     requestNotice.setFrequency(RequestNotice.Frequency.ONE_TIME);
     requestNotice.setRealTime(Boolean.TRUE);
-    SendOptions__.SendHow sendHow = SendOptions__.SendHow.BEFORE;
+    SendOptions.SendHow sendHow = SendOptions.SendHow.BEFORE;
     SendOptions__.SendWhen sendWhen = SendOptions__.SendWhen.RECALL_REQUEST;
     SendOptions__ sendOptions = new SendOptions__();
     sendOptions.setSendHow(sendHow);

@@ -8,6 +8,7 @@ import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 
 import static org.folio.rest.persist.PostgresClient.convertToPsqlStandard;
 
+import java.util.Collections;
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
@@ -21,11 +22,13 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.sql.UpdateResult;
 
 import org.apache.commons.lang3.StringUtils;
+
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.cql2pgjson.exception.QueryValidationException;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.ScheduledNotice;
+import org.folio.rest.jaxrs.model.ScheduledNoticeGroups;
 import org.folio.rest.jaxrs.model.ScheduledNotices;
 import org.folio.rest.jaxrs.resource.ScheduledNoticeStorage;
 import org.folio.rest.persist.PgUtil;
@@ -99,6 +102,21 @@ public class ScheduledNoticesAPI implements ScheduledNoticeStorage {
     PgUtil.deleteById(SCHEDULED_NOTICE_TABLE, scheduledNoticeId, okapiHeaders, vertxContext,
       DeleteScheduledNoticeStorageScheduledNoticesByScheduledNoticeIdResponse.class, asyncResultHandler);
 
+  }
+
+  @Override
+  public void getScheduledNoticeStorageScheduledNoticeGroups(String query,
+                                                             int groupSizeLimit,
+                                                             int limit,
+                                                             Map<String, String> okapiHeaders,
+                                                             Handler<AsyncResult<Response>> asyncResultHandler,
+                                                             Context vertxContext) {
+    ScheduledNoticeGroups scheduledNoticeGroups = new ScheduledNoticeGroups()
+      .withNoticeGroups(Collections.emptyList())
+      .withTotalRecords(0);
+    asyncResultHandler.handle(Future.succeededFuture(
+        GetScheduledNoticeStorageScheduledNoticeGroupsResponse
+          .respond200WithApplicationJson(scheduledNoticeGroups)));
   }
 
   @Override

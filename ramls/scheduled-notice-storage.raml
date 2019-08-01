@@ -1,6 +1,6 @@
 #%RAML 1.0
 title: Scheduled Notice Storage
-version: v0.2
+version: v0.3
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost:9130
 
@@ -11,6 +11,7 @@ documentation:
 types:
   scheduled-notice: !include scheduled-notice.json
   scheduled-notices: !include scheduled-notices.json
+  scheduled-notice-groups: !include scheduled-notice-groups.json
   errors: !include raml-util/schemas/errors.schema
   parameters: !include raml-util/schemas/parameters.schema
 
@@ -55,3 +56,38 @@ resourceTypes:
           exampleItem: !include examples/scheduled-notice.json
       put:
         is: [validate]
+  /scheduled-notice-groups:
+    displayName: Get scheduled notice groups
+    get:
+      queryParameters:
+        query:
+          description: CQL query to filter scheduled notices
+          type: string
+          required: false
+        groupSizeLimit:
+          description: Limit the number of notices in each group
+          type: integer
+          required: false
+          example: 10
+          default: 10
+          minimum: 0
+          maximum: 2147483647
+        limit:
+          description: Limit the number of groups returned in the response
+          type: integer
+          required: false
+          example: 10
+          default: 10
+          minimum: 0
+          maximum: 2147483647
+      responses:
+        200:
+          description: "Return list of notice groups"
+          body:
+            application/json:
+              type: scheduled-notice-groups
+        500:
+          description: "Internal server error"
+          body:
+            text/plain:
+              example: "Internal server error"

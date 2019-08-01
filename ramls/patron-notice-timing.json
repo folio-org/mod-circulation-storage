@@ -1,0 +1,10 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "string",
+  "description": "Timing represents when we need to send notice, before, at or after loan due date",
+  "enum": [
+    "Upon At",
+    "Before",
+    "After"
+  ]
+}

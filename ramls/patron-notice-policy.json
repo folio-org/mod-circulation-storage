@@ -46,12 +46,7 @@
           },
           "format": {
             "type": "string",
-            "description": "Notice format, send through email, sms etc.",
-            "enum": [
-              "Email",
-              "SMS",
-              "Print"
-            ]
+            "$ref": "patron-notice-format.json"
           },
           "frequency": {
             "type": "string",
@@ -72,11 +67,7 @@
               "sendHow": {
                 "type": "string",
                 "description": "Defines how notice should be sent, before, after or upon",
-                "enum": [
-                  "Upon At",
-                  "Before",
-                  "After"
-                ]
+                "$ref": "patron-notice-timing.json"
               },
               "sendWhen": {
                 "type": "string",
@@ -181,12 +172,7 @@
           },
           "format": {
             "type": "string",
-            "description": "Notice format, send through email, sms etc.",
-            "enum": [
-              "Email",
-              "SMS",
-              "Print"
-            ]
+            "$ref": "patron-notice-format.json"
           },
           "frequency": {
             "type": "string",
@@ -207,11 +193,7 @@
               "sendHow": {
                 "type": "string",
                 "description": "Defines how notice should be sent, before, after or upon",
-                "enum": [
-                  "Upon At",
-                  "Before",
-                  "After"
-                ]
+                "$ref": "patron-notice-timing.json"
               },
               "sendBy": {
                 "type": "object",
@@ -305,12 +287,7 @@
           },
           "format": {
             "type": "string",
-            "description": "Notice format, send through email, sms etc.",
-            "enum": [
-              "Email",
-              "SMS",
-              "Print"
-            ]
+            "$ref": "patron-notice-format.json"
           },
           "frequency": {
             "type": "string",
@@ -331,11 +308,7 @@
               "sendHow": {
                 "type": "string",
                 "description": "Defines how notice should be sent, before, after or upon",
-                "enum": [
-                  "Upon At",
-                  "Before",
-                  "After"
-                ]
+                "$ref": "patron-notice-timing.json"
               },
               "sendWhen": {
                 "type": "string",

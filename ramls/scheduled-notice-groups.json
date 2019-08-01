@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Scheduled notice groups",
+  "type": "object",
+  "properties": {
+    "noticeGroups": {
+      "description": "Array of notice groups",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "description": "Notice group",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "userId property common for this notice group",
+            "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+          },
+          "templateId": {
+            "type": "string",
+            "description": "templateId property common for this notice group",
+            "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+          },
+          "triggeringEvent": {
+            "type": "string",
+            "description": "triggeringEvent property common for this notice group",
+            "$ref": "scheduled-notice-triggering-event.json"
+          },
+          "timing": {
+            "type": "string",
+            "description": "timing property common for this notice group",
+            "$ref": "patron-notice-timing.json"
+          },
+          "format": {
+            "type": "string",
+            "description": "format property common for this notice group",
+            "$ref": "patron-notice-format.json"
+          },
+          "scheduledNotices": {
+            "type": "array",
+            "description": "",
+            "items": {
+              "type": "object",
+              "$ref": "scheduled-notice.json"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "additionalProperties": false
+}
