@@ -1,10 +1,9 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.support.http.InterfaceUrls.anonymizeLoansURL;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isBadRequest;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNotFound;
-import static org.folio.rest.support.matchers.LoanStatusMatchers.isClosed;
-import static org.folio.rest.support.matchers.LoanStatusMatchers.isOpen;
+import static org.folio.rest.support.matchers.LoanMatchers.isClosed;
+import static org.folio.rest.support.matchers.LoanMatchers.isOpen;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessageContaining;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasParameter;
@@ -17,7 +16,6 @@ import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
-
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.text.DateFormat;
@@ -29,7 +27,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
 import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.ApiTests;
@@ -49,7 +46,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -67,43 +63,6 @@ public class LoansApiTest extends ApiTests {
   @After
   public void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("loan");
-  }
-
-  @Test
-  public void canAnonymizeLoans() throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
-
-    UUID itemId = UUID.randomUUID();
-    UUID userId = UUID.randomUUID();
-
-    JsonObject loan1 = loansClient.create(new LoanRequestBuilder()
-      .withId(UUID.randomUUID())
-      .withItemId(itemId)
-      .withUserId(userId)
-      .closed()
-      .create()).getJson();
-
-    JsonObject loan2 = loansClient.create(new LoanRequestBuilder()
-      .withId(UUID.randomUUID())
-      .withItemId(itemId)
-      .withUserId(userId)
-      .closed()
-      .create()).getJson();
-
-    String loanId2 = loan2.getValue("id").toString();
-    String loanId1 = loan1.getValue("id").toString();
-
-    JsonArray ids = new JsonArray().add(loanId1).add(loanId2);
-    JsonObject requestBody = new JsonObject().put("loanIds", ids);
-    CompletableFuture<JsonResponse> completed = new CompletableFuture<>();
-
-    client.post(anonymizeLoansURL(), requestBody, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(completed));
-
-    JsonResponse response = completed.get(5, TimeUnit.SECONDS);
-    assertThat(response.getJson().getInteger("updatedCount"), is(2));
-
-    doesNotHaveProperty("userId", loansClient.getById(loanId1).getJson(), "userId");
-    doesNotHaveProperty("userId", loansClient.getById(loanId2).getJson(), "userId");
   }
 
   @Test

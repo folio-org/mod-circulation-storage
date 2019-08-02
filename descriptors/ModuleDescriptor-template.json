@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "loan-storage",
-      "version": "6.2",
+      "version": "6.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -38,11 +38,17 @@
           "methods": ["POST"],
           "pathPattern": "/loan-storage/loans/anonymize/{userId}",
           "permissionsRequired": ["circulation-storage.loans.collection.anonymize.user.post"]
-        },
+        }
+      ]
+    },
+    {
+      "id": "anonymize-loans",
+      "version": "0.1",
+      "handlers": [
         {
           "methods": ["POST"],
-          "pathPattern": "/loan-storage/anonymize-loans",
-          "permissionsRequired": ["circulation-storage.anonymizeloans.post"]
+          "pathPattern": "/anonymize-loans",
+          "permissionsRequired": ["anonymize-loans.post"]
         }
       ]
     },
@@ -376,7 +382,7 @@
       "description": "Anonymize closed loans for a single user"
     },
     {
-      "permissionName": "circulation-storage.anonymizeloans.post",
+      "permissionName": "anonymize-loans.post",
       "displayName": "circulation - anonymize loans",
       "description": "anonymize a list of loans"
     },
@@ -662,7 +668,7 @@
         "scheduled-notice-storage.scheduled-notices.item.put",
         "scheduled-notice-storage.scheduled-notices.item.delete",
         "scheduled-notice-storage.scheduled-notices.collection.delete",
-        "circulation-storage.anonymizeloans.post"
+        "anonymize-loans.post"
       ]
     },
     {

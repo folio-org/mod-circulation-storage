@@ -3,9 +3,19 @@
   "description": "Response schema for anonymize loans request",
   "type": "object",
   "properties": {
-    "updatedCount": {
-      "description": "The Number of successfully anonymized loans",
-      "type": "integer"
+    "anonimizedLoans": {
+      "description": "Successfully anonymized loan ids",
+      "type": "array",
+      "items":{
+        "type": "string"
+      }
+    },
+    "notAnonimizedLoans": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "anonymize-loans-failure.json"
+      }
     }
   },
   "additionalProperties": false

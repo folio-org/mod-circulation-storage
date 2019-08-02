@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Collection of loans",
+  "type": "object",
+  "properties": {
+    "reason": {
+      "description": "Reason of failure",
+      "type": "string"
+    },
+    "loanIds": {
+      "description": "List of loan IDs that have not been anonymized",
+      "type": "array",
+      "items":{
+        "type": "string"
+      }
+    }
+
+  },
+  "additionalProperties": false
+}
