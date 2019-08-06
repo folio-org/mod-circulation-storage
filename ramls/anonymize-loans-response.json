@@ -13,8 +13,22 @@
     "notAnonimizedLoans": {
       "type": "array",
       "items": {
+        "description": "Collection of loans",
         "type": "object",
-        "$ref": "anonymize-loans-failure.json"
+        "properties": {
+          "reason": {
+            "description": "Reason of failure",
+            "type": "string"
+          },
+          "loanIds": {
+            "description": "List of loan IDs that have not been anonymized",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
       }
     }
   },
