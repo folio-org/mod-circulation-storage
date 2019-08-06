@@ -8,8 +8,7 @@
       "type": "array",
       "items": {
         "type": "string"
-      },
-      "maxLength": 1000
+      }
     }
   },
   "additionalProperties": false
