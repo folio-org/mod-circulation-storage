@@ -1,33 +1,22 @@
 package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
-
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
 import static org.folio.support.ModuleConstants.LOAN_CLASS;
 import static org.folio.support.ModuleConstants.LOAN_HISTORY_TABLE;
 import static org.folio.support.ModuleConstants.LOAN_TABLE;
 import static org.folio.support.ModuleConstants.MODULE_NAME;
 import static org.folio.support.ModuleConstants.OPEN_LOAN_STATUS;
-
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.function.Function;
-
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.core.Response;
-
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.joda.time.DateTime;
-
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
@@ -46,6 +35,13 @@ import org.folio.support.ResultHandlerFactory;
 import org.folio.support.ServerErrorResponder;
 import org.folio.support.UUIDValidation;
 import org.folio.support.VertxContextRunner;
+import org.joda.time.DateTime;
+
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 public class LoansAPI implements LoanStorage {
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
