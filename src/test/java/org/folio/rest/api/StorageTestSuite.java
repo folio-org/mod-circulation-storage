@@ -40,7 +40,7 @@ import io.vertx.ext.sql.ResultSet;
 @RunWith(Suite.class)
 
 @Suite.SuiteClasses({
-  AnomimizeLoansApiTest.class,
+  AnonymizeLoansApiTest.class,
   LoansApiTest.class,
   LoansAnonymizationApiTest.class,
   CirculationRulesApiTest.class,

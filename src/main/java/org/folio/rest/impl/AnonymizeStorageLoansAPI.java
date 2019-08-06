@@ -60,7 +60,7 @@ public class AnonymizeStorageLoansAPI implements AnonymizeStorageLoans {
       return;
     }
 
-    log.info("Anonimizing loans: ", validIds);
+    log.info("Anonymizing loans: ", validIds);
 
     final String tenantId = TenantTool.tenantId(okapiHeaders);
     final PostgresClient postgresClient = PgUtil.postgresClient(vertxContext,
@@ -72,7 +72,7 @@ public class AnonymizeStorageLoansAPI implements AnonymizeStorageLoans {
 
     executeSql(postgresClient, combinedAnonymizationSql).map(
       updateResult -> PostAnonymizeStorageLoansResponse.respond200WithApplicationJson(
-        response.withAnonimizedLoans(validIds)))
+        response.withAnonymizedLoans(validIds)))
       .map(Response.class::cast)
       .otherwise(
         e -> PostAnonymizeStorageLoansResponse.respond500WithTextPlain(e.getMessage()))

@@ -23,7 +23,7 @@ import org.junit.Test;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-public class AnomimizeLoansApiTest extends ApiTests {
+public class AnonymizeLoansApiTest extends ApiTests {
   private final AssertingRecordClient loansClient = new AssertingRecordClient(
     client, StorageTestSuite.TENANT_ID, InterfaceUrls::loanStorageUrl);
 
@@ -76,7 +76,7 @@ public class AnomimizeLoansApiTest extends ApiTests {
       ResponseHandler.json(completed));
     JsonResponse response = completed.get(REQUEST_TIMEOUT, TimeUnit.SECONDS);
 
-    assertThat(response.getJson().getJsonArray("anonimizedLoans"),
+    assertThat(response.getJson().getJsonArray("anonymizedLoans"),
       equalTo(loanIds));
     assertThat(response.getStatusCode(), is(200));
     assertThat(loansClient.getById(loanIds.getString(0)).getJson(),
@@ -117,12 +117,12 @@ public class AnomimizeLoansApiTest extends ApiTests {
 
     JsonObject responseJson = response.getJson();
 
-    assertThat(responseJson.getJsonArray("anonimizedLoans"), equalTo(loanIds));
+    assertThat(responseJson.getJsonArray("anonymizedLoans"), equalTo(loanIds));
 
-    JsonArray notAnonimizedLoans = responseJson.getJsonArray(
+    JsonArray notAnonymizedLoans = responseJson.getJsonArray(
       "notAnonymizedLoans");
-    assertThat(notAnonimizedLoans.size(), is(1));
-    JsonObject notAnonimizedReasons = notAnonimizedLoans.getJsonObject(0);
+    assertThat(notAnonymizedLoans.size(), is(1));
+    JsonObject notAnonimizedReasons = notAnonymizedLoans.getJsonObject(0);
     assertThat(notAnonimizedReasons.getString("reason"),
       equalTo("invalidLoanIds"));
     assertThat(notAnonimizedReasons.getJsonArray("loanIds"),

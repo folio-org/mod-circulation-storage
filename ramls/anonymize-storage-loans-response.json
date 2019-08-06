@@ -3,7 +3,7 @@
   "description": "Response schema for anonymize loans request",
   "type": "object",
   "properties": {
-    "anonimizedLoans": {
+    "anonymizedLoans": {
       "description": "Successfully anonymized loan ids",
       "type": "array",
       "items":{
