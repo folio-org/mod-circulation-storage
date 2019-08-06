@@ -10,7 +10,7 @@
         "type": "string"
       }
     },
-    "notAnonimizedLoans": {
+    "notAnonymizedLoans": {
       "type": "array",
       "items": {
         "description": "Collection of loans",

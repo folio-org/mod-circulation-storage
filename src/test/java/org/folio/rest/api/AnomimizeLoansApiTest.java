@@ -120,7 +120,7 @@ public class AnomimizeLoansApiTest extends ApiTests {
     assertThat(responseJson.getJsonArray("anonimizedLoans"), equalTo(loanIds));
 
     JsonArray notAnonimizedLoans = responseJson.getJsonArray(
-      "notAnonimizedLoans");
+      "notAnonymizedLoans");
     assertThat(notAnonimizedLoans.size(), is(1));
     JsonObject notAnonimizedReasons = notAnonimizedLoans.getJsonObject(0);
     assertThat(notAnonimizedReasons.getString("reason"),

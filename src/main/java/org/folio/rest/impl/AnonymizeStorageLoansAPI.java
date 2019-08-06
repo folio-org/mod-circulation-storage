@@ -14,7 +14,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.folio.rest.jaxrs.model.AnonymizeStorageLoansRequest;
 import org.folio.rest.jaxrs.model.AnonymizeStorageLoansResponse;
 import org.folio.rest.jaxrs.model.Errors;
-import org.folio.rest.jaxrs.model.NotAnonimizedLoan;
+import org.folio.rest.jaxrs.model.NotAnonymizedLoan;
 import org.folio.rest.jaxrs.resource.AnonymizeStorageLoans;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
@@ -82,10 +82,10 @@ public class AnonymizeStorageLoansAPI implements AnonymizeStorageLoans {
 
   private void addToNotAnonimizedLoans(AnonymizeStorageLoansResponse response,
     String reason, List<String> ids) {
-    List<NotAnonimizedLoan> notAnonimizedLoans =
-      response.getNotAnonimizedLoans();
+    List<NotAnonymizedLoan> notAnonimizedLoans =
+      response.getNotAnonymizedLoans();
     notAnonimizedLoans.add(
-      new NotAnonimizedLoan().withReason(reason).withLoanIds(ids));
+      new NotAnonymizedLoan().withReason(reason).withLoanIds(ids));
   }
 
   private Future<UpdateResult> executeSql(PostgresClient postgresClient,
