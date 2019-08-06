@@ -11,11 +11,11 @@ import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.core.Response;
 import org.apache.commons.collections4.CollectionUtils;
-import org.folio.rest.jaxrs.model.AnonymizeLoansRequest;
-import org.folio.rest.jaxrs.model.AnonymizeLoansResponse;
+import org.folio.rest.jaxrs.model.AnonymizeStorageLoansRequest;
+import org.folio.rest.jaxrs.model.AnonymizeStorageLoansResponse;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.NotAnonimizedLoan;
-import org.folio.rest.jaxrs.resource.AnonymizeLoans;
+import org.folio.rest.jaxrs.resource.AnonymizeStorageLoans;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.TenantTool;
@@ -29,16 +29,16 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.sql.UpdateResult;
 
-public class AnonymizeLoansAPI implements AnonymizeLoans {
+public class AnonymizeStorageLoansAPI implements AnonymizeStorageLoans {
   private static final Logger log = LoggerFactory.getLogger(
     MethodHandles.lookup().lookupClass());
 
   @Override
-  public void postAnonymizeLoans(AnonymizeLoansRequest request,
+  public void postAnonymizeStorageLoans(AnonymizeStorageLoansRequest request,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> responseHandler, Context vertxContext) {
 
-    AnonymizeLoansResponse response = new AnonymizeLoansResponse();
+    AnonymizeStorageLoansResponse response = new AnonymizeStorageLoansResponse();
     List<String> loanIds = request.getLoanIds();
 
     Map<Boolean, List<String>> loanIdsMap = loanIds.stream()
@@ -56,7 +56,7 @@ public class AnonymizeLoansAPI implements AnonymizeLoans {
       final Errors errors = ValidationHelper.createValidationErrorMessage(
         "loanIds", loanIds.toString(), "Please provide valid loanIds");
       responseHandler.handle(succeededFuture(
-        PostAnonymizeLoansResponse.respond422WithApplicationJson(errors)));
+        PostAnonymizeStorageLoansResponse.respond422WithApplicationJson(errors)));
       return;
     }
 
@@ -71,16 +71,16 @@ public class AnonymizeLoansAPI implements AnonymizeLoans {
     log.info(String.format("Anonymization SQL: %s", combinedAnonymizationSql));
 
     executeSql(postgresClient, combinedAnonymizationSql).map(
-      updateResult -> PostAnonymizeLoansResponse.respond200WithApplicationJson(
+      updateResult -> PostAnonymizeStorageLoansResponse.respond200WithApplicationJson(
         response.withAnonimizedLoans(validIds)))
       .map(Response.class::cast)
       .otherwise(
-        e -> PostAnonymizeLoansResponse.respond500WithTextPlain(e.getMessage()))
+        e -> PostAnonymizeStorageLoansResponse.respond500WithTextPlain(e.getMessage()))
       .setHandler(responseHandler);
 
   }
 
-  private void addToNotAnonimizedLoans(AnonymizeLoansResponse response,
+  private void addToNotAnonimizedLoans(AnonymizeStorageLoansResponse response,
     String reason, List<String> ids) {
     List<NotAnonimizedLoan> notAnonimizedLoans =
       response.getNotAnonimizedLoans();
@@ -102,7 +102,7 @@ public class AnonymizeLoansAPI implements AnonymizeLoans {
       .map(s -> "\'" + s + "\'")
       .collect(Collectors.joining(",", "(", ")"));
 
-    final String anonymizeLoansSql = String.format(
+    final String AnonymizeStorageLoansSql = String.format(
       new StringBuilder().append("UPDATE %s_%s.loan ")
         .append(" SET jsonb = jsonb - 'userId'")
         .append(" WHERE loan.id in ")
@@ -114,7 +114,7 @@ public class AnonymizeLoansAPI implements AnonymizeLoans {
 
     // Only anonymize the history for loans that are currently closed
     // meaning that we need to refer to loans in this query
-    final String anonymizeLoansActionHistorySql = String.format(
+    final String AnonymizeStorageLoansActionHistorySql = String.format(
       new StringBuilder().append("UPDATE %s_%s.%s l")
         .append(" SET jsonb = jsonb #- '{loan,userId}'")
         .append(" WHERE jsonb->'loan'->>'id' IN")
@@ -127,6 +127,6 @@ public class AnonymizeLoansAPI implements AnonymizeLoans {
       tenantId, MODULE_NAME, LOAN_HISTORY_TABLE, tenantId, MODULE_NAME);
 
     // Loan action history needs to go first, as needs to be for specific loans
-    return anonymizeLoansActionHistorySql + "; " + anonymizeLoansSql;
+    return AnonymizeStorageLoansActionHistorySql + "; " + AnonymizeStorageLoansSql;
   }
 }
