@@ -1,0 +1,35 @@
+#%RAML 1.0
+title: Anonymize loans
+version: v0.1
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost:9130
+
+documentation:
+  - title: Anonymize loans API
+    content: <b>Anonymize loans API</b>
+
+types:
+  errors: !include raml-util/schemas/errors.schema
+  anonymize-storage-loans-response: !include anonymize-storage-loans-response.json
+  anonymize-storage-loans-request: !include anonymize-storage-loans-request.json
+
+traits:
+  validate: !include raml-util/traits/validation.raml
+
+/anonymize-storage-loans:
+  post:
+    is: [validate]
+    body:
+      application/json:
+        type: anonymize-storage-loans-request
+    responses:
+      200:
+        description: "Loans that have been anonymized"
+        body:
+          application/json:
+            type: anonymize-storage-loans-response
+      500:
+        description: "Internal server error, e.g. due to misconfiguration"
+        body:
+          text/plain:
+            example: "Internal server error, contact administrator"
