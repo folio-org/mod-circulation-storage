@@ -2,8 +2,8 @@ package org.folio.rest.api;
 
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isBadRequest;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNotFound;
-import static org.folio.rest.support.matchers.LoanStatusMatchers.isClosed;
-import static org.folio.rest.support.matchers.LoanStatusMatchers.isOpen;
+import static org.folio.rest.support.matchers.LoanMatchers.isClosed;
+import static org.folio.rest.support.matchers.LoanMatchers.isOpen;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessageContaining;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasParameter;
@@ -16,7 +16,6 @@ import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
-
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.text.DateFormat;
@@ -28,7 +27,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
 import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.ApiTests;
@@ -48,7 +46,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -1087,31 +1084,31 @@ public class LoansApiTest extends ApiTests {
     UUID id3 = UUID.randomUUID();
 
     JsonObject j1 = new JsonObject()
-    .put("id", id1.toString())
-    .put("userId", userId.toString())
-    .put("itemId", itemId.toString())
-    .put("action", "checkedout")
-    .put("loanDate", DateTime.parse("2017-03-06T16:04:43.000+02:00",
-      ISODateTimeFormat.dateTime()).toString())
-    .put("status", new JsonObject().put("name", "Closed"));
+      .put("id", id1.toString())
+      .put("userId", userId.toString())
+      .put("itemId", itemId.toString())
+      .put("action", "checkedout")
+      .put("loanDate", DateTime.parse("2017-03-06T16:04:43.000+02:00",
+        ISODateTimeFormat.dateTime()).toString())
+      .put("status", new JsonObject().put("name", "Closed"));
 
     JsonObject j2 = new JsonObject()
-    .put("id", id2.toString())
-    .put("userId", userId.toString())
-    .put("itemId", itemId.toString())
-    .put("action", "renewal")
-    .put("loanDate", DateTime.parse("2017-03-06T16:05:43.000+02:00",
-      ISODateTimeFormat.dateTime()).toString())
-    .put("status", new JsonObject().put("name", "Opened"));
+      .put("id", id2.toString())
+      .put("userId", userId.toString())
+      .put("itemId", itemId.toString())
+      .put("action", "renewal")
+      .put("loanDate", DateTime.parse("2017-03-06T16:05:43.000+02:00",
+        ISODateTimeFormat.dateTime()).toString())
+      .put("status", new JsonObject().put("name", "Opened"));
 
     JsonObject j3 = new JsonObject()
-    .put("id", id3.toString())
-    .put("userId", userId.toString())
-    .put("itemId", itemId.toString())
-    .put("action", "renewal")
-    .put("loanDate", DateTime.parse("2017-03-06T16:05:43.000+02:00",
-      ISODateTimeFormat.dateTime()).toString())
-    .put("status", new JsonObject().put("name", "Opened"));
+      .put("id", id3.toString())
+      .put("userId", userId.toString())
+      .put("itemId", itemId.toString())
+      .put("action", "renewal")
+      .put("loanDate", DateTime.parse("2017-03-06T16:05:43.000+02:00",
+        ISODateTimeFormat.dateTime()).toString())
+      .put("status", new JsonObject().put("name", "Opened"));
     Metadata md = new Metadata();
     md.setCreatedByUserId("af23adf0-61ba-4887-bf82-956c4aae2260");
     md.setUpdatedByUserId("af23adf0-61ba-4887-bf82-956c4aae2260");
@@ -1127,11 +1124,11 @@ public class LoansApiTest extends ApiTests {
     j3.put("metadata", new JsonObject(PostgresClient.pojo2json(md)));
 
     CompletableFuture<JsonResponse> create1 = new CompletableFuture<>();
-    CompletableFuture<JsonResponse> get1    = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> get1 = new CompletableFuture<>();
     CompletableFuture<JsonResponse> create2 = new CompletableFuture<>();
-    CompletableFuture<JsonResponse> get2    = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> get2 = new CompletableFuture<>();
     CompletableFuture<JsonResponse> create3 = new CompletableFuture<>();
-    CompletableFuture<JsonResponse> get3    = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> get3 = new CompletableFuture<>();
 
     ///////////////post loan//////////////////////
     client.post(InterfaceUrls.loanStorageUrl(), j1, StorageTestSuite.TENANT_ID,
@@ -1140,7 +1137,7 @@ public class LoansApiTest extends ApiTests {
     create1.get(5, TimeUnit.SECONDS);
 
     //////////////get loan/////////////////////
-    client.get(InterfaceUrls.loanStorageUrl("/"+id1.toString()), StorageTestSuite.TENANT_ID,
+    client.get(InterfaceUrls.loanStorageUrl("/" + id1.toString()), StorageTestSuite.TENANT_ID,
       ResponseHandler.json(get1));
 
     JsonResponse response2 = get1.get(5, TimeUnit.SECONDS);
@@ -1155,7 +1152,7 @@ public class LoansApiTest extends ApiTests {
     create2.get(5, TimeUnit.SECONDS);
 
     //////////////get loan/////////////////////
-    client.get(InterfaceUrls.loanStorageUrl("/"+id2.toString()), StorageTestSuite.TENANT_ID,
+    client.get(InterfaceUrls.loanStorageUrl("/" + id2.toString()), StorageTestSuite.TENANT_ID,
       ResponseHandler.json(get2));
 
     JsonResponse response4 = get2.get(5, TimeUnit.SECONDS);
@@ -1170,7 +1167,7 @@ public class LoansApiTest extends ApiTests {
     create3.get(5, TimeUnit.SECONDS);
 
     //////////////get loan/////////////////////
-    client.get(InterfaceUrls.loanStorageUrl("/"+id3.toString()), StorageTestSuite.TENANT_ID,
+    client.get(InterfaceUrls.loanStorageUrl("/" + id3.toString()), StorageTestSuite.TENANT_ID,
       ResponseHandler.json(get3));
 
     JsonResponse response6 = get3.get(5, TimeUnit.SECONDS);
