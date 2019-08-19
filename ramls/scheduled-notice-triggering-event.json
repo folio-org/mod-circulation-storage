@@ -5,6 +5,6 @@
   "enum": [
     "Due date",
     "Hold Expiration",
-    "Request Expiration"
+    "Request expiration"
   ]
 }
