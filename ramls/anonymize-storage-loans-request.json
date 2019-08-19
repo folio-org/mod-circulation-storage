@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Request schema for anonymize loans",
+  "type": "object",
+  "properties": {
+    "loanIds": {
+      "description": "Loan ids to be anonymized",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

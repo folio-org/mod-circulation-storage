@@ -17,4 +17,8 @@ public class InterfaceUrls {
 
     return StorageTestSuite.storageUrl("/loan-storage/loans" + subPath);
   }
+
+  public static URL anonymizeLoansURL() throws MalformedURLException {
+    return StorageTestSuite.storageUrl("/anonymize-storage-loans");
+  }
 }

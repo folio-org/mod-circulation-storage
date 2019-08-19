@@ -42,13 +42,13 @@
               "type": "object",
               "$ref": "scheduled-notice.json"
             }
+          },
+          "totalRecords": {
+            "type": "integer"
           }
         },
         "additionalProperties": false
       }
-    },
-    "totalRecords": {
-      "type": "integer"
     }
   },
   "additionalProperties": false

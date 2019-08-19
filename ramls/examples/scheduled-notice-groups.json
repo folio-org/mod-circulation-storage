@@ -1,0 +1,92 @@
+{
+  "noticeGroups": [
+    {
+      "userId": "dff68ca7-ed1e-4b7c-b6f6-573bdfb7dfa9",
+      "templateId": "2a779ade-2f97-4866-bab1-bc793ace8199",
+      "triggeringEvent": "Due date",
+      "timing": "Before",
+      "format": "Email",
+      "scheduledNotices": [
+        {
+          "id": "68df2fba-6a09-4320-ba9e-a3da657feaaa",
+          "userId": "dff68ca7-ed1e-4b7c-b6f6-573bdfb7dfa9",
+          "nextRunTime": "2019-08-09T16:05:22.911+0000",
+          "triggeringEvent": "Due date",
+          "noticeConfig": {
+            "timing": "Before",
+            "templateId": "2a779ade-2f97-4866-bab1-bc793ace8199",
+            "format": "Email"
+          },
+          "metadata": {
+            "createdDate": "2019-08-09T16:05:22.913+0000",
+            "createdByUserId": "00ee7571-fa0f-4ee8-bf70-20423a213e1e",
+            "updatedDate": "2019-08-09T16:05:22.913+0000",
+            "updatedByUserId": "00ee7571-fa0f-4ee8-bf70-20423a213e1e"
+          }
+        },
+        {
+          "id": "2413bb89-a217-4737-b42b-a86d873fd9f3",
+          "userId": "dff68ca7-ed1e-4b7c-b6f6-573bdfb7dfa9",
+          "nextRunTime": "2019-08-09T16:05:22.911+0000",
+          "triggeringEvent": "Due date",
+          "noticeConfig": {
+            "timing": "Before",
+            "templateId": "2a779ade-2f97-4866-bab1-bc793ace8199",
+            "format": "Email"
+          },
+          "metadata": {
+            "createdDate": "2019-08-09T16:05:22.921+0000",
+            "createdByUserId": "00ee7571-fa0f-4ee8-bf70-20423a213e1e",
+            "updatedDate": "2019-08-09T16:05:22.921+0000",
+            "updatedByUserId": "00ee7571-fa0f-4ee8-bf70-20423a213e1e"
+          }
+        }
+      ],
+      "totalRecords": 5
+    },
+    {
+      "userId": "dff68ca7-ed1e-4b7c-b6f6-573bdfb7dfa9",
+      "templateId": "2a779ade-2f97-4866-bab1-bc793ace8199",
+      "triggeringEvent": "Due date",
+      "timing": "Before",
+      "format": "SMS",
+      "scheduledNotices": [
+        {
+          "id": "516aa293-beb2-4ad0-ad76-bd3266a990bc",
+          "userId": "dff68ca7-ed1e-4b7c-b6f6-573bdfb7dfa9",
+          "nextRunTime": "2019-08-09T16:05:22.954+0000",
+          "triggeringEvent": "Due date",
+          "noticeConfig": {
+            "timing": "Before",
+            "templateId": "2a779ade-2f97-4866-bab1-bc793ace8199",
+            "format": "SMS"
+          },
+          "metadata": {
+            "createdDate": "2019-08-09T16:05:22.966+0000",
+            "createdByUserId": "00ee7571-fa0f-4ee8-bf70-20423a213e1e",
+            "updatedDate": "2019-08-09T16:05:22.966+0000",
+            "updatedByUserId": "00ee7571-fa0f-4ee8-bf70-20423a213e1e"
+          }
+        },
+        {
+          "id": "8c72a080-dc60-43f0-b27f-f485f58a73d7",
+          "userId": "dff68ca7-ed1e-4b7c-b6f6-573bdfb7dfa9",
+          "nextRunTime": "2019-08-09T16:05:22.954+0000",
+          "triggeringEvent": "Due date",
+          "noticeConfig": {
+            "timing": "Before",
+            "templateId": "2a779ade-2f97-4866-bab1-bc793ace8199",
+            "format": "SMS"
+          },
+          "metadata": {
+            "createdDate": "2019-08-09T16:05:22.975+0000",
+            "createdByUserId": "00ee7571-fa0f-4ee8-bf70-20423a213e1e",
+            "updatedDate": "2019-08-09T16:05:22.975+0000",
+            "updatedByUserId": "00ee7571-fa0f-4ee8-bf70-20423a213e1e"
+          }
+        }
+      ],
+      "totalRecords": 5
+    }
+  ]
+}

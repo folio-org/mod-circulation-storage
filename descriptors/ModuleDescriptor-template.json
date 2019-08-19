@@ -42,6 +42,17 @@
       ]
     },
     {
+      "id": "anonymize-storage-loans",
+      "version": "0.1",
+      "handlers": [
+        {
+          "methods": ["POST"],
+          "pathPattern": "/anonymize-storage-loans",
+          "permissionsRequired": ["anonymize-storage-loans.post"]
+        }
+      ]
+    },
+    {
       "id": "circulation-rules-storage",
       "version": "1.0",
       "handlers": [
@@ -376,6 +387,11 @@
       "description": "Anonymize closed loans for a single user"
     },
     {
+      "permissionName": "anonymize-storage-loans.post",
+      "displayName": "circulation - anonymize loans",
+      "description": "anonymize a list of loans"
+    },
+    {
       "permissionName": "circulation-storage.circulation-rules.get",
       "displayName": "Circulation storage - get circulation rules",
       "description": "Get circulation rules from storage"
@@ -662,7 +678,8 @@
         "scheduled-notice-storage.scheduled-notices.item.put",
         "scheduled-notice-storage.scheduled-notices.item.delete",
         "scheduled-notice-storage.scheduled-notices.collection.delete",
-        "scheduled-notice-storage.scheduled-notice-groups.collection.get"
+        "scheduled-notice-storage.scheduled-notice-groups.collection.get",
+        "anonymize-storage-loans.post"
       ]
     },
     {
