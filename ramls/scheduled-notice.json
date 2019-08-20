@@ -25,7 +25,11 @@
     "triggeringEvent": {
       "type": "string",
       "description": "Scheduled notice triggering event",
-      "enum": ["Hold expiration", "Request expiration"]
+      "enum": [
+        "Hold expiration",
+        "Request expiration",
+        "Due date"
+      ]
     },
     "noticeConfig": {
       "type": "object",
