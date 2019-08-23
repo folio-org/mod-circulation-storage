@@ -234,7 +234,7 @@
     },
     {
       "id": "patron-notice-policy-storage",
-      "version": "0.8",
+      "version": "0.9",
       "handlers": [
         {
           "methods": ["POST"],
@@ -296,7 +296,7 @@
     },
     {
       "id": "scheduled-notice-storage",
-      "version": "0.1",
+      "version": "0.2",
       "handlers": [
         {
           "methods": ["GET"],

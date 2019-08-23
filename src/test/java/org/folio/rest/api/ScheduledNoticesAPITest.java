@@ -1,10 +1,10 @@
 package org.folio.rest.api;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.joda.time.DateTimeZone.UTC;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -12,12 +12,8 @@ import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import io.vertx.core.json.JsonObject;
-
-import org.junit.Before;
-import org.junit.Test;
 
 import org.folio.rest.jaxrs.model.NoticeConfig;
 import org.folio.rest.jaxrs.model.RecurringPeriod;
@@ -27,6 +23,11 @@ import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
+import org.joda.time.DateTime;
+import org.junit.Before;
+import org.junit.Test;
+
+import io.vertx.core.json.JsonObject;
 
 public class ScheduledNoticesAPITest extends ApiTests {
 
@@ -44,46 +45,68 @@ public class ScheduledNoticesAPITest extends ApiTests {
   }
 
   @Test
-  public void canSaveScheduledNotice() throws MalformedURLException,InterruptedException, ExecutionException,
+  public void canCreateScheduledNotice() throws MalformedURLException,InterruptedException, ExecutionException,
     TimeoutException {
 
-    Date nextRunTime = new Date();
-    NoticeConfig.Timing timing = NoticeConfig.Timing.BEFORE;
     String templateId = UUID.randomUUID().toString();
-    NoticeConfig.Format format = NoticeConfig.Format.EMAIL;
+    JsonObject noticeConfig = new JsonObject()
+      .put("timing", "Upon At")
+      .put("templateId", templateId)
+      .put("format", "Email");
 
-    String createdNoticeId = createScheduledNotice(nextRunTime, timing, ONE_DAY_PERIOD, templateId, format).getId();
+    DateTime nextRunTime = new DateTime(UTC);
+    JsonObject scheduledNotice = new JsonObject()
+      .put("nextRunTime", nextRunTime.toString())
+      .put("noticeConfig", noticeConfig)
+      .put("triggeringEvent", "Request expiration");
 
-    ScheduledNotice createdNotice = getById(scheduledNoticesStorageUrl("/scheduled-notices/" + createdNoticeId))
-      .mapTo(ScheduledNotice.class);
-    NoticeConfig createdConfig = createdNotice.getNoticeConfig();
+    String createdNoticeId = postScheduledNotice(scheduledNotice).getJson().getString("id");
 
-    assertThat(createdNotice.getNextRunTime(), is(nextRunTime));
-    assertThat(createdConfig.getTiming(), is(timing));
-    assertThat(createdConfig.getRecurringPeriod().getIntervalId(), is(ONE_DAY_PERIOD.getIntervalId()));
-    assertThat(createdConfig.getRecurringPeriod().getDuration(), is(ONE_DAY_PERIOD.getDuration()));
-    assertThat(createdConfig.getTemplateId(), is(templateId));
-    assertThat(createdConfig.getFormat(), is(format));
+    JsonObject createdNotice = getById(scheduledNoticesStorageUrl("/scheduled-notices/" + createdNoticeId));
+    JsonObject createdConfig = createdNotice.getJsonObject("noticeConfig");
+
+    assertThat(createdNotice.getString("triggeringEvent"), is("Request expiration"));
+    assertThat(DateTime.parse(createdNotice.getString("nextRunTime")), is(nextRunTime));
+    assertThat(createdConfig.getString("timing"), is("Upon At"));
+    assertThat(createdConfig.getString("templateId"), is(templateId));
+    assertThat(createdConfig.getString("format"), is("Email"));
   }
 
   @Test
   public void canGetScheduledNoticesCollection() throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    createScheduledNotice(NoticeConfig.Timing.BEFORE, ONE_DAY_PERIOD,
-      UUID.randomUUID().toString(), NoticeConfig.Format.EMAIL);
+    JsonObject noticeConfig = new JsonObject()
+      .put("timing", "Upon At")
+      .put("templateId", UUID.randomUUID().toString())
+      .put("format", "Email");
+    String nextRunTime = new DateTime(UTC).toString();
 
-    createScheduledNotice(NoticeConfig.Timing.AFTER, ONE_MONTH_PERIOD,
-      UUID.randomUUID().toString(), NoticeConfig.Format.SMS);
+    postScheduledNotice(new JsonObject()
+      .put("nextRunTime", nextRunTime)
+      .put("triggeringEvent", "Request expiration")
+      .put("noticeConfig", noticeConfig)
+    );
 
+    postScheduledNotice(new JsonObject()
+      .put("nextRunTime", nextRunTime)
+      .put("triggeringEvent", "Hold expiration")
+      .put("noticeConfig", noticeConfig)
+    );
+
+    postScheduledNotice(new JsonObject()
+      .put("nextRunTime", nextRunTime)
+      .put("triggeringEvent", "Due date")
+      .put("noticeConfig", noticeConfig)
+    );
 
     CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
     client.get(scheduledNoticesStorageUrl("/scheduled-notices"), TENANT_ID, ResponseHandler.json(getCompleted));
     JsonResponse response = getCompleted.get(5, SECONDS);
     ScheduledNotices scheduledNotices = response.getJson().mapTo(ScheduledNotices.class);
 
-    assertThat(scheduledNotices.getScheduledNotices().size(), is(2));
-    assertThat(scheduledNotices.getTotalRecords(), is(2));
+    assertThat(scheduledNotices.getScheduledNotices().size(), is(3));
+    assertThat(scheduledNotices.getTotalRecords(), is(3));
   }
 
   @Test
@@ -92,14 +115,33 @@ public class ScheduledNoticesAPITest extends ApiTests {
 
     String templateId = UUID.randomUUID().toString();
 
-    createScheduledNotice(NoticeConfig.Timing.BEFORE, ONE_DAY_PERIOD,
-      UUID.randomUUID().toString(), NoticeConfig.Format.EMAIL);
+    JsonObject noticeConfig1 = new JsonObject()
+      .put("timing", "Upon At")
+      .put("templateId", templateId)
+      .put("format", "Email");
+    JsonObject noticeConfig2 = new JsonObject()
+      .put("timing", "Upon At")
+      .put("templateId", UUID.randomUUID().toString())
+      .put("format", "Email");
+    String nextRunTime = new DateTime(UTC).toString();
 
-    createScheduledNotice(NoticeConfig.Timing.AFTER, ONE_DAY_PERIOD,
-      templateId, NoticeConfig.Format.SMS);
+    postScheduledNotice(new JsonObject()
+      .put("nextRunTime", nextRunTime)
+      .put("triggeringEvent", "Request expiration")
+      .put("noticeConfig", noticeConfig1)
+    );
 
-    createScheduledNotice(NoticeConfig.Timing.UPON_AT, ONE_MONTH_PERIOD,
-      templateId, NoticeConfig.Format.SMS);
+    postScheduledNotice(new JsonObject()
+      .put("nextRunTime", nextRunTime)
+      .put("triggeringEvent", "Hold expiration")
+      .put("noticeConfig", noticeConfig1)
+    );
+
+    postScheduledNotice(new JsonObject()
+      .put("nextRunTime", nextRunTime)
+      .put("triggeringEvent", "Due date")
+      .put("noticeConfig", noticeConfig2)
+    );
 
     String query = "query=noticeConfig.templateId=" + templateId;
 
@@ -117,23 +159,28 @@ public class ScheduledNoticesAPITest extends ApiTests {
   public void canGetScheduledNoticeById() throws MalformedURLException, InterruptedException,ExecutionException,
     TimeoutException {
 
-    Date nextRunTime = new Date();
-    NoticeConfig.Timing timing = NoticeConfig.Timing.BEFORE;
     String templateId = UUID.randomUUID().toString();
-    NoticeConfig.Format format = NoticeConfig.Format.EMAIL;
+    JsonObject noticeConfig = new JsonObject()
+      .put("timing", "Upon At")
+      .put("templateId", templateId)
+      .put("format", "Email");
 
-    String createdNoticeId = createScheduledNotice(nextRunTime, timing, ONE_DAY_PERIOD, templateId, format).getId();
+    DateTime nextRunTime = new DateTime(UTC);
+    JsonObject scheduledNotice = new JsonObject()
+      .put("nextRunTime", nextRunTime.toString())
+      .put("noticeConfig", noticeConfig)
+      .put("triggeringEvent", "Request expiration");
 
-    ScheduledNotice receivedNotice = getById(scheduledNoticesStorageUrl("/scheduled-notices/" + createdNoticeId))
-      .mapTo(ScheduledNotice.class);
-    NoticeConfig receivedConfig = receivedNotice.getNoticeConfig();
+    String createdNoticeId = postScheduledNotice(scheduledNotice).getJson().getString("id");
 
-    assertThat(receivedNotice.getNextRunTime(), is(nextRunTime));
-    assertThat(receivedConfig.getTiming(), is(timing));
-    assertThat(receivedConfig.getRecurringPeriod().getIntervalId(), is(ONE_DAY_PERIOD.getIntervalId()));
-    assertThat(receivedConfig.getRecurringPeriod().getDuration(), is(ONE_DAY_PERIOD.getDuration()));
-    assertThat(receivedConfig.getTemplateId(), is(templateId));
-    assertThat(receivedConfig.getFormat(), is(format));
+    JsonObject receivedNotice = getById(scheduledNoticesStorageUrl("/scheduled-notices/" + createdNoticeId));
+    JsonObject receivedNoticeConfig = receivedNotice.getJsonObject("noticeConfig");
+
+    assertThat(DateTime.parse(receivedNotice.getString("nextRunTime")), is(nextRunTime));
+    assertThat(receivedNotice.getString("triggeringEvent"), is("Request expiration"));
+    assertThat(receivedNoticeConfig.getString("timing"), is("Upon At"));
+    assertThat(receivedNoticeConfig.getString("templateId"), is(templateId));
+    assertThat(receivedNoticeConfig.getString("format"), is("Email"));
   }
 
   @Test
@@ -262,6 +309,17 @@ public class ScheduledNoticesAPITest extends ApiTests {
     Response response = deleteCompleted.get(5, SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
+  }
+
+  private JsonResponse postScheduledNotice(JsonObject entity) throws MalformedURLException,
+    InterruptedException, ExecutionException, TimeoutException {
+
+    CompletableFuture<JsonResponse> postCompleted = new CompletableFuture<>();
+
+    client.post(scheduledNoticesStorageUrl("/scheduled-notices"), entity, TENANT_ID,
+      ResponseHandler.json(postCompleted));
+
+    return postCompleted.get(5, TimeUnit.SECONDS);
   }
 
   private ScheduledNotice createScheduledNotice(Date nextRunTime,
