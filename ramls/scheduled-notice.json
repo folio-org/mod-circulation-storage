@@ -17,7 +17,7 @@
       "description": "UUID of related request for request notices",
       "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
     },
-    "recipientId": {
+    "recipientUserId": {
       "type": "string",
       "description": "Id of the user to whom this notice should be sent to",
       "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
