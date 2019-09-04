@@ -183,6 +183,11 @@
       "tableName": "scheduled_notice",
       "withMetadata": true,
       "withAuditing": false
+    },
+    {
+      "tableName": "patron_action_session",
+      "withMetadata": true,
+      "withAuditing": false
     }
   ]
 }

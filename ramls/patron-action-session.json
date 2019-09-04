@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "description": "Patron action session",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Patron action session id, UUID",
+      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+    },
+    "patronId": {
+      "type": "string",
+      "description": "Patron id",
+      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+    },
+    "loanId": {
+      "type": "string",
+      "description": "Loan id",
+      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+    },
+    "actionType": {
+      "type": "string",
+      "description": "Defines action type",
+      "enum": [
+        "Check-out",
+        "Check-in"
+      ]
+    },
+    "metadata": {
+      "description": "Metadata about creation and changes to patron action session, provided by the server (client should not provide)",
+      "type": "object",
+      "$ref": "raml-util/schemas/metadata.schema"
+    }
+  },
+  "required": [
+    "patronId",
+    "loanId",
+    "actionType"
+  ]
+}
