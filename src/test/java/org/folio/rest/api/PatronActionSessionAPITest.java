@@ -1,19 +1,19 @@
 package org.folio.rest.api;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.collection.IsArrayContainingInAnyOrder.arrayContainingInAnyOrder;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 
 import java.net.MalformedURLException;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.UpdateResult;
 
@@ -23,13 +23,18 @@ import org.junit.Test;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.support.ApiTests;
+import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonResponse;
-import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.MultipleRecords;
+import org.folio.rest.support.TextResponse;
+import org.folio.rest.support.http.AssertingRecordClient;
+import org.folio.rest.support.http.InterfaceUrls;
 
 public class PatronActionSessionAPITest extends ApiTests {
 
   private static final String PATRON_ACTION_SESSION = "patron_action_session";
-  private static final String PATRON_ACTION_SESSION_URL = "/patron-action-session-storage/patron-action-sessions";
+  private final AssertingRecordClient assertRecordClient = new AssertingRecordClient(client,
+    StorageTestSuite.TENANT_ID, InterfaceUrls::patronActionSessionStorageUrl, "patronActionSessions");
 
   @Before
   public void cleanUp() {
@@ -56,29 +61,53 @@ public class PatronActionSessionAPITest extends ApiTests {
       .put("loanId", UUID.randomUUID().toString())
       .put("actionType", "Check-out");
 
-    postPatronActionSession(firstSession);
-    postPatronActionSession(secondSession);
+    assertRecordClient.create(firstSession);
+    assertRecordClient.create(secondSession);
+    MultipleRecords<JsonObject> sessions = assertRecordClient.getAll();
 
-    CompletableFuture<JsonResponse> getAllCompleted = new CompletableFuture<>();
+    assertThat(sessions.getTotalRecords(), is(2));
+    assertThat(sessions.getRecords().size(), is(2));
 
-    client.get(StorageTestSuite.storageUrl(PATRON_ACTION_SESSION_URL), TENANT_ID,
-      ResponseHandler.json(getAllCompleted));
-    JsonResponse response = getAllCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat("Failed to get all patron notice policies", response.getStatusCode(), is(200));
-
-    JsonArray sessions = response.getJson().getJsonArray("patronActionSessions");
-
-    assertThat(sessions.size(), is(2));
-    assertThat(response.getJson().getInteger("totalRecords"), is(2));
-
-    String[] patronIdArray = sessions.stream()
-      .map(JsonObject.class :: cast)
+    List<String> patronIds = sessions.getRecords().stream()
       .map(json -> json.getString("patronId"))
-      .toArray(String[] :: new);
+      .collect(Collectors.toList());
 
-    assertThat(patronIdArray,
-      arrayContainingInAnyOrder(firstSession.getString("patronId"), secondSession.getString("patronId")));
+    assertThat(patronIds, containsInAnyOrder(
+      firstSession.getString("patronId"),
+      secondSession.getString("patronId")));
+  }
+
+  @Test
+  public void canGetPatronActionSessionsByQueryAndLimit() throws InterruptedException, MalformedURLException,
+    TimeoutException, ExecutionException {
+
+    JsonObject firstSession = new JsonObject()
+      .put("id", UUID.randomUUID().toString())
+      .put("patronId", UUID.randomUUID().toString())
+      .put("loanId", UUID.randomUUID().toString())
+      .put("actionType", "Check-out");
+
+    JsonObject secondSession = new JsonObject()
+      .put("id", UUID.randomUUID().toString())
+      .put("patronId", UUID.randomUUID().toString())
+      .put("loanId", UUID.randomUUID().toString())
+      .put("actionType", "Check-out");
+
+    JsonObject thirdSession = new JsonObject()
+      .put("id", UUID.randomUUID().toString())
+      .put("patronId", UUID.randomUUID().toString())
+      .put("loanId", UUID.randomUUID().toString())
+      .put("actionType", "Check-in");
+
+    assertRecordClient.create(firstSession);
+    assertRecordClient.create(secondSession);
+    assertRecordClient.create(thirdSession);
+
+    String query = "query=actionType==Check-out&limit=1";
+    MultipleRecords<JsonObject> sessions = assertRecordClient.getMany(query);
+
+    assertThat(sessions.getRecords().size(), is(1));
+    assertThat(sessions.getTotalRecords(), is(2));
   }
 
   @Test
@@ -90,8 +119,7 @@ public class PatronActionSessionAPITest extends ApiTests {
       .put("patronId", UUID.randomUUID().toString())
       .put("loanId", UUID.randomUUID().toString())
       .put("actionType", "Check-out");
-    JsonResponse response = postPatronActionSession(request);
-    assertThat("Failed to create patron active session", response.getStatusCode(), is(201));
+    assertRecordClient.create(request);
   }
 
   @Test
@@ -103,17 +131,12 @@ public class PatronActionSessionAPITest extends ApiTests {
       .put("patronId", UUID.randomUUID().toString())
       .put("loanId", UUID.randomUUID().toString())
       .put("actionType", "Check-out");
-    String id = postPatronActionSession(session).getJson().getString("id");
+    String id = assertRecordClient.create(session).getJson().getString("id");
 
-    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
-    client.get(StorageTestSuite.storageUrl(PATRON_ACTION_SESSION_URL + "/" + id),
-      TENANT_ID, ResponseHandler.json(getCompleted));
+    IndividualResource individualResource = assertRecordClient.getById(id);
 
-    JsonResponse response = getCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(response.getStatusCode(), is(200));
-    assertThat(response.getJson().getString("id"), is(id));
-    assertThat(response.getJson().getString("patronId"), is(session.getString("patronId")));
+    assertThat(individualResource.getJson().getString("id"), is(id));
+    assertThat(individualResource.getJson().getString("patronId"), is(session.getString("patronId")));
 
   }
 
@@ -121,26 +144,29 @@ public class PatronActionSessionAPITest extends ApiTests {
   public void canDeletePatronActionSession() throws InterruptedException, MalformedURLException,
     TimeoutException, ExecutionException {
 
+    UUID id = UUID.randomUUID();
     JsonObject request = new JsonObject()
-      .put("id", UUID.randomUUID().toString())
+      .put("id", id.toString())
       .put("patronId", UUID.randomUUID().toString())
       .put("loanId", UUID.randomUUID().toString())
       .put("actionType", "Check-out");
-    String id = postPatronActionSession(request).getJson().getString("id");
-    JsonResponse response = deletePatronActionSession(id);
 
-    assertThat(response.getStatusCode(), is(204));
+    assertRecordClient.create(request).getId();
+    assertRecordClient.deleteById(id);
+    MultipleRecords<JsonObject> sessions = assertRecordClient.getAll();
+
+    assertThat(sessions.getRecords().size(), is(0));
+    assertThat(sessions.getTotalRecords(), is(0));
   }
 
   @Test
-  public void cannotDeleteNonExistPatronActionSessionId() throws MalformedURLException,
+  public void cannotDeleteNonExistentPatronActionSessionId() throws MalformedURLException,
     InterruptedException, ExecutionException, TimeoutException {
 
-    String id = UUID.randomUUID().toString();
-    JsonResponse response = deletePatronActionSession(id);
+    TextResponse textResponse = assertRecordClient.attemptDeleteById(UUID.randomUUID());
 
-    assertThat(response.getStatusCode(), is(404));
-    assertThat(response.getBody(), is("Not found"));
+    assertThat(textResponse.getStatusCode(), is(404));
+    assertThat(textResponse.getBody(), is("Not found"));
   }
 
   @Test
@@ -153,22 +179,23 @@ public class PatronActionSessionAPITest extends ApiTests {
       .put("loanId", UUID.randomUUID().toString())
       .put("actionType", "Check-out");
 
-    String id = postPatronActionSession(request).getJson().getString("id");
+    String id = assertRecordClient.create(request).getJson().getString("id");
     String newLoanId = UUID.randomUUID().toString();
     request
       .put("loanId", newLoanId)
       .put("actionType", "Check-in");
-    JsonResponse response = putPatronActionSession(request);
+    JsonResponse response = assertRecordClient.attemptPutById(request);
 
     assertThat("Failed to update patron active session", response.getStatusCode(), is(204));
 
-    JsonObject updatedPolicy = getPatronActionSessionById(id).getJson();
-    assertThat(updatedPolicy.getString("loanId"), is(newLoanId));
-    assertThat(updatedPolicy.getString("actionType"), is ("Check-in"));
+    IndividualResource updatedPatronActionSession = assertRecordClient.getById(id);
+
+    assertThat(updatedPatronActionSession.getJson().getString("loanId"), is(newLoanId));
+    assertThat(updatedPatronActionSession.getJson().getString("actionType"), is("Check-in"));
   }
 
   @Test
-  public void cannotUpdateNonExistActionSession() throws InterruptedException, MalformedURLException,
+  public void cannotUpdateNonExistentActionSession() throws InterruptedException, MalformedURLException,
     TimeoutException, ExecutionException {
 
     JsonObject nonExistPatronActionSession = new JsonObject()
@@ -176,49 +203,8 @@ public class PatronActionSessionAPITest extends ApiTests {
       .put("patronId", UUID.randomUUID().toString())
       .put("loanId", UUID.randomUUID().toString())
       .put("actionType", "Check-out");
-    JsonResponse response = putPatronActionSession(nonExistPatronActionSession);
+    JsonResponse response = assertRecordClient.attemptPutById(nonExistPatronActionSession);
 
     assertThat(response.getStatusCode(), is(404));
-  }
-
-
-  private JsonResponse postPatronActionSession(JsonObject entity) throws MalformedURLException,
-    InterruptedException, ExecutionException, TimeoutException {
-
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
-    client.post(StorageTestSuite.storageUrl(PATRON_ACTION_SESSION_URL),
-      entity, TENANT_ID, ResponseHandler.json(createCompleted));
-
-    return createCompleted.get(5, TimeUnit.SECONDS);
-  }
-
-  private JsonResponse putPatronActionSession(JsonObject entity) throws MalformedURLException,
-    InterruptedException, ExecutionException, TimeoutException {
-
-    CompletableFuture<JsonResponse> updateCompleted = new CompletableFuture<>();
-    client.put(StorageTestSuite.storageUrl(PATRON_ACTION_SESSION_URL + "/" + entity.getString("id")),
-      entity, TENANT_ID, ResponseHandler.json(updateCompleted));
-
-    return updateCompleted.get(5, TimeUnit.SECONDS);
-  }
-
-  private JsonResponse getPatronActionSessionById(String id)
-    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
-
-    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
-    client.get(StorageTestSuite.storageUrl(PATRON_ACTION_SESSION_URL + "/" + id),
-      TENANT_ID, ResponseHandler.json(getCompleted));
-
-    return getCompleted.get(5, TimeUnit.SECONDS);
-  }
-
-  private JsonResponse deletePatronActionSession(String id) throws MalformedURLException,
-    InterruptedException, ExecutionException, TimeoutException {
-
-    CompletableFuture<JsonResponse> deleteCompleted = new CompletableFuture<>();
-    client.delete(StorageTestSuite.storageUrl(PATRON_ACTION_SESSION_URL + "/" + id),
-      TENANT_ID, ResponseHandler.json(deleteCompleted));
-
-    return deleteCompleted.get(5, TimeUnit.SECONDS);
   }
 }

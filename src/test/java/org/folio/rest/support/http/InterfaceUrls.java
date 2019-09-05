@@ -18,6 +18,12 @@ public class InterfaceUrls {
     return StorageTestSuite.storageUrl("/loan-storage/loans" + subPath);
   }
 
+  public static URL patronActionSessionStorageUrl(String subPath)
+    throws MalformedURLException {
+
+    return StorageTestSuite.storageUrl("/patron-action-session-storage/patron-action-sessions" + subPath);
+  }
+
   public static URL anonymizeLoansURL() throws MalformedURLException {
     return StorageTestSuite.storageUrl("/anonymize-storage-loans");
   }
