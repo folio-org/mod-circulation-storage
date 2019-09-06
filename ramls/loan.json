@@ -21,6 +21,10 @@
       "description": "ID of the item lent to the patron",
       "type": "string"
     },
+    "itemLocationId": {
+      "description": "Effective Location ID of the item lent to the patron",
+      "type": "string"
+    },
     "status": {
       "description": "Overall status of the loan",
       "type": "object",
