@@ -1,0 +1,43 @@
+#%RAML 1.0
+title: Request Preference Storage
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost:9130
+
+documentation:
+  - title: Request Preference Storage API
+    content: <b>Storage for request oreferences</b>
+
+types:
+  request-preference: !include request-preference.json
+  request-preferences: !include request-preferences.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  language: !include raml-util/traits/language.raml
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+
+/request-preference-storage:
+  /request-preference:
+    displayName: Request Preferences
+    type:
+      collection:
+        exampleCollection: !include examples/request-preference.json
+        exampleItem: !include examples/request-preferences.json
+        schemaCollection: request-preferences
+        schemaItem: request-preference
+    get:
+      is: [
+      pageable,
+      searchable: {description: "searchable using CQL", example: "id=\"cf23adf0-61ba-4887-bf82-956c4aae2260\""},
+        ]
+    /{id}:
+      type:
+        collection-item:
+          exampleItem: !include examples/request-preference.json
+          schema: request-preference
