@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Collection of request preferences",
+  "type": "object",
+  "properties": {
+    "requestPreferences": {
+      "description": "List of request preferences",
+      "id": "requestPreferences",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "request-preference.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "requestPreferences",
+    "totalRecords"
+  ]
+}

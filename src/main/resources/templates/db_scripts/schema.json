@@ -109,6 +109,18 @@
       "customSnippetPath": "requestUpdateTrigger.sql"
     },
     {
+      "tableName": "user_request_preference",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "userId",
+          "tOps": "ADD",
+          "caseSensitive": false
+        }
+      ]
+    },
+    {
       "tableName": "fixed_due_date_schedule",
       "withMetadata": false,
       "withAuditing": false,
