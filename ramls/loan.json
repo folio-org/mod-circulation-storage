@@ -22,7 +22,7 @@
       "type": "string"
     },
     "itemLocationId": {
-      "description": "Effective Location ID of the item lent to the patron",
+      "description": "The effective location, at the time of checkout, of the item loaned to the patron. This is a UUID that refers to /locations/{id}.",
       "type": "string"
     },
     "status": {
