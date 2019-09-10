@@ -234,7 +234,7 @@
     },
     {
       "id": "patron-notice-policy-storage",
-      "version": "0.9",
+      "version": "0.10",
       "handlers": [
         {
           "methods": ["POST"],
