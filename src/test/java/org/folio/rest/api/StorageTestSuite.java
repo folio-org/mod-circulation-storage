@@ -46,6 +46,7 @@ import io.vertx.ext.sql.ResultSet;
   CirculationRulesApiTest.class,
   FixedDueDateApiTest.class,
   LoanPoliciesApiTest.class,
+  RequestPreferencesApiTest.class,
   RequestsApiTest.class,
   LoansApiHistoryTest.class,
   StaffSlipsApiTest.class,

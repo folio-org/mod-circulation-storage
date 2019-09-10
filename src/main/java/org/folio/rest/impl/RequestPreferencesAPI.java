@@ -4,6 +4,7 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.RequestPreference;
 import org.folio.rest.jaxrs.model.RequestPreferences;
 import org.folio.rest.jaxrs.resource.RequestPreferenceStorage;
@@ -13,11 +14,12 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
 
-public class RequestPreferencesImpl implements RequestPreferenceStorage {
+public class RequestPreferencesAPI implements RequestPreferenceStorage {
 
   private static final String REQUEST_PREFERENCE_TABLE = "user_request_preference";
 
   @Override
+  @Validate
   public void getRequestPreferenceStorageRequestPreference(int offset, int limit, String query, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.get(REQUEST_PREFERENCE_TABLE, RequestPreference.class, RequestPreferences.class,
       query, offset, limit, okapiHeaders, vertxContext,
