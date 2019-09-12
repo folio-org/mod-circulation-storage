@@ -68,9 +68,18 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
       .put("sendOptions", new JsonObject()
         .put("sendWhen", "Item recalled"));
 
+    JsonObject holdExpirationChangeNotice = new JsonObject()
+      .put("templateId", UUID.randomUUID().toString())
+      .put("format", "Email")
+      .put("realTime", "true")
+      .put("sendOptions", new JsonObject()
+        .put("sendWhen", "Hold expiration"));
+
     JsonObject noticePolicy = new JsonObject()
       .put("name", "sample policy")
-      .put("requestNotices", new JsonArray().add(requestNotice))
+      .put("requestNotices", new JsonArray()
+        .add(requestNotice)
+        .add(holdExpirationChangeNotice))
       .put("loanNotices", new JsonArray()
         .add(manualDueDateChangeNotice)
         .add(itemRecalledNotice));

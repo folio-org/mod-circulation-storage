@@ -83,7 +83,6 @@
                 "description": "Triggering event",
                 "enum": [
                   "Due date",
-                  "Overdue",
                   "Renewed",
                   "Check in",
                   "Check out",
@@ -348,7 +347,7 @@
                   "Request expiration",
                   "Paging request",
                   "Available",
-                  "Hold Expiration",
+                  "Hold expiration",
                   "Request cancellation"
                 ]
               },
