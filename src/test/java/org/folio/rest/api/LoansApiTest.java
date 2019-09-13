@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static java.lang.Boolean.TRUE;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isBadRequest;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNotFound;
 import static org.folio.rest.support.matchers.LoanMatchers.isClosed;
@@ -123,6 +124,42 @@ public class LoansApiTest extends ApiTests {
     //and presents the offset as +0000 (which is ISO8601 compatible, but not RFC3339)
     assertThat("due date does not match",
       loan.getString("dueDate"), is("2017-07-27T10:23:43.000+0000"));
+
+    assertThat("recall changed due date is set",
+        loan.getBoolean("dueDateChangedByRecall"), nullValue());
+  }
+
+  @Test
+  public void canCreateALoanWithDueDateChangedByRecallSet()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    UUID id = UUID.randomUUID();
+    UUID itemId = UUID.randomUUID();
+    UUID userId = UUID.randomUUID();
+    UUID proxyUserId = UUID.randomUUID();
+    UUID loanPolicyId = UUID.randomUUID();
+
+    JsonObject loanRequest = new LoanRequestBuilder()
+      .withId(id)
+      .withItemId(itemId)
+      .withUserId(userId)
+      .withProxyUserId(proxyUserId)
+      .withLoanDate(new DateTime(2017, 6, 27, 10, 23, 43, DateTimeZone.UTC))
+      .open()
+      .withAction("checkedout")
+      .withItemStatus("Checked out")
+      .withDueDate(new DateTime(2017, 7, 27, 10, 23, 43, DateTimeZone.UTC))
+      .withLoanPolicyId(loanPolicyId)
+      .withDueDateChangedByRecall(TRUE)
+      .create();
+
+    JsonObject loan = loansClient.create(loanRequest).getJson();
+
+    assertThat("recall changed due date is not true",
+        loan.getBoolean("dueDateChangedByRecall"), is(TRUE));
   }
 
   @Test
