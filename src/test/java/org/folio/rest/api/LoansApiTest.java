@@ -125,7 +125,7 @@ public class LoansApiTest extends ApiTests {
     assertThat("due date does not match",
       loan.getString("dueDate"), is("2017-07-27T10:23:43.000+0000"));
 
-    assertThat("recall changed due date is set",
+    assertThat("recall changed due date should be null",
         loan.getBoolean("dueDateChangedByRecall"), nullValue());
   }
 
