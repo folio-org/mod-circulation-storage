@@ -1,4 +1,9 @@
-## 9.1.0 2019-09-09
+## 9.3.0 2019-09-18
+
+* Stores whether a loan due date has changed due to a recall request CIRCSTORE-156
+* Adds {{Manual due date change}} event to patron notice policies CIRCSTORE-151
+
+## 9.2.0 2019-09-09
 
 * Can anonymize a list of loans (CIRCSTORE-137)
 * Adds `recipient user ID` to `scheduled notices` (CIRCSTORE-146)
