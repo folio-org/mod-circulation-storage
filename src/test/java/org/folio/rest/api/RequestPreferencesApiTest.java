@@ -1,10 +1,11 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isBadRequest;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isCreated;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNoContent;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNotFound;
+import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isUnprocessableEntity;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.core.Is.is;
@@ -60,13 +61,19 @@ public class RequestPreferencesApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateSecondRequestPreferenceForTheSameUser() {
-
+  public void cannotCreateSecondRequestPreferenceForTheSameUser() {
     JsonResponse response1 = createRequestPreference();
     assertThat(response1, isCreated());
 
     JsonResponse response2 = createRequestPreference();
-    assertThat(response2, isBadRequest());
+    assertThat(response2, isUnprocessableEntity());
+    assertThat(response2.getJson().toString(), containsString("Request preference for specified user already exists"));
+  }
+
+  @Test
+  public void cannotCreateRequestWithInvalidId() {
+    JsonResponse response1 = createRequestPreference("invalid_id");
+    assertThat(response1, isUnprocessableEntity());
   }
 
   @Test
@@ -145,6 +152,23 @@ public class RequestPreferencesApiTest extends ApiTests {
     RequestPreference preference = constructDefaultPreference(USER_ID).withId(UUID.randomUUID().toString());
     JsonResponse response = udpatePreference(preference);
     assertThat(response, isNotFound());
+  }
+
+  @Test
+  public void cannotUpdateRequestPreferenceWithDuplicateUserId() {
+    createRequestPreference(USER_ID);
+    RequestPreference secondPreference = createRequestPreference(USER_ID2).getJson().mapTo(RequestPreference.class);
+
+    JsonResponse response = udpatePreference(constructDefaultPreference(USER_ID).withId(secondPreference.getId()));
+    assertThat(response, isUnprocessableEntity());
+    assertThat(response.getJson().toString(), containsString("Request preference for specified user already exists"));
+  }
+
+  @Test
+  public void cannotUpdateRequestPreferenceWithInvalidId() {
+    RequestPreference preference = constructDefaultPreference(USER_ID).withId("invalid_id");
+    JsonResponse response = udpatePreference(preference);
+    assertThat(response, isUnprocessableEntity());
   }
 
   private void assertPreferenceEquals(RequestPreference preference1, RequestPreference preference2) {

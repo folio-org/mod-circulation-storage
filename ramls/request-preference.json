@@ -5,10 +5,12 @@
   "properties": {
     "id": {
       "description": "Unique request preference ID",
+      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
       "type": "string"
     },
     "userId": {
       "description": "UUID of user associated with this request preference",
+      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
       "type": "string"
     },
     "holdShelf": {
@@ -21,10 +23,12 @@
     },
     "defaultServicePointId": {
       "description": "UUID of default service point for 'Hold shelf' option",
+      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
       "type": "string"
     },
     "defaultDeliveryAddressTypeId": {
       "description": "UUID of user's address type",
+      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
       "type": "string"
     },
     "fulfillment": {

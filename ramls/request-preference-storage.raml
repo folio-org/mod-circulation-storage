@@ -15,6 +15,7 @@ types:
 
 traits:
   language: !include raml-util/traits/language.raml
+  validate: !include raml-util/traits/validation.raml
   pageable: !include raml-util/traits/pageable.raml
   searchable: !include raml-util/traits/searchable.raml
 
@@ -34,10 +35,14 @@ resourceTypes:
     get:
       is: [
       pageable,
-      searchable: {description: "searchable using CQL", example: "id=\"cf23adf0-61ba-4887-bf82-956c4aae2260\""},
+      searchable: {description: "searchable using CQL", example: "userId==1e425b93-501e-44b0-a4c7-b3e66a25c42e"},
         ]
+    post:
+      is: [validate]
     /{id}:
       type:
         collection-item:
           exampleItem: !include examples/request-preference.json
           schema: request-preference
+      put:
+        is: [validate]
