@@ -1,0 +1,49 @@
+#%RAML 1.0
+title: Patron Action Session
+version: v0.1
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost:9130
+
+documentation:
+  - title: Patron Action Session API
+    content: <b>Storage for patron action sessions</b>
+
+types:
+  patron-action-session: !include patron-action-session.json
+  patron-action-sessions: !include patron-action-sessions.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  language: !include raml-util/traits/language.raml
+  validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+
+/patron-action-session-storage:
+  /patron-action-sessions:
+    displayName: Patron Action Session
+    type:
+      collection:
+        schemaItem: patron-action-session
+        schemaCollection: patron-action-sessions
+        exampleItem: !include examples/patron-action-session.json
+        exampleCollection: !include examples/patron-action-sessions.json
+
+    get:
+      is: [
+        pageable,
+        searchable: {description: "searchable using CQL", example: "name=\"undergrad*\""}
+        ]
+    post:
+      is: [validate]
+    /{patronSessionId}:
+      type:
+        collection-item:
+          schema: patron-action-session
+          exampleItem: !include examples/patron-action-session.json
+      put:
+        is: [validate]

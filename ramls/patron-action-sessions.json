@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Collection of patron action sessions",
+  "type": "object",
+  "properties": {
+    "patronActionSessions": {
+      "description": "List of patron action sessions",
+      "id": "patronActionSessions",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "patron-action-session.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "patron-action-sessions",
+    "totalRecords"
+  ]
+}
