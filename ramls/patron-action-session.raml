@@ -47,3 +47,33 @@ resourceTypes:
           exampleItem: !include examples/patron-action-session.json
       put:
         is: [validate]
+  /expired-session-patron-ids:
+      get:
+        queryParameters:
+          action_type:
+            description: Action type for patron notice session
+            type: string
+            required: true
+          last_time_action_limit:
+            description: Period of time for before that a session will be expired
+            type: string
+            required: true
+          limit:
+            description: Limit the number of sessions returned in the response
+            type: integer
+            required: false
+            example: 10
+            default: 10
+            minimum: 0
+            maximum: 2147483647
+        responses:
+          200:
+            description: "Return list of notice groups"
+            body:
+              application/json:
+                type: string[]
+          500:
+            description: "Internal server error"
+            body:
+              text/plain:
+                example: "Internal server error"

@@ -368,6 +368,10 @@
           "methods": ["DELETE"],
           "pathPattern": "/patron-action-session-storage/patron-action-sessions/{id}",
           "permissionsRequired": ["patron-action-session-storage.patron-action-sessions.item.delete"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/patron-action-session-storage/expired-session-patron-ids",
+          "permissionsRequired": ["patron-action-session-storage.expired-session-patron-ids.collection.get"]
         }
       ]
     }
@@ -725,7 +729,8 @@
         "patron-action-session-storage.patron-action-sessions.item.get",
         "patron-action-session-storage.patron-action-sessions.item.post",
         "patron-action-session-storage.patron-action-sessions.item.put",
-        "patron-action-session-storage.patron-action-sessions.item.delete"
+        "patron-action-session-storage.patron-action-sessions.item.delete",
+        "patron-action-session-storage.expired-session-patron-ids.collection.get"
       ]
     },
     {
