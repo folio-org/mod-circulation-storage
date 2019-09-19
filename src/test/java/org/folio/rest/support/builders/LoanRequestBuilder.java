@@ -24,6 +24,7 @@ public class LoanRequestBuilder implements Builder {
   private DateTime returnDate;
   private DateTime systemReturnDate;
   private final Integer renewalCount;
+  private Boolean dueDateChangedByRecall;
 
   public LoanRequestBuilder() {
     this(UUID.randomUUID(),
@@ -35,6 +36,7 @@ public class LoanRequestBuilder implements Builder {
       null,
       "checkedout",
       "test",
+      null,
       null,
       null,
       null,
@@ -56,7 +58,8 @@ public class LoanRequestBuilder implements Builder {
     UUID loanPolicyId,
     DateTime returnDate,
     DateTime systemReturnDate,
-    Integer renewalCount) {
+    Integer renewalCount,
+    Boolean dueDateChangedByRecall) {
 
     this.id = id;
     this.itemId = itemId;
@@ -72,6 +75,7 @@ public class LoanRequestBuilder implements Builder {
     this.returnDate = returnDate;
     this.systemReturnDate = systemReturnDate;
     this.renewalCount = renewalCount;
+    this.dueDateChangedByRecall = dueDateChangedByRecall;
   }
 
   public static LoanRequestBuilder from(JsonObject example) {
@@ -135,7 +139,8 @@ public class LoanRequestBuilder implements Builder {
       loanPolicyId,
       returnDate,
       systemReturnDate,
-      renewalCount);
+      renewalCount,
+      example.getBoolean("dueDateChangedByRecall"));
   }
 
   @Override
@@ -196,6 +201,10 @@ public class LoanRequestBuilder implements Builder {
       request.put("actionComment", actionComment);
     }
 
+    if (dueDateChangedByRecall != null) {
+      request.put("dueDateChangedByRecall", dueDateChangedByRecall);
+    }
+
     return request;
   }
 
@@ -214,7 +223,8 @@ public class LoanRequestBuilder implements Builder {
       this.loanPolicyId,
       this.returnDate,
       this.systemReturnDate,
-      this.renewalCount);
+      this.renewalCount,
+      this.dueDateChangedByRecall);
   }
 
   public LoanRequestBuilder withNoId() {
@@ -236,7 +246,8 @@ public class LoanRequestBuilder implements Builder {
       this.loanPolicyId,
       this.returnDate,
       this.systemReturnDate,
-      this.renewalCount);
+      this.renewalCount,
+      this.dueDateChangedByRecall);
   }
 
   public LoanRequestBuilder withUserId(UUID userId) {
@@ -254,7 +265,8 @@ public class LoanRequestBuilder implements Builder {
       this.loanPolicyId,
       this.returnDate,
       this.systemReturnDate,
-      this.renewalCount);
+      this.renewalCount,
+      this.dueDateChangedByRecall);
   }
 
   public LoanRequestBuilder withNoUserId() {
@@ -276,7 +288,8 @@ public class LoanRequestBuilder implements Builder {
       this.loanPolicyId,
       this.returnDate,
       this.systemReturnDate,
-      this.renewalCount);
+      this.renewalCount,
+      this.dueDateChangedByRecall);
   }
 
   public LoanRequestBuilder withLoanDate(DateTime loanDate) {
@@ -294,7 +307,8 @@ public class LoanRequestBuilder implements Builder {
       this.loanPolicyId,
       this.returnDate,
       this.systemReturnDate,
-      this.renewalCount);
+      this.renewalCount,
+      this.dueDateChangedByRecall);
   }
 
   public LoanRequestBuilder withStatus(String statusName) {
@@ -312,7 +326,8 @@ public class LoanRequestBuilder implements Builder {
       this.loanPolicyId,
       this.returnDate,
       this.systemReturnDate,
-      this.renewalCount);
+      this.renewalCount,
+      this.dueDateChangedByRecall);
   }
 
   public LoanRequestBuilder open() {
@@ -338,7 +353,8 @@ public class LoanRequestBuilder implements Builder {
       this.loanPolicyId,
       this.returnDate,
       this.systemReturnDate,
-      this.renewalCount);
+      this.renewalCount,
+      this.dueDateChangedByRecall);
   }
 
   public LoanRequestBuilder withAction(String action) {
@@ -356,7 +372,8 @@ public class LoanRequestBuilder implements Builder {
       this.loanPolicyId,
       this.returnDate,
       this.systemReturnDate,
-      this.renewalCount);
+      this.renewalCount,
+      this.dueDateChangedByRecall);
   }
 
   public LoanRequestBuilder withActionComment(String actionComment) {
@@ -374,7 +391,8 @@ public class LoanRequestBuilder implements Builder {
       this.loanPolicyId,
       this.returnDate,
       this.systemReturnDate,
-      this.renewalCount);
+      this.renewalCount,
+      this.dueDateChangedByRecall);
   }
 
   public LoanRequestBuilder withDueDate(DateTime dueDate) {
@@ -392,7 +410,8 @@ public class LoanRequestBuilder implements Builder {
       this.loanPolicyId,
       this.returnDate,
       this.systemReturnDate,
-      this.renewalCount);
+      this.renewalCount,
+      this.dueDateChangedByRecall);
   }
 
   public LoanRequestBuilder withReturnDate(DateTime returnDate) {
@@ -410,7 +429,8 @@ public class LoanRequestBuilder implements Builder {
       this.loanPolicyId,
       returnDate,
       this.systemReturnDate,
-      this.renewalCount);
+      this.renewalCount,
+      this.dueDateChangedByRecall);
   }
 
   public LoanRequestBuilder withSystemReturnDate(DateTime systemReturnDate) {
@@ -428,7 +448,8 @@ public class LoanRequestBuilder implements Builder {
       this.loanPolicyId,
       this.returnDate,
       systemReturnDate,
-      this.renewalCount);
+      this.renewalCount,
+      this.dueDateChangedByRecall);
   }
 
   public LoanRequestBuilder withNoStatus() {
@@ -458,7 +479,8 @@ public class LoanRequestBuilder implements Builder {
       loanPolicyId,
       this.returnDate,
       this.systemReturnDate,
-      this.renewalCount);
+      this.renewalCount,
+      this.dueDateChangedByRecall);
   }
 
   public LoanRequestBuilder withRenewalCount(int renewalCount) {
@@ -476,6 +498,26 @@ public class LoanRequestBuilder implements Builder {
       this.loanPolicyId,
       this.returnDate,
       this.systemReturnDate,
-      renewalCount);
+      renewalCount,
+      this.dueDateChangedByRecall);
+  }
+
+  public LoanRequestBuilder withDueDateChangedByRecall(Boolean dueDateChangedByRecall) {
+    return new LoanRequestBuilder(
+      this.id,
+      this.itemId,
+      this.userId,
+      this.proxyUserId,
+      this.loanDate,
+      this.statusName,
+      this.itemStatus,
+      this.action,
+      this.actionComment,
+      this.dueDate,
+      this.loanPolicyId,
+      this.returnDate,
+      this.systemReturnDate,
+      this.renewalCount,
+      dueDateChangedByRecall);
   }
 }
