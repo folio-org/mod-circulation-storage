@@ -83,11 +83,11 @@
                 "description": "Triggering event",
                 "enum": [
                   "Due date",
-                  "Overdue",
                   "Renewed",
                   "Check in",
                   "Check out",
-                  "Manual due date change"
+                  "Manual due date change",
+                  "Item recalled"
                 ]
               },
               "sendBy": {
@@ -343,12 +343,11 @@
                 "description": "User initiated and time driven events for request related notices",
                 "enum": [
                   "Recall request",
-                  "Recall loanee",
                   "Hold request",
                   "Request expiration",
                   "Paging request",
                   "Available",
-                  "Hold Expiration",
+                  "Hold expiration",
                   "Request cancellation"
                 ]
               },
