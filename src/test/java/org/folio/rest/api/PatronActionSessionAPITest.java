@@ -27,6 +27,7 @@ import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.MultipleRecords;
 import org.folio.rest.support.TextResponse;
+import org.folio.rest.support.builders.LoanRequestBuilder;
 import org.folio.rest.support.http.AssertingRecordClient;
 import org.folio.rest.support.http.InterfaceUrls;
 
@@ -35,31 +36,34 @@ public class PatronActionSessionAPITest extends ApiTests {
   private static final String PATRON_ACTION_SESSION = "patron_action_session";
   private final AssertingRecordClient assertRecordClient = new AssertingRecordClient(client,
     StorageTestSuite.TENANT_ID, InterfaceUrls::patronActionSessionStorageUrl, "patronActionSessions");
+  private final AssertingRecordClient loansClient = new AssertingRecordClient(
+    client, StorageTestSuite.TENANT_ID, InterfaceUrls::loanStorageUrl, "loans");
+  private String existingLoanId;
 
   @Before
-  public void cleanUp() {
+  public void beforeTest() throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
     CompletableFuture<UpdateResult> future = new CompletableFuture<>();
     PostgresClient
       .getInstance(StorageTestSuite.getVertx(), TENANT_ID)
       .delete(PATRON_ACTION_SESSION, new Criterion(), del -> future.complete(del.result()));
     future.join();
+
+    JsonObject loan = loansClient.create(
+      new LoanRequestBuilder().withId(UUID.randomUUID())
+        .withItemId(UUID.randomUUID())
+        .withUserId(UUID.randomUUID())
+        .closed()
+        .create()).getJson();
+
+    existingLoanId = loan.getString("id");
   }
 
   @Test
   public void canGetAllPatronActionSessions() throws InterruptedException, MalformedURLException,
     TimeoutException, ExecutionException {
 
-    JsonObject firstSession = new JsonObject()
-      .put("id", UUID.randomUUID().toString())
-      .put("patronId", UUID.randomUUID().toString())
-      .put("loanId", UUID.randomUUID().toString())
-      .put("actionType", "Check-out");
-
-    JsonObject secondSession = new JsonObject()
-      .put("id", UUID.randomUUID().toString())
-      .put("patronId", UUID.randomUUID().toString())
-      .put("loanId", UUID.randomUUID().toString())
-      .put("actionType", "Check-out");
+    JsonObject firstSession = createSession("Check-out");
+    JsonObject secondSession = createSession("Check-out");
 
     assertRecordClient.create(firstSession);
     assertRecordClient.create(secondSession);
@@ -81,23 +85,9 @@ public class PatronActionSessionAPITest extends ApiTests {
   public void canGetPatronActionSessionsByQueryAndLimit() throws InterruptedException, MalformedURLException,
     TimeoutException, ExecutionException {
 
-    JsonObject firstSession = new JsonObject()
-      .put("id", UUID.randomUUID().toString())
-      .put("patronId", UUID.randomUUID().toString())
-      .put("loanId", UUID.randomUUID().toString())
-      .put("actionType", "Check-out");
-
-    JsonObject secondSession = new JsonObject()
-      .put("id", UUID.randomUUID().toString())
-      .put("patronId", UUID.randomUUID().toString())
-      .put("loanId", UUID.randomUUID().toString())
-      .put("actionType", "Check-out");
-
-    JsonObject thirdSession = new JsonObject()
-      .put("id", UUID.randomUUID().toString())
-      .put("patronId", UUID.randomUUID().toString())
-      .put("loanId", UUID.randomUUID().toString())
-      .put("actionType", "Check-in");
+    JsonObject firstSession = createSession("Check-out");
+    JsonObject secondSession = createSession("Check-out");
+    JsonObject thirdSession = createSession("Check-in");
 
     assertRecordClient.create(firstSession);
     assertRecordClient.create(secondSession);
@@ -114,23 +104,18 @@ public class PatronActionSessionAPITest extends ApiTests {
   public void canCreatePatronActionSession() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
-    JsonObject request = new JsonObject()
-      .put("id", UUID.randomUUID().toString())
-      .put("patronId", UUID.randomUUID().toString())
-      .put("loanId", UUID.randomUUID().toString())
-      .put("actionType", "Check-out");
-    assertRecordClient.create(request);
+    String actionType = "Check-out";
+    JsonObject request = createSession(actionType);
+
+    IndividualResource individualResource = assertRecordClient.create(request);
+    assertThat(individualResource.getJson().getString("actionType"), is(actionType));
   }
 
   @Test
   public void canGetPatronActionSession() throws InterruptedException, MalformedURLException,
     TimeoutException, ExecutionException {
 
-    JsonObject session = new JsonObject()
-      .put("id", UUID.randomUUID().toString())
-      .put("patronId", UUID.randomUUID().toString())
-      .put("loanId", UUID.randomUUID().toString())
-      .put("actionType", "Check-out");
+    JsonObject session = createSession("Check-out");
     String id = assertRecordClient.create(session).getJson().getString("id");
 
     IndividualResource individualResource = assertRecordClient.getById(id);
@@ -144,15 +129,10 @@ public class PatronActionSessionAPITest extends ApiTests {
   public void canDeletePatronActionSession() throws InterruptedException, MalformedURLException,
     TimeoutException, ExecutionException {
 
-    UUID id = UUID.randomUUID();
-    JsonObject request = new JsonObject()
-      .put("id", id.toString())
-      .put("patronId", UUID.randomUUID().toString())
-      .put("loanId", UUID.randomUUID().toString())
-      .put("actionType", "Check-out");
+    JsonObject request = createSession("Check-out");
 
-    assertRecordClient.create(request).getId();
-    assertRecordClient.deleteById(id);
+    String id = assertRecordClient.create(request).getId();
+    assertRecordClient.deleteById(UUID.fromString(id));
     MultipleRecords<JsonObject> sessions = assertRecordClient.getAll();
 
     assertThat(sessions.getRecords().size(), is(0));
@@ -173,16 +153,11 @@ public class PatronActionSessionAPITest extends ApiTests {
   public void canUpdatePatronActiveSession() throws InterruptedException, MalformedURLException,
     TimeoutException, ExecutionException {
 
-    JsonObject request = new JsonObject()
-      .put("id", UUID.randomUUID().toString())
-      .put("patronId", UUID.randomUUID().toString())
-      .put("loanId", UUID.randomUUID().toString())
-      .put("actionType", "Check-out");
+    JsonObject request = createSession("Check-out");
 
     String id = assertRecordClient.create(request).getJson().getString("id");
-    String newLoanId = UUID.randomUUID().toString();
     request
-      .put("loanId", newLoanId)
+      .put("loanId", existingLoanId)
       .put("actionType", "Check-in");
     JsonResponse response = assertRecordClient.attemptPutById(request);
 
@@ -190,7 +165,7 @@ public class PatronActionSessionAPITest extends ApiTests {
 
     IndividualResource updatedPatronActionSession = assertRecordClient.getById(id);
 
-    assertThat(updatedPatronActionSession.getJson().getString("loanId"), is(newLoanId));
+    assertThat(updatedPatronActionSession.getJson().getString("loanId"), is(existingLoanId));
     assertThat(updatedPatronActionSession.getJson().getString("actionType"), is("Check-in"));
   }
 
@@ -198,13 +173,18 @@ public class PatronActionSessionAPITest extends ApiTests {
   public void cannotUpdateNonExistentActionSession() throws InterruptedException, MalformedURLException,
     TimeoutException, ExecutionException {
 
-    JsonObject nonExistPatronActionSession = new JsonObject()
-      .put("id", UUID.randomUUID().toString())
-      .put("patronId", UUID.randomUUID().toString())
-      .put("loanId", UUID.randomUUID().toString())
-      .put("actionType", "Check-out");
+    JsonObject nonExistPatronActionSession = createSession("Check-out");
     JsonResponse response = assertRecordClient.attemptPutById(nonExistPatronActionSession);
 
     assertThat(response.getStatusCode(), is(404));
+  }
+
+  private JsonObject createSession(String actionType){
+    JsonObject jsonObject = new JsonObject()
+      .put("id", UUID.randomUUID().toString())
+      .put("patronId", UUID.randomUUID().toString())
+      .put("loanId", existingLoanId)
+      .put("actionType", actionType);
+    return jsonObject;
   }
 }
