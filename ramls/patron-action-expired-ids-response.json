@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Collection of patron ids who has expired session",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "patronIds": {
+      "description": "List of patron ids",
+      "id": "patronIds",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "patronIds"
+  ]
+}

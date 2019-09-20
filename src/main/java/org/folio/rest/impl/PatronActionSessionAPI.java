@@ -1,5 +1,6 @@
 package org.folio.rest.impl;
 
+import static io.vertx.core.Future.succeededFuture;
 import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 
@@ -21,12 +22,15 @@ import io.vertx.ext.sql.ResultSet;
 import org.joda.time.DateTime;
 import org.joda.time.format.ISODateTimeFormat;
 
-import org.folio.cql2pgjson.exception.QueryValidationException;
 import org.folio.rest.RestVerticle;
+import org.folio.rest.jaxrs.model.Errors;
+import org.folio.rest.jaxrs.model.PatronActionExpiredIdsResponse;
 import org.folio.rest.jaxrs.model.PatronActionSession;
+import org.folio.rest.jaxrs.model.PatronActionSessionStorageExpiredSessionPatronIdsGetActionType;
 import org.folio.rest.jaxrs.model.PatronActionSessions;
 import org.folio.rest.jaxrs.resource.PatronActionSessionStorage;
 import org.folio.rest.persist.PgUtil;
+import org.folio.rest.tools.utils.ValidationHelper;
 import org.folio.support.PgClientFutureAdapter;
 
 public class PatronActionSessionAPI implements PatronActionSessionStorage {
@@ -75,14 +79,26 @@ public class PatronActionSessionAPI implements PatronActionSessionStorage {
 
   @Override
   public void getPatronActionSessionStorageExpiredSessionPatronIds(
-    String actionType, String lastTimeActionLimit, int limit, Map<String,
-    String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+    PatronActionSessionStorageExpiredSessionPatronIdsGetActionType actionType, String lastTimeActionLimit,
+    int limit, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
     PgClientFutureAdapter pgClient = PgClientFutureAdapter.create(vertxContext, okapiHeaders);
+    DateTime dateTimeLimit;
+    try {
+      dateTimeLimit = DateTime.parse(lastTimeActionLimit);
+    }
+    catch (Exception e){
+      Errors errors = ValidationHelper.createValidationErrorMessage("last_time_action_limit",
+        lastTimeActionLimit, "cannot be parsed");
+      asyncResultHandler.handle(succeededFuture(
+        PatronActionSessionStorage.PutPatronActionSessionStoragePatronActionSessionsByPatronSessionIdResponse
+          .respond422WithApplicationJson(errors)));
+      return;
+    }
 
-    String sql = toSelectExpiredSessionsQuery(tenantId, PatronActionSession.ActionType.fromValue(actionType),
-      limit, DateTime.parse(lastTimeActionLimit));
+    String sql = toSelectExpiredSessionsQuery(tenantId, PatronActionSession.ActionType.valueOf(actionType.name()),
+      limit, dateTimeLimit);
 
     pgClient.select(sql)
       .map(this::mapPatronIdResponse)
@@ -92,11 +108,12 @@ public class PatronActionSessionAPI implements PatronActionSessionStorage {
       .setHandler(asyncResultHandler);
   }
 
-  private List<String> mapPatronIdResponse(ResultSet resultSet) {
-    return resultSet.getRows()
+  private PatronActionExpiredIdsResponse mapPatronIdResponse(ResultSet resultSet) {
+    List<String> patronIds = resultSet.getRows()
       .stream()
       .map(json -> json.getString("patron_id"))
       .collect(Collectors.toList());
+    return new PatronActionExpiredIdsResponse().withPatronIds(patronIds);
   }
 
   @Override
@@ -125,13 +142,6 @@ public class PatronActionSessionAPI implements PatronActionSessionStorage {
   private Response mapExceptionToResponse(Throwable t) {
 
     LOGGER.error(t.getMessage(), t);
-
-    if (t.getClass() == QueryValidationException.class) {
-      return Response.status(400)
-        .header(CONTENT_TYPE, TEXT_PLAIN)
-        .entity(t.getMessage())
-        .build();
-    }
 
     return Response.status(500)
       .header(CONTENT_TYPE, TEXT_PLAIN)

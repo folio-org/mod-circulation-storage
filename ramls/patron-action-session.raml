@@ -12,6 +12,7 @@ types:
   patron-action-session: !include patron-action-session.json
   patron-action-sessions: !include patron-action-sessions.json
   errors: !include raml-util/schemas/errors.schema
+  patron-action-expired-ids-response: !include patron-action-expired-ids-response.json
 
 traits:
   pageable: !include raml-util/traits/pageable.raml
@@ -53,6 +54,7 @@ resourceTypes:
           action_type:
             description: Action type for patron notice session
             type: string
+            enum: ["Check-in", "Check-out"]
             required: true
           last_time_action_limit:
             description: Period of time for before that a session will be expired
@@ -71,9 +73,14 @@ resourceTypes:
             description: "Return list of notice groups"
             body:
               application/json:
-                type: string[]
+                type: patron-action-expired-ids-response
           500:
             description: "Internal server error"
             body:
               text/plain:
                 example: "Internal server error"
+          422:
+            description: "Validation error"
+            body:
+              application/json:
+                type: errors
