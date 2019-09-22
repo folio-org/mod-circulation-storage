@@ -40,7 +40,7 @@ import io.vertx.core.json.JsonObject;
 
 public class LoansAnonymizationApiTest extends ApiTests {
   private final AssertingRecordClient loansClient = new AssertingRecordClient(
-    client, StorageTestSuite.TENANT_ID, InterfaceUrls::loanStorageUrl);
+    client, StorageTestSuite.TENANT_ID, InterfaceUrls::loanStorageUrl, "loans");
 
   @Before
   public void beforeEach()

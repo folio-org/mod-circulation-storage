@@ -1,3 +1,19 @@
+## 9.3.0 2019-09-18
+
+* Stores whether a loan `due date has changed due to a recall` request (CIRCSTORE-156)
+* Adds `Manual due date change` event to patron notice policies (CIRCSTORE-151)
+
+## 9.2.0 2019-09-09
+
+* Can anonymize a list of loans (CIRCSTORE-137)
+* Adds `recipient user ID` to `scheduled notices` (CIRCSTORE-146)
+* Adds `request expiration` event to patron notice policies (CIRCSTORE-141)
+* Adds blank `request delivery staff slip` template (CIRCSTORE-150)
+* Adds reported missing database indexes (CIRCSTORE-139) 
+* Provides `anonymize-storage-loans 0.1` interface (CIRCSTORE-137)
+* Provides `patron-notice-policy-storage 0.9` interface (CIRCSTORE-141)
+* Provides `scheduled-notice-storage 0.3` interface (CIRCSTORE-146)
+
 ## 9.1.0 2019-07-24
 
 * Support hyphens in request status when using CQL = relation (CIRCSTORE-138)

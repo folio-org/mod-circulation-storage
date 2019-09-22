@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "loan-storage",
-      "version": "6.1",
+      "version": "6.2",
       "handlers": [
         {
           "methods": ["GET"],
@@ -234,7 +234,7 @@
     },
     {
       "id": "patron-notice-policy-storage",
-      "version": "0.9",
+      "version": "0.11",
       "handlers": [
         {
           "methods": ["POST"],
@@ -341,6 +341,33 @@
         }, {
           "methods": ["DELETE"],
           "pathPattern": "/_/tenant"
+        }
+      ]
+    },
+    {
+      "id": "patron-action-session-storage",
+      "version": "0.1",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/patron-action-session-storage/patron-action-sessions",
+          "permissionsRequired": ["patron-action-session-storage.patron-action-sessions.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/patron-action-session-storage/patron-action-sessions/{id}",
+          "permissionsRequired": ["patron-action-session-storage.patron-action-sessions.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/patron-action-session-storage/patron-action-sessions",
+          "permissionsRequired": ["patron-action-session-storage.patron-action-sessions.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/patron-action-session-storage/patron-action-sessions/{id}",
+          "permissionsRequired": ["patron-action-session-storage.patron-action-sessions.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/patron-action-session-storage/patron-action-sessions/{id}",
+          "permissionsRequired": ["patron-action-session-storage.patron-action-sessions.item.delete"]
         }
       ]
     }
@@ -607,6 +634,31 @@
       "description": "Delete all scheduled notices from storage"
     },
     {
+      "permissionName": "patron-action-session-storage.patron-action-sessions.collection.get",
+      "displayName": "Circulation storage - get patron action session collection",
+      "description": "Get patron action session collection from storage"
+    },
+    {
+      "permissionName": "patron-action-session-storage.patron-action-sessions.item.get",
+      "displayName": "Circulation storage - get patron action session",
+      "description": "Get individual patron action session by id"
+    },
+    {
+      "permissionName": "patron-action-session-storage.patron-action-sessions.item.post",
+      "displayName": "Circulation storage - post patron action session",
+      "description": "Create individual patron action session"
+    },
+    {
+      "permissionName": "patron-action-session-storage.patron-action-sessions.item.put",
+      "displayName": "Circulation storage - put patron action session",
+      "description": "Put patron action session by id"
+    },
+    {
+      "permissionName": "patron-action-session-storage.patron-action-sessions.item.delete",
+      "displayName": "Circulation storage - delete patron action session",
+      "description": "Delete patron action session by id"
+    },
+    {
       "permissionName": "circulation-storage.all",
       "displayName": "Circulation storage module - all permissions",
       "description": "Entire set of permissions needed to use the circulation storage module",
@@ -668,7 +720,12 @@
         "scheduled-notice-storage.scheduled-notices.item.put",
         "scheduled-notice-storage.scheduled-notices.item.delete",
         "scheduled-notice-storage.scheduled-notices.collection.delete",
-        "anonymize-storage-loans.post"
+        "anonymize-storage-loans.post",
+        "patron-action-session-storage.patron-action-sessions.collection.get",
+        "patron-action-session-storage.patron-action-sessions.item.get",
+        "patron-action-session-storage.patron-action-sessions.item.post",
+        "patron-action-session-storage.patron-action-sessions.item.put",
+        "patron-action-session-storage.patron-action-sessions.item.delete"
       ]
     },
     {
@@ -707,11 +764,26 @@
     "databaseConnection": "true"
   },
   "launchDescriptor": {
-    "dockerImage" : "${artifactId}:${version}",
-    "dockerArgs" : {
-      "HostConfig" : { "PortBindings": { "8081/tcp": [{ "HostPort": "%p" }] } }
+    "dockerImage": "${artifactId}:${version}",
+    "dockerPull": false,
+    "dockerArgs": {
+      "HostConfig": {
+        "Memory": 357913941,
+        "PortBindings": { "8081/tcp": [ { "HostPort": "%p" } ] }
+      }
     },
-    "dockerPull" : false
+    "env": [
+      { "name": "JAVA_OPTIONS",
+        "value": "-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap"
+      },
+      { "name": "DB_HOST", "value": "postgres" },
+      { "name": "DB_PORT", "value": "5432" },
+      { "name": "DB_USERNAME", "value": "folio_admin" },
+      { "name": "DB_PASSWORD", "value": "folio_admin" },
+      { "name": "DB_DATABASE", "value": "okapi_modules" },
+      { "name": "DB_QUERYTIMEOUT", "value": "60000" },
+      { "name": "DB_CHARSET", "value": "UTF-8" },
+      { "name": "DB_MAXPOOLSIZE", "value": "5" }
+    ]
   }
 }
-
