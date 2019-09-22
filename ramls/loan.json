@@ -21,9 +21,10 @@
       "description": "ID of the item lent to the patron",
       "type": "string"
     },
-    "itemLocationId": {
+    "itemEffectiveLocationAtCheckOut": {
       "description": "The effective location, at the time of checkout, of the item loaned to the patron. This is a UUID that refers to /locations/{id}.",
-      "type": "string"
+      "type": "string",
+      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
     },
     "status": {
       "description": "Overall status of the loan",
