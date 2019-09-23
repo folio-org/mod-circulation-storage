@@ -3,9 +3,9 @@
   "userId": "df7f4993-8c14-4a0f-ab63-93975ab01c76",
   "proxyUserId": "346ad017-dac1-417d-9ed8-0ac7eeb886aa",
   "itemId": "cb20f34f-b773-462f-a091-b233cc96b9e6",
-  "itemLocationId": "07f83048-6737-4c6a-a3bc-c49cd9beaa38",
   "loanDate": "2017-03-01T23:11:00-01:00",
   "dueDate": "2017-03-15T23:11:00-01:00",
+  "itemEffectiveLocationAtCheckOut": "07f83048-6737-4c6a-a3bc-c49cd9beaa38",
   "checkoutServicePointId": "8bb53832-c9fb-47ef-986d-5b1a498a8b30",
   "checkinServicePointId": "8bb53832-c9fb-47ef-986d-5b1a498a8b30",
   "status": {
