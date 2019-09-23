@@ -551,7 +551,7 @@ public class LoansApiTest extends ApiTests {
     MalformedURLException,
     TimeoutException,
     ExecutionException {
- 
+
     UUID itemId = UUID.randomUUID();
 
     JsonObject firstLoanRequest = new LoanRequestBuilder()
