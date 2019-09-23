@@ -75,6 +75,7 @@ public class LoansApiTest extends ApiTests {
 
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
+    UUID itemLocationAtCheckOut = UUID.randomUUID();
     UUID userId = UUID.randomUUID();
     UUID proxyUserId = UUID.randomUUID();
     UUID loanPolicyId = UUID.randomUUID();
@@ -89,6 +90,7 @@ public class LoansApiTest extends ApiTests {
       .withAction("checkedout")
       .withItemStatus("Checked out")
       .withDueDate(new DateTime(2017, 7, 27, 10, 23, 43, DateTimeZone.UTC))
+      .withItemEffectiveLocationAtCheckOut(itemLocationAtCheckOut)
       .withLoanPolicyId(loanPolicyId)
       .create();
 
@@ -116,6 +118,9 @@ public class LoansApiTest extends ApiTests {
 
     assertThat("item status is not checked out",
       loan.getString("itemStatus"), is("Checked out"));
+
+    assertThat("itemEffectiveLocationAtCheckOut does not match",
+      loan.getString("itemEffectiveLocationAtCheckOut"), is(itemLocationAtCheckOut.toString()));
 
     assertThat("loan policy should be set",
       loan.getString("loanPolicyId"), is(loanPolicyId.toString()));
@@ -546,7 +551,7 @@ public class LoansApiTest extends ApiTests {
     MalformedURLException,
     TimeoutException,
     ExecutionException {
-
+ 
     UUID itemId = UUID.randomUUID();
 
     JsonObject firstLoanRequest = new LoanRequestBuilder()
