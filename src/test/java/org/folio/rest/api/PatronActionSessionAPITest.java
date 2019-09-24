@@ -254,7 +254,6 @@ public class PatronActionSessionAPITest extends ApiTests {
     final JsonResponse response = getCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(response, isOk());
-
     return response.getJson().getJsonArray("patronIds").getList();
   }
 }
