@@ -6,6 +6,7 @@ import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 
 import static org.folio.rest.persist.PostgresClient.convertToPsqlStandard;
 
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -37,7 +38,16 @@ public class PatronActionSessionAPI implements PatronActionSessionStorage {
 
   private static final String PATRON_ACTION_SESSION_TABLE = "patron_action_session";
   private static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
-  private static final Logger LOGGER = LoggerFactory.getLogger(PatronActionSessionStorage.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(PatronActionSessionAPI.class);
+  private static final EnumMap<PatronActionSessionStorageExpiredSessionPatronIdsGetActionType,
+    PatronActionSession.ActionType> ACTION_TYPE_MAP = new EnumMap<>(
+      PatronActionSessionStorageExpiredSessionPatronIdsGetActionType.class);
+
+  static {
+    ACTION_TYPE_MAP.put(PatronActionSessionStorageExpiredSessionPatronIdsGetActionType.CHECKIN, PatronActionSession.ActionType.CHECK_IN);
+    ACTION_TYPE_MAP.put(PatronActionSessionStorageExpiredSessionPatronIdsGetActionType.CHECKOUT, PatronActionSession.ActionType.CHECK_OUT);
+  }
+
 
   @Override
   public void getPatronActionSessionStoragePatronActionSessions(int offset,
@@ -97,7 +107,7 @@ public class PatronActionSessionAPI implements PatronActionSessionStorage {
       return;
     }
 
-    String sql = toSelectExpiredSessionsQuery(tenantId, PatronActionSession.ActionType.valueOf(actionType.name()),
+    String sql = toSelectExpiredSessionsQuery(tenantId, ACTION_TYPE_MAP.get(actionType),
       limit, dateTimeLimit);
 
     pgClient.select(sql)

@@ -5,18 +5,23 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isOk;
 
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.UpdateResult;
 
+import org.joda.time.DateTime;
+import org.joda.time.format.ISODateTimeFormat;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -26,6 +31,7 @@ import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.MultipleRecords;
+import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.TextResponse;
 import org.folio.rest.support.builders.LoanRequestBuilder;
 import org.folio.rest.support.http.AssertingRecordClient;
@@ -179,12 +185,76 @@ public class PatronActionSessionAPITest extends ApiTests {
     assertThat(response.getStatusCode(), is(404));
   }
 
-  private JsonObject createSession(String actionType){
+  @Test
+  public void canGetPatronActionSessionStorageExpiredSessionPatronIds() throws InterruptedException,
+    ExecutionException, TimeoutException, MalformedURLException {
+
+    String firstPatronId = UUID.randomUUID().toString();
+    createEntity(firstPatronId, "Check-in", DateTime.now().minusDays(3));
+    createEntity(firstPatronId, "Check-out", DateTime.now().minusDays(3));
+    String secondPatronId = UUID.randomUUID().toString();
+    createEntity(secondPatronId, "Check-in", DateTime.now().minus(1));
+    createEntity(secondPatronId, "Check-out", DateTime.now().minus(1));
+    createEntity(secondPatronId, "Check-out", DateTime.now().minus(1));
+
+    assertThat(getExpiredSessionPatronIds("Check-in", 2, DateTime.now().minusDays(2)).size(),
+      is(1));
+    assertThat(getExpiredSessionPatronIds("Check-out", 10, DateTime.now()).size(),
+      is(2));
+    assertThat(getExpiredSessionPatronIds("Check-in", 2, DateTime.now().minusDays(2)).get(0),
+      is(firstPatronId));
+    assertThat(getExpiredSessionPatronIds("Check-out", 2, DateTime.now().minusDays(2)).get(0),
+      is(firstPatronId));
+    assertThat(getExpiredSessionPatronIds("Check-out", 2, DateTime.now()).size(),
+      is(2));
+  }
+
+  private JsonObject createSession(String actionType) {
     JsonObject jsonObject = new JsonObject()
       .put("id", UUID.randomUUID().toString())
       .put("patronId", UUID.randomUUID().toString())
       .put("loanId", existingLoanId)
       .put("actionType", actionType);
     return jsonObject;
+  }
+
+  private JsonObject createEntity(String patronId, String actionType, DateTime createdDate) {
+
+    String userId = UUID.randomUUID().toString();
+    JsonObject metaData = new JsonObject()
+      .put("createdDate", createdDate.toString(ISODateTimeFormat.dateTime()))
+      .put("createdByUserId", userId)
+      .put("updatedDate", createdDate.toString(ISODateTimeFormat.dateTime()))
+      .put("updatedByUserId", userId);
+
+    JsonObject session = createSession(actionType);
+    session
+      .put("metadata", metaData)
+      .put("id", UUID.randomUUID().toString())
+      .put("patronId", patronId)
+      .put("loanId", existingLoanId)
+      .put("actionType", actionType);
+
+    CompletableFuture<String> future = new CompletableFuture<>();
+    PostgresClient
+      .getInstance(StorageTestSuite.getVertx(), TENANT_ID)
+      .save(PATRON_ACTION_SESSION, session, update -> future.complete(update.result()));
+    future.join();
+    return session;
+  }
+
+  private List<String> getExpiredSessionPatronIds(String actionType, int limit, DateTime lastActionDateLimit)
+    throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+
+    URL url = StorageTestSuite.storageUrl("/patron-action-session-storage/expired-session-patron-ids",
+      "action_type", actionType, "last_time_action_limit",
+      lastActionDateLimit.toString(ISODateTimeFormat.dateTime()), "limit", Integer.toString(limit));
+    final CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
+    this.client.get(url, StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
+    final JsonResponse response = getCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response, isOk());
+
+    return response.getJson().getJsonArray("patronIds").getList();
   }
 }
