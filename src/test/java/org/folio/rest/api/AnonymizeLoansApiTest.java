@@ -25,7 +25,7 @@ import io.vertx.core.json.JsonObject;
 
 public class AnonymizeLoansApiTest extends ApiTests {
   private final AssertingRecordClient loansClient = new AssertingRecordClient(
-    client, StorageTestSuite.TENANT_ID, InterfaceUrls::loanStorageUrl);
+    client, StorageTestSuite.TENANT_ID, InterfaceUrls::loanStorageUrl, "loans");
 
   private JsonArray loanIds;
   private int REQUEST_TIMEOUT = 500;

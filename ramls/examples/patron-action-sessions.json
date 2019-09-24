@@ -1,0 +1,16 @@
+{
+  "patronActionSessions": [
+    {
+      "id": "b86829e3-613d-47a6-9f71-d7fcc09c93a3",
+      "patronId": "2d5f138f-e088-4dff-80f6-9830f13bcde7",
+      "loanId": "718b576f-a6ca-4964-842e-63f79906bd32",
+      "actionType" : "Check-out"
+    },
+    {
+      "id": "5c1affcb-3c59-4e89-9223-c9f8850bf82c",
+      "patronId": "ee6a2ac0-51c2-4c33-9e3e-d2effa63b9dd",
+      "loanId": "12cf2185-e149-4430-af5e-52a6038a6cd6",
+      "actionType" : "Check-in"
+    }
+  ]
+}

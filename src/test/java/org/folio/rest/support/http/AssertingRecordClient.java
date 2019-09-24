@@ -1,9 +1,10 @@
 package org.folio.rest.support.http;
 
+import static org.hamcrest.junit.MatcherAssert.assertThat;
+
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isCreated;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNoContent;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isOk;
-import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -12,6 +13,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import io.vertx.core.json.JsonObject;
 
 import org.folio.rest.api.StorageTestSuite;
 import org.folio.rest.support.HttpClient;
@@ -23,20 +26,21 @@ import org.folio.rest.support.TextResponse;
 import org.folio.rest.support.builders.Builder;
 import org.folio.rest.support.builders.LoanRequestBuilder;
 
-import io.vertx.core.json.JsonObject;
-
 public class AssertingRecordClient {
   private final HttpClient client;
   private final String tenantId;
   private final UrlMaker urlMaker;
+  private final String collectionPropertyName;
 
   public AssertingRecordClient(
     HttpClient client,
     String tenantId,
-    UrlMaker urlMaker) {
+    UrlMaker urlMaker,
+    String collectionPropertyName) {
     this.client = client;
     this.tenantId = tenantId;
     this.urlMaker = urlMaker;
+    this.collectionPropertyName = collectionPropertyName;
   }
 
   public IndividualResource create(LoanRequestBuilder builder)
@@ -184,12 +188,7 @@ public class AssertingRecordClient {
     ExecutionException,
     TimeoutException {
 
-    CompletableFuture<TextResponse> deleteCompleted = new CompletableFuture<>();
-
-    client.delete(InterfaceUrls.loanStorageUrl(String.format("/%s", id)),
-      StorageTestSuite.TENANT_ID, ResponseHandler.text(deleteCompleted));
-
-    TextResponse deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
+    TextResponse deleteResponse = attemptDeleteById(id);
 
     assertThat("Failed to delete record", deleteResponse, isNoContent());
   }
@@ -211,7 +210,7 @@ public class AssertingRecordClient {
 
     assertThat(fetchedLoansResponse, isOk());
 
-    return MultipleRecords.fromJson(fetchedLoansResponse.getJson(), "loans");
+    return MultipleRecords.fromJson(fetchedLoansResponse.getJson(), collectionPropertyName);
   }
 
   public MultipleRecords<JsonObject> getAll()
@@ -230,6 +229,27 @@ public class AssertingRecordClient {
 
     assertThat(fetchedLoansResponse, isOk());
 
-    return MultipleRecords.fromJson(fetchedLoansResponse.getJson(), "loans");
+    return MultipleRecords.fromJson(fetchedLoansResponse.getJson(), collectionPropertyName);
+  }
+
+  public TextResponse attemptDeleteById(UUID id)
+    throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+
+    CompletableFuture<TextResponse> deleteCompleted = new CompletableFuture<>();
+
+    client.delete(urlMaker.combine(String.format("/%s", id)),
+      StorageTestSuite.TENANT_ID, ResponseHandler.text(deleteCompleted));
+
+    return deleteCompleted.get(5, TimeUnit.SECONDS);
+  }
+
+  public JsonResponse attemptPutById(JsonObject updateObject)
+    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+
+    CompletableFuture<JsonResponse> updateCompleted = new CompletableFuture<>();
+    client.put(urlMaker.combine(String.format("/%s", updateObject.getString("id"))),
+      updateObject, StorageTestSuite.TENANT_ID, ResponseHandler.json(updateCompleted));
+
+    return updateCompleted.get(5, TimeUnit.SECONDS);
   }
 }
