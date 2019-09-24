@@ -197,16 +197,23 @@ public class PatronActionSessionAPITest extends ApiTests {
     createEntity(secondPatronId, "Check-out", DateTime.now().minus(1));
     createEntity(secondPatronId, "Check-out", DateTime.now().minus(1));
 
-    assertThat(getExpiredSessionPatronIds("Check-in", 2, DateTime.now().minusDays(2)).size(),
+    assertThat(getExpiredSessionPatronIds("Check-in", 10, DateTime.now().minusDays(2)).size(),
       is(1));
     assertThat(getExpiredSessionPatronIds("Check-out", 10, DateTime.now()).size(),
       is(2));
-    assertThat(getExpiredSessionPatronIds("Check-in", 2, DateTime.now().minusDays(2)).get(0),
+    assertThat(getExpiredSessionPatronIds("Check-in", 10, DateTime.now().minusDays(2)).get(0),
       is(firstPatronId));
-    assertThat(getExpiredSessionPatronIds("Check-out", 2, DateTime.now().minusDays(2)).get(0),
+    assertThat(getExpiredSessionPatronIds("Check-out", 10, DateTime.now().minusDays(2)).get(0),
       is(firstPatronId));
     assertThat(getExpiredSessionPatronIds("Check-out", 2, DateTime.now()).size(),
       is(2));
+  }
+
+  @Test
+  public void cannotGetPatronActionSessionStorageExpiredSessionPatronIds()
+    throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+
+    checkGetExpiredSessionPatronIdsWithInvalidDate("Check-out", 10);
   }
 
   private JsonObject createSession(String actionType) {
@@ -232,8 +239,7 @@ public class PatronActionSessionAPITest extends ApiTests {
       .put("metadata", metaData)
       .put("id", UUID.randomUUID().toString())
       .put("patronId", patronId)
-      .put("loanId", existingLoanId)
-      .put("actionType", actionType);
+      .put("loanId", existingLoanId);
 
     CompletableFuture<String> future = new CompletableFuture<>();
     PostgresClient
@@ -249,11 +255,29 @@ public class PatronActionSessionAPITest extends ApiTests {
     URL url = StorageTestSuite.storageUrl("/patron-action-session-storage/expired-session-patron-ids",
       "action_type", actionType, "last_time_action_limit",
       lastActionDateLimit.toString(ISODateTimeFormat.dateTime()), "limit", Integer.toString(limit));
+
+    JsonResponse response = performRequest(url);
+    assertThat(response, isOk());
+    return response.getJson().getJsonArray("patronIds").getList();
+  }
+
+  private void checkGetExpiredSessionPatronIdsWithInvalidDate(String actionType, int limit)
+    throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+
+    URL url = StorageTestSuite.storageUrl("/patron-action-session-storage/expired-session-patron-ids",
+      "action_type", actionType, "last_time_action_limit",
+      "wrong date", "limit", Integer.toString(limit));
+    JsonResponse response = performRequest(url);
+    assertThat(response.getStatusCode(), is(422));
+  }
+
+  private JsonResponse performRequest(URL url)
+    throws InterruptedException, ExecutionException, TimeoutException {
+
     final CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
     this.client.get(url, StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
     final JsonResponse response = getCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(response, isOk());
-    return response.getJson().getJsonArray("patronIds").getList();
+    return response;
   }
 }
