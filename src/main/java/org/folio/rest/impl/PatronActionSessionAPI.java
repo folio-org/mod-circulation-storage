@@ -97,8 +97,7 @@ public class PatronActionSessionAPI implements PatronActionSessionStorage {
     DateTime dateTimeLimit;
     try {
       dateTimeLimit = DateTime.parse(lastTimeActionLimit);
-    }
-    catch (Exception e){
+    } catch (Exception e) {
       Errors errors = ValidationHelper.createValidationErrorMessage("last_time_action_limit",
         lastTimeActionLimit, "cannot be parsed");
       asyncResultHandler.handle(succeededFuture(
@@ -121,7 +120,7 @@ public class PatronActionSessionAPI implements PatronActionSessionStorage {
   private PatronActionExpiredIdsResponse mapPatronIdResponse(ResultSet resultSet) {
     List<String> patronIds = resultSet.getRows()
       .stream()
-      .map(json -> json.getString("patron_id"))
+      .map(json -> json.getString("patronId"))
       .collect(Collectors.toList());
     return new PatronActionExpiredIdsResponse().withPatronIds(patronIds);
   }
@@ -141,7 +140,7 @@ public class PatronActionSessionAPI implements PatronActionSessionStorage {
     String tableName = String.format("%s.%s", convertToPsqlStandard(tenant), PATRON_ACTION_SESSION_TABLE);
     String limitDate = lastActionDateLimit.toString(ISODateTimeFormat.dateTime());
 
-    return String.format("SELECT jsonb ->> 'patronId' AS \"patron_id\" " +
+    return String.format("SELECT jsonb ->> 'patronId' AS \"patronId\" " +
       "FROM %s " +
       "WHERE jsonb ->> 'actionType' = '%s' " +
       "GROUP BY jsonb ->> 'patronId' " +

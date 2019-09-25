@@ -68,8 +68,8 @@ public class PatronActionSessionAPITest extends ApiTests {
   public void canGetAllPatronActionSessions() throws InterruptedException, MalformedURLException,
     TimeoutException, ExecutionException {
 
-    JsonObject firstSession = createSession("Check-out");
-    JsonObject secondSession = createSession("Check-out");
+    JsonObject firstSession = createPatronActionSession("Check-out");
+    JsonObject secondSession = createPatronActionSession("Check-out");
 
     assertRecordClient.create(firstSession);
     assertRecordClient.create(secondSession);
@@ -91,9 +91,9 @@ public class PatronActionSessionAPITest extends ApiTests {
   public void canGetPatronActionSessionsByQueryAndLimit() throws InterruptedException, MalformedURLException,
     TimeoutException, ExecutionException {
 
-    JsonObject firstSession = createSession("Check-out");
-    JsonObject secondSession = createSession("Check-out");
-    JsonObject thirdSession = createSession("Check-in");
+    JsonObject firstSession = createPatronActionSession("Check-out");
+    JsonObject secondSession = createPatronActionSession("Check-out");
+    JsonObject thirdSession = createPatronActionSession("Check-in");
 
     assertRecordClient.create(firstSession);
     assertRecordClient.create(secondSession);
@@ -111,7 +111,7 @@ public class PatronActionSessionAPITest extends ApiTests {
     MalformedURLException, TimeoutException, ExecutionException {
 
     String actionType = "Check-out";
-    JsonObject request = createSession(actionType);
+    JsonObject request = createPatronActionSession(actionType);
 
     IndividualResource individualResource = assertRecordClient.create(request);
     assertThat(individualResource.getJson().getString("actionType"), is(actionType));
@@ -121,7 +121,7 @@ public class PatronActionSessionAPITest extends ApiTests {
   public void canGetPatronActionSession() throws InterruptedException, MalformedURLException,
     TimeoutException, ExecutionException {
 
-    JsonObject session = createSession("Check-out");
+    JsonObject session = createPatronActionSession("Check-out");
     String id = assertRecordClient.create(session).getJson().getString("id");
 
     IndividualResource individualResource = assertRecordClient.getById(id);
@@ -135,7 +135,7 @@ public class PatronActionSessionAPITest extends ApiTests {
   public void canDeletePatronActionSession() throws InterruptedException, MalformedURLException,
     TimeoutException, ExecutionException {
 
-    JsonObject request = createSession("Check-out");
+    JsonObject request = createPatronActionSession("Check-out");
 
     String id = assertRecordClient.create(request).getId();
     assertRecordClient.deleteById(UUID.fromString(id));
@@ -159,7 +159,7 @@ public class PatronActionSessionAPITest extends ApiTests {
   public void canUpdatePatronActiveSession() throws InterruptedException, MalformedURLException,
     TimeoutException, ExecutionException {
 
-    JsonObject request = createSession("Check-out");
+    JsonObject request = createPatronActionSession("Check-out");
 
     String id = assertRecordClient.create(request).getJson().getString("id");
     request
@@ -179,7 +179,7 @@ public class PatronActionSessionAPITest extends ApiTests {
   public void cannotUpdateNonExistentActionSession() throws InterruptedException, MalformedURLException,
     TimeoutException, ExecutionException {
 
-    JsonObject nonExistPatronActionSession = createSession("Check-out");
+    JsonObject nonExistPatronActionSession = createPatronActionSession("Check-out");
     JsonResponse response = assertRecordClient.attemptPutById(nonExistPatronActionSession);
 
     assertThat(response.getStatusCode(), is(404));
@@ -190,12 +190,11 @@ public class PatronActionSessionAPITest extends ApiTests {
     ExecutionException, TimeoutException, MalformedURLException {
 
     String firstPatronId = UUID.randomUUID().toString();
-    createEntity(firstPatronId, "Check-in", DateTime.now().minusDays(3));
-    createEntity(firstPatronId, "Check-out", DateTime.now().minusDays(3));
+    createPatronActionSessionRecords(firstPatronId, "Check-in", DateTime.now().minusDays(3));
+    createPatronActionSessionRecords(firstPatronId, "Check-out", DateTime.now().minusDays(3));
     String secondPatronId = UUID.randomUUID().toString();
-    createEntity(secondPatronId, "Check-in", DateTime.now().minus(1));
-    createEntity(secondPatronId, "Check-out", DateTime.now().minus(1));
-    createEntity(secondPatronId, "Check-out", DateTime.now().minus(1));
+    createPatronActionSessionRecords(secondPatronId, "Check-in", DateTime.now().minus(1));
+    createPatronActionSessionRecords(secondPatronId, "Check-out", DateTime.now().minus(1));
 
     assertThat(getExpiredSessionPatronIds("Check-in", 10, DateTime.now().minusDays(2)).size(),
       is(1));
@@ -205,18 +204,22 @@ public class PatronActionSessionAPITest extends ApiTests {
       is(firstPatronId));
     assertThat(getExpiredSessionPatronIds("Check-out", 10, DateTime.now().minusDays(2)).get(0),
       is(firstPatronId));
-    assertThat(getExpiredSessionPatronIds("Check-out", 2, DateTime.now()).size(),
-      is(2));
+    assertThat(getExpiredSessionPatronIds("Check-out", 1, DateTime.now()).size(),
+      is(1));
   }
 
   @Test
   public void cannotGetPatronActionSessionStorageExpiredSessionPatronIds()
     throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
 
-    checkGetExpiredSessionPatronIdsWithInvalidDate("Check-out", 10);
+    URL url = StorageTestSuite.storageUrl("/patron-action-session-storage/expired-session-patron-ids",
+      "action_type", "Check-out", "last_time_action_limit",
+      "wrong date", "limit", Integer.toString(10));
+    JsonResponse response = get(url);
+    assertThat(response.getStatusCode(), is(422));
   }
 
-  private JsonObject createSession(String actionType) {
+  private JsonObject createPatronActionSession(String actionType) {
     JsonObject jsonObject = new JsonObject()
       .put("id", UUID.randomUUID().toString())
       .put("patronId", UUID.randomUUID().toString())
@@ -225,7 +228,8 @@ public class PatronActionSessionAPITest extends ApiTests {
     return jsonObject;
   }
 
-  private JsonObject createEntity(String patronId, String actionType, DateTime createdDate) {
+  private JsonObject createPatronActionSessionRecords(String patronId, String actionType,
+                                                      DateTime createdDate) {
 
     String userId = UUID.randomUUID().toString();
     JsonObject metaData = new JsonObject()
@@ -234,7 +238,7 @@ public class PatronActionSessionAPITest extends ApiTests {
       .put("updatedDate", createdDate.toString(ISODateTimeFormat.dateTime()))
       .put("updatedByUserId", userId);
 
-    JsonObject session = createSession(actionType);
+    JsonObject session = createPatronActionSession(actionType);
     session
       .put("metadata", metaData)
       .put("id", UUID.randomUUID().toString())
@@ -256,22 +260,12 @@ public class PatronActionSessionAPITest extends ApiTests {
       "action_type", actionType, "last_time_action_limit",
       lastActionDateLimit.toString(ISODateTimeFormat.dateTime()), "limit", Integer.toString(limit));
 
-    JsonResponse response = performRequest(url);
+    JsonResponse response = get(url);
     assertThat(response, isOk());
     return response.getJson().getJsonArray("patronIds").getList();
   }
 
-  private void checkGetExpiredSessionPatronIdsWithInvalidDate(String actionType, int limit)
-    throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
-
-    URL url = StorageTestSuite.storageUrl("/patron-action-session-storage/expired-session-patron-ids",
-      "action_type", actionType, "last_time_action_limit",
-      "wrong date", "limit", Integer.toString(limit));
-    JsonResponse response = performRequest(url);
-    assertThat(response.getStatusCode(), is(422));
-  }
-
-  private JsonResponse performRequest(URL url)
+  private JsonResponse get(URL url)
     throws InterruptedException, ExecutionException, TimeoutException {
 
     final CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
