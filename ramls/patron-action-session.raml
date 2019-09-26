@@ -56,8 +56,8 @@ resourceTypes:
             type: string
             enum: ["Check-in", "Check-out"]
             required: true
-          last_time_action_limit:
-            description: Period of time for before that a session will be expired
+          max_session_change_time:
+            description: The maximum time of last session modification
             type: string
             required: true
           limit:
