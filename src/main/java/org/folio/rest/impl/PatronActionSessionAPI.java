@@ -16,10 +16,12 @@ import javax.ws.rs.core.Response;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.sql.ResultSet;
 
+import org.folio.rest.jaxrs.model.ExpiredSession;
 import org.joda.time.DateTime;
 import org.joda.time.format.ISODateTimeFormat;
 
@@ -42,6 +44,8 @@ public class PatronActionSessionAPI implements PatronActionSessionStorage {
   private static final EnumMap<PatronActionSessionStorageExpiredSessionPatronIdsGetActionType,
     PatronActionSession.ActionType> ACTION_TYPE_MAP = new EnumMap<>(
       PatronActionSessionStorageExpiredSessionPatronIdsGetActionType.class);
+  private static final String PATRON_ID = "patronId";
+  private static final String ACTION_TYPE = "actionType";
 
   static {
     ACTION_TYPE_MAP.put(PatronActionSessionStorageExpiredSessionPatronIdsGetActionType.CHECKIN, PatronActionSession.ActionType.CHECK_IN);
@@ -89,24 +93,28 @@ public class PatronActionSessionAPI implements PatronActionSessionStorage {
 
   @Override
   public void getPatronActionSessionStorageExpiredSessionPatronIds(
-    PatronActionSessionStorageExpiredSessionPatronIdsGetActionType actionType, String lastTimeActionLimit,
+    PatronActionSessionStorageExpiredSessionPatronIdsGetActionType actionType, String sessionInactivityTimeLimit,
     int limit, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
     PgClientFutureAdapter pgClient = PgClientFutureAdapter.create(vertxContext, okapiHeaders);
     DateTime dateTimeLimit;
     try {
-      dateTimeLimit = DateTime.parse(lastTimeActionLimit);
+      dateTimeLimit = DateTime.parse(sessionInactivityTimeLimit);
     } catch (Exception e) {
       Errors errors = ValidationHelper.createValidationErrorMessage("last_time_action_limit",
-        lastTimeActionLimit, "cannot be parsed");
+        sessionInactivityTimeLimit, "cannot be parsed");
       asyncResultHandler.handle(succeededFuture(
         PatronActionSessionStorage.PutPatronActionSessionStoragePatronActionSessionsByPatronSessionIdResponse
           .respond422WithApplicationJson(errors)));
       return;
     }
 
-    String sql = toSelectExpiredSessionsQuery(tenantId, ACTION_TYPE_MAP.get(actionType),
+    PatronActionSession.ActionType mappedActionType = actionType != null
+      ? ACTION_TYPE_MAP.get(actionType)
+      : null;
+
+    String sql = toSelectExpiredSessionsQuery(tenantId, mappedActionType,
       limit, dateTimeLimit);
 
     pgClient.select(sql)
@@ -118,11 +126,17 @@ public class PatronActionSessionAPI implements PatronActionSessionStorage {
   }
 
   private PatronActionExpiredIdsResponse mapPatronIdResponse(ResultSet resultSet) {
-    List<String> patronIds = resultSet.getRows()
+    List<ExpiredSession> expiredSessions = resultSet.getRows()
       .stream()
-      .map(json -> json.getString("patronId"))
+      .map(this::mapToExpiredSession)
       .collect(Collectors.toList());
-    return new PatronActionExpiredIdsResponse().withPatronIds(patronIds);
+    return new PatronActionExpiredIdsResponse().withExpiredSessions(expiredSessions);
+  }
+
+  private ExpiredSession mapToExpiredSession(JsonObject jsonObject){
+    return new ExpiredSession()
+      .withPatronId(jsonObject.getString(PATRON_ID))
+      .withActionType(ExpiredSession.ActionType.fromValue(jsonObject.getString(ACTION_TYPE)));
   }
 
   @Override
@@ -137,15 +151,19 @@ public class PatronActionSessionAPI implements PatronActionSessionStorage {
   private String toSelectExpiredSessionsQuery(String tenant, PatronActionSession.ActionType actionType,
                                                       int limit, DateTime lastActionDateLimit){
 
+    String actionTypeFilter = actionType != null
+      ? String.format("WHERE jsonb ->> 'actionType' = '%s'", actionType)
+      : "";
     String tableName = String.format("%s.%s", convertToPsqlStandard(tenant), PATRON_ACTION_SESSION_TABLE);
     String limitDate = lastActionDateLimit.toString(ISODateTimeFormat.dateTime());
 
-    return String.format("SELECT jsonb ->> 'patronId' AS \"patronId\" " +
-      "FROM %s " +
-      "WHERE jsonb ->> 'actionType' = '%s' " +
-      "GROUP BY jsonb ->> 'patronId' " +
+    return String.format("SELECT jsonb ->> 'patronId' AS \"%s\", " +
+      "jsonb ->> 'actionType' AS \"%s\" " +
+      "FROM %s %s " +
+      "GROUP BY jsonb ->> 'patronId', jsonb ->> 'actionType' " +
       "HAVING max(jsonb #>> '{metadata,createdDate}') < '%s' " +
-      "LIMIT '%d'", tableName, actionType, limitDate, limit);
+      "ORDER BY max(jsonb #>> '{metadata,createdDate}') ASC " +
+      "LIMIT '%d'", PATRON_ID, ACTION_TYPE, tableName, actionTypeFilter, limitDate, limit);
   }
 
   private Response mapExceptionToResponse(Throwable t) {

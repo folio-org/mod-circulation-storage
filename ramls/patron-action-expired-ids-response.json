@@ -4,16 +4,32 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "patronIds": {
-      "description": "List of patron ids",
-      "id": "patronIds",
+    "expiredSessions": {
+      "description": "List of expired sessions",
+      "id": "expiredSessions",
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "patronId": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+            "description": "Id of patron who has expired session"
+          },
+          "actionType": {
+            "type": "string",
+            "enum": [
+              "Check-out",
+              "Check-in"
+            ],
+            "description": "Type of expired session"
+          }
+        }
       }
     }
   },
   "required": [
-    "patronIds"
+    "expiredSessions"
   ]
 }

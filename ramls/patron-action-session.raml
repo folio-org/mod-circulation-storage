@@ -55,9 +55,10 @@ resourceTypes:
             description: Action type for patron notice session
             type: string
             enum: ["Check-in", "Check-out"]
-            required: true
-          max_session_change_time:
-            description: The maximum time of last session modification
+            required: false
+          session_inactivity_time_limit:
+            description: This parameter defines time in format up to which all sessions are considered as expired
+            example: 2018-11-29T13:23:36Z
             type: string
             required: true
           limit:
