@@ -50,11 +50,11 @@ resourceTypes:
         is: [validate]
   /expired-session-patron-ids:
       get:
+        is: [validate]
         queryParameters:
           action_type:
             description: Action type for patron notice session
             type: string
-            enum: ["Check-in", "Check-out"]
             required: false
           session_inactivity_time_limit:
             description: This parameter defines time in format up to which all sessions are considered as expired
@@ -80,8 +80,3 @@ resourceTypes:
             body:
               text/plain:
                 example: "Internal server error"
-          422:
-            description: "Validation error"
-            body:
-              application/json:
-                type: errors

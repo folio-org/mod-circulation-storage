@@ -215,14 +215,34 @@ public class PatronActionSessionAPITest extends ApiTests {
   public void canGetPatronActionSessionStorageExpiredSessionPatronIdsWithoutActionType()
     throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
 
-    String patronId = UUID.randomUUID().toString();
-    createPatronActionSessionRecords(patronId, "Check-in", DateTime.now().minusDays(2));
+    String firstPatronId = UUID.randomUUID().toString();
+    createPatronActionSessionRecords(firstPatronId, "Check-in", DateTime.now().minusDays(2));
+    String secondPatronId = UUID.randomUUID().toString();
+    createPatronActionSessionRecords(secondPatronId, "Check-out", DateTime.now().minusDays(1));
 
-    JsonArray jsonArray = getExpiredSessionPatronIds(10, DateTime.now().minusDays(2));
+    JsonArray jsonArray = getExpiredSessionPatronIds(10, DateTime.now());
 
-    assertThat(jsonArray.size(), is(1));
-    assertThat(jsonArray.getJsonObject(0).getString("patronId"), is(patronId));
+    assertThat(jsonArray.size(), is(2));
+    assertThat(jsonArray.getJsonObject(0).getString("patronId"), is(firstPatronId));
     assertThat(jsonArray.getJsonObject(0).getString("actionType"), is("Check-in"));
+    assertThat(jsonArray.getJsonObject(1).getString("patronId"), is(secondPatronId));
+    assertThat(jsonArray.getJsonObject(1).getString("actionType"), is("Check-out"));
+  }
+
+  @Test
+  public void cannotGetPatronActionSessionStorageExpiredSessionPatronIdsWithWrongActionType()
+    throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+
+    String firstPatronId = UUID.randomUUID().toString();
+    createPatronActionSessionRecords(firstPatronId, "Check-in", DateTime.now().minusDays(2));
+
+    URL url = StorageTestSuite.storageUrl("/patron-action-session-storage/expired-session-patron-ids",
+      "action_type", "WrongType", "session_inactivity_time_limit",
+      DateTime.now().minusDays(2).toString(ISODateTimeFormat.dateTime()), "limit", "10");
+    JsonResponse response = get(url);
+    assertThat(response.getStatusCode(), is(422));
+    assertThat(response.getJson().getJsonArray("errors").getJsonObject(0).getString("message"),
+      is("Invalid action type value"));
   }
 
   @Test
@@ -234,6 +254,8 @@ public class PatronActionSessionAPITest extends ApiTests {
       "wrong date", "limit", Integer.toString(10));
     JsonResponse response = get(url);
     assertThat(response.getStatusCode(), is(422));
+    assertThat(response.getJson().getJsonArray("errors").getJsonObject(0).getString("message"),
+      is("Date cannot be parsed"));
   }
 
   private JsonObject createPatronActionSession(String actionType) {
@@ -273,8 +295,9 @@ public class PatronActionSessionAPITest extends ApiTests {
   private JsonArray getExpiredSessionPatronIds(String actionType, int limit, DateTime lastActionDateLimit)
     throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
 
+    String actionTypeFilter = actionType != null ? actionType : "";
     URL url = StorageTestSuite.storageUrl("/patron-action-session-storage/expired-session-patron-ids",
-      "action_type", actionType, "session_inactivity_time_limit",
+      "action_type", actionTypeFilter, "session_inactivity_time_limit",
       lastActionDateLimit.toString(ISODateTimeFormat.dateTime()), "limit", Integer.toString(limit));
 
     JsonResponse response = get(url);
@@ -285,12 +308,7 @@ public class PatronActionSessionAPITest extends ApiTests {
   private JsonArray getExpiredSessionPatronIds(int limit, DateTime lastActionDateLimit)
     throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
 
-    URL url = StorageTestSuite.storageUrl("/patron-action-session-storage/expired-session-patron-ids", "session_inactivity_time_limit",
-      lastActionDateLimit.toString(ISODateTimeFormat.dateTime()), "limit", Integer.toString(limit));
-
-    JsonResponse response = get(url);
-    assertThat(response, isOk());
-    return response.getJson().getJsonArray("expiredSessions");
+    return getExpiredSessionPatronIds(null, limit, lastActionDateLimit);
   }
 
   private JsonResponse get(URL url)

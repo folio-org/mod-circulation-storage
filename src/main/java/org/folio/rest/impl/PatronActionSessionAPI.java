@@ -6,7 +6,6 @@ import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 
 import static org.folio.rest.persist.PostgresClient.convertToPsqlStandard;
 
-import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -21,15 +20,16 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.sql.ResultSet;
 
-import org.folio.rest.jaxrs.model.ExpiredSession;
+import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.format.ISODateTimeFormat;
 
 import org.folio.rest.RestVerticle;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Errors;
+import org.folio.rest.jaxrs.model.ExpiredSession;
 import org.folio.rest.jaxrs.model.PatronActionExpiredIdsResponse;
 import org.folio.rest.jaxrs.model.PatronActionSession;
-import org.folio.rest.jaxrs.model.PatronActionSessionStorageExpiredSessionPatronIdsGetActionType;
 import org.folio.rest.jaxrs.model.PatronActionSessions;
 import org.folio.rest.jaxrs.resource.PatronActionSessionStorage;
 import org.folio.rest.persist.PgUtil;
@@ -41,17 +41,8 @@ public class PatronActionSessionAPI implements PatronActionSessionStorage {
   private static final String PATRON_ACTION_SESSION_TABLE = "patron_action_session";
   private static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
   private static final Logger LOGGER = LoggerFactory.getLogger(PatronActionSessionAPI.class);
-  private static final EnumMap<PatronActionSessionStorageExpiredSessionPatronIdsGetActionType,
-    PatronActionSession.ActionType> ACTION_TYPE_MAP = new EnumMap<>(
-      PatronActionSessionStorageExpiredSessionPatronIdsGetActionType.class);
   private static final String PATRON_ID = "patronId";
   private static final String ACTION_TYPE = "actionType";
-
-  static {
-    ACTION_TYPE_MAP.put(PatronActionSessionStorageExpiredSessionPatronIdsGetActionType.CHECKIN, PatronActionSession.ActionType.CHECK_IN);
-    ACTION_TYPE_MAP.put(PatronActionSessionStorageExpiredSessionPatronIdsGetActionType.CHECKOUT, PatronActionSession.ActionType.CHECK_OUT);
-  }
-
 
   @Override
   public void getPatronActionSessionStoragePatronActionSessions(int offset,
@@ -91,10 +82,11 @@ public class PatronActionSessionAPI implements PatronActionSessionStorage {
       DeletePatronActionSessionStoragePatronActionSessionsByPatronSessionIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void getPatronActionSessionStorageExpiredSessionPatronIds(
-    PatronActionSessionStorageExpiredSessionPatronIdsGetActionType actionType, String sessionInactivityTimeLimit,
-    int limit, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+    String actionType, String sessionInactivityTimeLimit, int limit, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
     PgClientFutureAdapter pgClient = PgClientFutureAdapter.create(vertxContext, okapiHeaders);
@@ -102,17 +94,27 @@ public class PatronActionSessionAPI implements PatronActionSessionStorage {
     try {
       dateTimeLimit = DateTime.parse(sessionInactivityTimeLimit);
     } catch (Exception e) {
-      Errors errors = ValidationHelper.createValidationErrorMessage("last_time_action_limit",
-        sessionInactivityTimeLimit, "cannot be parsed");
+      Errors errors = ValidationHelper.createValidationErrorMessage("session_inactivity_time_limit",
+        sessionInactivityTimeLimit, "Date cannot be parsed");
       asyncResultHandler.handle(succeededFuture(
         PatronActionSessionStorage.PutPatronActionSessionStoragePatronActionSessionsByPatronSessionIdResponse
           .respond422WithApplicationJson(errors)));
       return;
     }
 
-    PatronActionSession.ActionType mappedActionType = actionType != null
-      ? ACTION_TYPE_MAP.get(actionType)
-      : null;
+    PatronActionSession.ActionType mappedActionType = null;
+    if (!StringUtils.isBlank(actionType)) {
+      try {
+        mappedActionType = PatronActionSession.ActionType.fromValue(actionType);
+      } catch (IllegalArgumentException e) {
+        Errors errors = ValidationHelper.createValidationErrorMessage("action_type",
+          sessionInactivityTimeLimit, "Invalid action type value");
+        asyncResultHandler.handle(succeededFuture(
+          PatronActionSessionStorage.PutPatronActionSessionStoragePatronActionSessionsByPatronSessionIdResponse
+            .respond422WithApplicationJson(errors)));
+        return;
+      }
+    }
 
     String sql = toSelectExpiredSessionsQuery(tenantId, mappedActionType,
       limit, dateTimeLimit);
