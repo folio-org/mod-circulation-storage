@@ -1,7 +1,7 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isBadRequest;
 import static org.folio.rest.support.matchers.periodJsonObjectMatcher.matchesPeriod;
-import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.folio.HttpStatus;
+import org.folio.rest.jaxrs.model.Period;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonArrayHelper;
@@ -26,6 +27,7 @@ import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.TextResponse;
 import org.folio.rest.support.builders.LoanPolicyRequestBuilder;
 import org.hamcrest.junit.MatcherAssert;
+import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -76,6 +78,7 @@ public class LoanPoliciesApiTest extends ApiTests {
 
     //////////// create loan policy with foreign key to fdd
     JsonObject loanPolicyRequest = new LoanPolicyRequestBuilder()
+      .defaultPolicy()
       .withId(id1)
       .withName("Example Loan Policy")
       .withDescription("An example loan policy")
@@ -93,6 +96,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     ////////////validation error - renewable = true + different period = true + fixed -> needs fk
     CompletableFuture<JsonResponse> createpdateV1Completed = new CompletableFuture<>();
     JsonObject loanPolicyRequest3 = new LoanPolicyRequestBuilder()
+        .defaultPolicy()
         .withId(id1)
         .withName("Example Loan Policy")
         .withDescription("An example loan policy")
@@ -108,6 +112,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     ///////////non-existent foreign key
     UUID id2 = UUID.randomUUID();
     JsonObject badLoanPolicyRequest = new LoanPolicyRequestBuilder()
+        .defaultPolicy()
         .withId(id2)
         .withName("Example Loan Policy")
         .withDescription("An example loan policy")
@@ -125,6 +130,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     ///////////bad foreign key
     id2 = UUID.randomUUID();
     JsonObject bad2LoanPolicyRequest = new LoanPolicyRequestBuilder()
+        .defaultPolicy()
         .withId(id2)
         .withName("Example Loan Policy")
         .withDescription("An example loan policy")
@@ -143,6 +149,7 @@ public class LoanPoliciesApiTest extends ApiTests {
 
     //////////// create loan policy with fk to jsonb->'renewalsPolicy'->>'alternateFixedDueDateScheduleId'
     JsonObject loanPolicyRequest4 = new LoanPolicyRequestBuilder()
+      .defaultPolicy()
       .withId(id2)
       .withName("Example Loan Policy")
       .withDescription("An example loan policy")
@@ -160,6 +167,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     ///validation, fk to fixedDueDateScheduleId required once profileid = fixed
     CompletableFuture<JsonResponse> createpdateV2Completed = new CompletableFuture<>();
     JsonObject loanPolicyRequest8 = new LoanPolicyRequestBuilder()
+        .defaultPolicy()
         .withId(id2)
         .withName("Example Loan Policy")
         .withDescription("An example loan policy")
@@ -237,6 +245,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     UUID id = UUID.randomUUID();
 
     JsonObject loanPolicyRequest = new LoanPolicyRequestBuilder()
+      .defaultPolicy()
       .withId(id)
       .withName("Example Loan Policy")
       .withDescription("An example loan policy")
@@ -293,6 +302,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     UUID id = UUID.randomUUID();
 
     JsonObject loanPolicyRequest = new LoanPolicyRequestBuilder()
+      .defaultPolicy()
       .withId(id)
       .withName("Example Loan Policy")
       .withDescription("An example loan policy")
@@ -322,6 +332,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     UUID id = UUID.randomUUID();
 
     JsonObject loanPolicyRequest = new LoanPolicyRequestBuilder()
+      .defaultPolicy()
       .withId(id)
       .withName("Example Loan Policy")
       .withDescription("An example loan policy")
@@ -354,6 +365,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     JsonObject loanPolicyRequest = new LoanPolicyRequestBuilder()
+      .defaultPolicy()
       .withNoId()
       .create();
 
@@ -383,6 +395,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     UUID id = UUID.randomUUID();
 
     JsonObject loanPolicyRequest = new LoanPolicyRequestBuilder()
+      .defaultPolicy()
       .withId(id)
       .create();
 
@@ -444,7 +457,11 @@ public class LoanPoliciesApiTest extends ApiTests {
 
     UUID id = UUID.randomUUID();
 
-    createLoanPolicy(new LoanPolicyRequestBuilder().withId(id).create());
+    createLoanPolicy(new LoanPolicyRequestBuilder()
+      .defaultPolicy()
+      .withId(id)
+      .create()
+    );
 
     JsonResponse getResponse = getById(id);
 
@@ -500,10 +517,14 @@ public class LoanPoliciesApiTest extends ApiTests {
     ExecutionException,
     TimeoutException {
 
-    String firstPolicyId = createLoanPolicy(new LoanPolicyRequestBuilder().create()).getId();
-    String secondPolicyId = createLoanPolicy(new LoanPolicyRequestBuilder().create()).getId();
-    String thirdPolicyId = createLoanPolicy(new LoanPolicyRequestBuilder().create()).getId();
-    String fourthPolicyId = createLoanPolicy(new LoanPolicyRequestBuilder().create()).getId();
+    String firstPolicyId = createLoanPolicy(new LoanPolicyRequestBuilder()
+      .defaultPolicy().create()).getId();
+    String secondPolicyId = createLoanPolicy(new LoanPolicyRequestBuilder()
+      .defaultPolicy().create()).getId();
+    String thirdPolicyId = createLoanPolicy(new LoanPolicyRequestBuilder()
+      .defaultPolicy().create()).getId();
+    String fourthPolicyId = createLoanPolicy(new LoanPolicyRequestBuilder()
+      .defaultPolicy().create()).getId();
 
     CompletableFuture<JsonResponse> getAllCompleted = new CompletableFuture<>();
 
@@ -537,13 +558,13 @@ public class LoanPoliciesApiTest extends ApiTests {
     TimeoutException,
     ExecutionException {
 
-    createLoanPolicy(new LoanPolicyRequestBuilder().create());
-    createLoanPolicy(new LoanPolicyRequestBuilder().create());
-    createLoanPolicy(new LoanPolicyRequestBuilder().create());
-    createLoanPolicy(new LoanPolicyRequestBuilder().create());
-    createLoanPolicy(new LoanPolicyRequestBuilder().create());
-    createLoanPolicy(new LoanPolicyRequestBuilder().create());
-    createLoanPolicy(new LoanPolicyRequestBuilder().create());
+    createLoanPolicy(new LoanPolicyRequestBuilder().defaultPolicy().create());
+    createLoanPolicy(new LoanPolicyRequestBuilder().defaultPolicy().create());
+    createLoanPolicy(new LoanPolicyRequestBuilder().defaultPolicy().create());
+    createLoanPolicy(new LoanPolicyRequestBuilder().defaultPolicy().create());
+    createLoanPolicy(new LoanPolicyRequestBuilder().defaultPolicy().create());
+    createLoanPolicy(new LoanPolicyRequestBuilder().defaultPolicy().create());
+    createLoanPolicy(new LoanPolicyRequestBuilder().defaultPolicy().create());
 
     CompletableFuture<JsonResponse> firstPageCompleted = new CompletableFuture<>();
     CompletableFuture<JsonResponse> secondPageCompleted = new CompletableFuture<>();
@@ -585,8 +606,10 @@ public class LoanPoliciesApiTest extends ApiTests {
     ExecutionException,
     TimeoutException {
 
-    String firstPolicyId = createLoanPolicy(new LoanPolicyRequestBuilder().create()).getId();
-    String secondPolicyId = createLoanPolicy(new LoanPolicyRequestBuilder().create()).getId();
+    String firstPolicyId = createLoanPolicy(new LoanPolicyRequestBuilder()
+      .defaultPolicy().create()).getId();
+    String secondPolicyId = createLoanPolicy(new LoanPolicyRequestBuilder()
+      .defaultPolicy().create()).getId();
 
     String queryTemplate = loanPolicyStorageUrl() + "?query=id=\"%s\"";
 
@@ -639,11 +662,12 @@ public class LoanPoliciesApiTest extends ApiTests {
 
     UUID id = UUID.randomUUID();
 
-    createLoanPolicy(new LoanPolicyRequestBuilder().withId(id).create());
+    createLoanPolicy(new LoanPolicyRequestBuilder().defaultPolicy().withId(id).create());
 
     CompletableFuture<JsonResponse> updateCompleted = new CompletableFuture<>();
 
     JsonObject loanPolicyRequest = new LoanPolicyRequestBuilder()
+      .defaultPolicy()
       .withId(id)
       .withName("A Different Name")
       .withDescription("A different description")
@@ -710,7 +734,7 @@ public class LoanPoliciesApiTest extends ApiTests {
 
     UUID id = UUID.randomUUID();
 
-    createLoanPolicy(new LoanPolicyRequestBuilder().withId(id).create());
+    createLoanPolicy(new LoanPolicyRequestBuilder().defaultPolicy().withId(id).create());
 
     client.delete(loanPolicyStorageUrl(String.format("/%s", id.toString())),
       StorageTestSuite.TENANT_ID,
@@ -725,6 +749,66 @@ public class LoanPoliciesApiTest extends ApiTests {
 
     assertThat(String.format("Found a deleted loan policy: %s", getResponse.getBody()),
       getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+  }
+
+  @Test
+  public void canNotUseHoldAlternateRenewalLoanPeriodForFixedProfile() throws Exception {
+    DateTime from = DateTime.now().minusMonths(3);
+    DateTime to = DateTime.now().plusMonths(3);
+    DateTime dueDate = to.plusDays(15);
+
+    IndividualResource fixedDueDateSchedule =
+      createFixedDueDateSchedule("semester_for_fixed_policy", from, to, dueDate);
+
+    LoanPolicyRequestBuilder loanPolicy = new LoanPolicyRequestBuilder()
+      .fixed(fixedDueDateSchedule.getId())
+      .withAlternateFixedDueDateScheduleId(fixedDueDateSchedule.getId())
+      .withHoldsRenewalLoanPeriod(new Period()
+        .withDuration(1)
+        .withIntervalId(Period.IntervalId.DAYS)
+      );
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    client.post(loanPolicyStorageUrl(), loanPolicy.create(),
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(createCompleted));
+
+    JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(postResponse.getStatusCode(), is(422));
+    assertThat(postResponse.getJson().getJsonArray("errors")
+        .getJsonObject(0).getString("message"),
+      is("Alternate Renewal Loan Period for Holds is not allowed for policies with Fixed profile"));
+  }
+
+  @Test
+  public void canNotUseRenewalsPeriodForFixedProfile() throws Exception {
+    DateTime from = DateTime.now().minusMonths(3);
+    DateTime to = DateTime.now().plusMonths(3);
+    DateTime dueDate = to.plusDays(15);
+
+    IndividualResource fixedDueDateSchedule = createFixedDueDateSchedule(
+      "semester fixed policy test", from, to, dueDate);
+    LoanPolicyRequestBuilder loanPolicy = new LoanPolicyRequestBuilder()
+      .fixed(fixedDueDateSchedule.getId())
+      .withAlternateFixedDueDateScheduleId(fixedDueDateSchedule.getId())
+      .withName("test")
+      .withRenewalPeriod(new Period()
+        .withDuration(1)
+        .withIntervalId(Period.IntervalId.DAYS)
+      );
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    client.post(loanPolicyStorageUrl(), loanPolicy.create(),
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(createCompleted));
+
+    JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(postResponse.getStatusCode(), is(422));
+    assertThat(postResponse.getJson().getJsonArray("errors")
+      .getJsonObject(0).getString("message"),
+      is("Period in RenewalsPolicy is not allowed for policies with Fixed profile"));
   }
 
   static URL loanPolicyStorageUrl() throws MalformedURLException {
@@ -789,11 +873,35 @@ public class LoanPoliciesApiTest extends ApiTests {
     assertThat(recalls.getJsonObject("recallReturnInterval"), matchesPeriod(1, "Days"));
     JsonObject holds = requestManagement.getJsonObject("holds");
     assertThat(holds.getJsonObject("alternateCheckoutLoanPeriod"), matchesPeriod(2, "Months"));
-    assertThat(holds.getBoolean("renewItemsWithRequest"), is(false));
+    assertThat(holds.getBoolean("renewItemsWithRequest"), is(true));
     assertThat(holds.getJsonObject("alternateRenewalLoanPeriod"), matchesPeriod(2, "Days"));
     JsonObject pages = requestManagement.getJsonObject("pages");
     assertThat(pages.getJsonObject("alternateCheckoutLoanPeriod"), matchesPeriod(3, "Months"));
     assertThat(pages.getBoolean("renewItemsWithRequest"), is(true));
     assertThat(pages.getJsonObject("alternateRenewalLoanPeriod"), matchesPeriod(3, "Days"));
+  }
+
+  private IndividualResource createFixedDueDateSchedule(String name,
+    DateTime from, DateTime to, DateTime dueDate) throws Exception {
+
+    UUID fddId = UUID.randomUUID();
+    JsonObject fdd = FixedDueDateApiTest
+      .createFixedDueDate(fddId.toString(), name, "desc");
+
+    JsonObject fddSchedule = FixedDueDateApiTest
+      .createSchedule(from.toString(), to.toString(), dueDate.toString());
+
+    fdd.put(FixedDueDateApiTest.SCHEDULE_SECTION, new JsonArray().add(fddSchedule));
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+    client.post(FixedDueDateApiTest.dueDateURL(), fdd, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to create due date: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    return new IndividualResource(response);
   }
 }
