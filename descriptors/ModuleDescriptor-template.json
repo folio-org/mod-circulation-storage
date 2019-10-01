@@ -295,6 +295,37 @@
       ]
     },
     {
+      "id": "request-preference-storage",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["POST"],
+          "pathPattern": "/request-preference-storage/request-preference",
+          "permissionsRequired": ["circulation-storage.request-preferences.item.post"]
+        },
+        {
+          "methods": ["PUT"],
+          "pathPattern": "/request-preference-storage/request-preference/{id}",
+          "permissionsRequired": ["circulation-storage.request-preferences.item.put"]
+        },
+        {
+          "methods": ["DELETE"],
+          "pathPattern": "/request-preference-storage/request-preference/{id}",
+          "permissionsRequired": ["circulation-storage.request-preferences.item.delete"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/request-preference-storage/request-preference",
+          "permissionsRequired": ["circulation-storage.request-preferences.collection.get"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/request-preference-storage/request-preference/{id}",
+          "permissionsRequired": ["circulation-storage.request-preferences.item.get"]
+        }
+      ]
+    },
+    {
       "id": "scheduled-notice-storage",
       "version": "0.3",
       "handlers": [
@@ -604,6 +635,31 @@
       "description": "Get individual patron notice policy by id"
     },
     {
+      "permissionName": "circulation-storage.request-preferences.item.post",
+      "displayName": "Circulation storage - post individual request preference",
+      "description": "Post individual request preference"
+    },
+    {
+      "permissionName": "circulation-storage.request-preferences.item.put",
+      "displayName": "Circulation storage - put individual request preference",
+      "description": "Put individual request preference by id"
+    },
+    {
+      "permissionName": "circulation-storage.request-preferences.item.delete",
+      "displayName": "Circulation storage - delete request preference",
+      "description": "Delete request preference by id"
+    },
+    {
+      "permissionName": "circulation-storage.request-preferences.collection.get",
+      "displayName": "Circulation storage - get request preference collection",
+      "description": "Get request preference collection from storage"
+    },
+    {
+      "permissionName": "circulation-storage.request-preferences.item.get",
+      "displayName": "Circulation storage - get individual request preference",
+      "description": "Get individual request preference by id"
+    },
+    {
       "permissionName": "scheduled-notice-storage.scheduled-notices.collection.get",
       "displayName": "Circulation storage - get scheduled notice collection",
       "description": "Get scheduled notice collection from storage"
@@ -708,6 +764,11 @@
         "circulation-storage.patron-notice-policies.item.delete",
         "circulation-storage.patron-notice-policies.collection.get",
         "circulation-storage.patron-notice-policies.item.get",
+        "circulation-storage.request-preferences.item.post",
+        "circulation-storage.request-preferences.item.put",
+        "circulation-storage.request-preferences.item.delete",
+        "circulation-storage.request-preferences.collection.get",
+        "circulation-storage.request-preferences.item.get",
         "circulation-storage.request-policies.collection.get",
         "circulation-storage.request-policies.item.get",
         "circulation-storage.request-policies.collection.delete",

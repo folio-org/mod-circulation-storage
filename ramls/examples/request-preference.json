@@ -1,0 +1,8 @@
+{
+  "userId": "1e425b93-501e-44b0-a4c7-b3e66a25c42e",
+  "holdShelf" : true,
+  "delivery": true,
+  "defaultServicePointId": "22beccec-8d77-4a97-906a-37cc26b070e5",
+  "defaultDeliveryAddressTypeId": "27a1b086-20ac-4b1d-b6ac-3be353383f3d",
+  "fulfillment": "Delivery"
+}
