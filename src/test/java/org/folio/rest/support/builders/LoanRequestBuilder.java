@@ -20,6 +20,7 @@ public class LoanRequestBuilder implements Builder {
   private final DateTime dueDate;
   private final String action;
   private final String actionComment;
+  private final UUID itemEffectiveLocationAtCheckOut;
   private final UUID loanPolicyId;
   private DateTime returnDate;
   private DateTime systemReturnDate;
@@ -41,6 +42,7 @@ public class LoanRequestBuilder implements Builder {
       null,
       null,
       null,
+      null,
       null);
   }
 
@@ -55,6 +57,7 @@ public class LoanRequestBuilder implements Builder {
     String action,
     String actionComment,
     DateTime dueDate,
+    UUID itemEffectiveLocationAtCheckOut,
     UUID loanPolicyId,
     DateTime returnDate,
     DateTime systemReturnDate,
@@ -68,9 +71,10 @@ public class LoanRequestBuilder implements Builder {
     this.loanDate = loanDate;
     this.statusName = statusName;
     this.itemStatus = itemStatus;
-    this.dueDate = dueDate;
     this.action = action;
     this.actionComment = actionComment;
+    this.dueDate = dueDate;
+    this.itemEffectiveLocationAtCheckOut = itemEffectiveLocationAtCheckOut;
     this.loanPolicyId = loanPolicyId;
     this.returnDate = returnDate;
     this.systemReturnDate = systemReturnDate;
@@ -109,6 +113,10 @@ public class LoanRequestBuilder implements Builder {
       ? DateTime.parse(example.getString("dueDate"))
       : null;
 
+    final UUID itemEffectiveLocationAtCheckOut = example.containsKey("itemEffectiveLocationAtCheckOut")
+      ? UUID.fromString(example.getString("itemEffectiveLocationAtCheckOut"))
+      : null;
+
     final DateTime returnDate = example.containsKey("returnDate")
       ? DateTime.parse(example.getString("returnDate"))
       : null;
@@ -136,6 +144,7 @@ public class LoanRequestBuilder implements Builder {
       example.getString("action"),
       example.getString("actionComment"),
       dueDate,
+      itemEffectiveLocationAtCheckOut,
       loanPolicyId,
       returnDate,
       systemReturnDate,
@@ -185,6 +194,10 @@ public class LoanRequestBuilder implements Builder {
       }
     }
 
+    if(itemEffectiveLocationAtCheckOut != null) {
+      request.put("itemEffectiveLocationAtCheckOut", itemEffectiveLocationAtCheckOut.toString());
+    }
+
     if(loanPolicyId != null) {
       request.put("loanPolicyId", loanPolicyId.toString());
     }
@@ -220,6 +233,7 @@ public class LoanRequestBuilder implements Builder {
       this.action,
       this.actionComment,
       this.dueDate,
+      this.itemEffectiveLocationAtCheckOut,
       this.loanPolicyId,
       this.returnDate,
       this.systemReturnDate,
@@ -243,6 +257,7 @@ public class LoanRequestBuilder implements Builder {
       this.action,
       this.actionComment,
       this.dueDate,
+      this.itemEffectiveLocationAtCheckOut,
       this.loanPolicyId,
       this.returnDate,
       this.systemReturnDate,
@@ -262,6 +277,7 @@ public class LoanRequestBuilder implements Builder {
       this.action,
       this.actionComment,
       this.dueDate,
+      this.itemEffectiveLocationAtCheckOut,
       this.loanPolicyId,
       this.returnDate,
       this.systemReturnDate,
@@ -285,6 +301,7 @@ public class LoanRequestBuilder implements Builder {
       this.action,
       this.actionComment,
       this.dueDate,
+      this.itemEffectiveLocationAtCheckOut,
       this.loanPolicyId,
       this.returnDate,
       this.systemReturnDate,
@@ -304,6 +321,7 @@ public class LoanRequestBuilder implements Builder {
       this.action,
       this.actionComment,
       this.dueDate,
+      this.itemEffectiveLocationAtCheckOut,
       this.loanPolicyId,
       this.returnDate,
       this.systemReturnDate,
@@ -323,6 +341,7 @@ public class LoanRequestBuilder implements Builder {
       this.action,
       this.actionComment,
       this.dueDate,
+      this.itemEffectiveLocationAtCheckOut,
       this.loanPolicyId,
       this.returnDate,
       this.systemReturnDate,
@@ -350,6 +369,7 @@ public class LoanRequestBuilder implements Builder {
       this.action,
       this.actionComment,
       this.dueDate,
+      this.itemEffectiveLocationAtCheckOut,
       this.loanPolicyId,
       this.returnDate,
       this.systemReturnDate,
@@ -369,6 +389,7 @@ public class LoanRequestBuilder implements Builder {
       action,
       this.actionComment,
       this.dueDate,
+      this.itemEffectiveLocationAtCheckOut,
       this.loanPolicyId,
       this.returnDate,
       this.systemReturnDate,
@@ -388,6 +409,7 @@ public class LoanRequestBuilder implements Builder {
       this.action,
       actionComment,
       this.dueDate,
+      this.itemEffectiveLocationAtCheckOut,
       this.loanPolicyId,
       this.returnDate,
       this.systemReturnDate,
@@ -407,6 +429,7 @@ public class LoanRequestBuilder implements Builder {
       this.action,
       this.actionComment,
       dueDate,
+      this.itemEffectiveLocationAtCheckOut,
       this.loanPolicyId,
       this.returnDate,
       this.systemReturnDate,
@@ -426,6 +449,7 @@ public class LoanRequestBuilder implements Builder {
       this.action,
       this.actionComment,
       this.dueDate,
+      this.itemEffectiveLocationAtCheckOut,
       this.loanPolicyId,
       returnDate,
       this.systemReturnDate,
@@ -445,6 +469,7 @@ public class LoanRequestBuilder implements Builder {
       this.action,
       this.actionComment,
       this.dueDate,
+      this.itemEffectiveLocationAtCheckOut,
       this.loanPolicyId,
       this.returnDate,
       systemReturnDate,
@@ -464,6 +489,25 @@ public class LoanRequestBuilder implements Builder {
     return requestDate.toString(ISODateTimeFormat.dateTime());
   }
 
+  public LoanRequestBuilder withItemEffectiveLocationAtCheckOut(UUID itemLocation) {
+    return new LoanRequestBuilder(
+      this.id,
+      this.itemId,
+      this.userId,
+      this.proxyUserId,
+      this.loanDate,
+      this.statusName,
+      this.itemStatus,
+      this.action,
+      this.actionComment,
+      this.dueDate,
+      itemLocation,
+      this.loanPolicyId,
+      this.returnDate,
+      this.systemReturnDate,
+      this.renewalCount,
+      this.dueDateChangedByRecall);
+  }
   public LoanRequestBuilder withLoanPolicyId(UUID loanPolicyId) {
     return new LoanRequestBuilder(
       this.id,
@@ -476,6 +520,7 @@ public class LoanRequestBuilder implements Builder {
       this.action,
       this.actionComment,
       this.dueDate,
+      this.itemEffectiveLocationAtCheckOut,
       loanPolicyId,
       this.returnDate,
       this.systemReturnDate,
@@ -495,6 +540,7 @@ public class LoanRequestBuilder implements Builder {
       this.action,
       this.actionComment,
       this.dueDate,
+      this.itemEffectiveLocationAtCheckOut,
       this.loanPolicyId,
       this.returnDate,
       this.systemReturnDate,
@@ -514,6 +560,7 @@ public class LoanRequestBuilder implements Builder {
       this.action,
       this.actionComment,
       this.dueDate,
+      this.itemEffectiveLocationAtCheckOut,
       this.loanPolicyId,
       this.returnDate,
       this.systemReturnDate,
