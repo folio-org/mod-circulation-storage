@@ -1,0 +1,16 @@
+{
+  "expiredSessions": [
+    {
+      "patronId": "2d5f138f-e088-4dff-80f6-9830f13bcde7",
+      "actionType" : "Check-out"
+    },
+    {
+      "patronId": "2d5f138f-e088-4dff-80f6-9830f13bcde8",
+      "actionType" : "Check-in"
+    },
+    {
+      "patronId": "2d5f138f-e088-4dff-80f6-9830f13bcde9",
+      "actionType" : "Check-out"
+    }
+  ]
+}

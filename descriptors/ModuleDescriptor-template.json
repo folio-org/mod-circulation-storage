@@ -377,7 +377,7 @@
     },
     {
       "id": "patron-action-session-storage",
-      "version": "0.1",
+      "version": "0.2",
       "handlers": [
         {
           "methods": ["GET"],
@@ -399,6 +399,10 @@
           "methods": ["DELETE"],
           "pathPattern": "/patron-action-session-storage/patron-action-sessions/{id}",
           "permissionsRequired": ["patron-action-session-storage.patron-action-sessions.item.delete"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/patron-action-session-storage/expired-session-patron-ids",
+          "permissionsRequired": ["patron-action-session-storage.expired-session-patron-ids.collection.get"]
         }
       ]
     }
@@ -786,7 +790,8 @@
         "patron-action-session-storage.patron-action-sessions.item.get",
         "patron-action-session-storage.patron-action-sessions.item.post",
         "patron-action-session-storage.patron-action-sessions.item.put",
-        "patron-action-session-storage.patron-action-sessions.item.delete"
+        "patron-action-session-storage.patron-action-sessions.item.delete",
+        "patron-action-session-storage.expired-session-patron-ids.collection.get"
       ]
     },
     {
