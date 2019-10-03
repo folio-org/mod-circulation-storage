@@ -53,11 +53,11 @@ resourceTypes:
         is: [validate]
         queryParameters:
           action_type:
-            description: Action type for patron notice session
+            description: Parameter to filter expired sessions by patron action type
             type: string
             required: false
           session_inactivity_time_limit:
-            description: This parameter defines time in format up to which all sessions are considered as expired
+            description: This parameter defines time up to which all sessions are considered as expired. Conforms to the ISO 8601 date and time format
             example: 2018-11-29T13:23:36Z
             type: string
             required: true
