@@ -1,3 +1,7 @@
+## 10.0.0 2019-10-03
+
+* Disallows `alternateRenewalLoanPeriod for holds` and `renewalsPolicy.period` for fixed policies (CIRCSTORE-159).
+
 ## 9.3.0 2019-09-18
 
 * Stores whether a loan `due date has changed due to a recall` request (CIRCSTORE-156)
