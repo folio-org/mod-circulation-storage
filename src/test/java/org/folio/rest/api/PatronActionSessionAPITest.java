@@ -197,18 +197,18 @@ public class PatronActionSessionAPITest extends ApiTests {
     createPatronActionSessionRecords(secondPatronId, "Check-in", DateTime.now().minus(1));
     createPatronActionSessionRecords(secondPatronId, "Check-out", DateTime.now().minus(1));
 
-    assertThat(getExpiredSessionPatronIds("Check-out", 10, DateTime.now()).size(), is(2));
+    assertThat(getExpiredPatronSessions("Check-out", 10, DateTime.now()).size(), is(2));
 
-    JsonArray checkInJsonArray = getExpiredSessionPatronIds("Check-in", 10, DateTime.now().minusDays(2));
+    JsonArray checkInJsonArray = getExpiredPatronSessions("Check-in", 10, DateTime.now().minusDays(2));
     assertThat(checkInJsonArray.size(), is(1));
     assertThat(checkInJsonArray.getJsonObject(0).getString("patronId"), is(firstPatronId));
     assertThat(checkInJsonArray.getJsonObject(0).getString("actionType"), is("Check-in"));
 
-    JsonArray checkOutJsonArray = getExpiredSessionPatronIds("Check-out", 10, DateTime.now().minusDays(2));
+    JsonArray checkOutJsonArray = getExpiredPatronSessions("Check-out", 10, DateTime.now().minusDays(2));
     assertThat(checkOutJsonArray.getJsonObject(0).getString("patronId"), is(firstPatronId));
     assertThat(checkOutJsonArray.getJsonObject(0).getString("actionType"), is("Check-out"));
 
-    assertThat(getExpiredSessionPatronIds("Check-out", 1, DateTime.now()).size(), is(1));
+    assertThat(getExpiredPatronSessions("Check-out", 1, DateTime.now()).size(), is(1));
   }
 
   @Test
@@ -220,7 +220,7 @@ public class PatronActionSessionAPITest extends ApiTests {
     String secondPatronId = UUID.randomUUID().toString();
     createPatronActionSessionRecords(secondPatronId, "Check-out", DateTime.now().minusDays(1));
 
-    JsonArray jsonArray = getExpiredSessionPatronIds(10, DateTime.now());
+    JsonArray jsonArray = getExpiredPatronSessions(10, DateTime.now());
 
     assertThat(jsonArray.size(), is(2));
     assertThat(jsonArray.getJsonObject(0).getString("patronId"), is(firstPatronId));
@@ -292,7 +292,7 @@ public class PatronActionSessionAPITest extends ApiTests {
     return session;
   }
 
-  private JsonArray getExpiredSessionPatronIds(String actionType, int limit, DateTime lastActionDateLimit)
+  private JsonArray getExpiredPatronSessions(String actionType, int limit, DateTime lastActionDateLimit)
     throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
 
     String actionTypeFilter = actionType != null ? actionType : "";
@@ -305,10 +305,10 @@ public class PatronActionSessionAPITest extends ApiTests {
     return response.getJson().getJsonArray("expiredSessions");
   }
 
-  private JsonArray getExpiredSessionPatronIds(int limit, DateTime lastActionDateLimit)
+  private JsonArray getExpiredPatronSessions(int limit, DateTime lastActionDateLimit)
     throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
 
-    return getExpiredSessionPatronIds(null, limit, lastActionDateLimit);
+    return getExpiredPatronSessions(null, limit, lastActionDateLimit);
   }
 
   private JsonResponse get(URL url)
