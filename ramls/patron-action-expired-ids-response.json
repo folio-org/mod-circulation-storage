@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Collection of expired sessions",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "expiredSessions": {
+      "description": "List of expired sessions",
+      "id": "expiredSessions",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "patronId": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+            "description": "Id of patron who has expired session"
+          },
+          "actionType": {
+            "type": "string",
+            "enum": [
+              "Check-out",
+              "Check-in"
+            ],
+            "description": "Type of expired session"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "expiredSessions"
+  ]
+}

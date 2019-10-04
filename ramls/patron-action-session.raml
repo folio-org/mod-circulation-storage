@@ -1,6 +1,6 @@
 #%RAML 1.0
 title: Patron Action Session
-version: v0.1
+version: v0.2
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost:9130
 
@@ -12,6 +12,7 @@ types:
   patron-action-session: !include patron-action-session.json
   patron-action-sessions: !include patron-action-sessions.json
   errors: !include raml-util/schemas/errors.schema
+  patron-action-expired-ids-response: !include patron-action-expired-ids-response.json
 
 traits:
   pageable: !include raml-util/traits/pageable.raml
@@ -47,3 +48,35 @@ resourceTypes:
           exampleItem: !include examples/patron-action-session.json
       put:
         is: [validate]
+  /expired-session-patron-ids:
+      get:
+        is: [validate]
+        queryParameters:
+          action_type:
+            description: Parameter to filter expired sessions by patron action type
+            type: string
+            required: false
+          session_inactivity_time_limit:
+            description: This parameter defines time up to which all sessions are considered as expired. Conforms to the ISO 8601 date and time format
+            example: 2018-11-29T13:23:36Z
+            type: string
+            required: true
+          limit:
+            description: Limit the number of sessions returned in the response
+            type: integer
+            required: false
+            example: 10
+            default: 10
+            minimum: 0
+            maximum: 2147483647
+        responses:
+          200:
+            description: "Return list of notice groups"
+            body:
+              application/json:
+                type: patron-action-expired-ids-response
+          500:
+            description: "Internal server error"
+            body:
+              text/plain:
+                example: "Internal server error"
