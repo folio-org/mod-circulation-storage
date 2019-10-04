@@ -17,11 +17,6 @@ public class LoanPolicyRequestBuilder {
   private final Period loanPeriod;
   private final Period renewalPeriod;
 
-  public LoanPolicyRequestBuilder() {
-    this(UUID.randomUUID(), "Example Loan Policy", "An example loan policy",
-      "Rolling", null, null, null, null, null);
-  }
-
   private LoanPolicyRequestBuilder(
     UUID id, String name, String description, String profile,
     String fixedDueDateScheduleId,
@@ -196,9 +191,10 @@ public class LoanPolicyRequestBuilder {
     );
   }
 
-  public LoanPolicyRequestBuilder defaultPolicy() {
-    return new LoanPolicyRequestBuilder(this.id, this.name,
-      this.description,
+  public static LoanPolicyRequestBuilder defaultRollingPolicy() {
+    return new LoanPolicyRequestBuilder(UUID.randomUUID(),
+      "Example Loan Policy",
+      "An example loan policy",
       "Rolling",
       null,
       null,
@@ -208,7 +204,20 @@ public class LoanPolicyRequestBuilder {
     );
   }
 
-  private JsonObject createPeriod(Integer duration, String intervalId) {
+  public static LoanPolicyRequestBuilder emptyPolicy() {
+    return new LoanPolicyRequestBuilder(UUID.randomUUID(),
+      "Example Loan Policy",
+      "An example loan policy",
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    );
+  }
+
+  private static JsonObject createPeriod(Integer duration, String intervalId) {
     JsonObject period = new JsonObject();
 
     period.put("duration", duration);

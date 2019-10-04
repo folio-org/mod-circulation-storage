@@ -1,5 +1,7 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.support.builders.LoanPolicyRequestBuilder.defaultRollingPolicy;
+import static org.folio.rest.support.builders.LoanPolicyRequestBuilder.emptyPolicy;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isBadRequest;
 import static org.folio.rest.support.matchers.periodJsonObjectMatcher.matchesPeriod;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -77,8 +79,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     UUID id1 = UUID.randomUUID();
 
     //////////// create loan policy with foreign key to fdd
-    JsonObject loanPolicyRequest = new LoanPolicyRequestBuilder()
-      .defaultPolicy()
+    JsonObject loanPolicyRequest = defaultRollingPolicy()
       .withId(id1)
       .withName("Example Loan Policy")
       .withDescription("An example loan policy")
@@ -95,8 +96,7 @@ public class LoanPoliciesApiTest extends ApiTests {
 
     ////////////validation error - renewable = true + different period = true + fixed -> needs fk
     CompletableFuture<JsonResponse> createpdateV1Completed = new CompletableFuture<>();
-    JsonObject loanPolicyRequest3 = new LoanPolicyRequestBuilder()
-        .defaultPolicy()
+    JsonObject loanPolicyRequest3 = defaultRollingPolicy()
         .withId(id1)
         .withName("Example Loan Policy")
         .withDescription("An example loan policy")
@@ -111,8 +111,7 @@ public class LoanPoliciesApiTest extends ApiTests {
 
     ///////////non-existent foreign key
     UUID id2 = UUID.randomUUID();
-    JsonObject badLoanPolicyRequest = new LoanPolicyRequestBuilder()
-        .defaultPolicy()
+    JsonObject badLoanPolicyRequest = defaultRollingPolicy()
         .withId(id2)
         .withName("Example Loan Policy")
         .withDescription("An example loan policy")
@@ -129,8 +128,7 @@ public class LoanPoliciesApiTest extends ApiTests {
 
     ///////////bad foreign key
     id2 = UUID.randomUUID();
-    JsonObject bad2LoanPolicyRequest = new LoanPolicyRequestBuilder()
-        .defaultPolicy()
+    JsonObject bad2LoanPolicyRequest = defaultRollingPolicy()
         .withId(id2)
         .withName("Example Loan Policy")
         .withDescription("An example loan policy")
@@ -148,8 +146,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     id2 = UUID.randomUUID();
 
     //////////// create loan policy with fk to jsonb->'renewalsPolicy'->>'alternateFixedDueDateScheduleId'
-    JsonObject loanPolicyRequest4 = new LoanPolicyRequestBuilder()
-      .defaultPolicy()
+    JsonObject loanPolicyRequest4 = defaultRollingPolicy()
       .withId(id2)
       .withName("Example Loan Policy")
       .withDescription("An example loan policy")
@@ -166,8 +163,7 @@ public class LoanPoliciesApiTest extends ApiTests {
 
     ///validation, fk to fixedDueDateScheduleId required once profileid = fixed
     CompletableFuture<JsonResponse> createpdateV2Completed = new CompletableFuture<>();
-    JsonObject loanPolicyRequest8 = new LoanPolicyRequestBuilder()
-        .defaultPolicy()
+    JsonObject loanPolicyRequest8 = defaultRollingPolicy()
         .withId(id2)
         .withName("Example Loan Policy")
         .withDescription("An example loan policy")
@@ -244,8 +240,7 @@ public class LoanPoliciesApiTest extends ApiTests {
 
     UUID id = UUID.randomUUID();
 
-    JsonObject loanPolicyRequest = new LoanPolicyRequestBuilder()
-      .defaultPolicy()
+    JsonObject loanPolicyRequest = defaultRollingPolicy()
       .withId(id)
       .withName("Example Loan Policy")
       .withDescription("An example loan policy")
@@ -301,8 +296,7 @@ public class LoanPoliciesApiTest extends ApiTests {
 
     UUID id = UUID.randomUUID();
 
-    JsonObject loanPolicyRequest = new LoanPolicyRequestBuilder()
-      .defaultPolicy()
+    JsonObject loanPolicyRequest = defaultRollingPolicy()
       .withId(id)
       .withName("Example Loan Policy")
       .withDescription("An example loan policy")
@@ -331,8 +325,7 @@ public class LoanPoliciesApiTest extends ApiTests {
 
     UUID id = UUID.randomUUID();
 
-    JsonObject loanPolicyRequest = new LoanPolicyRequestBuilder()
-      .defaultPolicy()
+    JsonObject loanPolicyRequest = defaultRollingPolicy()
       .withId(id)
       .withName("Example Loan Policy")
       .withDescription("An example loan policy")
@@ -364,8 +357,7 @@ public class LoanPoliciesApiTest extends ApiTests {
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
-    JsonObject loanPolicyRequest = new LoanPolicyRequestBuilder()
-      .defaultPolicy()
+    JsonObject loanPolicyRequest = defaultRollingPolicy()
       .withNoId()
       .create();
 
@@ -394,8 +386,7 @@ public class LoanPoliciesApiTest extends ApiTests {
 
     UUID id = UUID.randomUUID();
 
-    JsonObject loanPolicyRequest = new LoanPolicyRequestBuilder()
-      .defaultPolicy()
+    JsonObject loanPolicyRequest = defaultRollingPolicy()
       .withId(id)
       .create();
 
@@ -457,8 +448,7 @@ public class LoanPoliciesApiTest extends ApiTests {
 
     UUID id = UUID.randomUUID();
 
-    createLoanPolicy(new LoanPolicyRequestBuilder()
-      .defaultPolicy()
+    createLoanPolicy(defaultRollingPolicy()
       .withId(id)
       .create()
     );
@@ -517,14 +507,10 @@ public class LoanPoliciesApiTest extends ApiTests {
     ExecutionException,
     TimeoutException {
 
-    String firstPolicyId = createLoanPolicy(new LoanPolicyRequestBuilder()
-      .defaultPolicy().create()).getId();
-    String secondPolicyId = createLoanPolicy(new LoanPolicyRequestBuilder()
-      .defaultPolicy().create()).getId();
-    String thirdPolicyId = createLoanPolicy(new LoanPolicyRequestBuilder()
-      .defaultPolicy().create()).getId();
-    String fourthPolicyId = createLoanPolicy(new LoanPolicyRequestBuilder()
-      .defaultPolicy().create()).getId();
+    String firstPolicyId = createLoanPolicy(defaultRollingPolicy().create()).getId();
+    String secondPolicyId = createLoanPolicy(defaultRollingPolicy().create()).getId();
+    String thirdPolicyId = createLoanPolicy(defaultRollingPolicy().create()).getId();
+    String fourthPolicyId = createLoanPolicy(defaultRollingPolicy().create()).getId();
 
     CompletableFuture<JsonResponse> getAllCompleted = new CompletableFuture<>();
 
@@ -558,13 +544,13 @@ public class LoanPoliciesApiTest extends ApiTests {
     TimeoutException,
     ExecutionException {
 
-    createLoanPolicy(new LoanPolicyRequestBuilder().defaultPolicy().create());
-    createLoanPolicy(new LoanPolicyRequestBuilder().defaultPolicy().create());
-    createLoanPolicy(new LoanPolicyRequestBuilder().defaultPolicy().create());
-    createLoanPolicy(new LoanPolicyRequestBuilder().defaultPolicy().create());
-    createLoanPolicy(new LoanPolicyRequestBuilder().defaultPolicy().create());
-    createLoanPolicy(new LoanPolicyRequestBuilder().defaultPolicy().create());
-    createLoanPolicy(new LoanPolicyRequestBuilder().defaultPolicy().create());
+    createLoanPolicy(defaultRollingPolicy().create());
+    createLoanPolicy(defaultRollingPolicy().create());
+    createLoanPolicy(defaultRollingPolicy().create());
+    createLoanPolicy(defaultRollingPolicy().create());
+    createLoanPolicy(defaultRollingPolicy().create());
+    createLoanPolicy(defaultRollingPolicy().create());
+    createLoanPolicy(defaultRollingPolicy().create());
 
     CompletableFuture<JsonResponse> firstPageCompleted = new CompletableFuture<>();
     CompletableFuture<JsonResponse> secondPageCompleted = new CompletableFuture<>();
@@ -606,10 +592,8 @@ public class LoanPoliciesApiTest extends ApiTests {
     ExecutionException,
     TimeoutException {
 
-    String firstPolicyId = createLoanPolicy(new LoanPolicyRequestBuilder()
-      .defaultPolicy().create()).getId();
-    String secondPolicyId = createLoanPolicy(new LoanPolicyRequestBuilder()
-      .defaultPolicy().create()).getId();
+    String firstPolicyId = createLoanPolicy(defaultRollingPolicy().create()).getId();
+    String secondPolicyId = createLoanPolicy(defaultRollingPolicy().create()).getId();
 
     String queryTemplate = loanPolicyStorageUrl() + "?query=id=\"%s\"";
 
@@ -662,12 +646,11 @@ public class LoanPoliciesApiTest extends ApiTests {
 
     UUID id = UUID.randomUUID();
 
-    createLoanPolicy(new LoanPolicyRequestBuilder().defaultPolicy().withId(id).create());
+    createLoanPolicy(defaultRollingPolicy().withId(id).create());
 
     CompletableFuture<JsonResponse> updateCompleted = new CompletableFuture<>();
 
-    JsonObject loanPolicyRequest = new LoanPolicyRequestBuilder()
-      .defaultPolicy()
+    JsonObject loanPolicyRequest = defaultRollingPolicy()
       .withId(id)
       .withName("A Different Name")
       .withDescription("A different description")
@@ -734,7 +717,7 @@ public class LoanPoliciesApiTest extends ApiTests {
 
     UUID id = UUID.randomUUID();
 
-    createLoanPolicy(new LoanPolicyRequestBuilder().defaultPolicy().withId(id).create());
+    createLoanPolicy(defaultRollingPolicy().withId(id).create());
 
     client.delete(loanPolicyStorageUrl(String.format("/%s", id.toString())),
       StorageTestSuite.TENANT_ID,
@@ -760,7 +743,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     IndividualResource fixedDueDateSchedule =
       createFixedDueDateSchedule("semester_for_fixed_policy", from, to, dueDate);
 
-    LoanPolicyRequestBuilder loanPolicy = new LoanPolicyRequestBuilder()
+    LoanPolicyRequestBuilder loanPolicy = emptyPolicy()
       .fixed(fixedDueDateSchedule.getId())
       .withAlternateFixedDueDateScheduleId(fixedDueDateSchedule.getId())
       .withHoldsRenewalLoanPeriod(new Period()
@@ -789,7 +772,7 @@ public class LoanPoliciesApiTest extends ApiTests {
 
     IndividualResource fixedDueDateSchedule = createFixedDueDateSchedule(
       "semester fixed policy test", from, to, dueDate);
-    LoanPolicyRequestBuilder loanPolicy = new LoanPolicyRequestBuilder()
+    LoanPolicyRequestBuilder loanPolicy = emptyPolicy()
       .fixed(fixedDueDateSchedule.getId())
       .withAlternateFixedDueDateScheduleId(fixedDueDateSchedule.getId())
       .withName("test")
