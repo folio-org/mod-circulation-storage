@@ -1,0 +1,31 @@
+package rules
+
+import org.folio.rest.jaxrs.model.LoanPolicy;
+import org.folio.rest.jaxrs.model.Error;
+import org.folio.rest.jaxrs.model.Parameter;
+
+rule "Mixed objects Rule 3"
+
+no-loop
+
+when
+  error : Error()
+  m1 : LoanPolicy
+      (
+        eval(m1.getLoansPolicy().getProfileId().equalsIgnoreCase("Fixed"))
+        && m1.getRenewable()  == true
+        && m1.getRequestManagement() != null
+        && m1.getRequestManagement().getHolds() != null
+        && m1.getRequestManagement().getHolds().getRenewItemsWithRequest() == true
+        && m1.getRequestManagement().getHolds().getAlternateRenewalLoanPeriod() != null
+      )
+then
+  error.setMessage("Alternate Renewal Loan Period for Holds is not allowed for policies with Fixed profile");
+  Parameter param = new Parameter();
+  param.setKey("alternateRenewalLoanPeriod");
+  param.setValue("" + m1.getRequestManagement().getHolds().getAlternateRenewalLoanPeriod());
+  java.util.List<Parameter> p = new java.util.ArrayList<>();
+  p.add(param);
+  error.setParameters(p);
+  throw new java.lang.Exception("ProfileId = Fixed, but alternateRenewalLoanPeriod is provided");
+end
