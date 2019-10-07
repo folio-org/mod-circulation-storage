@@ -735,7 +735,7 @@ public class LoanPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void canNotUseHoldAlternateRenewalLoanPeriodForFixedProfile() throws Exception {
+  public void cannotUseHoldAlternateRenewalLoanPeriodForFixedProfile() throws Exception {
     DateTime from = DateTime.now().minusMonths(3);
     DateTime to = DateTime.now().plusMonths(3);
     DateTime dueDate = to.plusDays(15);
@@ -765,7 +765,7 @@ public class LoanPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void canNotUseRenewalsPeriodForFixedProfile() throws Exception {
+  public void cannotUseRenewalsPeriodForFixedProfile() throws Exception {
     DateTime from = DateTime.now().minusMonths(3);
     DateTime to = DateTime.now().plusMonths(3);
     DateTime dueDate = to.plusDays(15);
