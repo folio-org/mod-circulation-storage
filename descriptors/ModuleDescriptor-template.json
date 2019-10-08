@@ -826,7 +826,7 @@
     }
   ],
   "metadata": {
-    "containerMemory": "256",
+    "containerMemory": "384",
     "databaseConnection": "true"
   },
   "launchDescriptor": {
@@ -834,7 +834,7 @@
     "dockerPull": false,
     "dockerArgs": {
       "HostConfig": {
-        "Memory": 357913941,
+        "Memory": 536870912,
         "PortBindings": { "8081/tcp": [ { "HostPort": "%p" } ] }
       }
     },
