@@ -296,6 +296,144 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
     assertThat(message, is("Cannot delete in use notice policy"));
   }
 
+  @Test
+  public void cannotUpdatePatronNoticePolicyWithNotValidSendHow() throws InterruptedException,
+    MalformedURLException, TimeoutException, ExecutionException {
+
+    JsonObject sendOptions = new JsonObject()
+      .put("sendWhen", "Renewed")
+      .put("sendHow", "Before");
+
+    JsonObject loanNotice = new JsonObject()
+      .put("templateId", UUID.randomUUID().toString())
+      .put("format", "Email")
+      .put("realTime", "true")
+      .put("sendOptions", sendOptions);
+
+    JsonObject noticePolicy = createNoticePolicyWithLoanNotice(loanNotice);
+    JsonResponse response = putPatronNoticePolicy(noticePolicy);
+    assertThat(response.getStatusCode(), is(422));
+    assertThat(response.getJson().getJsonArray("errors").getJsonObject(0).getString("message"),
+      is("sendHow should not be present"));
+  }
+
+  @Test
+  public void cannotUpdatePatronNoticePolicyWithNotValidSendBy() throws InterruptedException,
+    MalformedURLException, TimeoutException, ExecutionException {
+
+    JsonObject sendBy = new JsonObject()
+      .put("duration", "1")
+      .put("intervalId", "Days");
+
+    JsonObject sendOptions = new JsonObject()
+      .put("sendWhen", "Renewed")
+      .put("sendBy", sendBy);
+
+    JsonObject noticePolicy = createNoticePolicyWithSendOptions(sendOptions);
+    JsonResponse response = putPatronNoticePolicy(noticePolicy);
+    assertThat(response.getStatusCode(), is(422));
+    assertThat(response.getJson().getJsonArray("errors").getJsonObject(0).getString("message"),
+      is("sendBy should not be present"));
+  }
+
+  @Test
+  public void cannotUpdatePatronNoticePolicyWithNotValidSendEvery() throws InterruptedException,
+    MalformedURLException, TimeoutException, ExecutionException {
+
+    JsonObject sendEvery = new JsonObject()
+      .put("duration", "2")
+      .put("intervalId", "Hours");
+
+    JsonObject sendOptions = new JsonObject()
+      .put("sendWhen", "Renewed")
+      .put("sendEvery", sendEvery);
+
+    JsonObject noticePolicy = createNoticePolicyWithSendOptions(sendOptions);
+    JsonResponse response = putPatronNoticePolicy(noticePolicy);
+    assertThat(response.getStatusCode(), is(422));
+    assertThat(response.getJson().getJsonArray("errors").getJsonObject(0).getString("message"),
+      is("sendEvery should not be present"));
+  }
+
+  @Test
+  public void cannotUpdatePatronNoticePolicyWithWrongSendHow() throws InterruptedException,
+    MalformedURLException, TimeoutException, ExecutionException {
+
+    JsonObject sendOptions = new JsonObject()
+      .put("sendWhen", "Due date")
+      .put("sendHow", "Upon At");
+
+    JsonObject loanNotice = new JsonObject()
+      .put("templateId", UUID.randomUUID().toString())
+      .put("format", "Email")
+      .put("realTime", "true")
+      .put("frequency", "Recurring")
+      .put("sendOptions", sendOptions);
+
+    JsonObject noticePolicy = createNoticePolicyWithLoanNotice(loanNotice);
+    JsonResponse response = putPatronNoticePolicy(noticePolicy);
+    assertThat(response.getStatusCode(), is(422));
+    assertThat(response.getJson().getJsonArray("errors").getJsonObject(0).getString("message"),
+      is("frequency should not be present"));
+  }
+
+  @Test
+  public void cannotUpdatePatronNoticePolicyWithWrongFrequency() throws InterruptedException,
+    MalformedURLException, TimeoutException, ExecutionException {
+
+    JsonObject sendEvery = new JsonObject()
+      .put("duration", "10")
+      .put("intervalId", "Minutes");
+
+    JsonObject sendOptions = new JsonObject()
+      .put("sendWhen", "Due date")
+      .put("sendHow", "Before")
+      .put("sendEvery", sendEvery);
+
+    JsonObject loanNotice = new JsonObject()
+      .put("templateId", UUID.randomUUID().toString())
+      .put("format", "Email")
+      .put("realTime", "true")
+      .put("frequency", "One time")
+      .put("sendOptions", sendOptions);
+
+    JsonObject noticePolicy = createNoticePolicyWithLoanNotice(loanNotice);
+    JsonResponse response = putPatronNoticePolicy(noticePolicy);
+    assertThat(response.getStatusCode(), is(422));
+    assertThat(response.getJson().getJsonArray("errors").getJsonObject(0).getString("message"),
+      is("sendEvery should not be present"));
+  }
+
+  private JsonObject createNoticePolicyWithSendOptions(JsonObject sendOptions) {
+
+    JsonObject noticePolicy = new JsonObject()
+      .put("name", "sample policy");
+
+    JsonObject loanNotice = new JsonObject()
+      .put("templateId", UUID.randomUUID().toString())
+      .put("format", "Email")
+      .put("realTime", "true")
+      .put("sendOptions", sendOptions);
+
+    noticePolicy
+      .put("id", UUID.randomUUID().toString())
+      .put("description", "new description")
+      .put("loanNotices", new JsonArray().add(loanNotice));
+
+    return noticePolicy;
+  }
+
+  private JsonObject createNoticePolicyWithLoanNotice(JsonObject loanNotice) {
+
+    JsonObject noticePolicy = new JsonObject()
+      .put("name", "sample policy")
+      .put("id", UUID.randomUUID().toString())
+      .put("description", "new description")
+      .put("loanNotices", new JsonArray().add(loanNotice));
+
+    return noticePolicy;
+  }
+
   private JsonResponse getPatronNoticePolicyById(String id)
     throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 
