@@ -35,7 +35,7 @@ public class TenantRefAPI extends TenantAPI {
         .add("circulation-rules-storage")
         .withIdContent()
         .add("cancellation-reason-storage/cancellation-reasons")
-        .add("overdue-fine-policy-storage/overdue-fine-policies")
+        .add("overdue-fines-policies")
         .withKey("loadSample").withLead("sample-data")
         .add("loans", "loan-storage/loans")
         .add("requests", "request-storage/requests")
