@@ -107,7 +107,6 @@ public class RequestExpirationApiTest extends ApiTests {
     UUID id1 = UUID.randomUUID();
     UUID id2 = UUID.randomUUID();
     UUID id3 = UUID.randomUUID();
-    UUID id4 = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
 
     /* Status "Open - Awaiting pickup" and hold shelf expiration date in the past - should be expired */
