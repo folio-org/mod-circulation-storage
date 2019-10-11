@@ -1,6 +1,8 @@
 package org.folio.support;
 
 import static io.vertx.core.Future.succeededFuture;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -39,6 +41,8 @@ import org.folio.rest.persist.PostgresClient;
 
 public class ExpirationTool {
 
+  private static final Logger log = LoggerFactory.getLogger(ExpirationTool.class);
+
   private ExpirationTool() {
     //do nothing
   }
@@ -69,7 +73,10 @@ public class ExpirationTool {
       .compose(requests -> reorderRequests(conn, vertx, tenant, requests))
       .setHandler(v -> {
         if (v.failed()) {
-          pgClient.rollbackTx(conn, done -> future.fail(v.cause()));
+          pgClient.rollbackTx(conn, done -> {
+            log.error("Error in request processing", v.cause());
+            future.fail(v.cause());
+          });
         } else {
           pgClient.endTx(conn, done -> future.complete());
         }
@@ -124,9 +131,9 @@ public class ExpirationTool {
       .collect(toSet());
 
     String where = format("WHERE " +
-        "jsonb->>'status' = '%1$s' OR " +
+        "(jsonb->>'status' = '%1$s' OR " +
         "jsonb->>'status' = '%2$s' OR " +
-        "jsonb->>'status' = '%3$s' AND " +
+        "jsonb->>'status' = '%3$s') AND " +
         "jsonb->>'itemId' IN (%4$s) " +
         "ORDER BY jsonb->>'position' ASC",
 
@@ -226,9 +233,9 @@ public class ExpirationTool {
     String fullTableName = format("%s.%s", PostgresClient.convertToPsqlStandard(tenant), REQUEST_TABLE);
 
     String sql = format("UPDATE %1$s SET jsonb = jsonb - 'position' WHERE " +
-        "jsonb->>'status' = '%2$s' OR " +
+        "(jsonb->>'status' = '%2$s' OR " +
         "jsonb->>'status' = '%3$s' OR " +
-        "jsonb->>'status' = '%4$s' AND " +
+        "jsonb->>'status' = '%4$s') AND " +
         "jsonb->>'itemId' IN (%5$s)",
 
       fullTableName,
