@@ -314,7 +314,7 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
     JsonResponse response = putPatronNoticePolicy(noticePolicy);
     assertThat(response.getStatusCode(), is(422));
     assertThat(response.getJson().getJsonArray("errors").getJsonObject(0).getString("message"),
-      is("sendHow should not be present"));
+      is("This option is not valid for selected Triggering event"));
   }
 
   @Test
@@ -333,7 +333,7 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
     JsonResponse response = putPatronNoticePolicy(noticePolicy);
     assertThat(response.getStatusCode(), is(422));
     assertThat(response.getJson().getJsonArray("errors").getJsonObject(0).getString("message"),
-      is("sendBy should not be present"));
+      is("This option is not valid for selected Triggering event"));
   }
 
   @Test
@@ -352,7 +352,7 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
     JsonResponse response = putPatronNoticePolicy(noticePolicy);
     assertThat(response.getStatusCode(), is(422));
     assertThat(response.getJson().getJsonArray("errors").getJsonObject(0).getString("message"),
-      is("sendEvery should not be present"));
+      is("This option is not valid for selected Triggering event"));
   }
 
   @Test
@@ -374,7 +374,7 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
     JsonResponse response = putPatronNoticePolicy(noticePolicy);
     assertThat(response.getStatusCode(), is(422));
     assertThat(response.getJson().getJsonArray("errors").getJsonObject(0).getString("message"),
-      is("frequency should not be present"));
+      is("This option is not valid for selected Send"));
   }
 
   @Test
@@ -401,7 +401,7 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
     JsonResponse response = putPatronNoticePolicy(noticePolicy);
     assertThat(response.getStatusCode(), is(422));
     assertThat(response.getJson().getJsonArray("errors").getJsonObject(0).getString("message"),
-      is("sendEvery should not be present"));
+      is("This option is not valid for selected Frequency"));
   }
 
   private JsonObject createNoticePolicyWithSendOptions(JsonObject sendOptions) {

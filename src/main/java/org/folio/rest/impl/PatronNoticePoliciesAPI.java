@@ -58,6 +58,7 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
   public static final String NOT_FOUND = "Not found";
   private static final String INTERNAL_SERVER_ERROR = "Internal server error";
   private static final String IN_USE_POLICY_ERROR_MESSAGE = "Cannot delete in use notice policy";
+  private static final String VALIDATION_ERROR_MESSAGE = "This option is not valid for selected";
 
   @Override
   public void getPatronNoticePolicyStoragePatronNoticePolicies(
@@ -310,7 +311,7 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
       && sendOptions.getSendHow() != SendOptions.SendHow.AFTER && loanNotice.getFrequency() != null) {
 
       return ValidationHelper.createValidationErrorMessage("frequency",
-        loanNotice.getFrequency().toString(), "frequency should not be present");
+        loanNotice.getFrequency().toString(), VALIDATION_ERROR_MESSAGE + " Send");
     }
     return new Errors().withErrors(Collections.emptyList());
   }
@@ -319,7 +320,7 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
     if (loanNotice.getFrequency() != null && loanNotice.getFrequency() == LoanNotice.Frequency.ONE_TIME
       && loanNotice.getSendOptions().getSendEvery() != null) {
       return ValidationHelper.createValidationErrorMessage("sendEvery",
-        loanNotice.getSendOptions().getSendEvery().toString(), "sendEvery should not be present");
+        loanNotice.getSendOptions().getSendEvery().toString(), VALIDATION_ERROR_MESSAGE + " Frequency");
     }
     return new Errors().withErrors(Collections.emptyList());
   }
@@ -327,15 +328,15 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
   private Errors validateSendOptionsForNotDueDate(SendOptions sendOptions) {
     if (sendOptions.getSendHow() != null) {
        return ValidationHelper.createValidationErrorMessage("sendHow",
-        sendOptions.getSendHow().toString(), "sendHow should not be present");
+        sendOptions.getSendHow().toString(), VALIDATION_ERROR_MESSAGE + " Triggering event");
     }
     if (sendOptions.getSendBy() != null) {
       return ValidationHelper.createValidationErrorMessage("sendBy",
-        sendOptions.getSendBy().toString(), "sendBy should not be present");
+        sendOptions.getSendBy().toString(), VALIDATION_ERROR_MESSAGE + " Triggering event");
     }
     if (sendOptions.getSendEvery() != null) {
       return ValidationHelper.createValidationErrorMessage("sendEvery",
-        sendOptions.getSendEvery().toString(), "sendEvery should not be present");
+        sendOptions.getSendEvery().toString(), VALIDATION_ERROR_MESSAGE + " Triggering event");
     }
     return new Errors().withErrors(Collections.emptyList());
   }
