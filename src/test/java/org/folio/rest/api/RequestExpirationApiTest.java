@@ -1,13 +1,10 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.support.builders.RequestRequestBuilder.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
 import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
-import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_PICKUP_EXPIRED;
-import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_UNFILLED;
-import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_AWAITING_PICKUP;
-import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET_FILLED;
 
 import java.net.MalformedURLException;
 import java.util.UUID;
@@ -110,6 +107,7 @@ public class RequestExpirationApiTest extends ApiTests {
     UUID id1 = UUID.randomUUID();
     UUID id2 = UUID.randomUUID();
     UUID id3 = UUID.randomUUID();
+    UUID id4 = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
 
     /* Status "Open - Awaiting pickup" and hold shelf expiration date in the past - should be expired */
@@ -191,14 +189,14 @@ public class RequestExpirationApiTest extends ApiTests {
       .create(),
       requestStorageUrl());
 
-    /* Status "Open - Awaiting pickup" and request expiration date in the past - should NOT be expired */
+    /* Status "Open - In transit" and request expiration date in the past - should NOT be expired */
     createEntity(
       new RequestRequestBuilder()
       .hold()
       .withId(id1_2)
       .withItemId(itemId1)
       .withPosition(2)
-      .withStatus(OPEN_NOT_YET_FILLED)
+      .withStatus(OPEN_IN_TRANSIT)
       .create(),
       requestStorageUrl());
 
@@ -259,7 +257,7 @@ public class RequestExpirationApiTest extends ApiTests {
     assertThat(response1_1.getString("status"), is(CLOSED_UNFILLED));
     assertThat(response1_1.containsKey("position"), is(false));
 
-    assertThat(response1_2.getString("status"), is(OPEN_NOT_YET_FILLED));
+    assertThat(response1_2.getString("status"), is(OPEN_IN_TRANSIT));
     assertThat(response1_2.getInteger("position"), is(1));
 
     assertThat(response1_3.getString("status"), is(OPEN_NOT_YET_FILLED));
@@ -308,10 +306,9 @@ public class RequestExpirationApiTest extends ApiTests {
       new RequestRequestBuilder()
         .hold()
         .withId(id1_1)
-        .withRequestExpiration(new DateTime(9999, 7, 30, 10, 22, 54, DateTimeZone.UTC))
         .withItemId(itemId1)
         .withPosition(1)
-        .withStatus(OPEN_NOT_YET_FILLED)
+        .withStatus(OPEN_IN_TRANSIT)
         .create(),
       requestStorageUrl());
 
@@ -529,7 +526,7 @@ public class RequestExpirationApiTest extends ApiTests {
     JsonObject response3_5 = getById(requestStorageUrl(String.format("/%s", id3_5)));
     JsonObject response3_6 = getById(requestStorageUrl(String.format("/%s", id3_6)));
 
-    assertThat(response1_1.getString("status"), is(OPEN_NOT_YET_FILLED));
+    assertThat(response1_1.getString("status"), is(OPEN_IN_TRANSIT));
     assertThat(response1_1.getInteger("position"), is(1));
 
     assertThat(response1_2.getString("status"), is(CLOSED_UNFILLED));
