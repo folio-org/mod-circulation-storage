@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Collection of requests",
+  "type": "object",
+  "properties": {
+    "requests": {
+      "description": "List of request items to update",
+      "id": "requests",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "request.json"
+      }
+    },
+    "transactionMode": {
+      "type": "string",
+      "description": "Transaction mode to use for update operation: Same - execute all updates sequentially within the same transaction",
+      "enum": [
+        "Same"
+      ],
+      "default": "Same"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "requests",
+    "transactionMode"
+  ]
+}

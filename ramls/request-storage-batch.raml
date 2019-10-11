@@ -1,0 +1,32 @@
+#%RAML 1.0
+title: Request Storage Batch
+version: v0.1
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost:9130
+
+documentation:
+  - title: Batch Request Storage API
+    content: <b>Batch request operations</b>
+
+types:
+  requests-batch: !include requests-batch.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  validate: !include raml-util/traits/validation.raml
+
+/request-storage-batch:
+  /requests:
+    put:
+      is: [validate]
+      body:
+        application/json:
+          type: requests-batch
+      responses:
+        204:
+          description: "Update executed successfully"
+        500:
+          description: "Internal server error, e.g. due to misconfiguration"
+          body:
+            text/plain:
+              example: "Internal server error, contact administrator"
