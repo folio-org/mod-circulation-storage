@@ -1,3 +1,7 @@
+## 9.3.1 2019-10-15
+
+* Fix hold shelf expiration bug which caused some requests to not expire
+
 ## 9.3.0 2019-09-18
 
 * Stores whether a loan due date has changed due to a recall request CIRCSTORE-156
