@@ -1,3 +1,7 @@
+## 9.1.1 2019-10-16
+
+* Fixes hold shelf expiration bug which caused some requests to not expire (CIRCSTORE-163)
+
 ## 9.1.0 2019-07-24
 
 * Support hyphens in request status when using CQL = relation CIRCSTORE-138
