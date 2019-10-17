@@ -17,13 +17,13 @@ traits:
 
 /request-storage-batch:
   /requests:
-    put:
+    post:
       is: [validate]
       body:
         application/json:
           type: requests-batch
       responses:
-        204:
+        201:
           description: "Update executed successfully"
         500:
           description: "Internal server error, e.g. due to misconfiguration"

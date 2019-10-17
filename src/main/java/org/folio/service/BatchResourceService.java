@@ -1,7 +1,5 @@
 package org.folio.service;
 
-import static org.folio.rest.jaxrs.model.RequestsBatch.TransactionMode;
-
 import java.util.List;
 import java.util.function.Function;
 
@@ -28,31 +26,16 @@ public class BatchResourceService {
   }
 
   /**
-   * Execute batch update.
+   * Execute batch update in a single transaction, subsequently.
    *
-   * @param transactionMode - Transaction mode for update:
-   *                        Same - use one transaction for all entities
    * @param entities        - Entities to update
    * @param getId           - Function to get ID from an entity.
    * @param onFinishHandler - Callback.
    * @param <T>             - Entity type.
-   * @throws UnsupportedOperationException if transaction mode is not supported.
    */
   public <T> void executeBatchUpdate(
-    TransactionMode transactionMode, List<T> entities, Function<T, String> getId,
+    List<T> entities, Function<T, String> getId,
     Handler<AsyncResult<Void>> onFinishHandler) {
-
-    // Currently only one mode supported
-    if (transactionMode == TransactionMode.SAME) {
-      executeBatchUpdateInSameTransaction(entities, getId, onFinishHandler);
-    } else {
-      throw new UnsupportedOperationException(
-        "Transaction mode: [" + transactionMode + "] is not supported now");
-    }
-  }
-
-  private <T> void executeBatchUpdateInSameTransaction(
-    List<T> entities, Function<T, String> getId, Handler<AsyncResult<Void>> onFinishHandler) {
 
     postgresClient.startTx(connectionResult -> {
       if (connectionResult.failed()) {

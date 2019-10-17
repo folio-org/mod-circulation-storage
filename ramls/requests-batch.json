@@ -11,19 +11,10 @@
         "type": "object",
         "$ref": "request.json"
       }
-    },
-    "transactionMode": {
-      "type": "string",
-      "description": "Transaction mode to use for update operation: Same - execute all updates sequentially within the same transaction",
-      "enum": [
-        "Same"
-      ],
-      "default": "Same"
     }
   },
   "additionalProperties": false,
   "required": [
-    "requests",
-    "transactionMode"
+    "requests"
   ]
 }
