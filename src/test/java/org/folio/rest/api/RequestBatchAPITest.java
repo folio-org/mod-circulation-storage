@@ -3,6 +3,7 @@ package org.folio.rest.api;
 import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.storageUrl;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -21,6 +22,7 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.TextResponse;
 import org.folio.rest.support.builders.RequestRequestBuilder;
+import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -118,6 +120,24 @@ public class RequestBatchAPITest extends ApiTests {
     assertRequestsNotUpdated(itemId, firstRequest, secondRequest);
   }
 
+  @Test
+  public void cannotInjectSqlThroughRequestId() throws Exception {
+    UUID itemId = UUID.randomUUID();
+
+    JsonObject firstRequest = createRequestForItemAtPosition(itemId, 1);
+
+    JsonObject firstRequestCopy = firstRequest.copy();
+    firstRequestCopy.put("id", "1'; DELETE FROM request where id::text is not '1");
+
+    JsonResponse reorderResponse = attemptReorderRequests(ResponseHandler::json,
+      new ReorderRequest(firstRequestCopy, 3)
+    );
+    assertValidationError(reorderResponse,
+      containsString("must match"));
+
+    assertRequestsNotUpdated(itemId, firstRequest);
+  }
+
   private JsonObject getAllRequestsForItem(UUID itemId) throws Exception {
     CompletableFuture<JsonResponse> getRequestsCompleted = new CompletableFuture<>();
 
@@ -199,7 +219,6 @@ public class RequestBatchAPITest extends ApiTests {
   private void assertRequestsNotUpdated(UUID itemId, JsonObject... requests) throws Exception {
     JsonObject requestsForItemReply = getAllRequestsForItem(itemId);
 
-    assertThat(requestsForItemReply.size(), is(requests.length));
     assertThat(requestsForItemReply.getInteger("totalRecords"), is(requests.length));
 
     JsonObject[] sortedExpectedRequests = Arrays.stream(requests)
@@ -207,16 +226,24 @@ public class RequestBatchAPITest extends ApiTests {
       .toArray(JsonObject[]::new);
     JsonArray requestsFromDb = requestsForItemReply.getJsonArray("requests");
 
+    assertThat(requestsFromDb.size(), is(sortedExpectedRequests.length));
     assertThat(requestsFromDb, hasItems(sortedExpectedRequests));
   }
 
   private void assertPositionConstraintViolationError(JsonResponse response) {
+    assertValidationError(response,
+      is("Cannot have more than one request with the same position in the queue"));
+  }
+
+  private void assertValidationError(
+    JsonResponse response, Matcher<String> errorMessageMatcher) {
+
     assertThat(response.getStatusCode(), is(422));
 
     JsonArray errors = response.getJson().getJsonArray("errors");
     assertThat(errors.size(), is(1));
     assertThat(errors.getJsonObject(0).getString("message"),
-      is("Cannot have more than one request with the same position in the queue"));
+      errorMessageMatcher);
   }
 
   /**

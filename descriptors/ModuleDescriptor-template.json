@@ -7,9 +7,9 @@
       "version": "0.1",
       "handlers": [
         {
-          "methods": ["PUT"],
+          "methods": ["POST"],
           "pathPattern": "/request-storage-batch/requests",
-          "permissionsRequired": ["circulation-storage-batch.requests.item.put"]
+          "permissionsRequired": ["circulation-storage-batch.requests.item.post"]
         }
       ]
     },
@@ -530,7 +530,7 @@
       "description": "Modify request in storage"
     },
     {
-      "permissionName": "circulation-storage-batch.requests.item.put",
+      "permissionName": "circulation-storage-batch.requests.item.post",
       "displayName": "Circulation storage batch - modify requests",
       "description": "Modify requests in storage"
     },
@@ -795,7 +795,7 @@
         "circulation-storage.request-policies.item.delete",
         "circulation-storage.request-policies.item.post",
         "circulation-storage.request-policies.item.put",
-        "circulation-storage-batch.requests.item.put",
+        "circulation-storage-batch.requests.item.post",
         "scheduled-notice-storage.scheduled-notices.collection.get",
         "scheduled-notice-storage.scheduled-notices.item.get",
         "scheduled-notice-storage.scheduled-notices.item.post",
