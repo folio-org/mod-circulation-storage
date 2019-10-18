@@ -12,11 +12,11 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
-import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.jaxrs.model.RequestsBatch;
 import org.folio.rest.jaxrs.resource.RequestStorageBatch;
 import org.folio.rest.persist.PgUtil;
 import org.folio.service.BatchResourceService;
+import org.folio.service.request.RequestBatchResourceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,12 +32,15 @@ public class RequestsBatchAPI implements RequestStorageBatch {
     RequestsBatch entity, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context context) {
 
-    BatchResourceService updateService = new BatchResourceService(
+    BatchResourceService batchUpdateService = new BatchResourceService(
       PgUtil.postgresClient(context, okapiHeaders),
       REQUEST_TABLE
     );
 
-    updateService.executeBatchUpdate(entity.getRequests(), Request::getId,
+    RequestBatchResourceService requestBatchUpdateService =
+      new RequestBatchResourceService(batchUpdateService);
+
+    requestBatchUpdateService.executeRequestBatchUpdate(entity.getRequests(),
       updateResult -> {
         // Successfully updated
         if (updateResult.succeeded()) {

@@ -16,6 +16,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
+import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.Response;
@@ -55,16 +56,69 @@ public class RequestBatchAPITest extends ApiTests {
     ReorderRequest secondReorderRequest = new ReorderRequest(secondRequest, 1);
 
     reorderRequests(
-      // We have to remove request positions before assigning new ones
-      // in order to get through 'item-position' unique constraint
-      new ReorderRequest(firstRequest, null),
-      new ReorderRequest(secondRequest, null),
-      // Then set the actual positions.
       firstReorderRequest,
       secondReorderRequest
     );
 
     assertRequestsUpdated(itemId, firstReorderRequest, secondReorderRequest);
+  }
+
+  @Test
+  public void canCloseRequestsInBatch() throws Exception {
+    UUID itemId = UUID.randomUUID();
+
+    JsonObject firstRequest = createRequestForItemAtPosition(itemId, 1);
+    JsonObject secondRequest = createRequestForItemAtPosition(itemId, 2);
+
+    firstRequest.put("status", Request.Status.CLOSED_FILLED.value());
+    firstRequest.remove("position");
+    secondRequest.put("status", Request.Status.CLOSED_FILLED.value());
+    secondRequest.remove("position");
+
+    CompletableFuture<Response> postCompleted = new CompletableFuture<>();
+    client.post(batchRequestStorageUrl(),
+      buildBatchUpdateRequest(firstRequest, secondRequest),
+      TENANT_ID,
+      ResponseHandler.empty(postCompleted)
+    );
+
+    Response response = postCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(response.getStatusCode(), is(201));
+
+    JsonObject allRequestsForItem = getAllRequestsForItem(itemId);
+    assertThat(allRequestsForItem.getInteger("totalRecords"), is(2));
+
+    JsonArray allRequests = allRequestsForItem.getJsonArray("requests");
+    assertThat(firstRequest, is(allRequests.getJsonObject(0)));
+    assertThat(secondRequest, is(allRequests.getJsonObject(1)));
+  }
+
+  @Test
+  public void canUpdateRequestFulfilmentPreferenceInBatch() throws Exception {
+    UUID itemId = UUID.randomUUID();
+
+    JsonObject firstRequest = createRequestForItemAtPosition(itemId, 1);
+    JsonObject secondRequest = createRequestForItemAtPosition(itemId, 2);
+
+    firstRequest.put("fulfilmentPreference", "Delivery");
+    secondRequest.put("fulfilmentPreference", "Delivery");
+
+    CompletableFuture<Response> postCompleted = new CompletableFuture<>();
+    client.post(batchRequestStorageUrl(),
+      buildBatchUpdateRequest(firstRequest, secondRequest),
+      TENANT_ID,
+      ResponseHandler.empty(postCompleted)
+    );
+
+    Response response = postCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(response.getStatusCode(), is(201));
+
+    JsonObject allRequestsForItem = getAllRequestsForItem(itemId);
+    assertThat(allRequestsForItem.getInteger("totalRecords"), is(2));
+
+    JsonArray allRequests = allRequestsForItem.getJsonArray("requests");
+    assertThat(firstRequest, is(allRequests.getJsonObject(0)));
+    assertThat(secondRequest, is(allRequests.getJsonObject(1)));
   }
 
   @Test
@@ -88,7 +142,6 @@ public class RequestBatchAPITest extends ApiTests {
   public void willAbortBatchUpdateWhenOnlyOnePositionIsModified() throws Exception {
     UUID itemId = UUID.randomUUID();
 
-    // 1st create some sample requests for an item
     JsonObject firstRequest = createRequestForItemAtPosition(itemId, 1);
     JsonObject secondRequest = createRequestForItemAtPosition(itemId, 2);
 
