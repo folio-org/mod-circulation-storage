@@ -152,3 +152,19 @@ Then an update trigger adds the property 'awaitingPickupRequestClosedDate' to th
 Such behavior is required by Expired Holds Report CSV functionality in mod-circulation<br/>
 See [CIRC-320](https://issues.folio.org/browse/CIRC-320)
 
+### Requests Batch API
+
+In order to go through `itemId`-`position` constraint for **request** table we're removing all positions 
+for requests as the first operation of batch, before executing the updates.
+
+Let's say we have following requests in batch package:
+* *Request A*;
+* *Request B*;
+* *Request C*.
+
+Then, in order to execute them successfully and do not get constraint violation we're 
+removing positions for these request, so we will do:
+1. `UPDATE requests SET jsonb = jsonb - 'position' WHERE id IN (A, B, C)`;
+1. `UPDATE requests SET jsonb = A WHERE id = A`;
+1. `UPDATE requests SET jsonb = B WHERE id = B`;
+1. `UPDATE requests SET jsonb = C WHERE id = C`;

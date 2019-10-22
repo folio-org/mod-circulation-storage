@@ -1,12 +1,12 @@
 package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
-import static org.folio.rest.impl.RequestsAPI.REQUEST_TABLE;
 import static org.folio.rest.impl.util.RequestsApiUtil.hasSamePositionConstraintViolated;
 import static org.folio.rest.impl.util.RequestsApiUtil.samePositionInQueueError;
 import static org.folio.rest.jaxrs.resource.RequestStorageBatch.PostRequestStorageBatchRequestsResponse.respond201;
 import static org.folio.rest.jaxrs.resource.RequestStorageBatch.PostRequestStorageBatchRequestsResponse.respond422WithApplicationJson;
 import static org.folio.rest.jaxrs.resource.RequestStorageBatch.PostRequestStorageBatchRequestsResponse.respond500WithTextPlain;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 import java.util.Map;
 
@@ -33,12 +33,11 @@ public class RequestsBatchAPI implements RequestStorageBatch {
     Handler<AsyncResult<Response>> asyncResultHandler, Context context) {
 
     BatchResourceService batchUpdateService = new BatchResourceService(
-      PgUtil.postgresClient(context, okapiHeaders),
-      REQUEST_TABLE
+      PgUtil.postgresClient(context, okapiHeaders)
     );
 
     RequestBatchResourceService requestBatchUpdateService =
-      new RequestBatchResourceService(batchUpdateService);
+      new RequestBatchResourceService(tenantId(okapiHeaders), batchUpdateService);
 
     requestBatchUpdateService.executeRequestBatchUpdate(entity.getRequests(),
       updateResult -> {

@@ -52,11 +52,6 @@
       <version>5.4.2</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>uk.com.robust-it</groupId>
-      <artifactId>cloning</artifactId>
-      <version>1.9.11</version>
-    </dependency>
   </dependencies>
 
   <properties>

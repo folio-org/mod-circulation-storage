@@ -1,28 +1,38 @@
 package org.folio.service.request;
 
+import static org.folio.rest.impl.RequestsAPI.REQUEST_TABLE;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.folio.rest.jaxrs.model.Request;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.service.BatchResourceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.rits.cloning.Cloner;
-
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.ext.sql.SQLConnection;
+import io.vertx.ext.sql.UpdateResult;
 
 public class RequestBatchResourceService {
   private static final Logger LOG = LoggerFactory.getLogger(RequestBatchResourceService.class);
+  private static final String REMOVE_POSITIONS_SQL =
+    "UPDATE %s.%s SET jsonb = jsonb - 'position' WHERE id::text IN (%s)";
 
   private final BatchResourceService batchResourceService;
-  private final Cloner cloner;
+  private final String tenantName;
 
+  public RequestBatchResourceService(String tenantName,
+                                     BatchResourceService batchResourceService) {
 
-  public RequestBatchResourceService(BatchResourceService batchResourceService) {
     this.batchResourceService = batchResourceService;
-    this.cloner = new Cloner();
+    this.tenantName = tenantName;
   }
 
   /**
@@ -51,41 +61,53 @@ public class RequestBatchResourceService {
     List<Request> requests, Handler<AsyncResult<Void>> onFinishHandler) {
 
     LOG.debug("Removing positions for all request to go through positions constraint");
-    // We have to include requests with positions removed to the batch package
-    // to go through itemId-position unique constraint.
-    List<Request> requestsWithRemovedPositions = removePositionsForRequests(requests);
+    List<Function<SQLConnection, Future<UpdateResult>>> allBatches = new ArrayList<>();
 
-    List<Request> allRequestsToUpdate = new ArrayList<>(requestsWithRemovedPositions);
-    allRequestsToUpdate.addAll(requests);
+    // Remove positions for the requests before updating them
+    // in order to go through item position constraint.
+    Function<SQLConnection, Future<UpdateResult>> removePositionBatch =
+      removePositionsForRequestsBatch(requests);
+
+    List<Function<SQLConnection, Future<UpdateResult>>> updateRequestsBatch =
+      updateRequestsBatch(requests);
+
+    allBatches.add(removePositionBatch);
+    allBatches.addAll(updateRequestsBatch);
 
     LOG.info("Executing batch update, total records to update [{}] (including remove positions)",
-      allRequestsToUpdate.size()
+      allBatches.size()
     );
 
-    batchResourceService.executeBatchUpdate(allRequestsToUpdate,
-      Request::getId, onFinishHandler);
+    batchResourceService.executeBatchUpdate(allBatches, onFinishHandler);
   }
 
-  private List<Request> removePositionsForRequests(List<Request> requests) {
-    List<Request> allRequests = new ArrayList<>();
+  private Function<SQLConnection, Future<UpdateResult>> removePositionsForRequestsBatch(
+    List<Request> requests) {
 
-    for (Request request : requests) {
-      Request requestCopyWithNoPosition = cloneRequest(request)
-        .withPosition(null);
+    Set<String> uniqueRequestIds = requests.stream()
+      .map(Request::getId)
+      .collect(Collectors.toSet());
 
-      allRequests.add(requestCopyWithNoPosition);
-    }
+    String requestIdsParamsPlaceholder = uniqueRequestIds.stream()
+      .map(reqId -> "?")
+      .collect(Collectors.joining(", "));
 
-    return allRequests;
+    String sql = String.format(REMOVE_POSITIONS_SQL,
+      PostgresClient.convertToPsqlStandard(tenantName),
+      REQUEST_TABLE,
+      requestIdsParamsPlaceholder
+    );
+
+    return batchResourceService
+      .queryWithParamsBatchFactory(sql, uniqueRequestIds);
   }
 
-  /**
-   * Makes a copy of a request object.
-   *
-   * @param requestToCopy - Request object to make a copy.
-   * @return Copy of a request object.
-   */
-  private Request cloneRequest(Request requestToCopy) {
-    return cloner.deepClone(requestToCopy);
+  private List<Function<SQLConnection, Future<UpdateResult>>> updateRequestsBatch(
+    List<Request> requests) {
+
+    return requests.stream()
+      .map(request -> batchResourceService
+        .updateSingleEntityBatchFactory(REQUEST_TABLE, request.getId(), request))
+      .collect(Collectors.toList());
   }
 }
