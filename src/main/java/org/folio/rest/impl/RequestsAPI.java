@@ -3,7 +3,8 @@ package org.folio.rest.impl;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
-import org.folio.rest.jaxrs.model.Error;
+
+import org.folio.rest.impl.util.RequestsApiUtil;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.jaxrs.model.Requests;
@@ -14,8 +15,6 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.TenantTool;
 
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
@@ -130,24 +129,14 @@ public class RequestsAPI implements RequestStorage {
   }
 
   private Errors samePositionInQueueError(Request request) {
-    Error error = new Error();
-
-    error.withMessage("Cannot have more than one request with the same position in the queue")
-      .withAdditionalProperty("itemId", request.getItemId())
-      .withAdditionalProperty("position", request.getPosition());
-
-    List<Error> errorList = new ArrayList<>();
-    errorList.add(error);
-
-    Errors errors = new Errors();
-    errors.setErrors(errorList);
-
-    return errors;
+    return RequestsApiUtil
+      .samePositionInQueueError(request.getItemId(), request.getPosition());
   }
 
   private boolean isSamePositionInQueueError(AsyncResult<Response> reply) {
     return reply.succeeded()
-        && reply.result().getStatus() == 400
-        && reply.result().getEntity().toString().contains("request_itemid_position_idx_unique");
+      && reply.result().getStatus() == 400
+      && RequestsApiUtil
+      .hasSamePositionConstraintViolated(reply.result().getEntity().toString());
   }
 }

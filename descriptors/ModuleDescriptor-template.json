@@ -3,6 +3,17 @@
   "name": "Circulation Storage Module",
   "provides": [
     {
+      "id": "request-storage-batch",
+      "version": "0.1",
+      "handlers": [
+        {
+          "methods": ["POST"],
+          "pathPattern": "/request-storage-batch/requests",
+          "permissionsRequired": ["circulation-storage.request-batch.item.post"]
+        }
+      ]
+    },
+    {
       "id": "loan-storage",
       "version": "6.2",
       "handlers": [
@@ -519,6 +530,11 @@
       "description": "Modify request in storage"
     },
     {
+      "permissionName": "circulation-storage.request-batch.item.post",
+      "displayName": "Circulation storage batch - modify requests",
+      "description": "Modify requests in storage"
+    },
+    {
       "permissionName": "circulation-storage.requests.item.delete",
       "displayName": "Circulation storage - delete individual request",
       "description": "Delete individual request from storage"
@@ -779,6 +795,7 @@
         "circulation-storage.request-policies.item.delete",
         "circulation-storage.request-policies.item.post",
         "circulation-storage.request-policies.item.put",
+        "circulation-storage.request-batch.item.post",
         "scheduled-notice-storage.scheduled-notices.collection.get",
         "scheduled-notice-storage.scheduled-notices.item.get",
         "scheduled-notice-storage.scheduled-notices.item.post",
