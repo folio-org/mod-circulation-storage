@@ -3,13 +3,13 @@
   "name": "Circulation Storage Module",
   "provides": [
     {
-      "id": "requests-storage-batch",
+      "id": "request-storage-batch",
       "version": "0.1",
       "handlers": [
         {
           "methods": ["POST"],
           "pathPattern": "/request-storage-batch/requests",
-          "permissionsRequired": ["circulation-storage-batch.requests.item.post"]
+          "permissionsRequired": ["circulation-storage.request-batch.item.post"]
         }
       ]
     },
@@ -530,7 +530,7 @@
       "description": "Modify request in storage"
     },
     {
-      "permissionName": "circulation-storage-batch.requests.item.post",
+      "permissionName": "circulation-storage.request-batch.item.post",
       "displayName": "Circulation storage batch - modify requests",
       "description": "Modify requests in storage"
     },
@@ -795,7 +795,7 @@
         "circulation-storage.request-policies.item.delete",
         "circulation-storage.request-policies.item.post",
         "circulation-storage.request-policies.item.put",
-        "circulation-storage-batch.requests.item.post",
+        "circulation-storage.request-batch.item.post",
         "scheduled-notice-storage.scheduled-notices.collection.get",
         "scheduled-notice-storage.scheduled-notices.item.get",
         "scheduled-notice-storage.scheduled-notices.item.post",
