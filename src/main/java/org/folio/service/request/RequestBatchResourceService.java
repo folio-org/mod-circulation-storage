@@ -61,7 +61,8 @@ public class RequestBatchResourceService {
     List<Request> requests, Handler<AsyncResult<Void>> onFinishHandler) {
 
     LOG.debug("Removing positions for all request to go through positions constraint");
-    List<Function<SQLConnection, Future<UpdateResult>>> allBatches = new ArrayList<>();
+    List<Function<SQLConnection, Future<UpdateResult>>> allDatabaseOperations =
+      new ArrayList<>();
 
     // Remove positions for the requests before updating them
     // in order to go through item position constraint.
@@ -71,14 +72,14 @@ public class RequestBatchResourceService {
     List<Function<SQLConnection, Future<UpdateResult>>> updateRequestsBatch =
       updateRequestsBatch(requests);
 
-    allBatches.add(removePositionBatch);
-    allBatches.addAll(updateRequestsBatch);
+    allDatabaseOperations.add(removePositionBatch);
+    allDatabaseOperations.addAll(updateRequestsBatch);
 
     LOG.info("Executing batch update, total records to update [{}] (including remove positions)",
-      allBatches.size()
+      allDatabaseOperations.size()
     );
 
-    batchResourceService.executeBatchUpdate(allBatches, onFinishHandler);
+    batchResourceService.executeBatchUpdate(allDatabaseOperations, onFinishHandler);
   }
 
   private Function<SQLConnection, Future<UpdateResult>> removePositionsForRequestsBatch(
