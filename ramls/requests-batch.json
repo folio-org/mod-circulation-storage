@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Collection of requests",
+  "type": "object",
+  "properties": {
+    "requests": {
+      "description": "List of request items to update",
+      "id": "requests",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "request.json"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "requests"
+  ]
+}
