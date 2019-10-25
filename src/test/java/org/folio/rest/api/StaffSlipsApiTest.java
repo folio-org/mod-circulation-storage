@@ -66,7 +66,7 @@ public class StaffSlipsApiTest extends ApiTests {
 
     JsonArray slipsJsonArray = getResponse.getJson().getJsonArray("staffSlips");
     Object [] names = slipsJsonArray.stream().map(o -> ((JsonObject) o).getString(NAME_KEY)).toArray();
-    assertThat(names, arrayContainingInAnyOrder("Hold", "Transit", "Request delivery"));
+    assertThat(names, arrayContainingInAnyOrder("Hold", "Transit", "Request delivery", "Pick slip"));
   }
 
   /* Begin Tests */
