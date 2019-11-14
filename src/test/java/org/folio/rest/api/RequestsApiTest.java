@@ -15,6 +15,7 @@ import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_CANCE
 import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_FILLED;
 import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_PICKUP_EXPIRED;
 import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_UNFILLED;
+import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_AWAITING_DELIVERY;
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_AWAITING_PICKUP;
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_IN_TRANSIT;
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET_FILLED;
@@ -40,7 +41,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
-
 import org.hamcrest.junit.MatcherAssert;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -173,6 +173,7 @@ public class RequestsApiTest extends ApiTests {
   @Parameters({
     OPEN_NOT_YET_FILLED,
     OPEN_AWAITING_PICKUP,
+    OPEN_AWAITING_DELIVERY,
     OPEN_IN_TRANSIT,
     CLOSED_FILLED,
     CLOSED_UNFILLED,
@@ -1252,6 +1253,13 @@ public class RequestsApiTest extends ApiTests {
 
     createEntity(
       new RequestRequestBuilder()
+        .withItemId(itemId)
+        .withPosition(3)
+        .withStatus(OPEN_AWAITING_DELIVERY).create(),
+      requestStorageUrl());
+
+    createEntity(
+      new RequestRequestBuilder()
       .withItemId(itemId)
       .withNoPosition()
       .withStatus(CLOSED_FILLED).create(),
@@ -1274,7 +1282,7 @@ public class RequestsApiTest extends ApiTests {
     createEntity(
       new RequestRequestBuilder()
         .withItemId(itemId)
-        .withPosition(3)
+        .withPosition(4)
         .withStatus(OPEN_IN_TRANSIT).create(),
       requestStorageUrl());
 
@@ -1287,8 +1295,10 @@ public class RequestsApiTest extends ApiTests {
 
     CompletableFuture<JsonResponse> getRequestsCompleted = new CompletableFuture<>();
 
-    String query = URLEncoder.encode(String.format("itemId==%s and status==(\"%s\" or \"%s\" or \"%s\")",
-      itemId, OPEN_NOT_YET_FILLED, OPEN_AWAITING_PICKUP, OPEN_IN_TRANSIT),
+    String query = URLEncoder.encode(String.format("itemId==%s and status==(\"%s\" or \"%s\" or \"%s\" or \"%s\")",
+      itemId,
+      OPEN_NOT_YET_FILLED, OPEN_AWAITING_PICKUP,
+      OPEN_IN_TRANSIT, OPEN_AWAITING_DELIVERY),
       "UTF-8");
 
     client.get(requestStorageUrl() + String.format("?query=%s", query),
@@ -1302,8 +1312,8 @@ public class RequestsApiTest extends ApiTests {
 
     JsonObject wrappedRequests = getRequestsResponse.getJson();
 
-    assertThat(wrappedRequests.getJsonArray("requests").size(), is(3));
-    assertThat(wrappedRequests.getInteger("totalRecords"), is(3));
+    assertThat(wrappedRequests.getJsonArray("requests").size(), is(4));
+    assertThat(wrappedRequests.getInteger("totalRecords"), is(4));
   }
 
   @Test
@@ -1332,6 +1342,13 @@ public class RequestsApiTest extends ApiTests {
 
     createEntity(
       new RequestRequestBuilder()
+        .withItemId(itemId)
+        .withPosition(3)
+        .withStatus(OPEN_AWAITING_DELIVERY).create(),
+      requestStorageUrl());
+
+    createEntity(
+      new RequestRequestBuilder()
       .withItemId(itemId)
       .withNoPosition()
       .withStatus(CLOSED_FILLED).create(),
@@ -1354,7 +1371,7 @@ public class RequestsApiTest extends ApiTests {
     createEntity(
       new RequestRequestBuilder()
         .withItemId(itemId)
-        .withPosition(3)
+        .withPosition(4)
         .withStatus(OPEN_IN_TRANSIT).create(),
       requestStorageUrl());
 

@@ -1,16 +1,18 @@
 package org.folio.rest.support.builders;
 
+import java.util.UUID;
+
 import io.vertx.core.json.JsonObject;
-import org.folio.rest.jaxrs.model.Tags;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-import java.util.UUID;
+import org.folio.rest.jaxrs.model.Tags;
 
 public class RequestRequestBuilder extends JsonBuilder {
   public static final String OPEN_NOT_YET_FILLED = "Open - Not yet filled";
   public static final String OPEN_AWAITING_PICKUP = "Open - Awaiting pickup";
   public static final String OPEN_IN_TRANSIT = "Open - In transit";
+  public static final String OPEN_AWAITING_DELIVERY = "Open - Awaiting delivery";
   public static final String CLOSED_FILLED = "Closed - Filled";
   public static final String CLOSED_CANCELLED = "Closed - Cancelled";
   public static final String CLOSED_UNFILLED = "Closed - Unfilled";
