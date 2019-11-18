@@ -13,7 +13,8 @@
     "gracePeriod": {
       "duration": 7,
       "intervalId": "Days"
-    }
+    },
+    "itemLimit": 1000
   },
   "renewable": true,
   "renewalsPolicy": {
