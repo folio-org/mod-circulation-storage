@@ -341,6 +341,7 @@ public class LoanPoliciesApiTest extends ApiTests {
 
     assertThat(String.format("Failed to create loan policy: %s", response.getBody()),
       response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    assertThat(response.getJson().getJsonObject("loansPolicy").getInteger("itemLimit"), is(1000));
   }
 
   @Test
@@ -369,7 +370,14 @@ public class LoanPoliciesApiTest extends ApiTests {
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Should fail to create loan policy: %s", response.getBody()),
-      response.getStatusCode(), is(HttpStatus.HTTP_INTERNAL_SERVER_ERROR.toInt()));
+      response.getStatusCode(), is(HttpStatus.HTTP_VALIDATION_ERROR.toInt()));
+
+    JsonObject error = getErrorFromResponse(response);
+    JsonObject parameters = error.getJsonArray("parameters").getJsonObject(0);
+
+    assertThat(error.getString("message"), is("must be greater than or equal to 1"));
+    assertThat(parameters.getString("key"), is("loansPolicy.itemLimit"));
+    assertThat(parameters.getString("value"), is("0"));
   }
 
   @Test
@@ -398,7 +406,14 @@ public class LoanPoliciesApiTest extends ApiTests {
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Should fail to create loan policy: %s", response.getBody()),
-      response.getStatusCode(), is(HttpStatus.HTTP_INTERNAL_SERVER_ERROR.toInt()));
+      response.getStatusCode(), is(HttpStatus.HTTP_VALIDATION_ERROR.toInt()));
+
+    JsonObject error = getErrorFromResponse(response);
+    JsonObject parameters = error.getJsonArray("parameters").getJsonObject(0);
+
+    assertThat(error.getString("message"), is("must be less than or equal to 9999"));
+    assertThat(parameters.getString("key"), is("loansPolicy.itemLimit"));
+    assertThat(parameters.getString("value"), is("10000"));
   }
 
   @Test
@@ -973,5 +988,9 @@ public class LoanPoliciesApiTest extends ApiTests {
       response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     return new IndividualResource(response);
+  }
+
+  private JsonObject getErrorFromResponse(JsonResponse response) {
+    return response.getJson().getJsonArray("errors").getJsonObject(0);
   }
 }
