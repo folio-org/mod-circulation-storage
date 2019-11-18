@@ -44,6 +44,12 @@
         "fixedDueDateScheduleId": {
           "type": "string",
           "description": "Fixed due date schedule (due date limit)"
+        },
+        "itemLimit": {
+          "type": "integer",
+          "description": "Number of items allowed",
+          "minimum": 1,
+          "maximum": 9999
         }
       }
     },
