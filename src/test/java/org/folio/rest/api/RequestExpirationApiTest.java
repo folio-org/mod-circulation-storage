@@ -1,10 +1,14 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.support.builders.RequestRequestBuilder.*;
+import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
+import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_PICKUP_EXPIRED;
+import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_UNFILLED;
+import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_AWAITING_DELIVERY;
+import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_AWAITING_PICKUP;
+import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_IN_TRANSIT;
+import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET_FILLED;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-
-import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
 
 import java.net.MalformedURLException;
 import java.util.UUID;
@@ -12,17 +16,16 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import io.vertx.core.json.JsonObject;
+import org.folio.rest.support.ApiTests;
+import org.folio.rest.support.builders.RequestRequestBuilder;
+import org.folio.support.ExpirationTool;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.folio.rest.support.ApiTests;
-import org.folio.rest.support.builders.RequestRequestBuilder;
-import org.folio.support.ExpirationTool;
+import io.vertx.core.json.JsonObject;
 
 public class RequestExpirationApiTest extends ApiTests {
 
@@ -98,6 +101,35 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
+  public void canExpireASingleOpenAwaitingDeliveryRequest()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID id = UUID.randomUUID();
+    UUID itemId = UUID.randomUUID();
+
+    createEntity(
+      new RequestRequestBuilder()
+        .hold()
+        .withId(id)
+        .withRequestExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+        .withItemId(itemId)
+        .withPosition(1)
+        .withStatus(OPEN_AWAITING_DELIVERY)
+        .create(),
+      requestStorageUrl());
+
+    expireRequests();
+
+    JsonObject response = getById(requestStorageUrl(String.format("/%s", id)));
+
+    assertThat(response.getString("status"), is(CLOSED_UNFILLED));
+    assertThat(response.containsKey("position"), is(false));
+  }
+
+  @Test
   public void canExpireAnFirstAwaitingPickupRequest()
     throws InterruptedException,
     MalformedURLException,
@@ -158,6 +190,70 @@ public class RequestExpirationApiTest extends ApiTests {
     assertThat(response2.getInteger("position"), is(1));
 
     assertThat(response3.getString("status"), is(OPEN_NOT_YET_FILLED));
+    assertThat(response3.getInteger("position"), is(2));
+  }
+
+  @Test
+  public void canExpireFirstAwaitingDeliveryRequest()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID id1 = UUID.randomUUID();
+    UUID id2 = UUID.randomUUID();
+    UUID id3 = UUID.randomUUID();
+    UUID itemId = UUID.randomUUID();
+
+    /* Status "Open - Awaiting delivery" and expiration date in the past - should be expired */
+    createEntity(
+      new RequestRequestBuilder()
+        .hold()
+        .withId(id1)
+        .withRequestExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+        .withItemId(itemId)
+        .withPosition(1)
+        .withStatus(OPEN_AWAITING_DELIVERY)
+        .create(),
+      requestStorageUrl());
+
+    /* Status "Open - not yet filled" and request expiration date not provided - should NOT be expired */
+    createEntity(
+      new RequestRequestBuilder()
+        .hold()
+        .withId(id2)
+        .withHoldShelfExpiration(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+        .withItemId(itemId)
+        .withPosition(2)
+        .withStatus(OPEN_NOT_YET_FILLED)
+        .create(),
+      requestStorageUrl());
+
+    /* Status "Open - Awaiting delivery" and expiration date in the future - should NOT be expired */
+    createEntity(
+      new RequestRequestBuilder()
+        .hold()
+        .withId(id3)
+        .withRequestExpiration(new DateTime(9999, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+        .withItemId(itemId)
+        .withPosition(3)
+        .withStatus(OPEN_AWAITING_DELIVERY)
+        .create(),
+      requestStorageUrl());
+
+    expireRequests();
+
+    JsonObject response1 = getById(requestStorageUrl(String.format("/%s", id1)));
+    JsonObject response2 = getById(requestStorageUrl(String.format("/%s", id2)));
+    JsonObject response3 = getById(requestStorageUrl(String.format("/%s", id3)));
+
+    assertThat(response1.getString("status"), is(CLOSED_UNFILLED));
+    assertThat(response1.containsKey("position"), is(false));
+
+    assertThat(response2.getString("status"), is(OPEN_NOT_YET_FILLED));
+    assertThat(response2.getInteger("position"), is(1));
+
+    assertThat(response3.getString("status"), is(OPEN_AWAITING_DELIVERY));
     assertThat(response3.getInteger("position"), is(2));
   }
 
