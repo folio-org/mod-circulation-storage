@@ -1,16 +1,14 @@
 package org.folio.support;
 
 import static io.vertx.core.Future.succeededFuture;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
-
 import static org.folio.rest.impl.RequestsAPI.REQUEST_TABLE;
 import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_PICKUP_EXPIRED;
 import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_UNFILLED;
+import static org.folio.rest.jaxrs.model.Request.Status.OPEN_AWAITING_DELIVERY;
 import static org.folio.rest.jaxrs.model.Request.Status.OPEN_AWAITING_PICKUP;
 import static org.folio.rest.jaxrs.model.Request.Status.OPEN_IN_TRANSIT;
 import static org.folio.rest.jaxrs.model.Request.Status.OPEN_NOT_YET_FILLED;
@@ -26,18 +24,19 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import org.folio.rest.jaxrs.model.Request;
+import org.folio.rest.persist.PostgresClient;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.sql.ResultSet;
 import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.sql.UpdateResult;
-
-import org.folio.rest.jaxrs.model.Request;
-import org.folio.rest.persist.PostgresClient;
 
 public class ExpirationTool {
 
@@ -94,11 +93,15 @@ public class ExpirationTool {
     Future<ResultSet> future = Future.future();
 
     String where = format("WHERE " +
-        "(jsonb->>'status' = '%1$s' AND jsonb->>'requestExpirationDate' < '%3$s') OR " +
-        "(jsonb->>'status' = '%2$s' AND jsonb->>'holdShelfExpirationDate' < '%3$s') " +
+        "(jsonb->>'status' = '%1$s' AND jsonb->>'requestExpirationDate' < '%5$s') OR " +
+        "(jsonb->>'status' = '%2$s' AND jsonb->>'requestExpirationDate' < '%5$s') OR " +
+        "(jsonb->>'status' = '%3$s' AND jsonb->>'requestExpirationDate' < '%5$s') OR " +
+        "(jsonb->>'status' = '%4$s' AND jsonb->>'holdShelfExpirationDate' < '%5$s') " +
         "LIMIT 150",
 
       OPEN_NOT_YET_FILLED.value(),
+      OPEN_AWAITING_DELIVERY.value(),
+      OPEN_IN_TRANSIT.value(),
       OPEN_AWAITING_PICKUP.value(),
       df.format(new Date()));
 
@@ -133,12 +136,14 @@ public class ExpirationTool {
     String where = format("WHERE " +
         "(jsonb->>'status' = '%1$s' OR " +
         "jsonb->>'status' = '%2$s' OR " +
-        "jsonb->>'status' = '%3$s') AND " +
-        "jsonb->>'itemId' IN (%4$s) " +
+        "jsonb->>'status' = '%3$s' OR " +
+        "jsonb->>'status' = '%4$s') AND " +
+        "jsonb->>'itemId' IN (%5$s) " +
         "ORDER BY jsonb->>'position' ASC",
 
       OPEN_NOT_YET_FILLED.value(),
       OPEN_AWAITING_PICKUP.value(),
+      OPEN_AWAITING_DELIVERY.value(),
       OPEN_IN_TRANSIT.value(),
       String.join(",", quotedItemIds));
 
@@ -155,7 +160,9 @@ public class ExpirationTool {
   }
 
   private static Request changeRequestStatus(Request request) {
-    if (request.getStatus() == OPEN_NOT_YET_FILLED) {
+    if (request.getStatus() == OPEN_NOT_YET_FILLED ||
+          request.getStatus() == OPEN_IN_TRANSIT ||
+          request.getStatus() == OPEN_AWAITING_DELIVERY) {
       request.setStatus(CLOSED_UNFILLED);
     } else if (request.getStatus() == OPEN_AWAITING_PICKUP) {
       request.setStatus(CLOSED_PICKUP_EXPIRED);
@@ -235,12 +242,14 @@ public class ExpirationTool {
     String sql = format("UPDATE %1$s SET jsonb = jsonb - 'position' WHERE " +
         "(jsonb->>'status' = '%2$s' OR " +
         "jsonb->>'status' = '%3$s' OR " +
-        "jsonb->>'status' = '%4$s') AND " +
-        "jsonb->>'itemId' IN (%5$s)",
+        "jsonb->>'status' = '%4$s' OR " +
+        "jsonb->>'status' = '%5$s') AND " +
+        "jsonb->>'itemId' IN (%6$s)",
 
       fullTableName,
       OPEN_NOT_YET_FILLED.value(),
       OPEN_AWAITING_PICKUP.value(),
+      OPEN_AWAITING_DELIVERY.value(),
       OPEN_IN_TRANSIT.value(),
       String.join(",", quotedItemIds));
 
