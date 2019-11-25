@@ -1292,4 +1292,32 @@ public class LoansApiTest extends ApiTests {
       .withStatus(statusName)
       .create();
   }
+
+  @Test
+  public void declaredLostPropertyExists()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    UUID id = UUID.randomUUID();
+    UUID itemId = UUID.randomUUID();
+    UUID itemLocationAtCheckOut = UUID.randomUUID();
+    UUID userId = UUID.randomUUID();
+    UUID loanPolicyId = UUID.randomUUID();
+    String expectedLostDate = DateTime.now().toString();
+
+    JsonObject loanRequest = new LoanRequestBuilder().withId(id)
+      .withItemId(itemId).withUserId(userId).withLoanDate(DateTime.now())
+      .withDeclaredLostDate(expectedLostDate).withAction("declaredLost")
+      .withItemStatus("declaredLost")
+      .withItemEffectiveLocationAtCheckOut(itemLocationAtCheckOut)
+      .withLoanPolicyId(loanPolicyId).create();
+
+    JsonObject loan = loansClient.create(loanRequest).getJson();
+
+    assertThat("Loan should have declaredLostDate property",
+      loan.getString("declaredLostDate"), is(expectedLostDate));
+  }
+
 }

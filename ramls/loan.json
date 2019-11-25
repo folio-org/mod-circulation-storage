@@ -95,7 +95,8 @@
     },
     "declaredLostDate" : {
       "description": "Date and time loan was declared lost",
-      "type": "string"
+      "type" : "string",
+      "format": "date-time"
     },
     "metadata": {
       "description": "Metadata about creation and changes to loan, provided by the server (client should not provide)",

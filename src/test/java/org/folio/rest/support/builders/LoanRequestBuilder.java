@@ -10,22 +10,23 @@ import io.vertx.core.json.JsonObject;
 
 public class LoanRequestBuilder implements Builder {
 
-  private final UUID id;
-  private final UUID itemId;
-  private final UUID userId;
-  private final UUID proxyUserId;
-  private final DateTime loanDate;
-  private final String statusName;
-  private final String itemStatus;
-  private final DateTime dueDate;
-  private final String action;
-  private final String actionComment;
-  private final UUID itemEffectiveLocationAtCheckOut;
-  private final UUID loanPolicyId;
+  private UUID id;
+  private UUID itemId;
+  private UUID userId;
+  private UUID proxyUserId;
+  private DateTime loanDate;
+  private String statusName;
+  private String itemStatus;
+  private DateTime dueDate;
+  private String action;
+  private String actionComment;
+  private UUID itemEffectiveLocationAtCheckOut;
+  private UUID loanPolicyId;
   private DateTime returnDate;
   private DateTime systemReturnDate;
-  private final Integer renewalCount;
+  private Integer renewalCount;
   private Boolean dueDateChangedByRecall;
+  private String declaredLostDate;
 
   public LoanRequestBuilder() {
     this(UUID.randomUUID(),
@@ -133,6 +134,10 @@ public class LoanRequestBuilder implements Builder {
       ? example.getInteger("renewalCount")
       : null;
 
+    final String declaredLostDate = example.containsKey("declaredLostDate")
+      ? example.getString("declaredLostDate")
+      : null;
+
     return new LoanRequestBuilder(
       id,
       itemId,
@@ -149,7 +154,8 @@ public class LoanRequestBuilder implements Builder {
       returnDate,
       systemReturnDate,
       renewalCount,
-      example.getBoolean("dueDateChangedByRecall"));
+      example.getBoolean("dueDateChangedByRecall"))
+      .withDeclaredLostDate(declaredLostDate);
   }
 
   @Override
@@ -192,6 +198,7 @@ public class LoanRequestBuilder implements Builder {
         request.put("returnDate", returnDate.toString(ISODateTimeFormat.dateTime()));
         request.put("systemReturnDate", systemReturnDate.toString(ISODateTimeFormat.dateTime()));
       }
+      request.put("declaredLostDate", declaredLostDate);
     }
 
     if(itemEffectiveLocationAtCheckOut != null) {
@@ -222,23 +229,8 @@ public class LoanRequestBuilder implements Builder {
   }
 
   public LoanRequestBuilder withId(UUID newId) {
-    return new LoanRequestBuilder(
-      newId,
-      this.itemId,
-      this.userId,
-      this.proxyUserId,
-      this.loanDate,
-      this.statusName,
-      this.itemStatus,
-      this.action,
-      this.actionComment,
-      this.dueDate,
-      this.itemEffectiveLocationAtCheckOut,
-      this.loanPolicyId,
-      this.returnDate,
-      this.systemReturnDate,
-      this.renewalCount,
-      this.dueDateChangedByRecall);
+    this.id = newId;
+    return this;
   }
 
   public LoanRequestBuilder withNoId() {
@@ -246,43 +238,13 @@ public class LoanRequestBuilder implements Builder {
   }
 
   public LoanRequestBuilder withItemId(UUID itemId) {
-    return new LoanRequestBuilder(
-      this.id,
-      itemId,
-      this.userId,
-      this.proxyUserId,
-      this.loanDate,
-      this.statusName,
-      this.itemStatus,
-      this.action,
-      this.actionComment,
-      this.dueDate,
-      this.itemEffectiveLocationAtCheckOut,
-      this.loanPolicyId,
-      this.returnDate,
-      this.systemReturnDate,
-      this.renewalCount,
-      this.dueDateChangedByRecall);
+    this.itemId = itemId;
+    return this;
   }
 
   public LoanRequestBuilder withUserId(UUID userId) {
-    return new LoanRequestBuilder(
-      this.id,
-      this.itemId,
-      userId,
-      this.proxyUserId,
-      this.loanDate,
-      this.statusName,
-      this.itemStatus,
-      this.action,
-      this.actionComment,
-      this.dueDate,
-      this.itemEffectiveLocationAtCheckOut,
-      this.loanPolicyId,
-      this.returnDate,
-      this.systemReturnDate,
-      this.renewalCount,
-      this.dueDateChangedByRecall);
+    this.userId = userId;
+    return this;
   }
 
   public LoanRequestBuilder withNoUserId() {
@@ -290,63 +252,18 @@ public class LoanRequestBuilder implements Builder {
   }
 
   public LoanRequestBuilder withProxyUserId(UUID proxyUserId) {
-    return new LoanRequestBuilder(
-      this.id,
-      this.itemId,
-      this.userId,
-      proxyUserId,
-      this.loanDate,
-      this.statusName,
-      this.itemStatus,
-      this.action,
-      this.actionComment,
-      this.dueDate,
-      this.itemEffectiveLocationAtCheckOut,
-      this.loanPolicyId,
-      this.returnDate,
-      this.systemReturnDate,
-      this.renewalCount,
-      this.dueDateChangedByRecall);
+    this.proxyUserId = proxyUserId;
+    return this;
   }
 
   public LoanRequestBuilder withLoanDate(DateTime loanDate) {
-    return new LoanRequestBuilder(
-      this.id,
-      this.itemId,
-      this.userId,
-      this.proxyUserId,
-      loanDate,
-      this.statusName,
-      this.itemStatus,
-      this.action,
-      this.actionComment,
-      this.dueDate,
-      this.itemEffectiveLocationAtCheckOut,
-      this.loanPolicyId,
-      this.returnDate,
-      this.systemReturnDate,
-      this.renewalCount,
-      this.dueDateChangedByRecall);
+    this.loanDate = loanDate;
+    return this;
   }
 
   public LoanRequestBuilder withStatus(String statusName) {
-    return new LoanRequestBuilder(
-      this.id,
-      this.itemId,
-      this.userId,
-      this.proxyUserId,
-      this.loanDate,
-      statusName,
-      this.itemStatus,
-      this.action,
-      this.actionComment,
-      this.dueDate,
-      this.itemEffectiveLocationAtCheckOut,
-      this.loanPolicyId,
-      this.returnDate,
-      this.systemReturnDate,
-      this.renewalCount,
-      this.dueDateChangedByRecall);
+    this.statusName = statusName;
+    return this;
   }
 
   public LoanRequestBuilder open() {
@@ -358,123 +275,33 @@ public class LoanRequestBuilder implements Builder {
   }
 
   public LoanRequestBuilder withItemStatus(String itemStatus) {
-    return new LoanRequestBuilder(
-      this.id,
-      this.itemId,
-      this.userId,
-      this.proxyUserId,
-      this.loanDate,
-      statusName,
-      itemStatus,
-      this.action,
-      this.actionComment,
-      this.dueDate,
-      this.itemEffectiveLocationAtCheckOut,
-      this.loanPolicyId,
-      this.returnDate,
-      this.systemReturnDate,
-      this.renewalCount,
-      this.dueDateChangedByRecall);
+    this.itemStatus = itemStatus;
+    return this;
   }
 
   public LoanRequestBuilder withAction(String action) {
-    return new LoanRequestBuilder(
-      this.id,
-      this.itemId,
-      this.userId,
-      this.proxyUserId,
-      this.loanDate,
-      this.statusName,
-      this.itemStatus,
-      action,
-      this.actionComment,
-      this.dueDate,
-      this.itemEffectiveLocationAtCheckOut,
-      this.loanPolicyId,
-      this.returnDate,
-      this.systemReturnDate,
-      this.renewalCount,
-      this.dueDateChangedByRecall);
+    this.action = action;
+    return this;
   }
 
   public LoanRequestBuilder withActionComment(String actionComment) {
-    return new LoanRequestBuilder(
-      this.id,
-      this.itemId,
-      this.userId,
-      this.proxyUserId,
-      this.loanDate,
-      this.statusName,
-      this.itemStatus,
-      this.action,
-      actionComment,
-      this.dueDate,
-      this.itemEffectiveLocationAtCheckOut,
-      this.loanPolicyId,
-      this.returnDate,
-      this.systemReturnDate,
-      this.renewalCount,
-      this.dueDateChangedByRecall);
+    this.actionComment = actionComment;
+    return this;
   }
 
   public LoanRequestBuilder withDueDate(DateTime dueDate) {
-    return new LoanRequestBuilder(
-      this.id,
-      this.itemId,
-      this.userId,
-      this.proxyUserId,
-      this.loanDate,
-      this.statusName,
-      this.itemStatus,
-      this.action,
-      this.actionComment,
-      dueDate,
-      this.itemEffectiveLocationAtCheckOut,
-      this.loanPolicyId,
-      this.returnDate,
-      this.systemReturnDate,
-      this.renewalCount,
-      this.dueDateChangedByRecall);
+    this.dueDate = dueDate;
+    return this;
   }
 
   public LoanRequestBuilder withReturnDate(DateTime returnDate) {
-    return new LoanRequestBuilder(
-      this.id,
-      this.itemId,
-      this.userId,
-      this.proxyUserId,
-      this.loanDate,
-      this.statusName,
-      this.itemStatus,
-      this.action,
-      this.actionComment,
-      this.dueDate,
-      this.itemEffectiveLocationAtCheckOut,
-      this.loanPolicyId,
-      returnDate,
-      this.systemReturnDate,
-      this.renewalCount,
-      this.dueDateChangedByRecall);
+    this.returnDate = returnDate;
+    return this;
   }
 
   public LoanRequestBuilder withSystemReturnDate(DateTime systemReturnDate) {
-    return new LoanRequestBuilder(
-      this.id,
-      this.itemId,
-      this.userId,
-      this.proxyUserId,
-      this.loanDate,
-      this.statusName,
-      this.itemStatus,
-      this.action,
-      this.actionComment,
-      this.dueDate,
-      this.itemEffectiveLocationAtCheckOut,
-      this.loanPolicyId,
-      this.returnDate,
-      systemReturnDate,
-      this.renewalCount,
-      this.dueDateChangedByRecall);
+    this.systemReturnDate = systemReturnDate;
+    return this;
   }
 
   public LoanRequestBuilder withNoStatus() {
@@ -490,81 +317,26 @@ public class LoanRequestBuilder implements Builder {
   }
 
   public LoanRequestBuilder withItemEffectiveLocationAtCheckOut(UUID itemLocation) {
-    return new LoanRequestBuilder(
-      this.id,
-      this.itemId,
-      this.userId,
-      this.proxyUserId,
-      this.loanDate,
-      this.statusName,
-      this.itemStatus,
-      this.action,
-      this.actionComment,
-      this.dueDate,
-      itemLocation,
-      this.loanPolicyId,
-      this.returnDate,
-      this.systemReturnDate,
-      this.renewalCount,
-      this.dueDateChangedByRecall);
+    this.itemEffectiveLocationAtCheckOut = itemLocation;
+    return this;
   }
   public LoanRequestBuilder withLoanPolicyId(UUID loanPolicyId) {
-    return new LoanRequestBuilder(
-      this.id,
-      this.itemId,
-      this.userId,
-      this.proxyUserId,
-      this.loanDate,
-      this.statusName,
-      this.itemStatus,
-      this.action,
-      this.actionComment,
-      this.dueDate,
-      this.itemEffectiveLocationAtCheckOut,
-      loanPolicyId,
-      this.returnDate,
-      this.systemReturnDate,
-      this.renewalCount,
-      this.dueDateChangedByRecall);
+    this.loanPolicyId = loanPolicyId;
+    return this;
+  }
+
+  public LoanRequestBuilder withDeclaredLostDate(String date) {
+    this.declaredLostDate = date;
+    return this;
   }
 
   public LoanRequestBuilder withRenewalCount(int renewalCount) {
-    return new LoanRequestBuilder(
-      this.id,
-      this.itemId,
-      this.userId,
-      this.proxyUserId,
-      this.loanDate,
-      this.statusName,
-      this.itemStatus,
-      this.action,
-      this.actionComment,
-      this.dueDate,
-      this.itemEffectiveLocationAtCheckOut,
-      this.loanPolicyId,
-      this.returnDate,
-      this.systemReturnDate,
-      renewalCount,
-      this.dueDateChangedByRecall);
+    this.renewalCount = renewalCount;
+    return this;
   }
 
   public LoanRequestBuilder withDueDateChangedByRecall(Boolean dueDateChangedByRecall) {
-    return new LoanRequestBuilder(
-      this.id,
-      this.itemId,
-      this.userId,
-      this.proxyUserId,
-      this.loanDate,
-      this.statusName,
-      this.itemStatus,
-      this.action,
-      this.actionComment,
-      this.dueDate,
-      this.itemEffectiveLocationAtCheckOut,
-      this.loanPolicyId,
-      this.returnDate,
-      this.systemReturnDate,
-      this.renewalCount,
-      dueDateChangedByRecall);
+    this.dueDateChangedByRecall = dueDateChangedByRecall;
+    return this;
   }
 }
