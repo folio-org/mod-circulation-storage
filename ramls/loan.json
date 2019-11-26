@@ -94,7 +94,7 @@
       "type": "boolean"
     },
     "declaredLostDate" : {
-      "description": "Date and time loan was declared lost",
+      "description": "Date and time the item was declared lost during this loan",
       "type" : "string",
       "format": "date-time"
     },

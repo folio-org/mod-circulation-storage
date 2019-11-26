@@ -12,6 +12,7 @@ import static org.folio.rest.support.matchers.ValidationResponseMatchers.isValid
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.IsNull.notNullValue;
@@ -137,9 +138,9 @@ public class LoansApiTest extends ApiTests {
     assertThat("recall changed due date should be null",
         loan.getBoolean("dueDateChangedByRecall"), nullValue());
 
-    assertThat("Loan should have a declaredLostDate property",
-      loansClient.getById(id).getJson().getString("declaredLostDate"),
-      is(expectedLostDate.toString(ISODateTimeFormat.dateTime())));
+    assertThat("Loan should have a declaredLostDate property", DateTime
+      .parse(loansClient.getById(id).getJson().getString("declaredLostDate"))
+      .getMillis(), is(expectedLostDate.getMillis()));
 
   }
 
