@@ -12,11 +12,13 @@ import static org.folio.rest.support.matchers.ValidationResponseMatchers.isValid
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
+
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.text.DateFormat;
@@ -28,6 +30,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.ApiTests;
@@ -47,8 +52,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 
 public class LoansApiTest extends ApiTests {
   private final AssertingRecordClient loansClient = new AssertingRecordClient(
@@ -79,6 +82,7 @@ public class LoansApiTest extends ApiTests {
     UUID userId = UUID.randomUUID();
     UUID proxyUserId = UUID.randomUUID();
     UUID loanPolicyId = UUID.randomUUID();
+    DateTime expectedLostDate = DateTime.now();
 
     JsonObject loanRequest = new LoanRequestBuilder()
       .withId(id)
@@ -92,6 +96,7 @@ public class LoansApiTest extends ApiTests {
       .withDueDate(new DateTime(2017, 7, 27, 10, 23, 43, DateTimeZone.UTC))
       .withItemEffectiveLocationAtCheckOut(itemLocationAtCheckOut)
       .withLoanPolicyId(loanPolicyId)
+      .withDeclaredLostDate(expectedLostDate)
       .create();
 
     JsonObject loan = loansClient.create(loanRequest).getJson();
@@ -132,6 +137,11 @@ public class LoansApiTest extends ApiTests {
 
     assertThat("recall changed due date should be null",
         loan.getBoolean("dueDateChangedByRecall"), nullValue());
+
+    assertThat("Loan should have a declaredLostDate property", DateTime
+      .parse(loansClient.getById(id).getJson().getString("declaredLostDate"))
+      .getMillis(), is(expectedLostDate.getMillis()));
+
   }
 
   @Test
@@ -1292,4 +1302,5 @@ public class LoansApiTest extends ApiTests {
       .withStatus(statusName)
       .create();
   }
+
 }
