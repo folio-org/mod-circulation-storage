@@ -1,4 +1,4 @@
-## 9.3.0 2019-11-28
+## 10.0.0 2019-11-28
 
 * Store check in / check out patron sessions (CIRCSTORE-147, CIRCSTORE-148, CIRCSTORE-149)
 * Store user request preferences (CIRCSTORE-154, CIRCSTORE-165)
