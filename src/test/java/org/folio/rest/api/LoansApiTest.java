@@ -12,7 +12,6 @@ import static org.folio.rest.support.matchers.ValidationResponseMatchers.isValid
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.IsNull.notNullValue;
@@ -83,6 +82,8 @@ public class LoansApiTest extends ApiTests {
     UUID proxyUserId = UUID.randomUUID();
     UUID loanPolicyId = UUID.randomUUID();
     DateTime expectedLostDate = DateTime.now();
+    UUID effectiveOverdueFinePolicyId = UUID.randomUUID();
+    UUID lostItemPolicyId = UUID.randomUUID();
 
     JsonObject loanRequest = new LoanRequestBuilder()
       .withId(id)
@@ -97,6 +98,8 @@ public class LoansApiTest extends ApiTests {
       .withItemEffectiveLocationAtCheckOut(itemLocationAtCheckOut)
       .withLoanPolicyId(loanPolicyId)
       .withDeclaredLostDate(expectedLostDate)
+      .withEffectiveOverdueFinePolicyId(effectiveOverdueFinePolicyId)
+      .withLostItemPolicyId(lostItemPolicyId)
       .create();
 
     JsonObject loan = loansClient.create(loanRequest).getJson();
@@ -142,6 +145,12 @@ public class LoansApiTest extends ApiTests {
       .parse(loansClient.getById(id).getJson().getString("declaredLostDate"))
       .getMillis(), is(expectedLostDate.getMillis()));
 
+    assertThat("Effective overdue fine policy id should be set",
+      loan.getString("effectiveOverdueFinePolicyId"),
+      is(effectiveOverdueFinePolicyId.toString()));
+
+    assertThat("Lost item policy id should be set",
+      loan.getString("lostItemPolicyId"), is(lostItemPolicyId.toString()));
   }
 
   @Test
