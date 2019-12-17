@@ -82,7 +82,7 @@ public class LoansApiTest extends ApiTests {
     UUID proxyUserId = UUID.randomUUID();
     UUID loanPolicyId = UUID.randomUUID();
     DateTime expectedLostDate = DateTime.now();
-    UUID effectiveOverdueFinePolicyId = UUID.randomUUID();
+    UUID overdueFinePolicyId = UUID.randomUUID();
     UUID lostItemPolicyId = UUID.randomUUID();
 
     JsonObject loanRequest = new LoanRequestBuilder()
@@ -98,7 +98,7 @@ public class LoansApiTest extends ApiTests {
       .withItemEffectiveLocationAtCheckOut(itemLocationAtCheckOut)
       .withLoanPolicyId(loanPolicyId)
       .withDeclaredLostDate(expectedLostDate)
-      .withEffectiveOverdueFinePolicyId(effectiveOverdueFinePolicyId)
+      .withOverdueFinePolicyId(overdueFinePolicyId)
       .withLostItemPolicyId(lostItemPolicyId)
       .create();
 
@@ -145,9 +145,9 @@ public class LoansApiTest extends ApiTests {
       .parse(loansClient.getById(id).getJson().getString("declaredLostDate"))
       .getMillis(), is(expectedLostDate.getMillis()));
 
-    assertThat("Effective overdue fine policy id should be set",
-      loan.getString("effectiveOverdueFinePolicyId"),
-      is(effectiveOverdueFinePolicyId.toString()));
+    assertThat("Overdue fine policy id should be set",
+      loan.getString("overdueFinePolicyId"),
+      is(overdueFinePolicyId.toString()));
 
     assertThat("Lost item policy id should be set",
       loan.getString("lostItemPolicyId"), is(lostItemPolicyId.toString()));

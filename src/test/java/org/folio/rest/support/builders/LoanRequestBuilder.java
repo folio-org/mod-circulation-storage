@@ -26,7 +26,7 @@ public class LoanRequestBuilder implements Builder {
   private final Integer renewalCount;
   private Boolean dueDateChangedByRecall;
   private final DateTime declaredLostDate;
-  private final UUID effectiveOverdueFinePolicyId;
+  private final UUID overdueFinePolicyId;
   private final UUID lostItemPolicyId;
 
   public LoanRequestBuilder() {
@@ -69,7 +69,7 @@ public class LoanRequestBuilder implements Builder {
     Integer renewalCount,
     Boolean dueDateChangedByRecall,
     DateTime declaredLostDate,
-    UUID effectiveOverdueFinePolicyId,
+    UUID overdueFinePolicyId,
     UUID lostItemPolicyId) {
 
     this.id = id;
@@ -89,7 +89,7 @@ public class LoanRequestBuilder implements Builder {
     this.renewalCount = renewalCount;
     this.dueDateChangedByRecall = dueDateChangedByRecall;
     this.declaredLostDate = declaredLostDate;
-    this.effectiveOverdueFinePolicyId = effectiveOverdueFinePolicyId;
+    this.overdueFinePolicyId = overdueFinePolicyId;
     this.lostItemPolicyId = lostItemPolicyId;
   }
 
@@ -148,9 +148,9 @@ public class LoanRequestBuilder implements Builder {
       ? DateTime.parse(example.getString("declaredLostDate"))
       : null;
 
-    final UUID effectiveOverdueFinePolicyId = example
-      .containsKey("effectiveOverdueFinePolicyId")
-      ? UUID.fromString(example.getString("effectiveOverdueFinePolicyId"))
+    final UUID overdueFinePolicyId = example
+      .containsKey("overdueFinePolicyId")
+      ? UUID.fromString(example.getString("overdueFinePolicyId"))
       : null;
 
     final UUID lostItemPolicyId = example.containsKey("lostItemPolicyId")
@@ -175,7 +175,7 @@ public class LoanRequestBuilder implements Builder {
       renewalCount,
       example.getBoolean("dueDateChangedByRecall"),
       declaredLostDate,
-      effectiveOverdueFinePolicyId,
+      overdueFinePolicyId,
       lostItemPolicyId
       );
   }
@@ -248,9 +248,9 @@ public class LoanRequestBuilder implements Builder {
       request.put("dueDateChangedByRecall", dueDateChangedByRecall);
     }
 
-    if (effectiveOverdueFinePolicyId != null) {
-      request.put("effectiveOverdueFinePolicyId",
-        effectiveOverdueFinePolicyId.toString());
+    if (overdueFinePolicyId != null) {
+      request.put("overdueFinePolicyId",
+        overdueFinePolicyId.toString());
     }
 
     if (lostItemPolicyId != null) {
@@ -279,7 +279,7 @@ public class LoanRequestBuilder implements Builder {
       this.renewalCount,
       this.dueDateChangedByRecall,
       this.declaredLostDate,
-      this.effectiveOverdueFinePolicyId,
+      this.overdueFinePolicyId,
       this.lostItemPolicyId);
   }
 
@@ -306,7 +306,7 @@ public class LoanRequestBuilder implements Builder {
       this.renewalCount,
       this.dueDateChangedByRecall,
       this.declaredLostDate,
-      this.effectiveOverdueFinePolicyId,
+      this.overdueFinePolicyId,
       this.lostItemPolicyId);
   }
 
@@ -329,7 +329,7 @@ public class LoanRequestBuilder implements Builder {
       this.renewalCount,
       this.dueDateChangedByRecall,
       this.declaredLostDate,
-      this.effectiveOverdueFinePolicyId,
+      this.overdueFinePolicyId,
       this.lostItemPolicyId);
   }
 
@@ -356,7 +356,7 @@ public class LoanRequestBuilder implements Builder {
       this.renewalCount,
       this.dueDateChangedByRecall,
       this.declaredLostDate,
-      this.effectiveOverdueFinePolicyId,
+      this.overdueFinePolicyId,
       this.lostItemPolicyId);
   }
 
@@ -379,7 +379,7 @@ public class LoanRequestBuilder implements Builder {
       this.renewalCount,
       this.dueDateChangedByRecall,
       this.declaredLostDate,
-      this.effectiveOverdueFinePolicyId,
+      this.overdueFinePolicyId,
       this.lostItemPolicyId);
   }
 
@@ -402,7 +402,7 @@ public class LoanRequestBuilder implements Builder {
       this.renewalCount,
       this.dueDateChangedByRecall,
       this.declaredLostDate,
-      this.effectiveOverdueFinePolicyId,
+      this.overdueFinePolicyId,
       this.lostItemPolicyId);
   }
 
@@ -433,7 +433,7 @@ public class LoanRequestBuilder implements Builder {
       this.renewalCount,
       this.dueDateChangedByRecall,
       this.declaredLostDate,
-      this.effectiveOverdueFinePolicyId,
+      this.overdueFinePolicyId,
       this.lostItemPolicyId);
   }
 
@@ -456,7 +456,7 @@ public class LoanRequestBuilder implements Builder {
       this.renewalCount,
       this.dueDateChangedByRecall,
       this.declaredLostDate,
-      this.effectiveOverdueFinePolicyId,
+      this.overdueFinePolicyId,
       this.lostItemPolicyId);
   }
 
@@ -479,7 +479,7 @@ public class LoanRequestBuilder implements Builder {
       this.renewalCount,
       this.dueDateChangedByRecall,
       this.declaredLostDate,
-      this.effectiveOverdueFinePolicyId,
+      this.overdueFinePolicyId,
       this.lostItemPolicyId);
   }
 
@@ -502,7 +502,7 @@ public class LoanRequestBuilder implements Builder {
       this.renewalCount,
       this.dueDateChangedByRecall,
       this.declaredLostDate,
-      this.effectiveOverdueFinePolicyId,
+      this.overdueFinePolicyId,
       this.lostItemPolicyId);
   }
 
@@ -525,7 +525,7 @@ public class LoanRequestBuilder implements Builder {
       this.renewalCount,
       this.dueDateChangedByRecall,
       this.declaredLostDate,
-      this.effectiveOverdueFinePolicyId,
+      this.overdueFinePolicyId,
       this.lostItemPolicyId);
   }
 
@@ -548,7 +548,7 @@ public class LoanRequestBuilder implements Builder {
       this.renewalCount,
       this.dueDateChangedByRecall,
       this.declaredLostDate,
-      this.effectiveOverdueFinePolicyId,
+      this.overdueFinePolicyId,
       this.lostItemPolicyId);
   }
 
@@ -583,7 +583,7 @@ public class LoanRequestBuilder implements Builder {
       this.renewalCount,
       this.dueDateChangedByRecall,
       this.declaredLostDate,
-      this.effectiveOverdueFinePolicyId,
+      this.overdueFinePolicyId,
       this.lostItemPolicyId);
   }
   public LoanRequestBuilder withLoanPolicyId(UUID loanPolicyId) {
@@ -605,7 +605,7 @@ public class LoanRequestBuilder implements Builder {
       this.renewalCount,
       this.dueDateChangedByRecall,
       this.declaredLostDate,
-      this.effectiveOverdueFinePolicyId,
+      this.overdueFinePolicyId,
       this.lostItemPolicyId);
   }
 
@@ -628,7 +628,7 @@ public class LoanRequestBuilder implements Builder {
       renewalCount,
       this.dueDateChangedByRecall,
       this.declaredLostDate,
-      this.effectiveOverdueFinePolicyId,
+      this.overdueFinePolicyId,
       this.lostItemPolicyId);
   }
 
@@ -651,7 +651,7 @@ public class LoanRequestBuilder implements Builder {
       this.renewalCount,
       dueDateChangedByRecall,
       this.declaredLostDate,
-      this.effectiveOverdueFinePolicyId,
+      this.overdueFinePolicyId,
       this.lostItemPolicyId);
   }
 
@@ -674,12 +674,12 @@ public class LoanRequestBuilder implements Builder {
       this.renewalCount,
       this.dueDateChangedByRecall,
       declaredLostDate,
-      this.effectiveOverdueFinePolicyId,
+      this.overdueFinePolicyId,
       this.lostItemPolicyId);
   }
 
-  public LoanRequestBuilder withEffectiveOverdueFinePolicyId(
-    UUID effectiveOverdueFinePolicyId) {
+  public LoanRequestBuilder withOverdueFinePolicyId(
+    UUID overdueFinePolicyId) {
     return new LoanRequestBuilder(
       this.id,
       this.itemId,
@@ -698,7 +698,7 @@ public class LoanRequestBuilder implements Builder {
       this.renewalCount,
       this.dueDateChangedByRecall,
       this.declaredLostDate,
-      effectiveOverdueFinePolicyId,
+      overdueFinePolicyId,
       this.lostItemPolicyId);
   }
 
@@ -721,7 +721,7 @@ public class LoanRequestBuilder implements Builder {
       this.renewalCount,
       this.dueDateChangedByRecall,
       this.declaredLostDate,
-      this.effectiveOverdueFinePolicyId,
+      this.overdueFinePolicyId,
       lostItemPolicyId);
   }
 }
