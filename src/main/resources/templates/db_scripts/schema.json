@@ -5,7 +5,7 @@
   "scripts": [
     {
       "run": "before",
-      "fromModuleVersion": "10.0.1",
+      "fromModuleVersion": "10.1.0",
       "snippet": "DROP INDEX IF EXISTS loan_userid_idx_ft;"
     }
   ],
