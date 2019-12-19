@@ -13,5 +13,7 @@
   },
   "action": "checkedout",
   "itemStatus": "Checked out",
-  "renewalCount": 0
+  "renewalCount": 0,
+  "overdueFinePolicyId": "27b56832-c9fb-47ef-986d-5b1a498a8b89",
+  "lostItemPolicyId": "82b53832-c9fb-47ef-986j-5b1a498a8b61"
 }
