@@ -1,3 +1,28 @@
+## 10.0.0 2019-11-28
+
+* Introduces check in / check out patron sessions (CIRCSTORE-147, CIRCSTORE-148, CIRCSTORE-149)
+* Introduces user request preferences (CIRCSTORE-154, CIRCSTORE-165)
+* Introduces batch requests API (CIRCSTORE-164)
+* Introduces `item effective location at check out` property on `loan` record (CIRCSTORE-157)
+* Introduces `item declared lost date` property on `loan` record (CIRCSTORE-175)
+* Introduces `Open - Awaiting delivery` request status (CIRCSTORE-169)
+* Introduces `item limit` for loan policies (CIRCSTORE-170)
+* Improves patron notice policy validation (CIRCSTORE-155, CIRCSTORE-158)
+* Fixes hold shelf expiration bug which caused some requests to not expire (CIRCSTORE-163)
+* Disallows alternate renewal period for fixed profile loan policies (CIRCSTORE-159)
+* Includes default overdue fines and lost item fees policies in sample circulation rules (
+CIRCSTORE-160, CIRCSTORE-171)
+* Changes container memory management (CIRCSTORE-173, FOLIO-2358)
+* Provides `loan-storage 6.4`
+* Provides `request-storage 3.2`
+* Provides `loan-policy-storage 2.1`
+* Provides `patron-notice-policy-storage 0.11`
+* Provides `scheduled-notice-storage 0.3`
+* Provides `patron-action-session-storage 0.2`
+* Provides `anonymize-storage-loans 0.1`
+* Provides `request-preference-storage 2.0`
+* Provides `request-storage-batch 0.2`
+
 ## 9.3.0 2019-11-28
 
 * Store check in / check out patron sessions (CIRCSTORE-147, CIRCSTORE-148, CIRCSTORE-149)
