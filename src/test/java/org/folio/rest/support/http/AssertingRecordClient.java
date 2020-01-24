@@ -17,7 +17,7 @@ import java.util.concurrent.TimeoutException;
 import io.vertx.core.json.JsonObject;
 
 import org.folio.rest.api.StorageTestSuite;
-import org.folio.rest.support.HttpClient;
+import org.folio.rest.support.WebClient;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.MultipleRecords;
@@ -27,13 +27,13 @@ import org.folio.rest.support.builders.Builder;
 import org.folio.rest.support.builders.LoanRequestBuilder;
 
 public class AssertingRecordClient {
-  private final HttpClient client;
+  private final WebClient client;
   private final String tenantId;
   private final UrlMaker urlMaker;
   private final String collectionPropertyName;
 
   public AssertingRecordClient(
-    HttpClient client,
+    WebClient client,
     String tenantId,
     UrlMaker urlMaker,
     String collectionPropertyName) {

@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.UpdateResult;
 
@@ -119,25 +120,25 @@ class RequestUpdateTriggerTest {
 
   private Future<Void> saveRequest(String id, Request request) {
 
-    Future<String> future = Future.future();
-    pgClient.save(REQUEST_TABLE, id, request, future.completer());
+    Promise<String> promise = Promise.promise();
+    pgClient.save(REQUEST_TABLE, id, request, promise.future());
 
-    return future.map(s -> null);
+    return promise.future().map(s -> null);
   }
 
   private Future<Void> updateRequest(String id, Request request) {
 
-    Future<UpdateResult> future = Future.future();
-    pgClient.update(REQUEST_TABLE, request, id, future.completer());
+    Promise<UpdateResult> promise = Promise.promise();
+    pgClient.update(REQUEST_TABLE, request, id, promise.future());
 
-    return future.map(ur -> null);
+    return promise.future().map(ur -> null);
   }
 
   private Future<JsonObject> getRequest(String id) {
 
-    Future<JsonObject> future = Future.future();
-    pgClient.getById(REQUEST_TABLE, id, future.completer());
+    Promise<JsonObject> promise = Promise.promise();
+    pgClient.getById(REQUEST_TABLE, id, promise.future());
 
-    return future;
+    return promise.future();
   }
 }

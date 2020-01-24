@@ -19,7 +19,7 @@ import java.util.concurrent.TimeoutException;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.api.loans.LoansAnonymizationApiTest;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.support.HttpClient;
+import org.folio.rest.support.WebClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.TextResponse;
@@ -194,7 +194,7 @@ public class StorageTestSuite {
   }
 
   public static void deleteAll(URL rootUrl) {
-    HttpClient client = new HttpClient(getVertx());
+    WebClient client = new WebClient(getVertx());
 
     CompletableFuture<Response> deleteAllFinished = new CompletableFuture<>();
 
@@ -279,7 +279,7 @@ public class StorageTestSuite {
     log.info("Making request to prepare tenant in module");
 
     try {
-      HttpClient client = new HttpClient(vertx);
+      WebClient client = new WebClient(vertx);
 
       JsonArray ar = new JsonArray();
 
@@ -311,7 +311,7 @@ public class StorageTestSuite {
     log.info("Making request to clean up tenant in module");
 
     try {
-      HttpClient client = new HttpClient(vertx);
+      WebClient client = new WebClient(vertx);
 
       client.delete(storageUrl("/_/tenant"), tenantId,
         ResponseHandler.text(tenantDeleted));

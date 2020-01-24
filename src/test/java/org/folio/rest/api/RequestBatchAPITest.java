@@ -28,10 +28,13 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.HttpResponse;
 
 public class RequestBatchAPITest extends ApiTests {
 
@@ -228,7 +231,7 @@ public class RequestBatchAPITest extends ApiTests {
   }
 
   private <T> T attemptReorderRequests(
-    Function<CompletableFuture<T>, Handler<HttpClientResponse>> bodyHandler,
+    Function<CompletableFuture<T>, Handler<AsyncResult<HttpResponse<Buffer>>>> bodyHandler,
     ReorderRequest... requests) throws Exception {
 
     JsonObject[] requestsToReorder = Arrays.stream(requests)

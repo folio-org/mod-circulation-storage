@@ -1,6 +1,8 @@
 package org.folio.rest.api;
 
 import io.vertx.core.json.JsonObject;
+
+import org.folio.HttpStatus;
 import org.folio.rest.jaxrs.model.CirculationRules;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
@@ -21,7 +23,6 @@ import static org.hamcrest.core.IsNull.notNullValue;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class CirculationRulesApiTest extends ApiTests {
-  private static final int HTTP_VALIDATION_ERROR = 422;
   private String uuid;
 
   public static URL rulesStorageUrl() throws MalformedURLException {
@@ -91,6 +92,6 @@ public class CirculationRulesApiTest extends ApiTests {
   @Test
   public void putNullFields() throws Exception {
     CirculationRules circulationRules = new CirculationRules();
-    assertThat(putResponse(circulationRules).getStatusCode(), is(HTTP_VALIDATION_ERROR));
+    assertThat(putResponse(circulationRules).getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 }

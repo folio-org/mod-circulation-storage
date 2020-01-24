@@ -311,7 +311,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Should fail to create loan policy: %s", response.getBody()),
-      response.getStatusCode(), is(HttpStatus.HTTP_VALIDATION_ERROR.toInt()));
+      response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 
   @Test
@@ -370,7 +370,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Should fail to create loan policy: %s", response.getBody()),
-      response.getStatusCode(), is(HttpStatus.HTTP_VALIDATION_ERROR.toInt()));
+      response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
 
     JsonObject error = getErrorFromResponse(response);
     JsonObject parameters = error.getJsonArray("parameters").getJsonObject(0);
@@ -406,7 +406,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Should fail to create loan policy: %s", response.getBody()),
-      response.getStatusCode(), is(HttpStatus.HTTP_VALIDATION_ERROR.toInt()));
+      response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
 
     JsonObject error = getErrorFromResponse(response);
     JsonObject parameters = error.getJsonArray("parameters").getJsonObject(0);

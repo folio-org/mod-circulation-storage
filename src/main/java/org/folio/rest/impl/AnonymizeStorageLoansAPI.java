@@ -25,6 +25,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.sql.UpdateResult;
@@ -90,9 +91,9 @@ public class AnonymizeStorageLoansAPI implements AnonymizeStorageLoans {
 
   private Future<UpdateResult> executeSql(PostgresClient postgresClient,
     String sql) {
-    Future<UpdateResult> future = Future.future();
-    postgresClient.execute(sql, future);
-    return future;
+    Promise<UpdateResult> promise = Promise.promise();
+    postgresClient.execute(sql, promise.future());
+    return promise.future();
   }
 
   private String createAnonymizationSQL(@NotNull Collection<String> loanIdList,

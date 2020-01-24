@@ -1,7 +1,4 @@
 {
-  "fullText": {
-    "defaultDictionary": "simple"
-  },
   "scripts": [
     {
       "run": "before",
@@ -32,30 +29,10 @@
       ],
       "ginIndex": [
         {
-          "fieldName": "userId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "itemId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
           "fieldName": "status.name",
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
-        }
-      ],
-      "index": [
-        {
-          "fieldName": "id",
-          "tOps": "ADD",
-          "caseSensitive": true,
-          "removeAccents": false
         }
       ],
       "fullTextIndex": [
@@ -97,12 +74,6 @@
         }
       ],
       "ginIndex": [
-        {
-          "fieldName": "itemId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
         {
           "fieldName": "requestType",
           "tOps": "ADD",

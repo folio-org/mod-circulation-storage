@@ -22,7 +22,7 @@ import static org.hamcrest.core.Is.is;
 public class ApiTests {
   private static boolean runningOnOwn;
 
-  protected final HttpClient client = new HttpClient(StorageTestSuite.getVertx());
+  protected final WebClient client = new WebClient(StorageTestSuite.getVertx());
 
   @BeforeClass
   public static void before()
