@@ -19,6 +19,7 @@ import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_AWAITIN
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_AWAITING_PICKUP;
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_IN_TRANSIT;
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET_FILLED;
+import static org.folio.rest.support.builders.RequestRequestBuilder.ItemSummary;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.equivalentTo;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
@@ -41,6 +42,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
+
+import org.folio.util.StringUtil;
 import org.hamcrest.junit.MatcherAssert;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -97,6 +100,13 @@ public class RequestsApiTest extends ApiTests {
     DateTime requestExpirationDate = new DateTime(2017, 7, 30, 0, 0, DateTimeZone.UTC);
     DateTime holdShelfExpirationDate = new DateTime(2017, 8, 31, 0, 0, DateTimeZone.UTC);
 
+    UUID isbnIdentifierId = UUID.randomUUID();
+    UUID bnbIdentifierId = UUID.randomUUID();
+
+    final ItemSummary nod = new ItemSummary("Nod", "565578437802")
+      .addIdentifier(isbnIdentifierId, "978-92-8011-566-9")
+      .addIdentifier(bnbIdentifierId, "2193988");
+
     JsonObject representation = createEntity(
       new RequestRequestBuilder()
       .recall()
@@ -108,7 +118,7 @@ public class RequestsApiTest extends ApiTests {
       .withProxyId(proxyId)
       .withRequestExpiration(requestExpirationDate)
       .withHoldShelfExpiration(holdShelfExpirationDate)
-      .withItem("Nod", "565578437802")
+      .withItem(nod)
       .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
       .withProxy("Stuart", "Rebecca", "6059539205")
       .withStatus(OPEN_NOT_YET_FILLED)
@@ -132,8 +142,21 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getString("pickupServicePointId"), is(pickupServicePointId.toString()));
 
     assertThat(representation.containsKey("item"), is(true));
-    assertThat(representation.getJsonObject("item").getString("title"), is("Nod"));
-    assertThat(representation.getJsonObject("item").getString("barcode"), is("565578437802"));
+
+    JsonObject item = representation.getJsonObject("item");
+    assertThat(item.getString("title"), is("Nod"));
+    assertThat(item.getString("barcode"), is("565578437802"));
+
+    JsonArray identifiers = item.getJsonArray("identifiers");
+    assertThat(identifiers.size(), is(2));
+
+    assertThat(identifiers.getJsonObject(0).getString("identifierTypeId"),
+      is(isbnIdentifierId.toString()));
+    assertThat(identifiers.getJsonObject(0).getString("value"),
+      is("978-92-8011-566-9"));
+    assertThat(identifiers.getJsonObject(1).getString("identifierTypeId"),
+      is(bnbIdentifierId.toString()));
+    assertThat(identifiers.getJsonObject(1).getString("value"), is("2193988"));
 
     assertThat(representation.containsKey("requester"), is(true));
 
@@ -1639,6 +1662,59 @@ public class RequestsApiTest extends ApiTests {
     assertThat(updatedRequest.getString("awaitingPickupRequestClosedDate"), is(nullValue()));
   }
 
+  @Test
+  public void canFindRequestsWithIsbnIdentifier()
+    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+
+    final UUID nodRequestId = UUID.randomUUID();
+    final UUID smallAngryPlanetRequestId = UUID.randomUUID();
+    final UUID issnIdentifierId = UUID.randomUUID();
+    final UUID isbnIdentifierId = UUID.randomUUID();
+    final String isbn = "978-92-8011-566-10";
+
+    final ItemSummary nod = new ItemSummary("Nod", "565578437802")
+      .addIdentifier(issnIdentifierId, "978-92-8011-566-9")
+      .addIdentifier(UUID.randomUUID(), "2193988")
+      .addIdentifier(isbnIdentifierId, isbn);
+
+    final ItemSummary smallAngryPlanet = new ItemSummary("SAP", "565578437803")
+      .addIdentifier(isbnIdentifierId, isbn)
+      .addIdentifier(UUID.randomUUID(), "2193989");
+
+    final ItemSummary temeraire = new ItemSummary("Temeraire", "565578437804");
+
+    createEntity(new RequestRequestBuilder()
+        .withId(nodRequestId)
+        .recall()
+        .toHoldShelf()
+        .withItem(nod)
+        .create(),
+      requestStorageUrl());
+
+    createEntity(new RequestRequestBuilder()
+        .withId(smallAngryPlanetRequestId)
+        .recall()
+        .toHoldShelf()
+        .withItem(smallAngryPlanet)
+        .create(),
+      requestStorageUrl());
+
+    createEntity(new RequestRequestBuilder()
+        .withId(UUID.randomUUID())
+        .recall()
+        .toHoldShelf()
+        .withItem(temeraire)
+        .create(),
+      requestStorageUrl());
+
+    List<JsonObject> isbnRequests = findRequestsByQuery(
+      "item.identifiers = /@identifierTypeId=%s %s", isbnIdentifierId, isbn);
+
+    assertThat(isbnRequests.size(), is(2));
+    assertThat(isbnRequests.get(0).getString("id"), is(nodRequestId.toString()));
+    assertThat(isbnRequests.get(1).getString("id"), is(smallAngryPlanetRequestId.toString()));
+  }
+
   private IndividualResource createCancellationReason(
     String name,
     String description)
@@ -1664,6 +1740,23 @@ public class RequestsApiTest extends ApiTests {
       postResponse.getBody()), postResponse.getStatusCode(), is(HTTP_CREATED));
 
     return new IndividualResource(postResponse);
+  }
+
+  private List<JsonObject> findRequestsByQuery(String query, Object... params)
+    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+
+    final String fullQuery = StringUtil.urlEncode(String.format(query, params));
+    final CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
+
+    client.get(requestStorageUrl("?query=" + fullQuery), TENANT_ID,
+      ResponseHandler.json(getCompleted));
+
+    return getCompleted
+      .thenApply(response -> response.getJson().getJsonArray("requests")
+        .stream()
+        .map(request -> (JsonObject) request)
+        .collect(Collectors.toList()))
+      .get(5, TimeUnit.SECONDS);
   }
 
   static URL requestStorageUrl() throws MalformedURLException {

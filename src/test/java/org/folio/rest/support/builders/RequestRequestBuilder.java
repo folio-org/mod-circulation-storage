@@ -1,8 +1,16 @@
 package org.folio.rest.support.builders;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -132,6 +140,14 @@ public class RequestRequestBuilder extends JsonBuilder {
 
       put(item, "title", this.itemSummary.title);
       put(item, "barcode", this.itemSummary.barcode);
+
+      final JsonArray identifiers = new JsonArray(this.itemSummary.identifiers
+        .stream()
+        .map(pair -> new JsonObject()
+          .put("identifierTypeId", pair.getKey().toString())
+          .put("value", pair.getValue())
+        ).collect(Collectors.toList()));
+      item.put("identifiers", identifiers);
 
       put(request, "item", item);
     }
@@ -417,6 +433,10 @@ public class RequestRequestBuilder extends JsonBuilder {
   }
 
   public RequestRequestBuilder withItem(String title, String barcode) {
+    return withItem(new ItemSummary(title, barcode));
+  }
+
+  public RequestRequestBuilder withItem(ItemSummary item) {
     return new RequestRequestBuilder(
       this.id,
       this.requestType,
@@ -428,7 +448,7 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.deliveryAddressTypeId,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
-      new ItemSummary(title, barcode),
+      item,
       this.requesterSummary,
       this.proxySummary,
       this.status,
@@ -783,13 +803,30 @@ public class RequestRequestBuilder extends JsonBuilder {
       tags);
   }
 
-  private class ItemSummary {
+  public static class ItemSummary {
     final String title;
     final String barcode;
+    final List<Pair<UUID, String>> identifiers;
 
-    ItemSummary(String title, String barcode) {
+    public ItemSummary(String title, String barcode) {
+      this(title, barcode, Collections.emptyList());
+    }
+
+    private ItemSummary(String title, String barcode, List<Pair<UUID, String>> identifiers) {
       this.title = title;
       this.barcode = barcode;
+      this.identifiers = new ArrayList<>(identifiers);
+    }
+
+    public ItemSummary addIdentifier(UUID identifierId, String value) {
+      final List<Pair<UUID, String>> copiedIdentifiers = new ArrayList<>(identifiers);
+      copiedIdentifiers.add(new ImmutablePair<>(identifierId, value));
+
+      return new ItemSummary(
+        this.title,
+        this.barcode,
+        copiedIdentifiers
+      );
     }
   }
 
