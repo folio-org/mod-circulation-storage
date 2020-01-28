@@ -101,11 +101,11 @@ public class RequestsApiTest extends ApiTests {
     DateTime holdShelfExpirationDate = new DateTime(2017, 8, 31, 0, 0, DateTimeZone.UTC);
 
     UUID isbnIdentifierId = UUID.randomUUID();
-    UUID bnbIdentifierId = UUID.randomUUID();
+    UUID issnIdentifierId = UUID.randomUUID();
 
     final ItemSummary nod = new ItemSummary("Nod", "565578437802")
       .addIdentifier(isbnIdentifierId, "978-92-8011-566-9")
-      .addIdentifier(bnbIdentifierId, "2193988");
+      .addIdentifier(issnIdentifierId, "2193988");
 
     JsonObject representation = createEntity(
       new RequestRequestBuilder()
@@ -155,7 +155,7 @@ public class RequestsApiTest extends ApiTests {
     assertThat(identifiers.getJsonObject(0).getString("value"),
       is("978-92-8011-566-9"));
     assertThat(identifiers.getJsonObject(1).getString("identifierTypeId"),
-      is(bnbIdentifierId.toString()));
+      is(issnIdentifierId.toString()));
     assertThat(identifiers.getJsonObject(1).getString("value"), is("2193988"));
 
     assertThat(representation.containsKey("requester"), is(true));
