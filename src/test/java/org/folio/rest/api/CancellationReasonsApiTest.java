@@ -1,6 +1,8 @@
 package org.folio.rest.api;
 
 import io.vertx.core.json.JsonObject;
+
+import org.folio.HttpStatus;
 import org.folio.rest.support.*;
 import org.folio.rest.support.builders.RequestRequestBuilder;
 import org.hamcrest.junit.MatcherAssert;
@@ -256,7 +258,7 @@ public class CancellationReasonsApiTest extends ApiTests {
     assertCreateCancellationReason(request);
     assertDeleteCancellationReason(id);
     JsonResponse getResponse = getCancellationReason(id);
-    assertTrue(getResponse.getStatusCode() == 404);
+    assertEquals(HttpStatus.HTTP_NOT_FOUND.toInt(), getResponse.getStatusCode());
   }
 
   @Test
@@ -273,7 +275,7 @@ public class CancellationReasonsApiTest extends ApiTests {
         .put("description", "Chicken grease stains on item");
     assertCreateCancellationReason(request);
     JsonResponse response = createCancellationReason(request2);
-    assertEquals(400, response.getStatusCode());
+    assertEquals(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt(), response.getStatusCode());
   }
 
   @Test
@@ -317,9 +319,9 @@ public class CancellationReasonsApiTest extends ApiTests {
     client.post(requestStorageUrl(), requestRequest, StorageTestSuite.TENANT_ID,
         ResponseHandler.json(createRequestFuture));
     JsonResponse createRequestResponse = createRequestFuture.get(5, TimeUnit.SECONDS);
-    assertEquals(201, createRequestResponse.getStatusCode());
+    assertEquals(HttpStatus.HTTP_CREATED.toInt(), createRequestResponse.getStatusCode());
     TextResponse deleteReasonResponse = deleteCancellationReason(cancellationReasonId.toString());
-    assertEquals(400, deleteReasonResponse.getStatusCode());
+    assertEquals(HttpStatus.HTTP_BAD_REQUEST.toInt(), deleteReasonResponse.getStatusCode());
 
   }
   @Test

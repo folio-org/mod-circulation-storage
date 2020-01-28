@@ -3,6 +3,7 @@ package org.folio.rest.api;
 import static org.folio.rest.support.builders.LoanPolicyRequestBuilder.defaultRollingPolicy;
 import static org.folio.rest.support.builders.LoanPolicyRequestBuilder.emptyPolicy;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isBadRequest;
+import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isUnprocessableEntity;
 import static org.folio.rest.support.matchers.periodJsonObjectMatcher.matchesPeriod;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -123,7 +124,7 @@ public class LoanPoliciesApiTest extends ApiTests {
       badLoanPolicyRequest, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createBadLPCompleted));
     JsonResponse badlpResponse = createBadLPCompleted.get(5, TimeUnit.SECONDS);
-    assertThat(String.format("Non-existent foreign key: %s", badlpResponse.getBody()), badlpResponse, isBadRequest());
+    assertThat(String.format("Non-existent foreign key: %s", badlpResponse.getBody()), badlpResponse, isUnprocessableEntity());
     //////////////////////////////////////////
 
     ///////////bad foreign key
@@ -140,7 +141,7 @@ public class LoanPoliciesApiTest extends ApiTests {
       bad2LoanPolicyRequest, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createBadLP2Completed));
     JsonResponse badlpResponse2 = createBadLP2Completed.get(5, TimeUnit.SECONDS);
-    assertThat("Bad foreign key", badlpResponse2, isBadRequest());
+    assertThat("Bad foreign key", badlpResponse2, isUnprocessableEntity());
     //////////////////////////////////////////
 
     id2 = UUID.randomUUID();

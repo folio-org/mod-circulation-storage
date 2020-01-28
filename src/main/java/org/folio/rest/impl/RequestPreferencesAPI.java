@@ -6,6 +6,7 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
+import org.folio.HttpStatus;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.RequestPreference;
@@ -56,7 +57,7 @@ public class RequestPreferencesAPI implements RequestPreferenceStorage {
     return reply -> {
       if (isUniqueUserIdViolation(reply)) {
         asyncResultHandler.handle(
-          succeededFuture(Response.status(422).header("Content-Type", "application/json")
+          succeededFuture(Response.status(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()).header("Content-Type", "application/json")
             .entity(preferenceAlreadyExistsError(entity.getUserId())).build()));
       } else {
         asyncResultHandler.handle(reply);
@@ -66,7 +67,7 @@ public class RequestPreferencesAPI implements RequestPreferenceStorage {
 
   private boolean isUniqueUserIdViolation(AsyncResult<Response> reply) {
     return reply.succeeded() &&
-      reply.result().getStatus() == 400 &&
+      reply.result().getStatus() == HttpStatus.HTTP_BAD_REQUEST.toInt() &&
       reply.result().getEntity().toString().contains("user_request_preference_userid_idx_unique");
   }
 

@@ -20,7 +20,9 @@ public class RequestsApiUtil {
   }
 
   public static boolean hasSamePositionConstraintViolated(String errorMessage) {
-    return errorMessage != null && errorMessage.contains("request_itemid_position_idx_unique");
+    return errorMessage != null &&
+      (errorMessage.contains("request_itemid_position_idx_unique") ||
+      errorMessage.contains("value already exists in table "));
   }
 
   public static Errors samePositionInQueueError(String item, Integer position) {

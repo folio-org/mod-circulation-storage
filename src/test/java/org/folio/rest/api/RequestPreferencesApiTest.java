@@ -67,7 +67,7 @@ public class RequestPreferencesApiTest extends ApiTests {
 
     JsonResponse response2 = createRequestPreference();
     assertThat(response2, isUnprocessableEntity());
-    assertThat(response2.getJson().toString(), containsString("Request preference for specified user already exists"));
+    assertThat(response2.getJson().toString(), containsString(" value already exists in table "));
   }
 
   @Test
@@ -161,7 +161,7 @@ public class RequestPreferencesApiTest extends ApiTests {
 
     JsonResponse response = udpatePreference(constructDefaultPreference(USER_ID).withId(secondPreference.getId()));
     assertThat(response, isUnprocessableEntity());
-    assertThat(response.getJson().toString(), containsString("Request preference for specified user already exists"));
+    assertThat(response.getJson().toString(), containsString(" value already exists in table "));
   }
 
   @Test
