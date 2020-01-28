@@ -1707,7 +1707,7 @@ public class RequestsApiTest extends ApiTests {
       requestStorageUrl());
 
     List<JsonObject> isbnRequests = findRequestsByQuery(
-      "item.identifiers = /@identifierTypeId=%s %s", isbnIdentifierId, isbn);
+      "item.identifiers = %s and item.identifiers = %s", isbnIdentifierId, isbn);
 
     assertThat(isbnRequests.size(), is(2));
     assertThat(isbnRequests.get(0).getString("id"), is(nodRequestId.toString()));

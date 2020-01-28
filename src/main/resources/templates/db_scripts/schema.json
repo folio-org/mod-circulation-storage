@@ -83,7 +83,6 @@
       "tableName": "request",
       "withMetadata": true,
       "withAuditing": false,
-      "fromModuleVersion": "10.1.0",
       "foreignKeys": [
         {
           "fieldName": "cancellationReasonId",
@@ -115,37 +114,6 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
-        },
-        {
-          "fieldName": "item.identifiers",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "requesterId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        }
-      ],
-      "fullTextIndex": [
-        {
-          "fieldName": "item.identifiers",
-          "arraySubfield" : "value",
-          "arrayModifiers": ["identifierTypeId"]
-        },
-        {
-          "fieldName": "item.barcode",
-          "tOps": "ADD"
-        },
-        {
-          "fieldName": "item.title",
-          "tOps": "ADD"
-        },
-        {
-          "fieldName": "requester.barcode",
-          "tOps": "ADD"
         }
       ],
       "customSnippetPath": "requestUpdateTrigger.sql"
