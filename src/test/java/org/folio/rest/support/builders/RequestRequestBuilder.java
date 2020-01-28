@@ -1,16 +1,11 @@
 package org.folio.rest.support.builders;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -36,7 +31,7 @@ public class RequestRequestBuilder extends JsonBuilder {
   private final UUID deliveryAddressTypeId;
   private final DateTime requestExpirationDate;
   private final DateTime holdShelfExpirationDate;
-  private final ItemSummary itemSummary;
+  private final RequestItemSummary itemSummary;
   private final PatronSummary requesterSummary;
   private final PatronSummary proxySummary;
   private final String status;
@@ -83,7 +78,7 @@ public class RequestRequestBuilder extends JsonBuilder {
     UUID deliveryAddressTypeId,
     DateTime requestExpirationDate,
     DateTime holdShelfExpirationDate,
-    ItemSummary itemSummary,
+    RequestItemSummary itemSummary,
     PatronSummary requesterSummary,
     PatronSummary proxySummary,
     String status,
@@ -433,10 +428,10 @@ public class RequestRequestBuilder extends JsonBuilder {
   }
 
   public RequestRequestBuilder withItem(String title, String barcode) {
-    return withItem(new ItemSummary(title, barcode));
+    return withItem(new RequestItemSummary(title, barcode));
   }
 
-  public RequestRequestBuilder withItem(ItemSummary item) {
+  public RequestRequestBuilder withItem(RequestItemSummary item) {
     return new RequestRequestBuilder(
       this.id,
       this.requestType,
@@ -801,33 +796,6 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position,
       this.pickupServicePointId,
       tags);
-  }
-
-  public static class ItemSummary {
-    final String title;
-    final String barcode;
-    final List<Pair<UUID, String>> identifiers;
-
-    public ItemSummary(String title, String barcode) {
-      this(title, barcode, Collections.emptyList());
-    }
-
-    private ItemSummary(String title, String barcode, List<Pair<UUID, String>> identifiers) {
-      this.title = title;
-      this.barcode = barcode;
-      this.identifiers = new ArrayList<>(identifiers);
-    }
-
-    public ItemSummary addIdentifier(UUID identifierId, String value) {
-      final List<Pair<UUID, String>> copiedIdentifiers = new ArrayList<>(identifiers);
-      copiedIdentifiers.add(new ImmutablePair<>(identifierId, value));
-
-      return new ItemSummary(
-        this.title,
-        this.barcode,
-        copiedIdentifiers
-      );
-    }
   }
 
   private class PatronSummary {

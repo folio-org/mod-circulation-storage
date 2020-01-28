@@ -2,14 +2,6 @@ package org.folio.rest.api;
 
 import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.util.Arrays.asList;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNull.notNullValue;
-import static org.hamcrest.core.IsNull.nullValue;
-
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_CANCELLED;
 import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_FILLED;
@@ -19,11 +11,17 @@ import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_AWAITIN
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_AWAITING_PICKUP;
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_IN_TRANSIT;
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET_FILLED;
-import static org.folio.rest.support.builders.RequestRequestBuilder.ItemSummary;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.equivalentTo;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
 import static org.folio.rest.support.matchers.ValidationResponseMatchers.isValidationResponseWhich;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.hamcrest.core.IsNull.nullValue;
 
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
@@ -38,11 +36,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-
+import org.folio.rest.jaxrs.model.Tags;
+import org.folio.rest.support.ApiTests;
+import org.folio.rest.support.IndividualResource;
+import org.folio.rest.support.JsonArrayHelper;
+import org.folio.rest.support.JsonResponse;
+import org.folio.rest.support.Response;
+import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.TextResponse;
+import org.folio.rest.support.builders.RequestItemSummary;
+import org.folio.rest.support.builders.RequestRequestBuilder;
 import org.folio.util.StringUtil;
 import org.hamcrest.junit.MatcherAssert;
 import org.joda.time.DateTime;
@@ -54,15 +57,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.folio.rest.jaxrs.model.Tags;
-import org.folio.rest.support.ApiTests;
-import org.folio.rest.support.IndividualResource;
-import org.folio.rest.support.JsonArrayHelper;
-import org.folio.rest.support.JsonResponse;
-import org.folio.rest.support.Response;
-import org.folio.rest.support.ResponseHandler;
-import org.folio.rest.support.TextResponse;
-import org.folio.rest.support.builders.RequestRequestBuilder;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 
 @RunWith(JUnitParamsRunner.class)
 public class RequestsApiTest extends ApiTests {
@@ -103,7 +101,7 @@ public class RequestsApiTest extends ApiTests {
     UUID isbnIdentifierId = UUID.randomUUID();
     UUID issnIdentifierId = UUID.randomUUID();
 
-    final ItemSummary nod = new ItemSummary("Nod", "565578437802")
+    final RequestItemSummary nod = new RequestItemSummary("Nod", "565578437802")
       .addIdentifier(isbnIdentifierId, "978-92-8011-566-9")
       .addIdentifier(issnIdentifierId, "2193988");
 
@@ -1670,18 +1668,19 @@ public class RequestsApiTest extends ApiTests {
     final UUID smallAngryPlanetRequestId = UUID.randomUUID();
     final UUID issnIdentifierId = UUID.randomUUID();
     final UUID isbnIdentifierId = UUID.randomUUID();
+    final UUID bnbIdentifierId = UUID.randomUUID();
     final String isbn = "978-92-8011-566-10";
 
-    final ItemSummary nod = new ItemSummary("Nod", "565578437802")
+    final RequestItemSummary nod = new RequestItemSummary("Nod", "565578437802")
       .addIdentifier(issnIdentifierId, "978-92-8011-566-9")
-      .addIdentifier(UUID.randomUUID(), "2193988")
+      .addIdentifier(bnbIdentifierId, "2193988")
       .addIdentifier(isbnIdentifierId, isbn);
 
-    final ItemSummary smallAngryPlanet = new ItemSummary("SAP", "565578437803")
+    final RequestItemSummary smallAngryPlanet = new RequestItemSummary("SAP", "565578437803")
       .addIdentifier(isbnIdentifierId, isbn)
-      .addIdentifier(UUID.randomUUID(), "2193989");
+      .addIdentifier(bnbIdentifierId, "2193989");
 
-    final ItemSummary temeraire = new ItemSummary("Temeraire", "565578437804");
+    final RequestItemSummary temeraire = new RequestItemSummary("Temeraire", "565578437804");
 
     createEntity(new RequestRequestBuilder()
         .withId(nodRequestId)
