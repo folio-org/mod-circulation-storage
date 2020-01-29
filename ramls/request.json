@@ -94,7 +94,7 @@
               "identifierTypeId": {
                 "type": "string",
                 "description": "UUID of resource identifier type (e.g. ISBN, ISSN, LCCN, CODEN, Locally defined identifiers)",
-                "$ref": "uuid.json"
+                "$ref": "raml-util/schemas/uuid.schema"
               }
             },
             "additionalProperties": false,
