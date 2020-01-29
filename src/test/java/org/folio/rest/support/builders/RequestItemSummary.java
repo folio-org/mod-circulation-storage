@@ -30,7 +30,6 @@ public class RequestItemSummary {
     return new RequestItemSummary(
       this.title,
       this.barcode,
-      copiedIdentifiers
-    );
+      copiedIdentifiers);
   }
 }
