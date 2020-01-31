@@ -67,7 +67,7 @@ public class RequestPreferencesApiTest extends ApiTests {
 
     JsonResponse response2 = createRequestPreference();
     assertThat(response2, isUnprocessableEntity());
-    assertThat(response2.getJson().toString(), containsString(" value already exists in table "));
+    assertThat(response2.getJson().toString(), containsString("Request preference for specified user already exists"));
   }
 
   @Test
@@ -140,7 +140,7 @@ public class RequestPreferencesApiTest extends ApiTests {
     RequestPreference preference = createRequestPreference().getJson().mapTo(RequestPreference.class);
     preference.setDelivery(false);
     preference.setDefaultDeliveryAddressTypeId(null);
-    JsonResponse response = udpatePreference(preference);
+    JsonResponse response = updatePreference(preference);
     assertThat(response, isNoContent());
 
     RequestPreference updatedPreference = getPreference(preference.getId()).getJson().mapTo(RequestPreference.class);
@@ -150,7 +150,7 @@ public class RequestPreferencesApiTest extends ApiTests {
   @Test
   public void cannotUpdateRequestPreferenceWithNotExistingId() {
     RequestPreference preference = constructDefaultPreference(USER_ID).withId(UUID.randomUUID().toString());
-    JsonResponse response = udpatePreference(preference);
+    JsonResponse response = updatePreference(preference);
     assertThat(response, isNotFound());
   }
 
@@ -159,15 +159,15 @@ public class RequestPreferencesApiTest extends ApiTests {
     createRequestPreference(USER_ID);
     RequestPreference secondPreference = createRequestPreference(USER_ID2).getJson().mapTo(RequestPreference.class);
 
-    JsonResponse response = udpatePreference(constructDefaultPreference(USER_ID).withId(secondPreference.getId()));
+    JsonResponse response = updatePreference(constructDefaultPreference(USER_ID).withId(secondPreference.getId()));
     assertThat(response, isUnprocessableEntity());
-    assertThat(response.getJson().toString(), containsString(" value already exists in table "));
+    assertThat(response.getJson().toString(), containsString("Request preference for specified user already exists"));
   }
 
   @Test
   public void cannotUpdateRequestPreferenceWithInvalidId() {
     RequestPreference preference = constructDefaultPreference(USER_ID).withId("invalid_id");
-    JsonResponse response = udpatePreference(preference);
+    JsonResponse response = updatePreference(preference);
     assertThat(response, isUnprocessableEntity());
   }
 
@@ -197,7 +197,7 @@ public class RequestPreferencesApiTest extends ApiTests {
     return getFromFuture(getCompleted);
   }
 
-  private JsonResponse udpatePreference(RequestPreference preference) {
+  private JsonResponse updatePreference(RequestPreference preference) {
     CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
     client.put(requestPreferenceStorageUrl("/" + preference.getId()), preference, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(getCompleted));
