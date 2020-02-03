@@ -3,7 +3,6 @@ package org.folio.rest.api;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-import org.folio.HttpStatus;
 import org.folio.rest.support.*;
 import org.hamcrest.junit.MatcherAssert;
 import org.junit.After;
@@ -22,6 +21,12 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.isBadRequest;
+import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.isCreated;
+import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.isNoContent;
+import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.isNotFound;
+import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.isOk;
+import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.isUnprocessableEntity;
 import static org.folio.rest.api.LoanPoliciesApiTest.loanPolicyStorageUrl;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -63,7 +68,8 @@ public class FixedDueDateApiTest extends ApiTests {
       ResponseHandler.json(createCompleted));
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create due date: %s", response.getBody()),
-      response.getStatusCode(), is(HttpStatus.HTTP_CREATED.toInt()));
+      response.getStatusCode(), isCreated());
+    //assertThat(response, isOkapiCreated());
     JsonObject representation = response.getJson();
     assertThat(representation.getString("id"), is(id.toString()));
     ////////////////////////////////////
@@ -79,7 +85,7 @@ public class FixedDueDateApiTest extends ApiTests {
       ResponseHandler.empty(updateCompleted));
     Response updateResponse = updateCompleted.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create due date: %s", representation.encodePrettily()),
-      updateResponse.getStatusCode(), is(HttpStatus.HTTP_NO_CONTENT.toInt()));
+      updateResponse.getStatusCode(), isNoContent());
     ////////////////////////////////////////////////
 
     //update the fixed due date with a valid schedule
@@ -92,7 +98,7 @@ public class FixedDueDateApiTest extends ApiTests {
       ResponseHandler.empty(updateBad3Completed));
     Response updateBad3Response = updateBad3Completed.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create due date: %s", representation.encodePrettily()),
-      updateBad3Response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
+      updateBad3Response.getStatusCode(), isUnprocessableEntity());
     ////////////////////////////////////////////////
 
     //update the fixed due date with an in-valid schedule
@@ -105,7 +111,7 @@ public class FixedDueDateApiTest extends ApiTests {
       ResponseHandler.text(updateBadCompleted));
     TextResponse updateBadResponse = updateBadCompleted.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create due date: %s", representation.encodePrettily()),
-      updateBadResponse.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
+      updateBadResponse.getStatusCode(), isUnprocessableEntity());
     ////////////////////////////////////////////////
 
     //update the fixed due date with a bad date in schedule
@@ -118,7 +124,7 @@ public class FixedDueDateApiTest extends ApiTests {
       ResponseHandler.text(updateBad2Completed));
     TextResponse updateBad2Response = updateBad2Completed.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create due date: %s", fixDueDate.encodePrettily()),
-      updateBad2Response.getStatusCode(), is(HttpStatus.HTTP_BAD_REQUEST.toInt()));
+      updateBad2Response.getStatusCode(), isBadRequest());
     ////////////////////////////////////////////////
 
     //try to create fixed due date without a mandatory name field
@@ -130,7 +136,7 @@ public class FixedDueDateApiTest extends ApiTests {
       ResponseHandler.json(createCompleted2));
     JsonResponse response2 = createCompleted2.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create due date: %s", response2.getBody()),
-      response2.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
+      response2.getStatusCode(), isUnprocessableEntity());
     ////////////////////////////////////
 
     //create fixed due date without id, server generated
@@ -144,7 +150,7 @@ public class FixedDueDateApiTest extends ApiTests {
       ResponseHandler.json(updateCompleted2));
     JsonResponse updateCompleted2Response = updateCompleted2.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create due date: %s", fixDueDate3.encodePrettily()),
-      updateCompleted2Response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
+      updateCompleted2Response.getStatusCode(), isUnprocessableEntity());
     ////////////////////////////////////////////
 
     //create fixed due date without id, server generated
@@ -158,7 +164,7 @@ public class FixedDueDateApiTest extends ApiTests {
       ResponseHandler.json(updateGoodCompleted));
     JsonResponse updateCompleted5Response = updateGoodCompleted.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create due date: %s", fixDueDate7.encodePrettily()),
-      updateCompleted5Response.getStatusCode(), is(HttpStatus.HTTP_CREATED.toInt()));
+      updateCompleted5Response.getStatusCode(), isCreated());
     fixDueDate7 = updateCompleted5Response.getJson();
     fixDueDate7.remove("metadata");
     String newId = fixDueDate7.getString("id");
@@ -174,7 +180,7 @@ public class FixedDueDateApiTest extends ApiTests {
       ResponseHandler.empty(updateBad4Completed));
     Response updateBad4Response = updateBad4Completed.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create due date: %s", fixDueDate7.encodePrettily()),
-      updateBad4Response.getStatusCode(), is(HttpStatus.HTTP_NO_CONTENT.toInt()));
+      updateBad4Response.getStatusCode(), isNoContent());
     ////////////////////////////////////////////////
 
     //update the fixed due date with a valid schedule
@@ -187,7 +193,7 @@ public class FixedDueDateApiTest extends ApiTests {
       ResponseHandler.empty(updateBad5Completed));
     Response updateBad5Response = updateBad5Completed.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create due date: %s", fixDueDate7.encodePrettily()),
-      updateBad5Response.getStatusCode(), is(HttpStatus.HTTP_NO_CONTENT.toInt()));
+      updateBad5Response.getStatusCode(), isNoContent());
     ////////////////////////////////////////////////
 
     //create duplicate name due date
@@ -198,18 +204,8 @@ public class FixedDueDateApiTest extends ApiTests {
       ResponseHandler.json(updateCompleted3));
     JsonResponse updateCompleted3Response = updateCompleted3.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create due date: %s", fixDueDate4.encodePrettily()),
-      updateCompleted3Response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
+      updateCompleted3Response.getStatusCode(), isUnprocessableEntity());
     ////////////////////////////////////////////
-
-    //create duplicate name with different case - due date <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-/*    CompletableFuture<JsonResponse> updateBadCompleted5 = new CompletableFuture<>();
-    JsonObject fixBadDueDate5 = createFixedDueDate(null, "semester", "desc2");
-    client.post(dueDateURL(),
-      fixBadDueDate5, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(updateBadCompleted5));
-    JsonResponse updateBadCompleted3Response = updateBadCompleted5.get(5, TimeUnit.SECONDS);
-    assertThat(String.format("Failed to create due date: %s", fixBadDueDate5.encodePrettily()),
-      updateBadCompleted3Response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));*/
 
     ////////////////////////////////////////////
     //create and then update with a duplicate name due date
@@ -221,18 +217,8 @@ public class FixedDueDateApiTest extends ApiTests {
     JsonResponse createdCompleted3Response = createCompleted3.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create due date: %s",
       createdCompleted3Response.getJson().encodePrettily()),
-      createdCompleted3Response.getStatusCode(), is(HttpStatus.HTTP_CREATED.toInt()));
+      createdCompleted3Response.getStatusCode(), isCreated());
     String newId2 = createdCompleted3Response.getJson().getString("id");
-
-    ////////////////////// <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-/*    CompletableFuture<JsonResponse> updateCompleted4 = new CompletableFuture<>();
-    JsonObject fixDueDate5 = createFixedDueDate(newId2, "Semester", "desc2");
-    client.put(dueDateURL("/"+newId2),
-      fixDueDate5, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(updateCompleted4));
-    JsonResponse updateCompleted4Response = updateCompleted4.get(5, TimeUnit.SECONDS);
-    assertThat(String.format("Failed to create due date: %s", fixDueDate5.encodePrettily()),
-      updateCompleted4Response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));*/
 
     ////////////////////////////////////////////
     //get with non-existing field now returns 200 / OK
@@ -244,7 +230,7 @@ public class FixedDueDateApiTest extends ApiTests {
     JsonResponse getCQLResponse2 = getCQLCompleted2.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Failed to get schedule: %s", getCQLResponse2.getJson().encodePrettily()),
-      getCQLResponse2.getStatusCode(), is(HttpStatus.HTTP_OK.toInt()));
+      getCQLResponse2.getStatusCode(), isOk());
     //////////////////////////////////////////////////////////
 
     //// get by id ///////////////////////
@@ -253,7 +239,7 @@ public class FixedDueDateApiTest extends ApiTests {
       ResponseHandler.json(getCompleted4));
     JsonResponse getCompleted4Response = getCompleted4.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create due date: %s", getCompleted4Response.getJson().encodePrettily()),
-      getCompleted4Response.getStatusCode(), is(HttpStatus.HTTP_OK.toInt()));
+      getCompleted4Response.getStatusCode(), isOk());
     assertThat(getCompleted4Response.getJson().getString("name"), is("semester2"));
 
     //// delete by id ///////////////////////
@@ -262,7 +248,7 @@ public class FixedDueDateApiTest extends ApiTests {
       ResponseHandler.empty(delCompleted));
     Response delCompleted4Response = delCompleted.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create due date: %s", dueDateURL("/"+newId2)),
-      delCompleted4Response.getStatusCode(), is(HttpStatus.HTTP_NO_CONTENT.toInt()));
+      delCompleted4Response.getStatusCode(), isNoContent());
 
     //// get by bad id ///////////////////////
     CompletableFuture<TextResponse> getCompleted5 = new CompletableFuture<>();
@@ -270,19 +256,8 @@ public class FixedDueDateApiTest extends ApiTests {
       ResponseHandler.text(getCompleted5));
     TextResponse getCompleted5Response = getCompleted5.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create due date: %s", getCompleted5Response.getBody()),
-      getCompleted5Response.getStatusCode(), is(HttpStatus.HTTP_NOT_FOUND.toInt()));
+      getCompleted5Response.getStatusCode(), isNotFound());
     System.out.println(dueDateURL("/12345") + " " + getCompleted5Response.getBody());
-
-
-    //// delete by bad id /////////////////////// <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-/*    CompletableFuture<TextResponse> delCompleted5 = new CompletableFuture<>();
-    client.delete(dueDateURL("/12345"), StorageTestSuite.TENANT_ID,
-      ResponseHandler.text(delCompleted5));
-    TextResponse delCompleted5Response = delCompleted5.get(5, TimeUnit.SECONDS);
-    assertThat(String.format("Failed to create due date: %s", delCompleted5Response.getBody()),
-      delCompleted5Response.getStatusCode(), is(HttpStatus.HTTP_NOT_FOUND.toInt()));
-    System.out.println(dueDateURL("/12345") + " " + delCompleted5Response.getBody());
-*/
 
     //update by bad id
     CompletableFuture<TextResponse> updateBadCompleted4 = new CompletableFuture<>();
@@ -292,7 +267,7 @@ public class FixedDueDateApiTest extends ApiTests {
       ResponseHandler.text(updateBadCompleted4));
     TextResponse updateBadCompleted4Response = updateBadCompleted4.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create due date: %s", updateDueDate5.encodePrettily()),
-      updateBadCompleted4Response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
+      updateBadCompleted4Response.getStatusCode(), isUnprocessableEntity());
 
     //// get , should have 2 records ///////////////////////
     CompletableFuture<JsonResponse> get2Completed = new CompletableFuture<>();
@@ -300,7 +275,7 @@ public class FixedDueDateApiTest extends ApiTests {
       ResponseHandler.json(get2Completed));
     JsonResponse get2CompletedResponse = get2Completed.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create due date: %s", get2CompletedResponse.getJson().encodePrettily()),
-      get2CompletedResponse.getStatusCode(), is(HttpStatus.HTTP_OK.toInt()));
+      get2CompletedResponse.getStatusCode(), isOk());
     assertThat(get2CompletedResponse.getJson().getJsonArray("fixedDueDateSchedules").size(), is(2));
 
     //// try to delete all fdds (uses cascade so will succeed) ///////////////////////
@@ -309,7 +284,7 @@ public class FixedDueDateApiTest extends ApiTests {
       ResponseHandler.empty(delAllCompleted));
     Response delAllCompleted4Response = delAllCompleted.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to delete due date: %s", dueDateURL()),
-      delAllCompleted4Response.getStatusCode(), is(HttpStatus.HTTP_NO_CONTENT.toInt()));
+      delAllCompleted4Response.getStatusCode(), isNoContent());
     ////////////////////////////////////////////////////////
 
     //// get , should have 0 records ///////////////////////
@@ -318,7 +293,7 @@ public class FixedDueDateApiTest extends ApiTests {
       ResponseHandler.json(get3Completed));
     JsonResponse get3CompletedResponse = get3Completed.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to get due date: %s", get3CompletedResponse.getJson().encodePrettily()),
-      get3CompletedResponse.getStatusCode(), is(HttpStatus.HTTP_OK.toInt()));
+      get3CompletedResponse.getStatusCode(), isOk());
     assertThat(get3CompletedResponse.getJson().getJsonArray("fixedDueDateSchedules").size(), is(0));
   }
 
@@ -347,7 +322,7 @@ public class FixedDueDateApiTest extends ApiTests {
 
     assertThat(String.format("Failed to get fixed due date schedules: %s",
       getResponse.getJson().encodePrettily()),
-      getResponse.getStatusCode(), is(HttpStatus.HTTP_OK.toInt()));
+      getResponse.getStatusCode(), isOk());
 
     List<JsonObject> results = JsonArrayHelper.toList(getResponse.getJson()
       .getJsonArray("fixedDueDateSchedules"));
@@ -384,7 +359,7 @@ public class FixedDueDateApiTest extends ApiTests {
 
     assertThat(String.format("Failed to get fixed due date schedules: %s",
       getResponse.getJson().encodePrettily()),
-      getResponse.getStatusCode(), is(HttpStatus.HTTP_OK.toInt()));
+      getResponse.getStatusCode(), isOk());
 
     List<JsonObject> results = JsonArrayHelper.toList(getResponse.getJson()
       .getJsonArray("fixedDueDateSchedules"));
@@ -422,7 +397,7 @@ public class FixedDueDateApiTest extends ApiTests {
 
     assertThat(String.format("Failed to get fixed due date schedules: %s",
       getResponse.getJson().encodePrettily()),
-      getResponse.getStatusCode(), is(HttpStatus.HTTP_OK.toInt()));
+      getResponse.getStatusCode(), isOk());
 
     List<JsonObject> results = JsonArrayHelper.toList(getResponse.getJson()
       .getJsonArray("fixedDueDateSchedules"));
@@ -502,7 +477,7 @@ public class FixedDueDateApiTest extends ApiTests {
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
     MatcherAssert.assertThat(String.format("Failed to create fixed due date: %s", response.getBody()),
-      response.getStatusCode(), is(HttpStatus.HTTP_CREATED.toInt()));
+      response.getStatusCode(), isCreated());
 
     return new IndividualResource(response);
   }

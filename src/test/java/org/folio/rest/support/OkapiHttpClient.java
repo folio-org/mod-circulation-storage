@@ -15,9 +15,9 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 
-public class WebClient {
+public class OkapiHttpClient {
 
-  private static final Logger log = LoggerFactory.getLogger(WebClient.class);
+  private static final Logger log = LoggerFactory.getLogger(OkapiHttpClient.class);
 
   private static final String TENANT_HEADER = "X-Okapi-Tenant";
   private static final String USERID_HEADER = "X-Okapi-User-Id";
@@ -26,7 +26,7 @@ public class WebClient {
 
   private final String defaultUserId = UUID.randomUUID().toString();
 
-  public WebClient(Vertx vertx) {
+  public OkapiHttpClient(Vertx vertx) {
     client = io.vertx.ext.web.client.WebClient.create(vertx);
   }
 
@@ -66,12 +66,13 @@ public class WebClient {
 
     if (body == null) {
       request.send(responseHandler);
-    } else {
-      Buffer encodedBody = Buffer.buffer(Json.encodePrettily(body));
-      log.info(String.format("POST %s, Request: %s",
-        url.toString(), body));
-      request.sendBuffer(encodedBody, responseHandler);
+      return;
     }
+
+    Buffer encodedBody = Buffer.buffer(Json.encodePrettily(body));
+    log.info(String.format("POST %s, Request: %s",
+      url.toString(), body));
+    request.sendBuffer(encodedBody, responseHandler);
   }
 
   public void post(URL url,

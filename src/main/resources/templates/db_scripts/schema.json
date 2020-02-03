@@ -29,7 +29,39 @@
       ],
       "ginIndex": [
         {
+          "fieldName": "userId",
+          "tOps": "DELETE",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "itemId",
+          "tOps": "DELETE",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
           "fieldName": "status.name",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        }
+      ],
+      "index": [
+        {
+          "fieldName": "id",
+          "tOps": "DELETE",
+          "caseSensitive": true,
+          "removeAccents": false
+        },
+        {
+          "fieldName": "userId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "itemId",
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
@@ -75,6 +107,12 @@
       ],
       "ginIndex": [
         {
+          "fieldName": "itemId",
+          "tOps": "DELETE",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
           "fieldName": "requestType",
           "tOps": "ADD",
           "caseSensitive": false,
@@ -82,6 +120,14 @@
         },
         {
           "fieldName": "status",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        }
+      ],
+      "index": [
+        {
+          "fieldName": "itemId",
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true

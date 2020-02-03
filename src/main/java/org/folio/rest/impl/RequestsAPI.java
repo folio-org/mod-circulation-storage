@@ -4,8 +4,8 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
 
+import org.folio.rest.impl.util.OkapiResponseUtil;
 import org.folio.rest.impl.util.RequestsApiUtil;
-import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.jaxrs.model.Requests;
@@ -13,12 +13,13 @@ import org.folio.rest.jaxrs.resource.RequestStorage;
 import org.folio.rest.persist.MyPgUtil;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.tools.RTFConsts;
 import org.folio.rest.tools.utils.TenantTool;
 
 import javax.ws.rs.core.Response;
 import java.util.Map;
+
 import static io.vertx.core.Future.succeededFuture;
+import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
 public class RequestsAPI implements RequestStorage {
@@ -120,7 +121,7 @@ public class RequestsAPI implements RequestStorage {
     // TODO: On insert don't return 204, we must return 201!
     MyPgUtil.putUpsert204(REQUEST_TABLE, entity, requestId, okapiHeaders, vertxContext,
         PutRequestStorageRequestsByRequestIdResponse.class, reply -> {
-          if (isSamePositionInQueueError(reply)) {
+          if (isSamePositionInQueueErrorOnUpsert(reply)) {
             asyncResultHandler.handle(succeededFuture(
               PutRequestStorageRequestsByRequestIdResponse
                 .respond422WithApplicationJson(samePositionInQueueError(entity))));
@@ -135,29 +136,18 @@ public class RequestsAPI implements RequestStorage {
       .samePositionInQueueError(request.getItemId(), request.getPosition());
   }
 
+  // Remove/Replace this function when MyPgUtil.putUpsert204() is removed/replaced.
+  private boolean isSamePositionInQueueErrorOnUpsert(AsyncResult<Response> reply) {
+    return reply.succeeded()
+      && reply.result().getStatus() == HTTP_BAD_REQUEST.toInt()
+      && reply.result().hasEntity()
+      && RequestsApiUtil
+      .hasSamePositionConstraintViolated(reply.result().getEntity().toString());
+
+  }
+
   private boolean isSamePositionInQueueError(AsyncResult<Response> reply) {
-    String message = null;
-
-    if (reply.succeeded() && reply.result().getStatus() >= 400 &&
-      reply.result().getStatus() < 600 && reply.result().hasEntity()) {
-
-      // When entity is an instance of Errors, the getEntity().toString()
-      // will return an object identifier. Process the object to correctly
-      // parse the message.
-      if (reply.result().getEntity() instanceof Errors) {
-        Errors errors = (Errors) reply.result().getEntity();
-
-        for (int i = 0; i < errors.getErrors().size(); i++) {
-          Error error = errors.getErrors().get(i);
-
-          if (error.getType() == RTFConsts.VALIDATION_FIELD_ERROR)
-            message = error.getMessage().toLowerCase();
-        }
-      } else {
-        message = reply.result().getEntity().toString().toLowerCase();
-      }
-    }
-
+    String message = OkapiResponseUtil.getErrorMessage(reply);
     return RequestsApiUtil.hasSamePositionConstraintViolated(message);
   }
 }

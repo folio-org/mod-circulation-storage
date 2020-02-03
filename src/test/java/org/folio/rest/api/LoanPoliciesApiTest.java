@@ -2,14 +2,18 @@ package org.folio.rest.api;
 
 import static org.folio.rest.support.builders.LoanPolicyRequestBuilder.defaultRollingPolicy;
 import static org.folio.rest.support.builders.LoanPolicyRequestBuilder.emptyPolicy;
-import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isBadRequest;
-import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isUnprocessableEntity;
 import static org.folio.rest.support.matchers.periodJsonObjectMatcher.matchesPeriod;
+import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.isNoContent;
+import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.matchesBadRequest;
+import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.matchesCreated;
+import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.matchesOk;
+import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.matchesNoContent;
+import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.matchesNotFound;
+import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.matchesUnprocessableEntity;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
 
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
@@ -19,7 +23,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.folio.HttpStatus;
 import org.folio.rest.jaxrs.model.Period;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.IndividualResource;
@@ -72,7 +75,7 @@ public class LoanPoliciesApiTest extends ApiTests {
       ResponseHandler.json(createCompleted));
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create due date: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+      response, matchesCreated());
     JsonObject representation = response.getJson();
     assertThat(representation.getString("id"), is(fddId.toString()));
     ////////////////////////////////////////////////////////////
@@ -92,7 +95,7 @@ public class LoanPoliciesApiTest extends ApiTests {
       ResponseHandler.json(createLPCompleted));
     JsonResponse lpResponse = createLPCompleted.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create loan policy: %s", lpResponse.getBody()),
-      lpResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+      lpResponse, matchesCreated());
     ////////////////////////////////////////////////////////
 
     ////////////validation error - renewable = true + different period = true + fixed -> needs fk
@@ -107,7 +110,7 @@ public class LoanPoliciesApiTest extends ApiTests {
       ResponseHandler.json(createpdateV1Completed));
     JsonResponse updateV1response = createpdateV1Completed.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create due date: %s", updateV1response.getBody()),
-      updateV1response.getStatusCode(), is(422));
+      updateV1response, matchesUnprocessableEntity());
     //////////////////////////////////////////////////////////////
 
     ///////////non-existent foreign key
@@ -124,7 +127,8 @@ public class LoanPoliciesApiTest extends ApiTests {
       badLoanPolicyRequest, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createBadLPCompleted));
     JsonResponse badlpResponse = createBadLPCompleted.get(5, TimeUnit.SECONDS);
-    assertThat(String.format("Non-existent foreign key: %s", badlpResponse.getBody()), badlpResponse, isUnprocessableEntity());
+    assertThat(String.format("Non-existent foreign key: %s", badlpResponse.getBody()),
+      badlpResponse, matchesUnprocessableEntity());
     //////////////////////////////////////////
 
     ///////////bad foreign key
@@ -135,13 +139,13 @@ public class LoanPoliciesApiTest extends ApiTests {
         .withDescription("An example loan policy")
         .create();
     bad2LoanPolicyRequest.getJsonObject("loansPolicy")
-      .put("fixedDueDateScheduleId", "1234567890");
+      .put("fixedDueDateScheduleId", UUID.randomUUID().toString());
     CompletableFuture<JsonResponse> createBadLP2Completed = new CompletableFuture<>();
     client.post(loanPolicyStorageUrl(),
       bad2LoanPolicyRequest, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createBadLP2Completed));
     JsonResponse badlpResponse2 = createBadLP2Completed.get(5, TimeUnit.SECONDS);
-    assertThat("Bad foreign key", badlpResponse2, isUnprocessableEntity());
+    assertThat("Bad foreign key", badlpResponse2, matchesUnprocessableEntity());
     //////////////////////////////////////////
 
     id2 = UUID.randomUUID();
@@ -160,7 +164,7 @@ public class LoanPoliciesApiTest extends ApiTests {
       ResponseHandler.json(createLPHeirarchyCompleted));
     JsonResponse lpHierarchyResponse = createLPHeirarchyCompleted.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create loan policy: %s", lpHierarchyResponse.getBody()),
-      lpHierarchyResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+      lpHierarchyResponse, matchesCreated());
 
     ///validation, fk to fixedDueDateScheduleId required once profileid = fixed
     CompletableFuture<JsonResponse> createpdateV2Completed = new CompletableFuture<>();
@@ -175,7 +179,7 @@ public class LoanPoliciesApiTest extends ApiTests {
       ResponseHandler.json(createpdateV2Completed));
     JsonResponse updateV2response = createpdateV2Completed.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create due date: %s", updateV2response.getBody()),
-      updateV2response.getStatusCode(), is(422));
+      updateV2response, matchesUnprocessableEntity());
 
     //update alternateFixedDueDateScheduleId with a bad (non existent) id
     CompletableFuture<TextResponse> updateCompleted = new CompletableFuture<>();
@@ -185,7 +189,7 @@ public class LoanPoliciesApiTest extends ApiTests {
       ResponseHandler.text(updateCompleted));
     TextResponse updateResponse = updateCompleted.get(5, TimeUnit.SECONDS);
     assertThat("update loanPolicy: set alternateFixedDueDateScheduleId = non existent id",
-        updateResponse, isBadRequest());
+        updateResponse, matchesBadRequest());
     ////////////////////////////////////////////////////////
 
     //delete loan policy //////////////////
@@ -195,7 +199,7 @@ public class LoanPoliciesApiTest extends ApiTests {
       ResponseHandler.empty(delCompleted2));
     Response delCompleted4Response = delCompleted2.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to delete due date: %s", loanPolicyStorageUrl("/"+id2)),
-      delCompleted4Response.getStatusCode(), is(204));
+      delCompleted4Response.getStatusCode(), isNoContent());
     ///////////////////////////////////////
 
     //delete loan policy //////////////////
@@ -205,7 +209,7 @@ public class LoanPoliciesApiTest extends ApiTests {
       ResponseHandler.empty(delCompleted9));
     Response delCompleted5Response = delCompleted9.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to delete due date: %s", loanPolicyStorageUrl("/"+id1)),
-      delCompleted5Response.getStatusCode(), is(204));
+      delCompleted5Response.getStatusCode(), isNoContent());
     ///////////////////////////////////////
 
     //// try to delete the fdd - not allowed since referenced by loan policy ///////////////////////
@@ -215,7 +219,7 @@ public class LoanPoliciesApiTest extends ApiTests {
       ResponseHandler.empty(delCompleted3));
     Response delCompleted6Response = delCompleted3.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to delete due date: %s", FixedDueDateApiTest.dueDateURL("/"+fddId.toString())),
-      delCompleted6Response.getStatusCode(), is(204));
+      delCompleted6Response.getStatusCode(), isNoContent());
     //////////////////////////////////////////////////////////////////////////////////////////
 
     //// try to delete all fdds (uses cascade so will succeed) ///////////////////////
@@ -225,7 +229,7 @@ public class LoanPoliciesApiTest extends ApiTests {
       ResponseHandler.empty(delAllCompleted));
     Response delAllCompleted4Response = delAllCompleted.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to delete due date: %s", FixedDueDateApiTest.dueDateURL()),
-      delAllCompleted4Response.getStatusCode(), is(204));
+      delAllCompleted4Response.getStatusCode(), isNoContent());
     //////////////////////////////////////////////////////////////////////////////////////////
 
     }
@@ -254,7 +258,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Failed to create loan policy: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+      response, matchesCreated());
 
     JsonObject representation = response.getJson();
 
@@ -312,7 +316,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Should fail to create loan policy: %s", response.getBody()),
-      response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
+      response, matchesUnprocessableEntity());
   }
 
   @Test
@@ -341,7 +345,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Failed to create loan policy: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+      response, matchesCreated());
     assertThat(response.getJson().getJsonObject("loansPolicy").getInteger("itemLimit"), is(1000));
   }
 
@@ -371,7 +375,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Should fail to create loan policy: %s", response.getBody()),
-      response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
+      response, matchesUnprocessableEntity());
 
     JsonObject error = getErrorFromResponse(response);
     JsonObject parameters = error.getJsonArray("parameters").getJsonObject(0);
@@ -407,7 +411,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Should fail to create loan policy: %s", response.getBody()),
-      response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
+      response, matchesUnprocessableEntity());
 
     JsonObject error = getErrorFromResponse(response);
     JsonObject parameters = error.getJsonArray("parameters").getJsonObject(0);
@@ -448,7 +452,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Should fail to create loan policy: %s", response.getBody()),
-      response.getStatusCode(), is(HttpStatus.HTTP_BAD_REQUEST.toInt()));
+      response, matchesBadRequest());
   }
 
   @Test
@@ -471,7 +475,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Failed to create loan policy: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+      response, matchesCreated());
 
     JsonObject representation = response.getJson();
 
@@ -500,7 +504,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     JsonResponse createResponse = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Failed to create loan policy: %s", createResponse.getBody()),
-      createResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+      createResponse, matchesNoContent());
 
     CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
 
@@ -511,7 +515,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     JsonResponse getResponse = getCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Failed to get updated loan policy: %s", getResponse.getBody()),
-      getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+      getResponse, matchesOk());
 
     JsonObject representation = getResponse.getJson();
 
@@ -559,7 +563,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     JsonResponse getResponse = getById(id);
 
     assertThat(String.format("Failed to get loan policy: %s", getResponse.getBody()),
-      getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+      getResponse, matchesOk());
 
     JsonObject representation = getResponse.getJson();
 
@@ -600,7 +604,7 @@ public class LoanPoliciesApiTest extends ApiTests {
 
     JsonResponse getResponse = getById(UUID.randomUUID());
 
-    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+    assertThat(getResponse, matchesNotFound());
   }
 
   @Test
@@ -766,7 +770,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     JsonResponse updateResponse = updateCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Failed to update loan policy: %s", updateResponse.getBody()),
-      updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+      updateResponse, matchesNoContent());
 
     CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
 
@@ -777,7 +781,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     JsonResponse getResponse = getCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Failed to get updated loan policy: %s", getResponse.getBody()),
-      getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+      getResponse, matchesOk());
 
     JsonObject representation = getResponse.getJson();
 
@@ -829,12 +833,12 @@ public class LoanPoliciesApiTest extends ApiTests {
     JsonResponse createResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Failed to delete loan policy: %s", createResponse.getBody()),
-      createResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+      createResponse, matchesNoContent());
 
     JsonResponse getResponse = getById(id);
 
     assertThat(String.format("Found a deleted loan policy: %s", getResponse.getBody()),
-      getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+      getResponse, matchesNotFound());
   }
 
   @Test
@@ -922,7 +926,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Failed to create loan policy: %s", postResponse.getBody()),
-      postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+      postResponse, matchesCreated());
 
     return new IndividualResource(postResponse);
   }
@@ -986,7 +990,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Failed to create due date: %s", response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+      response, matchesCreated());
 
     return new IndividualResource(response);
   }

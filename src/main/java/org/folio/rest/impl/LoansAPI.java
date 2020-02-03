@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
+import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
 import static org.folio.support.ModuleConstants.LOAN_CLASS;
 import static org.folio.support.ModuleConstants.LOAN_HISTORY_TABLE;
@@ -18,6 +19,7 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.folio.rest.annotations.Validate;
+import org.folio.rest.impl.util.OkapiResponseUtil;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Loan;
@@ -29,7 +31,6 @@ import org.folio.rest.jaxrs.resource.LoanStorage;
 import org.folio.rest.persist.MyPgUtil;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.tools.RTFConsts;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
 import org.folio.support.ResultHandlerFactory;
@@ -233,7 +234,7 @@ public class LoansAPI implements LoanStorage {
 
     MyPgUtil.putUpsert204(LOAN_TABLE, loan, loanId, okapiHeaders, vertxContext,
       PutLoanStorageLoansByLoanIdResponse.class, reply -> {
-        if (isMultipleOpenLoanError(reply)) {
+        if (isMultipleOpenLoanErrorOnUpsert(reply)) {
           asyncResultHandler.handle(
             succeededFuture(
               LoanStorage.PutLoanStorageLoansByLoanIdResponse
@@ -293,31 +294,17 @@ public class LoansAPI implements LoanStorage {
       "Cannot have more than one open loan for the same item");
   }
 
+  // Remove/Replace this function when MyPgUtil.putUpsert204() is removed/replaced.
+  private boolean isMultipleOpenLoanErrorOnUpsert(AsyncResult<Response> reply) {
+    return reply.succeeded()
+      && reply.result().getStatus() == HTTP_BAD_REQUEST.toInt()
+      && reply.result().hasEntity()
+      && reply.result().getEntity().toString().contains("loan_itemid_idx_unique");
+  }
+
   private boolean isMultipleOpenLoanError(AsyncResult<Response> reply) {
-    String message = "";
-
-    if (reply.succeeded() && reply.result().getStatus() >= 400 &&
-      reply.result().getStatus() < 600 && reply.result().hasEntity()) {
-
-      // When entity is an instance of Errors, the getEntity().toString()
-      // will return an object identifier. Process the object to correctly
-      // parse the message.
-      if (reply.result().getEntity() instanceof Errors) {
-        Errors errors = (Errors) reply.result().getEntity();
-
-        for (int i = 0; i < errors.getErrors().size(); i++) {
-          Error error = errors.getErrors().get(i);
-
-          if (error.getType() == RTFConsts.VALIDATION_FIELD_ERROR)
-            message = error.getMessage().toLowerCase();
-        }
-      } else {
-        message = reply.result().getEntity().toString().toLowerCase();
-      }
-    }
-
-    return message.contains("value already exists in table loan: ")
-      || message.contains("duplicate key value violates unique constraint ");
+    return OkapiResponseUtil.containsErrorMessage(
+      reply, "value already exists in table loan: ");
   }
 
   private boolean isOpenAndHasNoUserId(Loan loan) {
