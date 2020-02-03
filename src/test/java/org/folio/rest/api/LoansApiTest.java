@@ -32,6 +32,7 @@ import java.util.concurrent.TimeoutException;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+
 import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.ApiTests;
@@ -84,6 +85,7 @@ public class LoansApiTest extends ApiTests {
     DateTime expectedLostDate = DateTime.now();
     UUID overdueFinePolicyId = UUID.randomUUID();
     UUID lostItemPolicyId = UUID.randomUUID();
+    final DateTime claimedReturnedDate = DateTime.now(DateTimeZone.UTC);
 
     JsonObject loanRequest = new LoanRequestBuilder()
       .withId(id)
@@ -100,6 +102,7 @@ public class LoansApiTest extends ApiTests {
       .withDeclaredLostDate(expectedLostDate)
       .withOverdueFinePolicyId(overdueFinePolicyId)
       .withLostItemPolicyId(lostItemPolicyId)
+      .withClaimedReturnedDate(claimedReturnedDate)
       .create();
 
     JsonObject loan = loansClient.create(loanRequest).getJson();
@@ -151,6 +154,9 @@ public class LoansApiTest extends ApiTests {
 
     assertThat("Lost item policy id should be set",
       loan.getString("lostItemPolicyId"), is(lostItemPolicyId.toString()));
+
+    assertThat(DateTime.parse(loan.getString("claimedReturnedDate")),
+      is(claimedReturnedDate));
   }
 
   @Test
