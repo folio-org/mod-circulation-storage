@@ -69,7 +69,6 @@ public class FixedDueDateApiTest extends ApiTests {
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create due date: %s", response.getBody()),
       response.getStatusCode(), isCreated());
-    //assertThat(response, isOkapiCreated());
     JsonObject representation = response.getJson();
     assertThat(representation.getString("id"), is(id.toString()));
     ////////////////////////////////////
