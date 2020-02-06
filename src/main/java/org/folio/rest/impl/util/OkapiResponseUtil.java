@@ -16,6 +16,18 @@ public class OkapiResponseUtil {
     throw new UnsupportedOperationException("Do not instantiate");
   }
 
+  /**
+   * Parse an Okapi HTTP Response for error messages.
+   *
+   * This will handle only 4xx (client side) HTTP error messages.
+   *
+   * @param reply
+   *   The Okapi Response to parse for error messages.
+   *
+   * @return
+   *   A concatenated list of error messages associated with the reply.
+   *   A newline is appended at the end of each distinct error message.
+   */
   public static String getErrorMessage(AsyncResult<Response> reply) {
     String message = null;
 
@@ -28,18 +40,35 @@ public class OkapiResponseUtil {
       if (reply.result().getEntity() instanceof Errors) {
         Errors errors = (Errors) reply.result().getEntity();
 
+        if (errors.getErrors().size() > 0)
+          message = "";
+
         for (int i = 0; i < errors.getErrors().size(); i++) {
           Error error = errors.getErrors().get(i);
-          message = error.getMessage().toLowerCase();
+          message += error.getMessage().toLowerCase() + "\n";
         }
       } else {
-        message = reply.result().getEntity().toString().toLowerCase();
+        message = reply.result().getEntity().toString().toLowerCase()
+          + "\n";
       }
     }
 
     return message;
   }
 
+  /**
+   * Search for the given substring within an Okapi HTTP Response.
+   *
+   * This will handle only 4xx (client side) HTTP error messages.
+   *
+   * @param reply
+   *   The Okapi Response to parse for error messages.
+   * @param subString
+   *   The substring to find within the error messages.
+   *
+   * @return
+   *   TRUE is returned on match, FALSE otherwise.
+   */
   public static boolean containsErrorMessage(AsyncResult<Response> reply, String subString) {
     String message = getErrorMessage(reply);
     return message != null && message.contains(subString);
