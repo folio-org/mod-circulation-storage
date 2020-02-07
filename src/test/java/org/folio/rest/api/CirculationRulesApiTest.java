@@ -57,7 +57,7 @@ public class CirculationRulesApiTest extends ApiTests {
   /** @return the JSON of the get response, asserts an HTTP_OK=200 response */
   private JsonObject get() throws Exception {
     JsonResponse response = getResponse();
-    assertThat(response.getBody(), response, matchesOk());
+    assertThat(response, matchesOk());
     return response.getJson();
   }
 
@@ -72,7 +72,7 @@ public class CirculationRulesApiTest extends ApiTests {
   /** @return the message of the put response, asserts an HTTP_OK=200 response */
   private String put204(CirculationRules circulationRules) throws Exception {
     JsonResponse response = putResponse(circulationRules);
-    assertThat(response.getBody(), response, matchesNoContent());
+    assertThat(response, matchesNoContent());
     return response.getBody();
   }
 

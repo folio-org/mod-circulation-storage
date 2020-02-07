@@ -29,7 +29,7 @@ public class OkapiResponseUtil {
    *   A newline is appended at the end of each distinct error message.
    */
   public static String getErrorMessage(AsyncResult<Response> reply) {
-    String message = null;
+    StringBuilder builder = new StringBuilder();
 
     if (reply.succeeded() && reply.result().getStatus() >= 400
       && reply.result().getStatus() < 500 && reply.result().hasEntity()) {
@@ -40,19 +40,18 @@ public class OkapiResponseUtil {
       if (reply.result().getEntity() instanceof Errors) {
         Errors errors = (Errors) reply.result().getEntity();
 
-        if (errors.getErrors().size() > 0)
-          message = "";
-
         for (int i = 0; i < errors.getErrors().size(); i++) {
           Error error = errors.getErrors().get(i);
-          message += error.getMessage() + "\n";
+          builder.append(error.getMessage());
+          builder.append("\n");
         }
       } else {
-        message = reply.result().getEntity().toString() + "\n";
+        builder.append(reply.result().getEntity().toString());
+        builder.append("\n");
       }
     }
 
-    return message;
+    return builder.toString();
   }
 
   /**
