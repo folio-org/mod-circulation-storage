@@ -45,11 +45,10 @@ public class OkapiResponseUtil {
 
         for (int i = 0; i < errors.getErrors().size(); i++) {
           Error error = errors.getErrors().get(i);
-          message += error.getMessage().toLowerCase() + "\n";
+          message += error.getMessage() + "\n";
         }
       } else {
-        message = reply.result().getEntity().toString().toLowerCase()
-          + "\n";
+        message = reply.result().getEntity().toString() + "\n";
       }
     }
 
