@@ -25,7 +25,7 @@ public class OkapiResponseUtil {
    *   The Okapi Response to parse for error messages.
    *
    * @return
-   *   A concatenated list of error messages associated with the reply.
+   *   A string of concatenated error messages associated with the reply.
    *   A newline is appended at the end of each distinct error message.
    */
   public static String getErrorMessage(AsyncResult<Response> reply) {
