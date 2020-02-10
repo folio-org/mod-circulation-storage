@@ -40,8 +40,7 @@ public class OkapiResponseUtil {
       if (reply.result().getEntity() instanceof Errors) {
         Errors errors = (Errors) reply.result().getEntity();
 
-        for (int i = 0; i < errors.getErrors().size(); i++) {
-          Error error = errors.getErrors().get(i);
+        for (Error error : errors.getErrors()) {
           builder.append(error.getMessage());
           builder.append("\n");
         }
