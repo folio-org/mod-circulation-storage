@@ -100,8 +100,8 @@ public class PatronActionSessionAPITest extends ApiTests {
     assertRecordClient.create(secondSession);
     assertRecordClient.create(thirdSession);
 
-    String query = "query=actionType==Check-out&limit=1";
-    MultipleRecords<JsonObject> sessions = assertRecordClient.getMany(query);
+    String query = "actionType==Check-out";
+    MultipleRecords<JsonObject> sessions = assertRecordClient.getMany(query, null, 1);
 
     assertThat(sessions.getRecords().size(), is(1));
     assertThat(sessions.getTotalRecords(), is(2));

@@ -201,7 +201,13 @@ public class AssertingRecordClient {
   public MultipleRecords<JsonObject> getMany(String cqlQuery) throws MalformedURLException,
     InterruptedException, ExecutionException, TimeoutException {
 
-    final JsonResponse fetchedLoansResponse = attemptGetMany(cqlQuery, null, null);
+    return getMany(cqlQuery, null, null);
+  }
+
+  public MultipleRecords<JsonObject> getMany(String cqlQuery, Integer offset, Integer limit) throws MalformedURLException,
+    InterruptedException, ExecutionException, TimeoutException {
+
+    final JsonResponse fetchedLoansResponse = attemptGetMany(cqlQuery, offset, limit);
 
     assertThat(fetchedLoansResponse, isOk());
     return MultipleRecords.fromJson(fetchedLoansResponse.getJson(), collectionPropertyName);
