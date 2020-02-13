@@ -112,7 +112,7 @@ public class CheckInOperationApiTest extends ApiTests {
     checkInOperationClient.create(thirdCheckInOperation);
 
     MultipleRecords<JsonObject> allCheckInOperations = checkInOperationClient
-      .getMany(String.format("occurredDateTime >= '%s'", beforeCreateDateTime));
+      .getMany(String.format("occurredDateTime >= %s", beforeCreateDateTime.getMillis()));
 
     assertThat(allCheckInOperations.getTotalRecords(), is(3));
     assertTrue(allCheckInOperations.getRecords().contains(firstCheckInOperation));
