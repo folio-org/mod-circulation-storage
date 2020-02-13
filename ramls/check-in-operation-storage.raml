@@ -1,0 +1,69 @@
+#%RAML 1.0
+title: Check-in opearion storage
+version: v0.1
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost:9130
+
+documentation:
+  - title: Check-in Operation Storage API
+    content: <b>Storage for check-in operations</b>
+
+types:
+  errors: !include raml-util/schemas/errors.schema
+  parameters: !include raml-util/schemas/parameters.schema
+  check-in-operation: !include check-in-operation.json
+  check-in-operations: !include check-in-operations.json
+
+traits:
+  language: !include raml-util/traits/language.raml
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  get-delete: !include raml-util/rtypes/get-delete.raml
+
+/check-in-operation-storage:
+  displayName: Check-in operation storage
+  type:
+    collection:
+      exampleCollection: !include examples/check-in-operations.json
+      exampleItem: !include examples/check-in-operation.json
+      schemaCollection: check-in-operations
+      schemaItem: check-in-operation
+  get:
+    is: [pageable,
+      searchable: {description: "by using CQL",
+                      example: "itemId=\"cf23adf0-61ba-4887-bf82-956c4aae2260\""}
+      ]
+    responses:
+      200:
+        description: "Check-in operations that have matched search criteria"
+      500:
+        description: "Internal server error"
+  post:
+    is: [validate]
+    responses:
+      201:
+        description: "Check-in operation that has been created"
+      422:
+        description: "Supplied entity is not valid per schema"
+      400:
+        description: "Supplied entity can not be deserialized"
+      500:
+        description: "Internal server error"
+  /{checkInOperationId}:
+    type:
+      get-delete:
+        exampleItem: !include examples/check-in-operation.json
+        schema: check-in-operation
+    get:
+      responses:
+        200:
+          description: "Check in operation retrieved"
+    delete:
+      is: [language]
+      responses:
+        204:
+          description: "The check-in record has been removed"

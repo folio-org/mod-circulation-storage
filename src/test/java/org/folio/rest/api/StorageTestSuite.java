@@ -18,6 +18,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.folio.rest.RestVerticle;
 import org.folio.rest.api.loans.LoansAnonymizationApiTest;
+import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
@@ -56,7 +57,8 @@ import io.vertx.ext.sql.ResultSet;
   RequestExpirationApiTest.class,
   ScheduledNoticesAPITest.class,
   PatronActionSessionAPITest.class,
-  RequestBatchAPITest.class
+  RequestBatchAPITest.class,
+  CheckInOperationApiTest.class
 })
 
 public class StorageTestSuite {
@@ -210,6 +212,25 @@ public class StorageTestSuite {
     } catch (Exception e) {
       log.error("Unable to delete all resources: " + e.getMessage(), e);
       assert false;
+    }
+  }
+
+  public static void cleanUpTable(String tableName) {
+    CompletableFuture<Void> removeCompleted = new CompletableFuture<>();
+
+    PostgresClient.getInstance(getVertx(), TENANT_ID)
+      .delete(tableName, new Criterion(), updateResult -> {
+        if (updateResult.succeeded()) {
+          removeCompleted.complete(null);
+        } else {
+          removeCompleted.completeExceptionally(updateResult.cause());
+        }
+      });
+
+    try {
+      removeCompleted.get(5, TimeUnit.SECONDS);
+    } catch (Exception ex) {
+      throw new RuntimeException(ex);
     }
   }
 

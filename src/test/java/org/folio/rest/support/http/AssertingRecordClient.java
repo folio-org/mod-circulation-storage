@@ -15,16 +15,19 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import io.vertx.core.json.JsonObject;
+import javafx.beans.value.WritableIntegerValue;
 
 import org.folio.rest.api.StorageTestSuite;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.MultipleRecords;
+import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.TextResponse;
 import org.folio.rest.support.builders.Builder;
 import org.folio.rest.support.builders.LoanRequestBuilder;
+import org.folio.util.StringUtil;
 
 public class AssertingRecordClient {
   private final HttpClient client;
@@ -43,7 +46,7 @@ public class AssertingRecordClient {
     this.collectionPropertyName = collectionPropertyName;
   }
 
-  public IndividualResource create(LoanRequestBuilder builder)
+  public IndividualResource create(Builder builder)
     throws InterruptedException,
     ExecutionException,
     TimeoutException,
@@ -193,24 +196,40 @@ public class AssertingRecordClient {
     assertThat("Failed to delete record", deleteResponse, isNoContent());
   }
 
-  public MultipleRecords<JsonObject> getMany(String cqlQuery)
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
+  public void delete(IndividualResource toDelete) throws MalformedURLException,
+    InterruptedException, ExecutionException, TimeoutException {
+
+    deleteById(UUID.fromString(toDelete.getId()));
+  }
+
+  public MultipleRecords<JsonObject> getMany(String cqlQuery) throws MalformedURLException,
+    InterruptedException, ExecutionException, TimeoutException {
+
+    final JsonResponse fetchedLoansResponse = attemptGetMany(cqlQuery, null, null);
+
+    assertThat(fetchedLoansResponse, isOk());
+    return MultipleRecords.fromJson(fetchedLoansResponse.getJson(), collectionPropertyName);
+  }
+
+  public JsonResponse attemptGetMany(String cqlQuery, Integer offset, Integer limit)
+    throws MalformedURLException, InterruptedException, ExecutionException,
     TimeoutException {
 
     final CompletableFuture<JsonResponse> fetchManyCompleted = new CompletableFuture<>();
+    final StringBuilder queryParams = new StringBuilder()
+      .append("query=").append(StringUtil.urlEncode(cqlQuery));
 
-    this.client.get(urlMaker.combine(""),
-      "query=" + cqlQuery, StorageTestSuite.TENANT_ID,
+    if (offset != null) {
+      queryParams.append("&offset=").append(offset);
+    }
+    if (limit != null) {
+      queryParams.append("&limit=").append(limit);
+    }
+
+    client.get(urlMaker.combine("?" + queryParams), StorageTestSuite.TENANT_ID,
       ResponseHandler.json(fetchManyCompleted));
 
-    final JsonResponse fetchedLoansResponse = fetchManyCompleted
-      .get(5, TimeUnit.SECONDS);
-
-    assertThat(fetchedLoansResponse, isOk());
-
-    return MultipleRecords.fromJson(fetchedLoansResponse.getJson(), collectionPropertyName);
+    return fetchManyCompleted.get(5, TimeUnit.SECONDS);
   }
 
   public MultipleRecords<JsonObject> getAll()

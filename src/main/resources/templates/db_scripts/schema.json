@@ -241,6 +241,11 @@
       "tableName": "patron_action_session",
       "withMetadata": true,
       "withAuditing": false
+    },
+    {
+      "tableName": "check_in_operation",
+      "withMetadata": true,
+      "withAuditing": false
     }
   ]
 }

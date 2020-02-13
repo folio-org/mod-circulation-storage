@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Check-in operation",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique ID (generated UUID) of the check-in operation",
+      "$ref": "raml-util/schemas/uuid.schema"
+    },
+    "occurredDateTime": {
+      "type": "string",
+      "description": "Date and time when the check-in has been occurred",
+      "format": "date-time"
+    },
+    "itemId": {
+      "type": "string",
+      "description": "Id of item that has checked in",
+      "$ref": "raml-util/schemas/uuid.schema"
+    },
+    "itemStatus" : {
+      "type": "string",
+      "description": "Item status before check-in."
+    },
+    "checkInServicePointId": {
+      "type": "string",
+      "description": "Check-in service point id",
+      "$ref": "raml-util/schemas/uuid.schema"
+    },
+    "performedByUserId": {
+      "type": "string",
+      "description": "Id of user that has performed the check-in operation",
+      "$ref": "raml-util/schemas/uuid.schema"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "occurredDateTime",
+    "itemId",
+    "itemStatus",
+    "checkInServicePointId",
+    "performedByUserId"
+  ]
+}
