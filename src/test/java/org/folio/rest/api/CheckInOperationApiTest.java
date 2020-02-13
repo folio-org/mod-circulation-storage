@@ -138,7 +138,6 @@ public class CheckInOperationApiTest extends ApiTests {
     return new CheckInOperationBuilder()
       .withOccurredDateTime(DateTime.now(DateTimeZone.UTC))
       .withItemId(UUID.randomUUID())
-      .withItemStatus("Checked out")
       .withCheckInServicePointId(UUID.randomUUID())
       .withPerformedByUserId(UUID.randomUUID());
   }

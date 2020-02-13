@@ -18,10 +18,6 @@
       "description": "Id of item that has checked in",
       "$ref": "raml-util/schemas/uuid.schema"
     },
-    "itemStatus" : {
-      "type": "string",
-      "description": "Item status before check-in."
-    },
     "checkInServicePointId": {
       "type": "string",
       "description": "Check-in service point id",
@@ -38,7 +34,6 @@
     "id",
     "occurredDateTime",
     "itemId",
-    "itemStatus",
     "checkInServicePointId",
     "performedByUserId"
   ]

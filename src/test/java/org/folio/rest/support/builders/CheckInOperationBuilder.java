@@ -43,12 +43,6 @@ public class CheckInOperationBuilder implements Builder {
     return this;
   }
 
-  public CheckInOperationBuilder withItemStatus(String itemStatus) {
-    delegate.withItemStatus(itemStatus);
-
-    return this;
-  }
-
   public CheckInOperationBuilder withCheckInServicePointId(UUID checkInServicePointId) {
     delegate.withCheckInServicePointId(checkInServicePointId.toString());
 
