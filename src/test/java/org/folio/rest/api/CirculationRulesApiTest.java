@@ -1,6 +1,7 @@
 package org.folio.rest.api;
 
 import io.vertx.core.json.JsonObject;
+
 import org.folio.rest.jaxrs.model.CirculationRules;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
@@ -9,20 +10,19 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.matchesNoContent;
+import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.matchesOk;
+import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.matchesUnprocessableEntity;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNull.notNullValue;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class CirculationRulesApiTest extends ApiTests {
-  private static final int HTTP_VALIDATION_ERROR = 422;
-  private String uuid;
 
   public static URL rulesStorageUrl() throws MalformedURLException {
     return rulesStorageUrl("");
@@ -57,7 +57,7 @@ public class CirculationRulesApiTest extends ApiTests {
   /** @return the JSON of the get response, asserts an HTTP_OK=200 response */
   private JsonObject get() throws Exception {
     JsonResponse response = getResponse();
-    assertThat(response.getBody(), response.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(response, matchesOk());
     return response.getJson();
   }
 
@@ -72,7 +72,7 @@ public class CirculationRulesApiTest extends ApiTests {
   /** @return the message of the put response, asserts an HTTP_OK=200 response */
   private String put204(CirculationRules circulationRules) throws Exception {
     JsonResponse response = putResponse(circulationRules);
-    assertThat(response.getBody(), response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    assertThat(response, matchesNoContent());
     return response.getBody();
   }
 
@@ -91,6 +91,6 @@ public class CirculationRulesApiTest extends ApiTests {
   @Test
   public void putNullFields() throws Exception {
     CirculationRules circulationRules = new CirculationRules();
-    assertThat(putResponse(circulationRules).getStatusCode(), is(HTTP_VALIDATION_ERROR));
+    assertThat(putResponse(circulationRules), matchesUnprocessableEntity());
   }
 }

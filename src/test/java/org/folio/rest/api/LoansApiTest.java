@@ -1225,7 +1225,10 @@ public class LoansApiTest extends ApiTests {
     JsonResponse response4 = get2.get(5, TimeUnit.SECONDS);
 
     assertThat("Metadata section not populated correctly " + id2.toString(),
-      response4.getJson().getJsonObject("metadata"), is(nullValue()));
+      response4.getJson().getJsonObject("metadata"), not(nullValue()));
+
+    assertThat("Metadata section requires createdDate property " + id2.toString(),
+      response4.getJson().getJsonObject("metadata").containsKey("createdDate"), not(nullValue()));
 
     ///////////////post loan//////////////////////
     client.post(InterfaceUrls.loanStorageUrl(), j3, StorageTestSuite.TENANT_ID,

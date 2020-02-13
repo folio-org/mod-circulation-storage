@@ -5,7 +5,6 @@ import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
 import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
-
 import static org.folio.rest.persist.PostgresClient.convertToPsqlStandard;
 
 import java.util.Map;
@@ -16,6 +15,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.sql.UpdateResult;
@@ -116,9 +116,9 @@ public class ScheduledNoticesAPI implements ScheduledNoticeStorage {
 
   private Future<Void> executeSql(PostgresClient pgClient, String sql) {
 
-    Future<UpdateResult> future = Future.future();
-    pgClient.execute(sql, future.completer());
-    return future.map(ur -> null);
+    Promise<UpdateResult> promise = Promise.promise();
+    pgClient.execute(sql, promise.future());
+    return promise.future().map(ur -> null);
   }
 
   private Future<String> cqlToSqlDeleteQuery(String cql, String tenant) {

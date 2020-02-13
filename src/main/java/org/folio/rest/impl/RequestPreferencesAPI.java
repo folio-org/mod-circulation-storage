@@ -1,5 +1,6 @@
 package org.folio.rest.impl;
 
+import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static io.vertx.core.Future.succeededFuture;
 
 import java.util.Map;
@@ -7,6 +8,7 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 
 import org.folio.rest.annotations.Validate;
+import org.folio.rest.impl.util.OkapiResponseUtil;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.RequestPreference;
 import org.folio.rest.jaxrs.model.RequestPreferences;
@@ -56,7 +58,8 @@ public class RequestPreferencesAPI implements RequestPreferenceStorage {
     return reply -> {
       if (isUniqueUserIdViolation(reply)) {
         asyncResultHandler.handle(
-          succeededFuture(Response.status(422).header("Content-Type", "application/json")
+          succeededFuture(Response.status(HTTP_UNPROCESSABLE_ENTITY.toInt())
+            .header("Content-Type", "application/json")
             .entity(preferenceAlreadyExistsError(entity.getUserId())).build()));
       } else {
         asyncResultHandler.handle(reply);
@@ -65,9 +68,8 @@ public class RequestPreferencesAPI implements RequestPreferenceStorage {
   }
 
   private boolean isUniqueUserIdViolation(AsyncResult<Response> reply) {
-    return reply.succeeded() &&
-      reply.result().getStatus() == 400 &&
-      reply.result().getEntity().toString().contains("user_request_preference_userid_idx_unique");
+    return OkapiResponseUtil.containsErrorMessage(
+      reply, " value already exists in table ");
   }
 
   private Errors preferenceAlreadyExistsError(String userId) {

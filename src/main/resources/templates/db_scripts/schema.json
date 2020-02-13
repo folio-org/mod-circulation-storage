@@ -1,7 +1,4 @@
 {
-  "fullText": {
-    "defaultDictionary": "simple"
-  },
   "scripts": [
     {
       "run": "before",
@@ -34,13 +31,13 @@
       "ginIndex": [
         {
           "fieldName": "userId",
-          "tOps": "ADD",
+          "tOps": "DELETE",
           "caseSensitive": false,
           "removeAccents": true
         },
         {
           "fieldName": "itemId",
-          "tOps": "ADD",
+          "tOps": "DELETE",
           "caseSensitive": false,
           "removeAccents": true
         },
@@ -54,9 +51,21 @@
       "index": [
         {
           "fieldName": "id",
-          "tOps": "ADD",
+          "tOps": "DELETE",
           "caseSensitive": true,
           "removeAccents": false
+        },
+        {
+          "fieldName": "userId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "itemId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
         },
         {
           "fieldName": "checkinServicePointId",
@@ -130,7 +139,7 @@
       "ginIndex": [
         {
           "fieldName": "itemId",
-          "tOps": "ADD",
+          "tOps": "DELETE",
           "caseSensitive": false,
           "removeAccents": true
         },
@@ -142,6 +151,14 @@
         },
         {
           "fieldName": "status",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        }
+      ],
+      "index": [
+        {
+          "fieldName": "itemId",
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true

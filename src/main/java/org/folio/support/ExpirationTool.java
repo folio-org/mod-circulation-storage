@@ -30,6 +30,7 @@ import org.folio.rest.persist.PostgresClient;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -48,12 +49,12 @@ public class ExpirationTool {
 
   public static Future<Void> doRequestExpiration(Vertx vertx) {
 
-    Future<ResultSet> future = Future.future();
+    Promise<ResultSet> promise = Promise.promise();
     PostgresClient pgClient = PostgresClient.getInstance(vertx);
     String tenantQuery = "select nspname from pg_catalog.pg_namespace where nspname LIKE '%_mod_circulation_storage';";
-    pgClient.select(tenantQuery, future.completer());
+    pgClient.select(tenantQuery, promise.future());
 
-    return future.compose(rs -> CompositeFuture.all(rs.getRows()
+    return promise.future().compose(rs -> CompositeFuture.all(rs.getRows()
       .stream()
       .map(row -> doRequestExpirationForTenant(vertx, getTenant(row.getString("nspname"))))
       .collect(toList()))
@@ -62,7 +63,7 @@ public class ExpirationTool {
 
   private static Future<Void> doRequestExpirationForTenant(Vertx vertx, String tenant) {
 
-    Future<Void> future = Future.future();
+    Promise<Void> promise = Promise.promise();
 
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
 
@@ -74,14 +75,14 @@ public class ExpirationTool {
         if (v.failed()) {
           pgClient.rollbackTx(conn, done -> {
             log.error("Error in request processing", v.cause());
-            future.fail(v.cause());
+            promise.fail(v.cause());
           });
         } else {
-          pgClient.endTx(conn, done -> future.complete());
+          pgClient.endTx(conn, done -> promise.complete());
         }
       }));
 
-    return future;
+    return promise.future();
   }
 
   private static Future<List<Request>> getExpiredRequests(AsyncResult<SQLConnection> conn, Vertx vertx, String tenant) {
@@ -90,7 +91,7 @@ public class ExpirationTool {
     df.setTimeZone(TimeZone.getTimeZone(ZoneOffset.UTC));
 
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
-    Future<ResultSet> future = Future.future();
+    Promise<ResultSet> promise = Promise.promise();
 
     String where = format("WHERE " +
         "(jsonb->>'status' = '%1$s' AND jsonb->>'requestExpirationDate' < '%5$s') OR " +
@@ -108,9 +109,9 @@ public class ExpirationTool {
 
     String fullTableName = format("%s.%s", PostgresClient.convertToPsqlStandard(tenant), REQUEST_TABLE);
     String query = format("SELECT jsonb FROM %s %s", fullTableName, where);
-    pgClient.select(conn, query, future.completer());
+    pgClient.select(conn, query, promise.future());
 
-    return future.map(ResultSet::getRows)
+    return promise.future().map(ResultSet::getRows)
       .map(rows -> rows.stream()
         .map(row -> row.getString("jsonb"))
         .map(JsonObject::new)
@@ -123,7 +124,7 @@ public class ExpirationTool {
                                                                 String tenant, Set<String> itemIds) {
 
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
-    Future<ResultSet> future = Future.future();
+    Promise<ResultSet> promise = Promise.promise();
 
     if (itemIds.isEmpty()) {
       return succeededFuture(emptyList());
@@ -149,9 +150,9 @@ public class ExpirationTool {
 
     String fullTableName = format("%s.%s", PostgresClient.convertToPsqlStandard(tenant), REQUEST_TABLE);
     String sql = format("SELECT jsonb FROM %s %s", fullTableName, where);
-    pgClient.select(conn, sql, future.completer());
+    pgClient.select(conn, sql, promise.future());
 
-    return future.map(ResultSet::getRows)
+    return promise.future().map(ResultSet::getRows)
       .map(rows -> rows.stream()
         .map(row -> row.getString("jsonb"))
         .map(JsonObject::new)
@@ -253,23 +254,23 @@ public class ExpirationTool {
       OPEN_IN_TRANSIT.value(),
       String.join(",", quotedItemIds));
 
-    Future<UpdateResult> future = Future.future();
+    Promise<UpdateResult> promise = Promise.promise();
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
-    pgClient.execute(conn, sql, future.completer());
+    pgClient.execute(conn, sql, promise.future());
 
-    return future.map(ur -> null);
+    return promise.future().map(ur -> null);
   }
 
   private static Future<Void> updateRequest(AsyncResult<SQLConnection> conn, Vertx vertx,
                                             String tenant, Request request) {
 
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
-    Future<UpdateResult> future = Future.future();
+    Promise<UpdateResult> promise = Promise.promise();
 
     String where = format("WHERE jsonb->>'id' = '%s'", request.getId());
-    pgClient.update(conn, REQUEST_TABLE, request, "jsonb", where, false, future.completer());
+    pgClient.update(conn, REQUEST_TABLE, request, "jsonb", where, false, promise.future());
 
-    return future.map(ur -> null);
+    return promise.future().map(ur -> null);
   }
 
   private static String getTenant(String nsTenant) {
