@@ -1,10 +1,9 @@
 package org.folio.rest.support.http;
 
-import static org.hamcrest.junit.MatcherAssert.assertThat;
-
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isCreated;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNoContent;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isOk;
+import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -14,20 +13,17 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import io.vertx.core.json.JsonObject;
-import javafx.beans.value.WritableIntegerValue;
-
 import org.folio.rest.api.StorageTestSuite;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.MultipleRecords;
-import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.TextResponse;
 import org.folio.rest.support.builders.Builder;
-import org.folio.rest.support.builders.LoanRequestBuilder;
 import org.folio.util.StringUtil;
+
+import io.vertx.core.json.JsonObject;
 
 public class AssertingRecordClient {
   private final HttpClient client;
