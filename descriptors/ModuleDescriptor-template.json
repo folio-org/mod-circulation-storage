@@ -447,6 +447,15 @@
           "permissionsRequired": [
             "check-in-operation-storage.item.delete"
           ]
+        },
+        {
+          "methods": [
+            "GET"
+          ],
+          "pathPattern": "/check-in-operation-storage/{id}",
+          "permissionsRequired": [
+            "check-in-operation-storage.item.get"
+          ]
         }
       ]
     }
@@ -466,6 +475,11 @@
       "permissionName": "check-in-operation-storage.item.delete",
       "displayName": "Check-in operation storage - delete a check-in operation record by id",
       "description": "Delete individual check-in operation by id"
+    },
+    {
+      "permissionName": "check-in-operation-storage.item.get",
+      "displayName": "Check-in operation storage - get a check-in operation record by id",
+      "description": "Get individual check-in operation by id"
     },
     {
       "permissionName": "circulation-storage.loans.collection.get",
@@ -859,7 +873,8 @@
         "patron-action-session-storage.expired-session-patron-ids.collection.get",
         "check-in-operation-storage.collection.get",
         "check-in-operation-storage.item.post",
-        "check-in-operation-storage.item.delete"
+        "check-in-operation-storage.item.delete",
+        "check-in-operation-storage.item.get"
       ]
     },
     {
