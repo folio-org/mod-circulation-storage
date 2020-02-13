@@ -1,8 +1,11 @@
 package org.folio.rest.support.builders;
 
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -28,7 +31,7 @@ public class RequestRequestBuilder extends JsonBuilder {
   private final UUID deliveryAddressTypeId;
   private final DateTime requestExpirationDate;
   private final DateTime holdShelfExpirationDate;
-  private final ItemSummary itemSummary;
+  private final RequestItemSummary itemSummary;
   private final PatronSummary requesterSummary;
   private final PatronSummary proxySummary;
   private final String status;
@@ -75,7 +78,7 @@ public class RequestRequestBuilder extends JsonBuilder {
     UUID deliveryAddressTypeId,
     DateTime requestExpirationDate,
     DateTime holdShelfExpirationDate,
-    ItemSummary itemSummary,
+    RequestItemSummary itemSummary,
     PatronSummary requesterSummary,
     PatronSummary proxySummary,
     String status,
@@ -132,6 +135,14 @@ public class RequestRequestBuilder extends JsonBuilder {
 
       put(item, "title", this.itemSummary.title);
       put(item, "barcode", this.itemSummary.barcode);
+
+      final JsonArray identifiers = new JsonArray(this.itemSummary.identifiers
+        .stream()
+        .map(pair -> new JsonObject()
+          .put("identifierTypeId", pair.getKey().toString())
+          .put("value", pair.getValue())
+        ).collect(Collectors.toList()));
+      item.put("identifiers", identifiers);
 
       put(request, "item", item);
     }
@@ -417,6 +428,10 @@ public class RequestRequestBuilder extends JsonBuilder {
   }
 
   public RequestRequestBuilder withItem(String title, String barcode) {
+    return withItem(new RequestItemSummary(title, barcode));
+  }
+
+  public RequestRequestBuilder withItem(RequestItemSummary item) {
     return new RequestRequestBuilder(
       this.id,
       this.requestType,
@@ -428,7 +443,7 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.deliveryAddressTypeId,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
-      new ItemSummary(title, barcode),
+      item,
       this.requesterSummary,
       this.proxySummary,
       this.status,
@@ -781,16 +796,6 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position,
       this.pickupServicePointId,
       tags);
-  }
-
-  private class ItemSummary {
-    final String title;
-    final String barcode;
-
-    ItemSummary(String title, String barcode) {
-      this.title = title;
-      this.barcode = barcode;
-    }
   }
 
   private class PatronSummary {
