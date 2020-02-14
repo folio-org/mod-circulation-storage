@@ -7,6 +7,7 @@ import org.folio.rest.persist.PostgresClient;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.ext.sql.ResultSet;
 import io.vertx.ext.sql.UpdateResult;
 
@@ -23,14 +24,14 @@ public class PgClientFutureAdapter {
   }
 
   public Future<ResultSet> select(String sql) {
-    Future<ResultSet> future = Future.future();
-    client.select(sql, future);
-    return future;
+    Promise<ResultSet> promise = Promise.promise();
+    client.select(sql, promise.future());
+    return promise.future();
   }
 
   public Future<UpdateResult> execute(String sql) {
-    Future<UpdateResult> future = Future.future();
-    client.execute(sql, future);
-    return future;
+    Promise<UpdateResult> promise = Promise.promise();
+    client.execute(sql, promise.future());
+    return promise.future();
   }
 }

@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
+import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
 import static org.folio.support.ModuleConstants.LOAN_CLASS;
 import static org.folio.support.ModuleConstants.LOAN_HISTORY_TABLE;
@@ -18,6 +19,7 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.folio.rest.annotations.Validate;
+import org.folio.rest.impl.util.OkapiResponseUtil;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Loan;
@@ -232,7 +234,7 @@ public class LoansAPI implements LoanStorage {
 
     MyPgUtil.putUpsert204(LOAN_TABLE, loan, loanId, okapiHeaders, vertxContext,
       PutLoanStorageLoansByLoanIdResponse.class, reply -> {
-        if (isMultipleOpenLoanError(reply)) {
+        if (isMultipleOpenLoanErrorOnUpsert(reply)) {
           asyncResultHandler.handle(
             succeededFuture(
               LoanStorage.PutLoanStorageLoansByLoanIdResponse
@@ -292,10 +294,17 @@ public class LoansAPI implements LoanStorage {
       "Cannot have more than one open loan for the same item");
   }
 
-  private boolean isMultipleOpenLoanError(AsyncResult<Response> reply) {
+  // Remove/Replace this function when MyPgUtil.putUpsert204() is removed/replaced.
+  private boolean isMultipleOpenLoanErrorOnUpsert(AsyncResult<Response> reply) {
     return reply.succeeded()
-      && reply.result().getStatus() == 400
+      && reply.result().getStatus() == HTTP_BAD_REQUEST.toInt()
+      && reply.result().hasEntity()
       && reply.result().getEntity().toString().contains("loan_itemid_idx_unique");
+  }
+
+  private boolean isMultipleOpenLoanError(AsyncResult<Response> reply) {
+    return OkapiResponseUtil.containsErrorMessage(
+      reply, "value already exists in table loan: ");
   }
 
   private boolean isOpenAndHasNoUserId(Loan loan) {
@@ -318,8 +327,6 @@ public class LoansAPI implements LoanStorage {
     asyncResultHandler.handle(succeededFuture(
       responseCreator.apply(errors)));
   }
-
-
 
   private String createAnonymizationSQL(
     @NotNull String userId,

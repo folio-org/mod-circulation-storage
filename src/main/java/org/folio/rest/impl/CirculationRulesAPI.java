@@ -11,6 +11,7 @@ import org.folio.rest.jaxrs.model.CirculationRules;
 import org.folio.rest.jaxrs.resource.CirculationRulesStorage;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.UpdateSection;
+import org.folio.rest.persist.interfaces.Results;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.TenantTool;
 
@@ -35,9 +36,11 @@ public class CirculationRulesAPI implements CirculationRulesStorage {
     try {
       vertxContext.runOnContext(v -> {
         try {
+          Criterion filter = new Criterion();
           PostgresClient postgresClient = PostgresClient.getInstance(
               vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
-          postgresClient.get(CIRCULATION_RULES_TABLE, CirculationRules.class, "", true, false,
+
+          postgresClient.get(CIRCULATION_RULES_TABLE, CirculationRules.class, filter, true,
             reply -> {
               try {
                 if (reply.failed()) {

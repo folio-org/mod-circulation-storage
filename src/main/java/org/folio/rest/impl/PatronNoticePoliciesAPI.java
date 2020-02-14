@@ -24,6 +24,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.sql.UpdateResult;
@@ -81,7 +82,7 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
           .setLimit(new Limit(limit))
           .setOffset(new Offset(offset));
 
-        pgClient.get(PATRON_NOTICE_POLICY_TABLE, PatronNoticePolicy.class, fieldList, cql, true, false, get -> {
+        pgClient.get(PATRON_NOTICE_POLICY_TABLE, PatronNoticePolicy.class, fieldList, cql, true, get -> {
           if (get.failed()) {
             logger.error(get.cause());
             asyncResultHandler.handle(succeededFuture(
@@ -239,9 +240,9 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
 
   private Future<CirculationRules> findCirculationRules(PostgresClient pgClient) {
 
-    Future<Results<CirculationRules>> future = Future.future();
-    pgClient.get(CIRCULATION_RULES_TABLE, CirculationRules.class, new Criterion(), false, false, future.completer());
-    return future.map(Results::getResults)
+    Promise<Results<CirculationRules>> promise = Promise.promise();
+    pgClient.get(CIRCULATION_RULES_TABLE, CirculationRules.class, new Criterion(), false, promise.future());
+    return promise.future().map(Results::getResults)
       .compose(list -> list.size() == 1 ? succeededFuture(list) :
         failedFuture(new IllegalStateException("Number of records in circulation_rules table is " + list.size())))
       .map(list -> list.get(0));
@@ -249,10 +250,10 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
 
   private Future<Void> deleteNoticePolicyById(PostgresClient pgClient, String id) {
 
-    Future<UpdateResult> future = Future.future();
-    pgClient.delete(PATRON_NOTICE_POLICY_TABLE, id, future.completer());
+    Promise<UpdateResult> promise = Promise.promise();
+    pgClient.delete(PATRON_NOTICE_POLICY_TABLE, id, promise.future());
 
-    return future.map(UpdateResult::getUpdated)
+    return promise.future().map(UpdateResult::getUpdated)
       .compose(updated -> updated > 0 ? succeededFuture() : failedFuture(new NotFoundException(NOT_FOUND)));
   }
 

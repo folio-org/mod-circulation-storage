@@ -13,6 +13,7 @@ import com.google.common.collect.Lists;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.sql.UpdateResult;
@@ -84,15 +85,15 @@ public class BatchResourceService {
     String tableName, String id, T entity) {
 
     return connection -> {
-      Future<UpdateResult> updateResultFuture = Future.future();
+      Promise<UpdateResult> promise = Promise.promise();
       Future<SQLConnection> connectionResult = Future.succeededFuture(connection);
 
       LOG.debug("Updating entity {} with id {}", entity, id);
 
       postgresClient.update(connectionResult, tableName, entity, "jsonb",
-        String.format(WHERE_CLAUSE, id), false, updateResultFuture);
+        String.format(WHERE_CLAUSE, id), false, promise.future());
 
-      return updateResultFuture;
+      return promise.future();
     };
   }
 
@@ -108,15 +109,15 @@ public class BatchResourceService {
     String query, Collection<?> params) {
 
     return connection -> {
-      Future<UpdateResult> updateResultFuture = Future.future();
+      Promise<UpdateResult> promise = Promise.promise();
       LOG.debug("Executing SQL [{}], got [{}] parameters", query, params.size());
 
       connection.updateWithParams(query,
         new JsonArray(Lists.newArrayList(params)),
-        updateResultFuture
+        promise.future()
       );
 
-      return updateResultFuture;
+      return promise.future();
     };
   }
 }

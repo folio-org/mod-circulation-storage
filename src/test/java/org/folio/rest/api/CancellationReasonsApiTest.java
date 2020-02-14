@@ -1,6 +1,7 @@
 package org.folio.rest.api;
 
 import io.vertx.core.json.JsonObject;
+
 import org.folio.rest.support.*;
 import org.folio.rest.support.builders.RequestRequestBuilder;
 import org.hamcrest.junit.MatcherAssert;
@@ -9,7 +10,6 @@ import org.joda.time.DateTimeZone;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.UUID;
@@ -18,10 +18,16 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.matchesBadRequest;
+import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.matchesCreated;
+import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.matchesNoContent;
+import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.matchesNotFound;
+import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.matchesOk;
+import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.matchesUnprocessableEntity;
 import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
 import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_CANCELLED;
-import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -50,8 +56,7 @@ public class CancellationReasonsApiTest extends ApiTests {
     JsonResponse response = createCancellationReason(request);
 
     MatcherAssert.assertThat(String.format("Failed to create cancellation reason: %s",
-        response.getBody()),
-      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+        response.getBody()), response, matchesCreated());
 
     new IndividualResource(response);
   }
@@ -78,7 +83,7 @@ public class CancellationReasonsApiTest extends ApiTests {
 
     MatcherAssert.assertThat(String.format("Failed to retrieve cancellation reason: %s (%s)",
         response.getBody(), response.getStatusCode()),
-        response.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+        response, matchesOk());
 
     return new IndividualResource(response);
   }
@@ -134,7 +139,7 @@ public class CancellationReasonsApiTest extends ApiTests {
 
     MatcherAssert.assertThat(String.format("Failed to update cancellation reason: %s (%s)",
         response.getBody(), response.getStatusCode()),
-        response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+        response, matchesNoContent());
   }
 
   private TextResponse deleteCancellationReason(String id)
@@ -159,7 +164,7 @@ public class CancellationReasonsApiTest extends ApiTests {
 
     MatcherAssert.assertThat(String.format("Failed to delete cancellation reason: %s (%s)",
         response.getBody(), response.getStatusCode()),
-        response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+        response, matchesNoContent());
   }
   //Test Init
   @Before
@@ -256,7 +261,7 @@ public class CancellationReasonsApiTest extends ApiTests {
     assertCreateCancellationReason(request);
     assertDeleteCancellationReason(id);
     JsonResponse getResponse = getCancellationReason(id);
-    assertTrue(getResponse.getStatusCode() == 404);
+    assertThat(getResponse, matchesNotFound());
   }
 
   @Test
@@ -273,7 +278,7 @@ public class CancellationReasonsApiTest extends ApiTests {
         .put("description", "Chicken grease stains on item");
     assertCreateCancellationReason(request);
     JsonResponse response = createCancellationReason(request2);
-    assertEquals(400, response.getStatusCode());
+    assertThat(response, matchesUnprocessableEntity());
   }
 
   @Test
@@ -317,9 +322,9 @@ public class CancellationReasonsApiTest extends ApiTests {
     client.post(requestStorageUrl(), requestRequest, StorageTestSuite.TENANT_ID,
         ResponseHandler.json(createRequestFuture));
     JsonResponse createRequestResponse = createRequestFuture.get(5, TimeUnit.SECONDS);
-    assertEquals(201, createRequestResponse.getStatusCode());
+    assertThat(createRequestResponse, matchesCreated());
     TextResponse deleteReasonResponse = deleteCancellationReason(cancellationReasonId.toString());
-    assertEquals(400, deleteReasonResponse.getStatusCode());
+    assertThat(deleteReasonResponse, matchesBadRequest());
 
   }
   @Test

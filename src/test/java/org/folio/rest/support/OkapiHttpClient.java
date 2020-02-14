@@ -5,30 +5,32 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.UUID;
 
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpClientRequest;
-import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.ext.web.client.HttpRequest;
+import io.vertx.ext.web.client.HttpResponse;
 
-public class HttpClient {
+public class OkapiHttpClient {
 
-  private static final Logger log = LoggerFactory.getLogger(HttpClient.class);
+  private static final Logger log = LoggerFactory.getLogger(OkapiHttpClient.class);
 
   private static final String TENANT_HEADER = "X-Okapi-Tenant";
   private static final String USERID_HEADER = "X-Okapi-User-Id";
 
-  private final io.vertx.core.http.HttpClient client;
+  private io.vertx.ext.web.client.WebClient client;
 
   private final String defaultUserId = UUID.randomUUID().toString();
 
-  public HttpClient(Vertx vertx) {
-    client = vertx.createHttpClient();
+  public OkapiHttpClient(Vertx vertx) {
+    client = io.vertx.ext.web.client.WebClient.create(vertx);
   }
 
-  private void stdHeaders(HttpClientRequest request, URL url, String tenantId, String userId) {
+  private void stdHeaders(HttpRequest<Buffer> request, URL url, String tenantId, String userId) {
     if (url != null) {
       request.headers().add("X-Okapi-Url", url.getProtocol() + "://" + url.getHost() + ":" + url.getPort());
       request.headers().add("X-Okapi-Url-to", url.getProtocol() + "://" + url.getHost() + ":" + url.getPort());
@@ -44,7 +46,7 @@ public class HttpClient {
   public void post(URL url,
     Object body,
     String tenantId,
-    Handler<HttpClientResponse> responseHandler) {
+    Handler<AsyncResult<HttpResponse<Buffer>>> responseHandler) {
 
     post(url, body, tenantId, defaultUserId, responseHandler);
   }
@@ -53,34 +55,35 @@ public class HttpClient {
     Object body,
     String tenantId,
     String userId,
-    Handler<HttpClientResponse> responseHandler) {
+    Handler<AsyncResult<HttpResponse<Buffer>>> responseHandler) {
 
-    HttpClientRequest request = client.postAbs(url.toString(),
-      responseHandler);
+    HttpRequest<Buffer> request = client.postAbs(url.toString());
 
     request.headers().add("Accept", "application/json, text/plain");
     request.headers().add("Content-type", "application/json");
 
     stdHeaders(request, url, tenantId, userId);
-    if (body != null) {
-      String encodedBody = Json.encodePrettily(body);
-      log.info(String.format("POST %s, Request: %s",
-        url.toString(), encodedBody));
-      request.end(encodedBody);
-    } else {
-      request.end();
+
+    if (body == null) {
+      request.send(responseHandler);
+      return;
     }
+
+    Buffer encodedBody = Buffer.buffer(Json.encodePrettily(body));
+    log.info(String.format("POST %s, Request: %s",
+      url.toString(), body));
+    request.sendBuffer(encodedBody, responseHandler);
   }
 
   public void post(URL url,
     String tenantId,
-    Handler<HttpClientResponse> responseHandler) {
+    Handler<AsyncResult<HttpResponse<Buffer>>> responseHandler) {
 
     post(url, null, tenantId, responseHandler);
   }
 
   public void get(URL url,
-    Handler<HttpClientResponse> responseHandler)
+    Handler<AsyncResult<HttpResponse<Buffer>>> responseHandler)
     throws UnsupportedEncodingException {
 
     get(url, null, responseHandler);
@@ -89,7 +92,7 @@ public class HttpClient {
   public void put(URL url,
     Object body,
     String tenantId,
-    Handler<HttpClientResponse> responseHandler) {
+    Handler<AsyncResult<HttpResponse<Buffer>>> responseHandler) {
 
     put(url, body, tenantId, defaultUserId, responseHandler);
   }
@@ -98,24 +101,24 @@ public class HttpClient {
     Object body,
     String tenantId,
     String userId,
-    Handler<HttpClientResponse> responseHandler) {
+    Handler<AsyncResult<HttpResponse<Buffer>>> responseHandler) {
 
-    HttpClientRequest request = client.putAbs(url.toString(), responseHandler);
+    HttpRequest<Buffer> request = client.putAbs(url.toString());
 
     request.headers().add("Accept", "application/json, text/plain");
     request.headers().add("Content-type", "application/json");
 
     stdHeaders(request, url, tenantId, userId);
-    String encodedBody = Json.encodePrettily(body);
-    log.info(String.format("PUT %s, Request: %s",
-      url.toString(), encodedBody));
 
-    request.end(encodedBody);
+    Buffer encodedBody = Buffer.buffer(Json.encodePrettily(body));
+    log.info(String.format("PUT %s, Request: %s",
+      url.toString(), body));
+    request.sendBuffer(encodedBody, responseHandler);
   }
 
   public void get(URL url,
     String tenantId,
-    Handler<HttpClientResponse> responseHandler) {
+    Handler<AsyncResult<HttpResponse<Buffer>>> responseHandler) {
 
     get(url.toString(), tenantId, responseHandler);
   }
@@ -123,7 +126,7 @@ public class HttpClient {
   public void get(URL url,
     String query,
     String tenantId,
-    Handler<HttpClientResponse> responseHandler)
+    Handler<AsyncResult<HttpResponse<Buffer>>> responseHandler)
     throws MalformedURLException {
 
     get(new URL(url.getProtocol(), url.getHost(), url.getPort(),
@@ -133,32 +136,32 @@ public class HttpClient {
 
   public void get(String url,
     String tenantId,
-    Handler<HttpClientResponse> responseHandler) {
+    Handler<AsyncResult<HttpResponse<Buffer>>> responseHandler) {
 
-    HttpClientRequest request = client.getAbs(url, responseHandler);
+    HttpRequest<Buffer> request = client.getAbs(url);
 
     request.headers().add("Accept", "application/json");
 
     stdHeaders(request, null, tenantId, defaultUserId);
-    request.end();
+    request.send(responseHandler);
   }
 
   public void delete(URL url,
     String tenantId,
-    Handler<HttpClientResponse> responseHandler) {
+    Handler<AsyncResult<HttpResponse<Buffer>>> responseHandler) {
 
     delete(url.toString(), tenantId, responseHandler);
   }
 
   public void delete(String url,
     String tenantId,
-    Handler<HttpClientResponse> responseHandler) {
+    Handler<AsyncResult<HttpResponse<Buffer>>> responseHandler) {
 
-    HttpClientRequest request = client.deleteAbs(url, responseHandler);
+    HttpRequest<Buffer> request = client.deleteAbs(url);
 
     request.headers().add("Accept", "application/json, text/plain");
 
     stdHeaders(request, null, tenantId, defaultUserId);
-    request.end();
+    request.send(responseHandler);
   }
 }

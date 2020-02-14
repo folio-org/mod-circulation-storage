@@ -48,6 +48,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorage {
   }
 
   @Override
+  @Validate
   public void getLoanPolicyStorageLoanPolicies(
     int offset,
     int limit,

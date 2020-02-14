@@ -2,21 +2,28 @@ package org.folio.rest.support;
 
 import java.util.concurrent.CompletableFuture;
 
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
-import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.ext.web.client.HttpResponse;
 
 public class ResponseHandler {
   private static final Logger log = LoggerFactory.getLogger(ResponseHandler.class);
 
-  public static Handler<HttpClientResponse> empty(
+  public static Handler<AsyncResult<HttpResponse<Buffer>>> empty(
     CompletableFuture<Response> completed) {
 
-    return response -> {
+    return asyncResponse -> {
+      if (asyncResponse.failed()) {
+        completed.completeExceptionally(asyncResponse.cause());
+        return;
+      }
+
+      HttpResponse<Buffer> response = asyncResponse.result();
       try {
         int statusCode = response.statusCode();
-
         completed.complete(new Response(statusCode));
       }
       catch(Exception e) {
@@ -25,44 +32,51 @@ public class ResponseHandler {
     };
   }
 
-  public static Handler<HttpClientResponse> json(
+  public static Handler<AsyncResult<HttpResponse<Buffer>>> json(
     CompletableFuture<JsonResponse> completed) {
 
-    return response -> {
-      response.bodyHandler(buffer -> {
-        try {
-          int statusCode = response.statusCode();
-          String body = BufferHelper.stringFromBuffer(buffer);
+    return asyncResponse -> {
+      if (asyncResponse.failed()) {
+        completed.completeExceptionally(asyncResponse.cause());
+        return;
+      }
 
-          log.info(String.format("Response: '%s'", body));
+      try {
+        HttpResponse<Buffer> response = asyncResponse.result();
+        int statusCode = response.statusCode();
+        String body = response.bodyAsString();
 
-          completed.complete(new JsonResponse(statusCode, body));
+        log.info(String.format("Response: '%s'", body));
 
-        } catch(Exception e) {
-          completed.completeExceptionally(e);
-        }
-      });
+        completed.complete(new JsonResponse(statusCode, body));
+
+      } catch(Exception e) {
+        completed.completeExceptionally(e);
+      }
     };
   }
 
-  public static Handler<HttpClientResponse> text(
+  public static Handler<AsyncResult<HttpResponse<Buffer>>> text(
     CompletableFuture<TextResponse> completed) {
 
-    return response -> {
+    return asyncResponse -> {
+      if (asyncResponse.failed()) {
+        completed.completeExceptionally(asyncResponse.cause());
+        return;
+      }
+
+      try {
+        HttpResponse<Buffer> response = asyncResponse.result();
         int statusCode = response.statusCode();
+        String body = response.bodyAsString();
 
-        response.bodyHandler(buffer -> {
-          try {
-            String body = BufferHelper.stringFromBuffer(buffer);
+        log.info(String.format("Response: '%s'", body));
 
-            log.info(String.format("Response: '%s'", body));
+        completed.complete(new TextResponse(statusCode, body));
 
-            completed.complete(new TextResponse(statusCode, body));
-
-          } catch (Exception e) {
-            completed.completeExceptionally(e);
-          }
-        });
+      } catch (Exception e) {
+        completed.completeExceptionally(e);
+      }
     };
   }
 }
