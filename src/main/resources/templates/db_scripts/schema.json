@@ -260,7 +260,7 @@
       "withAuditing": false
     },
     {
-      "tableName": "check_in_operation",
+      "tableName": "check_in",
       "withMetadata": true,
       "withAuditing": false
     }

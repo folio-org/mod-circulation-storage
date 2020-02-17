@@ -18,7 +18,7 @@ import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.MultipleRecords;
 import org.folio.rest.support.TextResponse;
-import org.folio.rest.support.builders.CheckInOperationBuilder;
+import org.folio.rest.support.builders.CheckInBuilder;
 import org.folio.rest.support.http.AssertingRecordClient;
 import org.folio.rest.support.http.InterfaceUrls;
 import org.joda.time.DateTime;
@@ -29,12 +29,12 @@ import org.junit.Test;
 
 import io.vertx.core.json.JsonObject;
 
-public class CheckInOperationApiTest extends ApiTests {
-  private static final String TABLE_NAME = "check_in_operation";
+public class CheckInStorageApiTest extends ApiTests {
+  private static final String TABLE_NAME = "check_in";
 
-  private final AssertingRecordClient checkInOperationClient =
+  private final AssertingRecordClient checkInClient =
     new AssertingRecordClient(client, StorageTestSuite.TENANT_ID,
-      InterfaceUrls::checkInOperationStorageUrl, "checkInOperations");
+      InterfaceUrls::checkInsStorageUrl, "checkIns");
 
   @Before
   public void beforeEach() {
@@ -47,77 +47,76 @@ public class CheckInOperationApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateCheckInOperation() throws InterruptedException,
+  public void canCreateCheckIn() throws InterruptedException,
     ExecutionException, TimeoutException, MalformedURLException {
 
-    JsonObject checkInOperationToCreate = createSampleCheckInOperation().create();
+    JsonObject checkInToCreate = createSampleCheckIn().create();
 
-    IndividualResource createResult = checkInOperationClient.create(checkInOperationToCreate);
+    IndividualResource createResult = checkInClient.create(checkInToCreate);
 
-    assertThat(createResult.getJson(), is(checkInOperationToCreate));
+    assertThat(createResult.getJson(), is(checkInToCreate));
   }
 
 
   @Test
-  public void cannotCreateCheckInOperationIfRequiredPropertyMissing() throws InterruptedException,
+  public void cannotCreateCheckInIfRequiredPropertyMissing() throws InterruptedException,
     ExecutionException, TimeoutException, MalformedURLException {
 
-    JsonObject checkInOperationToCreate = new CheckInOperationBuilder().create();
+    JsonObject checkInToCreate = new CheckInBuilder().create();
 
-    JsonResponse createResponse = checkInOperationClient.attemptCreate(checkInOperationToCreate);
+    JsonResponse createResponse = checkInClient.attemptCreate(checkInToCreate);
 
     assertThat(createResponse, isValidationResponseWhich(hasMessage("may not be null")));
     assertThat(createResponse, isValidationResponseWhich(hasParameter("occurredDateTime", "null")));
   }
 
   @Test
-  public void canDeleteIndividualCheckInOperation() throws InterruptedException,
+  public void canDeleteIndividualCheckIn() throws InterruptedException,
     ExecutionException, TimeoutException, MalformedURLException {
 
-    JsonObject checkInOperationToCreate = createSampleCheckInOperation()
-      .create();
+    JsonObject checkInToCreate = createSampleCheckIn().create();
 
-    IndividualResource createResponse = checkInOperationClient.create(checkInOperationToCreate);
+    IndividualResource createResponse = checkInClient.create(checkInToCreate);
 
-    checkInOperationClient.delete(createResponse);
-    JsonResponse getResponse = checkInOperationClient.attemptGetById(
-      UUID.fromString(createResponse.getId()));
+    checkInClient.delete(createResponse);
+    JsonResponse getResponse = checkInClient
+      .attemptGetById(UUID.fromString(createResponse.getId()));
 
     assertThat(getResponse.getStatusCode(), is(404));
   }
 
   @Test
-  public void cannotDeleteCheckInOperationWhichDoesNotExist() throws InterruptedException,
+  public void cannotDeleteCheckInWhichDoesNotExist() throws InterruptedException,
     ExecutionException, TimeoutException, MalformedURLException {
 
-    TextResponse deleteResponse = checkInOperationClient
+    TextResponse deleteResponse = checkInClient
       .attemptDeleteById(UUID.randomUUID());
 
     assertThat(deleteResponse.getStatusCode(), is(404));
   }
 
   @Test
-  public void canSearchForCheckInOperationsByOccurredDateTime()
+  public void canSearchForCheckInsByOccurredDateTime()
     throws InterruptedException, ExecutionException, TimeoutException,
     MalformedURLException {
 
     final DateTime beforeCreateDateTime = DateTime.now(DateTimeZone.UTC);
 
-    JsonObject firstCheckInOperation = createSampleCheckInOperation().create();
-    JsonObject secondCheckInOperation = createSampleCheckInOperation().create();
-    JsonObject thirdCheckInOperation = createSampleCheckInOperation().create();
+    JsonObject firstCheckIn = createSampleCheckIn().create();
+    JsonObject secondCheckIn = createSampleCheckIn().create();
+    JsonObject thirdCheckIn = createSampleCheckIn().create();
 
-    checkInOperationClient.create(firstCheckInOperation);
-    checkInOperationClient.create(secondCheckInOperation);
-    checkInOperationClient.create(thirdCheckInOperation);
+    checkInClient.create(firstCheckIn);
+    checkInClient.create(secondCheckIn);
+    checkInClient.create(thirdCheckIn);
 
-    MultipleRecords<JsonObject> allCheckInOperations = checkInOperationClient
+    MultipleRecords<JsonObject> allCheckInOperations = checkInClient
       .getMany(String.format("occurredDateTime >= %s", beforeCreateDateTime.getMillis()));
 
     assertThat(allCheckInOperations.getTotalRecords(), is(3));
-    assertTrue(allCheckInOperations.getRecords().contains(firstCheckInOperation));
-    assertTrue(allCheckInOperations.getRecords().contains(secondCheckInOperation));
-    assertTrue(allCheckInOperations.getRecords().contains(thirdCheckInOperation));
+    assertTrue(allCheckInOperations.getRecords().contains(firstCheckIn));
+    assertTrue(allCheckInOperations.getRecords().contains(secondCheckIn));
+    assertTrue(allCheckInOperations.getRecords().contains(thirdCheckIn));
   }
 
   @Test
@@ -125,7 +124,7 @@ public class CheckInOperationApiTest extends ApiTests {
     throws InterruptedException, ExecutionException, TimeoutException,
     MalformedURLException {
 
-    JsonResponse jsonResponse = checkInOperationClient
+    JsonResponse jsonResponse = checkInClient
       .attemptGetMany("occurredDateTime is not null", -10, 10);
 
     assertThat(jsonResponse.getStatusCode(), is(400));
@@ -134,8 +133,8 @@ public class CheckInOperationApiTest extends ApiTests {
   }
 
 
-  private CheckInOperationBuilder createSampleCheckInOperation() {
-    return new CheckInOperationBuilder()
+  private CheckInBuilder createSampleCheckIn() {
+    return new CheckInBuilder()
       .withOccurredDateTime(DateTime.now(DateTimeZone.UTC))
       .withItemId(UUID.randomUUID())
       .withCheckInServicePointId(UUID.randomUUID())

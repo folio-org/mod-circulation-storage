@@ -2,7 +2,7 @@ package org.folio.rest.support.builders;
 
 import java.util.UUID;
 
-import org.folio.rest.jaxrs.model.CheckInOperation;
+import org.folio.rest.jaxrs.model.CheckIn;
 import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -11,45 +11,45 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 
 import io.vertx.core.json.JsonObject;
 
-public class CheckInOperationBuilder implements Builder {
+public class CheckInBuilder implements Builder {
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
   static {
     MAPPER.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
   }
 
-  private final CheckInOperation delegate;
+  private final CheckIn delegate;
 
-  public CheckInOperationBuilder() {
-    this.delegate = new CheckInOperation()
+  public CheckInBuilder() {
+    this.delegate = new CheckIn()
       .withId(UUID.randomUUID().toString());
   }
 
-  public CheckInOperationBuilder withId(UUID id) {
+  public CheckInBuilder withId(UUID id) {
     delegate.withId(id.toString());
 
     return this;
   }
 
-  public CheckInOperationBuilder withOccurredDateTime(DateTime occurredDateTime) {
+  public CheckInBuilder withOccurredDateTime(DateTime occurredDateTime) {
     delegate.withOccurredDateTime(occurredDateTime.toDate());
 
     return this;
   }
 
-  public CheckInOperationBuilder withItemId(UUID itemId) {
+  public CheckInBuilder withItemId(UUID itemId) {
     delegate.withItemId(itemId.toString());
 
     return this;
   }
 
-  public CheckInOperationBuilder withCheckInServicePointId(UUID checkInServicePointId) {
+  public CheckInBuilder withCheckInServicePointId(UUID checkInServicePointId) {
     delegate.withCheckInServicePointId(checkInServicePointId.toString());
 
     return this;
   }
 
-  public CheckInOperationBuilder withPerformedByUserId(UUID performedByUserId) {
+  public CheckInBuilder withPerformedByUserId(UUID performedByUserId) {
     delegate.withPerformedByUserId(performedByUserId.toString());
 
     return this;

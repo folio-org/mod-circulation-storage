@@ -1,18 +1,18 @@
 #%RAML 1.0
-title: Check-in opearion storage
+title: Check-in storage
 version: v0.1
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost:9130
 
 documentation:
-  - title: Check-in Operation Storage API
-    content: <b>Storage for check-in operations</b>
+  - title: Check-in Storage API
+    content: <b>Storage for check-ins</b>
 
 types:
   errors: !include raml-util/schemas/errors.schema
   parameters: !include raml-util/schemas/parameters.schema
-  check-in-operation: !include check-in-operation.json
-  check-in-operations: !include check-in-operations.json
+  check-in: !include check-in.json
+  check-ins: !include check-ins.json
 
 traits:
   language: !include raml-util/traits/language.raml
@@ -24,14 +24,14 @@ resourceTypes:
   collection: !include raml-util/rtypes/collection.raml
   get-delete: !include raml-util/rtypes/get-delete.raml
 
-/check-in-operation-storage:
-  displayName: Check-in operation storage
+/check-in-storage/check-ins:
+  displayName: Check-in storage
   type:
     collection:
-      exampleCollection: !include examples/check-in-operations.json
-      exampleItem: !include examples/check-in-operation.json
-      schemaCollection: check-in-operations
-      schemaItem: check-in-operation
+      exampleCollection: !include examples/check-ins.json
+      exampleItem: !include examples/check-in.json
+      schemaCollection: check-ins
+      schemaItem: check-in
   get:
     is: [pageable,
       searchable: {description: "by using CQL",
@@ -53,11 +53,11 @@ resourceTypes:
         description: "Supplied entity can not be deserialized"
       500:
         description: "Internal server error"
-  /{checkInOperationId}:
+  /{checkInId}:
     type:
       get-delete:
-        exampleItem: !include examples/check-in-operation.json
-        schema: check-in-operation
+        exampleItem: !include examples/check-in.json
+        schema: check-in
     get:
       responses:
         200:

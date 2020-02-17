@@ -418,43 +418,43 @@
       ]
     },
     {
-      "id": "check-in-operation-storage",
+      "id": "check-in-storage",
       "version": "0.1",
       "handlers": [
         {
           "methods": [
             "GET"
           ],
-          "pathPattern": "/check-in-operation-storage",
+          "pathPattern": "/check-in-storage/check-ins",
           "permissionsRequired": [
-            "check-in-operation-storage.collection.get"
+            "check-in-storage.check-ins.collection.get"
           ]
         },
         {
           "methods": [
             "POST"
           ],
-          "pathPattern": "/check-in-operation-storage",
+          "pathPattern": "/check-in-storage/check-ins",
           "permissionsRequired": [
-            "check-in-operation-storage.item.post"
+            "check-in-storage.check-ins.item.post"
           ]
         },
         {
           "methods": [
             "DELETE"
           ],
-          "pathPattern": "/check-in-operation-storage/{id}",
+          "pathPattern": "/check-in-storage/check-ins/{id}",
           "permissionsRequired": [
-            "check-in-operation-storage.item.delete"
+            "check-in-storage.check-ins.item.delete"
           ]
         },
         {
           "methods": [
             "GET"
           ],
-          "pathPattern": "/check-in-operation-storage/{id}",
+          "pathPattern": "/check-in-storage/check-ins/{id}",
           "permissionsRequired": [
-            "check-in-operation-storage.item.get"
+            "check-in-storage.check-ins.item.get"
           ]
         }
       ]
@@ -462,24 +462,24 @@
   ],
   "permissionSets": [
     {
-      "permissionName": "check-in-operation-storage.collection.get",
-      "displayName": "Check-in operation storage - get check-in operation collection",
-      "description": "Get check-in operations collection from storage"
+      "permissionName": "check-in-storage.check-ins.collection.get",
+      "displayName": "Check-in storage - get check-ins collection",
+      "description": "Get check-ins collection from storage"
     },
     {
-      "permissionName": "check-in-operation-storage.item.post",
-      "displayName": "Check-in operation storage - create a check-in operation",
-      "description": "Create a check-in operation"
+      "permissionName": "check-in-storage.check-ins.item.post",
+      "displayName": "Check-in storage - create a check-in record",
+      "description": "Create a check-in record"
     },
     {
-      "permissionName": "check-in-operation-storage.item.delete",
-      "displayName": "Check-in operation storage - delete a check-in operation record by id",
-      "description": "Delete individual check-in operation by id"
+      "permissionName": "check-in-storage.check-ins.item.delete",
+      "displayName": "Check-in storage - delete a check-in record by id",
+      "description": "Delete individual check-in by id"
     },
     {
-      "permissionName": "check-in-operation-storage.item.get",
-      "displayName": "Check-in operation storage - get a check-in operation record by id",
-      "description": "Get individual check-in operation by id"
+      "permissionName": "check-in-storage.check-ins.item.get",
+      "displayName": "Check-in storage - get a check-in record by id",
+      "description": "Get individual check-in by id"
     },
     {
       "permissionName": "circulation-storage.loans.collection.get",
@@ -871,10 +871,10 @@
         "patron-action-session-storage.patron-action-sessions.item.put",
         "patron-action-session-storage.patron-action-sessions.item.delete",
         "patron-action-session-storage.expired-session-patron-ids.collection.get",
-        "check-in-operation-storage.collection.get",
-        "check-in-operation-storage.item.post",
-        "check-in-operation-storage.item.delete",
-        "check-in-operation-storage.item.get"
+        "check-in-storage.check-ins.collection.get",
+        "check-in-storage.check-ins.item.post",
+        "check-in-storage.check-ins.item.delete",
+        "check-in-storage.check-ins.item.get"
       ]
     },
     {
