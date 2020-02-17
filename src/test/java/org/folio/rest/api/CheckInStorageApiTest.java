@@ -137,7 +137,7 @@ public class CheckInStorageApiTest extends ApiTests {
     return new CheckInBuilder()
       .withOccurredDateTime(DateTime.now(DateTimeZone.UTC))
       .withItemId(UUID.randomUUID())
-      .withCheckInServicePointId(UUID.randomUUID())
+      .withServicePointId(UUID.randomUUID())
       .withPerformedByUserId(UUID.randomUUID());
   }
 }

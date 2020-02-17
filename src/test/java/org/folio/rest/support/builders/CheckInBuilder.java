@@ -43,8 +43,8 @@ public class CheckInBuilder implements Builder {
     return this;
   }
 
-  public CheckInBuilder withCheckInServicePointId(UUID checkInServicePointId) {
-    delegate.withCheckInServicePointId(checkInServicePointId.toString());
+  public CheckInBuilder withServicePointId(UUID checkInServicePointId) {
+    delegate.withServicePointId(checkInServicePointId.toString());
 
     return this;
   }

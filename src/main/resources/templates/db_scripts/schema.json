@@ -261,6 +261,7 @@
     },
     {
       "tableName": "check_in",
+      "fromModuleVersion": "11.0.0",
       "withMetadata": true,
       "withAuditing": false
     }
