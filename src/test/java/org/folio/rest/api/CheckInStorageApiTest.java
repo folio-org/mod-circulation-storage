@@ -4,6 +4,7 @@ import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasParameter;
 import static org.folio.rest.support.matchers.ValidationResponseMatchers.isValidationResponseWhich;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.text.MatchesPattern.matchesPattern;
 import static org.junit.Assert.assertTrue;
@@ -56,6 +57,21 @@ public class CheckInStorageApiTest extends ApiTests {
     assertThat(createResult.getJson(), is(checkInToCreate));
   }
 
+  @Test
+  public void canCreateRecordWithoutId() throws InterruptedException,
+    ExecutionException, TimeoutException, MalformedURLException {
+
+    JsonObject checkInToCreate = createSampleCheckIn()
+      .withId(null)
+      .create();
+
+    IndividualResource createResult = checkInClient.create(checkInToCreate);
+
+    assertThat(createResult.getId(), notNullValue());
+
+    checkInToCreate.put("id", createResult.getId());
+    assertThat(createResult.getJson(), is(checkInToCreate));
+  }
 
   @Test
   public void cannotCreateCheckInIfRequiredPropertyMissing() throws InterruptedException,
@@ -94,12 +110,51 @@ public class CheckInStorageApiTest extends ApiTests {
   }
 
   @Test
+  public void canFilterCheckInsByServicePointAndItem()
+    throws InterruptedException, ExecutionException, TimeoutException,
+    MalformedURLException {
+
+    final UUID servicePointId = UUID.randomUUID();
+    final UUID nodItemId = UUID.randomUUID();
+    final UUID bobUserId = UUID.randomUUID();
+
+    JsonObject itemCheckInRecord = createSampleCheckIn()
+      .withItemId(nodItemId)
+      .create();
+    JsonObject servicePointCheckInRecord = createSampleCheckIn()
+      .withServicePointId(servicePointId)
+      .create();
+    JsonObject userCheckInRecord = createSampleCheckIn()
+      .withPerformedByUserId(bobUserId)
+      .create();
+
+    checkInClient.create(itemCheckInRecord);
+    checkInClient.create(servicePointCheckInRecord);
+    checkInClient.create(userCheckInRecord);
+
+    MultipleRecords<JsonObject> itemCheckInSearch = checkInClient
+      .getMany(String.format("itemId == %s", nodItemId));
+    assertThat(itemCheckInSearch.getTotalRecords(), is(1));
+    assertTrue(itemCheckInSearch.getRecords().contains(itemCheckInRecord));
+
+    MultipleRecords<JsonObject> servicePointCheckInSearch = checkInClient
+      .getMany(String.format("servicePointId == %s", servicePointId));
+    assertThat(servicePointCheckInSearch.getTotalRecords(), is(1));
+    assertTrue(servicePointCheckInSearch.getRecords().contains(servicePointCheckInRecord));
+
+    MultipleRecords<JsonObject> userCheckInSearch = checkInClient
+      .getMany(String.format("performedByUserId == %s", bobUserId));
+    assertThat(userCheckInSearch.getTotalRecords(), is(1));
+    assertTrue(userCheckInSearch.getRecords().contains(userCheckInRecord));
+  }
+
+  @Test
   public void cannotUseNegativeOffsetForSearch()
     throws InterruptedException, ExecutionException, TimeoutException,
     MalformedURLException {
 
     JsonResponse jsonResponse = checkInClient
-      .attemptGetMany("occurredDateTime is not null", -10, 10);
+      .attemptGetMany("occurredDateTime > 10", -10, 10);
 
     assertThat(jsonResponse.getStatusCode(), is(400));
     assertThat(jsonResponse.getBody().trim(),
@@ -130,6 +185,7 @@ public class CheckInStorageApiTest extends ApiTests {
 
   private CheckInBuilder createSampleCheckIn() {
     return new CheckInBuilder()
+      .withId(UUID.randomUUID())
       .withOccurredDateTime(DateTime.now(DateTimeZone.UTC))
       .withItemId(UUID.randomUUID())
       .withServicePointId(UUID.randomUUID())

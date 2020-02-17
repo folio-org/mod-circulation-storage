@@ -31,7 +31,6 @@
   },
   "additionalProperties": false,
   "required": [
-    "id",
     "occurredDateTime",
     "itemId",
     "servicePointId",

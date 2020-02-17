@@ -21,12 +21,13 @@ public class CheckInBuilder implements Builder {
   private final CheckIn delegate;
 
   public CheckInBuilder() {
-    this.delegate = new CheckIn()
-      .withId(UUID.randomUUID().toString());
+    this.delegate = new CheckIn();
   }
 
   public CheckInBuilder withId(UUID id) {
-    delegate.withId(id.toString());
+    if (id != null) {
+      delegate.withId(id.toString());
+    }
 
     return this;
   }
