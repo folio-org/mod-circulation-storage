@@ -17,7 +17,6 @@ import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.MultipleRecords;
-import org.folio.rest.support.TextResponse;
 import org.folio.rest.support.builders.CheckInBuilder;
 import org.folio.rest.support.http.AssertingRecordClient;
 import org.folio.rest.support.http.InterfaceUrls;
@@ -68,31 +67,6 @@ public class CheckInStorageApiTest extends ApiTests {
 
     assertThat(createResponse, isValidationResponseWhich(hasMessage("may not be null")));
     assertThat(createResponse, isValidationResponseWhich(hasParameter("occurredDateTime", "null")));
-  }
-
-  @Test
-  public void canDeleteIndividualCheckIn() throws InterruptedException,
-    ExecutionException, TimeoutException, MalformedURLException {
-
-    JsonObject checkInToCreate = createSampleCheckIn().create();
-
-    IndividualResource createResponse = checkInClient.create(checkInToCreate);
-
-    checkInClient.delete(createResponse);
-    JsonResponse getResponse = checkInClient
-      .attemptGetById(UUID.fromString(createResponse.getId()));
-
-    assertThat(getResponse.getStatusCode(), is(404));
-  }
-
-  @Test
-  public void cannotDeleteCheckInWhichDoesNotExist() throws InterruptedException,
-    ExecutionException, TimeoutException, MalformedURLException {
-
-    TextResponse deleteResponse = checkInClient
-      .attemptDeleteById(UUID.randomUUID());
-
-    assertThat(deleteResponse.getStatusCode(), is(404));
   }
 
   @Test

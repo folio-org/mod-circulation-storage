@@ -48,14 +48,4 @@ public class CheckInStorageAPI implements CheckInStorageCheckIns {
       okapiHeaders, vertxContext, GetCheckInStorageCheckInsByCheckInIdResponse.class,
       asyncResultHandler);
   }
-
-  @Validate
-  @Override
-  public void deleteCheckInStorageCheckInsByCheckInId(
-    String checkInId, String lang, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-
-    PgUtil.deleteById(TABLE_NAME, checkInId, okapiHeaders, vertxContext,
-      DeleteCheckInStorageCheckInsByCheckInIdResponse.class, asyncResultHandler);
-  }
 }

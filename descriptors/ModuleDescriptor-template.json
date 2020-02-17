@@ -441,15 +441,6 @@
         },
         {
           "methods": [
-            "DELETE"
-          ],
-          "pathPattern": "/check-in-storage/check-ins/{id}",
-          "permissionsRequired": [
-            "check-in-storage.check-ins.item.delete"
-          ]
-        },
-        {
-          "methods": [
             "GET"
           ],
           "pathPattern": "/check-in-storage/check-ins/{id}",
@@ -470,11 +461,6 @@
       "permissionName": "check-in-storage.check-ins.item.post",
       "displayName": "Check-in storage - create a check-in record",
       "description": "Create a check-in record"
-    },
-    {
-      "permissionName": "check-in-storage.check-ins.item.delete",
-      "displayName": "Check-in storage - delete a check-in record by id",
-      "description": "Delete individual check-in by id"
     },
     {
       "permissionName": "check-in-storage.check-ins.item.get",
@@ -873,7 +859,6 @@
         "patron-action-session-storage.expired-session-patron-ids.collection.get",
         "check-in-storage.check-ins.collection.get",
         "check-in-storage.check-ins.item.post",
-        "check-in-storage.check-ins.item.delete",
         "check-in-storage.check-ins.item.get"
       ]
     },

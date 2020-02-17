@@ -22,7 +22,7 @@ traits:
 
 resourceTypes:
   collection: !include raml-util/rtypes/collection.raml
-  get-delete: !include raml-util/rtypes/get-delete.raml
+  get-only: !include raml-util/rtypes/get-only.raml
 
 /check-in-storage/check-ins:
   displayName: Check-in storage
@@ -55,15 +55,10 @@ resourceTypes:
         description: "Internal server error"
   /{checkInId}:
     type:
-      get-delete:
-        exampleItem: !include examples/check-in.json
+      get-only:
+        exampleCollection: !include examples/check-in.json
         schema: check-in
     get:
       responses:
         200:
           description: "Check in operation retrieved"
-    delete:
-      is: [language]
-      responses:
-        204:
-          description: "The check-in record has been removed"
