@@ -106,6 +106,27 @@ public class CheckInStorageApiTest extends ApiTests {
       matchesPattern("'offset' .+ must be greater than or equal to 0"));
   }
 
+  @Test
+  public void canGetCheckInById() throws InterruptedException,
+    ExecutionException, TimeoutException, MalformedURLException {
+
+    JsonObject checkInToCreate = createSampleCheckIn().create();
+
+    IndividualResource createResult = checkInClient.create(checkInToCreate);
+    IndividualResource checkInById = checkInClient.getById(createResult.getId());
+
+    assertThat(createResult.getJson(), is(checkInToCreate));
+    assertThat(checkInById.getJson(), is(checkInToCreate));
+  }
+
+  @Test
+  public void cannotGetCheckInByIdIfDoesNotExists() throws InterruptedException,
+    ExecutionException, TimeoutException, MalformedURLException {
+
+    JsonResponse checkInById = checkInClient.attemptGetById(UUID.randomUUID());
+
+    assertThat(checkInById.getStatusCode(), is(404));
+  }
 
   private CheckInBuilder createSampleCheckIn() {
     return new CheckInBuilder()
