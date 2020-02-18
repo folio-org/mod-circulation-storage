@@ -85,31 +85,7 @@ public class CheckInStorageApiTest extends ApiTests {
   }
 
   @Test
-  public void canSearchForCheckInsByOccurredDateTime()
-    throws InterruptedException, ExecutionException, TimeoutException,
-    MalformedURLException {
-
-    final DateTime beforeCreateDateTime = DateTime.now(DateTimeZone.UTC);
-
-    JsonObject firstCheckIn = createSampleCheckIn().create();
-    JsonObject secondCheckIn = createSampleCheckIn().create();
-    JsonObject thirdCheckIn = createSampleCheckIn().create();
-
-    checkInClient.create(firstCheckIn);
-    checkInClient.create(secondCheckIn);
-    checkInClient.create(thirdCheckIn);
-
-    MultipleRecords<JsonObject> allCheckInOperations = checkInClient
-      .getMany(String.format("occurredDateTime >= %s", beforeCreateDateTime.getMillis()));
-
-    assertThat(allCheckInOperations.getTotalRecords(), is(3));
-    assertTrue(allCheckInOperations.getRecords().contains(firstCheckIn));
-    assertTrue(allCheckInOperations.getRecords().contains(secondCheckIn));
-    assertTrue(allCheckInOperations.getRecords().contains(thirdCheckIn));
-  }
-
-  @Test
-  public void canFilterCheckInsByServicePointAndItem()
+  public void canFilterCheckInsByProperties()
     throws InterruptedException, ExecutionException, TimeoutException,
     MalformedURLException {
 
@@ -127,9 +103,15 @@ public class CheckInStorageApiTest extends ApiTests {
       .withPerformedByUserId(bobUserId)
       .create();
 
+    final DateTime occurredDateTime = DateTime.now(DateTimeZone.UTC).plusHours(1);
+    JsonObject occurredDateTimeCheckInRecord = createSampleCheckIn()
+      .withOccurredDateTime(occurredDateTime)
+      .create();
+
     checkInClient.create(itemCheckInRecord);
     checkInClient.create(servicePointCheckInRecord);
     checkInClient.create(userCheckInRecord);
+    checkInClient.create(occurredDateTimeCheckInRecord);
 
     MultipleRecords<JsonObject> itemCheckInSearch = checkInClient
       .getMany(String.format("itemId == %s", nodItemId));
@@ -145,6 +127,13 @@ public class CheckInStorageApiTest extends ApiTests {
       .getMany(String.format("performedByUserId == %s", bobUserId));
     assertThat(userCheckInSearch.getTotalRecords(), is(1));
     assertTrue(userCheckInSearch.getRecords().contains(userCheckInRecord));
+
+    MultipleRecords<JsonObject> occurredDateTimeCheckInSearch = checkInClient
+      .getMany(String.format("occurredDateTime = '%s'", occurredDateTime
+        // Use RMB format to match
+        .toString("yyyy-MM-dd'T'HH:mm:ss.SSS+0000")));
+    assertThat(occurredDateTimeCheckInSearch.getTotalRecords(), is(1));
+    assertTrue(occurredDateTimeCheckInSearch.getRecords().contains(occurredDateTimeCheckInRecord));
   }
 
   @Test
