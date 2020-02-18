@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Collection of check-ins",
+  "type": "object",
+  "properties": {
+    "checkIns": {
+      "description": "List of check-ins",
+      "id": "checkIns",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "check-in.json"
+      }
+    },
+    "totalRecords": {
+      "description": "Number of records",
+      "type": "integer"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "checkIns",
+    "totalRecords"
+  ]
+}

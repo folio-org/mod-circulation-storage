@@ -258,6 +258,12 @@
       "tableName": "patron_action_session",
       "withMetadata": true,
       "withAuditing": false
+    },
+    {
+      "tableName": "check_in",
+      "fromModuleVersion": "11.0.0",
+      "withMetadata": true,
+      "withAuditing": false
     }
   ]
 }

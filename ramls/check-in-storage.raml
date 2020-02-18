@@ -1,0 +1,64 @@
+#%RAML 1.0
+title: Check-in storage
+version: v0.1
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost:9130
+
+documentation:
+  - title: Check-in Storage API
+    content: <b>Storage for check-ins</b>
+
+types:
+  errors: !include raml-util/schemas/errors.schema
+  parameters: !include raml-util/schemas/parameters.schema
+  check-in: !include check-in.json
+  check-ins: !include check-ins.json
+
+traits:
+  language: !include raml-util/traits/language.raml
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  item-collection-get: !include raml-util/rtypes/item-collection-get.raml
+
+/check-in-storage/check-ins:
+  displayName: Check-in storage
+  type:
+    collection:
+      exampleCollection: !include examples/check-ins.json
+      exampleItem: !include examples/check-in.json
+      schemaCollection: check-ins
+      schemaItem: check-in
+  get:
+    is: [pageable,
+      searchable: {description: "by using CQL",
+                      example: "itemId=\"cf23adf0-61ba-4887-bf82-956c4aae2260\""}
+      ]
+    responses:
+      200:
+        description: "Check-in operations that have matched search criteria"
+      500:
+        description: "Internal server error"
+  post:
+    is: [validate]
+    responses:
+      201:
+        description: "Check-in operation that has been created"
+      422:
+        description: "Supplied entity is not valid per schema"
+      400:
+        description: "Supplied entity can not be deserialized"
+      500:
+        description: "Internal server error"
+  /{checkInId}:
+    type:
+      item-collection-get:
+        exampleItem: !include examples/check-in.json
+        schema: check-in
+    get:
+      responses:
+        200:
+          description: "Check in operation retrieved"

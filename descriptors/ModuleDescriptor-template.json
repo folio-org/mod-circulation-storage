@@ -416,9 +416,57 @@
           "permissionsRequired": ["patron-action-session-storage.expired-session-patron-ids.collection.get"]
         }
       ]
+    },
+    {
+      "id": "check-in-storage",
+      "version": "0.1",
+      "handlers": [
+        {
+          "methods": [
+            "GET"
+          ],
+          "pathPattern": "/check-in-storage/check-ins",
+          "permissionsRequired": [
+            "check-in-storage.check-ins.collection.get"
+          ]
+        },
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/check-in-storage/check-ins",
+          "permissionsRequired": [
+            "check-in-storage.check-ins.item.post"
+          ]
+        },
+        {
+          "methods": [
+            "GET"
+          ],
+          "pathPattern": "/check-in-storage/check-ins/{id}",
+          "permissionsRequired": [
+            "check-in-storage.check-ins.item.get"
+          ]
+        }
+      ]
     }
   ],
   "permissionSets": [
+    {
+      "permissionName": "check-in-storage.check-ins.collection.get",
+      "displayName": "Check-in storage - get check-ins collection",
+      "description": "Get check-ins collection from storage"
+    },
+    {
+      "permissionName": "check-in-storage.check-ins.item.post",
+      "displayName": "Check-in storage - create a check-in record",
+      "description": "Create a check-in record"
+    },
+    {
+      "permissionName": "check-in-storage.check-ins.item.get",
+      "displayName": "Check-in storage - get a check-in record by id",
+      "description": "Get individual check-in by id"
+    },
     {
       "permissionName": "circulation-storage.loans.collection.get",
       "displayName": "Circulation storage - get loan collection",
@@ -808,7 +856,10 @@
         "patron-action-session-storage.patron-action-sessions.item.post",
         "patron-action-session-storage.patron-action-sessions.item.put",
         "patron-action-session-storage.patron-action-sessions.item.delete",
-        "patron-action-session-storage.expired-session-patron-ids.collection.get"
+        "patron-action-session-storage.expired-session-patron-ids.collection.get",
+        "check-in-storage.check-ins.collection.get",
+        "check-in-storage.check-ins.item.post",
+        "check-in-storage.check-ins.item.get"
       ]
     },
     {
