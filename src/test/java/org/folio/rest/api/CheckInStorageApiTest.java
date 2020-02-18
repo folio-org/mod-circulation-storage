@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.support.matchers.JsonMatchers.hasSameProperties;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasParameter;
 import static org.folio.rest.support.matchers.ValidationResponseMatchers.isValidationResponseWhich;
@@ -68,9 +69,7 @@ public class CheckInStorageApiTest extends ApiTests {
     IndividualResource createResult = checkInClient.create(checkInToCreate);
 
     assertThat(createResult.getId(), notNullValue());
-
-    checkInToCreate.put("id", createResult.getId());
-    assertThat(createResult.getJson(), is(checkInToCreate));
+    assertThat(createResult.getJson(), hasSameProperties(checkInToCreate));
   }
 
   @Test
