@@ -171,12 +171,46 @@ public class CheckInStorageApiTest extends ApiTests {
     assertThat(checkInById.getStatusCode(), is(404));
   }
 
+  @Test
+  public void canCreateRecordWithoutOptionalParameters() throws InterruptedException,
+    ExecutionException, TimeoutException, MalformedURLException {
+
+    JsonObject checkInToCreate = createSampleCheckIn()
+      .withItemStatus(null)
+      .withItemLocationId(null)
+      .withRequestQueueSize(null)
+      .create();
+
+    IndividualResource createResult = checkInClient.create(checkInToCreate);
+
+    assertThat(createResult.getJson(), is(checkInToCreate));
+  }
+
+  @Test
+  public void cannotCreateRecordWithNegativeRequestQueueSize() throws InterruptedException,
+    ExecutionException, TimeoutException, MalformedURLException {
+
+    JsonObject checkInToCreate = createSampleCheckIn()
+      .withRequestQueueSize(-1)
+      .create();
+
+    JsonResponse createResult = checkInClient.attemptCreate(checkInToCreate);
+
+    assertThat(createResult,
+      isValidationResponseWhich(hasMessage("must be greater than or equal to 0")));
+    assertThat(createResult,
+      isValidationResponseWhich(hasParameter("requestQueueSize", "-1")));
+  }
+
   private CheckInBuilder createSampleCheckIn() {
     return new CheckInBuilder()
       .withId(UUID.randomUUID())
       .withOccurredDateTime(DateTime.now(DateTimeZone.UTC))
       .withItemId(UUID.randomUUID())
       .withServicePointId(UUID.randomUUID())
-      .withPerformedByUserId(UUID.randomUUID());
+      .withPerformedByUserId(UUID.randomUUID())
+      .withItemStatus("Available")
+      .withItemLocationId(UUID.randomUUID())
+      .withRequestQueueSize(0);
   }
 }

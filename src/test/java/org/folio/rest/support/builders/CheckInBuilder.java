@@ -56,6 +56,25 @@ public class CheckInBuilder implements Builder {
     return this;
   }
 
+  public CheckInBuilder withItemStatus(String itemStatus) {
+    delegate.withItemStatus(itemStatus);
+
+    return this;
+  }
+
+  public CheckInBuilder withRequestQueueSize(Integer requestQueueSize) {
+    delegate.withRequestQueueSize(requestQueueSize);
+
+    return this;
+  }
+
+  public CheckInBuilder withItemLocationId(UUID itemLocationId) {
+    delegate.withItemLocationId(itemLocationId != null
+      ? itemLocationId.toString() : null);
+
+    return this;
+  }
+
   @Override
   public JsonObject create() {
     try {
