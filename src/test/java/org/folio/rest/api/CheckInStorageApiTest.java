@@ -76,12 +76,15 @@ public class CheckInStorageApiTest extends ApiTests {
   public void cannotCreateCheckInIfRequiredPropertyMissing() throws InterruptedException,
     ExecutionException, TimeoutException, MalformedURLException {
 
-    JsonObject checkInToCreate = new CheckInBuilder().create();
+    UUID recordId = UUID.randomUUID();
+    JsonObject checkInToCreate = new CheckInBuilder().withId(recordId).create();
 
     JsonResponse createResponse = checkInClient.attemptCreate(checkInToCreate);
 
     assertThat(createResponse, isValidationResponseWhich(hasMessage("may not be null")));
     assertThat(createResponse, isValidationResponseWhich(hasParameter("occurredDateTime", "null")));
+    assertThat(checkInClient.attemptGetById(recordId).getStatusCode(),
+      is(404));
   }
 
   @Test
@@ -190,7 +193,9 @@ public class CheckInStorageApiTest extends ApiTests {
   public void cannotCreateRecordWithNegativeRequestQueueSize() throws InterruptedException,
     ExecutionException, TimeoutException, MalformedURLException {
 
+    UUID recordId = UUID.randomUUID();
     JsonObject checkInToCreate = createSampleCheckIn()
+      .withId(recordId)
       .withRequestQueueSize(-1)
       .create();
 
@@ -200,6 +205,8 @@ public class CheckInStorageApiTest extends ApiTests {
       isValidationResponseWhich(hasMessage("must be greater than or equal to 0")));
     assertThat(createResult,
       isValidationResponseWhich(hasParameter("requestQueueSize", "-1")));
+    assertThat(checkInClient.attemptGetById(recordId).getStatusCode(),
+      is(404));
   }
 
   private CheckInBuilder createSampleCheckIn() {
