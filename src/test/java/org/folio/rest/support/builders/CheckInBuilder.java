@@ -56,8 +56,8 @@ public class CheckInBuilder implements Builder {
     return this;
   }
 
-  public CheckInBuilder withItemStatus(String itemStatus) {
-    delegate.withItemStatus(itemStatus);
+  public CheckInBuilder withItemStatusPriorToCheckIn(String itemStatus) {
+    delegate.withItemStatusPriorToCheckIn(itemStatus);
 
     return this;
   }

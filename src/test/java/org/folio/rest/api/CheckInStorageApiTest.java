@@ -83,8 +83,7 @@ public class CheckInStorageApiTest extends ApiTests {
 
     assertThat(createResponse, isValidationResponseWhich(hasMessage("may not be null")));
     assertThat(createResponse, isValidationResponseWhich(hasParameter("occurredDateTime", "null")));
-    assertThat(checkInClient.attemptGetById(recordId).getStatusCode(),
-      is(404));
+    assertThat(checkInClient.attemptGetById(recordId).getStatusCode(), is(404));
   }
 
   @Test
@@ -179,7 +178,7 @@ public class CheckInStorageApiTest extends ApiTests {
     ExecutionException, TimeoutException, MalformedURLException {
 
     JsonObject checkInToCreate = createSampleCheckIn()
-      .withItemStatus(null)
+      .withItemStatusPriorToCheckIn(null)
       .withItemLocationId(null)
       .withRequestQueueSize(null)
       .create();
@@ -205,8 +204,7 @@ public class CheckInStorageApiTest extends ApiTests {
       isValidationResponseWhich(hasMessage("must be greater than or equal to 0")));
     assertThat(createResult,
       isValidationResponseWhich(hasParameter("requestQueueSize", "-1")));
-    assertThat(checkInClient.attemptGetById(recordId).getStatusCode(),
-      is(404));
+    assertThat(checkInClient.attemptGetById(recordId).getStatusCode(), is(404));
   }
 
   private CheckInBuilder createSampleCheckIn() {
@@ -216,7 +214,7 @@ public class CheckInStorageApiTest extends ApiTests {
       .withItemId(UUID.randomUUID())
       .withServicePointId(UUID.randomUUID())
       .withPerformedByUserId(UUID.randomUUID())
-      .withItemStatus("Available")
+      .withItemStatusPriorToCheckIn("Available")
       .withItemLocationId(UUID.randomUUID())
       .withRequestQueueSize(0);
   }
