@@ -1,3 +1,19 @@
+## 11.0.0 2020-03-09
+
+* Stores `overdue fine policy` and `lost item policy` for loan (CIRCSTORE-177)
+* Stores `ISBN identifiers` for loaned item (CIRCSTORE-181)
+* Stores `claimed returned date` for loan (CIRCSTORE-187)
+* Stores a record of a check in having occurred (CIRCSTORE-193, CIRCSTORE-196)
+* Make full text indexes use the simple dictionary (CIRCSTORE-178)
+* Introduces indexes on various loan properties (CIRCSTORE-184)
+* Includes `overdue fine policy` and `lost item policy` in default rules (CIRCSTORE-192)
+* Upgrades to `RAML Module Builder 29.2.2` (CIRCSTORE-183)
+* Upgrades to `Vert.x 3.8.4`
+* Provides `loan-storage 6.6`
+* Provides `request-storage 3.3`
+* Provides `request-storage-batch 0.3`
+* Provides `check-in-storage 0.2`
+
 ## 10.0.0 2019-11-28
 
 * Introduces check in / check out patron sessions (CIRCSTORE-147, CIRCSTORE-148, CIRCSTORE-149)
