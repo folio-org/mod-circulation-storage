@@ -54,7 +54,7 @@ public class StaffSlipsMigrationScriptTest extends MigrationTestBase {
     return collection.stream()
       .map(index -> (JsonObject) index)
       .filter(request -> StringUtils.equals(request.getString("id"), id))
-      .findFirst().get();
+      .findFirst().orElse(null);
   }
 
   private void assertStaffSlip(JsonObject staffSlip, String expectedId,
