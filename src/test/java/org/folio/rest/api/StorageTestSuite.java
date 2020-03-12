@@ -18,6 +18,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.folio.rest.RestVerticle;
 import org.folio.rest.api.loans.LoansAnonymizationApiTest;
+import org.folio.rest.api.migration.StaffSlipsMigrationScriptTest;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.OkapiHttpClient;
@@ -58,7 +59,8 @@ import io.vertx.ext.sql.ResultSet;
   ScheduledNoticesAPITest.class,
   PatronActionSessionAPITest.class,
   RequestBatchAPITest.class,
-  CheckInStorageApiTest.class
+  CheckInStorageApiTest.class,
+  StaffSlipsMigrationScriptTest.class
 })
 
 public class StorageTestSuite {

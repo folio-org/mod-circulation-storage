@@ -8,7 +8,7 @@ INSERT INTO ${myuniversity}_${mymodule}.staff_slips(id, jsonb) VALUES (
 
 INSERT INTO ${myuniversity}_${mymodule}.staff_slips(id, jsonb) VALUES (
     '1ed55c5c-64d9-40eb-8b80-7438a262288b',
-	jsonb_build_object(
+    jsonb_build_object(
         'id', '1ed55c5c-64d9-40eb-8b80-7438a262288b',
         'name', 'Request delivery',
         'active', true,

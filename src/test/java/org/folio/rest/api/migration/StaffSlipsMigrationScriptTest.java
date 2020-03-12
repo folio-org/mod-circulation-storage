@@ -58,7 +58,7 @@ public class StaffSlipsMigrationScriptTest extends MigrationTestBase {
   }
 
   private void assertStaffSlip(JsonObject staffSlip, String expectedId,
-                               String expectedName) {
+    String expectedName) {
 
     assertThat(staffSlip.getString("id"), is(expectedId));
     assertThat(staffSlip.getString("name"), is(expectedName));
