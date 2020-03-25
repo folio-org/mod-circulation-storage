@@ -86,6 +86,7 @@ public class LoansApiTest extends ApiTests {
     UUID overdueFinePolicyId = UUID.randomUUID();
     UUID lostItemPolicyId = UUID.randomUUID();
     final DateTime claimedReturnedDate = DateTime.now(DateTimeZone.UTC);
+    final DateTime markedMissingDate = DateTime.now(DateTimeZone.UTC);
 
     JsonObject loanRequest = new LoanRequestBuilder()
       .withId(id)
@@ -103,6 +104,7 @@ public class LoansApiTest extends ApiTests {
       .withOverdueFinePolicyId(overdueFinePolicyId)
       .withLostItemPolicyId(lostItemPolicyId)
       .withClaimedReturnedDate(claimedReturnedDate)
+      .withMarkedMissingDate(markedMissingDate)
       .create();
 
     JsonObject loan = loansClient.create(loanRequest).getJson();
@@ -157,6 +159,9 @@ public class LoansApiTest extends ApiTests {
 
     assertThat(DateTime.parse(loan.getString("claimedReturnedDate")),
       is(claimedReturnedDate));
+
+    assertThat(DateTime.parse(loan.getString("markedMissingDate")),
+      is(markedMissingDate));
   }
 
   @Test
