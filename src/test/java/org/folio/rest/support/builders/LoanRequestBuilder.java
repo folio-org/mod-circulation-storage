@@ -30,7 +30,6 @@ public class LoanRequestBuilder implements Builder {
   private final UUID overdueFinePolicyId;
   private final UUID lostItemPolicyId;
   private final DateTime claimedReturnedDate;
-  private final DateTime markedMissingDate;
 
   public LoanRequestBuilder() {
     this(UUID.randomUUID(),
@@ -42,7 +41,6 @@ public class LoanRequestBuilder implements Builder {
       null,
       "checkedout",
       "test",
-      null,
       null,
       null,
       null,
@@ -76,8 +74,7 @@ public class LoanRequestBuilder implements Builder {
     DateTime declaredLostDate,
     UUID overdueFinePolicyId,
     UUID lostItemPolicyId,
-    DateTime claimedReturnedDate,
-    DateTime markedMissingDate) {
+    DateTime claimedReturnedDate) {
 
     this.id = id;
     this.itemId = itemId;
@@ -99,7 +96,6 @@ public class LoanRequestBuilder implements Builder {
     this.overdueFinePolicyId = overdueFinePolicyId;
     this.lostItemPolicyId = lostItemPolicyId;
     this.claimedReturnedDate = claimedReturnedDate;
-    this.markedMissingDate = markedMissingDate;
   }
 
   public static LoanRequestBuilder from(JsonObject example) {
@@ -170,10 +166,6 @@ public class LoanRequestBuilder implements Builder {
       ? DateTime.parse(example.getString("claimedReturnedDate"))
       : null;
 
-    final DateTime markedMissingDate = example.containsKey("markedMissingDate")
-      ? DateTime.parse(example.getString("markedMissingDate"))
-      : null;
-
     return new LoanRequestBuilder(
       id,
       itemId,
@@ -194,8 +186,7 @@ public class LoanRequestBuilder implements Builder {
       declaredLostDate,
       overdueFinePolicyId,
       lostItemPolicyId,
-      claimedReturnedDate,
-      markedMissingDate);
+      claimedReturnedDate);
   }
 
   @Override
@@ -279,10 +270,6 @@ public class LoanRequestBuilder implements Builder {
       request.put("claimedReturnedDate", claimedReturnedDate.toString());
     }
 
-    if (markedMissingDate != null) {
-      request.put("markedMissingDate", markedMissingDate.toString());
-    }
-
     return request;
   }
 
@@ -307,8 +294,7 @@ public class LoanRequestBuilder implements Builder {
       this.declaredLostDate,
       this.overdueFinePolicyId,
       this.lostItemPolicyId,
-      this.claimedReturnedDate,
-      this.markedMissingDate);
+      this.claimedReturnedDate);
   }
 
   public LoanRequestBuilder withNoId() {
@@ -336,8 +322,7 @@ public class LoanRequestBuilder implements Builder {
       this.declaredLostDate,
       this.overdueFinePolicyId,
       this.lostItemPolicyId,
-      this.claimedReturnedDate,
-      this.markedMissingDate);
+      this.claimedReturnedDate);
   }
 
   public LoanRequestBuilder withUserId(UUID userId) {
@@ -361,8 +346,7 @@ public class LoanRequestBuilder implements Builder {
       this.declaredLostDate,
       this.overdueFinePolicyId,
       this.lostItemPolicyId,
-      this.claimedReturnedDate,
-      this.markedMissingDate);
+      this.claimedReturnedDate);
   }
 
   public LoanRequestBuilder withNoUserId() {
@@ -390,8 +374,7 @@ public class LoanRequestBuilder implements Builder {
       this.declaredLostDate,
       this.overdueFinePolicyId,
       this.lostItemPolicyId,
-      this.claimedReturnedDate,
-      this.markedMissingDate);
+      this.claimedReturnedDate);
   }
 
   public LoanRequestBuilder withLoanDate(DateTime loanDate) {
@@ -415,8 +398,7 @@ public class LoanRequestBuilder implements Builder {
       this.declaredLostDate,
       this.overdueFinePolicyId,
       this.lostItemPolicyId,
-      this.claimedReturnedDate,
-      this.markedMissingDate);
+      this.claimedReturnedDate);
   }
 
   public LoanRequestBuilder withStatus(String statusName) {
@@ -440,8 +422,7 @@ public class LoanRequestBuilder implements Builder {
       this.declaredLostDate,
       this.overdueFinePolicyId,
       this.lostItemPolicyId,
-      this.claimedReturnedDate,
-      this.markedMissingDate);
+      this.claimedReturnedDate);
   }
 
   public LoanRequestBuilder open() {
@@ -473,8 +454,7 @@ public class LoanRequestBuilder implements Builder {
       this.declaredLostDate,
       this.overdueFinePolicyId,
       this.lostItemPolicyId,
-      this.claimedReturnedDate,
-      this.markedMissingDate);
+      this.claimedReturnedDate);
   }
 
   public LoanRequestBuilder withAction(String action) {
@@ -498,8 +478,7 @@ public class LoanRequestBuilder implements Builder {
       this.declaredLostDate,
       this.overdueFinePolicyId,
       this.lostItemPolicyId,
-      this.claimedReturnedDate,
-      this.markedMissingDate);
+      this.claimedReturnedDate);
   }
 
   public LoanRequestBuilder withActionComment(String actionComment) {
@@ -523,8 +502,7 @@ public class LoanRequestBuilder implements Builder {
       this.declaredLostDate,
       this.overdueFinePolicyId,
       this.lostItemPolicyId,
-      this.claimedReturnedDate,
-      this.markedMissingDate);
+      this.claimedReturnedDate);
   }
 
   public LoanRequestBuilder withDueDate(DateTime dueDate) {
@@ -548,8 +526,7 @@ public class LoanRequestBuilder implements Builder {
       this.declaredLostDate,
       this.overdueFinePolicyId,
       this.lostItemPolicyId,
-      this.claimedReturnedDate,
-      this.markedMissingDate);
+      this.claimedReturnedDate);
   }
 
   public LoanRequestBuilder withReturnDate(DateTime returnDate) {
@@ -573,8 +550,7 @@ public class LoanRequestBuilder implements Builder {
       this.declaredLostDate,
       this.overdueFinePolicyId,
       this.lostItemPolicyId,
-      this.claimedReturnedDate,
-      this.markedMissingDate);
+      this.claimedReturnedDate);
   }
 
   public LoanRequestBuilder withSystemReturnDate(DateTime systemReturnDate) {
@@ -598,8 +574,7 @@ public class LoanRequestBuilder implements Builder {
       this.declaredLostDate,
       this.overdueFinePolicyId,
       this.lostItemPolicyId,
-      this.claimedReturnedDate,
-      this.markedMissingDate);
+      this.claimedReturnedDate);
   }
 
   public LoanRequestBuilder withNoStatus() {
@@ -635,8 +610,7 @@ public class LoanRequestBuilder implements Builder {
       this.declaredLostDate,
       this.overdueFinePolicyId,
       this.lostItemPolicyId,
-      this.claimedReturnedDate,
-      this.markedMissingDate);
+      this.claimedReturnedDate);
   }
   public LoanRequestBuilder withLoanPolicyId(UUID loanPolicyId) {
     return new LoanRequestBuilder(
@@ -659,8 +633,7 @@ public class LoanRequestBuilder implements Builder {
       this.declaredLostDate,
       this.overdueFinePolicyId,
       this.lostItemPolicyId,
-      this.claimedReturnedDate,
-      this.markedMissingDate);
+      this.claimedReturnedDate);
   }
 
   public LoanRequestBuilder withRenewalCount(int renewalCount) {
@@ -684,8 +657,7 @@ public class LoanRequestBuilder implements Builder {
       this.declaredLostDate,
       this.overdueFinePolicyId,
       this.lostItemPolicyId,
-      this.claimedReturnedDate,
-      this.markedMissingDate);
+      this.claimedReturnedDate);
   }
 
   public LoanRequestBuilder withDueDateChangedByRecall(Boolean dueDateChangedByRecall) {
@@ -709,8 +681,7 @@ public class LoanRequestBuilder implements Builder {
       this.declaredLostDate,
       this.overdueFinePolicyId,
       this.lostItemPolicyId,
-      this.claimedReturnedDate,
-      this.markedMissingDate);
+      this.claimedReturnedDate);
   }
 
   public LoanRequestBuilder withDeclaredLostDate(DateTime declaredLostDate) {
@@ -734,8 +705,7 @@ public class LoanRequestBuilder implements Builder {
       declaredLostDate,
       this.overdueFinePolicyId,
       this.lostItemPolicyId,
-      this.claimedReturnedDate,
-      this.markedMissingDate);
+      this.claimedReturnedDate);
   }
 
   public LoanRequestBuilder withOverdueFinePolicyId(
@@ -760,8 +730,7 @@ public class LoanRequestBuilder implements Builder {
       this.declaredLostDate,
       overdueFinePolicyId,
       this.lostItemPolicyId,
-      this.claimedReturnedDate,
-      this.markedMissingDate);
+      this.claimedReturnedDate);
   }
 
   public LoanRequestBuilder withLostItemPolicyId(UUID lostItemPolicyId) {
@@ -785,8 +754,7 @@ public class LoanRequestBuilder implements Builder {
       this.declaredLostDate,
       this.overdueFinePolicyId,
       lostItemPolicyId,
-      this.claimedReturnedDate,
-      this.markedMissingDate);
+      this.claimedReturnedDate);
   }
 
   public LoanRequestBuilder withClaimedReturnedDate(DateTime claimedReturnedDate) {
@@ -810,32 +778,6 @@ public class LoanRequestBuilder implements Builder {
       this.declaredLostDate,
       this.overdueFinePolicyId,
       this.lostItemPolicyId,
-      claimedReturnedDate,
-      this.markedMissingDate);
-  }
-
-  public LoanRequestBuilder withMarkedMissingDate(DateTime markedMissingDate) {
-    return new LoanRequestBuilder(
-      this.id,
-      this.itemId,
-      this.userId,
-      this.proxyUserId,
-      this.loanDate,
-      this.statusName,
-      this.itemStatus,
-      this.action,
-      this.actionComment,
-      this.dueDate,
-      this.itemEffectiveLocationAtCheckOut,
-      this.loanPolicyId,
-      this.returnDate,
-      this.systemReturnDate,
-      this.renewalCount,
-      this.dueDateChangedByRecall,
-      this.declaredLostDate,
-      this.overdueFinePolicyId,
-      this.lostItemPolicyId,
-      this.claimedReturnedDate,
-      markedMissingDate);
+      claimedReturnedDate);
   }
 }
