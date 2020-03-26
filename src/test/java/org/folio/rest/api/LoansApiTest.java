@@ -86,6 +86,11 @@ public class LoansApiTest extends ApiTests {
     UUID overdueFinePolicyId = UUID.randomUUID();
     UUID lostItemPolicyId = UUID.randomUUID();
     final DateTime claimedReturnedDate = DateTime.now(DateTimeZone.UTC);
+    DateTime dateLostItemShouldBeBilled = new DateTime(2017, 9, 27, 10, 23, 43, DateTimeZone.UTC);
+    JsonObject agedToLostDelayedBilling = new JsonObject()
+            .put("lostItemHasBeenBilled", Boolean.FALSE)
+            .put("dateLostItemShouldBeBilled", dateLostItemShouldBeBilled );
+
 
     JsonObject loanRequest = new LoanRequestBuilder()
       .withId(id)
@@ -103,6 +108,7 @@ public class LoansApiTest extends ApiTests {
       .withOverdueFinePolicyId(overdueFinePolicyId)
       .withLostItemPolicyId(lostItemPolicyId)
       .withClaimedReturnedDate(claimedReturnedDate)
+      .withAgedToLostDelayedBilling(agedToLostDelayedBilling)
       .create();
 
     JsonObject loan = loansClient.create(loanRequest).getJson();
@@ -157,6 +163,15 @@ public class LoansApiTest extends ApiTests {
 
     assertThat(DateTime.parse(loan.getString("claimedReturnedDate")),
       is(claimedReturnedDate));
+    
+    assertThat("Loan could have a agedToLostDelayedBilling/lostItemHasBeenBilled property",
+            loan.getJsonObject("agedToLostDelayedBilling").getBoolean("lostItemHasBeenBilled"),
+            is(Boolean.FALSE));
+    
+    assertThat("Loan could have a agedToLostDelayedBilling/dateLostItemShouldBeBilled property",
+            DateTime.parse(loan.getJsonObject("agedToLostDelayedBilling").getString("dateLostItemShouldBeBilled")),
+            is(dateLostItemShouldBeBilled));
+
   }
 
   @Test
