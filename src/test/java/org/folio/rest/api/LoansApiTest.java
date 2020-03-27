@@ -168,7 +168,7 @@ public class LoansApiTest extends ApiTests {
     
     assertThat("Loan could have a agedToLostDelayedBilling/dateLostItemShouldBeBilled property",
             DateTime.parse(loan.getJsonObject("agedToLostDelayedBilling").getString("dateLostItemShouldBeBilled")),
-            is(dateLostItemShouldBeBilled));
+            is(dateLostItemShouldBeBilled.toString()));
 
   }
 
