@@ -280,7 +280,7 @@ public class LoanRequestBuilder implements Builder {
     }
     
      if (agedToLostDelayedBilling != null) {
-      request.put("claimedReturnedDate", agedToLostDelayedBilling);
+      request.put("agedToLostDelayedBilling", agedToLostDelayedBilling);
     }
 
     return request;
