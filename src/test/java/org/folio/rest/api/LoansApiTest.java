@@ -87,10 +87,6 @@ public class LoansApiTest extends ApiTests {
     UUID lostItemPolicyId = UUID.randomUUID();
     final DateTime claimedReturnedDate = DateTime.now(DateTimeZone.UTC);
     DateTime dateLostItemShouldBeBilled = new DateTime(2017, 9, 27, 10, 23, 43, DateTimeZone.UTC);
-    JsonObject agedToLostDelayedBilling = new JsonObject()
-            .put("lostItemHasBeenBilled", Boolean.FALSE)
-            .put("dateLostItemShouldBeBilled", dateLostItemShouldBeBilled );
-
 
     JsonObject loanRequest = new LoanRequestBuilder()
       .withId(id)
@@ -108,7 +104,9 @@ public class LoansApiTest extends ApiTests {
       .withOverdueFinePolicyId(overdueFinePolicyId)
       .withLostItemPolicyId(lostItemPolicyId)
       .withClaimedReturnedDate(claimedReturnedDate)
-      .withAgedToLostDelayedBilling(agedToLostDelayedBilling)
+      .withAgedToLostDelayedBilling(new JsonObject()
+            .put("lostItemHasBeenBilled", Boolean.FALSE)
+            .put("dateLostItemShouldBeBilled", dateLostItemShouldBeBilled.toString()))
       .create();
 
     JsonObject loan = loansClient.create(loanRequest).getJson();
