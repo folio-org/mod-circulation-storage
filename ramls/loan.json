@@ -95,7 +95,7 @@
     },
     "declaredLostDate" : {
       "description": "Date and time the item was declared lost during this loan",
-      "type" : "string",
+      "type": "string",
       "format": "date-time"
     },
     "claimedReturnedDate": {
