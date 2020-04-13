@@ -52,7 +52,7 @@
     },
     "systemReturnDate" : {
       "description": "Date time when the returned item is actually processed",
-      "type" : "string",
+      "type": "string",
       "format": "date-time"
     },
     "action": {
@@ -125,7 +125,7 @@
         "lostItemHasBeenBilled": {
           "description": "Indicates if the aged to lost fee has been billed (for use where delayed billing is set up)",
           "type": "boolean"
-        },    
+        },
         "dateLostItemShouldBeBilled": {
           "description": "Indicates when the aged to lost fee should be billed (for use where delayed billing is set up)",
           "type": "string",
@@ -133,7 +133,7 @@
         }
       }
     }
-  },  
+  },
   "additionalProperties": false,
   "required": [
     "itemId",
