@@ -92,61 +92,11 @@
               },
               "sendBy": {
                 "type": "object",
-                "additionalProperties": false,
-                "description": "Send by options",
-                "properties": {
-                  "duration": {
-                    "type": "integer",
-                    "description": "Duration amount",
-                    "minimum": 1,
-                    "maximum": 100
-                  },
-                  "intervalId": {
-                    "type": "string",
-                    "description": "Interval id",
-                    "enum": [
-                      "Minutes",
-                      "Hours",
-                      "Days",
-                      "Weeks",
-                      "Months",
-                      "Years"
-                    ]
-                  }
-                },
-                "required": [
-                  "duration",
-                  "intervalId"
-                ]
+                "$ref": "interval.json"
               },
               "sendEvery": {
                 "type": "object",
-                "additionalProperties": false,
-                "description": "Send every options",
-                "properties": {
-                  "duration": {
-                    "type": "integer",
-                    "description": "Duration amount",
-                    "minimum": 1,
-                    "maximum": 100
-                  },
-                  "intervalId": {
-                    "type": "string",
-                    "description": "Interval id",
-                    "enum": [
-                      "Minutes",
-                      "Hours",
-                      "Days",
-                      "Weeks",
-                      "Months",
-                      "Years"
-                    ]
-                  }
-                },
-                "required": [
-                  "duration",
-                  "intervalId"
-                ]
+                "$ref": "interval.json"
               }
             },
             "required": [
@@ -207,74 +157,31 @@
             "properties": {
               "sendHow": {
                 "type": "string",
-                "description": "Defines how notice should be sent, before, after or upon",
+                "description": "Defines how notice should be sent, after or upon",
                 "enum": [
                   "Upon At",
-                  "Before",
                   "After"
+                ]
+              },
+              "sendWhen": {
+                "type": "string",
+                "description": "Triggering event",
+                "enum": [
+                  "Overdue fine returned",
+                  "Overdue fine renewed"
                 ]
               },
               "sendBy": {
                 "type": "object",
-                "additionalProperties": false,
-                "description": "Send by options",
-                "properties": {
-                  "duration": {
-                    "type": "integer",
-                    "description": "Duration amount",
-                    "minimum": 1,
-                    "maximum": 100
-                  },
-                  "intervalId": {
-                    "type": "string",
-                    "description": "Interval id",
-                    "enum": [
-                      "Minutes",
-                      "Hours",
-                      "Days",
-                      "Weeks",
-                      "Months",
-                      "Years"
-                    ]
-                  }
-                },
-                "required": [
-                  "duration",
-                  "intervalId"
-                ]
+                "$ref": "interval.json"
               },
               "sendEvery": {
                 "type": "object",
-                "additionalProperties": false,
-                "description": "Send every options",
-                "properties": {
-                  "duration": {
-                    "type": "integer",
-                    "description": "Duration amount",
-                    "minimum": 1,
-                    "maximum": 100
-                  },
-                  "intervalId": {
-                    "type": "string",
-                    "description": "Interval id",
-                    "enum": [
-                      "Minutes",
-                      "Hours",
-                      "Days",
-                      "Weeks",
-                      "Months",
-                      "Years"
-                    ]
-                  }
-                },
-                "required": [
-                  "duration",
-                  "intervalId"
-                ]
+                "$ref": "interval.json"
               }
             },
             "required": [
-              "sendHow"
+              "sendWhen"
             ]
           }
         },
@@ -353,61 +260,11 @@
               },
               "sendBy": {
                 "type": "object",
-                "additionalProperties": false,
-                "description": "Send by options",
-                "properties": {
-                  "duration": {
-                    "type": "integer",
-                    "description": "Duration amount",
-                    "minimum": 1,
-                    "maximum": 100
-                  },
-                  "intervalId": {
-                    "type": "string",
-                    "description": "Interval id",
-                    "enum": [
-                      "Minutes",
-                      "Hours",
-                      "Days",
-                      "Weeks",
-                      "Months",
-                      "Years"
-                    ]
-                  }
-                },
-                "required": [
-                  "duration",
-                  "intervalId"
-                ]
+                "$ref": "interval.json"
               },
               "sendEvery": {
                 "type": "object",
-                "additionalProperties": false,
-                "description": "Send every options",
-                "properties": {
-                  "duration": {
-                    "type": "integer",
-                    "description": "Duration amount",
-                    "minimum": 1,
-                    "maximum": 100
-                  },
-                  "intervalId": {
-                    "type": "string",
-                    "description": "Interval id",
-                    "enum": [
-                      "Minutes",
-                      "Hours",
-                      "Days",
-                      "Weeks",
-                      "Months",
-                      "Years"
-                    ]
-                  }
-                },
-                "required": [
-                  "duration",
-                  "intervalId"
-                ]
+                "$ref": "interval.json"
               }
             },
             "required": [
