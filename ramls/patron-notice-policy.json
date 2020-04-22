@@ -157,7 +157,7 @@
             "properties": {
               "sendHow": {
                 "type": "string",
-                "description": "Defines how notice should be sent, after or upon",
+                "description": "Defines how notice should be sent: after or upon",
                 "enum": [
                   "Upon At",
                   "After"
