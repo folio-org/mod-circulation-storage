@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "description": "Time interval",
+  "properties": {
+    "duration": {
+      "type": "integer",
+      "description": "Interval duration, number of time units",
+      "minimum": 1,
+      "maximum": 100
+    },
+    "intervalId": {
+      "type": "string",
+      "description": "Unit of time",
+      "enum": [
+        "Minutes",
+        "Hours",
+        "Days",
+        "Weeks",
+        "Months",
+        "Years"
+      ]
+    }
+  },
+  "required": [
+    "duration",
+    "intervalId"
+  ],
+  "additionalProperties": false
+}
