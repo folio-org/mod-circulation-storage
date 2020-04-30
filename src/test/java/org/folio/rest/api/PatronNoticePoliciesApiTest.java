@@ -75,6 +75,30 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
       .put("sendOptions", new JsonObject()
         .put("sendWhen", "Hold expiration"));
 
+    JsonObject oneTimeOverdueFineReturnedNotice = new JsonObject()
+      .put("templateId", UUID.randomUUID().toString())
+      .put("format", "Email")
+      .put("realTime", true)
+      .put("frequency", "One time")
+      .put("sendOptions", new JsonObject()
+        .put("sendWhen", "Overdue fine returned")
+        .put("sendHow", "Upon At"));
+
+    JsonObject recurringOverdueFineRenewedNotice = new JsonObject()
+      .put("templateId", UUID.randomUUID().toString())
+      .put("format", "Email")
+      .put("realTime", true)
+      .put("frequency", "Recurring")
+      .put("sendOptions", new JsonObject()
+        .put("sendWhen", "Overdue fine renewed")
+        .put("sendHow", "After")
+        .put("sendBy", new JsonObject()
+          .put("intervalId", "Days")
+          .put("duration", 1))
+        .put("sendEvery", new JsonObject()
+          .put("intervalId", "Hours")
+          .put("duration", 6)));
+
     JsonObject noticePolicy = new JsonObject()
       .put("name", "sample policy")
       .put("requestNotices", new JsonArray()
@@ -82,7 +106,10 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
         .add(holdExpirationChangeNotice))
       .put("loanNotices", new JsonArray()
         .add(manualDueDateChangeNotice)
-        .add(itemRecalledNotice));
+        .add(itemRecalledNotice))
+      .put("feeFineNotices", new JsonArray()
+        .add(oneTimeOverdueFineReturnedNotice)
+        .add(recurringOverdueFineRenewedNotice));
 
     JsonResponse response = postPatronNoticePolicy(noticePolicy);
 

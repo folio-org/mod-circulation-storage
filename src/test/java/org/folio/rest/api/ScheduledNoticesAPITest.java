@@ -100,13 +100,25 @@ public class ScheduledNoticesAPITest extends ApiTests {
       .put("noticeConfig", noticeConfig)
     );
 
+    postScheduledNotice(new JsonObject()
+      .put("nextRunTime", nextRunTime)
+      .put("triggeringEvent", "Overdue fine returned")
+      .put("noticeConfig", noticeConfig)
+    );
+
+    postScheduledNotice(new JsonObject()
+      .put("nextRunTime", nextRunTime)
+      .put("triggeringEvent", "Overdue fine renewed")
+      .put("noticeConfig", noticeConfig)
+    );
+
     CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
     client.get(scheduledNoticesStorageUrl("/scheduled-notices"), TENANT_ID, ResponseHandler.json(getCompleted));
     JsonResponse response = getCompleted.get(5, SECONDS);
     ScheduledNotices scheduledNotices = response.getJson().mapTo(ScheduledNotices.class);
 
-    assertThat(scheduledNotices.getScheduledNotices().size(), is(3));
-    assertThat(scheduledNotices.getTotalRecords(), is(3));
+    assertThat(scheduledNotices.getScheduledNotices().size(), is(5));
+    assertThat(scheduledNotices.getTotalRecords(), is(5));
   }
 
   @Test

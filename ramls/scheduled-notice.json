@@ -5,22 +5,27 @@
     "id": {
       "type": "string",
       "description": "UUID of scheduled task",
-      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+      "$ref": "raml-util/schemas/uuid.schema"
     },
     "loanId": {
       "type": "string",
       "description": "UUID of related loan for loan notices",
-      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+      "$ref": "raml-util/schemas/uuid.schema"
     },
     "requestId": {
       "type": "string",
       "description": "UUID of related request for request notices",
-      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+      "$ref": "raml-util/schemas/uuid.schema"
+    },
+    "feeFineActionId": {
+      "type": "string",
+      "description": "UUID of related action for fee/fine notices",
+      "$ref": "raml-util/schemas/uuid.schema"
     },
     "recipientUserId": {
       "type": "string",
       "description": "Id of the user to whom this notice should be sent to",
-      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+      "$ref": "raml-util/schemas/uuid.schema"
     },
     "nextRunTime": {
       "type": "string",
@@ -33,7 +38,9 @@
       "enum": [
         "Hold expiration",
         "Request expiration",
-        "Due date"
+        "Due date",
+        "Overdue fine returned",
+        "Overdue fine renewed"
       ]
     },
     "noticeConfig": {
@@ -56,7 +63,7 @@
         "templateId": {
           "type": "string",
           "description": "UUID of related template",
-          "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+          "$ref": "raml-util/schemas/uuid.schema"
         },
         "format": {
           "type": "string",
