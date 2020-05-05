@@ -98,7 +98,7 @@ public class LoansApiTest extends ApiTests {
       .withAction("checkedout")
       .withItemStatus("Checked out")
       .withDueDate(new DateTime(2017, 7, 27, 10, 23, 43, DateTimeZone.UTC))
-      .withItemEffectiveLocationAtCheckOut(itemLocationAtCheckOut)
+      .withItemEffectiveLocationIdAtCheckOut(itemLocationAtCheckOut)
       .withLoanPolicyId(loanPolicyId)
       .withDeclaredLostDate(expectedLostDate)
       .withOverdueFinePolicyId(overdueFinePolicyId)
@@ -134,8 +134,8 @@ public class LoansApiTest extends ApiTests {
     assertThat("item status is not checked out",
       loan.getString("itemStatus"), is("Checked out"));
 
-    assertThat("itemEffectiveLocationAtCheckOut does not match",
-      loan.getString("itemEffectiveLocationAtCheckOut"), is(itemLocationAtCheckOut.toString()));
+    assertThat("itemEffectiveLocationIdAtCheckOut does not match",
+      loan.getString("itemEffectiveLocationIdAtCheckOut"), is(itemLocationAtCheckOut.toString()));
 
     assertThat("loan policy should be set",
       loan.getString("loanPolicyId"), is(loanPolicyId.toString()));
