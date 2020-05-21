@@ -42,8 +42,8 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 
 public class ExpirationTool {
-
   private static final Logger log = LoggerFactory.getLogger(ExpirationTool.class);
+  private static final String JSONB_COLUMN = "jsonb";
 
   private ExpirationTool() {
     //do nothing
@@ -115,7 +115,7 @@ public class ExpirationTool {
 
     return promise.future()
       .map(rs -> rowSetToStream(rs)
-        .map(row -> row.get(JsonObject.class, row.getColumnIndex("jsonb")))
+        .map(row -> row.get(JsonObject.class, row.getColumnIndex(JSONB_COLUMN)))
         .map(json -> json.mapTo(Request.class))
         .collect(toList()));
   }
@@ -154,7 +154,7 @@ public class ExpirationTool {
 
     return promise.future()
       .map(rs -> rowSetToStream(rs)
-        .map(row -> row.get(JsonObject.class, row.getColumnIndex("jsonb")))
+        .map(row -> row.get(JsonObject.class, row.getColumnIndex(JSONB_COLUMN)))
         .map(json -> json.mapTo(Request.class))
         .collect(toList()));
   }
@@ -266,7 +266,7 @@ public class ExpirationTool {
     Promise<RowSet<Row>> promise = Promise.promise();
 
     String where = format("WHERE jsonb->>'id' = '%s'", request.getId());
-    pgClient.update(conn, REQUEST_TABLE, request, "jsonb", where, false, promise);
+    pgClient.update(conn, REQUEST_TABLE, request, JSONB_COLUMN, where, false, promise);
 
     return promise.future().map(ur -> null);
   }
