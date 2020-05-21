@@ -37,7 +37,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.sql.ResultSet;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 
 @RunWith(Suite.class)
 
@@ -62,7 +63,6 @@ import io.vertx.ext.sql.ResultSet;
   CheckInStorageApiTest.class,
   StaffSlipsMigrationScriptTest.class
 })
-
 public class StorageTestSuite {
 
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -238,9 +238,9 @@ public class StorageTestSuite {
 
   public static void checkForMismatchedIDs(String table) {
     try {
-      ResultSet results = getRecordsWithUnmatchedIds(TENANT_ID, table);
+      RowSet<Row> results = getRecordsWithUnmatchedIds(TENANT_ID, table);
 
-      Integer mismatchedRowCount = results.getNumRows();
+      Integer mismatchedRowCount = results.rowCount();
 
       assertThat(mismatchedRowCount, is(0));
 
@@ -252,7 +252,7 @@ public class StorageTestSuite {
     }
   }
 
-  private static ResultSet getRecordsWithUnmatchedIds(
+  private static RowSet<Row> getRecordsWithUnmatchedIds(
     String tenantId,
     String tableName)
     throws InterruptedException,
@@ -261,7 +261,7 @@ public class StorageTestSuite {
 
     PostgresClient postgresClient = PostgresClient.getInstance(getVertx(), tenantId);
 
-    CompletableFuture<ResultSet> selectCompleted = new CompletableFuture<>();
+    CompletableFuture<RowSet<Row>> selectCompleted = new CompletableFuture<>();
 
     String sql = String.format(
       "SELECT null FROM %s_%s.%s" + " WHERE CAST(id AS VARCHAR(50)) != jsonb->>'id'",

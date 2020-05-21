@@ -18,7 +18,8 @@ import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.sql.UpdateResult;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 
 import org.apache.commons.lang3.StringUtils;
 import org.folio.cql2pgjson.CQL2PgJSON;
@@ -65,7 +66,7 @@ public class ScheduledNoticesAPI implements ScheduledNoticeStorage {
         .map(v -> DeleteScheduledNoticeStorageScheduledNoticesResponse.respond204())
         .map(Response.class::cast)
         .otherwise(this::mapExceptionToResponse)
-        .setHandler(asyncResultHandler);
+        .onComplete(asyncResultHandler);
   }
 
   @Override
@@ -116,7 +117,7 @@ public class ScheduledNoticesAPI implements ScheduledNoticeStorage {
 
   private Future<Void> executeSql(PostgresClient pgClient, String sql) {
 
-    Promise<UpdateResult> promise = Promise.promise();
+    Promise<RowSet<Row>> promise = Promise.promise();
     pgClient.execute(sql, promise.future());
     return promise.future().map(ur -> null);
   }

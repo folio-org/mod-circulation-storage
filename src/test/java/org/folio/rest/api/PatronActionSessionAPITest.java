@@ -19,7 +19,8 @@ import java.util.stream.Collectors;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.sql.UpdateResult;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 
 import org.joda.time.DateTime;
 import org.joda.time.format.ISODateTimeFormat;
@@ -49,7 +50,7 @@ public class PatronActionSessionAPITest extends ApiTests {
 
   @Before
   public void beforeTest() throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
-    CompletableFuture<UpdateResult> future = new CompletableFuture<>();
+    CompletableFuture<RowSet<Row>> future = new CompletableFuture<>();
     PostgresClient
       .getInstance(StorageTestSuite.getVertx(), TENANT_ID)
       .delete(PATRON_ACTION_SESSION, new Criterion(), del -> future.complete(del.result()));

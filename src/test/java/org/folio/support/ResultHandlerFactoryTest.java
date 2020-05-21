@@ -2,6 +2,7 @@ package org.folio.support;
 
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
+import static org.folio.support.ResultHandlerFactory.when;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
@@ -17,13 +18,10 @@ import io.vertx.core.Handler;
 public class ResultHandlerFactoryTest {
   @Test
   public void shouldExecuteConsumerOnSuccess() {
-    final ResultHandlerFactory resultHandlerFactory = new ResultHandlerFactory();
-
     AtomicBoolean onSuccessCalled = new AtomicBoolean(false);
     AtomicBoolean onFailureCalled = new AtomicBoolean(false);
 
-    final Handler<AsyncResult<String>> resultHandler =
-      resultHandlerFactory.when(
+    final Handler<AsyncResult<String>> resultHandler = when(
         s -> onSuccessCalled.set(true),
         e -> onFailureCalled.set(true));
 
@@ -38,13 +36,11 @@ public class ResultHandlerFactoryTest {
 
   @Test
   public void shouldExecuteConsumerOnFailure() {
-    final ResultHandlerFactory resultHandlerFactory = new ResultHandlerFactory();
 
     AtomicBoolean onSuccessCalled = new AtomicBoolean(false);
     AtomicBoolean onFailureCalled = new AtomicBoolean(false);
 
-    final Handler<AsyncResult<String>> resultHandler =
-      resultHandlerFactory.when(
+    final Handler<AsyncResult<String>> resultHandler = when(
         s -> onSuccessCalled.set(true),
         e -> onFailureCalled.set(true));
 
@@ -59,15 +55,12 @@ public class ResultHandlerFactoryTest {
 
   @Test
   public void shouldExecuteFailureConsumerOnExceptionInSuccessConsumer() {
-    final ResultHandlerFactory resultHandlerFactory = new ResultHandlerFactory();
-
     final RuntimeException expectedException
       = new RuntimeException("Something went wrong in success handler");
 
     AtomicReference<Throwable> receivedException = new AtomicReference<>();
 
-    final Handler<AsyncResult<String>> resultHandler =
-      resultHandlerFactory.when(
+    final Handler<AsyncResult<String>> resultHandler = when(
         s -> { throw expectedException; },
         receivedException::set);
 
@@ -79,12 +72,9 @@ public class ResultHandlerFactoryTest {
 
   @Test
   public void shouldExecuteFailureConsumerWhenResultIsNull() {
-    final ResultHandlerFactory resultHandlerFactory = new ResultHandlerFactory();
-
     AtomicReference<Throwable> receivedException = new AtomicReference<>();
 
-    final Handler<AsyncResult<String>> resultHandler =
-      resultHandlerFactory.when(
+    final Handler<AsyncResult<String>> resultHandler = when(
         s -> { throw new RuntimeException("Should not be called"); },
         receivedException::set);
 
@@ -99,12 +89,9 @@ public class ResultHandlerFactoryTest {
 
   @Test
   public void shouldExecuteFailureConsumerWhenFailureCauseIsNull() {
-    final ResultHandlerFactory resultHandlerFactory = new ResultHandlerFactory();
-
     AtomicReference<Throwable> receivedException = new AtomicReference<>();
 
-    final Handler<AsyncResult<String>> resultHandler =
-      resultHandlerFactory.when(
+    final Handler<AsyncResult<String>> resultHandler = when(
         s -> { throw new RuntimeException("Should not be called"); },
         receivedException::set);
 

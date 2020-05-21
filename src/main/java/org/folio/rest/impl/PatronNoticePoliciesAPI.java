@@ -27,7 +27,8 @@ import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.sql.UpdateResult;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.rest.RestVerticle;
@@ -175,7 +176,7 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
       .map(v -> DeletePatronNoticePolicyStoragePatronNoticePoliciesByPatronNoticePolicyIdResponse.respond204())
       .map(Response.class::cast)
       .otherwise(this::mapExceptionToResponse)
-      .setHandler(asyncResultHandler);
+      .onComplete(asyncResultHandler);
   }
 
   @Override
@@ -214,7 +215,7 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
             return;
           }
 
-          if (update.result().getUpdated() == 0) {
+          if (update.result().rowCount() == 0) {
             asyncResultHandler.handle(succeededFuture(
               PutPatronNoticePolicyStoragePatronNoticePoliciesByPatronNoticePolicyIdResponse
                 .respond404WithTextPlain(NOT_FOUND)));
@@ -249,11 +250,10 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
   }
 
   private Future<Void> deleteNoticePolicyById(PostgresClient pgClient, String id) {
+    final Promise<RowSet<Row>> promise = Promise.promise();
+    pgClient.delete(PATRON_NOTICE_POLICY_TABLE, id, promise);
 
-    Promise<UpdateResult> promise = Promise.promise();
-    pgClient.delete(PATRON_NOTICE_POLICY_TABLE, id, promise.future());
-
-    return promise.future().map(UpdateResult::getUpdated)
+    return promise.future().map(RowSet::rowCount)
       .compose(updated -> updated > 0 ? succeededFuture() : failedFuture(new NotFoundException(NOT_FOUND)));
   }
 

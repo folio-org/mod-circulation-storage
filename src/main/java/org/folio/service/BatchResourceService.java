@@ -1,22 +1,26 @@
 package org.folio.service;
 
+import static io.vertx.core.Future.failedFuture;
+import static io.vertx.core.Future.succeededFuture;
+import static io.vertx.core.Promise.promise;
+import static io.vertx.sqlclient.Tuple.tuple;
+
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.SQLConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Lists;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
-import io.vertx.core.json.JsonArray;
-import io.vertx.ext.sql.SQLConnection;
-import io.vertx.ext.sql.UpdateResult;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 
 public class BatchResourceService {
   private static final Logger LOG = LoggerFactory.getLogger(BatchResourceService.class);
@@ -35,32 +39,32 @@ public class BatchResourceService {
    * @param onFinishHandler - Callback.
    */
   public void executeBatchUpdate(
-    List<Function<SQLConnection, Future<UpdateResult>>> batchFactories,
+    List<Function<SQLConnection, Future<RowSet<Row>>>> batchFactories,
     Handler<AsyncResult<Void>> onFinishHandler) {
 
     postgresClient.startTx(connectionResult -> {
       if (connectionResult.failed()) {
         LOG.warn("Can not start transaction", connectionResult.cause());
-        onFinishHandler.handle(Future.failedFuture(connectionResult.cause()));
+        onFinishHandler.handle(failedFuture(connectionResult.cause()));
         return;
       }
 
       SQLConnection connection = connectionResult.result();
 
       // Using this future for chaining updates
-      Future<UpdateResult> lastUpdate = Future.succeededFuture();
-      for (Function<SQLConnection, Future<UpdateResult>> factory : batchFactories) {
+      Future<RowSet<Row>> lastUpdate = succeededFuture();
+      for (Function<SQLConnection, Future<RowSet<Row>>> factory : batchFactories) {
         lastUpdate = lastUpdate.compose(prev -> factory.apply(connection));
       }
 
       // Handle overall update result and decide on whether to commit or rollback transaction
-      lastUpdate.setHandler(updateResult -> {
+      lastUpdate.onComplete(updateResult -> {
         if (updateResult.failed()) {
           LOG.warn("Batch update rejected", updateResult.cause());
 
           // Rollback transaction and keep original cause.
           postgresClient.rollbackTx(connectionResult,
-            rollback -> onFinishHandler.handle(Future.failedFuture(updateResult.cause()))
+            rollback -> onFinishHandler.handle(failedFuture(updateResult.cause()))
           );
         } else {
           LOG.debug("Update successful, committing transaction");
@@ -81,17 +85,17 @@ public class BatchResourceService {
    * @return Batch function which consumes SQL connection and returns future
    * with result of the update.
    */
-  public <T> Function<SQLConnection, Future<UpdateResult>> updateSingleEntityBatchFactory(
+  public <T> Function<SQLConnection, Future<RowSet<Row>>> updateSingleEntityBatchFactory(
     String tableName, String id, T entity) {
 
     return connection -> {
-      Promise<UpdateResult> promise = Promise.promise();
-      Future<SQLConnection> connectionResult = Future.succeededFuture(connection);
+      final Promise<RowSet<Row>> promise = promise();
+      final Future<SQLConnection> connectionResult = succeededFuture(connection);
 
       LOG.debug("Updating entity {} with id {}", entity, id);
 
       postgresClient.update(connectionResult, tableName, entity, "jsonb",
-        String.format(WHERE_CLAUSE, id), false, promise.future());
+        String.format(WHERE_CLAUSE, id), false, promise);
 
       return promise.future();
     };
@@ -105,17 +109,17 @@ public class BatchResourceService {
    * @return Batch function which consumes SQL connection and returns future
    * with result of the update.
    */
-  public Function<SQLConnection, Future<UpdateResult>> queryWithParamsBatchFactory(
+  public Function<SQLConnection, Future<RowSet<Row>>> queryWithParamsBatchFactory(
     String query, Collection<?> params) {
 
     return connection -> {
-      Promise<UpdateResult> promise = Promise.promise();
       LOG.debug("Executing SQL [{}], got [{}] parameters", query, params.size());
 
-      connection.updateWithParams(query,
-        new JsonArray(Lists.newArrayList(params)),
-        promise.future()
-      );
+      final Promise<RowSet<Row>> promise = promise();
+      final Future<SQLConnection> connectionResult = succeededFuture(connection);
+
+      postgresClient.execute(connectionResult, query,
+        tuple(new ArrayList<>(params)), promise);
 
       return promise.future();
     };

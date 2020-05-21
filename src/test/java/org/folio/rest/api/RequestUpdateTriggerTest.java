@@ -20,7 +20,8 @@ import java.util.concurrent.TimeoutException;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.sql.UpdateResult;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 
 import org.joda.time.DateTime;
 import org.joda.time.Seconds;
@@ -74,7 +75,7 @@ class RequestUpdateTriggerTest {
     saveRequest(id, request)
       .compose(v -> updateRequest(id, request.withStatus(fromValue(newStatus))))
       .compose(v -> getRequest(id))
-      .setHandler(updatedRequest -> future.complete(updatedRequest.result()));
+      .onComplete(updatedRequest -> future.complete(updatedRequest.result()));
 
     JsonObject updatedRequest = future.get(5, TimeUnit.SECONDS);
 
@@ -110,7 +111,7 @@ class RequestUpdateTriggerTest {
     saveRequest(id, request)
       .compose(v -> updateRequest(id, request.withStatus(fromValue(newStatus))))
       .compose(v -> getRequest(id))
-      .setHandler(updatedRequest -> future.complete(updatedRequest.result()));
+      .onComplete(updatedRequest -> future.complete(updatedRequest.result()));
 
     JsonObject updatedRequest = future.get(5, TimeUnit.SECONDS);
 
@@ -127,9 +128,8 @@ class RequestUpdateTriggerTest {
   }
 
   private Future<Void> updateRequest(String id, Request request) {
-
-    Promise<UpdateResult> promise = Promise.promise();
-    pgClient.update(REQUEST_TABLE, request, id, promise.future());
+    Promise<RowSet<Row>> promise = Promise.promise();
+    pgClient.update(REQUEST_TABLE, request, id, promise);
 
     return promise.future().map(ur -> null);
   }

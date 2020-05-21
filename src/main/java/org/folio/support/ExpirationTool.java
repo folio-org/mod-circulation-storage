@@ -12,6 +12,7 @@ import static org.folio.rest.jaxrs.model.Request.Status.OPEN_AWAITING_DELIVERY;
 import static org.folio.rest.jaxrs.model.Request.Status.OPEN_AWAITING_PICKUP;
 import static org.folio.rest.jaxrs.model.Request.Status.OPEN_IN_TRANSIT;
 import static org.folio.rest.jaxrs.model.Request.Status.OPEN_NOT_YET_FILLED;
+import static org.folio.support.DbUtil.rowSetToStream;
 
 import java.text.SimpleDateFormat;
 import java.time.ZoneOffset;
@@ -24,8 +25,10 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.SQLConnection;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
@@ -35,9 +38,8 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.sql.ResultSet;
-import io.vertx.ext.sql.SQLConnection;
-import io.vertx.ext.sql.UpdateResult;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 
 public class ExpirationTool {
 
@@ -48,21 +50,21 @@ public class ExpirationTool {
   }
 
   public static Future<Void> doRequestExpiration(Vertx vertx) {
-
-    Promise<ResultSet> promise = Promise.promise();
+    final Promise<RowSet<Row>> promise = Promise.promise();
     PostgresClient pgClient = PostgresClient.getInstance(vertx);
-    String tenantQuery = "select nspname from pg_catalog.pg_namespace where nspname LIKE '%_mod_circulation_storage';";
-    pgClient.select(tenantQuery, promise.future());
 
-    return promise.future().compose(rs -> CompositeFuture.all(rs.getRows()
-      .stream()
-      .map(row -> doRequestExpirationForTenant(vertx, getTenant(row.getString("nspname"))))
-      .collect(toList()))
-      .map(all -> null));
+    String tenantQuery = "select nspname from pg_catalog.pg_namespace where nspname LIKE '%_mod_circulation_storage';";
+
+    pgClient.select(tenantQuery, promise);
+
+    return promise.future()
+      .compose(rs -> CompositeFuture.all(rowSetToStream(rs)
+        .map(row -> doRequestExpirationForTenant(vertx, getTenant(row.getString("nspname"))))
+        .collect(toList()))
+        .map(all -> null));
   }
 
   private static Future<Void> doRequestExpirationForTenant(Vertx vertx, String tenant) {
-
     Promise<Void> promise = Promise.promise();
 
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
@@ -71,7 +73,7 @@ public class ExpirationTool {
       .compose(requests -> closeRequests(conn, vertx, tenant, requests))
       .compose(itemIds -> getOpenRequestsByItemIds(conn, vertx, tenant, itemIds))
       .compose(requests -> reorderRequests(conn, vertx, tenant, requests))
-      .setHandler(v -> {
+      .onComplete(v -> {
         if (v.failed()) {
           pgClient.rollbackTx(conn, done -> {
             log.error("Error in request processing", v.cause());
@@ -91,7 +93,7 @@ public class ExpirationTool {
     df.setTimeZone(TimeZone.getTimeZone(ZoneOffset.UTC));
 
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
-    Promise<ResultSet> promise = Promise.promise();
+    Promise<RowSet<Row>> promise = Promise.promise();
 
     String where = format("WHERE " +
         "(jsonb->>'status' = '%1$s' AND jsonb->>'requestExpirationDate' < '%5$s') OR " +
@@ -111,20 +113,18 @@ public class ExpirationTool {
     String query = format("SELECT jsonb FROM %s %s", fullTableName, where);
     pgClient.select(conn, query, promise.future());
 
-    return promise.future().map(ResultSet::getRows)
-      .map(rows -> rows.stream()
-        .map(row -> row.getString("jsonb"))
-        .map(JsonObject::new)
+    return promise.future()
+      .map(rs -> rowSetToStream(rs)
+        .map(row -> row.get(JsonObject.class, row.getColumnIndex("jsonb")))
         .map(json -> json.mapTo(Request.class))
         .collect(toList()));
-
   }
 
   private static Future<List<Request>> getOpenRequestsByItemIds(AsyncResult<SQLConnection> conn, Vertx vertx,
                                                                 String tenant, Set<String> itemIds) {
 
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
-    Promise<ResultSet> promise = Promise.promise();
+    Promise<RowSet<Row>> promise = Promise.promise();
 
     if (itemIds.isEmpty()) {
       return succeededFuture(emptyList());
@@ -152,10 +152,9 @@ public class ExpirationTool {
     String sql = format("SELECT jsonb FROM %s %s", fullTableName, where);
     pgClient.select(conn, sql, promise.future());
 
-    return promise.future().map(ResultSet::getRows)
-      .map(rows -> rows.stream()
-        .map(row -> row.getString("jsonb"))
-        .map(JsonObject::new)
+    return promise.future()
+      .map(rs -> rowSetToStream(rs)
+        .map(row -> row.get(JsonObject.class, row.getColumnIndex("jsonb")))
         .map(json -> json.mapTo(Request.class))
         .collect(toList()));
   }
@@ -214,7 +213,6 @@ public class ExpirationTool {
   private static Future<Set<String>> closeRequests(AsyncResult<SQLConnection> conn, Vertx vertx,
                                                    String tenant, List<Request> requests) {
 
-
     Future<Void> future = succeededFuture();
     Set<String> closedRequestsItemIds = new HashSet<>();
 
@@ -227,8 +225,8 @@ public class ExpirationTool {
     return future.map(v -> closedRequestsItemIds);
   }
 
-  private static Future<UpdateResult> resetPositionsForOpenRequestsByIdemIds(AsyncResult<SQLConnection> conn, Vertx vertx,
-                                                                             String tenant, Set<String> itemIds) {
+  private static Future<RowSet<Row>> resetPositionsForOpenRequestsByIdemIds(
+    AsyncResult<SQLConnection> conn, Vertx vertx, String tenant, Set<String> itemIds) {
 
     if (itemIds.isEmpty()) {
      succeededFuture();
@@ -254,7 +252,7 @@ public class ExpirationTool {
       OPEN_IN_TRANSIT.value(),
       String.join(",", quotedItemIds));
 
-    Promise<UpdateResult> promise = Promise.promise();
+    Promise<RowSet<Row>> promise = Promise.promise();
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
     pgClient.execute(conn, sql, promise.future());
 
@@ -265,10 +263,10 @@ public class ExpirationTool {
                                             String tenant, Request request) {
 
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
-    Promise<UpdateResult> promise = Promise.promise();
+    Promise<RowSet<Row>> promise = Promise.promise();
 
     String where = format("WHERE jsonb->>'id' = '%s'", request.getId());
-    pgClient.update(conn, REQUEST_TABLE, request, "jsonb", where, false, promise.future());
+    pgClient.update(conn, REQUEST_TABLE, request, "jsonb", where, false, promise);
 
     return promise.future().map(ur -> null);
   }

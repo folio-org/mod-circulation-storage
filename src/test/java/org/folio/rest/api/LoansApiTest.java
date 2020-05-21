@@ -34,7 +34,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import org.folio.rest.jaxrs.model.Metadata;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonResponse;
@@ -161,11 +160,11 @@ public class LoansApiTest extends ApiTests {
 
     assertThat(DateTime.parse(loan.getString("claimedReturnedDate")),
       is(claimedReturnedDate));
-    
+
     assertThat("Loan could have a agedToLostDelayedBilling/lostItemHasBeenBilled property",
             loan.getJsonObject("agedToLostDelayedBilling").getBoolean("lostItemHasBeenBilled"),
             is(Boolean.FALSE));
-    
+
     assertThat("Loan could have a agedToLostDelayedBilling/dateLostItemShouldBeBilled property",
             DateTime.parse(loan.getJsonObject("agedToLostDelayedBilling").getString("dateLostItemShouldBeBilled")),
             is(dateLostItemShouldBeBilled));
@@ -1201,7 +1200,7 @@ public class LoansApiTest extends ApiTests {
 
     md.setCreatedDate(d);
     md.setUpdatedDate(d);
-    j3.put("metadata", new JsonObject(PostgresClient.pojo2json(md)));
+    j3.put("metadata", JsonObject.mapFrom(md));
 
     CompletableFuture<JsonResponse> create1 = new CompletableFuture<>();
     CompletableFuture<JsonResponse> get1 = new CompletableFuture<>();

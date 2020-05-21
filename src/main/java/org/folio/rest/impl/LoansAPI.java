@@ -167,11 +167,10 @@ public class LoansAPI implements LoanStorage {
 
       log.info(String.format("Anonymization SQL: %s", combinedAnonymizationSql));
 
-      postgresClient.mutate(combinedAnonymizationSql,
-        new ResultHandlerFactory().when(
-          s -> responseHandler.handle(succeededFuture(
-            PostLoanStorageLoansAnonymizeByUserIdResponse.respond204())),
-          serverErrorResponder::withError));
+      postgresClient.execute(combinedAnonymizationSql, ResultHandlerFactory.when(
+        s -> responseHandler.handle(succeededFuture(
+          PostLoanStorageLoansAnonymizeByUserIdResponse.respond204())),
+        serverErrorResponder::withError));
     });
   }
 
