@@ -69,8 +69,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
-    <raml-module-builder-version>29.2.2</raml-module-builder-version>
-    <vertx-version>3.8.4</vertx-version>
+    <raml-module-builder-version>30.0.0</raml-module-builder-version>
+    <vertx-version>3.9.0</vertx-version>
     <argLine />
   </properties>
 

@@ -3,8 +3,8 @@ package org.folio.rest.impl;
 import static io.vertx.core.Future.succeededFuture;
 import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
-
 import static org.folio.rest.persist.PostgresClient.convertToPsqlStandard;
+import static org.folio.support.DbUtil.rowSetToStream;
 
 import java.util.List;
 import java.util.Map;
@@ -12,18 +12,7 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.core.Response;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Handler;
-import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.sql.ResultSet;
-
 import org.apache.commons.lang3.StringUtils;
-import org.joda.time.DateTime;
-import org.joda.time.format.ISODateTimeFormat;
-
 import org.folio.rest.RestVerticle;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Errors;
@@ -35,6 +24,16 @@ import org.folio.rest.jaxrs.resource.PatronActionSessionStorage;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.tools.utils.ValidationHelper;
 import org.folio.support.PgClientFutureAdapter;
+import org.joda.time.DateTime;
+import org.joda.time.format.ISODateTimeFormat;
+
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 
 public class PatronActionSessionAPI implements PatronActionSessionStorage {
 
@@ -124,21 +123,20 @@ public class PatronActionSessionAPI implements PatronActionSessionStorage {
       .map(GetPatronActionSessionStorageExpiredSessionPatronIdsResponse::respond200WithApplicationJson)
       .map(Response.class::cast)
       .otherwise(this::mapExceptionToResponse)
-      .setHandler(asyncResultHandler);
+      .onComplete(asyncResultHandler);
   }
 
-  private PatronActionExpiredIdsResponse mapPatronIdResponse(ResultSet resultSet) {
-    List<ExpiredSession> expiredSessions = resultSet.getRows()
-      .stream()
+  private PatronActionExpiredIdsResponse mapPatronIdResponse(RowSet<Row> rowSet) {
+    List<ExpiredSession> expiredSessions = rowSetToStream(rowSet)
       .map(this::mapToExpiredSession)
       .collect(Collectors.toList());
     return new PatronActionExpiredIdsResponse().withExpiredSessions(expiredSessions);
   }
 
-  private ExpiredSession mapToExpiredSession(JsonObject jsonObject){
+  private ExpiredSession mapToExpiredSession(Row row){
     return new ExpiredSession()
-      .withPatronId(jsonObject.getString(PATRON_ID))
-      .withActionType(ExpiredSession.ActionType.fromValue(jsonObject.getString(ACTION_TYPE)));
+      .withPatronId(row.getString(PATRON_ID))
+      .withActionType(ExpiredSession.ActionType.fromValue(row.getString(ACTION_TYPE)));
   }
 
   @Override

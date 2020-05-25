@@ -137,7 +137,7 @@ public class RequestPoliciesApiTest extends ApiTests {
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     List<RequestType> requestTypes = Collections.singletonList(RequestType.HOLD);
-    String badId = "d9cdbed-1b49-4b5e-a7bd-064b8d231";
+    String badId = "bad_uuid";
 
     RequestPolicy requestPolicy = new RequestPolicy();
     requestPolicy.withDescription("test policy");
@@ -153,7 +153,7 @@ public class RequestPoliciesApiTest extends ApiTests {
     JsonResponse response = createCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
     assertThat(String.format("Failed to create request policy: %s", response.getBody()),
       response.getStatusCode(), is(HttpURLConnection.HTTP_INTERNAL_ERROR));
-    assertThat("unexpected error message" , response.getBody().contains("invalid input syntax for type uuid"));
+    assertThat(response.getBody(), containsString("Invalid UUID string"));
   }
 
   @Test

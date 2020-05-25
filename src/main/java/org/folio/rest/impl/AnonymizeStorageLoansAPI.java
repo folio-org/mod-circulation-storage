@@ -28,7 +28,8 @@ import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.sql.UpdateResult;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 
 public class AnonymizeStorageLoansAPI implements AnonymizeStorageLoans {
   private static final Logger log = LoggerFactory.getLogger(
@@ -77,7 +78,7 @@ public class AnonymizeStorageLoansAPI implements AnonymizeStorageLoans {
       .map(Response.class::cast)
       .otherwise(
         e -> PostAnonymizeStorageLoansResponse.respond500WithTextPlain(e.getMessage()))
-      .setHandler(responseHandler);
+      .onComplete(responseHandler);
 
   }
 
@@ -89,10 +90,11 @@ public class AnonymizeStorageLoansAPI implements AnonymizeStorageLoans {
       new NotAnonymizedLoan().withReason(reason).withLoanIds(ids));
   }
 
-  private Future<UpdateResult> executeSql(PostgresClient postgresClient,
-    String sql) {
-    Promise<UpdateResult> promise = Promise.promise();
-    postgresClient.execute(sql, promise.future());
+  private Future<RowSet<Row>> executeSql(PostgresClient postgresClient, String sql) {
+    final Promise<RowSet<Row>> promise = Promise.promise();
+
+    postgresClient.execute(sql, promise);
+
     return promise.future();
   }
 

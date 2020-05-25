@@ -1,6 +1,8 @@
 package org.folio.service.request;
 
+import static java.util.stream.IntStream.rangeClosed;
 import static org.folio.rest.impl.RequestsAPI.REQUEST_TABLE;
+import static org.folio.rest.persist.PostgresClient.convertToPsqlStandard;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,7 +11,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.folio.rest.jaxrs.model.Request;
-import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.SQLConnection;
 import org.folio.service.BatchResourceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,8 +19,8 @@ import org.slf4j.LoggerFactory;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.ext.sql.SQLConnection;
-import io.vertx.ext.sql.UpdateResult;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 
 public class RequestBatchResourceService {
   private static final Logger LOG = LoggerFactory.getLogger(RequestBatchResourceService.class);
@@ -61,49 +63,44 @@ public class RequestBatchResourceService {
     List<Request> requests, Handler<AsyncResult<Void>> onFinishHandler) {
 
     LOG.debug("Removing positions for all request to go through positions constraint");
-    List<Function<SQLConnection, Future<UpdateResult>>> allDatabaseOperations =
+    List<Function<SQLConnection, Future<RowSet<Row>>>> allDatabaseOperations =
       new ArrayList<>();
 
     // Remove positions for the requests before updating them
     // in order to go through item position constraint.
-    Function<SQLConnection, Future<UpdateResult>> removePositionBatch =
+    Function<SQLConnection, Future<RowSet<Row>>> removePositionBatch =
       removePositionsForRequestsBatch(requests);
 
-    List<Function<SQLConnection, Future<UpdateResult>>> updateRequestsBatch =
+    List<Function<SQLConnection, Future<RowSet<Row>>>> updateRequestsBatch =
       updateRequestsBatch(requests);
 
     allDatabaseOperations.add(removePositionBatch);
     allDatabaseOperations.addAll(updateRequestsBatch);
 
     LOG.info("Executing batch update, total records to update [{}] (including remove positions)",
-      allDatabaseOperations.size()
-    );
+      allDatabaseOperations.size());
 
     batchResourceService.executeBatchUpdate(allDatabaseOperations, onFinishHandler);
   }
 
-  private Function<SQLConnection, Future<UpdateResult>> removePositionsForRequestsBatch(
+  private Function<SQLConnection, Future<RowSet<Row>>> removePositionsForRequestsBatch(
     List<Request> requests) {
 
-    Set<String> uniqueRequestIds = requests.stream()
+    final Set<String> uniqueRequestIds = requests.stream()
       .map(Request::getId)
       .collect(Collectors.toSet());
 
-    String requestIdsParamsPlaceholder = uniqueRequestIds.stream()
-      .map(reqId -> "?")
+    final String requestIdsParamsPlaceholder = rangeClosed(1, uniqueRequestIds.size())
+      .mapToObj(paramNumber -> "$" + paramNumber)
       .collect(Collectors.joining(", "));
 
-    String sql = String.format(REMOVE_POSITIONS_SQL,
-      PostgresClient.convertToPsqlStandard(tenantName),
-      REQUEST_TABLE,
-      requestIdsParamsPlaceholder
-    );
+    final String sql = String.format(REMOVE_POSITIONS_SQL,
+      convertToPsqlStandard(tenantName), REQUEST_TABLE, requestIdsParamsPlaceholder);
 
-    return batchResourceService
-      .queryWithParamsBatchFactory(sql, uniqueRequestIds);
+    return batchResourceService.queryWithParamsBatchFactory(sql, uniqueRequestIds);
   }
 
-  private List<Function<SQLConnection, Future<UpdateResult>>> updateRequestsBatch(
+  private List<Function<SQLConnection, Future<RowSet<Row>>>> updateRequestsBatch(
     List<Request> requests) {
 
     return requests.stream()
