@@ -252,12 +252,8 @@ public class StorageTestSuite {
     }
   }
 
-  private static RowSet<Row> getRecordsWithUnmatchedIds(
-    String tenantId,
-    String tableName)
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  private static RowSet<Row> getRecordsWithUnmatchedIds(String tenantId, String tableName)
+    throws InterruptedException, ExecutionException, TimeoutException {
 
     PostgresClient postgresClient = PostgresClient.getInstance(getVertx(), tenantId);
 

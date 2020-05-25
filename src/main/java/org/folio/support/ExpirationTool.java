@@ -87,7 +87,8 @@ public class ExpirationTool {
     return promise.future();
   }
 
-  private static Future<List<Request>> getExpiredRequests(AsyncResult<SQLConnection> conn, Vertx vertx, String tenant) {
+  private static Future<List<Request>> getExpiredRequests(AsyncResult<SQLConnection> conn,
+    Vertx vertx, String tenant) {
 
     SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
     df.setTimeZone(TimeZone.getTimeZone(ZoneOffset.UTC));
@@ -120,8 +121,8 @@ public class ExpirationTool {
         .collect(toList()));
   }
 
-  private static Future<List<Request>> getOpenRequestsByItemIds(AsyncResult<SQLConnection> conn, Vertx vertx,
-                                                                String tenant, Set<String> itemIds) {
+  private static Future<List<Request>> getOpenRequestsByItemIds(
+    AsyncResult<SQLConnection> conn, Vertx vertx, String tenant, Set<String> itemIds) {
 
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
     Promise<RowSet<Row>> promise = Promise.promise();
@@ -170,8 +171,8 @@ public class ExpirationTool {
     return request;
   }
 
-  private static Future<Void> reorderRequests(AsyncResult<SQLConnection> conn, Vertx vertx,
-                                              String tenant, List<Request> requests) {
+  private static Future<Void> reorderRequests(AsyncResult<SQLConnection> conn,
+    Vertx vertx, String tenant, List<Request> requests) {
 
     if (requests.isEmpty()) {
       return succeededFuture();
@@ -184,8 +185,8 @@ public class ExpirationTool {
       .compose(v -> reorderRequestsForEachItem(conn, vertx, tenant, groupedRequests));
   }
 
-  private static Future<Void> reorderRequestsForEachItem(AsyncResult<SQLConnection> conn, Vertx vertx,
-                                                         String tenant, Map<String, List<Request>> groupedRequests) {
+  private static Future<Void> reorderRequestsForEachItem(AsyncResult<SQLConnection> conn,
+    Vertx vertx, String tenant, Map<String, List<Request>> groupedRequests) {
 
     Future<Void> future = succeededFuture();
     for (Map.Entry<String, List<Request>> entry : groupedRequests.entrySet()) {
@@ -195,8 +196,8 @@ public class ExpirationTool {
     return future;
   }
 
-  private static Future<Void> updateRequestsPositions(AsyncResult<SQLConnection> conn, Vertx vertx,
-                                                      String tenant, List<Request> requests) {
+  private static Future<Void> updateRequestsPositions(AsyncResult<SQLConnection> conn,
+    Vertx vertx, String tenant, List<Request> requests) {
 
     requests.sort(Comparator.comparingInt(Request::getPosition));
     AtomicInteger pos = new AtomicInteger(1);
@@ -210,8 +211,8 @@ public class ExpirationTool {
   }
 
 
-  private static Future<Set<String>> closeRequests(AsyncResult<SQLConnection> conn, Vertx vertx,
-                                                   String tenant, List<Request> requests) {
+  private static Future<Set<String>> closeRequests(AsyncResult<SQLConnection> conn,
+    Vertx vertx, String tenant, List<Request> requests) {
 
     Future<Void> future = succeededFuture();
     Set<String> closedRequestsItemIds = new HashSet<>();
@@ -259,8 +260,8 @@ public class ExpirationTool {
     return promise.future().map(ur -> null);
   }
 
-  private static Future<Void> updateRequest(AsyncResult<SQLConnection> conn, Vertx vertx,
-                                            String tenant, Request request) {
+  private static Future<Void> updateRequest(AsyncResult<SQLConnection> conn,
+     Vertx vertx, String tenant, Request request) {
 
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
     Promise<RowSet<Row>> promise = Promise.promise();

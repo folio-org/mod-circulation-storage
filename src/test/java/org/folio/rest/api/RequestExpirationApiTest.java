@@ -736,8 +736,10 @@ public class RequestExpirationApiTest extends ApiTests {
 
   private void expireRequests() throws InterruptedException, ExecutionException, TimeoutException {
     CompletableFuture<Void> expirationCompleted = new CompletableFuture<>();
+
     ExpirationTool.doRequestExpiration(StorageTestSuite.getVertx())
       .onComplete(res -> expirationCompleted.complete(null));
+
     expirationCompleted.get(5, TimeUnit.SECONDS);
   }
 }
