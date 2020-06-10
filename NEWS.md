@@ -1,3 +1,14 @@
+## 12.0.0 2020-06-10
+
+* Renames `itemEffectiveLocationAtCheckOut` to `itemEffectiveLocationIdAtCheckOut` in loan record (CIRCSTORE-208)
+* Introduces delayed billing information for loan (CIRCSTORE-199)
+* Introduces notices for overdue fees / fines (CIRCSTORE-207)
+* Creates `request delivery` and `pick slip` staff slip templates during upgrade (CIRCSTORE-200)
+* Provides `loan-storage 7.0`
+* Provides `patron-notice-storage-policy 0.12`
+* Provides `scheduled-notice-storage 0.4`
+* Upgrades to RAML Module Builder 30.0.0 (CIRCSTORE-212)
+
 ## 11.0.0 2020-03-09
 
 * Stores `overdue fine policy` and `lost item policy` for loan (CIRCSTORE-177)
