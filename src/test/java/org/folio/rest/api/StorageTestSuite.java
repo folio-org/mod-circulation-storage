@@ -70,7 +70,7 @@ public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";
 
   private static Vertx vertx;
-  private static int port;
+  public static final int PORT = NetworkUtils.nextFreePort();
   private static boolean initialised = false;
 
   /**
@@ -81,7 +81,7 @@ public class StorageTestSuite {
    */
   public static URL storageUrl(String path, String ... parameterKeyValue) throws MalformedURLException {
     if (parameterKeyValue.length == 0) {
-      return new URL("http", "localhost", port, path);
+      return new URL("http", "localhost", PORT, path);
     }
     if (parameterKeyValue.length % 2 == 1) {
       throw new InvalidParameterException("Expected even number of key/value strings, found "
@@ -96,7 +96,7 @@ public class StorageTestSuite {
           .append('=')
           .append(URLEncoder.encode(parameterKeyValue[i+1], StandardCharsets.UTF_8.name()));
       }
-      return new URL("http", "localhost", port, completePath.toString());
+      return new URL("http", "localhost", PORT, completePath.toString());
     } catch (UnsupportedEncodingException e) {
       throw new RuntimeException(e);
     }
@@ -154,11 +154,9 @@ public class StorageTestSuite {
         assert false;
     }
 
-    port = NetworkUtils.nextFreePort();
-
     DeploymentOptions options = new DeploymentOptions();
 
-    options.setConfig(new JsonObject().put("http.port", port));
+    options.setConfig(new JsonObject().put("http.port", PORT));
     options.setWorker(true);
 
     startVerticle(options);

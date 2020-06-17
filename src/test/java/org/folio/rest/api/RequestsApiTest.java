@@ -11,6 +11,10 @@ import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_AWAITIN
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_AWAITING_PICKUP;
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_IN_TRANSIT;
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET_FILLED;
+import static org.folio.rest.support.clients.CqlQuery.exactMatch;
+import static org.folio.rest.support.clients.CqlQuery.startsWith;
+import static org.folio.rest.support.matchers.CollectionMatchers.hasItemLike;
+import static org.folio.rest.support.matchers.CollectionMatchers.hasItemsLike;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.equivalentTo;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
@@ -18,6 +22,7 @@ import static org.folio.rest.support.matchers.ValidationResponseMatchers.isValid
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
@@ -36,6 +41,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.jaxrs.model.Tags;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.IndividualResource;
@@ -46,6 +52,8 @@ import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.TextResponse;
 import org.folio.rest.support.builders.RequestItemSummary;
 import org.folio.rest.support.builders.RequestRequestBuilder;
+import org.folio.rest.support.clients.ResourceClient;
+import org.folio.rest.support.spring.TestContextConfiguration;
 import org.folio.util.StringUtil;
 import org.hamcrest.junit.MatcherAssert;
 import org.joda.time.DateTime;
@@ -54,8 +62,14 @@ import org.joda.time.Seconds;
 import org.joda.time.format.ISODateTimeFormat;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.rules.SpringClassRule;
+import org.springframework.test.context.junit4.rules.SpringMethodRule;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -63,12 +77,21 @@ import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 
 @RunWith(JUnitParamsRunner.class)
+@ContextConfiguration(classes = TestContextConfiguration.class)
 public class RequestsApiTest extends ApiTests {
 
   private final String METADATA_PROPERTY = "metadata";
   private static final String REQUEST_STORAGE_URL = "/request-storage/requests";
   private static final String CANCEL_REASON_URL = "/cancellation-reason-storage/cancellation-reasons";
   private static final String REQUEST_TABLE = "request";
+
+  @ClassRule
+  public static final SpringClassRule classRule = new SpringClassRule();
+  @Rule
+  public final SpringMethodRule methodRule = new SpringMethodRule();
+
+  @Autowired
+  public ResourceClient<Request> requestClient;
 
   @Before
   public void beforeEach()
@@ -771,7 +794,7 @@ public class RequestsApiTest extends ApiTests {
       .create(),
       requestStorageUrl());
 
-    JsonObject getAfterCreateResponse = getById(requestStorageUrl(String.format("/%s", id)));;
+    JsonObject getAfterCreateResponse = getById(requestStorageUrl(String.format("/%s", id)));
 
     CompletableFuture<TextResponse> updateCompleted = new CompletableFuture<>();
 
@@ -1712,6 +1735,77 @@ public class RequestsApiTest extends ApiTests {
     assertThat(isbnRequests.size(), is(2));
     assertThat(isbnRequests.get(0).getString("id"), is(nodRequestId.toString()));
     assertThat(isbnRequests.get(1).getString("id"), is(smallAngryPlanetRequestId.toString()));
+  }
+
+  @Test
+  public void canFilterByPickupServicePointId() {
+    final String firstServicePointId = UUID.randomUUID().toString();
+    final String secondServicePointId = UUID.randomUUID().toString();
+
+    final Request firstRequest = holdShelfOpenRequest()
+      .withPickupServicePointId(firstServicePointId);
+
+    final Request secondRequest = holdShelfOpenRequest()
+      .withPickupServicePointId(secondServicePointId);
+
+    requestClient.create(firstRequest);
+    requestClient.create(secondRequest);
+
+    final List<Request> requestsForServicePoint = requestClient
+      .getMany(exactMatch("pickupServicePointId", firstServicePointId));
+
+    assertThat(requestsForServicePoint, hasSize(1));
+    assertThat(requestsForServicePoint, hasItemLike(firstRequest));
+  }
+
+  @Test
+  public void canFilterByRequesterId() {
+    final String firstRequesterId = UUID.randomUUID().toString();
+    final String secondRequesterId = UUID.randomUUID().toString();
+
+    final Request firstRequest = holdShelfOpenRequest().withRequesterId(firstRequesterId);
+    final Request secondRequest = holdShelfOpenRequest().withRequesterId(secondRequesterId);
+
+    requestClient.create(firstRequest);
+    requestClient.create(secondRequest);
+
+    final List<Request> requestsForSecondRequester = requestClient
+      .getMany(exactMatch("requesterId", secondRequesterId));
+
+    assertThat(requestsForSecondRequester, hasSize(1));
+    assertThat(requestsForSecondRequester, hasItemLike(secondRequest));
+  }
+
+  @Test
+  public void canFetchAllOpenRequests() {
+    final Request notYetFilledRequest = holdShelfOpenRequest();
+
+    final Request awaitingPickupRequest = holdShelfOpenRequest()
+      .withStatus(Request.Status.OPEN_AWAITING_PICKUP);
+
+    final Request closedRequest = holdShelfOpenRequest()
+      .withStatus(Request.Status.CLOSED_CANCELLED);
+
+    requestClient.create(notYetFilledRequest);
+    requestClient.create(awaitingPickupRequest);
+    requestClient.create(closedRequest);
+
+    final List<Request> allOpenRequests = requestClient
+      .getMany(startsWith("status", "Open"));
+
+    assertThat(allOpenRequests, hasSize(2));
+    assertThat(allOpenRequests, hasItemsLike(awaitingPickupRequest, notYetFilledRequest));
+  }
+
+  private Request holdShelfOpenRequest() {
+    return new Request()
+      .withStatus(Request.Status.OPEN_NOT_YET_FILLED)
+      .withFulfilmentPreference(Request.FulfilmentPreference.HOLD_SHELF)
+      .withRequesterId(UUID.randomUUID().toString())
+      .withItemId(UUID.randomUUID().toString())
+      .withRequestType(Request.RequestType.HOLD)
+      .withRequestDate(DateTime.now(DateTimeZone.UTC).toDate())
+      .withPickupServicePointId(UUID.randomUUID().toString());
   }
 
   private IndividualResource createCancellationReason(

@@ -2,13 +2,22 @@ package org.folio.rest.api;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.jaxrs.model.NoticeConfig.Format.EMAIL;
+import static org.folio.rest.jaxrs.model.NoticeConfig.Timing.UPON_AT;
+import static org.folio.rest.jaxrs.model.ScheduledNotice.TriggeringEvent.HOLD_EXPIRATION;
+import static org.folio.rest.jaxrs.model.ScheduledNotice.TriggeringEvent.REQUEST_EXPIRATION;
+import static org.folio.rest.support.clients.CqlQuery.exactMatch;
+import static org.folio.rest.support.clients.CqlQuery.lessThen;
+import static org.folio.rest.support.matchers.CollectionMatchers.hasItemLike;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.core.Is.is;
 import static org.joda.time.DateTimeZone.UTC;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -23,12 +32,20 @@ import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.clients.ResourceClient;
+import org.folio.rest.support.spring.TestContextConfiguration;
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import io.vertx.core.json.JsonObject;
 
+@RunWith(SpringRunner.class)
+@ContextConfiguration(classes = TestContextConfiguration.class)
 public class ScheduledNoticesAPITest extends ApiTests {
 
   private static final RecurringPeriod ONE_DAY_PERIOD = new RecurringPeriod()
@@ -38,6 +55,9 @@ public class ScheduledNoticesAPITest extends ApiTests {
   private static final RecurringPeriod ONE_MONTH_PERIOD = new RecurringPeriod()
     .withDuration(1)
     .withIntervalId(RecurringPeriod.IntervalId.MONTHS);
+
+  @Autowired
+  private ResourceClient<ScheduledNotice> scheduledNoticeClient;
 
   @Before
   public void beforeEach() throws MalformedURLException {
@@ -200,7 +220,7 @@ public class ScheduledNoticesAPITest extends ApiTests {
     TimeoutException {
 
     String noticeId = createScheduledNotice(NoticeConfig.Timing.BEFORE, ONE_DAY_PERIOD,
-      UUID.randomUUID().toString(), NoticeConfig.Format.EMAIL).getId();
+      UUID.randomUUID().toString(), EMAIL).getId();
 
     RecurringPeriod period = new RecurringPeriod()
       .withDuration(1)
@@ -235,7 +255,7 @@ public class ScheduledNoticesAPITest extends ApiTests {
     ExecutionException {
 
     String noticeId = createScheduledNotice(NoticeConfig.Timing.BEFORE, ONE_DAY_PERIOD,
-      UUID.randomUUID().toString(), NoticeConfig.Format.EMAIL).getId();
+      UUID.randomUUID().toString(), EMAIL).getId();
 
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
     client.delete(scheduledNoticesStorageUrl("/scheduled-notices/" + noticeId), TENANT_ID, ResponseHandler.empty(deleteCompleted));
@@ -253,7 +273,7 @@ public class ScheduledNoticesAPITest extends ApiTests {
     ExecutionException {
 
     createScheduledNotice(NoticeConfig.Timing.BEFORE, ONE_DAY_PERIOD,
-      UUID.randomUUID().toString(), NoticeConfig.Format.EMAIL);
+      UUID.randomUUID().toString(), EMAIL);
 
     createScheduledNotice(NoticeConfig.Timing.AFTER, ONE_MONTH_PERIOD,
       UUID.randomUUID().toString(), NoticeConfig.Format.SMS);
@@ -277,12 +297,12 @@ public class ScheduledNoticesAPITest extends ApiTests {
     String templateId = UUID.randomUUID().toString();
 
     createScheduledNotice(NoticeConfig.Timing.BEFORE, ONE_DAY_PERIOD,
-      UUID.randomUUID().toString(), NoticeConfig.Format.EMAIL);
+      UUID.randomUUID().toString(), EMAIL);
 
     createScheduledNotice(NoticeConfig.Timing.AFTER, ONE_DAY_PERIOD,
       templateId, NoticeConfig.Format.SMS);
 
-    createScheduledNotice(NoticeConfig.Timing.UPON_AT, ONE_MONTH_PERIOD,
+    createScheduledNotice(UPON_AT, ONE_MONTH_PERIOD,
       templateId, NoticeConfig.Format.SMS);
 
     String query = "query=noticeConfig.templateId=" + templateId;
@@ -321,6 +341,97 @@ public class ScheduledNoticesAPITest extends ApiTests {
     Response response = deleteCompleted.get(5, SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
+  }
+
+  @Test
+  public void canFilterNoticesByNextRunTime() {
+    final Date firstNextRunTime = DateTime.parse("2020-06-16T08:50:54.306+0000").toDate();
+    final Date secondNextRunTime = DateTime.parse("2020-06-19T08:50:54.306+0000").toDate();
+
+    final ScheduledNotice scheduledNoticeToRunOn16 = holdExpirationEmailNotice()
+      .withNextRunTime(firstNextRunTime);
+
+    final ScheduledNotice scheduledNoticeToRunOn19 = holdExpirationEmailNotice()
+      .withNextRunTime(secondNextRunTime);
+
+    scheduledNoticeClient.create(scheduledNoticeToRunOn16);
+    scheduledNoticeClient.create(scheduledNoticeToRunOn19);
+
+    final List<ScheduledNotice> filteredNotices = scheduledNoticeClient
+      .getMany(lessThen("nextRunTime", "2020-06-17"));
+
+    assertThat(filteredNotices, hasSize(1));
+    assertThat(filteredNotices, hasItemLike(scheduledNoticeToRunOn16));
+  }
+
+  @Test
+  public void canFilterNoticesByConfigSendInRealTime() {
+    final NoticeConfig sendInRealTimeConfig = emailUponAtConfig().withSendInRealTime(true);
+    final NoticeConfig doNotSendInRealTimeConfig = emailUponAtConfig().withSendInRealTime(false);
+
+    final ScheduledNotice sendInRealTimeNotice = holdExpirationEmailNotice()
+      .withNoticeConfig(sendInRealTimeConfig);
+    final ScheduledNotice doNotSendInRealTimeNotice = holdExpirationEmailNotice()
+      .withNoticeConfig(doNotSendInRealTimeConfig);
+
+    scheduledNoticeClient.create(sendInRealTimeNotice);
+    scheduledNoticeClient.create(doNotSendInRealTimeNotice);
+
+    final List<ScheduledNotice> sendInRealTimeNotices = scheduledNoticeClient
+      .getMany(exactMatch("noticeConfig.sendInRealTime", true));
+
+    assertThat(sendInRealTimeNotices, hasSize(1));
+    assertThat(sendInRealTimeNotices, hasItemLike(sendInRealTimeNotice));
+  }
+
+  @Test
+  public void canFilterNoticesByTriggeringEvent() {
+    final ScheduledNotice holdExpirationNotice = holdExpirationEmailNotice();
+    final ScheduledNotice requestExpirationNotice = holdExpirationEmailNotice()
+      .withTriggeringEvent(REQUEST_EXPIRATION);
+
+    scheduledNoticeClient.create(holdExpirationNotice);
+    scheduledNoticeClient.create(requestExpirationNotice);
+
+    final List<ScheduledNotice> holdExpirationNotices = scheduledNoticeClient
+      .getMany(exactMatch("triggeringEvent", "Hold expiration"));
+
+    assertThat(holdExpirationNotices, hasSize(1));
+    assertThat(holdExpirationNotices, hasItemLike(holdExpirationNotice));
+  }
+
+  @Test
+  public void canFilterNoticesByRequestId() {
+    final String holdRequestId = UUID.randomUUID().toString();
+    final String recallRequestId = UUID.randomUUID().toString();
+
+    final ScheduledNotice holdRequestNotice = holdExpirationEmailNotice()
+      .withRequestId(holdRequestId);
+    final ScheduledNotice recallRequestNotice = holdExpirationEmailNotice()
+      .withRequestId(recallRequestId);
+
+    scheduledNoticeClient.create(holdRequestNotice);
+    scheduledNoticeClient.create(recallRequestNotice);
+
+    final List<ScheduledNotice> holdRequestNotices = scheduledNoticeClient
+      .getMany(exactMatch("requestId", holdRequestId));
+
+    assertThat(holdRequestNotices, hasSize(1));
+    assertThat(holdRequestNotices, hasItemLike(holdRequestNotice));
+  }
+
+  private NoticeConfig emailUponAtConfig() {
+    return new NoticeConfig()
+      .withTiming(UPON_AT)
+      .withTemplateId(UUID.randomUUID().toString())
+      .withFormat(EMAIL);
+  }
+
+  private ScheduledNotice holdExpirationEmailNotice() {
+    return new ScheduledNotice()
+      .withNextRunTime(DateTime.now(UTC).toDate())
+      .withTriggeringEvent(HOLD_EXPIRATION)
+      .withNoticeConfig(emailUponAtConfig());
   }
 
   private JsonResponse postScheduledNotice(JsonObject entity) throws MalformedURLException,
