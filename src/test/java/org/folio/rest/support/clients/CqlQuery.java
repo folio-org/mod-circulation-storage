@@ -39,7 +39,11 @@ public final class CqlQuery {
       return value;
     }
 
-    return value.toString().replace("\\", "\\\\")
-      .replace("\"", "\\\"");
+    return value.toString()
+      .replace("\\", "\\\\")
+      .replace("\"", "\\\"")
+      .replace("*", "\\*")
+      .replace("?", "\\?")
+      .replace("^", "\\^");
   }
 }
