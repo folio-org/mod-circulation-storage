@@ -2,8 +2,6 @@ package org.folio.rest.support.clients;
 
 import java.util.stream.Stream;
 
-import org.apache.commons.lang3.StringUtils;
-
 public final class CqlQuery {
   private final String query;
 
@@ -35,8 +33,8 @@ public final class CqlQuery {
   }
 
   private static Object maskCqlValue(Object value) {
-    if (!(value instanceof String) || StringUtils.isBlank((String) value)) {
-      return value;
+    if (value == null) {
+      return null;
     }
 
     return value.toString()
