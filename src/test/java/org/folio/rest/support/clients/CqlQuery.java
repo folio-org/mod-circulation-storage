@@ -13,10 +13,6 @@ public final class CqlQuery {
     return fromTemplate("%s==\"%s\"", propertyName, value);
   }
 
-  public static CqlQuery startsWith(String propertyName, Object value) {
-    return fromTemplate("%s=\"%s\"", propertyName, value);
-  }
-
   public static CqlQuery lessThen(String propertyName, Object bound) {
     return fromTemplate("%s<\"%s\"", propertyName, bound);
   }

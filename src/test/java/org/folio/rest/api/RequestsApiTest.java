@@ -12,7 +12,7 @@ import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_AWAITIN
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_IN_TRANSIT;
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET_FILLED;
 import static org.folio.rest.support.clients.CqlQuery.exactMatch;
-import static org.folio.rest.support.clients.CqlQuery.startsWith;
+import static org.folio.rest.support.clients.CqlQuery.fromTemplate;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.equivalentTo;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
@@ -1794,7 +1794,7 @@ public class RequestsApiTest extends ApiTests {
     requestClient.create(closedRequest);
 
     final List<RequestDto> allOpenRequests = requestClient
-      .getMany(startsWith("status", "Open"));
+      .getMany(fromTemplate("status==\"Open*\""));
 
     assertThat(allOpenRequests, hasSize(2));
     assertThat(allOpenRequests, hasItems(awaitingPickupRequest, notYetFilledRequest));
