@@ -13,8 +13,6 @@ import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_IN_TRAN
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET_FILLED;
 import static org.folio.rest.support.clients.CqlQuery.exactMatch;
 import static org.folio.rest.support.clients.CqlQuery.startsWith;
-import static org.folio.rest.support.matchers.CollectionMatchers.hasItemLike;
-import static org.folio.rest.support.matchers.CollectionMatchers.hasItemsLike;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.equivalentTo;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
@@ -22,6 +20,8 @@ import static org.folio.rest.support.matchers.ValidationResponseMatchers.isValid
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
@@ -41,7 +41,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.jaxrs.model.Tags;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.IndividualResource;
@@ -53,6 +52,7 @@ import org.folio.rest.support.TextResponse;
 import org.folio.rest.support.builders.RequestItemSummary;
 import org.folio.rest.support.builders.RequestRequestBuilder;
 import org.folio.rest.support.clients.ResourceClient;
+import org.folio.rest.support.dto.RequestDto;
 import org.folio.rest.support.spring.TestContextConfiguration;
 import org.folio.util.StringUtil;
 import org.hamcrest.junit.MatcherAssert;
@@ -91,7 +91,7 @@ public class RequestsApiTest extends ApiTests {
   public final SpringMethodRule methodRule = new SpringMethodRule();
 
   @Autowired
-  public ResourceClient<Request> requestClient;
+  public ResourceClient<RequestDto> requestClient;
 
   @Before
   public void beforeEach()
@@ -1742,20 +1742,21 @@ public class RequestsApiTest extends ApiTests {
     final String firstServicePointId = UUID.randomUUID().toString();
     final String secondServicePointId = UUID.randomUUID().toString();
 
-    final Request firstRequest = holdShelfOpenRequest()
-      .withPickupServicePointId(firstServicePointId);
+    final RequestDto firstRequest = holdShelfOpenRequest()
+      .pickupServicePointId(firstServicePointId)
+      .build();
 
-    final Request secondRequest = holdShelfOpenRequest()
-      .withPickupServicePointId(secondServicePointId);
+    final RequestDto secondRequest = holdShelfOpenRequest()
+      .pickupServicePointId(secondServicePointId).build();
 
     requestClient.create(firstRequest);
     requestClient.create(secondRequest);
 
-    final List<Request> requestsForServicePoint = requestClient
+    final List<RequestDto> requestsForServicePoint = requestClient
       .getMany(exactMatch("pickupServicePointId", firstServicePointId));
 
     assertThat(requestsForServicePoint, hasSize(1));
-    assertThat(requestsForServicePoint, hasItemLike(firstRequest));
+    assertThat(requestsForServicePoint, hasItem(firstRequest));
   }
 
   @Test
@@ -1763,49 +1764,48 @@ public class RequestsApiTest extends ApiTests {
     final String firstRequesterId = UUID.randomUUID().toString();
     final String secondRequesterId = UUID.randomUUID().toString();
 
-    final Request firstRequest = holdShelfOpenRequest().withRequesterId(firstRequesterId);
-    final Request secondRequest = holdShelfOpenRequest().withRequesterId(secondRequesterId);
+    final RequestDto firstRequest = holdShelfOpenRequest()
+      .requesterId(firstRequesterId).build();
+    final RequestDto secondRequest = holdShelfOpenRequest()
+      .requesterId(secondRequesterId).build();
 
     requestClient.create(firstRequest);
     requestClient.create(secondRequest);
 
-    final List<Request> requestsForSecondRequester = requestClient
+    final List<RequestDto> requestsForSecondRequester = requestClient
       .getMany(exactMatch("requesterId", secondRequesterId));
 
     assertThat(requestsForSecondRequester, hasSize(1));
-    assertThat(requestsForSecondRequester, hasItemLike(secondRequest));
+    assertThat(requestsForSecondRequester, hasItem(secondRequest));
   }
 
   @Test
   public void canFetchAllOpenRequests() {
-    final Request notYetFilledRequest = holdShelfOpenRequest();
+    final RequestDto notYetFilledRequest = holdShelfOpenRequest().build();
 
-    final Request awaitingPickupRequest = holdShelfOpenRequest()
-      .withStatus(Request.Status.OPEN_AWAITING_PICKUP);
+    final RequestDto awaitingPickupRequest = holdShelfOpenRequest()
+      .status("Open - Awaiting pickup").build();
 
-    final Request closedRequest = holdShelfOpenRequest()
-      .withStatus(Request.Status.CLOSED_CANCELLED);
+    final RequestDto closedRequest = holdShelfOpenRequest()
+      .status("Closed - Cancelled").build();
 
     requestClient.create(notYetFilledRequest);
     requestClient.create(awaitingPickupRequest);
     requestClient.create(closedRequest);
 
-    final List<Request> allOpenRequests = requestClient
+    final List<RequestDto> allOpenRequests = requestClient
       .getMany(startsWith("status", "Open"));
 
     assertThat(allOpenRequests, hasSize(2));
-    assertThat(allOpenRequests, hasItemsLike(awaitingPickupRequest, notYetFilledRequest));
+    assertThat(allOpenRequests, hasItems(awaitingPickupRequest, notYetFilledRequest));
   }
 
-  private Request holdShelfOpenRequest() {
-    return new Request()
-      .withStatus(Request.Status.OPEN_NOT_YET_FILLED)
-      .withFulfilmentPreference(Request.FulfilmentPreference.HOLD_SHELF)
-      .withRequesterId(UUID.randomUUID().toString())
-      .withItemId(UUID.randomUUID().toString())
-      .withRequestType(Request.RequestType.HOLD)
-      .withRequestDate(DateTime.now(DateTimeZone.UTC).toDate())
-      .withPickupServicePointId(UUID.randomUUID().toString());
+  private RequestDto.RequestDtoBuilder holdShelfOpenRequest() {
+    return RequestDto.builder()
+      .requesterId(UUID.randomUUID().toString())
+      .itemId(UUID.randomUUID().toString())
+      .requestType("Hold")
+      .pickupServicePointId(UUID.randomUUID().toString());
   }
 
   private IndividualResource createCancellationReason(

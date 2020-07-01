@@ -7,11 +7,11 @@ import java.util.Base64;
 import java.util.UUID;
 
 import org.folio.rest.api.StorageTestSuite;
-import org.folio.rest.jaxrs.model.Request;
-import org.folio.rest.jaxrs.model.ScheduledNotice;
 import org.folio.rest.support.clients.OkapiHeaders;
 import org.folio.rest.support.clients.ResourceClient;
 import org.folio.rest.support.clients.RestAssuredClient;
+import org.folio.rest.support.dto.RequestDto;
+import org.folio.rest.support.dto.ScheduledNoticeDto;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -56,15 +56,15 @@ public class TestContextConfiguration {
   }
 
   @Bean
-  public ResourceClient<Request> requestClient(RestAssuredClient restAssuredClient) {
+  public ResourceClient<RequestDto> requestClient(RestAssuredClient restAssuredClient) {
     return new ResourceClient<>("/request-storage/requests", "requests",
-      restAssuredClient, Request.class);
+      restAssuredClient, RequestDto.class);
   }
 
   @Bean
-  public ResourceClient<ScheduledNotice> scheduledNoticeClient(RestAssuredClient restAssuredClient) {
+  public ResourceClient<ScheduledNoticeDto> scheduledNoticeClient(RestAssuredClient restAssuredClient) {
     return new ResourceClient<>("/scheduled-notice-storage/scheduled-notices",
-      "scheduledNotices", restAssuredClient, ScheduledNotice.class);
+      "scheduledNotices", restAssuredClient, ScheduledNoticeDto.class);
   }
 
   private String generateToken() {
