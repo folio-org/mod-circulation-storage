@@ -156,7 +156,7 @@
         },
         {
           "fieldName": "status",
-          "tOps": "ADD",
+          "tOps": "DELETE",
           "caseSensitive": false,
           "removeAccents": true
         }
@@ -167,6 +167,24 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
+        },
+        {
+          "fieldName": "pickupServicePointId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
+          "fieldName": "requesterId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
+          "fieldName": "status",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
         }
       ],
       "customSnippetPath": "requestUpdateTrigger.sql"
@@ -257,7 +275,33 @@
     {
       "tableName": "scheduled_notice",
       "withMetadata": true,
-      "withAuditing": false
+      "withAuditing": false,
+      "index": [
+        {
+          "fieldName": "nextRunTime",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
+          "fieldName": "noticeConfig.sendInRealTime",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
+          "fieldName": "triggeringEvent",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
+          "fieldName": "requestId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        }
+      ]
     },
     {
       "tableName": "patron_action_session",
