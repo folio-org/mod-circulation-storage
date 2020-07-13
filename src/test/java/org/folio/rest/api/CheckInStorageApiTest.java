@@ -81,7 +81,7 @@ public class CheckInStorageApiTest extends ApiTests {
 
     JsonResponse createResponse = checkInClient.attemptCreate(checkInToCreate);
 
-    assertThat(createResponse, isValidationResponseWhich(hasMessage("may not be null")));
+    assertThat(createResponse, isValidationResponseWhich(hasMessage("must not be null")));
     assertThat(createResponse, isValidationResponseWhich(hasParameter("occurredDateTime", "null")));
     assertThat(checkInClient.attemptGetById(recordId).getStatusCode(), is(404));
   }

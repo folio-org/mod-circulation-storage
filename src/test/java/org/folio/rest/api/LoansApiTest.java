@@ -446,7 +446,7 @@ public class LoansApiTest extends ApiTests {
     JsonResponse response = loansClient.attemptCreate(loanRequest);
 
     assertThat(response, isValidationResponseWhich(allOf(
-      anyOf(hasMessage("may not be null"), hasMessage("darf nicht null sein")),  // any server language
+      anyOf(hasMessage("must not be null"), hasMessage("darf nicht null sein")),  // any server language
       hasParameter("action", "null"))));
   }
 
