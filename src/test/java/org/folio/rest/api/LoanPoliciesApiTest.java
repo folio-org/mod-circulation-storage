@@ -13,6 +13,7 @@ import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.ma
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
+import static org.hamcrest.core.StringContains.containsString;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -190,6 +191,19 @@ public class LoanPoliciesApiTest extends ApiTests {
     TextResponse updateResponse = updateCompleted.get(5, TimeUnit.SECONDS);
     assertThat("update loanPolicy: set alternateFixedDueDateScheduleId = non existent id",
         updateResponse, matchesBadRequest());
+
+    // loanable==false but loansPolicy exist
+    JsonObject loanPolicyRequest9 = new JsonObject()
+        .put("name", "9").put("loanable", false).put("renewable", false)
+        .put("loansPolicy", new JsonObject());
+    CompletableFuture<TextResponse> completed9 = new CompletableFuture<>();
+    client.post(loanPolicyStorageUrl(),
+      loanPolicyRequest9, StorageTestSuite.TENANT_ID,
+      ResponseHandler.text(completed9));
+    TextResponse response9 = completed9.get(5, TimeUnit.SECONDS);
+    assertThat("loanable==false but loansPolicy exist", response9, matchesUnprocessableEntity());
+    // TODO: consider returning a better message
+    assertThat(response9.getBody(), containsString("Fixed due date"));
     ////////////////////////////////////////////////////////
 
     //delete loan policy //////////////////
