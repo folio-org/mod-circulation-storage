@@ -15,7 +15,7 @@ import org.hamcrest.core.IsCollectionContaining;
 import io.vertx.core.json.JsonObject;
 
 public class ValidationErrorMatchers {
-  static TypeSafeDiagnosingMatcher<JsonObject> hasErrorWith(Matcher<JsonObject> matcher) {
+  public static TypeSafeDiagnosingMatcher<JsonObject> hasErrorWith(Matcher<JsonObject> matcher) {
     return new TypeSafeDiagnosingMatcher<JsonObject>() {
       @Override
       public void describeTo(Description description) {

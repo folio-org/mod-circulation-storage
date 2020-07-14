@@ -10,11 +10,11 @@ import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.ma
 import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.matchesNoContent;
 import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.matchesNotFound;
 import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.matchesUnprocessableEntity;
+import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasErrorWith;
+import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessageContaining;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
-import static org.hamcrest.core.StringContains.containsString;
-
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
@@ -99,21 +99,6 @@ public class LoanPoliciesApiTest extends ApiTests {
       lpResponse, matchesCreated());
     ////////////////////////////////////////////////////////
 
-    ////////////validation error - renewable = true + different period = true + fixed -> needs fk
-    CompletableFuture<JsonResponse> createpdateV1Completed = new CompletableFuture<>();
-    JsonObject loanPolicyRequest3 = defaultRollingPolicy()
-        .withId(id1)
-        .withName("Example Loan Policy")
-        .withDescription("An example loan policy")
-        .create();
-    loanPolicyRequest3.getJsonObject("loansPolicy").put("profileId", "Fixed");
-    client.put(loanPolicyStorageUrl("/"+id1), loanPolicyRequest3, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(createpdateV1Completed));
-    JsonResponse updateV1response = createpdateV1Completed.get(5, TimeUnit.SECONDS);
-    assertThat(String.format("Failed to create due date: %s", updateV1response.getBody()),
-      updateV1response, matchesUnprocessableEntity());
-    //////////////////////////////////////////////////////////////
-
     ///////////non-existent foreign key
     UUID id2 = UUID.randomUUID();
     JsonObject badLoanPolicyRequest = defaultRollingPolicy()
@@ -192,20 +177,6 @@ public class LoanPoliciesApiTest extends ApiTests {
     assertThat("update loanPolicy: set alternateFixedDueDateScheduleId = non existent id",
         updateResponse, matchesBadRequest());
 
-    // loanable==false but loansPolicy exist
-    JsonObject loanPolicyRequest9 = new JsonObject()
-        .put("name", "9").put("loanable", false).put("renewable", false)
-        .put("loansPolicy", new JsonObject());
-    CompletableFuture<TextResponse> completed9 = new CompletableFuture<>();
-    client.post(loanPolicyStorageUrl(),
-      loanPolicyRequest9, StorageTestSuite.TENANT_ID,
-      ResponseHandler.text(completed9));
-    TextResponse response9 = completed9.get(5, TimeUnit.SECONDS);
-    assertThat("loanable==false but loansPolicy exist", response9, matchesUnprocessableEntity());
-    // TODO: consider returning a better message
-    assertThat(response9.getBody(), containsString("Fixed due date"));
-    ////////////////////////////////////////////////////////
-
     //delete loan policy //////////////////
     System.out.println("Running: DELETE " + loanPolicyStorageUrl("/"+id2));
     CompletableFuture<Response> delCompleted2 = new CompletableFuture<>();
@@ -246,7 +217,33 @@ public class LoanPoliciesApiTest extends ApiTests {
       delAllCompleted4Response.getStatusCode(), isNoContent());
     //////////////////////////////////////////////////////////////////////////////////////////
 
-    }
+  }
+
+  @Test
+  public void cannotUpdateWhenFixedIsRenewable() throws Exception {
+    UUID id = UUID.randomUUID();
+    CompletableFuture<JsonResponse> completed = new CompletableFuture<>();
+    JsonObject loanPolicy = defaultRollingPolicy().withId(id).create();
+    createLoanPolicy(loanPolicy);
+    loanPolicy.getJsonObject("loansPolicy").put("profileId", "Fixed");
+    client.put(loanPolicyStorageUrl("/" + id), loanPolicy, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(completed));
+    JsonResponse response = completed.get(5, TimeUnit.SECONDS);
+    String message = String.format("update when fixed is renewable, PUT request=%s, response=%s",
+        loanPolicy.encodePrettily(), response.getJson().encodePrettily());
+    assertThat(message, response, matchesUnprocessableEntity());
+    assertThat(message, response.getJson(),
+        hasErrorWith(hasMessageContaining("profile is Fixed")));
+  }
+
+  @Test
+  public void cannotCreateLoanPolicyWithLoanableFalseAndLoansPolicy() {
+    JsonObject loanPolicyRequest = new JsonObject()
+        .put("name", "9").put("loanable", false).put("renewable", false)
+        .put("loansPolicy", new JsonObject());
+    assertThat(postLoanPolicyWith422(loanPolicyRequest),
+        hasErrorWith(hasMessageContaining("Fixed due date")));
+  }
 
   @Test
   public void canCreateALoanPolicy()
@@ -943,6 +940,29 @@ public class LoanPoliciesApiTest extends ApiTests {
       postResponse, matchesCreated());
 
     return new IndividualResource(postResponse);
+  }
+
+  /**
+   * Assert that a POST of the loanPolicyRequest returns a 422 HTTP status code.
+   * @return the body with the validation failure message
+   */
+  private JsonObject postLoanPolicyWith422(JsonObject loanPolicyRequest) {
+    try {
+      CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+      client.post(loanPolicyStorageUrl(),
+          loanPolicyRequest, StorageTestSuite.TENANT_ID,
+          ResponseHandler.json(createCompleted));
+      JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+
+      assertThat(String.format("Expected validation failure when creating loan policy: request=%s, response=%s",
+          loanPolicyRequest.encodePrettily(), postResponse.getBody()),
+          postResponse, matchesUnprocessableEntity());
+
+      return postResponse.getJson();
+    } catch (MalformedURLException | InterruptedException | ExecutionException | TimeoutException e) {
+      throw new RuntimeException(e.getMessage() + ": " + loanPolicyRequest.encodePrettily(), e);
+    }
   }
 
   private JsonResponse getById(UUID id)

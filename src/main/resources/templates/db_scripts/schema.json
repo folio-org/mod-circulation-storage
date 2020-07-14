@@ -150,7 +150,7 @@
         },
         {
           "fieldName": "requestType",
-          "tOps": "ADD",
+          "tOps": "DELETE",
           "caseSensitive": false,
           "removeAccents": true
         },
@@ -176,6 +176,12 @@
         },
         {
           "fieldName": "requesterId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
+          "fieldName": "requestType",
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": false
