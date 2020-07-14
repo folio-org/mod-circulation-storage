@@ -127,7 +127,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorage {
   /**
    * @return true if bool is TRUE, false if bool is FALSE or null
    */
-  private boolean is(Boolean bool) {
+  private boolean isTrue(Boolean bool) {
     return Boolean.TRUE.equals(bool);
   }
 
