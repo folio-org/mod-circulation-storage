@@ -134,16 +134,16 @@ public class LoanPoliciesAPI implements LoanPolicyStorage {
 
   void validate(LoanPolicy loanPolicy, Consumer<Errors> runIfInvalid, Runnable runIfValid) {
     final boolean isFixed =
-        loanPolicy.getLoansPolicy() != null &&
-        loanPolicy.getLoansPolicy().getProfileId() != null &&
-        loanPolicy.getLoansPolicy().getProfileId().equalsIgnoreCase("Fixed");
+        loanPolicy.getLoansPolicy() != null
+        && loanPolicy.getLoansPolicy().getProfileId() != null
+        && loanPolicy.getLoansPolicy().getProfileId().equalsIgnoreCase("Fixed");
 
     // alternate fixed due date
-    if ((isTrue(loanPolicy.getRenewable()) &&
-         loanPolicy.getRenewalsPolicy() != null &&
-         isTrue(loanPolicy.getRenewalsPolicy().getDifferentPeriod()) &&
-         isFixed &&
-         loanPolicy.getRenewalsPolicy().getAlternateFixedDueDateScheduleId() == null
+    if ((isTrue(loanPolicy.getRenewable())
+         && loanPolicy.getRenewalsPolicy() != null
+         && isTrue(loanPolicy.getRenewalsPolicy().getDifferentPeriod())
+         && isFixed
+         && loanPolicy.getRenewalsPolicy().getAlternateFixedDueDateScheduleId() == null
         )
         ||
         ( loanPolicy.getRenewalsPolicy() != null
@@ -166,16 +166,16 @@ public class LoanPoliciesAPI implements LoanPolicyStorage {
     }
 
     // fixed profile id
-    if ( (isTrue(loanPolicy.getLoanable()) &&
-          isFixed &&
-          loanPolicy.getLoansPolicy().getFixedDueDateScheduleId() == null
+    if ( (isTrue(loanPolicy.getLoanable())
+          && isFixed
+          && loanPolicy.getLoansPolicy().getFixedDueDateScheduleId() == null
          )
          ||
          // TODO: consider adjusting the message
-         (! isTrue(loanPolicy.getLoanable()) &&
-          loanPolicy.getLoansPolicy() != null &&
+         (! isTrue(loanPolicy.getLoanable())
+          && loanPolicy.getLoansPolicy() != nulls
           // TODO: consider removing this last condition
-          loanPolicy.getLoansPolicy().getFixedDueDateScheduleId() == null
+          && loanPolicy.getLoansPolicy().getFixedDueDateScheduleId() == null
          )
         ) {
       String message = "Fixed due date cannot be null if loanable is " +
