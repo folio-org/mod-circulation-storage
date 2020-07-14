@@ -5,6 +5,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import org.folio.rest.annotations.Validate;
+import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.LoanPolicies;
 import org.folio.rest.jaxrs.model.LoanPolicy;
 import org.folio.rest.jaxrs.resource.LoanPolicyStorage;
@@ -12,8 +13,11 @@ import org.folio.rest.persist.MyPgUtil;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.TenantTool;
+import org.folio.rest.tools.utils.ValidationHelper;
 import javax.ws.rs.core.Response;
 import java.util.Map;
+import java.util.function.Consumer;
+
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
 public class LoanPoliciesAPI implements LoanPolicyStorage {
@@ -71,8 +75,9 @@ public class LoanPoliciesAPI implements LoanPolicyStorage {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    PgUtil.post(LOAN_POLICY_TABLE, entity, okapiHeaders, vertxContext,
-        PostLoanPolicyStorageLoanPoliciesResponse.class, asyncResultHandler);
+    validate(entity, errors -> respond422(errors, asyncResultHandler), () ->
+      PgUtil.post(LOAN_POLICY_TABLE, entity, okapiHeaders, vertxContext,
+          PostLoanPolicyStorageLoanPoliciesResponse.class, asyncResultHandler));
   }
 
   @Override
@@ -110,7 +115,107 @@ public class LoanPoliciesAPI implements LoanPolicyStorage {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    MyPgUtil.putUpsert204(LOAN_POLICY_TABLE, entity, loanPolicyId, okapiHeaders, vertxContext,
-        PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse.class, asyncResultHandler);
+    validate(entity, errors -> respond422(errors, asyncResultHandler), () ->
+      MyPgUtil.putUpsert204(LOAN_POLICY_TABLE, entity, loanPolicyId, okapiHeaders, vertxContext,
+          PutLoanPolicyStorageLoanPoliciesByLoanPolicyIdResponse.class, asyncResultHandler));
+  }
+
+  private void respond422(Errors errors, Handler<AsyncResult<Response>> asyncResultHandler) {
+    Response response = Response.status(422).header("Content-Type", "application/json").entity(errors).build();
+    asyncResultHandler.handle(Future.succeededFuture(response));
+  }
+
+  /**
+   * @return true if bool is TRUE, false if bool is FALSE or null
+   */
+  private boolean isTrue(Boolean bool) {
+    return Boolean.TRUE.equals(bool);
+  }
+
+  void validate(LoanPolicy loanPolicy, Consumer<Errors> runIfInvalid, Runnable runIfValid) {
+    final boolean isFixed =
+        loanPolicy.getLoansPolicy() != null
+        && loanPolicy.getLoansPolicy().getProfileId() != null
+        && loanPolicy.getLoansPolicy().getProfileId().equalsIgnoreCase("Fixed");
+
+    // alternate fixed due date
+    if ((isTrue(loanPolicy.getRenewable())
+         && loanPolicy.getRenewalsPolicy() != null
+         && isTrue(loanPolicy.getRenewalsPolicy().getDifferentPeriod())
+         && isFixed
+         && loanPolicy.getRenewalsPolicy().getAlternateFixedDueDateScheduleId() == null
+        )
+        ||
+        ( loanPolicy.getRenewalsPolicy() != null
+          &&
+          ( ! isTrue(loanPolicy.getRenewable()) ||
+            ! isTrue(loanPolicy.getRenewalsPolicy().getDifferentPeriod())
+          )
+          && loanPolicy.getRenewalsPolicy().getAlternateFixedDueDateScheduleId() != null
+       )) {
+      String message =
+          "Alternate fixed due date cannot be " + loanPolicy.getRenewalsPolicy().getAlternateFixedDueDateScheduleId() +
+          " if renewable is " + loanPolicy.getRenewable() +
+          ", different period is " + loanPolicy.getRenewalsPolicy().getDifferentPeriod() +
+          " and profile is " + loanPolicy.getLoansPolicy().getProfileId();
+      runIfInvalid.accept(ValidationHelper.createValidationErrorMessage(
+          "alternateFixedDueDateScheduleId",
+          "" + loanPolicy.getRenewalsPolicy().getAlternateFixedDueDateScheduleId(),
+          message));
+      return;
+    }
+
+    // fixed profile id
+    if ( (isTrue(loanPolicy.getLoanable())
+          && isFixed
+          && loanPolicy.getLoansPolicy().getFixedDueDateScheduleId() == null
+         )
+         ||
+         // TODO: consider adjusting the message
+         (! isTrue(loanPolicy.getLoanable())
+          && loanPolicy.getLoansPolicy() != null
+          // TODO: consider removing this last condition
+          && loanPolicy.getLoansPolicy().getFixedDueDateScheduleId() == null
+         )
+        ) {
+      String message = "Fixed due date cannot be null if loanable is " +
+        loanPolicy.getLoanable() + " and profile is of type fixed";
+      runIfInvalid.accept(ValidationHelper.createValidationErrorMessage(
+          "fixedDueDateScheduleId",
+          "" + loanPolicy.getLoansPolicy().getFixedDueDateScheduleId(),
+          message));
+      return;
+    }
+
+    // alternate renewal loan period
+    if (isFixed
+        && isTrue(loanPolicy.getRenewable())
+        &&        loanPolicy.getRequestManagement() != null
+        &&        loanPolicy.getRequestManagement().getHolds() != null
+        && isTrue(loanPolicy.getRequestManagement().getHolds().getRenewItemsWithRequest())
+        &&        loanPolicy.getRequestManagement().getHolds().getAlternateRenewalLoanPeriod() != null) {
+      String message = "Alternate Renewal Loan Period for Holds is not allowed for policies with Fixed profile";
+      runIfInvalid.accept(ValidationHelper.createValidationErrorMessage(
+          "alternateRenewalLoanPeriod",
+          loanPolicy.getRequestManagement().getHolds().getAlternateRenewalLoanPeriod().toString(),
+          message));
+      return;
+    }
+
+    // renewabls policy period
+    if (isFixed
+        && isTrue(loanPolicy.getRenewable())
+        &&        loanPolicy.getRenewalsPolicy() != null
+        && isTrue(loanPolicy.getRenewalsPolicy().getDifferentPeriod())
+        &&        loanPolicy.getRenewalsPolicy().getPeriod() != null) {
+      String message = "Period in RenewalsPolicy is not allowed for policies with Fixed profile";
+      runIfInvalid.accept(ValidationHelper.createValidationErrorMessage(
+          "period",
+          loanPolicy.getRenewalsPolicy().getPeriod().toString(),
+          message));
+      return;
+    }
+
+    runIfValid.run();
   }
 }
