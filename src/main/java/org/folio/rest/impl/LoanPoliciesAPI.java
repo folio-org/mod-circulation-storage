@@ -173,7 +173,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorage {
          ||
          // TODO: consider adjusting the message
          (! isTrue(loanPolicy.getLoanable())
-          && loanPolicy.getLoansPolicy() != nulls
+          && loanPolicy.getLoansPolicy() != null
           // TODO: consider removing this last condition
           && loanPolicy.getLoansPolicy().getFixedDueDateScheduleId() == null
          )
