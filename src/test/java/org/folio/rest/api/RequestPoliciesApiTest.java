@@ -88,7 +88,7 @@ public class RequestPoliciesApiTest extends ApiTests {
     assertThat(response2, isUnprocessableEntity());
     JsonObject error = extractErrorObject(response2);
     assertThat("unexpected error message", error,
-        anyOf(hasMessage("may not be null"), hasMessage("darf nicht null sein")));  // any server language
+        anyOf(hasMessage("must not be null"), hasMessage("darf nicht null sein")));  // any server language
   }
 
   @Test
@@ -574,7 +574,7 @@ public class RequestPoliciesApiTest extends ApiTests {
 
     JsonObject error = extractErrorObject(response2);
     assertThat("unexpected error message", error,
-        anyOf(hasMessage("may not be null"), hasMessage("darf nicht null sein")));  // any server language
+        anyOf(hasMessage("must not be null"), hasMessage("darf nicht null sein")));  // any server language
   }
 
   @Test
