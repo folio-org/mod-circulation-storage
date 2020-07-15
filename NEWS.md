@@ -1,6 +1,7 @@
 ## 12.0.1 2020-07-15
 
-* Introduces b-tree index for `requestType` property on `request` records CIRCSTORE-219 
+* Introduces b-tree index for `requestType` property on `request` records (CIRCSTORE-219)
+* Upgrades to RAML Module Builder 30.2.4 (CIRCSTORE-220)
 
 ## 12.0.0 2020-06-10
 
