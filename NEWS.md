@@ -1,3 +1,7 @@
+## 12.0.1 2020-07-15
+
+* Introduces b-tree index for `requestType` property on `request` records CIRCSTORE-219 
+
 ## 12.0.0 2020-06-10
 
 * Renames `itemEffectiveLocationAtCheckOut` to `itemEffectiveLocationIdAtCheckOut` in loan record (CIRCSTORE-208)
