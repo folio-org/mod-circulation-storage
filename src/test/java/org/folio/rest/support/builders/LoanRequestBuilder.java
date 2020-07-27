@@ -169,7 +169,7 @@ public class LoanRequestBuilder implements Builder {
     final DateTime claimedReturnedDate = example.containsKey("claimedReturnedDate")
       ? DateTime.parse(example.getString("claimedReturnedDate"))
       : null;
-    
+
     final JsonObject agedToLostDelayedBilling = example.containsKey("agedToLostDelayedBilling")
        ? example.getJsonObject("agedToLostDelayedBilling")
        : null;
@@ -278,7 +278,7 @@ public class LoanRequestBuilder implements Builder {
     if (claimedReturnedDate != null) {
       request.put("claimedReturnedDate", claimedReturnedDate.toString());
     }
-    
+
      if (agedToLostDelayedBilling != null) {
       request.put("agedToLostDelayedBilling", agedToLostDelayedBilling);
     }
@@ -817,7 +817,7 @@ public class LoanRequestBuilder implements Builder {
       claimedReturnedDate,
       this.agedToLostDelayedBilling);
   }
-  
+
   public LoanRequestBuilder withAgedToLostDelayedBilling(JsonObject agedToLostDelayedBilling) {
      return new LoanRequestBuilder(
       this.id,
@@ -842,4 +842,8 @@ public class LoanRequestBuilder implements Builder {
       this.claimedReturnedDate,
       agedToLostDelayedBilling);
     }
+
+  public LoanRequestBuilder checkedOut() {
+    return withAction("checkedout").withItemStatus("Checked out");
+  }
 }
