@@ -1,3 +1,7 @@
+## 12.0.2 2020-07-30
+
+* Introduces b-tree index for `status.name` property on `loan` records (CIRCSTORE-223)
+
 ## 12.0.1 2020-07-15
 
 * Introduces b-tree index for `requestType` property on `request` records (CIRCSTORE-219)

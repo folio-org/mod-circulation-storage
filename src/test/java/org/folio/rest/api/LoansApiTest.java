@@ -12,6 +12,8 @@ import static org.folio.rest.support.matchers.ValidationResponseMatchers.isValid
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.IsNull.notNullValue;
@@ -23,12 +25,14 @@ import java.net.MalformedURLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -1320,6 +1324,22 @@ public class LoansApiTest extends ApiTests {
 
     assertThat(response, isValidationResponseWhich(
       hasMessageContaining("Unrecognized field")));
+  }
+
+  @Test
+  public void canSearchByLoanStatus() throws Exception {
+    final IndividualResource openLoan = loansClient.create(
+      new LoanRequestBuilder().open().checkedOut());
+
+    loansClient.create(new LoanRequestBuilder().closed().checkedOut());
+
+    final List<String> openLoans = loansClient.getMany("status.name==Open")
+      .getRecords().stream()
+      .map(json -> json.getString("id"))
+      .collect(Collectors.toList());
+
+    assertThat(openLoans, hasSize(1));
+    assertThat(openLoans, hasItem(openLoan.getId()));
   }
 
   private JsonObject loanRequest() {
