@@ -326,5 +326,11 @@
       "withMetadata": true,
       "withAuditing": false
     }
+  ],
+  "scripts": [
+    {
+      "run": "after",
+      "snippetPath": "index_dateLostItemShouldBeBilled.sql"
+    }
   ]
 }
