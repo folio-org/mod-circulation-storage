@@ -1329,9 +1329,9 @@ public class LoansApiTest extends ApiTests {
   @Test
   public void canSearchByLoanStatus() throws Exception {
     final IndividualResource openLoan = loansClient.create(
-      new LoanRequestBuilder().open().checkedOut());
+      new LoanRequestBuilder().checkedOut());
 
-    loansClient.create(new LoanRequestBuilder().closed().checkedOut());
+    loansClient.create(new LoanRequestBuilder().checkedIn());
 
     final List<String> openLoans = loansClient.getMany("status.name==Open")
       .getRecords().stream()
@@ -1340,6 +1340,22 @@ public class LoansApiTest extends ApiTests {
 
     assertThat(openLoans, hasSize(1));
     assertThat(openLoans, hasItem(openLoan.getId()));
+  }
+
+  @Test
+  public void canSearchByLoanItemStatus() throws Exception {
+    final IndividualResource agedToLostLoan = loansClient.create(
+      new LoanRequestBuilder().agedToLost());
+
+    loansClient.create(new LoanRequestBuilder().lostAndPaid());
+
+    final List<String> agedToLostLoans = loansClient.getMany("itemStatus==Aged to lost")
+      .getRecords().stream()
+      .map(json -> json.getString("id"))
+      .collect(Collectors.toList());
+
+    assertThat(agedToLostLoans, hasSize(1));
+    assertThat(agedToLostLoans, hasItem(agedToLostLoan.getId()));
   }
 
   private JsonObject loanRequest() {
@@ -1352,5 +1368,4 @@ public class LoansApiTest extends ApiTests {
       .withStatus(statusName)
       .create();
   }
-
 }
