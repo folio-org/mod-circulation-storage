@@ -111,7 +111,7 @@ public class LoansApiTest extends ApiTests {
       .withClaimedReturnedDate(claimedReturnedDate)
       .withAgedToLostDate(agedToLostDate)
       .withAgedToLostDelayedBilling(new JsonObject()
-        .put("lostItemHasBeenBilled", Boolean.FALSE)
+        .put("lostItemHasBeenBilled", false)
         .put("dateLostItemShouldBeBilled", dateLostItemShouldBeBilled.toString()))
       .create();
 
