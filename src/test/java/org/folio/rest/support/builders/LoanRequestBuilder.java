@@ -286,4 +286,10 @@ public class LoanRequestBuilder implements Builder {
   public LoanRequestBuilder lostAndPaid() {
     return closed().withAction("closedLoan").withItemStatus("Lost and paid");
   }
+
+  public LoanRequestBuilder withAgedToLostDelayedBilling(boolean hasBeenBilled, DateTime date) {
+    return withAgedToLostDelayedBilling(new JsonObject()
+      .put("lostItemHasBeenBilled", hasBeenBilled)
+      .put("dateLostItemShouldBeBilled", date.toString()));
+  }
 }

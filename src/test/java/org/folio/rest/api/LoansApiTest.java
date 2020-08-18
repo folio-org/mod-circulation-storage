@@ -1358,6 +1358,47 @@ public class LoansApiTest extends ApiTests {
     assertThat(agedToLostLoans, hasItem(agedToLostLoan.getId()));
   }
 
+  @Test
+  public void canSearchByLoanAgedToLostItemHasBeenBilled() throws Exception {
+    final IndividualResource billedLoan = loansClient.create(
+      new LoanRequestBuilder()
+        .withAgedToLostDelayedBilling(true, DateTime.now()));
+
+    loansClient.create(new LoanRequestBuilder()
+        .withAgedToLostDelayedBilling(false, DateTime.now()));
+
+    final List<String> billedLoans = loansClient.getMany(
+      "agedToLostDelayedBilling.lostItemHasBeenBilled==true")
+      .getRecords().stream()
+      .map(json -> json.getString("id"))
+      .collect(Collectors.toList());
+
+    assertThat(billedLoans, hasSize(1));
+    assertThat(billedLoans, hasItem(billedLoan.getId()));
+  }
+
+  @Test
+  public void canSearchByLoanAgedToLostBillingDate() throws Exception {
+    final DateTime today = DateTime.now();
+    final DateTime yesterday = today.minusDays(1);
+    final DateTime tomorrow = yesterday.plusDays(1);
+
+    loansClient.create(new LoanRequestBuilder()
+        .withAgedToLostDelayedBilling(true, yesterday));
+
+    final IndividualResource loanToBillTomorrow = loansClient.create(
+      new LoanRequestBuilder().withAgedToLostDelayedBilling(false, tomorrow));
+
+    final List<String> filteredLoans = loansClient.getMany(
+      String.format("agedToLostDelayedBilling.dateLostItemShouldBeBilled > \"%s\"", yesterday))
+      .getRecords().stream()
+      .map(json -> json.getString("id"))
+      .collect(Collectors.toList());
+
+    assertThat(filteredLoans, hasSize(1));
+    assertThat(filteredLoans, hasItem(loanToBillTomorrow.getId()));
+  }
+
   private JsonObject loanRequest() {
     return new LoanRequestBuilder().create();
   }
