@@ -99,7 +99,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
-    <raml-module-builder-version>30.2.4</raml-module-builder-version>
+    <raml-module-builder-version>30.2.5</raml-module-builder-version>
     <vertx-version>3.9.1</vertx-version>
     <lombok.version>1.18.12</lombok.version>
     <spring.version>5.2.7.RELEASE</spring.version>
