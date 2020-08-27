@@ -285,6 +285,24 @@ public class LoanRequestBuilder implements Builder {
   }
 
   public LoanRequestBuilder checkedOut() {
-    return withAction("checkedout").withItemStatus("Checked out");
+    return open().withAction("checkedout").withItemStatus("Checked out");
+  }
+
+  public LoanRequestBuilder checkedIn() {
+    return closed().withAction("checkedin").withItemStatus("Checked in");
+  }
+
+  public LoanRequestBuilder agedToLost() {
+    return open().withAction("itemAgedToLost").withItemStatus("Aged to lost");
+  }
+
+  public LoanRequestBuilder lostAndPaid() {
+    return closed().withAction("closedLoan").withItemStatus("Lost and paid");
+  }
+
+  public LoanRequestBuilder withAgedToLostDelayedBilling(boolean hasBeenBilled, DateTime date) {
+    return withAgedToLostDelayedBilling(new JsonObject()
+      .put("lostItemHasBeenBilled", hasBeenBilled)
+      .put("dateLostItemShouldBeBilled", date.toString()));
   }
 }
