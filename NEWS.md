@@ -1,3 +1,21 @@
+## 12.0.3 2020-08-27
+
+* Cannot save new Loan Policy (CIRCSTORE-224)
+* Cannot save updated Loan Policy (CIRCSTORE-225)
+* Missing records when offset >= totalRecords (CIRCSTORE-226)
+* Record "new" has no field "loanspolicy\_fixedduedatescheduleid" (CIRCSTORE-227)
+* Upgrade to raml-module-builder (RMB) 30.2.5 (CIRCSTORE-232)
+  * GET query returns no records when offset value >= estimated totalRecords (RMB-684)
+  * Upgrade foreign key of a sub-field like "fieldName": "foo.bar" (RMB-694)
+  * Close prepared statements in PostgresClient stream get (RMB-693)
+  * ResponseException for TenantAPI, fix wrong postTenant HTTP status code (RMB-687)
+  * Drop obsolete rmb\_internal\_index
+  * Move pg\_trgm from wrong to public schema, don't drop & recreate (RMB-675)
+* Upgrade to RMB 30.2.6 (CIRCSTORE-237)
+  * Update to Vert.x 3.9.2, fixing WebClient request timeout races (RMB-701)
+  * NPE when RestVerticle calls LogUtil.formatStatsLogMessage (RMB-700)
+  * Close PostgreSQL connection after invalid CQL failure (RMB-677)
+
 ## 12.0.2 2020-07-30
 
 * Introduces b-tree index for `status.name` property on `loan` records (CIRCSTORE-223)
