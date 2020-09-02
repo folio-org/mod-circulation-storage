@@ -35,7 +35,6 @@ public class LoanRequestBuilder implements Builder {
   private final UUID overdueFinePolicyId;
   private final UUID lostItemPolicyId;
   private final DateTime claimedReturnedDate;
-  private final DateTime agedToLostDate;
   private final JsonObject agedToLostDelayedBilling;
 
   public LoanRequestBuilder() {
@@ -48,7 +47,6 @@ public class LoanRequestBuilder implements Builder {
       null,
       "checkedout",
       "test",
-      null,
       null,
       null,
       null,
@@ -131,10 +129,6 @@ public class LoanRequestBuilder implements Builder {
       ? DateTime.parse(example.getString("claimedReturnedDate"))
       : null;
 
-    final DateTime agedToLostDate = example.containsKey("agedToLostDate")
-      ? DateTime.parse(example.getString("agedToLostDate"))
-      : null;
-
     final JsonObject agedToLostDelayedBilling = example.containsKey("agedToLostDelayedBilling")
        ? example.getJsonObject("agedToLostDelayedBilling")
        : null;
@@ -160,7 +154,6 @@ public class LoanRequestBuilder implements Builder {
       overdueFinePolicyId,
       lostItemPolicyId,
       claimedReturnedDate,
-      agedToLostDate,
       agedToLostDelayedBilling);
   }
 
@@ -245,10 +238,6 @@ public class LoanRequestBuilder implements Builder {
       request.put("claimedReturnedDate", claimedReturnedDate.toString());
     }
 
-    if (agedToLostDate != null) {
-      request.put("agedToLostDate", agedToLostDate.toString());
-    }
-
      if (agedToLostDelayedBilling != null) {
       request.put("agedToLostDelayedBilling", agedToLostDelayedBilling);
     }
@@ -300,9 +289,12 @@ public class LoanRequestBuilder implements Builder {
     return closed().withAction("closedLoan").withItemStatus("Lost and paid");
   }
 
-  public LoanRequestBuilder withAgedToLostDelayedBilling(boolean hasBeenBilled, DateTime date) {
+  public LoanRequestBuilder withAgedToLostDelayedBilling(boolean hasBeenBilled,
+    DateTime whenToBill, DateTime agedToLostDate) {
     return withAgedToLostDelayedBilling(new JsonObject()
       .put("lostItemHasBeenBilled", hasBeenBilled)
-      .put("dateLostItemShouldBeBilled", date.toString()));
+      .put("dateLostItemShouldBeBilled", whenToBill.toString())
+      .put("agedToLostDate", agedToLostDate.toString())
+    );
   }
 }
