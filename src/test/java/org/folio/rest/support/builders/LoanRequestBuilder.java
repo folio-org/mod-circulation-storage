@@ -1,5 +1,7 @@
 package org.folio.rest.support.builders;
 
+import static lombok.AccessLevel.PRIVATE;
+
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -11,7 +13,7 @@ import lombok.AllArgsConstructor;
 import lombok.With;
 
 @With
-@AllArgsConstructor
+@AllArgsConstructor(access = PRIVATE)
 public class LoanRequestBuilder implements Builder {
   private final UUID id;
   private final UUID itemId;
@@ -287,9 +289,12 @@ public class LoanRequestBuilder implements Builder {
     return closed().withAction("closedLoan").withItemStatus("Lost and paid");
   }
 
-  public LoanRequestBuilder withAgedToLostDelayedBilling(boolean hasBeenBilled, DateTime date) {
+  public LoanRequestBuilder withAgedToLostDelayedBilling(boolean hasBeenBilled,
+    DateTime whenToBill, DateTime agedToLostDate) {
     return withAgedToLostDelayedBilling(new JsonObject()
       .put("lostItemHasBeenBilled", hasBeenBilled)
-      .put("dateLostItemShouldBeBilled", date.toString()));
+      .put("dateLostItemShouldBeBilled", whenToBill.toString())
+      .put("agedToLostDate", agedToLostDate.toString())
+    );
   }
 }
