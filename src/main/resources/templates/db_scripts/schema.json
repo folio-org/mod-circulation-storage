@@ -1,16 +1,4 @@
 {
-  "scripts": [
-    {
-      "run": "before",
-      "fromModuleVersion": "10.1.0",
-      "snippet": "DROP INDEX IF EXISTS loan_userid_idx_ft;"
-    },
-    {
-      "run": "after",
-      "snippetPath": "add_staff_slips.sql",
-      "fromModuleVersion": "11.1.0"
-    }
-  ],
   "tables": [
     {
       "tableName": "loan",
@@ -107,6 +95,18 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
+        },
+        {
+          "fieldName": "itemStatus",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "agedToLostDelayedBilling.lostItemHasBeenBilled",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
         }
       ],
       "fullTextIndex": [
@@ -325,6 +325,22 @@
       "fromModuleVersion": "11.0.0",
       "withMetadata": true,
       "withAuditing": false
+    }
+  ],
+  "scripts": [
+    {
+      "run": "before",
+      "fromModuleVersion": "10.1.0",
+      "snippet": "DROP INDEX IF EXISTS loan_userid_idx_ft;"
+    },
+    {
+      "run": "after",
+      "snippetPath": "add_staff_slips.sql",
+      "fromModuleVersion": "11.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "index_dateLostItemShouldBeBilled.sql"
     }
   ]
 }
