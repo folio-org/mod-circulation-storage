@@ -1,3 +1,10 @@
+## 12.1.0 2020-10-06
+
+* Introduces `aged to lost date` property on loans (CIRCSTORE-231)
+* Added a variety of database indexes for loans and requests (CIRCSTORE-215, CIRCSTORE-219, CIRCSTORE-223, CIRCSTORE-228, CIRCSTORE-230)
+* Requires JDK 11 (CIRCSTORE-235)
+* Upgraded to RAML Module Builder 31.0.2 (CIRCSTORE-220, CIRCSTORE-232, CIRCSTORE-237)
+
 ## 12.0.0 2020-06-10
 
 * Renames `itemEffectiveLocationAtCheckOut` to `itemEffectiveLocationIdAtCheckOut` in loan record (CIRCSTORE-208)
