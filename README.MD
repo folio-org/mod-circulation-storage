@@ -5,11 +5,6 @@ Copyright (C) 2017-2020 The Open Library Foundation
 This software is distributed under the terms of the Apache License,
 Version 2.0. See the file "[LICENSE](LICENSE)" for more information.
 
-## Prerequisites
-
-* Java 11 JDK
-* Maven 3.3.9
-
 ## Goal
 
 FOLIO compatible persistent storage of loans, loan policies, circulation rules,
@@ -72,7 +67,7 @@ The `userId` parameter is checked to take the form of a UUID to try to reduce th
 
 ## Required
 
-- Java 8 JDK
+- Java 11 JDK
 - Maven 3.3.9
 - PostgreSQL 9.6.1 (running and listening on the default port, logged in user must have admin rights), with the following extensions
   - pgcrypto
