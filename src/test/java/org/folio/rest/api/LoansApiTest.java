@@ -143,10 +143,8 @@ public class LoansApiTest extends ApiTests {
     assertThat("loan policy should be set",
       loan.getString("loanPolicyId"), is(loanPolicyId.toString()));
 
-    //The RAML-Module-Builder converts all date-time formatted strings to UTC
-    //and presents the offset as +0000 (which is ISO8601 compatible, but not RFC3339)
     assertThat("due date does not match",
-      loan.getString("dueDate"), is("2017-07-27T10:23:43.000+0000"));
+      loan.getString("dueDate"), is("2017-07-27T10:23:43.000+00:00"));
 
     assertThat("recall changed due date should be null",
         loan.getBoolean("dueDateChangedByRecall"), nullValue());
@@ -254,10 +252,8 @@ public class LoansApiTest extends ApiTests {
     assertThat("item status is not checked out",
       loan.getString("itemStatus"), is("Checked out"));
 
-    //The RAML-Module-Builder converts all date-time formatted strings to UTC
-    //and presents the offset as +0000 (which is ISO8601 compatible, but not RFC3339)
     assertThat("due date does not match",
-      loan.getString("dueDate"), is("2017-04-20T07:21:45.000+0000"));
+      loan.getString("dueDate"), is("2017-04-20T07:21:45.000+00:00"));
   }
 
   @Test
@@ -294,10 +290,8 @@ public class LoansApiTest extends ApiTests {
     assertThat("return date does not match",
       loan.getString("returnDate"), is("2017-04-01T11:35:00.000Z"));
 
-    //The RAML-Module-Builder converts all date-time formatted strings to UTC
-    //and presents the offset as +0000 (which is ISO8601 compatible, but not RFC3339)
     assertThat("system return date does not match",
-      loan.getString("systemReturnDate"), is("2017-04-01T12:00:00.000+0000"));
+      loan.getString("systemReturnDate"), is("2017-04-01T12:00:00.000+00:00"));
   }
 
   @Test
@@ -373,10 +367,8 @@ public class LoansApiTest extends ApiTests {
     assertThat("action is not checked out",
       loan.getString("action"), is("checkedout"));
 
-    //The RAML-Module-Builder converts all date-time formatted strings to UTC
-    //and presents the offset as +0000 (which is ISO8601 compatible, but not RFC3339)
     assertThat("due date does not match",
-      loan.getString("dueDate"), is("2017-03-29T21:14:43.000+0000"));
+      loan.getString("dueDate"), is("2017-03-29T21:14:43.000+00:00"));
   }
 
   @Test
@@ -865,10 +857,8 @@ public class LoansApiTest extends ApiTests {
     JsonObject updatedLoan = loansClient.getById(UUID.fromString(loan.getId()))
       .getJson();
 
-    //The RAML-Module-Builder converts all date-time formatted strings to UTC
-    //and presents the offset as +0000 (which is ISO8601 compatible, but not RFC3339)
     assertThat(updatedLoan.getString("dueDate"),
-      is("2017-03-30T13:25:46.000+0000"));
+      is("2017-03-30T13:25:46.000+00:00"));
 
     assertThat(updatedLoan, isOpen());
 

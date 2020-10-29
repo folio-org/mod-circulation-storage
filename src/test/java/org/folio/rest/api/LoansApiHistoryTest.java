@@ -114,10 +114,8 @@ public class LoansApiHistoryTest extends ApiTests {
     assertThat("item status is not checked out",
       loan.getString("itemStatus"), is("Checked out"));
 
-    //The RAML-Module-Builder converts all date-time formatted strings to UTC
-    //and presents the offset as +0000 (which is ISO8601 compatible, but not RFC3339)
     assertThat("due date does not match",
-      loan.getString("dueDate"), is("2017-07-27T10:23:43.000+0000"));
+      loan.getString("dueDate"), is("2017-07-27T10:23:43.000+00:00"));
   }
 
   @Test
@@ -173,10 +171,8 @@ public class LoansApiHistoryTest extends ApiTests {
 
     JsonObject entry = entries.get(0).getJsonObject("loan");
 
-    //The RAML-Module-Builder converts all date-time formatted strings to UTC
-    //and presents the offset as +0000 (which is ISO8601 compatible, but not RFC3339)
     assertThat(entry.getString("dueDate"),
-      is("2017-03-30T13:25:46.000+0000"));
+      is("2017-03-30T13:25:46.000+00:00"));
 
     assertThat("status is not open",
       entry.getJsonObject("status").getString("name"), is("Open"));
