@@ -133,7 +133,7 @@ public class CheckInStorageApiTest extends ApiTests {
     MultipleRecords<JsonObject> occurredDateTimeCheckInSearch = checkInClient
       .getMany(String.format("occurredDateTime = '%s'", occurredDateTime
         // Use RMB format to match
-        .toString("yyyy-MM-dd'T'HH:mm:ss.SSS+0000")));
+        .toString("yyyy-MM-dd'T'HH:mm:ss.SSSZZ")));
     assertThat(occurredDateTimeCheckInSearch.getTotalRecords(), is(1));
     assertTrue(occurredDateTimeCheckInSearch.getRecords().contains(occurredDateTimeCheckInRecord));
   }

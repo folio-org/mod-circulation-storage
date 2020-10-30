@@ -1,3 +1,12 @@
+## 12.1.1 2020-10-29
+
+* Upgrade to RMB 31.1.4 and Vert.x 3.9.4 (CIRCSTORE-249), most notable fixes:
+* Fix "tuple concurrently updated" when upgrading Q2 to Q3 with "REVOKE" (RMB-744)
+* Use FOLIO fork of vertx-sql-client and vertx-pg-client (RMB-740) with the following two patches
+* Make RMB's DB\_CONNECTIONRELEASEDELAY work again, defaults to 60 seconds (RMB-739)
+* Fix duplicate names causing 'prepared statement "XYZ" already exists' (FOLIO-2840)
+* Upgrade to Vert.x 3.9.4, fixes premature closing of RowStream https://github.com/eclipse-vertx/vertx-sql-client/issues/778 (RMB-738)
+
 ## 12.1.0 2020-10-06
 
 * Introduces `aged to lost date` property on loans (CIRCSTORE-231)
