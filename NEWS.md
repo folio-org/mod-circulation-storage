@@ -1,3 +1,8 @@
+## 12.1.2 2020-11-06
+
+* Uses an advisory lock when revoking privileges during upgrade (CIRCSTORE-252, RMB-750)
+* Upgrades to RAML Module Builder 31.1.5 (CIRCSTORE-252)
+
 ## 12.1.1 2020-10-29
 
 * Upgrade to RMB 31.1.4 and Vert.x 3.9.4 (CIRCSTORE-249), most notable fixes:
