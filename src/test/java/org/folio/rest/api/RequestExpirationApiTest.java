@@ -799,7 +799,7 @@ public class RequestExpirationApiTest extends ApiTests {
     events.forEach(e -> {
       Event event = e.mapTo(Event.class);
       assertThat(event.getEventType(), is(LOG_RECORD.name()));
-      JsonObject payload = new JsonObject(new JsonObject(event.getEventPayload()).getString(PAYLOAD.value()));
+      JsonObject payload = new JsonObject(event.getEventPayload()).getJsonObject(PAYLOAD.value());
       Request original = payload.getJsonObject(REQUESTS.value()).getJsonObject(ORIGINAL.value()).mapTo(Request.class);
       Request updated = payload.getJsonObject(REQUESTS.value()).getJsonObject(UPDATED.value()).mapTo(Request.class);
       assertThat(original.getStatus(), not(equalTo(updated.getStatus())));

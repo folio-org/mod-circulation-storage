@@ -23,7 +23,7 @@ public class EventPublisherService {
 
   public Future<Void> publishLogRecord(JsonObject context, LogEventType payloadType) {
     JsonPropertyWriter.write(context, LOG_EVENT_TYPE.value(), payloadType.value());
-    context = new JsonObject().put(LogEventPayloadField.PAYLOAD.value(), context.encode());
+    context = new JsonObject().put(LogEventPayloadField.PAYLOAD.value(), context);
     Promise<Void> promise = Promise.promise();
     pubSubPublishingService.publishEvent(EventType.LOG_RECORD.name(), context.encode())
       .thenAccept(r -> promise.complete());
