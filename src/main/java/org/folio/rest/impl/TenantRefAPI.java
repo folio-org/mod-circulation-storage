@@ -10,6 +10,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.folio.rest.tools.utils.TenantLoading;
+import org.folio.service.PubSubRegistrationService;
 
 public class TenantRefAPI extends TenantAPI {
   private static final Logger log = LoggerFactory.getLogger(TenantRefAPI.class);
@@ -44,11 +45,19 @@ public class TenantRefAPI extends TenantAPI {
               .respond500WithTextPlain(res1.cause().getLocalizedMessage())));
             return;
           }
-          hndlr.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
-            .respond201WithApplicationJson("")));
+          PubSubRegistrationService.registerModule(headers, vertx)
+          .handle((aBoolean, throwable) -> {
+            hndlr.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
+              .respond201WithApplicationJson("")));
+            return null;
+          });
         });
     }, cntxt);
   }
 
-
+  @Override
+  public void deleteTenant(Map<String, String> headers, Handler<AsyncResult<Response>> handlers, Context cntx) {
+    PubSubRegistrationService.unregisterModule(headers, cntx.owner())
+      .thenRun(() -> super.deleteTenant(headers, handlers, cntx));
+  }
 }

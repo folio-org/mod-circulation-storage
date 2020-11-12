@@ -1,7 +1,15 @@
 package org.folio.rest.api;
 
+import static org.folio.support.EventType.LOG_RECORD;
+import static org.folio.support.PubSubConfig.getOkapiPort;
+import static org.folio.support.MockServer.getCreatedEventTypes;
+import static org.folio.support.MockServer.getRegisteredPublishers;
+import static org.folio.support.MockServer.getRegisteredSubscribers;
+import static org.folio.util.pubsub.PubSubClientUtils.constructModuleName;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -11,6 +19,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidParameterException;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -19,6 +28,8 @@ import java.util.concurrent.TimeoutException;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.api.loans.LoansAnonymizationApiTest;
 import org.folio.rest.api.migration.StaffSlipsMigrationScriptTest;
+import org.folio.rest.jaxrs.model.EventDescriptor;
+import org.folio.rest.jaxrs.model.PublisherDescriptor;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.OkapiHttpClient;
@@ -26,6 +37,7 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.TextResponse;
 import org.folio.rest.tools.utils.NetworkUtils;
+import org.folio.support.MockServer;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
@@ -72,6 +84,7 @@ public class StorageTestSuite {
   private static Vertx vertx;
   public static final int PORT = NetworkUtils.nextFreePort();
   private static boolean initialised = false;
+  private static MockServer mockServer;
 
   /**
    * Return a URL for the path and the parameters.
@@ -161,6 +174,9 @@ public class StorageTestSuite {
 
     startVerticle(options);
 
+    mockServer = new MockServer(getOkapiPort(), vertx);
+    mockServer.start();
+
     prepareTenant(TENANT_ID);
 
     initialised = true;
@@ -175,6 +191,8 @@ public class StorageTestSuite {
     initialised = false;
 
     removeTenant(TENANT_ID);
+
+    mockServer.close();
 
     CompletableFuture<String> undeploymentComplete = new CompletableFuture<>();
 
@@ -315,6 +333,22 @@ public class StorageTestSuite {
         response.getStatusCode(), response.getBody());
 
       assertThat(failureMessage, response.getStatusCode(), is(201));
+
+      List<JsonObject> eventTypes = getCreatedEventTypes();
+      assertThat(eventTypes, hasSize(1));
+      EventDescriptor descriptor = eventTypes.get(0).mapTo(EventDescriptor.class);
+      assertThat(descriptor.getEventType(), equalTo(LOG_RECORD.name()));
+
+      List<JsonObject> publishers = getRegisteredPublishers();
+      assertThat(publishers, hasSize(1));
+      PublisherDescriptor publisher = publishers.get(0).mapTo(PublisherDescriptor.class);
+      assertThat(publisher.getModuleId(), equalTo(constructModuleName()));
+
+      assertThat(publisher.getEventDescriptors(), hasSize(1));
+      assertThat(publisher.getEventDescriptors().get(0).getEventType(), equalTo(LOG_RECORD.name()));
+
+      List<JsonObject> subscribers = getRegisteredSubscribers();
+      assertThat(subscribers, hasSize(0));
 
     } catch (Exception e) {
       log.error("Tenant preparation failed: " + e.getMessage(), e);

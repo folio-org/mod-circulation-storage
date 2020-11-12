@@ -7,18 +7,33 @@ import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_AWAITIN
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_AWAITING_PICKUP;
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_IN_TRANSIT;
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET_FILLED;
+import static org.folio.support.EventType.LOG_RECORD;
+import static org.folio.support.LogEventPayloadField.ORIGINAL;
+import static org.folio.support.LogEventPayloadField.PAYLOAD;
+import static org.folio.support.LogEventPayloadField.REQUESTS;
+import static org.folio.support.LogEventPayloadField.UPDATED;
+import static org.folio.support.MockServer.clearPublishedEvents;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.Is.is;
 
 import java.net.MalformedURLException;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import org.awaitility.Awaitility;
+import org.folio.rest.jaxrs.model.Event;
+import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.builders.RequestRequestBuilder;
 import org.folio.support.ExpirationTool;
+import org.folio.support.MockServer;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
@@ -41,6 +56,7 @@ public class RequestExpirationApiTest extends ApiTests {
   @After
   public void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs(REQUEST_TABLE);
+    clearPublishedEvents();
   }
 
   @Test
@@ -64,6 +80,12 @@ public class RequestExpirationApiTest extends ApiTests {
       requestStorageUrl());
 
     expireRequests();
+
+    List<JsonObject> events = Awaitility.await()
+      .atMost(10, TimeUnit.SECONDS)
+      .until(MockServer::getPublishedEvents, hasSize(1));
+
+    assertPublishedEvents(events);
 
     JsonObject response = getById(requestStorageUrl(String.format("/%s", id)));
 
@@ -94,6 +116,12 @@ public class RequestExpirationApiTest extends ApiTests {
 
     expireRequests();
 
+    List<JsonObject> events = Awaitility.await()
+      .atMost(10, TimeUnit.SECONDS)
+      .until(MockServer::getPublishedEvents, hasSize(1));
+
+    assertPublishedEvents(events);
+
     JsonObject response = getById(requestStorageUrl(String.format("/%s", id)));
 
     assertThat(response.getString("status"), is(CLOSED_PICKUP_EXPIRED));
@@ -122,6 +150,12 @@ public class RequestExpirationApiTest extends ApiTests {
       requestStorageUrl());
 
     expireRequests();
+
+    List<JsonObject> events = Awaitility.await()
+      .atMost(10, TimeUnit.SECONDS)
+      .until(MockServer::getPublishedEvents, hasSize(1));
+
+    assertPublishedEvents(events);
 
     JsonObject response = getById(requestStorageUrl(String.format("/%s", id)));
 
@@ -178,6 +212,12 @@ public class RequestExpirationApiTest extends ApiTests {
       requestStorageUrl());
 
     expireRequests();
+
+    List<JsonObject> events = Awaitility.await()
+      .atMost(10, TimeUnit.SECONDS)
+      .until(MockServer::getPublishedEvents, hasSize(1));
+
+    assertPublishedEvents(events);
 
     JsonObject response1 = getById(requestStorageUrl(String.format("/%s", id1)));
     JsonObject response2 = getById(requestStorageUrl(String.format("/%s", id2)));
@@ -242,6 +282,12 @@ public class RequestExpirationApiTest extends ApiTests {
       requestStorageUrl());
 
     expireRequests();
+
+    List<JsonObject> events = Awaitility.await()
+      .atMost(10, TimeUnit.SECONDS)
+      .until(MockServer::getPublishedEvents, hasSize(1));
+
+    assertPublishedEvents(events);
 
     JsonObject response1 = getById(requestStorageUrl(String.format("/%s", id1)));
     JsonObject response2 = getById(requestStorageUrl(String.format("/%s", id2)));
@@ -600,6 +646,12 @@ public class RequestExpirationApiTest extends ApiTests {
 
     expireRequests();
 
+    List<JsonObject> events = Awaitility.await()
+      .atMost(10, TimeUnit.SECONDS)
+      .until(MockServer::getPublishedEvents, hasSize(10));
+
+    assertPublishedEvents(events);
+
     JsonObject response1_1 = getById(requestStorageUrl(String.format("/%s", id1_1)));
     JsonObject response1_2 = getById(requestStorageUrl(String.format("/%s", id1_2)));
     JsonObject response1_3 = getById(requestStorageUrl(String.format("/%s", id1_3)));
@@ -741,5 +793,16 @@ public class RequestExpirationApiTest extends ApiTests {
       .onComplete(res -> expirationCompleted.complete(null));
 
     expirationCompleted.get(5, TimeUnit.SECONDS);
+  }
+
+  private void assertPublishedEvents(List<JsonObject> events) {
+    events.forEach(e -> {
+      Event event = e.mapTo(Event.class);
+      assertThat(event.getEventType(), is(LOG_RECORD.name()));
+      JsonObject payload = new JsonObject(new JsonObject(event.getEventPayload()).getString(PAYLOAD.value()));
+      Request original = payload.getJsonObject(REQUESTS.value()).getJsonObject(ORIGINAL.value()).mapTo(Request.class);
+      Request updated = payload.getJsonObject(REQUESTS.value()).getJsonObject(UPDATED.value()).mapTo(Request.class);
+      assertThat(original.getStatus(), not(equalTo(updated.getStatus())));
+    });
   }
 }

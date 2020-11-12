@@ -6,6 +6,7 @@ import org.hamcrest.MatcherAssert;
 import org.hamcrest.core.Is;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -21,6 +22,7 @@ import static org.hamcrest.core.Is.is;
 
 public class ApiTests {
   private static boolean runningOnOwn;
+
 
   protected final OkapiHttpClient client = new OkapiHttpClient(StorageTestSuite.getVertx());
 

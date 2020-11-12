@@ -1,0 +1,12 @@
+{
+  "publications": [
+    {
+      "eventType": "LOG_RECORD",
+      "description": "Created log record event",
+      "eventTTL": 1,
+      "signed": false
+    }
+  ],
+  "subscriptions": [
+  ]
+}
