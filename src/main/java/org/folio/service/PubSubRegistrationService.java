@@ -75,7 +75,7 @@ public class PubSubRegistrationService {
       .whenComplete((r, e) -> client.close());
   }
 
-  private static String buildOkapiUrl() {
+  public static String buildOkapiUrl() {
     return getOkapiHost() + ":" + getOkapiPort();
   }
 

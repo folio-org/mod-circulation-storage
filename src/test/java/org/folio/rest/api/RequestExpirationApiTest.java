@@ -1,12 +1,15 @@
 package org.folio.rest.api;
 
 import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
+import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.support.ResponseHandler.empty;
 import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_PICKUP_EXPIRED;
 import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_UNFILLED;
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_AWAITING_DELIVERY;
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_AWAITING_PICKUP;
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_IN_TRANSIT;
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET_FILLED;
+import static org.folio.rest.support.http.InterfaceUrls.requestExpirationUrl;
 import static org.folio.support.EventType.LOG_RECORD;
 import static org.folio.support.LogEventPayloadField.ORIGINAL;
 import static org.folio.support.LogEventPayloadField.PAYLOAD;
@@ -31,6 +34,7 @@ import org.awaitility.Awaitility;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.support.ApiTests;
+import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.RequestRequestBuilder;
 import org.folio.support.ExpirationTool;
 import org.folio.support.MockServer;
@@ -786,13 +790,14 @@ public class RequestExpirationApiTest extends ApiTests {
     assertThat(response.getInteger("position"), is(1));
   }
 
-  private void expireRequests() throws InterruptedException, ExecutionException, TimeoutException {
-    CompletableFuture<Void> expirationCompleted = new CompletableFuture<>();
+  private void expireRequests() throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+    final var createCompleted = new CompletableFuture<Response>();
 
-    ExpirationTool.doRequestExpiration(StorageTestSuite.getVertx())
-      .onComplete(res -> expirationCompleted.complete(null));
+    client.post(requestExpirationUrl(), TENANT_ID, empty(createCompleted));
 
-    expirationCompleted.get(5, TimeUnit.SECONDS);
+    final var postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(postResponse.getStatusCode(), is(204));
   }
 
   private void assertPublishedEvents(List<JsonObject> events) {

@@ -1,10 +1,10 @@
 package org.folio.rest.api;
 
 import static org.folio.support.EventType.LOG_RECORD;
-import static org.folio.support.PubSubConfig.getOkapiPort;
 import static org.folio.support.MockServer.getCreatedEventTypes;
 import static org.folio.support.MockServer.getRegisteredPublishers;
 import static org.folio.support.MockServer.getRegisteredSubscribers;
+import static org.folio.support.PubSubConfig.getOkapiPort;
 import static org.folio.util.pubsub.PubSubClientUtils.constructModuleName;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;

@@ -25,14 +25,6 @@ public class PubSubConfig {
     return properties.getProperty("okapi.host");
   }
 
-  public static String getPubSubUser() {
-    return properties.getProperty("pubsub.user");
-  }
-
-  public static String getPubSubPassword() {
-    return properties.getProperty("pubsub.password");
-  }
-
   public static Integer getOkapiPort() {
     return Integer.parseInt(properties.getProperty("okapi.port"));
   }

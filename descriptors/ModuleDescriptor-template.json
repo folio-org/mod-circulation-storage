@@ -476,6 +476,24 @@
           ]
         }
       ]
+    },
+    {
+      "id": "_timer",
+      "version": "1.0",
+      "interfaceType": "system",
+      "handlers": [
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/request-expiration/scheduled-request-expiration",
+          "modulePermissions": [
+            "pubsub.publish.post"
+          ],
+          "unit": "minute",
+          "delay": "2"
+        }
+      ]
     }
   ],
   "permissionSets": [

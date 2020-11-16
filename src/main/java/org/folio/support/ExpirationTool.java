@@ -12,15 +12,12 @@ import static org.folio.rest.jaxrs.model.Request.Status.OPEN_AWAITING_DELIVERY;
 import static org.folio.rest.jaxrs.model.Request.Status.OPEN_AWAITING_PICKUP;
 import static org.folio.rest.jaxrs.model.Request.Status.OPEN_IN_TRANSIT;
 import static org.folio.rest.jaxrs.model.Request.Status.OPEN_NOT_YET_FILLED;
-import static org.folio.rest.util.OkapiConnectionParams.OKAPI_TENANT_HEADER;
-import static org.folio.rest.util.OkapiConnectionParams.OKAPI_TOKEN_HEADER;
 import static org.folio.rest.util.OkapiConnectionParams.OKAPI_URL_HEADER;
+import static org.folio.service.PubSubRegistrationService.buildOkapiUrl;
 import static org.folio.support.LogEventPayloadField.ORIGINAL;
 import static org.folio.support.LogEventPayloadField.REQUESTS;
 import static org.folio.support.LogEventPayloadField.UPDATED;
 import static org.folio.support.exception.LogEventType.REQUEST_EXPIRED;
-import static org.folio.support.PubSubConfig.getOkapiHost;
-import static org.folio.support.PubSubConfig.getOkapiPort;
 import static org.folio.support.DbUtil.rowSetToStream;
 
 import java.text.SimpleDateFormat;
@@ -28,7 +25,6 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +33,6 @@ import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import org.folio.rest.client.LoginClient;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.SQLConnection;
@@ -62,7 +57,7 @@ public class ExpirationTool {
     //do nothing
   }
 
-  public static Future<Void> doRequestExpiration(Vertx vertx) {
+  public static Future<Void> doRequestExpiration(Map<String, String> okapiHeaders, Vertx vertx) {
     final Promise<RowSet<Row>> promise = Promise.promise();
     PostgresClient pgClient = PostgresClient.getInstance(vertx);
 
@@ -72,46 +67,36 @@ public class ExpirationTool {
 
     return promise.future()
       .compose(rs -> CompositeFuture.all(rowSetToStream(rs)
-        .map(row -> doRequestExpirationForTenant(vertx, getTenant(row.getString("nspname"))))
+        .map(row -> doRequestExpirationForTenant(okapiHeaders, vertx, getTenant(row.getString("nspname"))))
         .collect(toList()))
         .map(all -> null));
   }
 
-  private static Future<Void> doRequestExpirationForTenant(Vertx vertx, String tenant) {
+  private static Future<Void> doRequestExpirationForTenant(Map<String, String> okapiHeaders, Vertx vertx, String tenant) {
     Promise<Void> promise = Promise.promise();
 
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
 
-    Map<String, String> okapiHeaders = new HashMap<>();
-    okapiHeaders.put(OKAPI_URL_HEADER, getOkapiHost() + ":" + getOkapiPort());
-    okapiHeaders.put(OKAPI_TENANT_HEADER, tenant);
+    List<JsonObject> context = new ArrayList<>();
 
-    new LoginClient(vertx, okapiHeaders).postLoginRequest()
-      .onComplete(apiKey -> {
-
-        List<JsonObject> context = new ArrayList<>();
-
-        pgClient.startTx(conn -> getExpiredRequests(conn, vertx, tenant)
-          .compose(requests -> closeRequests(conn, vertx, tenant, requests, context))
-          .compose(itemIds -> getOpenRequestsByItemIds(conn, vertx, tenant, itemIds))
-          .compose(requests -> reorderRequests(conn, vertx, tenant, requests))
-          .onComplete(v -> {
-            if (v.failed()) {
-              pgClient.rollbackTx(conn, done -> {
-                log.error("Error in request processing", v.cause());
-                promise.fail(v.cause());
-              });
-            } else {
-              if(apiKey.succeeded()) {
-                okapiHeaders.put(OKAPI_TOKEN_HEADER, apiKey.result());
-                EventPublisherService eventPublisherService = new EventPublisherService(vertx, okapiHeaders);
-                context.forEach(p -> eventPublisherService
-                  .publishLogRecord(new JsonObject().put(REQUESTS.value(), p), REQUEST_EXPIRED));
-              }
-              pgClient.endTx(conn, done -> promise.complete());
-            }
-          }));
-      });
+    pgClient.startTx(conn -> getExpiredRequests(conn, vertx, tenant)
+      .compose(requests -> closeRequests(conn, vertx, tenant, requests, context))
+      .compose(itemIds -> getOpenRequestsByItemIds(conn, vertx, tenant, itemIds))
+      .compose(requests -> reorderRequests(conn, vertx, tenant, requests))
+      .onComplete(v -> {
+        if (v.failed()) {
+          pgClient.rollbackTx(conn, done -> {
+            log.error("Error in request processing", v.cause());
+            promise.fail(v.cause());
+          });
+        } else {
+          okapiHeaders.put(OKAPI_URL_HEADER, buildOkapiUrl());
+          EventPublisherService eventPublisherService = new EventPublisherService(vertx, okapiHeaders);
+          context.forEach(p -> eventPublisherService
+            .publishLogRecord(new JsonObject().put(REQUESTS.value(), p), REQUEST_EXPIRED));
+          pgClient.endTx(conn, done -> promise.complete());
+        }
+      }));
 
     return promise.future();
   }
