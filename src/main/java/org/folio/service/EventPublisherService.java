@@ -11,6 +11,7 @@ import org.folio.support.exception.LogEventType;
 
 import java.util.Map;
 
+import static org.folio.support.JsonPropertyWriter.write;
 import static org.folio.support.LogEventPayloadField.LOG_EVENT_TYPE;
 
 public class EventPublisherService {
@@ -22,8 +23,8 @@ public class EventPublisherService {
   }
 
   public Future<Void> publishLogRecord(JsonObject context, LogEventType payloadType) {
-    JsonPropertyWriter.write(context, LOG_EVENT_TYPE.value(), payloadType.value());
     context = new JsonObject().put(LogEventPayloadField.PAYLOAD.value(), context);
+    write(context, LOG_EVENT_TYPE.value(), payloadType.value());
     Promise<Void> promise = Promise.promise();
     pubSubPublishingService.publishEvent(EventType.LOG_RECORD.name(), context.encode())
       .thenAccept(r -> promise.complete());

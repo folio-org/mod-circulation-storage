@@ -39,8 +39,7 @@ public interface ScheduledRequestExpiration {
     }
 
     public static ScheduledRequestExpirationResponse respond500WithTextPlain(String reason) {
-      Response.ResponseBuilder responseBuilder = Response.status(500)
-        .header(CONTENT_TYPE, TEXT_PLAIN);
+      Response.ResponseBuilder responseBuilder = Response.status(500).header(CONTENT_TYPE, TEXT_PLAIN);
       responseBuilder.entity(reason);
 
       return new ScheduledRequestExpirationResponse(responseBuilder.build(), reason);
