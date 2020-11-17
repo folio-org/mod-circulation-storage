@@ -12,8 +12,6 @@ import static org.folio.rest.jaxrs.model.Request.Status.OPEN_AWAITING_DELIVERY;
 import static org.folio.rest.jaxrs.model.Request.Status.OPEN_AWAITING_PICKUP;
 import static org.folio.rest.jaxrs.model.Request.Status.OPEN_IN_TRANSIT;
 import static org.folio.rest.jaxrs.model.Request.Status.OPEN_NOT_YET_FILLED;
-import static org.folio.rest.util.OkapiConnectionParams.OKAPI_URL_HEADER;
-import static org.folio.service.PubSubRegistrationService.buildOkapiUrl;
 import static org.folio.support.LogEventPayloadField.ORIGINAL;
 import static org.folio.support.LogEventPayloadField.REQUESTS;
 import static org.folio.support.LogEventPayloadField.UPDATED;
@@ -90,7 +88,6 @@ public class ExpirationTool {
             promise.fail(v.cause());
           });
         } else {
-          okapiHeaders.put(OKAPI_URL_HEADER, buildOkapiUrl());
           EventPublisherService eventPublisherService = new EventPublisherService(vertx, okapiHeaders);
           context.forEach(p -> eventPublisherService
             .publishLogRecord(new JsonObject().put(REQUESTS.value(), p), REQUEST_EXPIRED));

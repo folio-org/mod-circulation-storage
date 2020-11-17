@@ -2,9 +2,6 @@ package org.folio.service;
 
 import static java.util.concurrent.CompletableFuture.allOf;
 import static org.folio.HttpStatus.HTTP_NO_CONTENT;
-import static org.folio.rest.util.OkapiConnectionParams.OKAPI_URL_HEADER;
-import static org.folio.support.PubSubConfig.getOkapiHost;
-import static org.folio.support.PubSubConfig.getOkapiPort;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,8 +27,6 @@ public class PubSubRegistrationService {
 
   public static CompletableFuture<Boolean> registerModule(Map<String, String> headers, Vertx vertx) {
 
-    headers.put(OKAPI_URL_HEADER, buildOkapiUrl());
-
     return PubSubClientUtils.registerModule(new OkapiConnectionParams(headers, vertx))
       .whenComplete((registrationAr, throwable) -> {
         if (throwable == null) {
@@ -45,8 +40,6 @@ public class PubSubRegistrationService {
   public static CompletableFuture<Boolean> unregisterModule(Map<String, String> headers, Vertx vertx) {
 
     List<CompletableFuture<Boolean>> list = new ArrayList<>();
-
-    headers.put(OKAPI_URL_HEADER, buildOkapiUrl());
 
     OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
     PubsubClient client = new PubsubClient(params.getOkapiUrl(), params.getTenantId(), params.getToken());
@@ -73,10 +66,6 @@ public class PubSubRegistrationService {
 
     return allOf(list.toArray(new CompletableFuture[0])).thenApply(r -> true)
       .whenComplete((r, e) -> client.close());
-  }
-
-  public static String buildOkapiUrl() {
-    return getOkapiHost() + ":" + getOkapiPort();
   }
 
 }

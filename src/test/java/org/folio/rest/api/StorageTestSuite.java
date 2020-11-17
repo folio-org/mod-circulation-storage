@@ -1,10 +1,14 @@
 package org.folio.rest.api;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.any;
+import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.folio.support.EventType.LOG_RECORD;
 import static org.folio.support.MockServer.getCreatedEventTypes;
 import static org.folio.support.MockServer.getRegisteredPublishers;
 import static org.folio.support.MockServer.getRegisteredSubscribers;
-import static org.folio.support.PubSubConfig.getOkapiPort;
 import static org.folio.util.pubsub.PubSubClientUtils.constructModuleName;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -25,6 +29,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import com.github.tomakehurst.wiremock.WireMockServer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.api.loans.LoansAnonymizationApiTest;
 import org.folio.rest.api.migration.StaffSlipsMigrationScriptTest;
@@ -82,9 +87,12 @@ public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";
 
   private static Vertx vertx;
-  public static final int PORT = NetworkUtils.nextFreePort();
+  public static final int VERTICLE_PORT = NetworkUtils.nextFreePort();
+  public static final int PROXY_PORT = NetworkUtils.nextFreePort();
+  public static final int OKAPI_MOCK_PORT = NetworkUtils.nextFreePort();
   private static boolean initialised = false;
   private static MockServer mockServer;
+  private static final WireMockServer wireMockServer = new WireMockServer(PROXY_PORT);
 
   /**
    * Return a URL for the path and the parameters.
@@ -94,7 +102,7 @@ public class StorageTestSuite {
    */
   public static URL storageUrl(String path, String ... parameterKeyValue) throws MalformedURLException {
     if (parameterKeyValue.length == 0) {
-      return new URL("http", "localhost", PORT, path);
+      return new URL("http", "localhost", PROXY_PORT, path);
     }
     if (parameterKeyValue.length % 2 == 1) {
       throw new InvalidParameterException("Expected even number of key/value strings, found "
@@ -109,7 +117,7 @@ public class StorageTestSuite {
           .append('=')
           .append(URLEncoder.encode(parameterKeyValue[i+1], StandardCharsets.UTF_8.name()));
       }
-      return new URL("http", "localhost", PORT, completePath.toString());
+      return new URL("http", "localhost", PROXY_PORT, completePath.toString());
     } catch (UnsupportedEncodingException e) {
       throw new RuntimeException(e);
     }
@@ -169,13 +177,23 @@ public class StorageTestSuite {
 
     DeploymentOptions options = new DeploymentOptions();
 
-    options.setConfig(new JsonObject().put("http.port", PORT));
+    options.setConfig(new JsonObject().put("http.port", VERTICLE_PORT));
     options.setWorker(true);
 
     startVerticle(options);
 
-    mockServer = new MockServer(getOkapiPort(), vertx);
+    mockServer = new MockServer(OKAPI_MOCK_PORT, vertx);
     mockServer.start();
+
+    wireMockServer.start();
+
+    wireMockServer.stubFor(post(urlMatching("/pubsub/.*"))
+      .atPriority(1)
+      .willReturn(aResponse().proxiedFrom("http://localhost:" + OKAPI_MOCK_PORT)));
+
+    wireMockServer.stubFor(any(anyUrl())
+      .atPriority(10)
+      .willReturn(aResponse().proxiedFrom("http://localhost:" + VERTICLE_PORT)));
 
     prepareTenant(TENANT_ID);
 
