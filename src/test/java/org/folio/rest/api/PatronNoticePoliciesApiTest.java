@@ -69,6 +69,13 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
       .put("sendOptions", new JsonObject()
         .put("sendWhen", "Item recalled"));
 
+    JsonObject agedToLostNotice = new JsonObject()
+      .put("templateId", UUID.randomUUID().toString())
+      .put("format", "Email")
+      .put("realTime", "true")
+      .put("sendOptions", new JsonObject()
+        .put("sendWhen", "Aged to lost"));
+
     JsonObject holdExpirationChangeNotice = new JsonObject()
       .put("templateId", UUID.randomUUID().toString())
       .put("format", "Email")
@@ -107,7 +114,8 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
         .add(holdExpirationChangeNotice))
       .put("loanNotices", new JsonArray()
         .add(manualDueDateChangeNotice)
-        .add(itemRecalledNotice))
+        .add(itemRecalledNotice)
+        .add(agedToLostNotice))
       .put("feeFineNotices", new JsonArray()
         .add(oneTimeOverdueFineReturnedNotice)
         .add(recurringOverdueFineRenewedNotice));
