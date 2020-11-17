@@ -109,6 +109,15 @@
               "type": "object",
               "$ref": "period.json",
               "description": "Recall return interval"
+            },
+            "alternateRecallReturn": {
+              "type": "boolean",
+              "description": "Allow recall return interval for overdue loans"
+            },
+            "alternateRecallReturnInterval": {
+              "type": "object",
+              "$ref": "period.json",
+              "description": "Alternate recall return interval for overdue loans"
             }
           }
         },
