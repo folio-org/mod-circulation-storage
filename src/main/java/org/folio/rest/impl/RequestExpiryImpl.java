@@ -1,24 +1,36 @@
+
 package org.folio.rest.impl;
 
-import static org.folio.rest.RestVerticle.MODULE_SPECIFIC_ARGS;
+import static io.vertx.core.Future.succeededFuture;
+import static org.folio.rest.jaxrs.resource.ScheduledRequestExpiration.ScheduledRequestExpirationResponse.respond204;
+import static org.folio.rest.jaxrs.resource.ScheduledRequestExpiration.ScheduledRequestExpirationResponse.respond500WithTextPlain;
+import static org.folio.support.ExpirationTool.doRequestExpiration;
 
+import java.util.Map;
+
+import javax.ws.rs.core.Response;
+
+import org.folio.rest.jaxrs.resource.ScheduledRequestExpiration;
+
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
-import io.vertx.core.Vertx;
+import io.vertx.core.Handler;
 
-import org.folio.rest.resource.interfaces.PeriodicAPI;
-import org.folio.support.ExpirationTool;
-
-public class RequestExpiryImpl implements PeriodicAPI {
+public class RequestExpiryImpl implements ScheduledRequestExpiration {
 
   @Override
-  public long runEvery() {
-    String intervalString = MODULE_SPECIFIC_ARGS.getOrDefault("request.expire.interval",
-      "120000");
-    return Long.parseLong(intervalString);
-  }
+  public void expireRequests(Map<String, String> okapiHeaders,
+                             Handler<AsyncResult<Response>> asyncResultHandler, Context context) {
 
-  @Override
-  public void run(Vertx vertx, Context context) {
-    context.runOnContext(v -> ExpirationTool.doRequestExpiration(vertx));
+    context.runOnContext(v -> doRequestExpiration(okapiHeaders, context.owner())
+      .onComplete(result -> {
+        if (result.succeeded()) {
+          asyncResultHandler.handle(succeededFuture(respond204()));
+        } else {
+          asyncResultHandler.handle(
+            succeededFuture(respond500WithTextPlain(result.cause().getMessage())));
+        }
+      })
+    );
   }
 }

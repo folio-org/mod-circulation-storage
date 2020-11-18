@@ -12,10 +12,15 @@ import static org.folio.rest.jaxrs.model.Request.Status.OPEN_AWAITING_DELIVERY;
 import static org.folio.rest.jaxrs.model.Request.Status.OPEN_AWAITING_PICKUP;
 import static org.folio.rest.jaxrs.model.Request.Status.OPEN_IN_TRANSIT;
 import static org.folio.rest.jaxrs.model.Request.Status.OPEN_NOT_YET_FILLED;
+import static org.folio.support.LogEventPayloadField.ORIGINAL;
+import static org.folio.support.LogEventPayloadField.REQUESTS;
+import static org.folio.support.LogEventPayloadField.UPDATED;
+import static org.folio.support.exception.LogEventType.REQUEST_EXPIRED;
 import static org.folio.support.DbUtil.rowSetToStream;
 
 import java.text.SimpleDateFormat;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
@@ -40,6 +45,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import org.folio.service.EventPublisherService;
 
 public class ExpirationTool {
   private static final Logger log = LoggerFactory.getLogger(ExpirationTool.class);
@@ -49,7 +55,7 @@ public class ExpirationTool {
     //do nothing
   }
 
-  public static Future<Void> doRequestExpiration(Vertx vertx) {
+  public static Future<Void> doRequestExpiration(Map<String, String> okapiHeaders, Vertx vertx) {
     final Promise<RowSet<Row>> promise = Promise.promise();
     PostgresClient pgClient = PostgresClient.getInstance(vertx);
 
@@ -59,18 +65,20 @@ public class ExpirationTool {
 
     return promise.future()
       .compose(rs -> CompositeFuture.all(rowSetToStream(rs)
-        .map(row -> doRequestExpirationForTenant(vertx, getTenant(row.getString("nspname"))))
+        .map(row -> doRequestExpirationForTenant(okapiHeaders, vertx, getTenant(row.getString("nspname"))))
         .collect(toList()))
         .map(all -> null));
   }
 
-  private static Future<Void> doRequestExpirationForTenant(Vertx vertx, String tenant) {
+  private static Future<Void> doRequestExpirationForTenant(Map<String, String> okapiHeaders, Vertx vertx, String tenant) {
     Promise<Void> promise = Promise.promise();
 
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
 
+    List<JsonObject> context = new ArrayList<>();
+
     pgClient.startTx(conn -> getExpiredRequests(conn, vertx, tenant)
-      .compose(requests -> closeRequests(conn, vertx, tenant, requests))
+      .compose(requests -> closeRequests(conn, vertx, tenant, requests, context))
       .compose(itemIds -> getOpenRequestsByItemIds(conn, vertx, tenant, itemIds))
       .compose(requests -> reorderRequests(conn, vertx, tenant, requests))
       .onComplete(v -> {
@@ -80,6 +88,9 @@ public class ExpirationTool {
             promise.fail(v.cause());
           });
         } else {
+          EventPublisherService eventPublisherService = new EventPublisherService(vertx, okapiHeaders);
+          context.forEach(p -> eventPublisherService
+            .publishLogRecord(new JsonObject().put(REQUESTS.value(), p), REQUEST_EXPIRED));
           pgClient.endTx(conn, done -> promise.complete());
         }
       }));
@@ -212,14 +223,18 @@ public class ExpirationTool {
 
 
   private static Future<Set<String>> closeRequests(AsyncResult<SQLConnection> conn,
-    Vertx vertx, String tenant, List<Request> requests) {
+    Vertx vertx, String tenant, List<Request> requests, List<JsonObject> context) {
 
     Future<Void> future = succeededFuture();
     Set<String> closedRequestsItemIds = new HashSet<>();
 
     for (Request request : requests) {
+      JsonObject pair = new JsonObject();
+      pair.put(ORIGINAL.value(), JsonObject.mapFrom(request));
       closedRequestsItemIds.add(request.getItemId());
       Request updatedRequest = changeRequestStatus(request).withPosition(null);
+      pair.put(UPDATED.value(), JsonObject.mapFrom(updatedRequest));
+      context.add(pair);
       future = future.compose(v -> updateRequest(conn, vertx, tenant, updatedRequest));
     }
 
