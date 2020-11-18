@@ -52,7 +52,7 @@ public class PubSubRegistrationService {
             future.complete(true);
           } else {
             ModulePubSubUnregisteringException exception = new ModulePubSubUnregisteringException(
-                String.format("Module's publisher for " + "event type %s was not unregistered from PubSub. HTTP status: %s",
+                String.format("Module's publisher for event type %s was not unregistered from PubSub. HTTP status: %s",
                     eventType.name(), ar.statusCode()));
             logger.error(exception);
             future.completeExceptionally(exception);

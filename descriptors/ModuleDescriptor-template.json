@@ -3,10 +3,6 @@
   "name": "Circulation Storage Module",
   "requires": [
     {
-      "id": "login",
-      "version": "7.0"
-    },
-    {
       "id": "pubsub-event-types",
       "version": "0.1"
     },

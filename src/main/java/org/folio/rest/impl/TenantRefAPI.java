@@ -46,11 +46,9 @@ public class TenantRefAPI extends TenantAPI {
             return;
           }
           PubSubRegistrationService.registerModule(headers, vertx)
-          .handle((aBoolean, throwable) -> {
+          .whenComplete((aBoolean, throwable) ->
             hndlr.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
-              .respond201WithApplicationJson("")));
-            return null;
-          });
+              .respond201WithApplicationJson(""))));
         });
     }, cntxt);
   }
