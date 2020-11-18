@@ -1,6 +1,7 @@
 package org.folio.rest.api;
 
 import static java.lang.Boolean.TRUE;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isBadRequest;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNotFound;
 import static org.folio.rest.support.matchers.LoanMatchers.isClosed;
@@ -23,6 +24,7 @@ import static org.joda.time.DateTime.parse;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -1048,7 +1050,7 @@ public class LoansApiTest extends ApiTests {
     UUID firstUserId = UUID.randomUUID();
     UUID secondUserId = UUID.randomUUID();
 
-    String queryTemplate = InterfaceUrls.loanStorageUrl() + "?query=userId=\"%s\"";
+    String queryTemplate = InterfaceUrls.loanStorageUrl() + "?query=userId='%s'";
 
     loansClient.create(new LoanRequestBuilder().withUserId(firstUserId).create());
     loansClient.create(new LoanRequestBuilder().withUserId(firstUserId).create());
@@ -1101,7 +1103,7 @@ public class LoansApiTest extends ApiTests {
 
     UUID userId = UUID.randomUUID();
 
-    String queryTemplate = "query=userId=\"%s\"+and+status.name=\"%s\"";
+    String queryTemplate = "query=userId=%s+and+status.name=%s";
 
     loansClient.create(loanRequest(userId, "Open"));
     loansClient.create(loanRequest(userId, "Open"));

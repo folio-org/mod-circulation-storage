@@ -30,7 +30,7 @@ public class TestContextConfiguration {
   public OkapiHeaders okapiHeaders() {
     return OkapiHeaders.builder()
       .tenantId(TENANT_ID)
-      .url("http://localhost:" + StorageTestSuite.PORT)
+      .url("http://localhost:" + StorageTestSuite.PROXY_PORT)
       .token(generateToken())
       .userId(USER_ID)
       .build();
