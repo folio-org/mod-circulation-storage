@@ -1,7 +1,19 @@
 package org.folio.rest.api;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.any;
+import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
+import static org.folio.support.EventType.LOG_RECORD;
+import static org.folio.support.MockServer.getCreatedEventTypes;
+import static org.folio.support.MockServer.getRegisteredPublishers;
+import static org.folio.support.MockServer.getRegisteredSubscribers;
+import static org.folio.util.pubsub.PubSubClientUtils.constructModuleName;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -11,14 +23,18 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidParameterException;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import com.github.tomakehurst.wiremock.WireMockServer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.api.loans.LoansAnonymizationApiTest;
 import org.folio.rest.api.migration.StaffSlipsMigrationScriptTest;
+import org.folio.rest.jaxrs.model.EventDescriptor;
+import org.folio.rest.jaxrs.model.PublisherDescriptor;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.OkapiHttpClient;
@@ -26,6 +42,7 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.TextResponse;
 import org.folio.rest.tools.utils.NetworkUtils;
+import org.folio.support.MockServer;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
@@ -70,8 +87,12 @@ public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";
 
   private static Vertx vertx;
-  public static final int PORT = NetworkUtils.nextFreePort();
+  public static final int VERTICLE_PORT = NetworkUtils.nextFreePort();
+  public static final int PROXY_PORT = NetworkUtils.nextFreePort();
+  public static final int OKAPI_MOCK_PORT = NetworkUtils.nextFreePort();
   private static boolean initialised = false;
+  private static MockServer mockServer;
+  private static final WireMockServer wireMockServer = new WireMockServer(PROXY_PORT);
 
   /**
    * Return a URL for the path and the parameters.
@@ -81,7 +102,7 @@ public class StorageTestSuite {
    */
   public static URL storageUrl(String path, String ... parameterKeyValue) throws MalformedURLException {
     if (parameterKeyValue.length == 0) {
-      return new URL("http", "localhost", PORT, path);
+      return new URL("http", "localhost", PROXY_PORT, path);
     }
     if (parameterKeyValue.length % 2 == 1) {
       throw new InvalidParameterException("Expected even number of key/value strings, found "
@@ -96,7 +117,7 @@ public class StorageTestSuite {
           .append('=')
           .append(URLEncoder.encode(parameterKeyValue[i+1], StandardCharsets.UTF_8.name()));
       }
-      return new URL("http", "localhost", PORT, completePath.toString());
+      return new URL("http", "localhost", PROXY_PORT, completePath.toString());
     } catch (UnsupportedEncodingException e) {
       throw new RuntimeException(e);
     }
@@ -156,10 +177,23 @@ public class StorageTestSuite {
 
     DeploymentOptions options = new DeploymentOptions();
 
-    options.setConfig(new JsonObject().put("http.port", PORT));
+    options.setConfig(new JsonObject().put("http.port", VERTICLE_PORT));
     options.setWorker(true);
 
     startVerticle(options);
+
+    mockServer = new MockServer(OKAPI_MOCK_PORT, vertx);
+    mockServer.start();
+
+    wireMockServer.start();
+
+    wireMockServer.stubFor(post(urlMatching("/pubsub/.*"))
+      .atPriority(1)
+      .willReturn(aResponse().proxiedFrom("http://localhost:" + OKAPI_MOCK_PORT)));
+
+    wireMockServer.stubFor(any(anyUrl())
+      .atPriority(10)
+      .willReturn(aResponse().proxiedFrom("http://localhost:" + VERTICLE_PORT)));
 
     prepareTenant(TENANT_ID);
 
@@ -175,6 +209,8 @@ public class StorageTestSuite {
     initialised = false;
 
     removeTenant(TENANT_ID);
+
+    mockServer.close();
 
     CompletableFuture<String> undeploymentComplete = new CompletableFuture<>();
 
@@ -315,6 +351,22 @@ public class StorageTestSuite {
         response.getStatusCode(), response.getBody());
 
       assertThat(failureMessage, response.getStatusCode(), is(201));
+
+      List<JsonObject> eventTypes = getCreatedEventTypes();
+      assertThat(eventTypes, hasSize(1));
+      EventDescriptor descriptor = eventTypes.get(0).mapTo(EventDescriptor.class);
+      assertThat(descriptor.getEventType(), equalTo(LOG_RECORD.name()));
+
+      List<JsonObject> publishers = getRegisteredPublishers();
+      assertThat(publishers, hasSize(1));
+      PublisherDescriptor publisher = publishers.get(0).mapTo(PublisherDescriptor.class);
+      assertThat(publisher.getModuleId(), equalTo(constructModuleName()));
+
+      assertThat(publisher.getEventDescriptors(), hasSize(1));
+      assertThat(publisher.getEventDescriptors().get(0).getEventType(), equalTo(LOG_RECORD.name()));
+
+      List<JsonObject> subscribers = getRegisteredSubscribers();
+      assertThat(subscribers, hasSize(0));
 
     } catch (Exception e) {
       log.error("Tenant preparation failed: " + e.getMessage(), e);

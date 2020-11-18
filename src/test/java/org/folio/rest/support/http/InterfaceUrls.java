@@ -31,4 +31,8 @@ public class InterfaceUrls {
   public static URL checkInsStorageUrl(String subPath) throws MalformedURLException {
     return StorageTestSuite.storageUrl("/check-in-storage/check-ins" + subPath);
   }
+
+  public static URL requestExpirationUrl() throws MalformedURLException {
+    return StorageTestSuite.storageUrl("/scheduled-request-expiration");
+  }
 }
