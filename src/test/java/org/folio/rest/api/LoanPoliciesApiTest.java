@@ -995,7 +995,6 @@ public class LoanPoliciesApiTest extends ApiTests {
     assertThat(recalls.getJsonObject("alternateGracePeriod"), matchesPeriod(1, "Months"));
     assertThat(recalls.getJsonObject("minimumGuaranteedLoanPeriod"), matchesPeriod(1, "Weeks"));
     assertThat(recalls.getJsonObject("recallReturnInterval"), matchesPeriod(1, "Days"));
-    assertThat(recalls.getBoolean("alternateRecallReturn"), is(true));
     assertThat(recalls.getJsonObject("alternateRecallReturnInterval"), matchesPeriod(4, "Hours"));
     JsonObject holds = requestManagement.getJsonObject("holds");
     assertThat(holds.getJsonObject("alternateCheckoutLoanPeriod"), matchesPeriod(2, "Months"));

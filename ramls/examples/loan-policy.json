@@ -47,7 +47,6 @@
         "duration": 3,
         "intervalId": "Days"
       },
-      "alternateRecallReturn": true,
       "alternateRecallReturnInterval": {
         "duration": 4,
         "intervalId": "Hours"
