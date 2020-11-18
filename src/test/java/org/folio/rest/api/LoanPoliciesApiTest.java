@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.folio.rest.support.builders.LoanPolicyRequestBuilder.defaultRollingPolicy;
 import static org.folio.rest.support.builders.LoanPolicyRequestBuilder.emptyPolicy;
 import static org.folio.rest.support.matchers.periodJsonObjectMatcher.matchesPeriod;
@@ -17,6 +18,7 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -713,15 +715,15 @@ public class LoanPoliciesApiTest extends ApiTests {
     String firstPolicyId = createLoanPolicy(defaultRollingPolicy().create()).getId();
     String secondPolicyId = createLoanPolicy(defaultRollingPolicy().create()).getId();
 
-    String queryTemplate = loanPolicyStorageUrl() + "?query=id=\"%s\"";
+    String queryTemplate =  "id=\"%s\"";
 
     CompletableFuture<JsonResponse> searchForFirstPolicyCompleted = new CompletableFuture<>();
     CompletableFuture<JsonResponse> searchForSecondPolicyCompleted = new CompletableFuture<>();
 
-    client.get(String.format(queryTemplate, firstPolicyId),
+    client.get(loanPolicyStorageUrl() + "?query=" + URLEncoder.encode(String.format(queryTemplate, firstPolicyId), UTF_8),
       StorageTestSuite.TENANT_ID, ResponseHandler.json(searchForFirstPolicyCompleted));
 
-    client.get(String.format(queryTemplate, secondPolicyId),
+    client.get(loanPolicyStorageUrl() + "?query=" + URLEncoder.encode(String.format(queryTemplate, secondPolicyId), UTF_8),
       StorageTestSuite.TENANT_ID, ResponseHandler.json(searchForSecondPolicyCompleted));
 
     JsonResponse firstPolicySearchResponse = searchForFirstPolicyCompleted.get(5, TimeUnit.SECONDS);

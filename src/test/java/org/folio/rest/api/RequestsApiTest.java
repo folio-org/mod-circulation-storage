@@ -1,6 +1,7 @@
 package org.folio.rest.api;
 
 import static java.net.HttpURLConnection.HTTP_CREATED;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_CANCELLED;
@@ -1208,7 +1209,8 @@ public class RequestsApiTest extends ApiTests {
 
     CompletableFuture<JsonResponse> getRequestsCompleted2 = new CompletableFuture<>();
 
-    client.get(requestStorageUrl() + String.format("?query=proxyUserId<>%s", UUID.randomUUID().toString()),
+    String query = String.format("proxyUserId<>%s", UUID.randomUUID().toString());
+    client.get(requestStorageUrl() + "?query=" + URLEncoder.encode(query, UTF_8),
       TENANT_ID, ResponseHandler.json(getRequestsCompleted2));
 
     JsonResponse getRequestsResponse2 = getRequestsCompleted2.get(5, TimeUnit.SECONDS);
