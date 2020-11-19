@@ -14,16 +14,69 @@
       "duration": 7,
       "intervalId": "Days"
     },
+    "openingTimeOffset": {
+      "duration": 2,
+      "intervalId": "Weeks"
+    },
+    "fixedDueDateScheduleId": "",
     "itemLimit": 1000
   },
   "renewable": true,
   "renewalsPolicy": {
     "unlimited": true,
+    "numberAllowed": 2,
     "renewFromId": "CURRENT_DUE_DATE",
     "differentPeriod": true,
     "period": {
       "duration": 30,
       "intervalId": "Days"
+    },
+    "alternateFixedDueDateScheduleId": ""
+  },
+  "requestManagement": {
+    "recalls": {
+      "alternateGracePeriod": {
+        "duration": 1,
+        "intervalId": "Months"
+      },
+      "minimumGuaranteedLoanPeriod": {
+        "duration": 2,
+        "intervalId": "Weeks"
+      },
+      "recallReturnInterval": {
+        "duration": 3,
+        "intervalId": "Days"
+      },
+      "alternateRecallReturnInterval": {
+        "duration": 4,
+        "intervalId": "Hours"
+      }
+    }
+  },
+  "holds": {
+    "recalls": {
+      "alternateCheckoutLoanPeriod": {
+        "duration": 1,
+        "intervalId": "Months"
+      },
+      "renewItemsWithRequest": true,
+      "alternateRenewalLoanPeriod": {
+        "duration": 2,
+        "intervalId": "Weeks"
+      }
+    }
+  },
+  "pages": {
+    "recalls": {
+      "alternateCheckoutLoanPeriod": {
+        "duration": 1,
+        "intervalId": "Months"
+      },
+      "renewItemsWithRequest": true,
+      "alternateRenewalLoanPeriod": {
+        "duration": 2,
+        "intervalId": "Weeks"
+      }
     }
   }
 }
