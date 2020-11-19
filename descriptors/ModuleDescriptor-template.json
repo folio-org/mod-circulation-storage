@@ -482,7 +482,7 @@
           "methods": [
             "POST"
           ],
-          "pathPattern": "/request-expiration/scheduled-request-expiration",
+          "pathPattern": "/scheduled-request-expiration",
           "modulePermissions": [
             "pubsub.publish.post"
           ],
