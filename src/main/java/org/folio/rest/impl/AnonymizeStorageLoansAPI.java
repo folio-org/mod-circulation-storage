@@ -118,14 +118,14 @@ public class AnonymizeStorageLoansAPI implements AnonymizeStorageLoans {
     // Only anonymize the history for loans that are currently closed
     // meaning that we need to refer to loans in this query
     final String AnonymizeStorageLoansActionHistorySql = String.format(
-      new StringBuilder().append("UPDATE %s_%s.%s l")
+      new StringBuilder().append("UPDATE %s_%s.%s al")
         .append(" SET jsonb = jsonb #- '{loan,userId}'")
         .append(" WHERE jsonb->'loan'->>'id' IN")
         .append(" (SELECT l.jsonb->>'id' FROM %s_%s.loan l")
         .append(" WHERE l.id in ")
         .append(loanIds)
         .append(" AND l.jsonb->'status'->>'name' = 'Closed')")
-        .append(" AND  l.jsonb->'userId' is NOT NULL")
+        .append(" AND  al.jsonb->'loan'->>'userId' is NOT NULL")
         .toString(),
       tenantId, MODULE_NAME, LOAN_HISTORY_TABLE, tenantId, MODULE_NAME);
 

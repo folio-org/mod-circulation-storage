@@ -1,9 +1,9 @@
 package org.folio.rest.support.http;
 
+import static org.folio.rest.api.StorageTestSuite.storageUrl;
+
 import java.net.MalformedURLException;
 import java.net.URL;
-
-import org.folio.rest.api.StorageTestSuite;
 
 public class InterfaceUrls {
   private InterfaceUrls() { }
@@ -15,24 +15,28 @@ public class InterfaceUrls {
   public static URL loanStorageUrl(String subPath)
     throws MalformedURLException {
 
-    return StorageTestSuite.storageUrl("/loan-storage/loans" + subPath);
+    return storageUrl("/loan-storage/loans" + subPath);
+  }
+
+  public static URL loanHistoryUrl(String subPath) throws MalformedURLException {
+    return storageUrl("/loan-storage/loan-history" + subPath);
   }
 
   public static URL patronActionSessionStorageUrl(String subPath)
     throws MalformedURLException {
 
-    return StorageTestSuite.storageUrl("/patron-action-session-storage/patron-action-sessions" + subPath);
+    return storageUrl("/patron-action-session-storage/patron-action-sessions" + subPath);
   }
 
   public static URL anonymizeLoansURL() throws MalformedURLException {
-    return StorageTestSuite.storageUrl("/anonymize-storage-loans");
+    return storageUrl("/anonymize-storage-loans");
   }
 
   public static URL checkInsStorageUrl(String subPath) throws MalformedURLException {
-    return StorageTestSuite.storageUrl("/check-in-storage/check-ins" + subPath);
+    return storageUrl("/check-in-storage/check-ins" + subPath);
   }
 
   public static URL requestExpirationUrl() throws MalformedURLException {
-    return StorageTestSuite.storageUrl("/scheduled-request-expiration");
+    return storageUrl("/scheduled-request-expiration");
   }
 }
