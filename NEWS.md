@@ -1,3 +1,6 @@
+## 12.1.4 2020-11-19
+* Request log actions: Pickup expired, Expired (CIRCSTORE-247) - improvements
+
 ## 12.1.3 2020-11-18
 * Request log actions: Pickup expired, Expired (CIRCSTORE-247)
 
