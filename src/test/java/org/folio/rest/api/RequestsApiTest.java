@@ -85,6 +85,7 @@ public class RequestsApiTest extends ApiTests {
   private static final String REQUEST_STORAGE_URL = "/request-storage/requests";
   private static final String CANCEL_REASON_URL = "/cancellation-reason-storage/cancellation-reasons";
   private static final String REQUEST_TABLE = "request";
+  private static final String PATRON_COMMENTS = "A comment.";
 
   @ClassRule
   public static final SpringClassRule classRule = new SpringClassRule();
@@ -162,6 +163,7 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getString("status"), is(OPEN_NOT_YET_FILLED));
     assertThat(representation.getInteger("position"), is(1));
     assertThat(representation.getString("pickupServicePointId"), is(pickupServicePointId.toString()));
+    assertThat(representation.containsKey("patronComments"), is(false));
 
     assertThat(representation.containsKey("item"), is(true));
 
@@ -346,6 +348,22 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.containsKey("holdShelfExpirationDate"), is(false));
     assertThat(representation.containsKey("item"), is(false));
     assertThat(representation.containsKey("requester"), is(false));
+  }
+
+  @Test
+  public void canCreateARequestWithPatronComments()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    JsonObject representation = createEntity(
+      new RequestRequestBuilder()
+      .withPatronComments(PATRON_COMMENTS)
+      .create(),
+      requestStorageUrl()).getJson();
+
+    assertThat(representation.getString("patronComments"), is(PATRON_COMMENTS));
   }
 
   @Test

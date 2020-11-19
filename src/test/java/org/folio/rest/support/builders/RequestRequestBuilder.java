@@ -42,6 +42,7 @@ public class RequestRequestBuilder extends JsonBuilder {
   private final Integer position;
   private final UUID pickupServicePointId;
   private final Tags tags;
+  private final String patronComments;
 
   public RequestRequestBuilder() {
     this(UUID.randomUUID(),
@@ -63,6 +64,7 @@ public class RequestRequestBuilder extends JsonBuilder {
       null,
       null,
       1,
+      null,
       null,
       null);
   }
@@ -88,7 +90,8 @@ public class RequestRequestBuilder extends JsonBuilder {
     DateTime cancelledDate,
     Integer position,
     UUID pickupServicePointId,
-    Tags tags) {
+    Tags tags,
+    String patronComments) {
 
     this.id = id;
     this.requestType = requestType;
@@ -111,6 +114,7 @@ public class RequestRequestBuilder extends JsonBuilder {
     this.position = position;
     this.pickupServicePointId = pickupServicePointId;
     this.tags = tags;
+    this.patronComments = patronComments;
   }
 
   public JsonObject create() {
@@ -175,6 +179,7 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.cancellationAdditionalInformation);
 
     put(request, "cancelledDate", this.cancelledDate);
+    put(request, "patronComments", this.patronComments);
 
     if (tags != null) {
       JsonObject tags = new JsonObject();
@@ -207,7 +212,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.cancelledDate,
       this.position,
       this.pickupServicePointId,
-      this.tags);
+      this.tags,
+      this.patronComments);
   }
 
   public RequestRequestBuilder recall() {
@@ -240,7 +246,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.cancelledDate,
       this.position,
       this.pickupServicePointId,
-      this.tags);
+      this.tags,
+      this.patronComments);
   }
 
   public RequestRequestBuilder withNoId() {
@@ -265,7 +272,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.cancelledDate,
       this.position,
       this.pickupServicePointId,
-      this.tags);
+      this.tags,
+      this.patronComments);
   }
 
   public RequestRequestBuilder withRequestDate(DateTime requestDate) {
@@ -290,7 +298,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.cancelledDate,
       this.position,
       this.pickupServicePointId,
-      this.tags);
+      this.tags,
+      this.patronComments);
   }
 
   public RequestRequestBuilder withItemId(UUID itemId) {
@@ -315,7 +324,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.cancelledDate,
       this.position,
       this.pickupServicePointId,
-      this.tags);
+      this.tags,
+      this.patronComments);
   }
 
   public RequestRequestBuilder withRequesterId(UUID requesterId) {
@@ -340,7 +350,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.cancelledDate,
       this.position,
       this.pickupServicePointId,
-      this.tags);
+      this.tags,
+      this.patronComments);
   }
 
   public RequestRequestBuilder toHoldShelf() {
@@ -374,7 +385,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.cancelledDate,
       this.position,
       this.pickupServicePointId,
-      this.tags);
+      this.tags,
+      this.patronComments);
   }
 
   public RequestRequestBuilder withRequestExpiration(DateTime requestExpiration) {
@@ -399,7 +411,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.cancelledDate,
       this.position,
       this.pickupServicePointId,
-      this.tags);
+      this.tags,
+      this.patronComments);
   }
 
   public RequestRequestBuilder withHoldShelfExpiration(DateTime holdShelfExpiration) {
@@ -424,7 +437,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.cancelledDate,
       this.position,
       this.pickupServicePointId,
-      this.tags);
+      this.tags,
+      this.patronComments);
   }
 
   public RequestRequestBuilder withItem(String title, String barcode) {
@@ -453,7 +467,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.cancelledDate,
       this.position,
       this.pickupServicePointId,
-      this.tags);
+      this.tags,
+      this.patronComments);
   }
 
   public RequestRequestBuilder withRequester(
@@ -483,7 +498,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.cancelledDate,
       this.position,
       this.pickupServicePointId,
-      this.tags);
+      this.tags,
+      this.patronComments);
   }
 
   public RequestRequestBuilder withRequester(
@@ -512,7 +528,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.cancelledDate,
       this.position,
       this.pickupServicePointId,
-      this.tags);
+      this.tags,
+      this.patronComments);
   }
 
   public RequestRequestBuilder withProxy(
@@ -541,7 +558,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.cancelledDate,
       this.position,
       this.pickupServicePointId,
-      this.tags);
+      this.tags,
+      this.patronComments);
   }
 
   public RequestRequestBuilder withDeliveryAddressType(UUID deliverAddressType) {
@@ -566,7 +584,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.cancelledDate,
       this.position,
       this.pickupServicePointId,
-      this.tags);
+      this.tags,
+      this.patronComments);
   }
 
   public RequestRequestBuilder withStatus(String status) {
@@ -591,7 +610,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.cancelledDate,
       this.position,
       this.pickupServicePointId,
-      this.tags);
+      this.tags,
+      this.patronComments);
   }
 
   public RequestRequestBuilder withProxyId(UUID proxyId) {
@@ -616,7 +636,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.cancelledDate,
       this.position,
       this.pickupServicePointId,
-      this.tags);
+      this.tags,
+      this.patronComments);
   }
 
   public RequestRequestBuilder withPosition(Integer newPosition) {
@@ -641,7 +662,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.cancelledDate,
       newPosition,
       this.pickupServicePointId,
-      this.tags);
+      this.tags,
+      this.patronComments);
   }
 
   public RequestRequestBuilder withNoPosition() {
@@ -670,7 +692,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.cancelledDate,
       this.position,
       this.pickupServicePointId,
-      this.tags);
+      this.tags,
+      this.patronComments);
   }
 
   public RequestRequestBuilder withCancelledByUserId(UUID cancelledByUserId) {
@@ -695,7 +718,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.cancelledDate,
       this.position,
       this.pickupServicePointId,
-      this.tags);
+      this.tags,
+      this.patronComments);
   }
 
   public RequestRequestBuilder withCancellationAdditionalInformation(String cancellationAdditionalInformation) {
@@ -720,7 +744,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.cancelledDate,
       this.position,
       this.pickupServicePointId,
-      this.tags);
+      this.tags,
+      this.patronComments);
   }
 
   public RequestRequestBuilder withCancelledDate(DateTime cancelledDate) {
@@ -745,7 +770,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       cancelledDate,
       this.position,
       this.pickupServicePointId,
-      this.tags);
+      this.tags,
+      this.patronComments);
   }
 
   public RequestRequestBuilder withPickupServicePointId(UUID pickupServicePointId) {
@@ -770,7 +796,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.cancelledDate,
       this.position,
       pickupServicePointId,
-      this.tags);
+      this.tags,
+      this.patronComments);
   }
 
   public RequestRequestBuilder withTags(Tags tags) {
@@ -795,7 +822,34 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.cancelledDate,
       this.position,
       this.pickupServicePointId,
-      tags);
+      tags,
+      this.patronComments);
+  }
+
+  public RequestRequestBuilder withPatronComments(String patronComments) {
+    return new RequestRequestBuilder(
+      this.id,
+      this.requestType,
+      this.requestDate,
+      this.itemId,
+      this.requesterId,
+      this.proxyId,
+      this.fulfilmentPreference,
+      this.deliveryAddressTypeId,
+      this.requestExpirationDate,
+      this.holdShelfExpirationDate,
+      this.itemSummary,
+      this.requesterSummary,
+      this.proxySummary,
+      this.status,
+      this.cancellationReasonId,
+      this.cancelledByUserId,
+      this.cancellationAdditionalInformation,
+      this.cancelledDate,
+      this.position,
+      this.pickupServicePointId,
+      this.tags,
+      patronComments);
   }
 
   private class PatronSummary {
