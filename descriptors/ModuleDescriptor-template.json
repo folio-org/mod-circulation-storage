@@ -1,6 +1,24 @@
 {
   "id": "${artifactId}-${version}",
   "name": "Circulation Storage Module",
+  "requires": [
+    {
+      "id": "pubsub-event-types",
+      "version": "0.1"
+    },
+    {
+      "id": "pubsub-publishers",
+      "version": "0.1"
+    },
+    {
+      "id": "pubsub-subscribers",
+      "version": "0.1"
+    },
+    {
+      "id": "pubsub-publish",
+      "version": "0.1"
+    }
+  ],
   "provides": [
     {
       "id": "request-storage-batch",
@@ -379,7 +397,12 @@
       "handlers": [
         {
           "methods": ["POST"],
-          "pathPattern": "/_/tenant"
+          "pathPattern": "/_/tenant",
+          "modulePermissions": [
+            "pubsub.event-types.post",
+            "pubsub.publishers.post",
+            "pubsub.subscribers.post"
+          ]
         }, {
           "methods": ["DELETE"],
           "pathPattern": "/_/tenant"
@@ -447,6 +470,24 @@
           "permissionsRequired": [
             "check-in-storage.check-ins.item.get"
           ]
+        }
+      ]
+    },
+    {
+      "id": "_timer",
+      "version": "1.0",
+      "interfaceType": "system",
+      "handlers": [
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/request-expiration/scheduled-request-expiration",
+          "modulePermissions": [
+            "pubsub.publish.post"
+          ],
+          "unit": "minute",
+          "delay": "2"
         }
       ]
     }

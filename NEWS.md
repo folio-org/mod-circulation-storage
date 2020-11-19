@@ -1,3 +1,6 @@
+## 12.1.3 2020-11-18
+* Request log actions: Pickup expired, Expired (CIRCSTORE-247)
+
 ## 12.1.2 2020-11-06
 
 * Uses an advisory lock when revoking privileges during upgrade (CIRCSTORE-252, RMB-750)

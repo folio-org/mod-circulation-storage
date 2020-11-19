@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.*;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.collection.IsArrayContainingInAnyOrder.arrayContainingInAnyOrder;
@@ -9,6 +10,7 @@ import static org.junit.Assert.assertThat;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -150,7 +152,7 @@ public class StaffSlipsApiTest extends ApiTests {
 
     String slipId = creationResponse.getJson().getString(ID_KEY);
 
-    URL path = staffSlipsStorageUrl(String.format("?query=%s==\"%s\"", ID_KEY, slipId));
+    URL path = staffSlipsStorageUrl("?query=" + URLEncoder.encode(String.format("%s==\"%s\"", ID_KEY, slipId), UTF_8));
 
     client.get(path, StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
 
