@@ -1,12 +1,13 @@
 package org.folio.rest.support;
 
 import io.vertx.core.json.JsonObject;
+import lombok.SneakyThrows;
+
 import org.folio.rest.api.StorageTestSuite;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.core.Is;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -17,7 +18,6 @@ import java.util.concurrent.TimeoutException;
 
 import static java.net.HttpURLConnection.HTTP_CREATED;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 
 public class ApiTests {
@@ -99,5 +99,10 @@ public class ApiTests {
     int statusCode = getCompleted.get(5, TimeUnit.SECONDS).getStatusCode();
 
     assertThat(statusCode, is(HttpURLConnection.HTTP_NOT_FOUND));
+  }
+
+  @SneakyThrows
+  protected <T> T get(CompletableFuture<T> future) {
+    return future.get(5, TimeUnit.SECONDS);
   }
 }
