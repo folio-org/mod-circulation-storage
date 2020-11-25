@@ -110,7 +110,7 @@
               "$ref": "period.json",
               "description": "Recall return interval"
             },
-            "allowRecallsExtendOverdueLoans": {
+            "allowRecallsToExtendOverdueLoans": {
               "type": "boolean",
               "description": "Whether recalls are allowed to extend overdue loans",
               "default": false
