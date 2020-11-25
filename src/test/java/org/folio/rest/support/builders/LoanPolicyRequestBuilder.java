@@ -50,7 +50,7 @@ public class LoanPolicyRequestBuilder extends JsonBuilder {
     recalls.put("minimumGuaranteedLoanPeriod", createPeriod(1, "Weeks"));
     recalls.put("recallReturnInterval", createPeriod(1, "Days"));
     recalls.put("alternateRecallReturnInterval", createPeriod(4, "Hours"));
-    recalls.put("allowExtendOverdueLoanDueDate", true);
+    recalls.put("allowRecallsExtendOverdueLoan", true);
 
     if (holdsRenewalLoanPeriod != null) {
       JsonObject holds = new JsonObject();
