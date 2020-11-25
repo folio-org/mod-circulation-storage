@@ -989,19 +989,24 @@ public class LoanPoliciesApiTest extends ApiTests {
 
   private void checkRequestManagementSection(JsonObject representation) {
     assertThat(representation.containsKey("requestManagement"), is(true));
+
     JsonObject requestManagement = representation.getJsonObject("requestManagement");
     assertThat(requestManagement.containsKey("recalls"), is(true));
     assertThat(requestManagement.containsKey("holds"), is(true));
     assertThat(requestManagement.containsKey("pages"), is(true));
+
     JsonObject recalls = requestManagement.getJsonObject("recalls");
     assertThat(recalls.getJsonObject("alternateGracePeriod"), matchesPeriod(1, "Months"));
     assertThat(recalls.getJsonObject("minimumGuaranteedLoanPeriod"), matchesPeriod(1, "Weeks"));
     assertThat(recalls.getJsonObject("recallReturnInterval"), matchesPeriod(1, "Days"));
     assertThat(recalls.getJsonObject("alternateRecallReturnInterval"), matchesPeriod(4, "Hours"));
+    assertThat(recalls.getBoolean("allowRecallsToExtendOverdueLoans"), is(true));
+
     JsonObject holds = requestManagement.getJsonObject("holds");
     assertThat(holds.getJsonObject("alternateCheckoutLoanPeriod"), matchesPeriod(2, "Months"));
     assertThat(holds.getBoolean("renewItemsWithRequest"), is(true));
     assertThat(holds.getJsonObject("alternateRenewalLoanPeriod"), matchesPeriod(2, "Days"));
+
     JsonObject pages = requestManagement.getJsonObject("pages");
     assertThat(pages.getJsonObject("alternateCheckoutLoanPeriod"), matchesPeriod(3, "Months"));
     assertThat(pages.getBoolean("renewItemsWithRequest"), is(true));

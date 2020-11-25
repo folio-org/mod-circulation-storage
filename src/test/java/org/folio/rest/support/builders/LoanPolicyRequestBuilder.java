@@ -5,8 +5,12 @@ import java.util.UUID;
 import org.folio.rest.jaxrs.model.Period;
 
 import io.vertx.core.json.JsonObject;
+import lombok.AllArgsConstructor;
+import lombok.With;
 
-public class LoanPolicyRequestBuilder {
+@AllArgsConstructor
+@With
+public class LoanPolicyRequestBuilder extends JsonBuilder {
   private final UUID id;
   private final String name;
   private final String description;
@@ -16,25 +20,6 @@ public class LoanPolicyRequestBuilder {
   private final Period holdsRenewalLoanPeriod;
   private final Period loanPeriod;
   private final Period renewalPeriod;
-
-  private LoanPolicyRequestBuilder(
-    UUID id, String name, String description, String profile,
-    String fixedDueDateScheduleId,
-    String alternateFixedDueDateScheduleId,
-    Period holdsRenewalLoanPeriod,
-    Period loanPeriod,
-    Period renewalPeriod
-  ) {
-    this.id = id;
-    this.name = name;
-    this.description = description;
-    this.profile = profile;
-    this.fixedDueDateScheduleId = fixedDueDateScheduleId;
-    this.alternateFixedDueDateScheduleId = alternateFixedDueDateScheduleId;
-    this.holdsRenewalLoanPeriod = holdsRenewalLoanPeriod;
-    this.loanPeriod = loanPeriod;
-    this.renewalPeriod = renewalPeriod;
-  }
 
   public JsonObject create() {
     JsonObject request = new JsonObject();
@@ -65,6 +50,8 @@ public class LoanPolicyRequestBuilder {
     recalls.put("minimumGuaranteedLoanPeriod", createPeriod(1, "Weeks"));
     recalls.put("recallReturnInterval", createPeriod(1, "Days"));
     recalls.put("alternateRecallReturnInterval", createPeriod(4, "Hours"));
+    recalls.put("allowRecallsToExtendOverdueLoans", true);
+
     if (holdsRenewalLoanPeriod != null) {
       JsonObject holds = new JsonObject();
       holds.put("alternateCheckoutLoanPeriod", createPeriod(2, "Months"));
@@ -101,95 +88,12 @@ public class LoanPolicyRequestBuilder {
     return request;
   }
 
-  public LoanPolicyRequestBuilder withId(UUID id) {
-    return new LoanPolicyRequestBuilder(id, this.name, this.description,
-      this.profile, this.fixedDueDateScheduleId,
-      this.alternateFixedDueDateScheduleId,
-      this.holdsRenewalLoanPeriod,
-      this.loanPeriod,
-      this.renewalPeriod
-    );
-  }
-
   public LoanPolicyRequestBuilder withNoId() {
-    return new LoanPolicyRequestBuilder(null, this.name, this.description,
-      this.profile, this.fixedDueDateScheduleId,
-      this.alternateFixedDueDateScheduleId,
-      this.holdsRenewalLoanPeriod,
-      this.loanPeriod,
-      this.renewalPeriod
-    );
-  }
-
-  public LoanPolicyRequestBuilder withName(String name) {
-    return new LoanPolicyRequestBuilder(this.id, name, this.description,
-      this.profile, this.fixedDueDateScheduleId,
-      this.alternateFixedDueDateScheduleId,
-      this.holdsRenewalLoanPeriod,
-      this.loanPeriod,
-      this.renewalPeriod
-    );
-  }
-
-  public LoanPolicyRequestBuilder withDescription(String description) {
-    return new LoanPolicyRequestBuilder(this.id, name, description,
-      this.profile, this.fixedDueDateScheduleId,
-      this.alternateFixedDueDateScheduleId,
-      this.holdsRenewalLoanPeriod,
-      this.loanPeriod,
-      this.renewalPeriod
-    );
+    return withId(null);
   }
 
   public LoanPolicyRequestBuilder fixed(String fixedDueDateScheduleId) {
-    return new LoanPolicyRequestBuilder(this.id, this.name, description,
-      "Fixed", fixedDueDateScheduleId,
-      this.alternateFixedDueDateScheduleId,
-      this.holdsRenewalLoanPeriod,
-      this.loanPeriod,
-      this.renewalPeriod
-    );
-  }
-
-  public LoanPolicyRequestBuilder withAlternateFixedDueDateScheduleId(
-    String alternateFixedDueDateScheduleId) {
-    return new LoanPolicyRequestBuilder(this.id, name, description,
-      this.profile, this.fixedDueDateScheduleId,
-      alternateFixedDueDateScheduleId,
-      this.holdsRenewalLoanPeriod,
-      this.loanPeriod,
-      this.renewalPeriod
-    );
-  }
-
-  public LoanPolicyRequestBuilder withHoldsRenewalLoanPeriod(Period holdsRenewalLoanPeriod) {
-    return new LoanPolicyRequestBuilder(this.id, name, description,
-      this.profile, this.fixedDueDateScheduleId,
-      this.alternateFixedDueDateScheduleId,
-      holdsRenewalLoanPeriod,
-      this.loanPeriod,
-      this.renewalPeriod
-    );
-  }
-
-  public LoanPolicyRequestBuilder withLoanPeriod(Period loanPeriod) {
-    return new LoanPolicyRequestBuilder(this.id, name, description,
-      this.profile, this.fixedDueDateScheduleId,
-      this.alternateFixedDueDateScheduleId,
-      this.holdsRenewalLoanPeriod,
-      loanPeriod,
-      this.renewalPeriod
-    );
-  }
-
-  public LoanPolicyRequestBuilder withRenewalPeriod(Period renewalPeriod) {
-    return new LoanPolicyRequestBuilder(this.id, name, description,
-      this.profile, this.fixedDueDateScheduleId,
-      this.alternateFixedDueDateScheduleId,
-      this.holdsRenewalLoanPeriod,
-      this.loanPeriod,
-      renewalPeriod
-    );
+    return withProfile("Fixed").withFixedDueDateScheduleId(fixedDueDateScheduleId);
   }
 
   public static LoanPolicyRequestBuilder defaultRollingPolicy() {
@@ -225,10 +129,5 @@ public class LoanPolicyRequestBuilder {
     period.put("intervalId", intervalId);
 
     return period;
-  }
-  private <T> void put(JsonObject object, String key, T value) {
-    if (object != null && value != null) {
-      object.put(key, value);
-    }
   }
 }
