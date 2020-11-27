@@ -48,6 +48,18 @@ import io.vertx.core.json.JsonObject;
 @ContextConfiguration(classes = TestContextConfiguration.class)
 public class ScheduledNoticesAPITest extends ApiTests {
 
+  private static final List<String> ALL_TRIGGERING_EVENTS = List.of(
+    "Request expiration",
+    "Hold expiration",
+    "Due date",
+    "Overdue fine returned",
+    "Overdue fine renewed",
+    "Aged to lost",
+    "Aged to lost - fine charged",
+    "Aged to lost & item returned - fine adjusted",
+    "Aged to lost & item replaced - fine adjusted"
+  );
+
   private static final RecurringPeriod ONE_DAY_PERIOD = new RecurringPeriod()
     .withDuration(1)
     .withIntervalId(RecurringPeriod.IntervalId.DAYS);
@@ -96,49 +108,32 @@ public class ScheduledNoticesAPITest extends ApiTests {
   public void canGetScheduledNoticesCollection() throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    JsonObject noticeConfig = new JsonObject()
-      .put("timing", "Upon At")
-      .put("templateId", UUID.randomUUID().toString())
-      .put("format", "Email");
-    String nextRunTime = new DateTime(UTC).toString();
-
-    postScheduledNotice(new JsonObject()
-      .put("nextRunTime", nextRunTime)
-      .put("triggeringEvent", "Request expiration")
-      .put("noticeConfig", noticeConfig)
-    );
-
-    postScheduledNotice(new JsonObject()
-      .put("nextRunTime", nextRunTime)
-      .put("triggeringEvent", "Hold expiration")
-      .put("noticeConfig", noticeConfig)
-    );
-
-    postScheduledNotice(new JsonObject()
-      .put("nextRunTime", nextRunTime)
-      .put("triggeringEvent", "Due date")
-      .put("noticeConfig", noticeConfig)
-    );
-
-    postScheduledNotice(new JsonObject()
-      .put("nextRunTime", nextRunTime)
-      .put("triggeringEvent", "Overdue fine returned")
-      .put("noticeConfig", noticeConfig)
-    );
-
-    postScheduledNotice(new JsonObject()
-      .put("nextRunTime", nextRunTime)
-      .put("triggeringEvent", "Overdue fine renewed")
-      .put("noticeConfig", noticeConfig)
-    );
+    for (String triggeringEvent : ALL_TRIGGERING_EVENTS) {
+      createScheduledNotice(triggeringEvent);
+    }
 
     CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
     client.get(scheduledNoticesStorageUrl("/scheduled-notices"), TENANT_ID, ResponseHandler.json(getCompleted));
     JsonResponse response = getCompleted.get(5, SECONDS);
     ScheduledNotices scheduledNotices = response.getJson().mapTo(ScheduledNotices.class);
 
-    assertThat(scheduledNotices.getScheduledNotices().size(), is(5));
-    assertThat(scheduledNotices.getTotalRecords(), is(5));
+    assertThat(scheduledNotices.getScheduledNotices().size(), is(9));
+    assertThat(scheduledNotices.getTotalRecords(), is(9));
+  }
+
+  private void createScheduledNotice(String triggeringEvent)
+    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+
+    JsonObject noticeConfig = new JsonObject()
+      .put("timing", "Upon At")
+      .put("templateId", UUID.randomUUID().toString())
+      .put("format", "Email");
+
+    postScheduledNotice(new JsonObject()
+      .put("nextRunTime", new DateTime(UTC).toString())
+      .put("triggeringEvent", triggeringEvent)
+      .put("noticeConfig", noticeConfig)
+    );
   }
 
   @Test
