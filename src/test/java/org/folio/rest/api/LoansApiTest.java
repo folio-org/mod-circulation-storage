@@ -1370,7 +1370,7 @@ public class LoansApiTest extends ApiTests {
   public void canSearchByLoanAgedToLostBillingDate() throws Exception {
     final DateTime today = DateTime.now();
     final DateTime yesterday = today.minusDays(1);
-    final DateTime tomorrow = yesterday.plusDays(1);
+    final DateTime tomorrow = today.plusDays(1);
 
     loansClient.create(new LoanRequestBuilder()
         .withAgedToLostDelayedBilling(true, yesterday, DateTime.now()));
@@ -1379,11 +1379,11 @@ public class LoansApiTest extends ApiTests {
       new LoanRequestBuilder().withAgedToLostDelayedBilling(false, tomorrow, DateTime.now()));
 
     final List<String> filteredLoans = loansClient.getMany(
-      String.format("agedToLostDelayedBilling.dateLostItemShouldBeBilled > \"%s\"", yesterday))
+      String.format("agedToLostDelayedBilling.dateLostItemShouldBeBilled > \"%s\"", today))
       .getRecords().stream()
       .map(json -> json.getString("id"))
       .collect(Collectors.toList());
-
+    
     assertThat(filteredLoans, hasSize(1));
     assertThat(filteredLoans, hasItem(loanToBillTomorrow.getId()));
   }
