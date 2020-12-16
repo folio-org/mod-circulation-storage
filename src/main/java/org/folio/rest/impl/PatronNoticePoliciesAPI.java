@@ -8,12 +8,16 @@ import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 
 import static org.folio.rest.impl.CirculationRulesAPI.CIRCULATION_RULES_TABLE;
+import static org.folio.rest.jaxrs.model.SendOptions.SendWhen.AGED_TO_LOST;
+import static org.folio.rest.jaxrs.model.SendOptions.SendWhen.DUE_DATE;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -61,6 +65,9 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
   private static final String INTERNAL_SERVER_ERROR = "Internal server error";
   private static final String IN_USE_POLICY_ERROR_MESSAGE = "Cannot delete in use notice policy";
   private static final String VALIDATION_ERROR_MESSAGE = "This option is not valid for selected";
+
+  private static final Set<SendOptions.SendWhen> TRIGGERING_EVENTS_FOR_SCHEDULED_LOAN_NOTICES =
+    EnumSet.of(DUE_DATE, AGED_TO_LOST);
 
   @Override
   public void getPatronNoticePolicyStoragePatronNoticePolicies(
@@ -291,10 +298,10 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
   private Errors validateLoanNotice(LoanNotice loanNotice) {
     List<Errors> errors = new ArrayList<>();
     SendOptions sendOptions = loanNotice.getSendOptions();
-    if (sendOptions.getSendWhen() != SendOptions.SendWhen.DUE_DATE) {
-      errors.add(validateSendOptionsForNotDueDate(sendOptions));
+    if (TRIGGERING_EVENTS_FOR_SCHEDULED_LOAN_NOTICES.contains(sendOptions.getSendWhen())) {
+      errors.add(validateFrequencyForScheduledNotice(loanNotice));
     } else {
-      errors.add(validateFrequencyForDueDate(loanNotice));
+      errors.add(validateSendOptionsForNonScheduledNotice(sendOptions));
     }
     errors.add(validateOneTimeFrequency(loanNotice));
 
@@ -306,7 +313,7 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
     return new Errors().withErrors(mergedErrors);
   }
 
-  private Errors validateFrequencyForDueDate(LoanNotice loanNotice) {
+  private Errors validateFrequencyForScheduledNotice(LoanNotice loanNotice) {
     SendOptions sendOptions = loanNotice.getSendOptions();
     if (sendOptions.getSendHow() != SendOptions.SendHow.BEFORE
       && sendOptions.getSendHow() != SendOptions.SendHow.AFTER && loanNotice.getFrequency() != null) {
@@ -326,7 +333,7 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
     return new Errors().withErrors(Collections.emptyList());
   }
 
-  private Errors validateSendOptionsForNotDueDate(SendOptions sendOptions) {
+  private Errors validateSendOptionsForNonScheduledNotice(SendOptions sendOptions) {
     if (sendOptions.getSendHow() != null) {
        return ValidationHelper.createValidationErrorMessage("sendHow",
         sendOptions.getSendHow().toString(), VALIDATION_ERROR_MESSAGE + " Triggering event");
