@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static io.vertx.core.json.JsonObject.mapFrom;
 import static org.folio.rest.api.CirculationRulesApiTest.rulesStorageUrl;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.impl.PatronNoticePoliciesAPI.NOT_FOUND;
@@ -11,12 +12,18 @@ import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.folio.rest.jaxrs.model.LoanNotice;
+import org.folio.rest.jaxrs.model.PatronNoticePolicy;
+import org.folio.rest.jaxrs.model.SendBy;
+import org.folio.rest.jaxrs.model.SendOptions;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.ApiTests;
@@ -438,6 +445,66 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
     assertThat(response.getStatusCode(), is(422));
     assertThat(response.getJson().getJsonArray("errors").getJsonObject(0).getString("message"),
       is("This option is not valid for selected Frequency"));
+  }
+
+  @Test
+  public void canCreateAndUpdatePatronNoticePolicyWithLoanAgedToLostNotices()
+    throws InterruptedException, MalformedURLException, TimeoutException, ExecutionException {
+
+    final PatronNoticePolicy patronNoticePolicy = new PatronNoticePolicy()
+      .withId(UUID.randomUUID().toString())
+      .withName("Test policy")
+      .withActive(true)
+      .withDescription("Test policy description")
+      .withLoanNotices(new ArrayList<>(List.of(
+        new LoanNotice()
+          .withName("Aged to lost UPON/AT")
+          .withRealTime(true)
+          .withFormat(LoanNotice.Format.EMAIL)
+          .withTemplateName("Aged to lost UPON/AT template")
+          .withTemplateId(UUID.randomUUID().toString())
+          .withSendOptions(new SendOptions()
+            .withSendHow(SendOptions.SendHow.UPON_AT)
+            .withSendWhen(SendOptions.SendWhen.AGED_TO_LOST)),
+        new LoanNotice()
+          .withName("Aged to lost AFTER/ONCE")
+          .withFrequency(LoanNotice.Frequency.ONE_TIME)
+          .withRealTime(true)
+          .withFormat(LoanNotice.Format.EMAIL)
+          .withTemplateName("Aged to lost AFTER/ONCE template")
+          .withTemplateId(UUID.randomUUID().toString())
+          .withSendOptions(new SendOptions()
+            .withSendHow(SendOptions.SendHow.AFTER)
+            .withSendWhen(SendOptions.SendWhen.AGED_TO_LOST)
+            .withSendBy(new SendBy()
+              .withDuration(1)
+              .withIntervalId(SendBy.IntervalId.DAYS)))
+      )));
+
+    JsonResponse postResponse = postPatronNoticePolicy(mapFrom(patronNoticePolicy));
+    assertThat(postResponse.getStatusCode(), is(201));
+
+    patronNoticePolicy.getLoanNotices().add(
+      new LoanNotice()
+        .withName("Aged to lost AFTER/RECURRING")
+        .withFrequency(LoanNotice.Frequency.RECURRING)
+        .withRealTime(true)
+        .withFormat(LoanNotice.Format.EMAIL)
+        .withTemplateName("Aged to lost AFTER/RECURRING template")
+        .withTemplateId(UUID.randomUUID().toString())
+        .withSendOptions(new SendOptions()
+          .withSendHow(SendOptions.SendHow.AFTER)
+          .withSendWhen(SendOptions.SendWhen.AGED_TO_LOST)
+          .withSendBy(new SendBy()
+            .withDuration(1)
+            .withIntervalId(SendBy.IntervalId.DAYS))
+          .withSendEvery(new SendBy()
+            .withDuration(2)
+            .withIntervalId(SendBy.IntervalId.HOURS)))
+    );
+
+    JsonResponse putResponse = putPatronNoticePolicy(mapFrom(patronNoticePolicy));
+    assertThat(putResponse.getStatusCode(), is(204));
   }
 
   private JsonObject createNoticePolicyWithSendOptions(JsonObject sendOptions) {
