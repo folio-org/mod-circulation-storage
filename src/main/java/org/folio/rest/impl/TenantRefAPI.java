@@ -20,6 +20,7 @@ public class TenantRefAPI extends TenantAPI {
     Handler<AsyncResult<Response>> hndlr, Context cntxt) {
     log.info("postTenant");
     Vertx vertx = cntxt.owner();
+
     super.postTenant(ta, headers, res -> {
       if (res.failed()) {
         hndlr.handle(res);
@@ -48,14 +49,16 @@ public class TenantRefAPI extends TenantAPI {
           PubSubRegistrationService.registerModule(headers, vertx)
           .whenComplete((aBoolean, throwable) ->
             hndlr.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
-              .respond201WithApplicationJson(""))));
+              .respond201WithApplicationJson(null, PostTenantResponse.headersFor201()))));
         });
     }, cntxt);
   }
 
+/*
   @Override
   public void deleteTenant(Map<String, String> headers, Handler<AsyncResult<Response>> handlers, Context cntx) {
     PubSubRegistrationService.unregisterModule(headers, cntx.owner())
       .thenRun(() -> super.deleteTenant(headers, handlers, cntx));
   }
+*/
 }

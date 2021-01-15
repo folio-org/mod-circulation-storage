@@ -107,8 +107,7 @@ public class MockServer extends AbstractVerticle {
       .setStatusCode(HTTP_CREATED.toInt())
       .putHeader("content-type", "application/json; charset=utf-8")
       .putHeader("content-length", Integer.toString(buffer.length()))
-      .write(buffer)
-      .end();
+      .end(buffer);
   }
 
   private static void deleteTenant(RoutingContext routingContext) {
