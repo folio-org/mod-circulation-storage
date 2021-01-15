@@ -31,12 +31,12 @@ import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import org.folio.okapi.common.GenericCompositeFuture;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.SQLConnection;
 
 import io.vertx.core.AsyncResult;
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
@@ -64,7 +64,7 @@ public class ExpirationTool {
     pgClient.select(tenantQuery, promise);
 
     return promise.future()
-      .compose(rs -> CompositeFuture.all(rowSetToStream(rs)
+      .compose(rs -> GenericCompositeFuture.all(rowSetToStream(rs)
         .map(row -> doRequestExpirationForTenant(okapiHeaders, vertx, getTenant(row.getString("nspname"))))
         .collect(toList()))
         .map(all -> null));
