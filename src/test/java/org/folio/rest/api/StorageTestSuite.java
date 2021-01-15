@@ -17,7 +17,6 @@ import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.lang.invoke.MethodHandles;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -176,10 +175,7 @@ public class StorageTestSuite {
     }
 
     DeploymentOptions options = new DeploymentOptions();
-
     options.setConfig(new JsonObject().put("http.port", VERTICLE_PORT));
-    options.setWorker(true);
-
     startVerticle(options);
 
     mockServer = new MockServer(OKAPI_MOCK_PORT, vertx);
