@@ -1,8 +1,9 @@
+
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <artifactId>mod-circulation-storage</artifactId>
   <groupId>org.folio</groupId>
-  <version>12.2.0-SNAPSHOT</version>
+  <version>12.2.1-SNAPSHOT</version>
   <licenses>
     <license>
       <name>Apache License 2.0</name>
@@ -112,6 +113,12 @@
       <artifactId>rest-assured</artifactId>
       <version>${rest-assured.version}</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>com.sun.xml.bind</groupId>
+          <artifactId>jaxb-osgi</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.folio</groupId>
@@ -148,9 +155,9 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
-    <raml-module-builder-version>31.1.5</raml-module-builder-version>
-    <vertx-version>3.9.4</vertx-version>
-    <lombok.version>1.18.12</lombok.version>
+    <raml-module-builder-version>32.1.0</raml-module-builder-version>
+    <vertx-version>4.0.0</vertx-version>
+    <lombok.version>1.18.14</lombok.version>
     <spring.version>5.2.7.RELEASE</spring.version>
     <rest-assured.version>3.3.0</rest-assured.version>
     <argLine />
@@ -305,6 +312,7 @@
           </execution>
         </executions>
         <configuration>
+          <outputFile/>
           <properties>
             <property>
               <name>log4j.configuration</name>
@@ -421,7 +429,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>2.3</version>
+        <version>3.2.4</version>
          <configuration>
           <filters>
             <filter>
