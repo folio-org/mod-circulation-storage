@@ -123,7 +123,7 @@ public class ExpirationTool {
 
     String fullTableName = format("%s.%s", PostgresClient.convertToPsqlStandard(tenant), REQUEST_TABLE);
     String query = format("SELECT jsonb FROM %s %s", fullTableName, where);
-    pgClient.select(conn, query, promise.future());
+    pgClient.select(conn, query, promise);
 
     return promise.future()
       .map(rs -> rowSetToStream(rs)
@@ -162,7 +162,7 @@ public class ExpirationTool {
 
     String fullTableName = format("%s.%s", PostgresClient.convertToPsqlStandard(tenant), REQUEST_TABLE);
     String sql = format("SELECT jsonb FROM %s %s", fullTableName, where);
-    pgClient.select(conn, sql, promise.future());
+    pgClient.select(conn, sql, promise);
 
     return promise.future()
       .map(rs -> rowSetToStream(rs)
@@ -270,7 +270,7 @@ public class ExpirationTool {
 
     Promise<RowSet<Row>> promise = Promise.promise();
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
-    pgClient.execute(conn, sql, promise.future());
+    pgClient.execute(conn, sql, promise);
 
     return promise.future().map(ur -> null);
   }

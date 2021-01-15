@@ -249,7 +249,7 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
   private Future<CirculationRules> findCirculationRules(PostgresClient pgClient) {
 
     Promise<Results<CirculationRules>> promise = Promise.promise();
-    pgClient.get(CIRCULATION_RULES_TABLE, CirculationRules.class, new Criterion(), false, promise.future());
+    pgClient.get(CIRCULATION_RULES_TABLE, CirculationRules.class, new Criterion(), false, promise);
     return promise.future().map(Results::getResults)
       .compose(list -> list.size() == 1 ? succeededFuture(list) :
         failedFuture(new IllegalStateException("Number of records in circulation_rules table is " + list.size())))

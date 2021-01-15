@@ -118,7 +118,7 @@ public class ScheduledNoticesAPI implements ScheduledNoticeStorage {
   private Future<Void> executeSql(PostgresClient pgClient, String sql) {
 
     Promise<RowSet<Row>> promise = Promise.promise();
-    pgClient.execute(sql, promise.future());
+    pgClient.execute(sql, promise);
     return promise.future().map(ur -> null);
   }
 
