@@ -4,8 +4,8 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import org.folio.rest.jaxrs.model.CirculationRules;
 import org.folio.rest.jaxrs.resource.CirculationRulesStorage;
@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 public class CirculationRulesAPI implements CirculationRulesStorage {
-  private static final Logger log = LoggerFactory.getLogger(CirculationRulesStorage.class);
+  private static final Logger log = LogManager.getLogger();
   static final String CIRCULATION_RULES_TABLE = "circulation_rules";
 
   private void internalErrorGet(Handler<AsyncResult<Response>> asyncResultHandler, Throwable e) {

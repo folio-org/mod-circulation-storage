@@ -11,8 +11,8 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 /**
  * Temporary only.
@@ -21,7 +21,7 @@ import io.vertx.core.logging.LoggerFactory;
  */
 @Deprecated
 public final class MyPgUtil {
-  private static final Logger logger = LoggerFactory.getLogger(PgUtil.class);
+  private static final Logger logger = LogManager.getLogger();
 
   private static final String RESPOND_204                       = "respond204";
   private static final String RESPOND_400_WITH_TEXT_PLAIN       = "respond400WithTextPlain";

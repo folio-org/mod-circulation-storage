@@ -15,11 +15,11 @@ import org.folio.support.exception.ModulePubSubUnregisteringException;
 import org.folio.util.pubsub.PubSubClientUtils;
 
 import io.vertx.core.Vertx;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public class PubSubRegistrationService {
-  private static final Logger logger = LoggerFactory.getLogger(PubSubRegistrationService.class);
+  private static final Logger logger = LogManager.getLogger();
 
   private PubSubRegistrationService() {
     throw new IllegalStateException();

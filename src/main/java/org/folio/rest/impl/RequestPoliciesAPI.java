@@ -4,8 +4,8 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.rest.annotations.Validate;
@@ -27,7 +27,7 @@ import java.util.UUID;
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
 public class RequestPoliciesAPI implements RequestPolicyStorage {
-  private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+  private static final Logger log = LogManager.getLogger();
 
   private static final String REQUEST_POLICY_TABLE = "request_policy";
   private static final Class<RequestPolicy> REQUEST_POLICY_CLASS = RequestPolicy.class;

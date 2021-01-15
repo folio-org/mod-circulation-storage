@@ -7,13 +7,13 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.folio.rest.tools.utils.TenantLoading;
 import org.folio.service.PubSubRegistrationService;
 
 public class TenantRefAPI extends TenantAPI {
-  private static final Logger log = LoggerFactory.getLogger(TenantRefAPI.class);
+  private static final Logger log = LogManager.getLogger();
 
   @Override
   public void postTenant(TenantAttributes ta, Map<String, String> headers,

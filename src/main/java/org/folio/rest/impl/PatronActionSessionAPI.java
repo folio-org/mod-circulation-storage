@@ -30,8 +30,8 @@ import org.joda.time.format.ISODateTimeFormat;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 
@@ -39,7 +39,7 @@ public class PatronActionSessionAPI implements PatronActionSessionStorage {
 
   private static final String PATRON_ACTION_SESSION_TABLE = "patron_action_session";
   private static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
-  private static final Logger LOGGER = LoggerFactory.getLogger(PatronActionSessionAPI.class);
+  private static final Logger LOGGER = LogManager.getLogger();
   private static final String PATRON_ID = "patronId";
   private static final String ACTION_TYPE = "actionType";
 

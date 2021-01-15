@@ -41,14 +41,14 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import org.folio.service.EventPublisherService;
 
 public class ExpirationTool {
-  private static final Logger log = LoggerFactory.getLogger(ExpirationTool.class);
+  private static final Logger log = LogManager.getLogger();
   private static final String JSONB_COLUMN = "jsonb";
 
   private ExpirationTool() {

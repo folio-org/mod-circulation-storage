@@ -10,14 +10,14 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 
 public class OkapiHttpClient {
 
-  private static final Logger log = LoggerFactory.getLogger(OkapiHttpClient.class);
+  private static final Logger log = LogManager.getLogger();
 
   private static final String TENANT_HEADER = "X-Okapi-Tenant";
   private static final String USERID_HEADER = "X-Okapi-User-Id";

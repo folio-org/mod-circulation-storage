@@ -29,8 +29,8 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 
@@ -57,7 +57,7 @@ import org.folio.support.exception.NoticePolicyInUseException;
 
 public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
 
-  private static final Logger logger = LoggerFactory.getLogger(PatronNoticePoliciesAPI.class);
+  private static final Logger logger = LogManager.getLogger();
 
   public static final String PATRON_NOTICE_POLICY_TABLE = "patron_notice_policy";
   public static final String STATUS_CODE_DUPLICATE_NAME = "duplicate.name";

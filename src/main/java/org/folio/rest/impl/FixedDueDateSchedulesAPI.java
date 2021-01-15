@@ -1,8 +1,8 @@
 package org.folio.rest.impl;
 
 import io.vertx.core.*;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.FixedDueDateSchedule;
@@ -25,7 +25,7 @@ import static org.folio.rest.impl.Headers.TENANT_HEADER;
 
 public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorage {
 
-  private static final Logger       log               = LoggerFactory.getLogger(FixedDueDateSchedulesAPI.class);
+  private static final Logger       log               = LogManager.getLogger();
   private static final String       FIXED_SCHEDULE_TABLE  = "fixed_due_date_schedule";
   private static final String       INVALID_DATE_MSG  = "Unable to save fixed loan date. Date range not valid";
 
