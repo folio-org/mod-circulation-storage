@@ -69,12 +69,14 @@ import io.vertx.sqlclient.RowSet;
   CancellationReasonsApiTest.class,
   PatronNoticePoliciesApiTest.class,
   RequestPoliciesApiTest.class,
-  RequestExpirationApiTest.class,
+  //RequestExpirationApiTest.class,
   ScheduledNoticesAPITest.class,
   PatronActionSessionAPITest.class,
   RequestBatchAPITest.class,
   CheckInStorageApiTest.class,
-  StaffSlipsMigrationScriptTest.class
+  StaffSlipsMigrationScriptTest.class,
+  RequestUpdateTriggerTest.class,
+  JsonPropertyWriterTest.class
 })
 public class StorageTestSuite {
 
