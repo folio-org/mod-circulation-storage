@@ -1,18 +1,13 @@
 package org.folio.rest.impl;
+
+import io.vertx.core.Context;
 import io.vertx.core.Future;
 import java.util.Map;
-import javax.ws.rs.core.Response;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.TenantAttributes;
-
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.folio.rest.tools.utils.TenantLoading;
-import org.folio.service.PubSubRegistrationService;
 
 public class TenantRefAPI extends TenantAPI {
 
@@ -26,9 +21,11 @@ public class TenantRefAPI extends TenantAPI {
   @Override
   Future<Integer> loadData(TenantAttributes attributes, String tenantId,
       Map<String, String> headers, Context vertxContext) {
+
     return super.loadData(attributes, tenantId, headers, vertxContext)
         .compose(superRecordsLoaded -> {
           log.info("Initializing of tenant's data");
+
           TenantLoading tl = new TenantLoading();
           tl.withKey(REFERENCE_KEY).withLead(REFERENCE_LEAD)
               .withIdContent()
@@ -45,7 +42,7 @@ public class TenantRefAPI extends TenantAPI {
               .add("requests", "request-storage/requests");
 
           return tl.perform(attributes, headers, vertxContext, superRecordsLoaded);
-        });
+       });
   }
 
 /*  @Validate

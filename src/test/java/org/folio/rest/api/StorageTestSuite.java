@@ -12,7 +12,6 @@ import static org.folio.support.MockServer.getRegisteredSubscribers;
 import static org.folio.util.pubsub.PubSubClientUtils.constructModuleName;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import java.io.IOException;
@@ -22,24 +21,24 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidParameterException;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
+import lombok.SneakyThrows;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import com.github.tomakehurst.wiremock.WireMockServer;
+
 import org.folio.rest.RestVerticle;
 import org.folio.rest.api.loans.LoansAnonymizationApiTest;
 import org.folio.rest.api.migration.StaffSlipsMigrationScriptTest;
-import org.folio.rest.jaxrs.model.EventDescriptor;
-import org.folio.rest.jaxrs.model.PublisherDescriptor;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.OkapiHttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
-import org.folio.rest.support.TextResponse;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.support.MockServer;
 import org.junit.AfterClass;
@@ -51,8 +50,6 @@ import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 
@@ -191,7 +188,7 @@ public class StorageTestSuite {
       .atPriority(10)
       .willReturn(aResponse().proxiedFrom("http://localhost:" + VERTICLE_PORT)));
 
-    prepareTenant(TENANT_ID);
+    prepareTenant(TENANT_ID, true);
 
     initialised = true;
   }
@@ -322,7 +319,7 @@ public class StorageTestSuite {
     deploymentComplete.get(30, TimeUnit.SECONDS);
   }
 
-  private static void prepareTenant(String tenantId) {
+/*  private static void prepareTenant(String tenantId) {
     CompletableFuture<TextResponse> tenantPrepared = new CompletableFuture<>();
 
     log.info("Making request to prepare tenant in module");
@@ -368,9 +365,9 @@ public class StorageTestSuite {
       log.error("Tenant preparation failed: " + e.getMessage(), e);
       assert false;
     }
-  }
+  }*/
 
-  private static void removeTenant(String tenantId) {
+/*  private static void removeTenant(String tenantId) {
     CompletableFuture<TextResponse> tenantDeleted = new CompletableFuture<>();
 
     log.info("Making request to clean up tenant in module");
@@ -392,5 +389,65 @@ public class StorageTestSuite {
       log.error("Tenant clean up failed: " + e.getMessage(), e);
       assert false;
     }
+  }*/
+
+  static private void prepareTenant(String tenantId, boolean loadSample) {
+    prepareTenant(tenantId, null, "mod-circulation-storage-1.0.0", loadSample);
   }
+
+  private static void prepareTenant(String tenantId, String moduleFrom, String moduleTo,
+      boolean loadSample) {
+
+    JsonArray ar = new JsonArray();
+    ar.add(new JsonObject().put("key", "loadReference").put("value", "true"));
+    ar.add(new JsonObject().put("key", "loadSample").put("value", Boolean.toString(loadSample)));
+
+    JsonObject jo = new JsonObject();
+    jo.put("parameters", ar);
+    if (moduleFrom != null) {
+      jo.put("module_from", moduleFrom);
+    }
+    jo.put("module_to", moduleTo);
+    tenantOp(tenantId, jo);
+  }
+
+  private static void removeTenant(String tenantId) {
+
+    JsonObject jo = new JsonObject();
+    jo.put("purge", Boolean.TRUE);
+    tenantOp(tenantId, jo);
+  }
+
+  @SneakyThrows
+  private static void tenantOp(String tenantId, JsonObject job) {
+    CompletableFuture<JsonResponse> tenantPrepared = new CompletableFuture<>();
+
+    OkapiHttpClient client = new OkapiHttpClient(vertx);
+
+    client.post(storageUrl("/_/tenant"), job, tenantId,
+        ResponseHandler.json(tenantPrepared));
+
+    JsonResponse response = tenantPrepared.get(60, TimeUnit.SECONDS);
+
+    String failureMessage = String.format("Tenant post failed: %s: %s",
+        response.getStatusCode(), response);
+
+    // wait if not complete ...
+    if (response.getStatusCode() == 201) {
+      String id = response.getJson().getString("id");
+
+      tenantPrepared = new CompletableFuture<>();
+      client.get(storageUrl("/_/tenant/" + id + "?wait=60000"), tenantId,
+          ResponseHandler.json(tenantPrepared));
+      response = tenantPrepared.get(60, TimeUnit.SECONDS);
+
+      failureMessage = String.format("Tenant get failed: %s: %s",
+          response.getStatusCode(), response.getBody());
+
+      assertThat(failureMessage, response.getStatusCode(), is(200));
+    } else {
+      assertThat(failureMessage, response.getStatusCode(), is(204));
+    }
+  }
+
 }
