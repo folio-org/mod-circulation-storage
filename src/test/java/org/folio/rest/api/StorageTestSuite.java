@@ -5,12 +5,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.any;
 import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
-import static org.folio.support.EventType.LOG_RECORD;
-import static org.folio.support.MockServer.getCreatedEventTypes;
-import static org.folio.support.MockServer.getRegisteredPublishers;
-import static org.folio.support.MockServer.getRegisteredSubscribers;
-import static org.folio.util.pubsub.PubSubClientUtils.constructModuleName;
-import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
@@ -69,7 +63,7 @@ import io.vertx.sqlclient.RowSet;
   CancellationReasonsApiTest.class,
   PatronNoticePoliciesApiTest.class,
   RequestPoliciesApiTest.class,
-  //RequestExpirationApiTest.class,
+  RequestExpirationApiTest.class,
   ScheduledNoticesAPITest.class,
   PatronActionSessionAPITest.class,
   RequestBatchAPITest.class,
@@ -321,78 +315,6 @@ public class StorageTestSuite {
     deploymentComplete.get(30, TimeUnit.SECONDS);
   }
 
-/*  private static void prepareTenant(String tenantId) {
-    CompletableFuture<TextResponse> tenantPrepared = new CompletableFuture<>();
-
-    log.info("Making request to prepare tenant in module");
-
-    try {
-      OkapiHttpClient client = new OkapiHttpClient(vertx);
-
-      JsonArray ar = new JsonArray();
-
-      ar.add(new JsonObject().put("key", "loadReference").put("value", "true"));
-      ar.add(new JsonObject().put("key", "loadSample").put("value", "true"));
-      JsonObject jo = new JsonObject();
-      jo.put("parameters", ar);
-      jo.put("module_to", "mod-circulation-storage-1.0.0");
-
-      client.post(storageUrl("/_/tenant"), jo, tenantId, null,
-        ResponseHandler.text(tenantPrepared));
-
-      TextResponse response = tenantPrepared.get(20, TimeUnit.SECONDS);
-
-      String failureMessage = String.format("Tenant preparation failed: %s: %s",
-        response.getStatusCode(), response.getBody());
-
-      assertThat(failureMessage, response.getStatusCode(), is(201));
-
-      List<JsonObject> eventTypes = getCreatedEventTypes();
-      assertThat(eventTypes, hasSize(1));
-      EventDescriptor descriptor = eventTypes.get(0).mapTo(EventDescriptor.class);
-      assertThat(descriptor.getEventType(), equalTo(LOG_RECORD.name()));
-
-      List<JsonObject> publishers = getRegisteredPublishers();
-      assertThat(publishers, hasSize(1));
-      PublisherDescriptor publisher = publishers.get(0).mapTo(PublisherDescriptor.class);
-      assertThat(publisher.getModuleId(), equalTo(constructModuleName()));
-
-      assertThat(publisher.getEventDescriptors(), hasSize(1));
-      assertThat(publisher.getEventDescriptors().get(0).getEventType(), equalTo(LOG_RECORD.name()));
-
-      List<JsonObject> subscribers = getRegisteredSubscribers();
-      assertThat(subscribers, hasSize(0));
-
-    } catch (Exception e) {
-      log.error("Tenant preparation failed: " + e.getMessage(), e);
-      assert false;
-    }
-  }*/
-
-/*  private static void removeTenant(String tenantId) {
-    CompletableFuture<TextResponse> tenantDeleted = new CompletableFuture<>();
-
-    log.info("Making request to clean up tenant in module");
-
-    try {
-      OkapiHttpClient client = new OkapiHttpClient(vertx);
-
-      client.delete(storageUrl("/_/tenant"), tenantId,
-        ResponseHandler.text(tenantDeleted));
-
-      TextResponse response = tenantDeleted.get(10, TimeUnit.SECONDS);
-
-      String failureMessage = String.format("Tenant clean up failed: %s: %s",
-        response.getStatusCode(), response.getBody());
-
-      assertThat(failureMessage, response.getStatusCode(), is(204));
-
-    } catch (Exception e) {
-      log.error("Tenant clean up failed: " + e.getMessage(), e);
-      assert false;
-    }
-  }*/
-
   static private void prepareTenant(String tenantId, boolean loadSample) {
     prepareTenant(tenantId, null, "mod-circulation-storage-1.0.0", loadSample);
   }
@@ -414,7 +336,6 @@ public class StorageTestSuite {
   }
 
   private static void removeTenant(String tenantId) {
-
     JsonObject jo = new JsonObject();
     jo.put("purge", Boolean.TRUE);
     tenantOp(tenantId, jo);
