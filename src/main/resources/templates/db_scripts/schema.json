@@ -325,12 +325,6 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": false
-        },
-        {
-          "fieldName": "actionType",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": false
         }
       ]
     },
