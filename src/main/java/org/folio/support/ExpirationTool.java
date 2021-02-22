@@ -31,24 +31,24 @@ import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import org.folio.okapi.common.GenericCompositeFuture;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.SQLConnection;
 
 import io.vertx.core.AsyncResult;
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import org.folio.service.EventPublisherService;
 
 public class ExpirationTool {
-  private static final Logger log = LoggerFactory.getLogger(ExpirationTool.class);
+  private static final Logger log = LogManager.getLogger();
   private static final String JSONB_COLUMN = "jsonb";
 
   private ExpirationTool() {
@@ -64,7 +64,7 @@ public class ExpirationTool {
     pgClient.select(tenantQuery, promise);
 
     return promise.future()
-      .compose(rs -> CompositeFuture.all(rowSetToStream(rs)
+      .compose(rs -> GenericCompositeFuture.all(rowSetToStream(rs)
         .map(row -> doRequestExpirationForTenant(okapiHeaders, vertx, getTenant(row.getString("nspname"))))
         .collect(toList()))
         .map(all -> null));
@@ -123,7 +123,7 @@ public class ExpirationTool {
 
     String fullTableName = format("%s.%s", PostgresClient.convertToPsqlStandard(tenant), REQUEST_TABLE);
     String query = format("SELECT jsonb FROM %s %s", fullTableName, where);
-    pgClient.select(conn, query, promise.future());
+    pgClient.select(conn, query, promise);
 
     return promise.future()
       .map(rs -> rowSetToStream(rs)
@@ -162,7 +162,7 @@ public class ExpirationTool {
 
     String fullTableName = format("%s.%s", PostgresClient.convertToPsqlStandard(tenant), REQUEST_TABLE);
     String sql = format("SELECT jsonb FROM %s %s", fullTableName, where);
-    pgClient.select(conn, sql, promise.future());
+    pgClient.select(conn, sql, promise);
 
     return promise.future()
       .map(rs -> rowSetToStream(rs)
@@ -270,7 +270,7 @@ public class ExpirationTool {
 
     Promise<RowSet<Row>> promise = Promise.promise();
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
-    pgClient.execute(conn, sql, promise.future());
+    pgClient.execute(conn, sql, promise);
 
     return promise.future().map(ur -> null);
   }

@@ -15,11 +15,11 @@ import org.folio.support.exception.ModulePubSubUnregisteringException;
 import org.folio.util.pubsub.PubSubClientUtils;
 
 import io.vertx.core.Vertx;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public class PubSubRegistrationService {
-  private static final Logger logger = LoggerFactory.getLogger(PubSubRegistrationService.class);
+  private static final Logger logger = LogManager.getLogger();
 
   private PubSubRegistrationService() {
     throw new IllegalStateException();
@@ -48,12 +48,12 @@ public class PubSubRegistrationService {
       for (EventType eventType : EventType.values()) {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
         client.deletePubsubEventTypesPublishersByEventTypeName(eventType.name(), PubSubClientUtils.constructModuleName(), ar -> {
-          if (ar.statusCode() == HTTP_NO_CONTENT.toInt()) {
+          if (ar.result().statusCode() == HTTP_NO_CONTENT.toInt()) {
             future.complete(true);
           } else {
             ModulePubSubUnregisteringException exception = new ModulePubSubUnregisteringException(
                 String.format("Module's publisher for event type %s was not unregistered from PubSub. HTTP status: %s",
-                    eventType.name(), ar.statusCode()));
+                    eventType.name(), ar.result().statusCode()));
             logger.error(exception);
             future.completeExceptionally(exception);
           }
@@ -64,8 +64,7 @@ public class PubSubRegistrationService {
       logger.error("Module's publishers were not unregistered from PubSub.", exception);
     }
 
-    return allOf(list.toArray(new CompletableFuture[0])).thenApply(r -> true)
-      .whenComplete((r, e) -> client.close());
+    return allOf(list.toArray(new CompletableFuture[0])).thenApply(r -> true);
   }
 
 }

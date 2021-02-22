@@ -122,7 +122,7 @@ class RequestUpdateTriggerTest {
   private Future<Void> saveRequest(String id, Request request) {
 
     Promise<String> promise = Promise.promise();
-    pgClient.save(REQUEST_TABLE, id, request, promise.future());
+    pgClient.save(REQUEST_TABLE, id, request, promise);
 
     return promise.future().map(s -> null);
   }
@@ -137,7 +137,7 @@ class RequestUpdateTriggerTest {
   private Future<JsonObject> getRequest(String id) {
 
     Promise<JsonObject> promise = Promise.promise();
-    pgClient.getById(REQUEST_TABLE, id, promise.future());
+    pgClient.getById(REQUEST_TABLE, id, promise);
 
     return promise.future();
   }
