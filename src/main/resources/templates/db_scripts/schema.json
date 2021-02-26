@@ -318,7 +318,15 @@
     {
       "tableName": "patron_action_session",
       "withMetadata": true,
-      "withAuditing": false
+      "withAuditing": false,
+      "index": [
+        {
+          "fieldName": "patronId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        }
+      ]
     },
     {
       "tableName": "check_in",
