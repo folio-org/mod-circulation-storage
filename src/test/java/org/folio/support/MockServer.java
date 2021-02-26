@@ -5,8 +5,8 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
@@ -31,7 +31,7 @@ public class MockServer extends AbstractVerticle {
   private static final List<JsonObject> registeredSubscribers = new ArrayList<>();
   private static final List<String> deletedEventTypes = new ArrayList<>();
 
-  private static final Logger logger = LoggerFactory.getLogger(MockServer.class);
+  private static final Logger logger = LogManager.getLogger();
 
   private final int port;
   private final Vertx vertx;
@@ -107,8 +107,7 @@ public class MockServer extends AbstractVerticle {
       .setStatusCode(HTTP_CREATED.toInt())
       .putHeader("content-type", "application/json; charset=utf-8")
       .putHeader("content-length", Integer.toString(buffer.length()))
-      .write(buffer)
-      .end();
+      .end(buffer);
   }
 
   private static void deleteTenant(RoutingContext routingContext) {

@@ -1,5 +1,6 @@
 package org.folio.rest.support;
 
+import io.vertx.core.http.HttpMethod;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -10,14 +11,14 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 
 public class OkapiHttpClient {
 
-  private static final Logger log = LoggerFactory.getLogger(OkapiHttpClient.class);
+  private static final Logger log = LogManager.getLogger();
 
   private static final String TENANT_HEADER = "X-Okapi-Tenant";
   private static final String USERID_HEADER = "X-Okapi-User-Id";
@@ -57,7 +58,7 @@ public class OkapiHttpClient {
     String userId,
     Handler<AsyncResult<HttpResponse<Buffer>>> responseHandler) {
 
-    HttpRequest<Buffer> request = client.postAbs(url.toString());
+    HttpRequest<Buffer> request = client.requestAbs(HttpMethod.POST, url.toString());
 
     request.headers().add("Accept", "application/json, text/plain");
     request.headers().add("Content-type", "application/json");
@@ -103,7 +104,7 @@ public class OkapiHttpClient {
     String userId,
     Handler<AsyncResult<HttpResponse<Buffer>>> responseHandler) {
 
-    HttpRequest<Buffer> request = client.putAbs(url.toString());
+    HttpRequest<Buffer> request = client.requestAbs(HttpMethod.PUT, url.toString());
 
     request.headers().add("Accept", "application/json, text/plain");
     request.headers().add("Content-type", "application/json");
@@ -138,7 +139,7 @@ public class OkapiHttpClient {
     String tenantId,
     Handler<AsyncResult<HttpResponse<Buffer>>> responseHandler) {
 
-    HttpRequest<Buffer> request = client.getAbs(url);
+    HttpRequest<Buffer> request = client.requestAbs(HttpMethod.GET, url);
 
     request.headers().add("Accept", "application/json");
 
@@ -157,7 +158,7 @@ public class OkapiHttpClient {
     String tenantId,
     Handler<AsyncResult<HttpResponse<Buffer>>> responseHandler) {
 
-    HttpRequest<Buffer> request = client.deleteAbs(url);
+    HttpRequest<Buffer> request = client.requestAbs(HttpMethod.DELETE, url);
 
     request.headers().add("Accept", "application/json, text/plain");
 

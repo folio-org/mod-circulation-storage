@@ -4,8 +4,8 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.CancellationReason;
 import org.folio.rest.jaxrs.model.CancellationReasons;
@@ -23,7 +23,7 @@ import static org.folio.rest.impl.Headers.TENANT_HEADER;
  */
 public class CancellationReasonsAPI implements CancellationReasonStorage {
 
-  private static final Logger logger = LoggerFactory.getLogger(CancellationReasonsAPI.class);
+  private static final Logger logger = LogManager.getLogger();
   private static final String TABLE_NAME = "cancellation_reason";
   private boolean suppressErrorResponse = false;
 

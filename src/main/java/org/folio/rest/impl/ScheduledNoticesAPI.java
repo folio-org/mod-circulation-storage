@@ -16,8 +16,8 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 
@@ -34,7 +34,7 @@ import org.folio.rest.persist.PostgresClient;
 
 public class ScheduledNoticesAPI implements ScheduledNoticeStorage {
 
-  private static final Logger logger = LoggerFactory.getLogger(ScheduledNoticeStorage.class);
+  private static final Logger logger = LogManager.getLogger();
 
   private static final String SCHEDULED_NOTICE_TABLE = "scheduled_notice";
   private static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
@@ -62,7 +62,7 @@ public class ScheduledNoticesAPI implements ScheduledNoticeStorage {
       PostgresClient pgClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
 
       cqlToSqlDeleteQuery(query, okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT))
-        .compose(sql -> executeSql(pgClient, sql))
+        .compose(sql -> pgClient.execute(sql))
         .map(v -> DeleteScheduledNoticeStorageScheduledNoticesResponse.respond204())
         .map(Response.class::cast)
         .otherwise(this::mapExceptionToResponse)
@@ -113,13 +113,6 @@ public class ScheduledNoticesAPI implements ScheduledNoticeStorage {
     PgUtil.put(SCHEDULED_NOTICE_TABLE, entity, scheduledNoticeId, okapiHeaders, vertxContext,
       PutScheduledNoticeStorageScheduledNoticesByScheduledNoticeIdResponse.class, asyncResultHandler);
 
-  }
-
-  private Future<Void> executeSql(PostgresClient pgClient, String sql) {
-
-    Promise<RowSet<Row>> promise = Promise.promise();
-    pgClient.execute(sql, promise.future());
-    return promise.future().map(ur -> null);
   }
 
   private Future<String> cqlToSqlDeleteQuery(String cql, String tenant) {

@@ -5,12 +5,12 @@ import java.util.concurrent.CompletableFuture;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import io.vertx.ext.web.client.HttpResponse;
 
 public class ResponseHandler {
-  private static final Logger log = LoggerFactory.getLogger(ResponseHandler.class);
+  private static final Logger log = LogManager.getLogger();
 
   public static Handler<AsyncResult<HttpResponse<Buffer>>> empty(
     CompletableFuture<Response> completed) {

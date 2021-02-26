@@ -8,7 +8,7 @@ import javax.ws.rs.core.Response;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
+import org.apache.logging.log4j.Logger;
 
 public class ServerErrorResponder {
   private final Function<String, Response> responseCreator;
@@ -32,7 +32,7 @@ public class ServerErrorResponder {
       log.error(unknownErrorMessage);
       withMessage(unknownErrorMessage);
     } else {
-      log.error(error, error.getMessage());
+      log.error(error.getMessage(), error);
       withMessage(error.getMessage());
     }
   }
