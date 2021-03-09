@@ -1,3 +1,22 @@
+## 12.2.0 2021-03-09
+
+* Requests may include patron comments (CIRCSTORE-255)
+* Loan policies can define whether requests can extend overdue loans (CIRCSTORE-257)
+* Patron notice policies can define aged to lost related notices (CIRCSTORE-248, CIRCSTORE-264)
+* Publishes circulation log messages to pub-sub (CIRCSTORE-247)
+* Anonymizes loan history as well as loans (CIRCSTORE-260)
+* Uses a `_timer` interface to periodically expire requests every two minutes (CIRCSTORE-247)
+* Upgrades to RAML Module Builder 32.1.0 (CIRCSTORE-266)
+* Upgrades to vert.x 4.0.0 (CIRCSTORE-266)
+* Provides `loan-policy-storage 2.3`
+* Provides `request-storage 3.4`
+* Provides `patron-notice-policy-storage 0.13`
+* Provides `_tenant 2.0`
+* Requires `pubsub-event-types 0.1`
+* Requires `pubsub-publishers 0.1`
+* Requires `pubsub-subscribers 0.1`
+* Requires `pubsub-publish 0.1`
+
 ## 12.1.1 2020-10-29
 
 * Upgrade to RMB 31.1.4 and Vert.x 3.9.4 (CIRCSTORE-249), most notable fixes:

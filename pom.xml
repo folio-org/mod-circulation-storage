@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>mod-circulation-storage</artifactId>
   <groupId>org.folio</groupId>
-  <version>12.2.0-SNAPSHOT</version>
+  <version>12.3.0-SNAPSHOT</version>
   <licenses>
     <license>
       <name>Apache License 2.0</name>
@@ -311,7 +311,7 @@
           </execution>
         </executions>
         <configuration>
-          <outputFile/>
+          <outputFile />
           <properties>
             <property>
               <name>log4j.configurationFile</name>
