@@ -48,12 +48,13 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>postgres-testing</artifactId>
-      <version>32.2.0</version>
+      <version>${raml-module-builder-version}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>domain-models-runtime</artifactId>
-      <version>32.2.0</version>
+      <version>${raml-module-builder-version}</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -164,6 +165,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
     <vertx-version>4.0.0</vertx-version>
+    <raml-module-builder-version>32.2.0</raml-module-builder-version>
     <spring.version>5.2.7.RELEASE</spring.version>
     <argLine />
   </properties>
