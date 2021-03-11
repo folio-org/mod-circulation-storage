@@ -47,8 +47,13 @@
     </dependency>
     <dependency>
       <groupId>org.folio</groupId>
+      <artifactId>postgres-testing</artifactId>
+      <version>32.2.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.folio</groupId>
       <artifactId>domain-models-runtime</artifactId>
-      <version>32.1.0</version>
+      <version>32.2.0</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -265,10 +270,6 @@
           <verbose>true</verbose>
           <showWeaveInfo>false</showWeaveInfo>
           <complianceLevel>11</complianceLevel>
-          <includes>
-            <include>**/impl/*.java</include>
-            <include>**/*.aj</include>
-          </includes>
           <aspectDirectory>src/main/java/org/folio/rest/annotations</aspectDirectory>
           <XaddSerialVersionUID>true</XaddSerialVersionUID>
           <showWeaveInfo>true</showWeaveInfo>
