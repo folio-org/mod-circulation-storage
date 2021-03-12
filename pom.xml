@@ -47,14 +47,14 @@
     </dependency>
     <dependency>
       <groupId>org.folio</groupId>
-      <artifactId>postgres-testing</artifactId>
+      <artifactId>domain-models-runtime</artifactId>
       <version>${raml-module-builder-version}</version>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.folio</groupId>
-      <artifactId>domain-models-runtime</artifactId>
+      <artifactId>postgres-testing</artifactId>
       <version>${raml-module-builder-version}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
