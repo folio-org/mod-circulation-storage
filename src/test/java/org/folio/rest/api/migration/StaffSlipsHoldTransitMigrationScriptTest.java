@@ -19,7 +19,7 @@ import java.net.URL;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-public class StaffSlipsMigrationScriptTest extends MigrationTestBase {
+public class StaffSlipsHoldTransitMigrationScriptTest extends MigrationTestBase {
   public static final String HOLD_ID = "6a6e72f0-69da-4b4c-8254-7154679e9d88";
   public static final String TRANSIT_ID = "f838cdaf-555a-473f-abf1-f35ef6ab8ae1";
   public static final String TEMPLATE = "<p></p>";
