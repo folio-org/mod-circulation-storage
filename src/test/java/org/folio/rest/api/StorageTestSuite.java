@@ -24,6 +24,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.github.tomakehurst.wiremock.WireMockServer;
 
+import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.api.loans.LoansAnonymizationApiTest;
 import org.folio.rest.api.migration.StaffSlipsMigrationScriptTest;
@@ -128,44 +129,7 @@ public class StorageTestSuite {
 
     vertx = Vertx.vertx();
 
-    String useExternalDatabase = System.getProperty(
-      "org.folio.circulation.storage.test.database",
-      "embedded");
-
-    switch (useExternalDatabase) {
-      case "environment":
-        log.info("Using environment settings");
-        break;
-
-      case "external":
-        String postgresConfigPath = System.getProperty(
-          "org.folio.circulation.storage.test.config",
-          "/postgres-conf-local.json");
-
-        log.info(String.format(
-          "Using external configuration settings: '%s'", postgresConfigPath));
-
-        PostgresClient.setConfigFilePath(postgresConfigPath);
-        break;
-
-      case "embedded":
-        log.info("Using embedded PostgreSQL");
-
-        PostgresClient.setIsEmbedded(true);
-        PostgresClient.setEmbeddedPort(NetworkUtils.nextFreePort());
-
-        PostgresClient client = PostgresClient.getInstance(vertx);
-        client.startEmbeddedPostgres();
-        break;
-
-      default:
-        String message = "No understood database choice made."
-          + "Please set org.folio.circulation.storage.test.config"
-          + "to 'external', 'environment' or 'embedded'";
-
-        log.error(message);
-        assert false;
-    }
+    PostgresClient.setPostgresTester(new PostgresTesterContainer());
 
     DeploymentOptions options = new DeploymentOptions();
     options.setConfig(new JsonObject().put("http.port", VERTICLE_PORT));
