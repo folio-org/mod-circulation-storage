@@ -71,7 +71,8 @@ import io.vertx.sqlclient.RowSet;
   CheckInStorageApiTest.class,
   StaffSlipsMigrationScriptTest.class,
   RequestUpdateTriggerTest.class,
-  JsonPropertyWriterTest.class
+  JsonPropertyWriterTest.class,
+  IsbnNormalizationTest.class
 })
 public class StorageTestSuite {
 

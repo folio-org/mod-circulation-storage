@@ -1,3 +1,7 @@
+## 12.3.0 IN-PROGRESS
+
+* implements normalization on ISBN index (CIRCSTORE-186)
+
 ## 12.2.0 2021-03-09
 
 * Requests may include patron comments (CIRCSTORE-255)

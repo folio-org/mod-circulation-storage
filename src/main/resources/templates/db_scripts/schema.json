@@ -120,12 +120,7 @@
           "fieldName": "identifiers",
           "arraySubfield" : "value",
           "arrayModifiers": ["identifierTypeId"]
-        },
-        {
-          "fieldName": "isbn",
-          "sqlExpression" : "normalize_isbns(jsonb->'identifiers')",
-          "sqlExpressionQuery": "normalize_digits($)"
-         }
+        }
       ]
     },
     {
@@ -176,6 +171,19 @@
           "caseSensitive": false,
           "removeAccents": true
         }
+      ],
+      "fullTextIndex": [
+      	{
+          "fieldName": "identifiers",
+          "arraySubfield" : "value",
+          "arrayModifiers": ["identifierTypeId"]
+        },
+        {
+          "fieldName": "isbn",
+          "sqlExpression" : "normalize_isbns(jsonb->'identifiers')",
+          "sqlExpressionQuery": "normalize_digits($)"
+        }
+      
       ],
       "index": [
         {
@@ -349,7 +357,7 @@
       {
       "run": "before",
       "snippetPath": "createIsbnFunctions.sql",
-      "fromModuleVersion": "12.2.0"
+      "fromModuleVersion": "12.3.0"
     },
     {
       "run": "before",
