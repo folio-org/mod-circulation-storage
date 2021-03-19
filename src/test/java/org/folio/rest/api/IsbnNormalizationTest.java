@@ -17,14 +17,17 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.ArrayList;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.runner.RunWith;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
@@ -35,9 +38,12 @@ import io.vertx.ext.web.client.WebClient;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.aspectj.lang.annotation.After;
+import org.awaitility.Awaitility;
 
 public class IsbnNormalizationTest extends ApiTests {
   private static final Logger log = LogManager.getLogger();
@@ -46,51 +52,29 @@ public class IsbnNormalizationTest extends ApiTests {
 
   @Before
   public void setUp() throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
-	  ArrayList<String> requestIds = createRequests();
-	  if (requestIds.size() > 5) {
-		  log.error("not all items created.");
-		  
-	  }
+	  createRequests();
+    log.info("setup code running");
+	  Awaitility.await()
+      .atMost(10, TimeUnit.SECONDS)
+      .until(requestsLoaded(), is(true));
   }
 
   @Test
-  public void canSearchForAnyIsbnWithAdditionalHyphens() {
-    canSort("title = *",      "Interesting Times");
-  }
+  public void searchForNormalizedIsbns() {
 
-  @Test
-  public void canSearchForFirstIsbnWithAdditionalHyphens() {
-    canSort("isbn = 0-552-16754-1",      "Interesting Times");
-  }
+    find("isbn = 0-552-16754-1",      "Interesting Times");
 
-  @Test
-  public void canSearchForFirstIsbnWithAdditionalHyphenAndTruncation() {
-    canSort("isbn = 05-5*",              "Interesting Times");
-  }
+    find("isbn = 05-5*",              "Interesting Times");
 
-  @Test
-  public void canSearchForSecondIsbnWithMissingHyphens() {
-    canSort("isbn = 9780552167543",      "Interesting Times");
-  }
+    find("isbn = 9780552167543",      "Interesting Times");
 
-  @Test
-  public void canSearchForSecondIsbnWithMissingHyphensAndTrunation() {
-    canSort("isbn = 9780* sortBy title", "Interesting Times", "Temeraire");
-  }
+    find("isbn = 9780*", "Interesting Times", "Temeraire");  
+    
+    find("isbn = 9-7-8-055-2167-543", "Interesting Times");
 
-  @Test
-  public void canSearchForSecondIsbnWithAlteredHyphens() {
-    canSort("isbn = 9-7-8-055-2167-543", "Interesting Times");
-  }
+    find("isbn = 552-16754-3");
 
-  @Test
-  public void cannotFindIsbnWithTailString() {
-    canSort("isbn = 552-16754-3");
-  }
-
-  @Test
-  public void cannotFindIsbnWithInnerStringAndTruncation() {
-    canSort("isbn = 552*");
+    find("isbn = 552*");
   }
 
   /**
@@ -102,14 +86,41 @@ public class IsbnNormalizationTest extends ApiTests {
    * @throws ExecutionException
    * @throws MalformedURLException
    */
-  private void canSort(String cql, String ... expectedTitles) {
+  private void find(String cql, String ... expectedTitles) {
     JsonObject searchBody = searchForRequests(cql);
+    log.info("request search results: " + searchBody.toString());
     assertThat(searchBody.toString(), not(""));
     matchItemTitles(searchBody, expectedTitles);
   }
 
-  private void matchItemTitles(JsonObject jsonObject, String ... expectedTitles) {
-    assertThat(jsonObject.toString(), is(""));
+  private Callable<Boolean> requestsLoaded() {
+    JsonObject search = searchForRequests("isbn = *");
+    log.info("dfbssretbetrb: " + search.toString());
+    return () -> search.getInteger("totalRecords") == 6;
+  }
+
+  private void matchItemTitles(JsonObject jsonObject, String[] expectedTitles) {
+    if (expectedTitles.length == 0) {
+      assertThat(jsonObject.getInteger("totalRecords"), is(0));
+      return;
+    }
+    assertThat(jsonObject.getInteger("totalRecords"), is(expectedTitles.length));
+    JsonArray requests = jsonObject.getJsonArray("requests");
+    for (String title : expectedTitles) {
+      Boolean found = requests.stream().anyMatch(request -> isTitlePresent((JsonObject) request, title));
+      assertThat(found, is(true));
+    }
+  }
+
+  private Boolean isTitlePresent(JsonObject request, String titleToMatch) {
+    JsonObject item = request.getJsonObject("item");
+    String itemTitle = item.getString("title");
+    if (itemTitle.equals(titleToMatch)) {
+      return true;
+    } else {
+      return false;
+    }
+
   }
 
   private JsonObject searchForRequests(String cql) {
