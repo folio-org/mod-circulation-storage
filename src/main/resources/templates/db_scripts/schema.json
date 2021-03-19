@@ -183,7 +183,6 @@
           "sqlExpression" : "normalize_isbns(jsonb->'item'->'identifiers')",
           "sqlExpressionQuery": "normalize_digits($)"
         }
-      
       ],
       "index": [
         {

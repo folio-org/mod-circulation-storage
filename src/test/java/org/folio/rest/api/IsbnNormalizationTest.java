@@ -2,7 +2,6 @@ package org.folio.rest.api;
 
 import org.folio.rest.support.builders.RequestItemSummary;
 
-import java.lang.reflect.Array;
 import java.net.MalformedURLException;
 import java.net.URL;
 import org.folio.rest.support.Response;
@@ -10,10 +9,8 @@ import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
-import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import org.folio.rest.support.builders.RequestRequestBuilder;
-import org.apache.commons.lang3.StringUtils;
 import java.util.ArrayList;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
@@ -24,17 +21,10 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.runner.RunWith;
 import org.folio.rest.support.ApiTests;
-import org.folio.rest.support.JsonResponse;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import io.vertx.ext.web.client.HttpResponse;
-import io.vertx.ext.web.client.WebClient;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
@@ -42,7 +32,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.aspectj.lang.annotation.After;
 import org.awaitility.Awaitility;
 
 public class IsbnNormalizationTest extends ApiTests {
@@ -77,15 +66,6 @@ public class IsbnNormalizationTest extends ApiTests {
     find("isbn = 552*");
   }
 
-  /**
-   * Assert that the cql query returns the expected requests in that order.
-   * Searches within the 5 example requests.
-   * @param cql  query to run
-   * @param expectedTitles  titles in the expected order
-   * @throws TimeoutException
-   * @throws ExecutionException
-   * @throws MalformedURLException
-   */
   private void find(String cql, String ... expectedTitles) {
     JsonObject searchBody = searchForRequests(cql);
     log.info("request search results: " + searchBody.toString());

@@ -186,7 +186,6 @@ public class PatronActionSessionAPITest extends ApiTests {
 
     assertThat(response.getStatusCode(), is(404));
   }
-  /*
 
   @Test
   public void canGetPatronActionSessionStorageExpiredSessionPatronIds() throws InterruptedException,
@@ -212,7 +211,7 @@ public class PatronActionSessionAPITest extends ApiTests {
 
     assertThat(getExpiredPatronSessions("Check-out", 1, DateTime.now()).size(), is(1));
   }
-*/
+
   @Test
   public void canGetPatronActionSessionStorageExpiredSessionPatronIdsWithoutActionType()
     throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
