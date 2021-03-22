@@ -115,11 +115,6 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
-        },
-        {
-          "fieldName": "identifiers",
-          "arraySubfield" : "value",
-          "arrayModifiers": ["identifierTypeId"]
         }
       ]
     },

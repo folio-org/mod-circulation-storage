@@ -30,19 +30,15 @@ import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.awaitility.Awaitility;
 
 public class IsbnNormalizationTest extends ApiTests {
-  private static final Logger log = LogManager.getLogger();
   private static final String REQUEST_STORAGE_URL = "/request-storage/requests";
      // Interesting Times has two ISBNs: 0552167541, 978-0-552-16754-3
 
   @Before
   public void setUp() throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
 	  createRequests();
-    log.info("setup code running");
 	  Awaitility.await()
       .atMost(10, TimeUnit.SECONDS)
       .until(requestsLoaded(), is(true));
@@ -68,14 +64,12 @@ public class IsbnNormalizationTest extends ApiTests {
 
   private void find(String cql, String ... expectedTitles) {
     JsonObject searchBody = searchForRequests(cql);
-    log.info("request search results: " + searchBody.toString());
     assertThat(searchBody.toString(), not(""));
     matchItemTitles(searchBody, expectedTitles);
   }
 
   private Callable<Boolean> requestsLoaded() {
     JsonObject search = searchForRequests("isbn = *");
-    log.info("dfbssretbetrb: " + search.toString());
     return () -> search.getInteger("totalRecords") == 6;
   }
 
@@ -100,7 +94,6 @@ public class IsbnNormalizationTest extends ApiTests {
     } else {
       return false;
     }
-
   }
 
   private JsonObject searchForRequests(String cql) {
@@ -114,7 +107,6 @@ public class IsbnNormalizationTest extends ApiTests {
       assertThat(searchResponse.getStatusCode(), is(200));
       return searchResponse.getJson();
     } catch (Exception e) {
-      log.error("error executing search: " + e.getMessage());
       return new JsonObject("");
     }
   }

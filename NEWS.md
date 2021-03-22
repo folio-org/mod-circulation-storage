@@ -1,6 +1,6 @@
 ## 12.3.0 IN-PROGRESS
 
-* implements normalization on ISBN index (CIRCSTORE-186)
+* Use normalization for request.item.identifiers (for search requests by ISBN) (CIRCSTORE-186)
 
 ## 12.2.0 2021-03-09
 
