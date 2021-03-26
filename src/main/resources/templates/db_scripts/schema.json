@@ -168,11 +168,6 @@
         }
       ],
       "fullTextIndex": [
-      	{
-          "fieldName": "identifiers",
-          "arraySubfield" : "value",
-          "arrayModifiers": ["identifierTypeId"]
-        },
         {
           "fieldName": "isbn",
           "sqlExpression" : "normalize_isbns(jsonb->'item'->'identifiers')",

@@ -47,18 +47,19 @@ public class IsbnNormalizationTest extends ApiTests {
   @Test
   public void searchForNormalizedIsbns() {
 
+    //canSearchForFirstIsbnWithAdditionalHyphens()
     find("isbn = 0-552-16754-1",      "Interesting Times");
-
+    //canSearchForFirstIsbnWithAdditionalHyphenAndTruncation()
     find("isbn = 05-5*",              "Interesting Times");
-
+    //canSearchForSecondIsbnWithMissingHyphens()
     find("isbn = 9780552167543",      "Interesting Times");
-
+    //canSearchForSecondIsbnWithMissingHyphensAndTrunation()
     find("isbn = 9780*", "Interesting Times", "Temeraire");  
-    
+    //canSearchForSecondIsbnWithAlteredHyphens()
     find("isbn = 9-7-8-055-2167-543", "Interesting Times");
-
+    //cannotFindIsbnWithTailString()
     find("isbn = 552-16754-3");
-
+    //cannotFindIsbnWithInnerStringAndTruncation()
     find("isbn = 552*");
   }
 
@@ -166,8 +167,6 @@ public class IsbnNormalizationTest extends ApiTests {
         ).getJson();
       requestIds.add(representation.getString("id"));
     }
-
-
     return requestIds;
   }
 }
