@@ -2,6 +2,7 @@ package org.folio.rest.api;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.api.StorageTestSuite.storageUrl;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -28,17 +29,21 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
+import lombok.SneakyThrows;
 
 public class IsbnNormalizationTest extends ApiTests {
   private static final String REQUEST_STORAGE_URL = "/request-storage/requests";
 
+  @SneakyThrows
   @Before
-  public void setUp() throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
-	  createRequests();
+  public void beforeEach() {
+    StorageTestSuite.deleteAll(storageUrl(REQUEST_STORAGE_URL));
   }
 
+  @SneakyThrows
   @Test
   public void searchForNormalizedIsbns() {
+    createRequests();
 
     find("isbn = 0-552-16754-1",      "Interesting Times");
 
@@ -120,7 +125,7 @@ public class IsbnNormalizationTest extends ApiTests {
   static URL requestStorageUrl(String subPath)
     throws MalformedURLException {
 
-    return StorageTestSuite.storageUrl(REQUEST_STORAGE_URL + subPath);
+    return storageUrl(REQUEST_STORAGE_URL + subPath);
   }
 
   private ArrayList<String> createRequests()
