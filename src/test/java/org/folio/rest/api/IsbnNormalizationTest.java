@@ -1,64 +1,63 @@
 package org.folio.rest.api;
 
-import org.folio.rest.support.builders.RequestItemSummary;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.util.StringUtil.urlEncode;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import org.folio.rest.support.Response;
-import static org.folio.util.StringUtil.urlEncode;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
-import org.folio.rest.support.builders.RequestRequestBuilder;
 import java.util.ArrayList;
 import java.util.UUID;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
+import org.folio.rest.support.ApiTests;
+import org.folio.rest.support.Response;
+import org.folio.rest.support.builders.RequestItemSummary;
+import org.folio.rest.support.builders.RequestRequestBuilder;
 import org.junit.Before;
 import org.junit.Test;
-import org.folio.rest.support.ApiTests;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
-import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.awaitility.Awaitility;
+import io.vertx.ext.web.client.HttpResponse;
 
 public class IsbnNormalizationTest extends ApiTests {
   private static final String REQUEST_STORAGE_URL = "/request-storage/requests";
-     // Interesting Times has two ISBNs: 0552167541, 978-0-552-16754-3
 
   @Before
   public void setUp() throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
 	  createRequests();
-	  Awaitility.await()
-      .atMost(10, TimeUnit.SECONDS)
-      .until(requestsLoaded(), is(true));
   }
 
   @Test
   public void searchForNormalizedIsbns() {
-
     //canSearchForFirstIsbnWithAdditionalHyphens()
     find("isbn = 0-552-16754-1",      "Interesting Times");
+
     //canSearchForFirstIsbnWithAdditionalHyphenAndTruncation()
     find("isbn = 05-5*",              "Interesting Times");
+
     //canSearchForSecondIsbnWithMissingHyphens()
     find("isbn = 9780552167543",      "Interesting Times");
+
     //canSearchForSecondIsbnWithMissingHyphensAndTrunation()
-    find("isbn = 9780*", "Interesting Times", "Temeraire");  
+    find("isbn = 9780*", "Interesting Times", "Temeraire");
+
     //canSearchForSecondIsbnWithAlteredHyphens()
+    find("isbn = 9780*", "Interesting Times", "Temeraire");
     find("isbn = 9-7-8-055-2167-543", "Interesting Times");
+
     //cannotFindIsbnWithTailString()
     find("isbn = 552-16754-3");
+
     //cannotFindIsbnWithInnerStringAndTruncation()
     find("isbn = 552*");
   }
@@ -67,11 +66,6 @@ public class IsbnNormalizationTest extends ApiTests {
     JsonObject searchBody = searchForRequests(cql);
     assertThat(searchBody.toString(), not(""));
     matchItemTitles(searchBody, expectedTitles);
-  }
-
-  private Callable<Boolean> requestsLoaded() {
-    JsonObject search = searchForRequests("isbn = *");
-    return () -> search.getInteger("totalRecords") == 6;
   }
 
   private void matchItemTitles(JsonObject jsonObject, String[] expectedTitles) {
@@ -136,7 +130,7 @@ public class IsbnNormalizationTest extends ApiTests {
     return StorageTestSuite.storageUrl(REQUEST_STORAGE_URL + subPath);
   }
 
-  private ArrayList<String> createRequests() 
+  private ArrayList<String> createRequests()
     throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
     final UUID isbnIdentifierId = UUID.fromString("8261054f-be78-422d-bd51-4ed9f33c3422");
     ArrayList<RequestItemSummary> items = new ArrayList<RequestItemSummary>();
@@ -152,6 +146,7 @@ public class IsbnNormalizationTest extends ApiTests {
     items.add(new RequestItemSummary("Uprooted", "565575337892")
         .addIdentifier(isbnIdentifierId, "9781447294146")
         .addIdentifier(isbnIdentifierId, "1447294149"));
+    // Interesting Times has two ISBNs: 0552167541, 978-0-552-16754-3
     items.add(new RequestItemSummary("Interesting Times", "000000004")
         .addIdentifier(isbnIdentifierId, "978-0-552-16754-3")
         .addIdentifier(isbnIdentifierId, "0552167541"));
@@ -167,6 +162,7 @@ public class IsbnNormalizationTest extends ApiTests {
         ).getJson();
       requestIds.add(representation.getString("id"));
     }
+    
     return requestIds;
   }
 }
