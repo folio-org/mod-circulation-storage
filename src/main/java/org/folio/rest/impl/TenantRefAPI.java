@@ -3,11 +3,15 @@ package org.folio.rest.impl;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import java.util.Map;
+
+import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.tools.utils.TenantLoading;
+import org.folio.service.PubSubRegistrationService;
 
 public class TenantRefAPI extends TenantAPI {
 
@@ -25,7 +29,8 @@ public class TenantRefAPI extends TenantAPI {
     return super.loadData(attributes, tenantId, headers, vertxContext)
         .compose(superRecordsLoaded -> {
           log.info("Initializing of tenant's data");
-
+          Vertx vertx = vertxContext.owner();
+          Promise<Integer> promise = Promise.promise();
           TenantLoading tl = new TenantLoading();
           tl.withKey(REFERENCE_KEY).withLead(REFERENCE_LEAD)
               .withIdContent()
@@ -41,7 +46,15 @@ public class TenantRefAPI extends TenantAPI {
               .add("loans", "loan-storage/loans")
               .add("requests", "request-storage/requests");
 
-          return tl.perform(attributes, headers, vertxContext, superRecordsLoaded);
+          tl.perform(attributes, headers, vertx, res -> {
+            if (res.failed()) {
+              promise.fail(res.cause());
+            } else {
+              PubSubRegistrationService.registerModule(headers, vertx)
+                .whenComplete((aBoolean, throwable) -> promise.complete());
+            }
+          });
+          return promise.future();
        });
   }
 
