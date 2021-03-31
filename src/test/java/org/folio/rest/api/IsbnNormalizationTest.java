@@ -10,7 +10,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -33,6 +34,7 @@ import lombok.SneakyThrows;
 
 public class IsbnNormalizationTest extends ApiTests {
   private static final String REQUEST_STORAGE_URL = "/request-storage/requests";
+  private final UUID isbnIdentifierId = UUID.fromString("8261054f-be78-422d-bd51-4ed9f33c3422");
 
   @SneakyThrows
   @Before
@@ -42,22 +44,57 @@ public class IsbnNormalizationTest extends ApiTests {
 
   @SneakyThrows
   @Test
-  public void searchForNormalizedIsbns() {
-    createRequests();
+  public void canSearchForFirstIsbnWithAdditionalHyphens() {
+    createRequests("Interesting Times", "Uprooted");
 
-    //canSearchForFirstIsbnWithAdditionalHyphens()
     find("isbn = 0-552-16754-1",      "Interesting Times");
-    //canSearchForFirstIsbnWithAdditionalHyphenAndTruncation()
+  }
+
+  @SneakyThrows
+  @Test
+  public void canSearchForFirstIsbnWithAdditionalHyphenAndTruncation() {
+    createRequests("Interesting Times", "Uprooted");
+
     find("isbn = 05-5*",              "Interesting Times");
-    //canSearchForSecondIsbnWithMissingHyphens()
+  }
+
+  @SneakyThrows
+  @Test
+  public void canSearchForSecondIsbnWithMissingHyphens() {
+    createRequests("Interesting Times", "Uprooted");
+
     find("isbn = 9780552167543",      "Interesting Times");
-    //canSearchForSecondIsbnWithMissingHyphensAndTrunation()
+  }
+
+  @SneakyThrows
+  @Test
+  public void canSearchForSecondIsbnWithMissingHyphensAndTrunation() {
+    createRequests("Interesting Times", "Temeraire", "Uprooted");
+
     find("isbn = 9780*", "Interesting Times", "Temeraire");  
-    //canSearchForSecondIsbnWithAlteredHyphens()
+  }
+
+  @SneakyThrows
+  @Test
+  public void canSearchForSecondIsbnWithAlteredHyphens() {
+    createRequests("Interesting Times", "Temeraire");
+
     find("isbn = 9-7-8-055-2167-543", "Interesting Times");
-    //cannotFindIsbnWithTailString()
+  }
+
+  @SneakyThrows
+  @Test
+  public void cannotFindIsbnWithTailString() {
+    createRequests("Interesting Times");
+
     find("isbn = 552-16754-3");
-    //cannotFindIsbnWithInnerStringAndTruncation()
+  }
+
+  @SneakyThrows
+  @Test
+  public void cannotFindIsbnWithInnerStringAndTruncation() {
+    createRequests("Interesting Times");
+
     find("isbn = 552*");
   }
 
@@ -129,38 +166,29 @@ public class IsbnNormalizationTest extends ApiTests {
     return storageUrl(REQUEST_STORAGE_URL + subPath);
   }
 
-  private ArrayList<String> createRequests()
+  private void createRequests(String ... titlesToCreate)
     throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
-    final UUID isbnIdentifierId = UUID.fromString("8261054f-be78-422d-bd51-4ed9f33c3422");
-    ArrayList<RequestItemSummary> items = new ArrayList<RequestItemSummary>();
-    ArrayList<String> requestIds = new ArrayList<String>();
+    Map<String, RequestItemSummary> requests
+            = new HashMap<String, RequestItemSummary>();
 
-    items.add(new RequestItemSummary("Nod", "000000001")
-        .addIdentifier(isbnIdentifierId, "0562167542"));
-    items.add(new RequestItemSummary("Temeraire", "000000002")
-        .addIdentifier(isbnIdentifierId, "0007258712")
-        .addIdentifier(isbnIdentifierId, "9780007258710"));
-    items.add(new RequestItemSummary("Small Angry Planet", "000000003")
-        .addIdentifier(isbnIdentifierId, "9781473619777"));
-    items.add(new RequestItemSummary("Uprooted", "565575337892")
-        .addIdentifier(isbnIdentifierId, "9781447294146")
-        .addIdentifier(isbnIdentifierId, "1447294149"));
     // Interesting Times has two ISBNs: 0552167541, 978-0-552-16754-3
-    items.add(new RequestItemSummary("Interesting Times", "000000004")
-        .addIdentifier(isbnIdentifierId, "978-0-552-16754-3")
-        .addIdentifier(isbnIdentifierId, "0552167541"));
+    requests.put("Interesting Times", new RequestItemSummary("Interesting Times", "000000004")
+      .addIdentifier(isbnIdentifierId, "978-0-552-16754-3")
+      .addIdentifier(isbnIdentifierId, "0552167541"));
+    requests.put("Temeraire", new RequestItemSummary("Temeraire", "000000002")
+        .addIdentifier(isbnIdentifierId, "9780007258710"));
+    requests.put("Uprooted", new RequestItemSummary("Uprooted", "565575337892")
+        .addIdentifier(isbnIdentifierId, "9781447294146"));
 
-    for (RequestItemSummary item : items) {
+    for (String title : titlesToCreate) {
       JsonObject representation = createEntity(
             new RequestRequestBuilder()
                 .recall()
                 .toHoldShelf()
-                .withItem(item)
+                .withItem(requests.get(title))
                 .create(),
             requestStorageUrl()
         ).getJson();
-      requestIds.add(representation.getString("id"));
     }
-    return requestIds;
   }
 }
