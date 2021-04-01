@@ -47,7 +47,7 @@ public class IsbnNormalizationTest extends ApiTests {
   public void canSearchForFirstIsbnWithAdditionalHyphens() {
     createRequests("Interesting Times", "Uprooted");
 
-    find("isbn = 0-552-16754-1",      "Interesting Times");
+    find("itemIsbn = 0-552-16754-1", "Interesting Times");
   }
 
   @SneakyThrows
@@ -55,7 +55,7 @@ public class IsbnNormalizationTest extends ApiTests {
   public void canSearchForFirstIsbnWithAdditionalHyphenAndTruncation() {
     createRequests("Interesting Times", "Uprooted");
 
-    find("isbn = 05-5*",              "Interesting Times");
+    find("itemIsbn = 05-5*", "Interesting Times");
   }
 
   @SneakyThrows
@@ -63,7 +63,7 @@ public class IsbnNormalizationTest extends ApiTests {
   public void canSearchForSecondIsbnWithMissingHyphens() {
     createRequests("Interesting Times", "Uprooted");
 
-    find("isbn = 9780552167543",      "Interesting Times");
+    find("itemIsbn = 9780552167543", "Interesting Times");
   }
 
   @SneakyThrows
@@ -71,7 +71,7 @@ public class IsbnNormalizationTest extends ApiTests {
   public void canSearchForSecondIsbnWithMissingHyphensAndTrunation() {
     createRequests("Interesting Times", "Temeraire", "Uprooted");
 
-    find("isbn = 9780*", "Interesting Times", "Temeraire");  
+    find("itemIsbn = 9780*", "Interesting Times", "Temeraire");  
   }
 
   @SneakyThrows
@@ -79,7 +79,7 @@ public class IsbnNormalizationTest extends ApiTests {
   public void canSearchForSecondIsbnWithAlteredHyphens() {
     createRequests("Interesting Times", "Temeraire");
 
-    find("isbn = 9-7-8-055-2167-543", "Interesting Times");
+    find("itemIsbn = 9-7-8-055-2167-543", "Interesting Times");
   }
 
   @SneakyThrows
@@ -87,7 +87,7 @@ public class IsbnNormalizationTest extends ApiTests {
   public void cannotFindIsbnWithTailString() {
     createRequests("Interesting Times");
 
-    find("isbn = 552-16754-3");
+    find("itemIsbn = 552-16754-3");
   }
 
   @SneakyThrows
@@ -95,7 +95,7 @@ public class IsbnNormalizationTest extends ApiTests {
   public void cannotFindIsbnWithInnerStringAndTruncation() {
     createRequests("Interesting Times");
 
-    find("isbn = 552*");
+    find("itemIsbn = 552*");
   }
 
   private void find(String cql, String ... expectedTitles) {
