@@ -98,9 +98,10 @@ public class IsbnNormalizationTest extends ApiTests {
     find("itemIsbn = 552*");
   }
 
-  private void find(String cql, String ... expectedTitles) {
+  private void find(String cql, String ... expectedTitles) 
+   throws MalformedURLException, InterruptedException, TimeoutException, ExecutionException {
+
     JsonObject searchBody = searchForRequests(cql);
-    assertThat(searchBody.toString(), not(""));
     matchItemTitles(searchBody, expectedTitles);
   }
 
@@ -127,9 +128,10 @@ public class IsbnNormalizationTest extends ApiTests {
     }
   }
 
-  private JsonObject searchForRequests(String cql) {
+  private JsonObject searchForRequests(String cql) 
+    throws MalformedURLException, InterruptedException, TimeoutException, ExecutionException {
+
     CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
-    try {
       String url = requestStorageUrl("").toString() + "?query=" + urlEncode(cql);
 
       client.get(url, TENANT_ID, responseHandler(searchCompleted));
@@ -137,9 +139,6 @@ public class IsbnNormalizationTest extends ApiTests {
 
       assertThat(searchResponse.getStatusCode(), is(200));
       return searchResponse.getJson();
-    } catch (Exception e) {
-      return new JsonObject("");
-    }
   }
 
   private static Handler<AsyncResult<HttpResponse<Buffer>>> responseHandler(CompletableFuture<Response> completed) {
