@@ -186,7 +186,7 @@ public class PatronActionSessionAPITest extends ApiTests {
 
     assertThat(response.getStatusCode(), is(404));
   }
-
+  
   @Test
   public void canGetPatronActionSessionStorageExpiredSessionPatronIds() throws InterruptedException,
     ExecutionException, TimeoutException, MalformedURLException {

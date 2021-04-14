@@ -167,6 +167,13 @@
           "removeAccents": true
         }
       ],
+      "fullTextIndex": [
+        {
+          "fieldName": "itemIsbn",
+          "sqlExpression" : "normalize_isbns(jsonb->'item'->'identifiers')",
+          "sqlExpressionQuery": "normalize_digits($)"
+        }
+      ],
       "index": [
         {
           "fieldName": "itemId",
@@ -336,6 +343,11 @@
     }
   ],
   "scripts": [
+      {
+      "run": "before",
+      "snippetPath": "createIsbnFunctions.sql",
+      "fromModuleVersion": "12.3.0"
+    },
     {
       "run": "before",
       "fromModuleVersion": "10.1.0",

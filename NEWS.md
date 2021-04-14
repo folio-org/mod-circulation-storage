@@ -1,3 +1,7 @@
+## 12.3.0 IN-PROGRESS
+
+* Use normalization for request.item.identifiers (for search requests by ISBN) (CIRCSTORE-186)
+
 ## 12.2.0 2021-03-09
 
 * Requests may include patron comments (CIRCSTORE-255)
