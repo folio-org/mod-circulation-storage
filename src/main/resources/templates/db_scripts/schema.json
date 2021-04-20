@@ -353,7 +353,7 @@
     {
       "run": "after",
       "snippetPath": "add_staff_slips_hold_transit.sql",
-      "fromModuleVersion": "12.2.0"
+      "fromModuleVersion": "12.3.0"
     }
   ]
 }
