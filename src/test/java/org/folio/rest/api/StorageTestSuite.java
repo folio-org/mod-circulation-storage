@@ -26,7 +26,8 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 
 import org.folio.rest.RestVerticle;
 import org.folio.rest.api.loans.LoansAnonymizationApiTest;
-import org.folio.rest.api.migration.StaffSlipsMigrationScriptTest;
+import org.folio.rest.api.migration.StaffSlipsPickRequestMigrationScriptTest;
+import org.folio.rest.api.migration.StaffSlipsHoldTransitMigrationScriptTest;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.JsonResponse;
@@ -68,7 +69,8 @@ import io.vertx.sqlclient.RowSet;
   PatronActionSessionAPITest.class,
   RequestBatchAPITest.class,
   CheckInStorageApiTest.class,
-  StaffSlipsMigrationScriptTest.class,
+  StaffSlipsPickRequestMigrationScriptTest.class,
+  StaffSlipsHoldTransitMigrationScriptTest.class,
   RequestUpdateTriggerTest.class,
   JsonPropertyWriterTest.class
 })
