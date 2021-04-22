@@ -1,3 +1,8 @@
+## 12.2.1 2021-04-22
+
+* Includes migration for missing staff slips (CIRCSTORE-273)
+* Pickup expired not showing in Circulation log (CIRCSTORE-265)
+
 ## 12.2.0 2021-03-09
 
 * Requests may include patron comments (CIRCSTORE-255)
