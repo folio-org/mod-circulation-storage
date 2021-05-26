@@ -48,7 +48,7 @@ public class CancellationReasonsAPI implements CancellationReasonStorage {
     try {
       String tenantId = okapiHeaders.get(TENANT_HEADER);
       String deleteAllQuery = String.format("DELETE FROM %s_%s.%s", tenantId,
-          PomReader.INSTANCE.getModuleName(), TABLE_NAME);
+          PomReader.getModuleName(), TABLE_NAME);
       PostgresClient.getInstance(vertxContext.owner(), tenantId).execute(deleteAllQuery,
           mutateReply -> {
         if(mutateReply.failed()) {

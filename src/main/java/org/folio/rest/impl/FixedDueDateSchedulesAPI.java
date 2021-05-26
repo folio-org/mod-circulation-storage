@@ -9,7 +9,6 @@ import org.folio.rest.jaxrs.model.FixedDueDateSchedule;
 import org.folio.rest.jaxrs.model.FixedDueDateSchedules;
 import org.folio.rest.jaxrs.model.Schedule;
 import org.folio.rest.jaxrs.resource.FixedDueDateScheduleStorage;
-import org.folio.rest.persist.MyPgUtil;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.PomReader;
@@ -49,7 +48,7 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorage {
 
         postgresClient.execute(
             String.format("DELETE FROM %s_%s.%s", tenantId,
-              PomReader.INSTANCE.getModuleName(), FIXED_SCHEDULE_TABLE), reply -> {
+              PomReader.getModuleName(), FIXED_SCHEDULE_TABLE), reply -> {
                 if(reply.succeeded()){
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                     FixedDueDateScheduleStorage
