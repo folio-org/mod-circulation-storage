@@ -83,10 +83,12 @@ public class AnonymizeLoansApiTest extends ApiTests {
     assertThat(loansClient.getById(firstLoanId).getJson(), isAnonymized());
     assertThat(loansClient.getById(secondLoanId).getJson(), isAnonymized());
 
+    // Check out, check in and anonymize entries for two loans
+    assertThat(getLoanHistoryForLoans().size(), is(6));
+
     // assert that history also anonymized
-    assertThat(getLoanHistoryForLoans(),
-      // Check out, check in and anonymize entries for two loans
-      allOf(iterableWithSize(6), everyItem(LoanHistoryMatchers.isAnonymized())));
+    assertThat(getLoanHistoryForLoans(), everyItem(LoanHistoryMatchers.isAnonymized()));
+
   }
 
   @Test
