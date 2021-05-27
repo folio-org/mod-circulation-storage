@@ -12,7 +12,8 @@ import org.folio.rest.jaxrs.model.CancellationReasons;
 import org.folio.rest.jaxrs.resource.CancellationReasonStorage;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.tools.PomReader;
+import org.folio.rest.tools.utils.ModuleName;
+
 import javax.ws.rs.core.Response;
 import java.util.Map;
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
@@ -48,7 +49,7 @@ public class CancellationReasonsAPI implements CancellationReasonStorage {
     try {
       String tenantId = okapiHeaders.get(TENANT_HEADER);
       String deleteAllQuery = String.format("DELETE FROM %s_%s.%s", tenantId,
-          PomReader.getModuleName(), TABLE_NAME);
+          ModuleName.getModuleName(), TABLE_NAME);
       PostgresClient.getInstance(vertxContext.owner(), tenantId).execute(deleteAllQuery,
           mutateReply -> {
         if(mutateReply.failed()) {
