@@ -1,6 +1,9 @@
-## 12.3.0 IN-PROGRESS
+## 13.0.0 IN-PROGRESS
 
 * Use normalization for request.item.identifiers (for search requests by ISBN) (CIRCSTORE-186)
+* `embed_postgres` command line option is no longer supported (CIRCSTORE-280)
+* Upgrades to RAML Module Builder 33.0.0 (CIRCSTORE-280)
+* Upgrades to 4.1.0.CR1 (CIRCSTORE-280)
 
 ## 12.2.0 2021-03-09
 
