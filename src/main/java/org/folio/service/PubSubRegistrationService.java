@@ -47,7 +47,7 @@ public class PubSubRegistrationService {
     try {
       for (EventType eventType : EventType.values()) {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
-        client.deletePubsubEventTypesPublishersByEventTypeName(eventType.name(), PubSubClientUtils.constructModuleName(), ar -> {
+        client.deletePubsubEventTypesPublishersByEventTypeName(eventType.name(), PubSubClientUtils.getModuleId(), ar -> {
           if (ar.result().statusCode() == HTTP_NO_CONTENT.toInt()) {
             future.complete(true);
           } else {
