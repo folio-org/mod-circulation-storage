@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>mod-circulation-storage</artifactId>
   <groupId>org.folio</groupId>
-  <version>12.3.0-SNAPSHOT</version>
+  <version>13.0.0-SNAPSHOT</version>
   <licenses>
     <license>
       <name>Apache License 2.0</name>
@@ -14,8 +14,15 @@
       <id>folio-nexus</id>
       <name>FOLIO Maven repository</name>
       <url>https://repository.folio.org/repository/maven-folio</url>
-    </repository>
+  </repository>
   </repositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <id>folio-nexus</id>
+      <name>FOLIO Maven repository</name>
+      <url>https://repository.folio.org/repository/maven-folio</url>
+    </pluginRepository>
+  </pluginRepositories>
 
   <dependencyManagement>
     <dependencies>
@@ -122,7 +129,7 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>mod-pubsub-client</artifactId>
-      <version>2.0.2</version>
+      <version>2.2.0</version>
       <exclusions>
         <exclusion>
           <groupId>org.hamcrest</groupId>
@@ -164,8 +171,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
-    <vertx-version>4.0.0</vertx-version>
-    <raml-module-builder-version>32.2.0</raml-module-builder-version>
+    <vertx-version>4.1.0.CR1</vertx-version>
+    <raml-module-builder-version>33.0.0</raml-module-builder-version>
     <spring.version>5.2.7.RELEASE</spring.version>
     <argLine />
   </properties>
@@ -211,26 +218,15 @@
         </configuration>
       </plugin>
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>3.0.0</version>
+        <groupId>org.folio</groupId>
+        <artifactId>domain-models-maven-plugin</artifactId>
+        <version>${raml-module-builder-version}</version>
         <executions>
           <execution>
             <id>generate_interfaces</id>
-            <phase>generate-sources</phase>
             <goals>
               <goal>java</goal>
             </goals>
-            <configuration>
-              <mainClass>org.folio.rest.tools.GenerateRunner</mainClass>
-              <cleanupDaemonThreads>false</cleanupDaemonThreads>
-              <systemProperties>
-                <systemProperty>
-                  <key>raml_files</key>
-                  <value>${ramlfiles_path}</value>
-                </systemProperty>
-              </systemProperties>
-            </configuration>
           </execution>
         </executions>
       </plugin>

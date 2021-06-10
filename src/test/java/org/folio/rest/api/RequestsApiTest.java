@@ -268,8 +268,6 @@ public class RequestsApiTest extends ApiTests {
 
     assertThat(String.format("Should not create request: %s", response.getBody()),
       response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-
-    assertThat(response.getBody(), containsString("Json content error"));
   }
 
   @Test

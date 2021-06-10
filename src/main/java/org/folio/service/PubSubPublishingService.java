@@ -34,7 +34,7 @@ class PubSubPublishingService {
       .toString())
       .withEventType(eventType)
       .withEventPayload(payload)
-      .withEventMetadata(new EventMetadata().withPublishedBy(PubSubClientUtils.constructModuleName())
+      .withEventMetadata(new EventMetadata().withPublishedBy(PubSubClientUtils.getModuleId())
         .withTenantId(okapiHeaders.get(OKAPI_TENANT_HEADER))
         .withEventTTL(1));
 

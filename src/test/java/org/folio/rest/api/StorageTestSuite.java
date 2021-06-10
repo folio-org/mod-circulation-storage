@@ -179,8 +179,6 @@ public class StorageTestSuite {
     });
 
     undeploymentComplete.get(20, TimeUnit.SECONDS);
-
-    PostgresClient.stopEmbeddedPostgres();
   }
 
   public static boolean isNotInitialised() {
