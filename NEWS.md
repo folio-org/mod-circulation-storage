@@ -1,5 +1,7 @@
-## 13.0.0 IN-PROGRESS
+## 13.0.0 2021-06-11
 
+* Includes migration for missing staff slips (CIRCSTORE-273)
+* Pickup expired not showing in Circulation log (CIRCSTORE-265)
 * Use normalization for request.item.identifiers (for search requests by ISBN) (CIRCSTORE-186)
 * `embed_postgres` command line option is no longer supported (CIRCSTORE-280)
 * Upgrades to RAML Module Builder 33.0.0 (CIRCSTORE-280)
