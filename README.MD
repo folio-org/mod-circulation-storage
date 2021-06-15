@@ -69,6 +69,7 @@ The `userId` parameter is checked to take the form of a UUID to try to reduce th
 
 - Java 11 JDK
 - Maven 3.3.9
+- Docker ([minimum requirements](https://www.testcontainers.org/supported_docker_environment/))
 - PostgreSQL 9.6.1 (running and listening on the default port, logged in user must have admin rights), with the following extensions
   - pgcrypto
   - unaccent
@@ -100,6 +101,34 @@ This is only required to run tests against an external Postgres instance, the de
 ### Checking the RAML and JSON.Schema definitions
 
 Follow the [guide](https://dev.folio.org/guides/raml-cop/) to use raml-cop to assess RAML, schema, and examples.
+
+# Local Deployment using Docker
+
+## Preparation
+
+Execute `mvn clean package` to build the jar artefact needed for building a Docker image
+
+## Start the infrastructure
+
+Clone `https://github.com/folio-org/folio-tools/`
+
+Navigate to the folder `infrastructure/local` directory within the cloned repository
+
+Execute `docker compose up -d` to start the infrastructure containers needed to run the module
+
+## Start the Module
+
+In the root of this repository, execute `docker compose up -d` to deploy the module
+
+## Stop the Module
+
+In the root of this repository, execute `docker compose down` to undeploy the module
+
+## Stop the infrastructure
+
+Navigate to the folder `infrastructure/local` directory within the clone of the folio-tools repository
+
+Execute `docker compose down` to stop the infrastructure containers
 
 ## Frequently Asked Questions
 
