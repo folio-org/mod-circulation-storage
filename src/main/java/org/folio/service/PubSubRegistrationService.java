@@ -13,9 +13,7 @@ import io.vertx.core.Vertx;
 public class PubSubRegistrationService {
   private static final Logger logger = LogManager.getLogger();
 
-  private PubSubRegistrationService() {
-    throw new IllegalStateException();
-  }
+  private PubSubRegistrationService() {}
 
   public static CompletableFuture<Boolean> registerModule(Map<String, String> headers, Vertx vertx) {
 
