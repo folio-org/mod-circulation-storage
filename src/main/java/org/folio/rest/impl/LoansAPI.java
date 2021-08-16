@@ -8,7 +8,6 @@ import static org.folio.support.ModuleConstants.LOAN_HISTORY_TABLE;
 import static org.folio.support.ModuleConstants.LOAN_TABLE;
 import static org.folio.support.ModuleConstants.MODULE_NAME;
 import static org.folio.support.ModuleConstants.OPEN_LOAN_STATUS;
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
@@ -48,6 +47,7 @@ import org.apache.logging.log4j.LogManager;
 public class LoansAPI implements LoanStorage {
   private static final Logger log = LogManager.getLogger();
 
+  @Validate
   @Override
   public void deleteLoanStorageLoans(
     String lang,
@@ -89,6 +89,7 @@ public class LoansAPI implements LoanStorage {
       GetLoanStorageLoansResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void postLoanStorageLoans(
     String lang,
@@ -132,6 +133,7 @@ public class LoansAPI implements LoanStorage {
     });
   }
 
+  @Validate
   @Override
   public void postLoanStorageLoansAnonymizeByUserId(
     String userId,
@@ -187,6 +189,7 @@ public class LoansAPI implements LoanStorage {
       GetLoanStorageLoansByLoanIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void deleteLoanStorageLoansByLoanId(
     String loanId,
@@ -199,6 +202,7 @@ public class LoansAPI implements LoanStorage {
       DeleteLoanStorageLoansByLoanIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void putLoanStorageLoansByLoanId(
     String loanId,

@@ -11,7 +11,7 @@ import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
-
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.RequestsBatch;
 import org.folio.rest.jaxrs.resource.RequestStorageBatch;
 import org.folio.rest.persist.PgUtil;
@@ -27,6 +27,7 @@ import io.vertx.core.Handler;
 public class RequestsBatchAPI implements RequestStorageBatch {
   private static final Logger LOG = LoggerFactory.getLogger(RequestsBatchAPI.class);
 
+  @Validate
   @Override
   public void postRequestStorageBatchRequests(
     RequestsBatch entity, Map<String, String> okapiHeaders,

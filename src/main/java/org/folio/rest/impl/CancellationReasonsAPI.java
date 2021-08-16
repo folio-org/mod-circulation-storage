@@ -42,6 +42,7 @@ public class CancellationReasonsAPI implements CancellationReasonStorage {
   }
 
   @Override
+  @Validate
   public void deleteCancellationReasonStorageCancellationReasons(String lang,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
@@ -72,6 +73,7 @@ public class CancellationReasonsAPI implements CancellationReasonStorage {
   }
 
   @Override
+  @Validate
   public void getCancellationReasonStorageCancellationReasons(int offset,
       int limit, String query, String lang, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
@@ -90,6 +92,7 @@ public class CancellationReasonsAPI implements CancellationReasonStorage {
   }
 
   @Override
+  @Validate
   public void getCancellationReasonStorageCancellationReasonsByCancellationReasonId(
       String cancellationReasonId, String lang, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
@@ -98,6 +101,7 @@ public class CancellationReasonsAPI implements CancellationReasonStorage {
   }
 
   @Override
+  @Validate
   public void deleteCancellationReasonStorageCancellationReasonsByCancellationReasonId(
       String cancellationReasonId, String lang, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {

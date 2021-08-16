@@ -43,6 +43,7 @@ public class PatronActionSessionAPI implements PatronActionSessionStorage {
   private static final String PATRON_ID = "patronId";
   private static final String ACTION_TYPE = "actionType";
 
+  @Validate
   @Override
   public void getPatronActionSessionStoragePatronActionSessions(int offset,
     int limit, String query, String lang, Map<String, String> okapiHeaders,
@@ -53,6 +54,7 @@ public class PatronActionSessionAPI implements PatronActionSessionStorage {
       GetPatronActionSessionStoragePatronActionSessionsResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void postPatronActionSessionStoragePatronActionSessions(
     String lang, PatronActionSession entity, Map<String, String> okapiHeaders,
@@ -62,6 +64,7 @@ public class PatronActionSessionAPI implements PatronActionSessionStorage {
       PostPatronActionSessionStoragePatronActionSessionsResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void getPatronActionSessionStoragePatronActionSessionsByPatronSessionId(
     String patronSessionId, String lang, Map<String, String> okapiHeaders,
@@ -72,6 +75,7 @@ public class PatronActionSessionAPI implements PatronActionSessionStorage {
       asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void deletePatronActionSessionStoragePatronActionSessionsByPatronSessionId(
     String patronSessionId, String lang, Map<String, String> okapiHeaders,
@@ -139,6 +143,7 @@ public class PatronActionSessionAPI implements PatronActionSessionStorage {
       .withActionType(ExpiredSession.ActionType.fromValue(row.getString(ACTION_TYPE)));
   }
 
+  @Validate
   @Override
   public void putPatronActionSessionStoragePatronActionSessionsByPatronSessionId(
     String patronSessionId, String lang, PatronActionSession entity, Map<String, String> okapiHeaders,
