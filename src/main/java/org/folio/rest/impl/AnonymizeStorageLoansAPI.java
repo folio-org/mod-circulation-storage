@@ -3,7 +3,6 @@ package org.folio.rest.impl;
 import static io.vertx.core.Future.succeededFuture;
 import static org.folio.support.ModuleConstants.LOAN_HISTORY_TABLE;
 import static org.folio.support.ModuleConstants.MODULE_NAME;
-import java.lang.invoke.MethodHandles;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +10,7 @@ import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.core.Response;
 import org.apache.commons.collections4.CollectionUtils;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.AnonymizeStorageLoansRequest;
 import org.folio.rest.jaxrs.model.AnonymizeStorageLoansResponse;
 import org.folio.rest.jaxrs.model.Errors;
@@ -34,6 +34,7 @@ import io.vertx.sqlclient.RowSet;
 public class AnonymizeStorageLoansAPI implements AnonymizeStorageLoans {
   private static final Logger log = LogManager.getLogger();
 
+  @Validate
   @Override
   public void postAnonymizeStorageLoans(AnonymizeStorageLoansRequest request,
     Map<String, String> okapiHeaders,

@@ -73,6 +73,7 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorage {
   }
 
   @Override
+  @Validate
   public void getFixedDueDateScheduleStorageFixedDueDateSchedules(
       int offset,
       int limit,

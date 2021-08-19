@@ -3,7 +3,7 @@ package org.folio.rest.impl;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
-
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.impl.util.OkapiResponseUtil;
 import org.folio.rest.impl.util.RequestsApiUtil;
 import org.folio.rest.jaxrs.model.Errors;
@@ -25,6 +25,7 @@ import static org.folio.rest.impl.Headers.TENANT_HEADER;
 public class RequestsAPI implements RequestStorage {
   public static final String REQUEST_TABLE = "request";
 
+  @Validate
   @Override
   public void deleteRequestStorageRequests(
     String lang,
@@ -52,6 +53,7 @@ public class RequestsAPI implements RequestStorage {
     });
   }
 
+  @Validate
   @Override
   public void getRequestStorageRequests(
     int offset,
@@ -66,6 +68,7 @@ public class RequestsAPI implements RequestStorage {
         GetRequestStorageRequestsResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void postRequestStorageRequests(
     String lang,
@@ -86,6 +89,7 @@ public class RequestsAPI implements RequestStorage {
         });
   }
 
+  @Validate
   @Override
   public void getRequestStorageRequestsByRequestId(
     String requestId,
@@ -98,6 +102,7 @@ public class RequestsAPI implements RequestStorage {
         GetRequestStorageRequestsByRequestIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void deleteRequestStorageRequestsByRequestId(
     String requestId,
@@ -110,6 +115,7 @@ public class RequestsAPI implements RequestStorage {
         DeleteRequestStorageRequestsByRequestIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void putRequestStorageRequestsByRequestId(
     String requestId,

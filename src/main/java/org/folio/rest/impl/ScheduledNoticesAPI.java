@@ -15,17 +15,14 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Promise;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
-
 import org.apache.commons.lang3.StringUtils;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.cql2pgjson.exception.QueryValidationException;
 import org.folio.rest.RestVerticle;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.ScheduledNotice;
 import org.folio.rest.jaxrs.model.ScheduledNotices;
 import org.folio.rest.jaxrs.resource.ScheduledNoticeStorage;
@@ -39,6 +36,7 @@ public class ScheduledNoticesAPI implements ScheduledNoticeStorage {
   private static final String SCHEDULED_NOTICE_TABLE = "scheduled_notice";
   private static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
 
+  @Validate
   @Override
   public void getScheduledNoticeStorageScheduledNotices(int offset,
                                                         int limit,
@@ -52,6 +50,7 @@ public class ScheduledNoticesAPI implements ScheduledNoticeStorage {
       okapiHeaders, vertxContext, GetScheduledNoticeStorageScheduledNoticesResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void deleteScheduledNoticeStorageScheduledNotices(String query,
                                                            Map<String, String> okapiHeaders,
@@ -69,6 +68,7 @@ public class ScheduledNoticesAPI implements ScheduledNoticeStorage {
         .onComplete(asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void postScheduledNoticeStorageScheduledNotices(String lang,
                                                          ScheduledNotice entity,
@@ -80,6 +80,7 @@ public class ScheduledNoticesAPI implements ScheduledNoticeStorage {
       PostScheduledNoticeStorageScheduledNoticesResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void getScheduledNoticeStorageScheduledNoticesByScheduledNoticeId(String scheduledNoticeId,
                                                                            String lang,
@@ -91,6 +92,7 @@ public class ScheduledNoticesAPI implements ScheduledNoticeStorage {
       GetScheduledNoticeStorageScheduledNoticesByScheduledNoticeIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void deleteScheduledNoticeStorageScheduledNoticesByScheduledNoticeId(String scheduledNoticeId,
                                                                               String lang, Map<String, String> okapiHeaders,
@@ -102,6 +104,7 @@ public class ScheduledNoticesAPI implements ScheduledNoticeStorage {
 
   }
 
+  @Validate
   @Override
   public void putScheduledNoticeStorageScheduledNoticesByScheduledNoticeId(String scheduledNoticeId,
                                                                            String lang,

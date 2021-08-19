@@ -9,7 +9,7 @@ import static org.folio.support.ExpirationTool.doRequestExpiration;
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
-
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.resource.ScheduledRequestExpiration;
 
 import io.vertx.core.AsyncResult;
@@ -18,6 +18,7 @@ import io.vertx.core.Handler;
 
 public class RequestExpiryImpl implements ScheduledRequestExpiration {
 
+  @Validate
   @Override
   public void expireRequests(Map<String, String> okapiHeaders,
                              Handler<AsyncResult<Response>> asyncResultHandler, Context context) {

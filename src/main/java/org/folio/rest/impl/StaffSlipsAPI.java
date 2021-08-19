@@ -4,6 +4,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.StaffSlip;
 import org.folio.rest.jaxrs.model.StaffSlips;
 import org.folio.rest.jaxrs.resource.LoanStorage;
@@ -24,6 +25,7 @@ public class StaffSlipsAPI implements StaffSlipsStorage {
 
   private static final Class<StaffSlip> STAFF_SLIP_CLASS = StaffSlip.class;
 
+  @Validate
   @Override
   public void deleteStaffSlipsStorageStaffSlips(String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
@@ -53,6 +55,7 @@ public class StaffSlipsAPI implements StaffSlipsStorage {
 
   }
 
+  @Validate
   @Override
   public void getStaffSlipsStorageStaffSlips(int offset, int limit, String query, String lang,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
@@ -61,6 +64,7 @@ public class StaffSlipsAPI implements StaffSlipsStorage {
         GetStaffSlipsStorageStaffSlipsResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void postStaffSlipsStorageStaffSlips(String lang, StaffSlip entity, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
@@ -78,6 +82,7 @@ public class StaffSlipsAPI implements StaffSlipsStorage {
 
   }
 
+  @Validate
   @Override
   public void getStaffSlipsStorageStaffSlipsByStaffSlipId(String staffSlipId, String lang,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
@@ -86,6 +91,7 @@ public class StaffSlipsAPI implements StaffSlipsStorage {
         GetStaffSlipsStorageStaffSlipsByStaffSlipIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void deleteStaffSlipsStorageStaffSlipsByStaffSlipId(String staffSlipId, String lang,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
@@ -94,6 +100,7 @@ public class StaffSlipsAPI implements StaffSlipsStorage {
         DeleteStaffSlipsStorageStaffSlipsByStaffSlipIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void putStaffSlipsStorageStaffSlipsByStaffSlipId(String staffSlipId, String lang, StaffSlip entity,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {

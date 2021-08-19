@@ -6,12 +6,11 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.CirculationRules;
 import org.folio.rest.jaxrs.resource.CirculationRulesStorage;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.UpdateSection;
-import org.folio.rest.persist.interfaces.Results;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.TenantTool;
 
@@ -31,6 +30,7 @@ public class CirculationRulesAPI implements CirculationRulesStorage {
   }
 
   @Override
+  @Validate
   public void getCirculationRulesStorage(Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     try {
@@ -80,6 +80,7 @@ public class CirculationRulesAPI implements CirculationRulesStorage {
   }
 
   @Override
+  @Validate
   public void putCirculationRulesStorage(CirculationRules entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     try {

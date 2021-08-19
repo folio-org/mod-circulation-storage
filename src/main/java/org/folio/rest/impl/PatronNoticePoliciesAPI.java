@@ -36,6 +36,7 @@ import io.vertx.sqlclient.RowSet;
 
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.rest.RestVerticle;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.CirculationRules;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
@@ -69,6 +70,7 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
   private static final Set<SendOptions.SendWhen> TRIGGERING_EVENTS_FOR_SCHEDULED_LOAN_NOTICES =
     EnumSet.of(DUE_DATE, AGED_TO_LOST);
 
+  @Validate
   @Override
   public void getPatronNoticePolicyStoragePatronNoticePolicies(
     int offset,
@@ -115,6 +117,7 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
     });
   }
 
+  @Validate
   @Override
   public void postPatronNoticePolicyStoragePatronNoticePolicies(
     PatronNoticePolicy entity,
@@ -154,6 +157,7 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
     });
   }
 
+  @Validate
   @Override
   public void getPatronNoticePolicyStoragePatronNoticePoliciesByPatronNoticePolicyId(
     String patronNoticePolicyId,
@@ -166,6 +170,7 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
       asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void deletePatronNoticePolicyStoragePatronNoticePoliciesByPatronNoticePolicyId(
     String patronNoticePolicyId,
@@ -186,6 +191,7 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
       .onComplete(asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void putPatronNoticePolicyStoragePatronNoticePoliciesByPatronNoticePolicyId(
     String patronNoticePolicyId,
