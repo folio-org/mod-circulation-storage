@@ -1,3 +1,7 @@
+## 13.1.0 2021-09-30
+
+* Fixes to code coverage, docker containers, and code owners (CIRCSTORE-289, CIRCSTORE-287, CIRCSTORE-259, CIRCSTORE-281)
+
 ## 13.0.0 2021-06-11
 
 * Includes migration for missing staff slips (CIRCSTORE-273)
