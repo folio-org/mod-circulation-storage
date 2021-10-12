@@ -40,6 +40,7 @@ public class RequestsBatchAPI implements RequestStorageBatch {
       String msg = "Cannot populate metadata of request list elements: " + e.getMessage();
       LOG.error(msg, e);
       asyncResultHandler.handle(succeededFuture(respond500WithTextPlain(msg)));
+      return;
     }
 
     BatchResourceService batchUpdateService = new BatchResourceService(

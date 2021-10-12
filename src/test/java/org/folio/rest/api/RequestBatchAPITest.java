@@ -16,7 +16,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-
+import org.folio.rest.impl.RequestsBatchAPI;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
@@ -133,6 +133,20 @@ public class RequestBatchAPITest extends ApiTests {
     JsonArray allRequests = allRequestsForItem.getJsonArray("requests");
     assertEqualsWithUpdatedDateChange(firstRequest, allRequests.getJsonObject(0));
     assertEqualsWithUpdatedDateChange(secondRequest, allRequests.getJsonObject(1));
+  }
+
+  @Test
+  public void willAbortBatchUpdateOnPopulateMetadataException() throws Exception {
+    CompletableFuture<TextResponse> postCompleted = new CompletableFuture<>();
+    new RequestsBatchAPI().postRequestStorageBatchRequests(
+        null, null,
+        result -> postCompleted.complete(new TextResponse(
+            result.result().getStatus(), result.result().getEntity().toString())),
+        null);
+
+    TextResponse response = postCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(response.getStatusCode(), is(500));
+    assertThat(response.getBody(), containsString("Cannot populate metadata"));
   }
 
   @Test
