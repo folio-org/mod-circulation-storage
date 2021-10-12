@@ -3,10 +3,11 @@ package org.folio.rest.api;
 import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.storageUrl;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.is;
 
 import java.net.URL;
 import java.util.Arrays;
@@ -62,7 +63,18 @@ public class RequestBatchAPITest extends ApiTests {
       secondReorderRequest
     );
 
-    assertRequestsUpdated(itemId, firstReorderRequest, secondReorderRequest);
+    JsonObject requestsForItemReply = getAllRequestsForItem(itemId);
+    assertThat(requestsForItemReply.getInteger("totalRecords"), is(2));
+    JsonArray requestsFromDb = requestsForItemReply.getJsonArray("requests");
+    assertThat(requestsFromDb.size(), is(2));
+    JsonObject [] r = new JsonObject [] { requestsFromDb.getJsonObject(0), requestsFromDb.getJsonObject(1) };
+    if (r[0].getInteger("position") == 2) {
+      r = new JsonObject [] { r[1], r[0] };
+    }
+    assertThat(r[0].getInteger("position"), is(1));
+    assertThat(r[1].getInteger("position"), is(2));
+    assertThat(r[0].getString("id"), is(secondRequest.getString("id")));
+    assertThat(r[1].getString("id"), is(firstRequest.getString("id")));
   }
 
   @Test
@@ -91,8 +103,8 @@ public class RequestBatchAPITest extends ApiTests {
     assertThat(allRequestsForItem.getInteger("totalRecords"), is(2));
 
     JsonArray allRequests = allRequestsForItem.getJsonArray("requests");
-    assertThat(firstRequest, is(allRequests.getJsonObject(0)));
-    assertThat(secondRequest, is(allRequests.getJsonObject(1)));
+    assertEqualsWithUpdatedDateChange(firstRequest, allRequests.getJsonObject(0));
+    assertEqualsWithUpdatedDateChange(secondRequest, allRequests.getJsonObject(1));
   }
 
   @Test
@@ -119,8 +131,8 @@ public class RequestBatchAPITest extends ApiTests {
     assertThat(allRequestsForItem.getInteger("totalRecords"), is(2));
 
     JsonArray allRequests = allRequestsForItem.getJsonArray("requests");
-    assertThat(firstRequest, is(allRequests.getJsonObject(0)));
-    assertThat(secondRequest, is(allRequests.getJsonObject(1)));
+    assertEqualsWithUpdatedDateChange(firstRequest, allRequests.getJsonObject(0));
+    assertEqualsWithUpdatedDateChange(secondRequest, allRequests.getJsonObject(1));
   }
 
   @Test
@@ -256,21 +268,6 @@ public class RequestBatchAPITest extends ApiTests {
     assertThat(response.getStatusCode(), is(201));
   }
 
-  private void assertRequestsUpdated(UUID itemId, ReorderRequest... requests) throws Exception {
-    JsonObject requestsForItemReply = getAllRequestsForItem(itemId);
-
-    assertThat(requestsForItemReply.size(), is(requests.length));
-    assertThat(requestsForItemReply.getInteger("totalRecords"), is(requests.length));
-
-    JsonObject[] sortedExpectedRequests = Arrays.stream(requests)
-      .sorted(Comparator.comparingInt(rr -> rr.newPosition))
-      .map(rr -> rr.request.copy().put("position", rr.newPosition))
-      .toArray(JsonObject[]::new);
-    JsonArray requestsFromDb = requestsForItemReply.getJsonArray("requests");
-
-    assertThat(requestsFromDb, hasItems(sortedExpectedRequests));
-  }
-
   private void assertRequestsNotUpdated(UUID itemId, JsonObject... requests) throws Exception {
     JsonObject requestsForItemReply = getAllRequestsForItem(itemId);
 
@@ -283,6 +280,21 @@ public class RequestBatchAPITest extends ApiTests {
 
     assertThat(requestsFromDb.size(), is(sortedExpectedRequests.length));
     assertThat(requestsFromDb, hasItems(sortedExpectedRequests));
+  }
+
+  /**
+   * Asserts that json1 and json2 are the same with the exception of metadta.updatedDate
+   * String that must exists and must be different.
+   */
+  private void assertEqualsWithUpdatedDateChange(JsonObject json1, JsonObject json2) {
+    String updatedDate1 = json1.getJsonObject("metadata").getString("updatedDate");
+    String updatedDate2 = json2.getJsonObject("metadata").getString("updatedDate");
+    assertThat("metadata.updatedDate should differ", updatedDate1, is(not(updatedDate2)));
+    JsonObject jsonStripped1 = json1.copy();
+    JsonObject jsonStripped2 = json2.copy();
+    jsonStripped1.getJsonObject("metadata").remove("updatedDate");
+    jsonStripped2.getJsonObject("metadata").remove("updatedDate");
+    assertThat(jsonStripped1, is(jsonStripped2));
   }
 
   private void assertPositionConstraintViolationError(JsonResponse response) {

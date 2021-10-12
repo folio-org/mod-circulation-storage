@@ -15,6 +15,7 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.RequestsBatch;
 import org.folio.rest.jaxrs.resource.RequestStorageBatch;
 import org.folio.rest.persist.PgUtil;
+import org.folio.rest.tools.utils.MetadataUtil;
 import org.folio.service.BatchResourceService;
 import org.folio.service.request.RequestBatchResourceService;
 import org.slf4j.Logger;
@@ -32,6 +33,14 @@ public class RequestsBatchAPI implements RequestStorageBatch {
   public void postRequestStorageBatchRequests(
     RequestsBatch entity, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context context) {
+
+    try {
+      MetadataUtil.populateMetadata(entity.getRequests(), okapiHeaders);
+    } catch (Throwable e) {
+      String msg = "Cannot populate metadata of request list elements: " + e.getMessage();
+      LOG.error(msg, e);
+      asyncResultHandler.handle(succeededFuture(respond500WithTextPlain(msg)));
+    }
 
     BatchResourceService batchUpdateService = new BatchResourceService(
       PgUtil.postgresClient(context, okapiHeaders)
