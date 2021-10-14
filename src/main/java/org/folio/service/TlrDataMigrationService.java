@@ -62,19 +62,19 @@ public class TlrDataMigrationService {
   }
 
   public Future<Void> migrate() {
-    if (attributes.getModuleFrom() != null) {
-      SemVer migrationModuleVersion = moduleVersionToSemVer("mod-circulation-storage-13.3.0");
-      SemVer currentModuleVersion = moduleVersionToSemVer(attributes.getModuleFrom());
-      if (migrationModuleVersion.compareTo(currentModuleVersion) != 0) {
-        logInfo(format("skipping migration for current module version %s, should be %s",
-          currentModuleVersion, migrationModuleVersion));
-        return succeededFuture();
-      }
-    }
-    else {
-      logError("skipping migration - can not determine current module version");
-      return succeededFuture();
-    }
+//    if (attributes.getModuleFrom() != null) {
+//      SemVer migrationModuleVersion = moduleVersionToSemVer("mod-circulation-storage-13.3.0");
+//      SemVer currentModuleVersion = moduleVersionToSemVer(attributes.getModuleFrom());
+//      if (migrationModuleVersion.compareTo(currentModuleVersion) != 0) {
+//        logInfo(format("skipping migration for current module version %s, should be %s",
+//          currentModuleVersion, migrationModuleVersion));
+//        return succeededFuture();
+//      }
+//    }
+//    else {
+//      logError("skipping migration - can not determine current module version");
+//      return succeededFuture();
+//    }
 
     logInfo("start");
 
@@ -97,7 +97,7 @@ public class TlrDataMigrationService {
                   promise.complete();
                 }
                 else {
-                  promise.fail(String.join("", migrationContext.errorMessages));
+                  promise.fail(String.join(", ", migrationContext.errorMessages));
                 }
               });
           }
