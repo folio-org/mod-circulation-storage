@@ -12,7 +12,7 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.tools.utils.TenantLoading;
 import org.folio.service.PubSubRegistrationService;
-import org.folio.service.TlrDataMigrationService;
+import org.folio.service.tlr.TlrDataMigrationService;
 
 public class TenantRefAPI extends TenantAPI {
 

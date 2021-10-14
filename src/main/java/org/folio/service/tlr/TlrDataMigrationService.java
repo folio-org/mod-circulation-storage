@@ -1,4 +1,4 @@
-package org.folio.service;
+package org.folio.service.tlr;
 
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
@@ -23,7 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -31,9 +30,7 @@ import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 public class TlrDataMigrationService {
@@ -49,7 +46,8 @@ public class TlrDataMigrationService {
   private final OkapiClient okapiClient;
   private final PostgresClient postgresClient;
   private final String schemaName;
-  private final MigrationContext migrationContext;
+  private final TlrDataMigrationContext migrationContext;
+  private final TlrDataMigrationUpdaterService updaterService;
 
   public TlrDataMigrationService(TenantAttributes attributes, Context context,
     Map<String, String> okapiHeaders) {
@@ -58,7 +56,8 @@ public class TlrDataMigrationService {
     okapiClient = new OkapiClient(context.owner(), okapiHeaders);
     postgresClient = PgUtil.postgresClient(context, okapiHeaders);
     schemaName = convertToPsqlStandard(tenantId(okapiHeaders));
-    migrationContext = new MigrationContext();
+    migrationContext = new TlrDataMigrationContext();
+    updaterService = new TlrDataMigrationUpdaterService(migrationContext);
   }
 
   public Future<Void> migrate() {
@@ -79,6 +78,7 @@ public class TlrDataMigrationService {
     logInfo("start");
 
     Promise<Void> promise = Promise.promise();
+    migrationContext.setMigrationProcessPromise(promise);
 
     postgresClient.select(format("SELECT COUNT(*) FROM %s.%s", schemaName, REQUEST_TABLE))
       .onComplete(asyncResult -> {
@@ -93,11 +93,11 @@ public class TlrDataMigrationService {
 
             chainFutures(range(0, numberOfBatches).boxed().collect(toList()), this::processBatch)
               .onComplete(batchesAsyncResult -> {
-                if (migrationContext.status) {
-                  promise.complete();
+                if (migrationContext.isSuccessful()) {
+                  updaterService.update();
                 }
                 else {
-                  promise.fail(String.join(", ", migrationContext.errorMessages));
+                  promise.fail(String.join(", ", migrationContext.getErrorMessages()));
                 }
               });
           }
@@ -159,7 +159,7 @@ public class TlrDataMigrationService {
     Promise<Void> promise = Promise.promise();
 
     requestIsValid
-      .compose(v -> getInstanceId(request))
+      .compose(v -> determineInstanceId(request))
       .onComplete(ar -> {
         if (ar.succeeded()) {
           logInfo(format("determined instanceId %s, request %s", ar.result(), requestId));
@@ -173,11 +173,17 @@ public class TlrDataMigrationService {
     return promise.future();
   }
 
-  private Future<String> getInstanceId(JsonObject request) {
+  private Future<String> determineInstanceId(JsonObject request) {
     return okapiClient.getById(ITEMS_STORAGE_URL, request.getString("itemId"), Item.class)
       .map(Item::getHoldingsRecordId)
       .compose(id -> okapiClient.getById(HOLDINGS_STORAGE_URL, id, HoldingsRecord.class))
-      .map(HoldingsRecord::getInstanceId);
+      .map(HoldingsRecord::getInstanceId)
+      .map(instanceId -> addInstanceIdToContext(request, instanceId));
+  }
+
+  private String addInstanceIdToContext(JsonObject request, String instanceId) {
+    migrationContext.getInstanceIds().put(request.getString("id"), instanceId);
+    return instanceId;
   }
 
   private boolean validateRequest(JsonObject request) {
@@ -229,8 +235,8 @@ public class TlrDataMigrationService {
 
     LOG.error(fullMessage);
 
-    migrationContext.setStatus(false);
-    migrationContext.errorMessages.add(fullMessage);
+    migrationContext.setSuccessful(false);
+    migrationContext.getErrorMessages().add(fullMessage);
   }
 
   public static <T> Future<Void> chainFutures(List<T> list,
@@ -253,7 +259,7 @@ public class TlrDataMigrationService {
   @Setter
   @JsonIgnoreProperties(ignoreUnknown = true)
   public static class Item {
-    @JsonProperty("holdingsRecordId")
+//    @JsonProperty("holdingsRecordId")
     private String holdingsRecordId;
   }
 
@@ -261,16 +267,7 @@ public class TlrDataMigrationService {
   @Setter
   @JsonIgnoreProperties(ignoreUnknown = true)
   public static class HoldingsRecord {
-    @JsonProperty("instanceId")
+//    @JsonProperty("instanceId")
     private String instanceId;
-  }
-
-  @AllArgsConstructor
-  @NoArgsConstructor(force = true)
-  @Getter
-  @Setter
-  public static class MigrationContext {
-    private boolean status = true;
-    private List<String> errorMessages = new ArrayList<>();
   }
 }
