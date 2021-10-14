@@ -13,7 +13,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import org.folio.okapi.common.ModuleId;
+import org.folio.okapi.common.SemVer;
 import org.folio.rest.client.OkapiClient;
+import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.slf4j.Logger;
@@ -42,19 +45,37 @@ public class TlrDataMigrationService {
   public static final String ITEMS_STORAGE_URL = "/item-storage/items";
   public static final String HOLDINGS_STORAGE_URL = "/holdings-storage/holdings";
 
+  private final TenantAttributes attributes;
   private final OkapiClient okapiClient;
   private final PostgresClient postgresClient;
   private final String schemaName;
   private final MigrationContext migrationContext;
 
-  public TlrDataMigrationService(Context context, Map<String, String> okapiHeaders) {
+  public TlrDataMigrationService(TenantAttributes attributes, Context context,
+    Map<String, String> okapiHeaders) {
+
+    this.attributes = attributes;
     okapiClient = new OkapiClient(context.owner(), okapiHeaders);
     postgresClient = PgUtil.postgresClient(context, okapiHeaders);
     schemaName = convertToPsqlStandard(tenantId(okapiHeaders));
-    this.migrationContext = new MigrationContext();
+    migrationContext = new MigrationContext();
   }
 
   public Future<Void> migrate() {
+    if (attributes.getModuleFrom() != null) {
+      SemVer migrationModuleVersion = moduleVersionToSemVer("mod-circulation-storage-13.3.0");
+      SemVer currentModuleVersion = moduleVersionToSemVer(attributes.getModuleFrom());
+      if (migrationModuleVersion.compareTo(currentModuleVersion) != 0) {
+        logInfo(format("skipping migration for current module version %s, should be %s",
+          currentModuleVersion, migrationModuleVersion));
+        return succeededFuture();
+      }
+    }
+    else {
+      logError("skipping migration - can not determine current module version");
+      return succeededFuture();
+    }
+
     logInfo("start");
 
     Promise<Void> promise = Promise.promise();
@@ -218,6 +239,14 @@ public class TlrDataMigrationService {
     return list.stream().reduce(succeededFuture(),
       (acc, item) -> acc.compose(v -> method.apply(item)),
       (a, b) -> succeededFuture());
+  }
+
+  private static SemVer moduleVersionToSemVer(String version) {
+    try {
+      return new SemVer(version);
+    } catch (IllegalArgumentException ex) {
+      return new ModuleId(version).getSemVer();
+    }
   }
 
   @Getter

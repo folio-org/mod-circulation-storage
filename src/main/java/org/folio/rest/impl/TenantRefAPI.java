@@ -28,7 +28,8 @@ public class TenantRefAPI extends TenantAPI {
       Map<String, String> headers, Context vertxContext) {
 
     return super.loadData(attributes, tenantId, headers, vertxContext)
-      .compose(r -> new TlrDataMigrationService(vertxContext, headers).migrate())
+      .compose(r -> new TlrDataMigrationService(attributes, vertxContext,
+        headers).migrate())
       .compose(superRecordsLoaded -> {
         log.info("Initializing of tenant's data");
         Vertx vertx = vertxContext.owner();
