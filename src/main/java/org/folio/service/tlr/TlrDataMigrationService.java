@@ -36,6 +36,7 @@ import lombok.Setter;
 public class TlrDataMigrationService {
   private static final Logger LOG = LoggerFactory.getLogger(TlrDataMigrationService.class);
 
+  public static final String TLR_MIGRATION_MODULE_VERSION = "mod-circulation-storage-13.2.0";
   public static final String LOG_PREFIX = "TLR data migration: ";
   public static final String REQUEST_TABLE = "request";
   public static final Integer BATCH_SIZE = 10;
@@ -61,19 +62,26 @@ public class TlrDataMigrationService {
   }
 
   public Future<Void> migrate() {
-//    if (attributes.getModuleFrom() != null) {
-//      SemVer migrationModuleVersion = moduleVersionToSemVer("mod-circulation-storage-13.3.0");
-//      SemVer currentModuleVersion = moduleVersionToSemVer(attributes.getModuleFrom());
-//      if (migrationModuleVersion.compareTo(currentModuleVersion) != 0) {
-//        logInfo(format("skipping migration for current module version %s, should be %s",
-//          currentModuleVersion, migrationModuleVersion));
-//        return succeededFuture();
-//      }
-//    }
-//    else {
-//      logError("skipping migration - can not determine current module version");
-//      return succeededFuture();
-//    }
+    if (attributes.getModuleFrom() != null && attributes.getModuleTo() != null) {
+      SemVer migrationModuleVersion = moduleVersionToSemVer(TLR_MIGRATION_MODULE_VERSION);
+      SemVer moduleFromVersion = moduleVersionToSemVer(attributes.getModuleFrom());
+      SemVer moduleToVersion = moduleVersionToSemVer(attributes.getModuleTo());
+
+      if (moduleToVersion.compareTo(migrationModuleVersion) < 0) {
+        logInfo(format("skipping migration for module version %s: should be %s or higher",
+          moduleToVersion, migrationModuleVersion));
+        return succeededFuture();
+      }
+      else if (moduleFromVersion.compareTo(migrationModuleVersion) >= 0) {
+        logInfo(format("skipping migration for module version %s: previous version %s " +
+          "is already migrated", moduleToVersion, moduleFromVersion));
+        return succeededFuture();
+      }
+    }
+    else {
+      logInfo("skipping migration - can not determine current moduleFrom or moduleTo version");
+      return succeededFuture();
+    }
 
     logInfo("start");
 
