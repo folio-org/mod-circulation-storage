@@ -6,6 +6,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.any;
 import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
 import static com.github.tomakehurst.wiremock.client.WireMock.created;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
 import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
@@ -33,7 +34,6 @@ import org.folio.rest.client.TenantClient;
 import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.jaxrs.model.TenantJob;
-import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.junit.AfterClass;
@@ -65,10 +65,10 @@ public class TenantApiTest {
   protected static final String MIGRATION_MODULE_VERSION = "13.2.0";
   protected static final String NEXT_MODULE_VERSION = "13.4.0";
   protected static final String MODULE_NAME = "mod_patron_blocks";
-  protected static final int OKAPI_PORT = NetworkUtils.nextFreePort();
-  protected static final String OKAPI_URL = "http://localhost:" + OKAPI_PORT;
-  protected static final String OKAPI_TENANT = "test_tenant";
-  protected static final String OKAPI_TOKEN = generateOkapiToken();
+  protected static final int PORT = NetworkUtils.nextFreePort();
+  protected static final String URL = "http://localhost:" + PORT;
+  protected static final String TENANT = "test_tenant";
+  protected static final String TOKEN = generateToken();
   private static final int GET_TENANT_TIMEOUT_MS = 10000;
 
   protected static Vertx vertx;
@@ -81,17 +81,17 @@ public class TenantApiTest {
     new WireMockConfiguration().dynamicPort());
 
   @BeforeClass
-  public static void beforeAll(final TestContext context) throws Exception {
+  public static void beforeAll(final TestContext context) {
     Async async = context.async();
 
     vertx = Vertx.vertx();
-    tenantClient = new TenantClient(getMockedOkapiUrl(), OKAPI_TENANT, OKAPI_TOKEN,
+    tenantClient = new TenantClient("http://localhost:" + wireMock.port(), TENANT, TOKEN,
       WebClient.create(vertx));
 
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
 
     DeploymentOptions deploymentOptions = new DeploymentOptions()
-      .setConfig(new JsonObject().put("http.port", OKAPI_PORT));
+      .setConfig(new JsonObject().put("http.port", PORT));
 
     mockEndpoints();
 
@@ -113,7 +113,7 @@ public class TenantApiTest {
 
           jobId = postResponse.bodyAsJson(TenantJob.class).getId();
 
-          postgresClient = PostgresClient.getInstance(vertx, OKAPI_TENANT);
+          postgresClient = PostgresClient.getInstance(vertx, TENANT);
 
           tenantClient.getTenantByOperationId(jobId, GET_TENANT_TIMEOUT_MS, getResult -> {
             if (getResult.failed()) {
@@ -123,13 +123,22 @@ public class TenantApiTest {
             }
 
             final HttpResponse<Buffer> getResponse = getResult.result();
-            assertThat(getResponse.statusCode(), is(HttpStatus.HTTP_OK.toInt()));
-            assertThat(getResponse.bodyAsJson(TenantJob.class).getComplete(), is(true));
+            context.assertEquals(getResponse.statusCode(), HttpStatus.HTTP_OK.toInt());
+            context.assertTrue(getResponse.bodyAsJson(TenantJob.class).getComplete());
 
             async.complete();
           });
         });
       });
+  }
+
+  @Before
+  public void beforeEach() throws Exception {
+    reLoadTestData();
+
+    // Need to reset all mocks before each test because some tests can remove stubs to mimic
+    // a failure on other modules' side
+    mockEndpoints();
   }
 
   @AfterClass
@@ -140,15 +149,6 @@ public class TenantApiTest {
       PostgresClient.stopPostgresTester();
       async.complete();
     }));
-  }
-
-  @Before
-  public void beforeEach() throws Exception {
-    reLoadTestData();
-
-    // Need to reset all mocks before each test because some tests can remove stubs to mimic
-    // a failure on other modules' side
-    mockEndpoints();
   }
 
   @Test
@@ -172,7 +172,7 @@ public class TenantApiTest {
           final HttpResponse<Buffer> getResponse = getResult.result();
 
           context.assertEquals(getResponse.statusCode(), HttpStatus.HTTP_OK.toInt());
-          context.assertEquals(getResponse.bodyAsJson(TenantJob.class).getComplete(), true);
+          context.assertTrue(getResponse.bodyAsJson(TenantJob.class).getComplete());
 
           postgresClient.select("SELECT COUNT(*) " +
             "FROM test_tenant_mod_circulation_storage.request " +
@@ -240,7 +240,7 @@ public class TenantApiTest {
   }
 
   @Test
-  public void jobCompleteWhenMigrationIsSuccessful(final TestContext context) {
+  public void jobCompletedWhenMigrationIsSuccessful(final TestContext context) {
     Async async = context.async();
 
     try {
@@ -273,7 +273,9 @@ public class TenantApiTest {
 
   @Test
   public void jobFailsWhenItemNotFound(final TestContext context) {
-    wireMock.removeStub(get(urlMatching("/item-storage/items/.*")));
+    wireMock.stubFor(get(urlMatching("/item-storage/items/100d10bf-2f06-4aa0-be15-0b95b2d9f9e4"))
+      .atPriority(0)
+      .willReturn(notFound()));
 
     Async async = context.async();
 
@@ -322,29 +324,24 @@ public class TenantApiTest {
     wireMock.resetAll();
 
     wireMock.stubFor(post(urlEqualTo("/pubsub/event-types"))
-      .atPriority(100)
       .willReturn(created()));
 
     wireMock.stubFor(post(urlEqualTo("/pubsub/event-types?"))
-      .atPriority(100)
       .willReturn(created()));
 
     wireMock.stubFor(post(urlMatching("/pubsub/event-types/declare/(publisher|subscriber)"))
-      .atPriority(100)
       .willReturn(created()));
 
     wireMock.stubFor(get(urlMatching("/item-storage/items/.*"))
-      .atPriority(100)
       .willReturn(ok().withBody(buildItemJson())));
 
     wireMock.stubFor(get(urlMatching("/holdings-storage/holdings/.*"))
-      .atPriority(100)
       .willReturn(ok().withBody(buildHoldingsRecordJson())));
 
-    // forward everything else to Okapi
+    // forward everything else to module URL
     wireMock.stubFor(any(anyUrl())
       .atPriority(Integer.MAX_VALUE)
-      .willReturn(aResponse().proxiedFrom(OKAPI_URL)));
+      .willReturn(aResponse().proxiedFrom(URL)));
   }
 
   private static String buildItemJson() {
@@ -379,19 +376,15 @@ public class TenantApiTest {
     dataLoaded.get(5, TimeUnit.SECONDS);
   }
 
-  private static String generateOkapiToken() {
+  private static String generateToken() {
     final String payload = new JsonObject()
       .put("user_id", randomId())
-      .put("tenant", OKAPI_TENANT)
+      .put("tenant", TENANT)
       .put("sub", "admin")
       .toString();
 
     return format("1.%s.3", Base64.getEncoder()
       .encodeToString(payload.getBytes()));
-  }
-
-  protected static String getMockedOkapiUrl() {
-    return "http://localhost:" + wireMock.port();
   }
 
   protected static String randomId() {

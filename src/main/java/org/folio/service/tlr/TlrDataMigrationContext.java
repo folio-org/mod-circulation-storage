@@ -19,5 +19,5 @@ public class TlrDataMigrationContext {
   private Promise<Void> migrationProcessPromise;
   private boolean successful = true;
   private List<String> errorMessages = new ArrayList<>();
-  private Map<String, String> instanceIds = new HashMap();
+  private Map<String, String> instanceIds = new HashMap<>();
 }

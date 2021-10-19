@@ -3,15 +3,19 @@ package org.folio.service.tlr;
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
+import static java.lang.String.join;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
 import static org.folio.rest.persist.PostgresClient.convertToPsqlStandard;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
+import static org.folio.util.UuidUtil.isUuid;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import org.folio.okapi.common.ModuleId;
 import org.folio.okapi.common.SemVer;
@@ -28,20 +32,21 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Data migration from item-level requests (ILR) to title-level requests (TLR)
+ */
 public class TlrDataMigrationService {
   private static final Logger LOG = LoggerFactory.getLogger(TlrDataMigrationService.class);
 
-  public static final String TLR_MIGRATION_MODULE_VERSION = "mod-circulation-storage-13.2.0";
-  public static final String LOG_PREFIX = "TLR data migration: ";
-  public static final String REQUEST_TABLE = "request";
-  public static final Integer BATCH_SIZE = 10;
-  public static final String ITEMS_STORAGE_URL = "/item-storage/items";
-  public static final String HOLDINGS_STORAGE_URL = "/holdings-storage/holdings";
+  private static final String TLR_MIGRATION_MODULE_VERSION = "mod-circulation-storage-13.2.0";
+  private static final String LOG_PREFIX = "TLR data migration: ";
+  private static final String REQUEST_TABLE = "request";
+  private static final Integer BATCH_SIZE = 1000;
+  private static final String ITEMS_STORAGE_URL = "/item-storage/items";
+  private static final String HOLDINGS_STORAGE_URL = "/holdings-storage/holdings";
 
   private final TenantAttributes attributes;
   private final OkapiClient okapiClient;
@@ -89,33 +94,26 @@ public class TlrDataMigrationService {
     migrationContext.setMigrationProcessPromise(promise);
 
     postgresClient.select(format("SELECT COUNT(*) FROM %s.%s", schemaName, REQUEST_TABLE))
-      .onComplete(asyncResult -> {
-        if (asyncResult.succeeded()) {
-          RowSet<Row> result = asyncResult.result();
-          if (result.iterator().hasNext()) {
-            Row row = result.iterator().next();
-            Integer count = row.get(Integer.class, 0);
-            int numberOfBatches = count / BATCH_SIZE + (count % BATCH_SIZE == 0 ? 0 : 1);
-
-            logInfo(format("found %d requests (%d batch(es))", count, numberOfBatches));
-
-            chainFutures(range(0, numberOfBatches).boxed().collect(toList()), this::processBatch)
-              .onComplete(batchesAsyncResult -> {
-                if (migrationContext.isSuccessful()) {
-                  updaterService.update();
-                }
-                else {
-                  promise.fail(String.join(", ", migrationContext.getErrorMessages()));
-                }
-              });
-          }
-          else {
-            logError("failed to get a total number of requests");
-          }
+      .onFailure(promise::fail)
+      .onSuccess(result -> {
+        if (!result.iterator().hasNext()) {
+          handleError("failed to get a total number of requests");
+          return;
         }
-        else {
-          promise.fail(asyncResult.cause());
-        }
+
+        Integer count = result.iterator().next().get(Integer.class, 0);
+        int numberOfBatches = count / BATCH_SIZE + (count % BATCH_SIZE == 0 ? 0 : 1);
+
+        logInfo(format("found %d requests (%d batch(es))", count, numberOfBatches));
+
+        chainFutures(range(0, numberOfBatches).boxed().collect(toList()), this::processBatch)
+          .onComplete(batchesAsyncResult -> {
+            if (migrationContext.isSuccessful()) {
+              updaterService.update();
+            } else {
+              promise.fail(join(", ", migrationContext.getErrorMessages()));
+            }
+          });
       });
 
     return promise.future();
@@ -126,59 +124,50 @@ public class TlrDataMigrationService {
 
     Promise<Void> promise = Promise.promise();
 
-    postgresClient.select(format("SELECT id, jsonb FROM %s.%s ORDER BY id LIMIT %d OFFSET %d",
+    postgresClient.select(format("SELECT jsonb FROM %s.%s ORDER BY id LIMIT %d OFFSET %d",
       schemaName, REQUEST_TABLE, BATCH_SIZE, batchNumber * BATCH_SIZE))
-      .onComplete(asyncResult -> {
-        RowSet<Row> result = asyncResult.result();
-        if (asyncResult.succeeded()) {
-          logInfo(format("found %d requests in batch %d", result.rowCount(), batchNumber));
-          List<JsonObject> requestList = new ArrayList<>();
-          for (Row requestRow : result) {
-            JsonObject request = requestRow.getJsonObject("jsonb");
-            requestList.add(request);
-          }
-          chainFutures(requestList, this::processRequest)
-            .onComplete(batchesAsyncResult -> {
-              if (batchesAsyncResult.succeeded()) {
-                logInfo(format("finished processing batch %d", batchNumber));
-              }
-              else {
-                logError(format("failed to process requests in batch %d", batchNumber));
-              }
-              promise.complete();
-            });
-        }
-        else {
-          logError(format("failed to select requests for batch %d", batchNumber));
-          promise.complete();
-        }
+      .onFailure(t -> {
+        handleError(format("failed to select requests for batch %d: %s", batchNumber,
+          t.getMessage()));
+        promise.complete();
+      })
+      .onSuccess(result -> {
+        logInfo(format("found %d requests in batch %d", result.rowCount(), batchNumber));
+
+        List<JsonObject> requestList = StreamSupport.stream(result.spliterator(), false)
+          .map(row -> row.getJsonObject("jsonb"))
+          .collect(Collectors.toList());
+
+        chainFutures(requestList, this::processRequest)
+          .onComplete(batchesAsyncResult -> {
+            if (batchesAsyncResult.succeeded()) {
+              logInfo(format("finished processing batch %d", batchNumber));
+            }
+            else {
+              handleError(format("failed to process requests in batch %d", batchNumber));
+            }
+            promise.complete();
+          });
       });
 
     return promise.future();
   }
 
   private Future<Void> processRequest(JsonObject request) {
-    logInfo(format("processing request %s", request.getString("id")));
-
     String requestId = request.getString("id");
-    Future<Void> requestIsValid = validateRequest(request) ? succeededFuture() :
-      failedFuture(format("request %s validation failed", requestId));
 
-    Promise<Void> promise = Promise.promise();
+    logInfo(format("processing request %s", requestId));
 
-    requestIsValid
-      .compose(v -> determineInstanceId(request))
-      .onComplete(ar -> {
-        if (ar.succeeded()) {
-          logInfo(format("determined instanceId %s, request %s", ar.result(), requestId));
-        }
-        else {
-          logError(format("failed to determine instanceId, request %s", requestId));
-        }
-        promise.complete();
-      });
-
-    return promise.future();
+    return validateRequest(request)
+      .compose(this::determineInstanceId)
+      .onSuccess(instanceId -> logInfo(format("determined instanceId %s, request %s",
+        instanceId, requestId)))
+      .onFailure(t -> handleError(format("failed to determine instanceId, request %s: %s",
+        requestId, t.getMessage())))
+      // In order to collect ALL errors we need to return succeeded future, but the error will be
+      // saved in the context.
+      .otherwiseEmpty()
+      .mapEmpty();
   }
 
   private Future<String> determineInstanceId(JsonObject request) {
@@ -186,48 +175,52 @@ public class TlrDataMigrationService {
       .map(Item::getHoldingsRecordId)
       .compose(id -> okapiClient.getById(HOLDINGS_STORAGE_URL, id, HoldingsRecord.class))
       .map(HoldingsRecord::getInstanceId)
-      .map(instanceId -> addInstanceIdToContext(request, instanceId));
+      .compose(instanceId -> addInstanceIdToContext(request, instanceId));
   }
 
-  private String addInstanceIdToContext(JsonObject request, String instanceId) {
-    migrationContext.getInstanceIds().put(request.getString("id"), instanceId);
-    return instanceId;
+  private Future<String> addInstanceIdToContext(JsonObject request, String instanceId) {
+    String requestId = request.getString("id");
+
+    if (!isUuid(instanceId)) {
+      String message = format("instanceId %s is not a UUID (request %s)", instanceId, requestId);
+      return failedFuture(message);
+    }
+
+    migrationContext.getInstanceIds().put(requestId, instanceId);
+    return succeededFuture(instanceId);
   }
 
-  private boolean validateRequest(JsonObject request) {
-    boolean doesNotContainTlrFields = allOrNonePresent(request,
-      List.of("requestLevel", "instanceId", "instance"), false);
+  private Future<JsonObject> validateRequest(JsonObject request) {
+    String requestId = request.getString("id");
+    List<String> errorList = new ArrayList<>();
+
+    boolean doesNotContainTlrFields = containsNone(request,
+      List.of("requestLevel", "instanceId", "instance"));
 
     if (!doesNotContainTlrFields) {
-      logInfo(format("skipping request %s - already contains TLR fields", request.getString("id")));
+      errorList.add(format("skipping request %s - already contains TLR fields", requestId));
     }
 
-    boolean containsAllRequiredIlrFields =
-      allOrNonePresent(request, List.of("itemId", "item"), true)
-        && allOrNonePresent(request.getJsonObject("item"), List.of("barcode"), true);
+    boolean containsAllRequiredIlrFields = containsAll(request, List.of("itemId"));
 
     if (!containsAllRequiredIlrFields) {
-      logInfo(format("skipping request %s - does not contain required ILR fields",
-        request.getString("id")));
+      errorList.add(format("skipping request %s - does not contain required ILR fields",
+        requestId));
     }
 
-    boolean containsAllNonRequiredIlrFields = containsAllRequiredIlrFields &&
-      allOrNonePresent(request.getJsonObject("item"),
-        List.of("title", "identifiers"), true);
-
-    if (!containsAllNonRequiredIlrFields) {
-      logInfo(format("request %s does not contain some non-required ILR fields, values will be " +
-          "copied from the instance record", request.getString("id")));
-    }
-
-    return doesNotContainTlrFields && containsAllRequiredIlrFields;
+    return (doesNotContainTlrFields && containsAllRequiredIlrFields)
+      ? succeededFuture(request)
+      : failedFuture(format("request %s validation failed: %s", requestId, join(", ", errorList)));
   }
 
-  private boolean allOrNonePresent(JsonObject request, List<String> fieldNames, boolean present) {
+  private boolean containsAll(JsonObject request, List<String> fieldNames) {
     return fieldNames.stream()
-      .map(fieldName -> present == request.containsKey(fieldName))
-      .reduce(Boolean::logicalAnd)
-      .orElse(true);
+      .allMatch(request::containsKey);
+  }
+
+  private boolean containsNone(JsonObject request, List<String> fieldNames) {
+    return fieldNames.stream()
+      .noneMatch(request::containsKey);
   }
 
   private void logDebug(String message) {
@@ -238,7 +231,7 @@ public class TlrDataMigrationService {
     LOG.info(format("%s%s", LOG_PREFIX, message));
   }
 
-  private void logError(String message) {
+  private void handleError(String message) {
     String fullMessage = format("%s%s", LOG_PREFIX, message);
 
     LOG.error(fullMessage);
@@ -247,9 +240,7 @@ public class TlrDataMigrationService {
     migrationContext.getErrorMessages().add(fullMessage);
   }
 
-  public static <T> Future<Void> chainFutures(List<T> list,
-    Function<T, Future<Void>> method) {
-
+  public static <T> Future<Void> chainFutures(List<T> list, Function<T, Future<Void>> method) {
     return list.stream().reduce(succeededFuture(),
       (acc, item) -> acc.compose(v -> method.apply(item)),
       (a, b) -> succeededFuture());
@@ -267,7 +258,6 @@ public class TlrDataMigrationService {
   @Setter
   @JsonIgnoreProperties(ignoreUnknown = true)
   public static class Item {
-//    @JsonProperty("holdingsRecordId")
     private String holdingsRecordId;
   }
 
@@ -275,7 +265,6 @@ public class TlrDataMigrationService {
   @Setter
   @JsonIgnoreProperties(ignoreUnknown = true)
   public static class HoldingsRecord {
-//    @JsonProperty("instanceId")
     private String instanceId;
   }
 }

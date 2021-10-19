@@ -39,7 +39,7 @@ public class OkapiClient {
   private final String token;
 
   public OkapiClient(Vertx vertx, Map<String, String> okapiHeaders) {
-    this.webClient = WebClientProvider.getWebClient(vertx) ;
+    this.webClient = WebClientProvider.getWebClient(vertx);
     okapiUrl = okapiHeaders.get(OKAPI_URL_HEADER);
     tenant = okapiHeaders.get(OKAPI_HEADER_TENANT);
     token = okapiHeaders.get(OKAPI_HEADER_TOKEN);

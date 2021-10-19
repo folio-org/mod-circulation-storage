@@ -402,8 +402,10 @@
             "pubsub.event-types.post",
             "pubsub.publishers.post",
             "pubsub.subscribers.post",
-            "inventory-storage.locations.item.get",
-            "inventory-storage.holdings.collection.get"
+            "inventory-storage.holdings.item.get",
+            "inventory-storage.holdings.collection.get",
+            "inventory-storage.items.item.get",
+            "inventory-storage.items.collection.get"
           ]
         }, {
           "methods": ["GET", "DELETE"],
