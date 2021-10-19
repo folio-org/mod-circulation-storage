@@ -70,7 +70,6 @@ public class TenantApiTest {
   protected static final String OKAPI_TENANT = "test_tenant";
   protected static final String OKAPI_TOKEN = generateOkapiToken();
   private static final int GET_TENANT_TIMEOUT_MS = 10000;
-  protected static final String REQUEST_TABLE = "request";
 
   protected static Vertx vertx;
   protected static TenantClient tenantClient;
@@ -86,7 +85,6 @@ public class TenantApiTest {
     Async async = context.async();
 
     vertx = Vertx.vertx();
-    postgresClient = PostgresClient.getInstance(vertx, OKAPI_TENANT);
     tenantClient = new TenantClient(getMockedOkapiUrl(), OKAPI_TENANT, OKAPI_TOKEN,
       WebClient.create(vertx));
 
@@ -95,8 +93,43 @@ public class TenantApiTest {
     DeploymentOptions deploymentOptions = new DeploymentOptions()
       .setConfig(new JsonObject().put("http.port", OKAPI_PORT));
 
+    mockEndpoints();
+
     vertx.deployVerticle(RestVerticle.class.getName(), deploymentOptions,
-      deployment -> async.complete());
+      deployment -> {
+        // Running Tenant API to initialize database schema to be able to set up test data
+        // before running tests
+
+        tenantClient.postTenant(getTenantAttributes(OLD_MODULE_VERSION,
+          PREVIOUS_MODULE_VERSION), postResult -> {
+          if (postResult.failed()) {
+            log.error(postResult.cause());
+            context.fail();
+            return;
+          }
+
+          final HttpResponse<Buffer> postResponse = postResult.result();
+          assertThat(postResponse.statusCode(), is(HttpStatus.HTTP_CREATED.toInt()));
+
+          jobId = postResponse.bodyAsJson(TenantJob.class).getId();
+
+          postgresClient = PostgresClient.getInstance(vertx, OKAPI_TENANT);
+
+          tenantClient.getTenantByOperationId(jobId, GET_TENANT_TIMEOUT_MS, getResult -> {
+            if (getResult.failed()) {
+              log.error(getResult.cause());
+              context.fail();
+              return;
+            }
+
+            final HttpResponse<Buffer> getResponse = getResult.result();
+            assertThat(getResponse.statusCode(), is(HttpStatus.HTTP_OK.toInt()));
+            assertThat(getResponse.bodyAsJson(TenantJob.class).getComplete(), is(true));
+
+            async.complete();
+          });
+        });
+      });
   }
 
   @AfterClass
@@ -111,9 +144,10 @@ public class TenantApiTest {
 
   @Before
   public void beforeEach() throws Exception {
-    PostgresClient.closeAllClients();
-    postgresClient = PostgresClient.getInstance(vertx, OKAPI_TENANT);
     reLoadTestData();
+
+    // Need to reset all mocks before each test because some tests can remove stubs to mimic
+    // a failure on other modules' side
     mockEndpoints();
   }
 
@@ -124,6 +158,50 @@ public class TenantApiTest {
     try {
       tenantClient.postTenant(getTenantAttributes(OLD_MODULE_VERSION,
         PREVIOUS_MODULE_VERSION), postResult -> {
+        if (postResult.failed()) {
+          log.error(postResult.cause());
+          return;
+        }
+
+        final HttpResponse<Buffer> postResponse = postResult.result();
+        assertThat(postResponse.statusCode(), is(HttpStatus.HTTP_CREATED.toInt()));
+
+        jobId = postResponse.bodyAsJson(TenantJob.class).getId();
+
+        tenantClient.getTenantByOperationId(jobId, GET_TENANT_TIMEOUT_MS, getResult -> {
+          final HttpResponse<Buffer> getResponse = getResult.result();
+
+          context.assertEquals(getResponse.statusCode(), HttpStatus.HTTP_OK.toInt());
+          context.assertEquals(getResponse.bodyAsJson(TenantJob.class).getComplete(), true);
+
+          postgresClient.select("SELECT COUNT(*) " +
+            "FROM test_tenant_mod_circulation_storage.request " +
+            "WHERE jsonb->>'requestLevel' IS NOT null")
+            .onComplete(ar -> {
+              if (ar.succeeded()) {
+                Integer count = ar.result().iterator().next().get(Integer.class, 0);
+                // TODO:: check the number of updated requests
+              }
+              else {
+                context.fail("Can not count requests");
+              }
+
+              async.complete();
+            });
+        });
+      });
+    } catch (Exception e) {
+      context.fail(e);
+    }
+  }
+
+  @Test
+  public void migrationShouldBeSkippedWhenUpgradingFromAlreadyMigratedVersion(final TestContext context) {
+    Async async = context.async();
+
+    try {
+      tenantClient.postTenant(getTenantAttributes(MIGRATION_MODULE_VERSION,
+        NEXT_MODULE_VERSION), postResult -> {
         if (postResult.failed()) {
           log.error(postResult.cause());
           return;
@@ -291,19 +369,7 @@ public class TenantApiTest {
       .withParameters(Collections.singletonList(loadReferenceParameter));
   }
 
-  protected void deleteTestData() {
-    final CompletableFuture<Void> future = new CompletableFuture<>();
-    postgresClient.delete(REQUEST_TABLE, new Criterion(), result -> future.complete(null));
-    try {
-      future.get(5, TimeUnit.SECONDS);
-    } catch (Exception ex) {
-      throw new RuntimeException(ex);
-    }
-  }
-
   protected void reLoadTestData() throws Exception {
-    deleteTestData();
-
     InputStream tableInput = TenantApiTest.class.getClassLoader().getResourceAsStream(
       "mocks/TlrDataMigrationTestData.sql");
     String sqlFile = IOUtils.toString(Objects.requireNonNull(tableInput), StandardCharsets.UTF_8);
