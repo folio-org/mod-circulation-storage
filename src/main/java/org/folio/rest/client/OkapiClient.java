@@ -11,10 +11,15 @@ import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
 import static org.folio.util.UuidUtil.isUuid;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.folio.rest.client.exception.HttpGetByIdException;
+import org.folio.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,12 +29,14 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 
 public class OkapiClient {
   protected static final Logger log = LoggerFactory.getLogger(OkapiClient.class);
+  private static final String GET_BY_IDS_URL_TEMPLATE = "%s?limit=%d&query=%s";
   private static final String OKAPI_URL_HEADER = "x-okapi-url";
   protected static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -84,6 +91,56 @@ public class OkapiClient {
       try {
         T object = objectMapper.readValue(response.bodyAsString(), objectType);
         return succeededFuture(object);
+      } catch (IOException exception) {
+        final String errorMessage = format("Failed to parse response from %s. Response body: %s",
+          url, response.bodyAsString());
+        log.error(errorMessage);
+        return failedFuture(errorMessage);
+      }
+    });
+  }
+
+  public <T> Future<Collection<T>> getByIds(String resourcePath, Collection<String> ids,
+    String collectionName, Class<T> objectType) {
+
+    final List<String> prefixedIds = ids.stream()
+      .distinct()
+      .map(id -> "id==" + id)
+      .collect(Collectors.toList());
+
+    final String query = StringUtil.urlEncode(String.join(" OR ", prefixedIds));
+    final String url = String.format(GET_BY_IDS_URL_TEMPLATE, resourcePath, ids.size(), query);
+
+    log.debug("Calling GET {}", url);
+
+    Promise<HttpResponse<Buffer>> promise = Promise.promise();
+    okapiGetAbs(url).send(promise);
+
+    return promise.future().compose(response -> {
+      int responseStatus = response.statusCode();
+      if (responseStatus != 200) {
+        final String errorMessage = format("Failed to get %d %ss by IDs. Response status code: %s",
+          ids.size(), objectType.getSimpleName(), responseStatus);
+        log.error(errorMessage);
+        return failedFuture(errorMessage);
+      }
+      try {
+        List<JsonObject> resultsJson = new JsonObject(response.bodyAsString())
+          .getJsonArray(collectionName)
+          .stream()
+          .filter(JsonObject.class::isInstance)
+          .map(JsonObject.class::cast)
+          .collect(Collectors.toList());
+
+        List<T> results = new ArrayList<>();
+
+        for (JsonObject jsonObject : resultsJson) {
+          results.add(objectMapper.readValue(jsonObject.encode(), objectType));
+        }
+
+        log.debug("{} {} fetched", results.size(), collectionName);
+
+        return succeededFuture(results);
       } catch (IOException exception) {
         final String errorMessage = format("Failed to parse response from %s. Response body: %s",
           url, response.bodyAsString());

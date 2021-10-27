@@ -4,24 +4,31 @@ import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
 import static java.lang.String.join;
+import static java.lang.System.currentTimeMillis;
+import static java.lang.System.lineSeparator;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
 import static java.util.stream.IntStream.range;
+import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationHMS;
 import static org.folio.rest.persist.PostgresClient.convertToPsqlStandard;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.folio.support.JsonPropertyWriter.write;
-import static org.folio.util.UuidUtil.isUuid;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import org.folio.okapi.common.ModuleId;
 import org.folio.okapi.common.SemVer;
 import org.folio.rest.client.OkapiClient;
 import org.folio.rest.jaxrs.model.TenantAttributes;
+import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.slf4j.Logger;
@@ -29,12 +36,15 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 /**
@@ -43,10 +53,11 @@ import lombok.Setter;
 public class TlrDataMigrationService {
   private static final Logger LOG = LoggerFactory.getLogger(TlrDataMigrationService.class);
 
+  // safe number of UUIDs which fits into Okapi's URL length limit (4096 characters)
+  private static final int BATCH_SIZE = 80;
+
   private static final String TLR_MIGRATION_MODULE_VERSION = "mod-circulation-storage-13.2.0";
-  private static final String LOG_PREFIX = "TLR data migration: ";
   private static final String REQUEST_TABLE = "request";
-  private static final Integer BATCH_SIZE = 1000;
   private static final String ITEMS_STORAGE_URL = "/item-storage/items";
   private static final String HOLDINGS_STORAGE_URL = "/holdings-storage/holdings";
 
@@ -64,7 +75,7 @@ public class TlrDataMigrationService {
   private final OkapiClient okapiClient;
   private final PostgresClient postgresClient;
   private final String schemaName;
-  private final TlrDataMigrationContext migrationContext;
+  private final List<String> errorMessages;
 
   public TlrDataMigrationService(TenantAttributes attributes, Context context,
     Map<String, String> okapiHeaders) {
@@ -73,218 +84,243 @@ public class TlrDataMigrationService {
     okapiClient = new OkapiClient(context.owner(), okapiHeaders);
     postgresClient = PgUtil.postgresClient(context, okapiHeaders);
     schemaName = convertToPsqlStandard(tenantId(okapiHeaders));
-    migrationContext = new TlrDataMigrationContext();
+    errorMessages = new ArrayList<>();
   }
 
   public Future<Void> migrate() {
+    final long startTime = currentTimeMillis();
+
     if (attributes.getModuleFrom() != null && attributes.getModuleTo() != null) {
       SemVer migrationModuleVersion = moduleVersionToSemVer(TLR_MIGRATION_MODULE_VERSION);
       SemVer moduleFromVersion = moduleVersionToSemVer(attributes.getModuleFrom());
       SemVer moduleToVersion = moduleVersionToSemVer(attributes.getModuleTo());
 
       if (moduleToVersion.compareTo(migrationModuleVersion) < 0) {
-        logInfo(format("skipping migration for module version %s: should be %s or higher",
-          moduleToVersion, migrationModuleVersion));
+        LOG.info("skipping migration for module version {}: should be {} or higher",
+          moduleToVersion, migrationModuleVersion);
         return succeededFuture();
       }
-      else if (moduleFromVersion.compareTo(migrationModuleVersion) >= 0) {
-        logInfo(format("skipping migration for module version %s: previous version %s " +
-          "is already migrated", moduleToVersion, moduleFromVersion));
+
+      if (moduleFromVersion.compareTo(migrationModuleVersion) >= 0) {
+        LOG.info("skipping migration for module version {}: previous version {} is already migrated",
+          moduleToVersion, moduleFromVersion);
         return succeededFuture();
       }
     }
     else {
-      logInfo("skipping migration - can not determine current moduleFrom or moduleTo version");
+      LOG.info("skipping migration - can not determine current moduleFrom or moduleTo version");
       return succeededFuture();
     }
 
-    logInfo("start");
+    LOG.info("migration started, batch size " + BATCH_SIZE);
 
-    Promise<Void> promise = Promise.promise();
-    migrationContext.setMigrationProcessPromise(promise);
-
-    postgresClient.select(format("SELECT COUNT(*) FROM %s.%s", schemaName, REQUEST_TABLE))
-      .onFailure(promise::fail)
-      .onSuccess(result -> {
-        if (!result.iterator().hasNext()) {
-          handleError("failed to get a total number of requests");
-          return;
-        }
-
-        Integer count = result.iterator().next().get(Integer.class, 0);
-        int numberOfBatches = count / BATCH_SIZE + (count % BATCH_SIZE == 0 ? 0 : 1);
-
-        logInfo(format("found %d requests (%d batch(es))", count, numberOfBatches));
-
-        chainFutures(range(0, numberOfBatches).boxed().collect(toList()), this::processBatch)
-          .onComplete(batchesAsyncResult -> {
-            if (migrationContext.isSuccessful()) {
-              updateRequestsInTransaction();
-            } else {
-              promise.fail(join(", ", migrationContext.getErrorMessages()));
-            }
-          });
-      });
-
-    return promise.future();
+    return getBatchCount()
+      .compose(this::migrateRequests)
+      .compose(r -> failIfErrorsOccurred())
+      .onSuccess(r -> LOG.info("Migration finished successfully"))
+      .onFailure(r -> LOG.error("Migration failed, rolling back the changes: {}", errorMessages))
+      .onComplete(r -> logDuration(startTime));
   }
 
-  private Future<Void> processBatch(int batchNumber) {
-    logInfo(format("start processing batch %d", batchNumber));
-
-    Promise<Void> promise = Promise.promise();
-
-    postgresClient.select(format("SELECT jsonb FROM %s.%s ORDER BY id LIMIT %d OFFSET %d",
-      schemaName, REQUEST_TABLE, BATCH_SIZE, batchNumber * BATCH_SIZE))
-      .onFailure(t -> {
-        handleError(format("failed to select requests for batch %d: %s", batchNumber,
-          t.getMessage()));
-        promise.complete();
-      })
-      .onSuccess(result -> {
-        logInfo(format("found %d requests in batch %d", result.rowCount(), batchNumber));
-
-        List<JsonObject> requestList = StreamSupport.stream(result.spliterator(), false)
-          .map(row -> row.getJsonObject("jsonb"))
-          .collect(Collectors.toList());
-
-        chainFutures(requestList, this::processRequest)
-          .onComplete(batchesAsyncResult -> {
-            if (batchesAsyncResult.succeeded()) {
-              logInfo(format("finished processing batch %d", batchNumber));
-            }
-            else {
-              handleError(format("failed to process requests in batch %d", batchNumber));
-            }
-            promise.complete();
-          });
-      });
-
-    return promise.future();
+  private Future<Integer> getBatchCount() {
+    return postgresClient.select(format("SELECT COUNT(*) FROM %s.%s", schemaName, REQUEST_TABLE))
+      .compose(this::getBatchCount);
   }
 
-  private Future<Void> processRequest(JsonObject request) {
-    String requestId = getId(request);
-
-    logInfo(format("processing request %s", requestId));
-
-    return validateRequest(request)
-      .compose(this::determineInstanceId)
-      .onSuccess(instanceId -> logInfo(format("determined instanceId %s, request %s",
-        instanceId, requestId)))
-      .onFailure(t -> handleError(format("failed to determine instanceId, request %s: %s",
-        requestId, t.getMessage())))
-      // In order to collect ALL errors we need to return succeeded future, but the error will be
-      // saved in the context.
-      .otherwiseEmpty()
-      .mapEmpty();
-  }
-
-  private Future<String> determineInstanceId(JsonObject request) {
-    return okapiClient.getById(ITEMS_STORAGE_URL, request.getString(ITEM_ID_KEY), Item.class)
-      .map(Item::getHoldingsRecordId)
-      .compose(id -> okapiClient.getById(HOLDINGS_STORAGE_URL, id, HoldingsRecord.class))
-      .map(HoldingsRecord::getInstanceId)
-      .compose(instanceId -> addInstanceIdToContext(request, instanceId));
-  }
-
-  private Future<String> addInstanceIdToContext(JsonObject request, String instanceId) {
-    String requestId = getId(request);
-
-    if (!isUuid(instanceId)) {
-      return failedFuture(format("instanceId %s is not a UUID (request %s)", instanceId, requestId));
+  private Future<Integer> getBatchCount(RowSet<Row> result) {
+    if (!result.iterator().hasNext()) {
+      return failedFuture("failed to get total number of requests");
     }
 
-    migrationContext.getInstanceIds().put(requestId, instanceId);
+    Integer requestsCount = result.iterator().next().get(Integer.class, 0);
+    int batchesCount = requestsCount / BATCH_SIZE + (requestsCount % BATCH_SIZE == 0 ? 0 : 1);
+    LOG.info("found {} requests ({} batches)", requestsCount, batchesCount);
 
-    return succeededFuture(instanceId);
+    return succeededFuture(batchesCount);
   }
 
-  private Future<JsonObject> validateRequest(JsonObject request) {
-    String requestId = getId(request);
-    List<String> errorList = new ArrayList<>();
+  private Future<Void> migrateRequests(int batchCount) {
+    return postgresClient.withTrans(conn ->
+      chainFutures(buildBatches(batchCount, conn), this::processBatch));
+  }
+  
+  private static Collection<Batch> buildBatches(int numberOfBatches, Conn connection) {
+    return range(0, numberOfBatches)
+      .boxed()
+      .map(num -> new Batch(num, connection))
+      .collect(toList());
+  }
 
-    boolean doesNotContainTlrFields = containsNone(request,
-      List.of(REQUEST_LEVEL_KEY, INSTANCE_ID_KEY, INSTANCE_KEY));
+  private Future<Void> processBatch(Batch batch) {
+    LOG.info("{} processing started", batch);
 
-    if (!doesNotContainTlrFields) {
-      errorList.add(format("skipping request %s - already contains TLR fields", requestId));
+    return succeededFuture(batch)
+      .compose(this::fetchRequests)
+      .compose(this::validateRequests)
+      .compose(this::findHoldingsRecordIds)
+      .compose(this::findInstanceIds)
+      .compose(this::failWhenNotAllInstanceIdsWereFound)
+      .onSuccess(this::buildNewRequests)
+      .compose(this::updateRequests)
+      .onSuccess(r -> LOG.info("{} processing finished successfully", batch))
+      .onFailure(t -> handleError(batch, t))
+      .otherwiseEmpty();
+  }
+
+  private Future<Batch> fetchRequests(Batch batch) {
+    return postgresClient.select(format("SELECT jsonb FROM %s.%s ORDER BY id LIMIT %d OFFSET %d",
+        schemaName, REQUEST_TABLE, BATCH_SIZE, batch.getBatchNumber() * BATCH_SIZE))
+      .onSuccess(r -> LOG.info("{} {} requests fetched", batch, r.size()))
+      .map(this::rowSetToRequestContexts)
+      .onSuccess(batch::setRequestMigrationContexts)
+      .map(batch);
+  }
+
+  private List<RequestMigrationContext> rowSetToRequestContexts(RowSet<Row> rowSet) {
+    return StreamSupport.stream(rowSet.spliterator(), false)
+      .map(row -> row.getJsonObject("jsonb"))
+      .map(RequestMigrationContext::from)
+      .collect(toList());
+  }
+
+  private Future<Batch> validateRequests(Batch batch) {
+    List<String> errors = batch.getRequestMigrationContexts()
+      .stream()
+      .map(this::validateRequest)
+      .flatMap(Collection::stream)
+      .collect(toList());
+
+    return errors.isEmpty()
+      ? succeededFuture(batch)
+      : failedFuture("batch validation failed: " + join(lineSeparator(), errors));
+  }
+
+  private Collection<String> validateRequest(RequestMigrationContext context) {
+    final JsonObject request = context.getOldRequest();
+    final String requestId = context.getRequestId();
+    final List<String> errors = new ArrayList<>();
+
+    if (containsAny(request, List.of(REQUEST_LEVEL_KEY, INSTANCE_ID_KEY, INSTANCE_KEY))) {
+      errors.add("request already contains TLR fields: " + requestId);
     }
 
-    boolean containsAllRequiredIlrFields = containsAll(request, List.of(ITEM_ID_KEY));
-
-    if (!containsAllRequiredIlrFields) {
-      errorList.add(format("skipping request %s - does not contain required ILR fields", requestId));
+    if (!containsAll(request, List.of(ITEM_ID_KEY))) {
+      errors.add("request does not contain required ILR fields: " + requestId);
     }
 
-    return (doesNotContainTlrFields && containsAllRequiredIlrFields)
-      ? succeededFuture(request)
-      : failedFuture(format("request %s validation failed: %s", requestId, join(", ", errorList)));
+    return errors;
   }
 
-  private void updateRequestsInTransaction() {
-    postgresClient.withTrans(conn -> updateRequests())
-      .onSuccess(ignored -> {
-        LOG.info("{}successfully updated {} requests", LOG_PREFIX,
-          migrationContext.getInstanceIds().size());
-        migrationContext.getMigrationProcessPromise().complete();
-      })
-      .onFailure(t -> {
-        LOG.error("{}failed to update requests: {}", LOG_PREFIX, t.getMessage());
-        migrationContext.getMigrationProcessPromise().fail(t);
-      });
+  private Future<Batch> findHoldingsRecordIds(Batch batch) {
+    Set<String> itemIds = batch.getRequestMigrationContexts()
+      .stream()
+      .map(RequestMigrationContext::getItemId)
+      .filter(Objects::nonNull)
+      .collect(toSet());
+
+    if (itemIds.isEmpty()) {
+      return succeededFuture(batch);
+    }
+
+    return okapiClient.getByIds(ITEMS_STORAGE_URL, itemIds, "items", Item.class)
+      .onSuccess(items -> saveHoldingsRecordIds(batch, items))
+      .map(batch);
   }
 
-  private CompositeFuture updateRequests() {
-    return CompositeFuture.all(
-      migrationContext.getInstanceIds().keySet()
-        .stream()
-        .map(this::updateRequest)
-        .collect(toList())
-    );
+  private static void saveHoldingsRecordIds(Batch batch, Collection<Item> items) {
+    Map<String, String> itemIdToHoldingsRecordId = items.stream()
+      .collect(toMap(Item::getId, Item::getHoldingsRecordId));
+
+    batch.getRequestMigrationContexts().forEach(ctx ->
+      ctx.setHoldingsRecordId(itemIdToHoldingsRecordId.get(ctx.getItemId())));
   }
 
-  private Future<Void> updateRequest(String requestId) {
-    return succeededFuture(requestId)
-      .compose(this::fetchRequest)
-      .map(this::migrateRequest)
-      .compose(this::updateRequest);
+  private Future<Batch> findInstanceIds(Batch batch) {
+    Set<String> holdingsRecordIds = batch.getRequestMigrationContexts()
+      .stream()
+      .map(RequestMigrationContext::getHoldingsRecordId)
+      .filter(Objects::nonNull)
+      .collect(toSet());
+
+    if (holdingsRecordIds.isEmpty()) {
+      return succeededFuture(batch);
+    }
+
+    return okapiClient.getByIds(HOLDINGS_STORAGE_URL, holdingsRecordIds, "holdingsRecords", HoldingsRecord.class)
+      .onSuccess(holdingsRecords -> saveInstanceIds(batch, holdingsRecords))
+      .map(batch);
   }
 
-  private Future<JsonObject> fetchRequest(String requestId) {
-    return postgresClient.getById(REQUEST_TABLE, requestId);
+  private static void saveInstanceIds(Batch batch, Collection<HoldingsRecord> holdingsRecords) {
+    Map<String, String> holdingsRecordIdInstanceId = holdingsRecords.stream()
+      .collect(toMap(HoldingsRecord::getId, HoldingsRecord::getInstanceId));
+
+    batch.getRequestMigrationContexts().forEach(ctx ->
+      ctx.setInstanceId(holdingsRecordIdInstanceId.get(ctx.getHoldingsRecordId())));
   }
 
-  private JsonObject migrateRequest(JsonObject request) {
-    String instanceId = migrationContext.getInstanceIds().get(getId(request));
+  private Future<Batch> failWhenNotAllInstanceIdsWereFound(Batch batch) {
+    List<String> failedContexts = batch.getRequestMigrationContexts()
+      .stream()
+      .filter(ctx -> ctx.getInstanceId() == null)
+      .map(RequestMigrationContext::toString)
+      .collect(toList());
 
-    JsonObject item = request.getJsonObject(ITEM_KEY);
+    return failedContexts.isEmpty()
+      ? succeededFuture(batch)
+      : failedFuture("failed to find instance IDs: " + join(lineSeparator(), failedContexts));
+  }
+
+  private void buildNewRequests(Batch batch) {
+    batch.getRequestMigrationContexts()
+      .forEach(this::buildNewRequest);
+  }
+
+  private void buildNewRequest(RequestMigrationContext context) {
+    final JsonObject migratedRequest = context.getOldRequest().copy();
+
+    JsonObject item = migratedRequest.getJsonObject(ITEM_KEY);
     JsonObject instance = new JsonObject();
 
     write(instance, TITLE_KEY, item.getString(TITLE_KEY));
     write(instance, IDENTIFIERS_KEY, item.getJsonArray(IDENTIFIERS_KEY));
 
-    write(request, REQUEST_LEVEL_KEY, ITEM_REQUEST_LEVEL);
-    write(request, INSTANCE_ID_KEY, instanceId);
-    write(request, INSTANCE_KEY, instance);
+    write(migratedRequest, REQUEST_LEVEL_KEY, ITEM_REQUEST_LEVEL);
+    write(migratedRequest, INSTANCE_ID_KEY, context.getInstanceId());
+    write(migratedRequest, INSTANCE_KEY, instance);
 
     item.remove(TITLE_KEY);
     item.remove(IDENTIFIERS_KEY);
 
-    return request;
+    context.setNewRequest(migratedRequest);
   }
 
-  private Future<Void> updateRequest(JsonObject request) {
-    String requestId = getId(request);
+  private Future<Void> updateRequests(Batch batch) {
+    if (!errorMessages.isEmpty()) {
+      LOG.info("{} batch update aborted - errors in previous batch(es) occurred", batch);
+      return succeededFuture();
+    }
 
-    return postgresClient.update(REQUEST_TABLE, request, requestId)
-      .onSuccess(r -> LOG.info("{}request {} updated", LOG_PREFIX, requestId))
-      .onFailure(t -> LOG.error("{}failed to update request {}: {}", LOG_PREFIX, requestId, t.getMessage()))
+    List<JsonObject> migratedRequests = batch.getRequestMigrationContexts()
+      .stream()
+      .map(RequestMigrationContext::getNewRequest)
+      .collect(toList());
+
+    return batch.getConnection()
+      .updateBatch(REQUEST_TABLE, new JsonArray(migratedRequests))
+      .onSuccess(r -> LOG.info("{} all requests were successfully updated", batch))
       .mapEmpty();
   }
 
-  private static String getId(JsonObject jsonObject) {
-    return jsonObject.getString(ID_KEY);
+  private Future<Void> failIfErrorsOccurred() {
+    return errorMessages.isEmpty()
+      ? succeededFuture()
+      : failedFuture(join(", ", errorMessages));
+  }
+
+  private static void logDuration(long startTime) {
+    String duration = formatDurationHMS(currentTimeMillis() - startTime);
+    LOG.info("Migration finished in {}", duration);
   }
 
   private static boolean containsAll(JsonObject request, List<String> fieldNames) {
@@ -292,29 +328,18 @@ public class TlrDataMigrationService {
       .allMatch(request::containsKey);
   }
 
-  private static boolean containsNone(JsonObject request, List<String> fieldNames) {
+  private static boolean containsAny(JsonObject request, List<String> fieldNames) {
     return fieldNames.stream()
-      .noneMatch(request::containsKey);
+      .anyMatch(request::containsKey);
   }
 
-  private void logDebug(String message) {
-    LOG.debug("{}{}", LOG_PREFIX, message);
+  private void handleError(Batch batch, Throwable throwable) {
+    String errorMessage = format("%s processing failed: %s", batch, throwable.getMessage());
+    LOG.error(errorMessage);
+    errorMessages.add(errorMessage);
   }
 
-  private void logInfo(String message) {
-    LOG.info("{}{}", LOG_PREFIX, message);
-  }
-
-  private void handleError(String message) {
-    String fullMessage = format("%s%s", LOG_PREFIX, message);
-
-    LOG.error(fullMessage);
-
-    migrationContext.setSuccessful(false);
-    migrationContext.getErrorMessages().add(fullMessage);
-  }
-
-  public static <T> Future<Void> chainFutures(List<T> list, Function<T, Future<Void>> method) {
+  public static <T> Future<Void> chainFutures(Collection<T> list, Function<T, Future<Void>> method) {
     return list.stream().reduce(succeededFuture(),
       (acc, item) -> acc.compose(v -> method.apply(item)),
       (a, b) -> succeededFuture());
@@ -332,6 +357,7 @@ public class TlrDataMigrationService {
   @Setter
   @JsonIgnoreProperties(ignoreUnknown = true)
   public static class Item {
+    private String id;
     private String holdingsRecordId;
   }
 
@@ -339,6 +365,51 @@ public class TlrDataMigrationService {
   @Setter
   @JsonIgnoreProperties(ignoreUnknown = true)
   public static class HoldingsRecord {
+    private String id;
     private String instanceId;
   }
+
+  @Getter
+  @Setter
+  @RequiredArgsConstructor
+  @AllArgsConstructor
+  public static class RequestMigrationContext {
+    private final JsonObject oldRequest;
+    private JsonObject newRequest;
+    private final String requestId;
+    private final String itemId;
+    private String holdingsRecordId;
+    private String instanceId;
+
+    public static RequestMigrationContext from(JsonObject request) {
+      return new RequestMigrationContext(request,
+        request.getString(ID_KEY), request.getString(ITEM_ID_KEY));
+    }
+
+    @Override
+    public String toString() {
+      return "RequestMigrationContext{" +
+        "requestId='" + requestId + '\'' +
+        ", itemId='" + itemId + '\'' +
+        ", holdingsRecordId='" + holdingsRecordId + '\'' +
+        ", instanceId='" + instanceId + '\'' +
+        '}';
+    }
+  }
+
+  @Getter
+  @Setter
+  @RequiredArgsConstructor
+  @AllArgsConstructor
+  private static class Batch {
+    private final int batchNumber;
+    private final Conn connection;
+    private List<RequestMigrationContext> requestMigrationContexts = new ArrayList<>();
+
+    @Override
+    public String toString() {
+      return String.format("[batch #%d - %d requests]", batchNumber, requestMigrationContexts.size());
+    }
+  }
+
 }
