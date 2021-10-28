@@ -29,8 +29,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.StreamSupport;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
@@ -63,7 +61,7 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 
 @RunWith(VertxUnitRunner.class)
-public class TenantApiTest {
+public class TenantRefApiTests {
   protected static final String OLD_MODULE_VERSION = "13.0.0";
   protected static final String PREVIOUS_MODULE_VERSION = "13.1.0";
   protected static final String MIGRATION_MODULE_VERSION = "13.2.0";
@@ -133,7 +131,7 @@ public class TenantApiTest {
       .onFailure(context::fail)
       .onSuccess(requests -> {
         requestsBeforeMigration = requests.stream()
-          .collect(toMap(TenantApiTest::getId, identity()));
+          .collect(toMap(TenantRefApiTests::getId, identity()));
         // Need to reset all mocks before each test because some tests can remove stubs to mimic
         // a failure on other modules' side
         mockEndpoints();
@@ -427,7 +425,7 @@ public class TenantApiTest {
   }
 
   protected static Future<List<String>> loadRequests() throws Exception {
-    InputStream tableInput = TenantApiTest.class.getClassLoader().getResourceAsStream(
+    InputStream tableInput = TenantRefApiTests.class.getClassLoader().getResourceAsStream(
       "mocks/TlrDataMigrationTestData.sql");
     String sqlFile = IOUtils.toString(Objects.requireNonNull(tableInput), StandardCharsets.UTF_8);
     return postgresClient.runSQLFile(sqlFile, true);
