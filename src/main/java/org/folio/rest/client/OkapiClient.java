@@ -5,20 +5,16 @@ import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
-import static org.folio.util.UuidUtil.isUuid;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.folio.rest.client.exception.HttpGetByIdException;
 import org.folio.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,38 +62,6 @@ public class OkapiClient {
       .putHeader(OKAPI_HEADER_TENANT, tenant)
       .putHeader(OKAPI_URL_HEADER, okapiUrl)
       .putHeader(OKAPI_HEADER_TOKEN, token);
-  }
-
-  public <T> Future<T> getById(String resourcePath, String id, Class<T> objectType) {
-    Optional<String> validationError = validateGetByIdArguments(resourcePath, id, objectType);
-    if (validationError.isPresent()) {
-      String errorMessage = validationError.get();
-      log.error(errorMessage);
-      return failedFuture(new IllegalArgumentException(errorMessage));
-    }
-
-    final String url = resourcePath + "/" + id;
-    Promise<HttpResponse<Buffer>> promise = Promise.promise();
-    okapiGetAbs(url).send(promise);
-
-    return promise.future().compose(response -> {
-      int responseStatus = response.statusCode();
-      if (responseStatus != 200) {
-        final String errorMessage = format("Failed to get %s by ID %s. Response status code: %s",
-          objectType.getSimpleName(), id, responseStatus);
-        log.error(errorMessage);
-        return failedFuture(new HttpGetByIdException(url, response, objectType, id));
-      }
-      try {
-        T object = objectMapper.readValue(response.bodyAsString(), objectType);
-        return succeededFuture(object);
-      } catch (IOException exception) {
-        final String errorMessage = format("Failed to parse response from %s. Response body: %s",
-          url, response.bodyAsString());
-        log.error(errorMessage);
-        return failedFuture(errorMessage);
-      }
-    });
   }
 
   public <T> Future<Collection<T>> getByIds(String resourcePath, Collection<String> ids,
@@ -148,23 +112,5 @@ public class OkapiClient {
         return failedFuture(errorMessage);
       }
     });
-  }
-
-  private static <T> Optional<String> validateGetByIdArguments(String path, String id,
-    Class<T> objectType) {
-
-    String errorMessage = null;
-
-    if (objectType == null) {
-      errorMessage = "Requested object type is null";
-    }
-    else if (isBlank(path)) {
-      errorMessage = "Invalid resource path for " + objectType.getSimpleName();
-    }
-    else if (!isUuid(id)) {
-      errorMessage = "Invalid UUID: " + id;
-    }
-
-    return Optional.ofNullable(errorMessage);
   }
 }
