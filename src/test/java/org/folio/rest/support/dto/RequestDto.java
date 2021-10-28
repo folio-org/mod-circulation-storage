@@ -22,7 +22,9 @@ public class RequestDto {
   String fulfilmentPreference = "Hold Shelf";
   String requesterId;
   String itemId;
+  String instanceId;
   String requestType;
+  String requestLevel;
   @Builder.Default
   Date requestDate = now(UTC).toDate();
   String pickupServicePointId;

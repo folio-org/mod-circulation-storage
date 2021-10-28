@@ -23,8 +23,10 @@ public class RequestRequestBuilder extends JsonBuilder {
 
   private final UUID id;
   private final String requestType;
+  private final String requestLevel;
   private final DateTime requestDate;
   private final UUID itemId;
+  private final UUID instanceId;
   private final UUID requesterId;
   private final UUID proxyId;
   private final String fulfilmentPreference;
@@ -47,7 +49,9 @@ public class RequestRequestBuilder extends JsonBuilder {
   public RequestRequestBuilder() {
     this(UUID.randomUUID(),
       "Hold",
+      "item",
       new DateTime(2017, 7, 15, 9, 35, 27, DateTimeZone.UTC),
+      UUID.randomUUID(),
       UUID.randomUUID(),
       UUID.randomUUID(),
       null,
@@ -72,8 +76,10 @@ public class RequestRequestBuilder extends JsonBuilder {
   private RequestRequestBuilder(
     UUID id,
     String requestType,
+    String requestLevel,
     DateTime requestDate,
     UUID itemId,
+    UUID instanceId,
     UUID requesterId,
     UUID proxyId,
     String fulfilmentPreference,
@@ -95,8 +101,10 @@ public class RequestRequestBuilder extends JsonBuilder {
 
     this.id = id;
     this.requestType = requestType;
+    this.requestLevel = requestLevel;
     this.requestDate = requestDate;
     this.itemId = itemId;
+    this.instanceId = instanceId;
     this.requesterId = requesterId;
     this.proxyId = proxyId;
     this.fulfilmentPreference = fulfilmentPreference;
@@ -122,8 +130,10 @@ public class RequestRequestBuilder extends JsonBuilder {
 
     put(request, "id", this.id);
     put(request, "requestType", this.requestType);
+    put(request, "requestLevel", this.requestLevel);
     put(request, "requestDate", this.requestDate);
     put(request, "itemId", this.itemId);
+    put(request, "instanceId", this.instanceId);
     put(request, "requesterId", this.requesterId);
     put(request, "fulfilmentPreference", this.fulfilmentPreference);
     put(request, "position", this.position);
@@ -134,10 +144,8 @@ public class RequestRequestBuilder extends JsonBuilder {
     put(request, "holdShelfExpirationDate", this.holdShelfExpirationDate);
     put(request, "pickupServicePointId", this.pickupServicePointId);
 
-    if(this.itemSummary != null) {
+    if (this.itemSummary != null) {
       final JsonObject item = new JsonObject();
-
-      put(item, "title", this.itemSummary.title);
       put(item, "barcode", this.itemSummary.barcode);
 
       final JsonArray identifiers = new JsonArray(this.itemSummary.identifiers
@@ -146,12 +154,16 @@ public class RequestRequestBuilder extends JsonBuilder {
           .put("identifierTypeId", pair.getKey().toString())
           .put("value", pair.getValue())
         ).collect(Collectors.toList()));
-      item.put("identifiers", identifiers);
+
+      final JsonObject instance = new JsonObject();
+      put(instance, "title", this.itemSummary.title);
+      instance.put("identifiers", identifiers);
 
       put(request, "item", item);
+      put(request, "instance", instance);
     }
 
-    if(requesterSummary != null) {
+    if (requesterSummary != null) {
       JsonObject requester = new JsonObject();
 
       put(requester, "lastName", requesterSummary.lastName);
@@ -162,7 +174,7 @@ public class RequestRequestBuilder extends JsonBuilder {
       put(request, "requester", requester);
     }
 
-    if(proxySummary != null) {
+    if (proxySummary != null) {
       JsonObject proxy = new JsonObject();
 
       put(proxy, "lastName", proxySummary.lastName);
@@ -194,8 +206,10 @@ public class RequestRequestBuilder extends JsonBuilder {
     return new RequestRequestBuilder(
       this.id,
       requestType,
+      this.requestLevel,
       this.requestDate,
       this.itemId,
+      this.instanceId,
       this.requesterId,
       this.proxyId,
       this.fulfilmentPreference,
@@ -228,8 +242,10 @@ public class RequestRequestBuilder extends JsonBuilder {
     return new RequestRequestBuilder(
       newId,
       this.requestType,
+      this.requestLevel,
       this.requestDate,
       this.itemId,
+      this.instanceId,
       this.requesterId,
       this.proxyId,
       this.fulfilmentPreference,
@@ -254,8 +270,10 @@ public class RequestRequestBuilder extends JsonBuilder {
     return new RequestRequestBuilder(
       null,
       this.requestType,
+      this.requestLevel,
       this.requestDate,
       this.itemId,
+      this.instanceId,
       this.requesterId,
       this.proxyId,
       this.fulfilmentPreference,
@@ -280,8 +298,10 @@ public class RequestRequestBuilder extends JsonBuilder {
     return new RequestRequestBuilder(
       this.id,
       this.requestType,
+      this.requestLevel,
       requestDate,
       this.itemId,
+      this.instanceId,
       this.requesterId,
       this.proxyId,
       this.fulfilmentPreference,
@@ -306,8 +326,10 @@ public class RequestRequestBuilder extends JsonBuilder {
     return new RequestRequestBuilder(
       this.id,
       this.requestType,
+      this.requestLevel,
       this.requestDate,
       itemId,
+      this.instanceId,
       this.requesterId,
       this.proxyId,
       this.fulfilmentPreference,
@@ -332,8 +354,10 @@ public class RequestRequestBuilder extends JsonBuilder {
     return new RequestRequestBuilder(
       this.id,
       this.requestType,
+      this.requestLevel,
       this.requestDate,
       this.itemId,
+      this.instanceId,
       requesterId,
       this.proxyId,
       this.fulfilmentPreference,
@@ -367,8 +391,10 @@ public class RequestRequestBuilder extends JsonBuilder {
     return new RequestRequestBuilder(
       this.id,
       this.requestType,
+      this.requestLevel,
       this.requestDate,
       this.itemId,
+      this.instanceId,
       this.requesterId,
       this.proxyId,
       fulfilmentPreference,
@@ -393,8 +419,10 @@ public class RequestRequestBuilder extends JsonBuilder {
     return new RequestRequestBuilder(
       this.id,
       this.requestType,
+      this.requestLevel,
       this.requestDate,
       this.itemId,
+      this.instanceId,
       this.requesterId,
       this.proxyId,
       this.fulfilmentPreference,
@@ -419,8 +447,10 @@ public class RequestRequestBuilder extends JsonBuilder {
     return new RequestRequestBuilder(
       this.id,
       this.requestType,
+      this.requestLevel,
       this.requestDate,
       this.itemId,
+      this.instanceId,
       this.requesterId,
       this.proxyId,
       this.fulfilmentPreference,
@@ -449,8 +479,10 @@ public class RequestRequestBuilder extends JsonBuilder {
     return new RequestRequestBuilder(
       this.id,
       this.requestType,
+      this.requestLevel,
       this.requestDate,
       this.itemId,
+      this.instanceId,
       this.requesterId,
       this.proxyId,
       this.fulfilmentPreference,
@@ -480,8 +512,10 @@ public class RequestRequestBuilder extends JsonBuilder {
     return new RequestRequestBuilder(
       this.id,
       this.requestType,
+      this.requestLevel,
       this.requestDate,
       this.itemId,
+      this.instanceId,
       this.requesterId,
       this.proxyId,
       this.fulfilmentPreference,
@@ -510,8 +544,10 @@ public class RequestRequestBuilder extends JsonBuilder {
     return new RequestRequestBuilder(
       this.id,
       this.requestType,
+      this.requestLevel,
       this.requestDate,
       this.itemId,
+      this.instanceId,
       this.requesterId,
       this.proxyId,
       this.fulfilmentPreference,
@@ -540,8 +576,10 @@ public class RequestRequestBuilder extends JsonBuilder {
     return new RequestRequestBuilder(
       this.id,
       this.requestType,
+      this.requestLevel,
       this.requestDate,
       this.itemId,
+      this.instanceId,
       this.requesterId,
       this.proxyId,
       this.fulfilmentPreference,
@@ -566,8 +604,10 @@ public class RequestRequestBuilder extends JsonBuilder {
     return new RequestRequestBuilder(
       this.id,
       this.requestType,
+      this.requestLevel,
       this.requestDate,
       this.itemId,
+      this.instanceId,
       this.requesterId,
       this.proxyId,
       this.fulfilmentPreference,
@@ -592,8 +632,10 @@ public class RequestRequestBuilder extends JsonBuilder {
     return new RequestRequestBuilder(
       this.id,
       this.requestType,
+      this.requestLevel,
       this.requestDate,
       this.itemId,
+      this.instanceId,
       this.requesterId,
       this.proxyId,
       this.fulfilmentPreference,
@@ -618,8 +660,10 @@ public class RequestRequestBuilder extends JsonBuilder {
     return new RequestRequestBuilder(
       this.id,
       this.requestType,
+      this.requestLevel,
       this.requestDate,
       this.itemId,
+      this.instanceId,
       this.requesterId,
       proxyId,
       this.fulfilmentPreference,
@@ -644,8 +688,10 @@ public class RequestRequestBuilder extends JsonBuilder {
     return new RequestRequestBuilder(
       this.id,
       this.requestType,
+      this.requestLevel,
       this.requestDate,
       this.itemId,
+      this.instanceId,
       this.requesterId,
       this.proxyId,
       this.fulfilmentPreference,
@@ -674,8 +720,10 @@ public class RequestRequestBuilder extends JsonBuilder {
     return new RequestRequestBuilder(
       this.id,
       this.requestType,
+      this.requestLevel,
       this.requestDate,
       this.itemId,
+      this.instanceId,
       this.requesterId,
       this.proxyId,
       this.fulfilmentPreference,
@@ -700,8 +748,10 @@ public class RequestRequestBuilder extends JsonBuilder {
     return new RequestRequestBuilder(
       this.id,
       this.requestType,
+      this.requestLevel,
       this.requestDate,
       this.itemId,
+      this.instanceId,
       this.requesterId,
       this.proxyId,
       this.fulfilmentPreference,
@@ -726,8 +776,10 @@ public class RequestRequestBuilder extends JsonBuilder {
     return new RequestRequestBuilder(
       this.id,
       this.requestType,
+      this.requestLevel,
       this.requestDate,
       this.itemId,
+      this.instanceId,
       this.requesterId,
       this.proxyId,
       this.fulfilmentPreference,
@@ -752,8 +804,10 @@ public class RequestRequestBuilder extends JsonBuilder {
     return new RequestRequestBuilder(
       this.id,
       this.requestType,
+      this.requestLevel,
       this.requestDate,
       this.itemId,
+      this.instanceId,
       this.requesterId,
       this.proxyId,
       this.fulfilmentPreference,
@@ -778,8 +832,10 @@ public class RequestRequestBuilder extends JsonBuilder {
     return new RequestRequestBuilder(
       this.id,
       this.requestType,
+      this.requestLevel,
       this.requestDate,
       this.itemId,
+      this.instanceId,
       this.requesterId,
       this.proxyId,
       this.fulfilmentPreference,
@@ -804,8 +860,10 @@ public class RequestRequestBuilder extends JsonBuilder {
     return new RequestRequestBuilder(
       this.id,
       this.requestType,
+      this.requestLevel,
       this.requestDate,
       this.itemId,
+      this.instanceId,
       this.requesterId,
       this.proxyId,
       this.fulfilmentPreference,
@@ -830,8 +888,10 @@ public class RequestRequestBuilder extends JsonBuilder {
     return new RequestRequestBuilder(
       this.id,
       this.requestType,
+      this.requestLevel,
       this.requestDate,
       this.itemId,
+      this.instanceId,
       this.requesterId,
       this.proxyId,
       this.fulfilmentPreference,

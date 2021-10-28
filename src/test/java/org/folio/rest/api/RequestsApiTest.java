@@ -166,14 +166,14 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.containsKey("patronComments"), is(false));
 
     assertThat(representation.containsKey("item"), is(true));
-
     JsonObject item = representation.getJsonObject("item");
-    assertThat(item.getString("title"), is("Nod"));
     assertThat(item.getString("barcode"), is("565578437802"));
 
-    JsonArray identifiers = item.getJsonArray("identifiers");
+    assertThat(representation.containsKey("instance"), is(true));
+    JsonObject instance = representation.getJsonObject("instance");
+    assertThat(instance.getString("title"), is("Nod"));
+    JsonArray identifiers = instance.getJsonArray("identifiers");
     assertThat(identifiers.size(), is(2));
-
     assertThat(identifiers.getJsonObject(0).getString("identifierTypeId"),
       is(isbnIdentifierId.toString()));
     assertThat(identifiers.getJsonObject(0).getString("value"),
@@ -632,8 +632,10 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getString("holdShelfExpirationDate"), is(equivalentTo(holdShelfExpirationDate)));
 
     assertThat(representation.containsKey("item"), is(true));
-    assertThat(representation.getJsonObject("item").getString("title"), is("Nod"));
     assertThat(representation.getJsonObject("item").getString("barcode"), is("565578437802"));
+
+    assertThat(representation.containsKey("instance"), is(true));
+    assertThat(representation.getJsonObject("instance").getString("title"), is("Nod"));
 
     assertThat(representation.containsKey("requester"), is(true));
     assertThat(representation.getJsonObject("requester").getString("lastName"), is("Smith"));
@@ -751,8 +753,9 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getInteger("position"), is(2));
 
     assertThat(representation.containsKey("item"), is(true));
-    assertThat(representation.getJsonObject("item").getString("title"), is("Nod"));
     assertThat(representation.getJsonObject("item").getString("barcode"), is("565578437802"));
+    assertThat(representation.containsKey("instance"), is(true));
+    assertThat(representation.getJsonObject("instance").getString("title"), is("Nod"));
 
     assertThat(representation.containsKey("requester"), is(true));
 
@@ -1025,8 +1028,10 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getInteger("position"), is(3));
 
     assertThat(representation.containsKey("item"), is(true));
-    assertThat(representation.getJsonObject("item").getString("title"), is("Nod"));
     assertThat(representation.getJsonObject("item").getString("barcode"), is("565578437802"));
+
+    assertThat(representation.containsKey("instance"), is(true));
+    assertThat(representation.getJsonObject("instance").getString("title"), is("Nod"));
 
     assertThat(representation.containsKey("requester"), is(true));
     assertThat(representation.getJsonObject("requester").getString("lastName"), is("Jones"));
@@ -1748,7 +1753,7 @@ public class RequestsApiTest extends ApiTests {
       requestStorageUrl());
 
     List<JsonObject> isbnRequests = findRequestsByQuery(
-      "item.identifiers = %s and item.identifiers = %s", isbnIdentifierId, isbn);
+      "instance.identifiers = %s and instance.identifiers = %s", isbnIdentifierId, isbn);
 
     assertThat(isbnRequests.size(), is(2));
     assertThat(isbnRequests.get(0).getString("id"), is(nodRequestId.toString()));
@@ -1823,6 +1828,8 @@ public class RequestsApiTest extends ApiTests {
       .requesterId(UUID.randomUUID().toString())
       .itemId(UUID.randomUUID().toString())
       .requestType("Hold")
+      .requestLevel("item")
+      .instanceId(UUID.randomUUID().toString())
       .pickupServicePointId(UUID.randomUUID().toString());
   }
 
