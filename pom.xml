@@ -485,6 +485,7 @@
           </excludes>
           <includes>
             <include>org/folio/rest/api/StorageTestSuite.java</include>
+            <include>org/folio/rest/api/TenantRefAPI.java</include>
             <include>org/folio/**</include>
           </includes>
         </configuration>
