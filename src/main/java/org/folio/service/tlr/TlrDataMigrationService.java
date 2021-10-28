@@ -372,7 +372,6 @@ public class TlrDataMigrationService {
   @Getter
   @Setter
   @RequiredArgsConstructor
-  @AllArgsConstructor
   public static class RequestMigrationContext {
     private final JsonObject oldRequest;
     private JsonObject newRequest;
@@ -400,7 +399,6 @@ public class TlrDataMigrationService {
   @Getter
   @Setter
   @RequiredArgsConstructor
-  @AllArgsConstructor
   private static class Batch {
     private final int batchNumber;
     private final Conn connection;
