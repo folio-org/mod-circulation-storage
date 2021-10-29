@@ -222,7 +222,7 @@ public class TlrDataMigrationService {
       return succeededFuture(batch);
     }
 
-    return okapiClient.getByIds(ITEMS_STORAGE_URL, itemIds, "items", Item.class)
+    return okapiClient.get(ITEMS_STORAGE_URL, itemIds, "items", Item.class)
       .onSuccess(items -> saveHoldingsRecordIds(batch, items))
       .map(batch);
   }
@@ -246,7 +246,7 @@ public class TlrDataMigrationService {
       return succeededFuture(batch);
     }
 
-    return okapiClient.getByIds(HOLDINGS_STORAGE_URL, holdingsRecordIds, "holdingsRecords", HoldingsRecord.class)
+    return okapiClient.get(HOLDINGS_STORAGE_URL, holdingsRecordIds, "holdingsRecords", HoldingsRecord.class)
       .onSuccess(holdingsRecords -> saveInstanceIds(batch, holdingsRecords))
       .map(batch);
   }

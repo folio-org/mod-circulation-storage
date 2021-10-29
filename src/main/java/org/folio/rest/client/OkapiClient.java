@@ -3,26 +3,23 @@ package org.folio.rest.client;
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
+import static org.folio.util.StringUtil.urlEncode;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-import org.folio.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
@@ -32,7 +29,6 @@ import io.vertx.ext.web.client.WebClient;
 
 public class OkapiClient {
   protected static final Logger log = LoggerFactory.getLogger(OkapiClient.class);
-  private static final String GET_BY_IDS_URL_TEMPLATE = "%s?limit=%d&query=%s";
   private static final String OKAPI_URL_HEADER = "x-okapi-url";
   protected static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -64,53 +60,44 @@ public class OkapiClient {
       .putHeader(OKAPI_HEADER_TOKEN, token);
   }
 
-  public <T> Future<Collection<T>> getByIds(String resourcePath, Collection<String> ids,
+  public <T> Future<Collection<T>> get(String resourcePath, Collection<String> ids,
     String collectionName, Class<T> objectType) {
 
-    final List<String> prefixedIds = ids.stream()
+    String query = ids.stream()
       .distinct()
       .map(id -> "id==" + id)
-      .collect(Collectors.toList());
+      .collect(joining(" OR "));
 
-    final String query = StringUtil.urlEncode(String.join(" OR ", prefixedIds));
-    final String url = String.format(GET_BY_IDS_URL_TEMPLATE, resourcePath, ids.size(), query);
+    return getAsJson(resourcePath, query)
+      .map(responseJson -> responseJson.getJsonArray(collectionName)
+        .stream()
+        .map(JsonObject.class::cast)
+        .map(json -> json.mapTo(objectType))
+        .collect(toList())
+      );
+  }
 
+  public Future<JsonObject> getAsJson(String resourcePath, String query) {
+    return get(resourcePath, query)
+      .map(HttpResponse::bodyAsJsonObject);
+  }
+
+  public Future<HttpResponse<Buffer>> get(String resourcePath, String query) {
+    return get(resourcePath + "?query=" + urlEncode(query));
+  }
+
+  private Future<HttpResponse<Buffer>> get(String url) {
     log.debug("Calling GET {}", url);
 
-    Promise<HttpResponse<Buffer>> promise = Promise.promise();
-    okapiGetAbs(url).send(promise);
-
-    return promise.future().compose(response -> {
-      int responseStatus = response.statusCode();
-      if (responseStatus != 200) {
-        final String errorMessage = format("Failed to get %d %ss by IDs. Response status code: %s",
-          ids.size(), objectType.getSimpleName(), responseStatus);
-        log.error(errorMessage);
-        return failedFuture(errorMessage);
-      }
-      try {
-        List<JsonObject> resultsJson = new JsonObject(response.bodyAsString())
-          .getJsonArray(collectionName)
-          .stream()
-          .filter(JsonObject.class::isInstance)
-          .map(JsonObject.class::cast)
-          .collect(Collectors.toList());
-
-        List<T> results = new ArrayList<>();
-
-        for (JsonObject jsonObject : resultsJson) {
-          results.add(objectMapper.readValue(jsonObject.encode(), objectType));
+    return okapiGetAbs(url).send()
+      .compose(response -> {
+        if (response.statusCode() == 200) {
+          return succeededFuture(response);
         }
-
-        log.debug("{} {} fetched", results.size(), collectionName);
-
-        return succeededFuture(results);
-      } catch (IOException exception) {
-        final String errorMessage = format("Failed to parse response from %s. Response body: %s",
-          url, response.bodyAsString());
+        final String errorMessage = format("Request failed: GET %s. Response: [%s] %s",
+          url, response.statusCode(), response.bodyAsString());
         log.error(errorMessage);
         return failedFuture(errorMessage);
-      }
-    });
+      });
   }
 }
