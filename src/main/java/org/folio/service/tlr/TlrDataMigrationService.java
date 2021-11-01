@@ -24,6 +24,8 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.StreamSupport;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.okapi.common.ModuleId;
 import org.folio.okapi.common.SemVer;
 import org.folio.rest.client.OkapiClient;
@@ -31,8 +33,6 @@ import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -42,7 +42,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -51,7 +50,7 @@ import lombok.Setter;
  * Data migration from item-level requests (ILR) to title-level requests (TLR)
  */
 public class TlrDataMigrationService {
-  private static final Logger LOG = LoggerFactory.getLogger(TlrDataMigrationService.class);
+  private static final Logger log = LogManager.getLogger(TlrDataMigrationService.class);
 
   // safe number of UUIDs which fits into Okapi's URL length limit (4096 characters)
   private static final int BATCH_SIZE = 80;
@@ -96,29 +95,28 @@ public class TlrDataMigrationService {
       SemVer moduleToVersion = moduleVersionToSemVer(attributes.getModuleTo());
 
       if (moduleToVersion.compareTo(migrationModuleVersion) < 0) {
-        LOG.info("skipping migration for module version {}: should be {} or higher",
+        log.info("skipping migration for module version {}: should be {} or higher",
           moduleToVersion, migrationModuleVersion);
         return succeededFuture();
       }
 
       if (moduleFromVersion.compareTo(migrationModuleVersion) >= 0) {
-        LOG.info("skipping migration for module version {}: previous version {} is already migrated",
+        log.info("skipping migration for module version {}: previous version {} is already migrated",
           moduleToVersion, moduleFromVersion);
         return succeededFuture();
       }
     }
     else {
-      LOG.info("skipping migration - can not determine current moduleFrom or moduleTo version");
+      log.info("skipping migration - can not determine current moduleFrom or moduleTo version");
       return succeededFuture();
     }
 
-    LOG.info("migration started, batch size " + BATCH_SIZE);
+    log.info("migration started, batch size " + BATCH_SIZE);
 
     return getBatchCount()
       .compose(this::migrateRequests)
-      .compose(r -> failIfErrorsOccurred())
-      .onSuccess(r -> LOG.info("Migration finished successfully"))
-      .onFailure(r -> LOG.error("Migration failed, rolling back the changes: {}", errorMessages))
+      .onSuccess(r -> log.info("Migration finished successfully"))
+      .onFailure(r -> log.error("Migration failed, rolling back the changes: {}", errorMessages))
       .onComplete(r -> logDuration(startTime));
   }
 
@@ -134,14 +132,16 @@ public class TlrDataMigrationService {
 
     Integer requestsCount = result.iterator().next().get(Integer.class, 0);
     int batchesCount = requestsCount / BATCH_SIZE + (requestsCount % BATCH_SIZE == 0 ? 0 : 1);
-    LOG.info("found {} requests ({} batches)", requestsCount, batchesCount);
+    log.info("found {} requests ({} batches)", requestsCount, batchesCount);
 
     return succeededFuture(batchesCount);
   }
 
   private Future<Void> migrateRequests(int batchCount) {
     return postgresClient.withTrans(conn ->
-      chainFutures(buildBatches(batchCount, conn), this::processBatch));
+      chainFutures(buildBatches(batchCount, conn), this::processBatch)
+        .compose(r -> failIfErrorsOccurred())
+    );
   }
   
   private static Collection<Batch> buildBatches(int numberOfBatches, Conn connection) {
@@ -152,7 +152,7 @@ public class TlrDataMigrationService {
   }
 
   private Future<Void> processBatch(Batch batch) {
-    LOG.info("{} processing started", batch);
+    log.info("{} processing started", batch);
 
     return succeededFuture(batch)
       .compose(this::fetchRequests)
@@ -162,15 +162,14 @@ public class TlrDataMigrationService {
       .compose(this::failWhenNotAllInstanceIdsWereFound)
       .onSuccess(this::buildNewRequests)
       .compose(this::updateRequests)
-      .onSuccess(r -> LOG.info("{} processing finished successfully", batch))
-      .onFailure(t -> handleError(batch, t))
-      .otherwiseEmpty();
+      .onSuccess(r -> log.info("{} processing finished successfully", batch))
+      .recover(t -> handleError(batch, t));
   }
 
   private Future<Batch> fetchRequests(Batch batch) {
     return postgresClient.select(format("SELECT jsonb FROM %s.%s ORDER BY id LIMIT %d OFFSET %d",
         schemaName, REQUEST_TABLE, BATCH_SIZE, batch.getBatchNumber() * BATCH_SIZE))
-      .onSuccess(r -> LOG.info("{} {} requests fetched", batch, r.size()))
+      .onSuccess(r -> log.info("{} {} requests fetched", batch, r.size()))
       .map(this::rowSetToRequestContexts)
       .onSuccess(batch::setRequestMigrationContexts)
       .map(batch);
@@ -192,7 +191,7 @@ public class TlrDataMigrationService {
 
     return errors.isEmpty()
       ? succeededFuture(batch)
-      : failedFuture("batch validation failed: " + join(lineSeparator(), errors));
+      : failedFuture(join(lineSeparator(), errors));
   }
 
   private Collection<String> validateRequest(RequestMigrationContext context) {
@@ -297,7 +296,7 @@ public class TlrDataMigrationService {
 
   private Future<Void> updateRequests(Batch batch) {
     if (!errorMessages.isEmpty()) {
-      LOG.info("{} batch update aborted - errors in previous batch(es) occurred", batch);
+      log.info("{} batch update aborted - errors in previous batch(es) occurred", batch);
       return succeededFuture();
     }
 
@@ -308,7 +307,7 @@ public class TlrDataMigrationService {
 
     return batch.getConnection()
       .updateBatch(REQUEST_TABLE, new JsonArray(migratedRequests))
-      .onSuccess(r -> LOG.info("{} all requests were successfully updated", batch))
+      .onSuccess(r -> log.info("{} all requests were successfully updated", batch))
       .mapEmpty();
   }
 
@@ -320,7 +319,7 @@ public class TlrDataMigrationService {
 
   private static void logDuration(long startTime) {
     String duration = formatDurationHMS(currentTimeMillis() - startTime);
-    LOG.info("Migration finished in {}", duration);
+    log.info("Migration finished in {}", duration);
   }
 
   private static boolean containsAll(JsonObject request, List<String> fieldNames) {
@@ -333,10 +332,11 @@ public class TlrDataMigrationService {
       .anyMatch(request::containsKey);
   }
 
-  private void handleError(Batch batch, Throwable throwable) {
-    String errorMessage = format("%s processing failed: %s", batch, throwable.getMessage());
-    LOG.error(errorMessage);
-    errorMessages.add(errorMessage);
+  private Future<Void> handleError(Batch batch, Throwable throwable) {
+    log.error("{} processing failed: {}", batch, throwable.getMessage());
+    errorMessages.add(throwable.getMessage());
+
+    return succeededFuture();
   }
 
   public static <T> Future<Void> chainFutures(Collection<T> list, Function<T, Future<Void>> method) {

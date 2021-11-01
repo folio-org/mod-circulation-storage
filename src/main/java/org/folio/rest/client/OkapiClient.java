@@ -68,7 +68,7 @@ public class OkapiClient {
       .map(id -> "id==" + id)
       .collect(joining(" OR "));
 
-    return getAsJson(resourcePath, query)
+    return getAsJson(resourcePath, query, ids.size())
       .map(responseJson -> responseJson.getJsonArray(collectionName)
         .stream()
         .map(JsonObject.class::cast)
@@ -77,13 +77,13 @@ public class OkapiClient {
       );
   }
 
-  public Future<JsonObject> getAsJson(String resourcePath, String query) {
-    return get(resourcePath, query)
+  public Future<JsonObject> getAsJson(String resourcePath, String query, int limit) {
+    return get(resourcePath, query, limit)
       .map(HttpResponse::bodyAsJsonObject);
   }
 
-  public Future<HttpResponse<Buffer>> get(String resourcePath, String query) {
-    return get(resourcePath + "?query=" + urlEncode(query));
+  public Future<HttpResponse<Buffer>> get(String resourcePath, String query, int limit) {
+    return get(String.format("%s?limit=%d&query=%s", resourcePath, limit, urlEncode(query)));
   }
 
   private Future<HttpResponse<Buffer>> get(String url) {
