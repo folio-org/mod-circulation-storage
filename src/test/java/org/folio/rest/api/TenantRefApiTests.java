@@ -200,7 +200,6 @@ public class TenantRefApiTests {
   private void jobFailsWhenRemoteCallFails(TestContext context, Async async) {
     postTenant(context, PREVIOUS_MODULE_VERSION, MIGRATION_MODULE_VERSION)
       .onSuccess(job -> {
-        context.assertTrue(job.getError().contains("processing failed"));
         context.assertTrue(job.getError().contains("Request failed: GET"));
         context.assertTrue(job.getError().contains("Response: [404]"));
         assertThatNoRequestsWereUpdated(context);
@@ -242,7 +241,7 @@ public class TenantRefApiTests {
 
     postTenant(context, PREVIOUS_MODULE_VERSION, MIGRATION_MODULE_VERSION)
       .onSuccess(job -> {
-        context.assertTrue(job.getError().contains("processing failed: failed to find instance IDs"));
+        context.assertTrue(job.getError().contains("failed to find instance IDs"));
         // make sure that changes for all batches were reverted
         assertThatNoRequestsWereUpdated(context);
         async.complete();
