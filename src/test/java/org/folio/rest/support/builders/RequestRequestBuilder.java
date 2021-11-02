@@ -49,7 +49,7 @@ public class RequestRequestBuilder extends JsonBuilder {
   public RequestRequestBuilder() {
     this(UUID.randomUUID(),
       "Hold",
-      "item",
+      "Item",
       new DateTime(2017, 7, 15, 9, 35, 27, DateTimeZone.UTC),
       UUID.randomUUID(),
       UUID.randomUUID(),

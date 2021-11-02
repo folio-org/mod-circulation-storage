@@ -1828,7 +1828,7 @@ public class RequestsApiTest extends ApiTests {
       .requesterId(UUID.randomUUID().toString())
       .itemId(UUID.randomUUID().toString())
       .requestType("Hold")
-      .requestLevel("item")
+      .requestLevel("Item")
       .instanceId(UUID.randomUUID().toString())
       .pickupServicePointId(UUID.randomUUID().toString());
   }

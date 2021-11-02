@@ -22,7 +22,7 @@
   "provides": [
     {
       "id": "request-storage-batch",
-      "version": "0.3",
+      "version": "1.0",
       "handlers": [
         {
           "methods": ["POST"],
@@ -129,7 +129,7 @@
     },
     {
       "id": "request-storage",
-      "version": "3.4",
+      "version": "4.0",
       "handlers": [
         {
           "methods": ["GET"],

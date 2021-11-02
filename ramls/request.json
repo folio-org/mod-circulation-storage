@@ -16,7 +16,7 @@
     "requestLevel": {
       "description": "Request level: item or instance",
       "type": "string",
-      "enum": ["item", "instance"]
+      "enum": ["Item", "Title"]
     },
     "instanceId": {
       "description": "ID of the instance of the requested item",
