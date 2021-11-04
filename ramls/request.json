@@ -14,7 +14,7 @@
       "enum": ["Hold", "Recall", "Page"]
     },
     "requestLevel": {
-      "description": "Request level: item or instance",
+      "description": "Request level: item or title",
       "type": "string",
       "enum": ["Item", "Title"]
     },
