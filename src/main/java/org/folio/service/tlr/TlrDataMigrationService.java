@@ -60,7 +60,7 @@ public class TlrDataMigrationService {
   private static final String ITEMS_STORAGE_URL = "/item-storage/items";
   private static final String HOLDINGS_STORAGE_URL = "/holdings-storage/holdings";
 
-  private static final String ITEM_REQUEST_LEVEL = "item";
+  private static final String ITEM_REQUEST_LEVEL = "Item";
   private static final String REQUEST_LEVEL_KEY = "requestLevel";
   private static final String ID_KEY = "id";
   private static final String INSTANCE_ID_KEY = "instanceId";

@@ -178,8 +178,7 @@ public class TenantRefApiTests {
     postTenant(context, PREVIOUS_MODULE_VERSION, MIGRATION_MODULE_VERSION)
       .onSuccess(job -> {
         context.assertNull(job.getError());
-        validateMigrationResult(context);
-        async.complete();
+        validateMigrationResult(context, async);
       });
   }
 
@@ -318,12 +317,13 @@ public class TenantRefApiTests {
         .collect(toList()));
   }
 
-  private void validateMigrationResult(TestContext context) {
+  private void validateMigrationResult(TestContext context, Async async) {
     getAllRequestsAsJson()
       .onFailure(context::fail)
       .onSuccess(requestsAfterMigration -> {
         context.assertEquals(requestsBeforeMigration.size(), requestsAfterMigration.size());
         requestsAfterMigration.forEach(request -> validateMigrationResult(context, request));
+        async.complete();
       });
   }
 
@@ -333,7 +333,7 @@ public class TenantRefApiTests {
     context.assertNotNull(requestBefore);
     context.assertNotNull(requestAfter);
 
-    context.assertEquals(requestAfter.getString("requestLevel"), "item");
+    context.assertEquals(requestAfter.getString("requestLevel"), "Item");
     context.assertNotNull(requestAfter.getString("instanceId"));
 
     if (requestBefore.containsKey("item")) {
