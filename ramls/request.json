@@ -8,20 +8,15 @@
       "type": "string",
       "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
     },
+    "requestLevel": {
+      "description": "Level of the request - Item or Title",
+      "type": "string",
+      "enum": ["Item", "Title"]
+    },
     "requestType": {
       "description": "Whether the item should be held upon return, recalled or paged for",
       "type": "string",
       "enum": ["Hold", "Recall", "Page"]
-    },
-    "requestLevel": {
-      "description": "Request level: item or title",
-      "type": "string",
-      "enum": ["Item", "Title"]
-    },
-    "instanceId": {
-      "description": "ID of the instance of the requested item",
-      "type": "string",
-      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
     },
     "requestDate": {
       "description": "Date the request was made",
@@ -41,6 +36,11 @@
       "description": "ID of the user representing a proxy for the patron",
       "type": "string",
       "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+    },
+    "instanceId": {
+      "description": "ID of the instance being requested",
+      "type": "string",
+      "$ref": "raml-util/schemas/uuid.schema"
     },
     "itemId": {
       "description": "ID of the item being requested",
@@ -79,26 +79,15 @@
       "format": "date-time"
     },
     "position": {
-      "description": "position of the request in a per-item request queue",
+      "description": "Position of the request in the unified request queue",
       "type": "integer"
-    },
-    "item": {
-      "description": "Copy of some item metadata (used for searching and sorting)",
-      "type": "object",
-      "properties": {
-        "barcode": {
-          "description": "barcode of the item",
-          "type": "string"
-        }
-      },
-      "additionalProperties": false
     },
     "instance": {
       "description": "Copy of some instance metadata (used for searching and sorting)",
       "type": "object",
       "properties": {
         "title": {
-          "description": "Title of the item",
+          "description": "title of the item",
           "type": "string"
         },
         "identifiers": {
@@ -124,6 +113,16 @@
               "identifierTypeId"
             ]
           }
+        }
+      }
+    },
+    "item": {
+      "description": "Copy of some item metadata (used for searching and sorting)",
+      "type": "object",
+      "properties": {
+        "barcode": {
+          "description": "barcode of the item",
+          "type": "string"
         }
       },
       "additionalProperties": false
@@ -227,10 +226,9 @@
   "additionalProperties": false,
   "required": [
     "itemId",
+    "instanceId",
     "requesterId",
     "requestType",
-    "requestLevel",
-    "instanceId",
     "requestDate",
     "fulfilmentPreference"
   ]
