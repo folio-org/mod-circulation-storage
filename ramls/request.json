@@ -13,6 +13,16 @@
       "type": "string",
       "enum": ["Hold", "Recall", "Page"]
     },
+    "requestLevel": {
+      "description": "Request level: item or title",
+      "type": "string",
+      "enum": ["Item", "Title"]
+    },
+    "instanceId": {
+      "description": "ID of the instance of the requested item",
+      "type": "string",
+      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+    },
     "requestDate": {
       "description": "Date the request was made",
       "type": "string",
@@ -76,12 +86,19 @@
       "description": "Copy of some item metadata (used for searching and sorting)",
       "type": "object",
       "properties": {
-        "title": {
-          "description": "title of the item",
-          "type": "string"
-        },
         "barcode": {
           "description": "barcode of the item",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "instance": {
+      "description": "Copy of some instance metadata (used for searching and sorting)",
+      "type": "object",
+      "properties": {
+        "title": {
+          "description": "Title of the item",
           "type": "string"
         },
         "identifiers": {
@@ -212,6 +229,8 @@
     "itemId",
     "requesterId",
     "requestType",
+    "requestLevel",
+    "instanceId",
     "requestDate",
     "fulfilmentPreference"
   ]

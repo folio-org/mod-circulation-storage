@@ -22,7 +22,7 @@
   "provides": [
     {
       "id": "request-storage-batch",
-      "version": "0.3",
+      "version": "1.0",
       "handlers": [
         {
           "methods": ["POST"],
@@ -129,7 +129,7 @@
     },
     {
       "id": "request-storage",
-      "version": "3.4",
+      "version": "4.0",
       "handlers": [
         {
           "methods": ["GET"],
@@ -401,7 +401,11 @@
           "modulePermissions": [
             "pubsub.event-types.post",
             "pubsub.publishers.post",
-            "pubsub.subscribers.post"
+            "pubsub.subscribers.post",
+            "inventory-storage.holdings.item.get",
+            "inventory-storage.holdings.collection.get",
+            "inventory-storage.items.item.get",
+            "inventory-storage.items.collection.get"
           ]
         }, {
           "methods": ["GET", "DELETE"],

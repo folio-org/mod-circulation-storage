@@ -170,7 +170,7 @@
       "fullTextIndex": [
         {
           "fieldName": "itemIsbn",
-          "sqlExpression" : "normalize_isbns(jsonb->'item'->'identifiers')",
+          "sqlExpression" : "normalize_isbns(jsonb->'instance'->'identifiers')",
           "sqlExpressionQuery": "normalize_digits($)"
         }
       ],

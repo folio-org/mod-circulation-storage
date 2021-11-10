@@ -119,13 +119,9 @@ public class IsbnNormalizationTest extends ApiTests {
   }
 
   private Boolean isTitlePresent(JsonObject request, String titleToMatch) {
-    JsonObject item = request.getJsonObject("item");
-    String itemTitle = item.getString("title");
-    if (itemTitle.equals(titleToMatch)) {
-      return true;
-    } else {
-      return false;
-    }
+    return request.getJsonObject("instance")
+    .getString("title")
+    .equals(titleToMatch);
   }
 
   private JsonObject searchForRequests(String cql) 
