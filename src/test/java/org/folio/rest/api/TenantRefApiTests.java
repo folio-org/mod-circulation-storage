@@ -335,6 +335,7 @@ public class TenantRefApiTests {
 
     context.assertEquals(requestAfter.getString("requestLevel"), "Item");
     context.assertNotNull(requestAfter.getString("instanceId"));
+    context.assertNotNull(requestAfter.getString("holdingsRecordId"));
 
     if (requestBefore.containsKey("item")) {
       JsonObject itemBefore = requestBefore.getJsonObject("item");
