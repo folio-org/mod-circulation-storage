@@ -64,6 +64,7 @@ public class TlrDataMigrationService {
   private static final String REQUEST_LEVEL_KEY = "requestLevel";
   private static final String ID_KEY = "id";
   private static final String INSTANCE_ID_KEY = "instanceId";
+  private static final String HOLDINGS_RECORD_ID_KEY = "holdingsRecordId";
   private static final String INSTANCE_KEY = "instance";
   private static final String ITEM_KEY = "item";
   private static final String ITEM_ID_KEY = "itemId";
@@ -286,6 +287,7 @@ public class TlrDataMigrationService {
 
     write(migratedRequest, REQUEST_LEVEL_KEY, ITEM_REQUEST_LEVEL);
     write(migratedRequest, INSTANCE_ID_KEY, context.getInstanceId());
+    write(migratedRequest, HOLDINGS_RECORD_ID_KEY, context.getHoldingsRecordId());
     write(migratedRequest, INSTANCE_KEY, instance);
 
     item.remove(TITLE_KEY);
