@@ -45,6 +45,7 @@ public class RequestRequestBuilder extends JsonBuilder {
   private final UUID pickupServicePointId;
   private final Tags tags;
   private final String patronComments;
+  private final UUID holdingsRecordId;
 
   public RequestRequestBuilder() {
     this(UUID.randomUUID(),
@@ -70,7 +71,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       1,
       null,
       null,
-      null);
+      null,
+       UUID.randomUUID());
   }
 
   private RequestRequestBuilder(
@@ -97,7 +99,8 @@ public class RequestRequestBuilder extends JsonBuilder {
     Integer position,
     UUID pickupServicePointId,
     Tags tags,
-    String patronComments) {
+    String patronComments,
+    UUID holdingsRecordId) {
 
     this.id = id;
     this.requestType = requestType;
@@ -123,12 +126,14 @@ public class RequestRequestBuilder extends JsonBuilder {
     this.pickupServicePointId = pickupServicePointId;
     this.tags = tags;
     this.patronComments = patronComments;
+    this.holdingsRecordId = holdingsRecordId;
   }
 
   public JsonObject create() {
     JsonObject request = new JsonObject();
 
     put(request, "id", this.id);
+    put(request, "holdingsRecordId", this.holdingsRecordId);
     put(request, "requestType", this.requestType);
     put(request, "requestLevel", this.requestLevel);
     put(request, "requestDate", this.requestDate);
@@ -227,7 +232,66 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position,
       this.pickupServicePointId,
       this.tags,
-      this.patronComments);
+      this.patronComments,
+      this.holdingsRecordId);
+  }
+
+  public RequestRequestBuilder withInstanceId(UUID instanceId) {
+    return new RequestRequestBuilder(
+      this.id,
+      this.requestType,
+      this.requestLevel,
+      this.requestDate,
+      this.itemId,
+      instanceId,
+      this.requesterId,
+      this.proxyId,
+      this.fulfilmentPreference,
+      this.deliveryAddressTypeId,
+      this.requestExpirationDate,
+      this.holdShelfExpirationDate,
+      this.itemSummary,
+      this.requesterSummary,
+      this.proxySummary,
+      this.status,
+      this.cancellationReasonId,
+      this.cancelledByUserId,
+      this.cancellationAdditionalInformation,
+      this.cancelledDate,
+      this.position,
+      this.pickupServicePointId,
+      this.tags,
+      this.patronComments,
+      this.holdingsRecordId);
+  }
+
+  public RequestRequestBuilder withRequestLevel(String requestLevel) {
+    return new RequestRequestBuilder(
+      this.id,
+      this.requestType,
+      requestLevel,
+      this.requestDate,
+      this.itemId,
+      this.instanceId,
+      this.requesterId,
+      this.proxyId,
+      this.fulfilmentPreference,
+      this.deliveryAddressTypeId,
+      this.requestExpirationDate,
+      this.holdShelfExpirationDate,
+      this.itemSummary,
+      this.requesterSummary,
+      this.proxySummary,
+      this.status,
+      this.cancellationReasonId,
+      this.cancelledByUserId,
+      this.cancellationAdditionalInformation,
+      this.cancelledDate,
+      this.position,
+      this.pickupServicePointId,
+      this.tags,
+      this.patronComments,
+      this.holdingsRecordId);
   }
 
   public RequestRequestBuilder recall() {
@@ -263,7 +327,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position,
       this.pickupServicePointId,
       this.tags,
-      this.patronComments);
+      this.patronComments,
+      this.holdingsRecordId);
   }
 
   public RequestRequestBuilder withNoId() {
@@ -291,7 +356,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position,
       this.pickupServicePointId,
       this.tags,
-      this.patronComments);
+      this.patronComments,
+      this.holdingsRecordId);
   }
 
   public RequestRequestBuilder withRequestDate(DateTime requestDate) {
@@ -319,7 +385,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position,
       this.pickupServicePointId,
       this.tags,
-      this.patronComments);
+      this.patronComments,
+      this.holdingsRecordId);
   }
 
   public RequestRequestBuilder withItemId(UUID itemId) {
@@ -347,7 +414,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position,
       this.pickupServicePointId,
       this.tags,
-      this.patronComments);
+      this.patronComments,
+      this.holdingsRecordId);
   }
 
   public RequestRequestBuilder withRequesterId(UUID requesterId) {
@@ -375,7 +443,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position,
       this.pickupServicePointId,
       this.tags,
-      this.patronComments);
+      this.patronComments,
+      this.holdingsRecordId);
   }
 
   public RequestRequestBuilder toHoldShelf() {
@@ -412,7 +481,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position,
       this.pickupServicePointId,
       this.tags,
-      this.patronComments);
+      this.patronComments,
+      this.holdingsRecordId);
   }
 
   public RequestRequestBuilder withRequestExpiration(DateTime requestExpiration) {
@@ -440,7 +510,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position,
       this.pickupServicePointId,
       this.tags,
-      this.patronComments);
+      this.patronComments,
+      this.holdingsRecordId);
   }
 
   public RequestRequestBuilder withHoldShelfExpiration(DateTime holdShelfExpiration) {
@@ -468,7 +539,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position,
       this.pickupServicePointId,
       this.tags,
-      this.patronComments);
+      this.patronComments,
+      this.holdingsRecordId);
   }
 
   public RequestRequestBuilder withItem(String title, String barcode) {
@@ -500,7 +572,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position,
       this.pickupServicePointId,
       this.tags,
-      this.patronComments);
+      this.patronComments,
+      this.holdingsRecordId);
   }
 
   public RequestRequestBuilder withRequester(
@@ -533,7 +606,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position,
       this.pickupServicePointId,
       this.tags,
-      this.patronComments);
+      this.patronComments,
+      this.holdingsRecordId);
   }
 
   public RequestRequestBuilder withRequester(
@@ -565,7 +639,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position,
       this.pickupServicePointId,
       this.tags,
-      this.patronComments);
+      this.patronComments,
+      this.holdingsRecordId);
   }
 
   public RequestRequestBuilder withProxy(
@@ -597,7 +672,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position,
       this.pickupServicePointId,
       this.tags,
-      this.patronComments);
+      this.patronComments,
+      this.holdingsRecordId);
   }
 
   public RequestRequestBuilder withDeliveryAddressType(UUID deliverAddressType) {
@@ -625,7 +701,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position,
       this.pickupServicePointId,
       this.tags,
-      this.patronComments);
+      this.patronComments,
+      this.holdingsRecordId);
   }
 
   public RequestRequestBuilder withStatus(String status) {
@@ -653,7 +730,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position,
       this.pickupServicePointId,
       this.tags,
-      this.patronComments);
+      this.patronComments,
+      this.holdingsRecordId);
   }
 
   public RequestRequestBuilder withProxyId(UUID proxyId) {
@@ -681,7 +759,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position,
       this.pickupServicePointId,
       this.tags,
-      this.patronComments);
+      this.patronComments,
+      this.holdingsRecordId);
   }
 
   public RequestRequestBuilder withPosition(Integer newPosition) {
@@ -709,7 +788,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       newPosition,
       this.pickupServicePointId,
       this.tags,
-      this.patronComments);
+      this.patronComments,
+      this.holdingsRecordId);
   }
 
   public RequestRequestBuilder withNoPosition() {
@@ -741,7 +821,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position,
       this.pickupServicePointId,
       this.tags,
-      this.patronComments);
+      this.patronComments,
+      this.holdingsRecordId);
   }
 
   public RequestRequestBuilder withCancelledByUserId(UUID cancelledByUserId) {
@@ -769,7 +850,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position,
       this.pickupServicePointId,
       this.tags,
-      this.patronComments);
+      this.patronComments,
+      this.holdingsRecordId);
   }
 
   public RequestRequestBuilder withCancellationAdditionalInformation(String cancellationAdditionalInformation) {
@@ -797,7 +879,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position,
       this.pickupServicePointId,
       this.tags,
-      this.patronComments);
+      this.patronComments,
+      this.holdingsRecordId);
   }
 
   public RequestRequestBuilder withCancelledDate(DateTime cancelledDate) {
@@ -825,7 +908,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position,
       this.pickupServicePointId,
       this.tags,
-      this.patronComments);
+      this.patronComments,
+      this.holdingsRecordId);
   }
 
   public RequestRequestBuilder withPickupServicePointId(UUID pickupServicePointId) {
@@ -853,7 +937,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position,
       pickupServicePointId,
       this.tags,
-      this.patronComments);
+      this.patronComments,
+      this.holdingsRecordId);
   }
 
   public RequestRequestBuilder withTags(Tags tags) {
@@ -881,7 +966,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position,
       this.pickupServicePointId,
       tags,
-      this.patronComments);
+      this.patronComments,
+      this.holdingsRecordId);
   }
 
   public RequestRequestBuilder withPatronComments(String patronComments) {
@@ -909,7 +995,37 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position,
       this.pickupServicePointId,
       this.tags,
-      patronComments);
+      patronComments,
+      this.holdingsRecordId);
+  }
+
+  public RequestRequestBuilder withHoldingsRecordId(UUID holdingsRecordId) {
+    return new RequestRequestBuilder(
+      this.id,
+      this.requestType,
+      this.requestLevel,
+      this.requestDate,
+      this.itemId,
+      this.instanceId,
+      this.requesterId,
+      this.proxyId,
+      this.fulfilmentPreference,
+      this.deliveryAddressTypeId,
+      this.requestExpirationDate,
+      this.holdShelfExpirationDate,
+      this.itemSummary,
+      this.requesterSummary,
+      this.proxySummary,
+      this.status,
+      this.cancellationReasonId,
+      this.cancelledByUserId,
+      this.cancellationAdditionalInformation,
+      this.cancelledDate,
+      this.position,
+      this.pickupServicePointId,
+      this.tags,
+      patronComments,
+      holdingsRecordId);
   }
 
   private class PatronSummary {
