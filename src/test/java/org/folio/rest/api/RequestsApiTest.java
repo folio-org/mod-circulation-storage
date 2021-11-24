@@ -20,16 +20,11 @@ import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasErrorWi
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessageContaining;
 import static org.folio.rest.support.matchers.ValidationResponseMatchers.isValidationResponseWhich;
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.both;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
-import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.hasXPath;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
@@ -62,7 +57,6 @@ import org.folio.rest.support.clients.ResourceClient;
 import org.folio.rest.support.dto.RequestDto;
 import org.folio.rest.support.spring.TestContextConfiguration;
 import org.folio.util.StringUtil;
-import org.hamcrest.CoreMatchers;
 import org.hamcrest.junit.MatcherAssert;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -173,14 +167,14 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.containsKey("patronComments"), is(false));
 
     assertThat(representation.containsKey("item"), is(true));
-
     JsonObject item = representation.getJsonObject("item");
-    assertThat(item.getString("title"), is("Nod"));
     assertThat(item.getString("barcode"), is("565578437802"));
 
-    JsonArray identifiers = item.getJsonArray("identifiers");
+    assertThat(representation.containsKey("instance"), is(true));
+    JsonObject instance = representation.getJsonObject("instance");
+    assertThat(instance.getString("title"), is("Nod"));
+    JsonArray identifiers = instance.getJsonArray("identifiers");
     assertThat(identifiers.size(), is(2));
-
     assertThat(identifiers.getJsonObject(0).getString("identifierTypeId"),
       is(isbnIdentifierId.toString()));
     assertThat(identifiers.getJsonObject(0).getString("value"),
@@ -188,37 +182,25 @@ public class RequestsApiTest extends ApiTests {
     assertThat(identifiers.getJsonObject(1).getString("identifierTypeId"),
       is(issnIdentifierId.toString()));
     assertThat(identifiers.getJsonObject(1).getString("value"), is("2193988"));
-
     assertThat(representation.containsKey("requester"), is(true));
-
     final JsonObject requesterRepresentation = representation.getJsonObject("requester");
-
     assertThat(requesterRepresentation.getString("lastName"), is("Jones"));
     assertThat(requesterRepresentation.getString("firstName"), is("Stuart"));
     assertThat(requesterRepresentation.getString("middleName"), is("Anthony"));
     assertThat(requesterRepresentation.getString("barcode"), is("6837502674015"));
-
     assertThat("has information taken from proxying user",
       representation.containsKey("proxy"), is(true));
-
     final JsonObject proxyRepresentation = representation.getJsonObject("proxy");
-
     assertThat("last name is taken from proxying user",
       proxyRepresentation.getString("lastName"), is("Stuart"));
-
     assertThat("first name is taken from proxying user",
       proxyRepresentation.getString("firstName"), is("Rebecca"));
-
     assertThat("middle name is not taken from proxying user",
       proxyRepresentation.containsKey("middleName"), is(false));
-
     assertThat("barcode is taken from proxying user",
       proxyRepresentation.getString("barcode"), is("6059539205"));
-
     assertThat(representation.containsKey("tags"), is(true));
-
     final JsonObject tagsRepresentation = representation.getJsonObject("tags");
-
     assertThat(tagsRepresentation.containsKey("tagList"), is(true));
     assertThat(tagsRepresentation.getJsonArray("tagList"), contains("new", "important"));
   }
@@ -276,8 +258,7 @@ public class RequestsApiTest extends ApiTests {
     UUID requesterId = UUID.randomUUID();
     DateTime requestDate = DateTime.now();
 
-    JsonObject representation = createEntity(
-      new RequestRequestBuilder()
+    JsonObject entity = new RequestRequestBuilder()
       .recall()
       .toHoldShelf()
       .withId(id)
@@ -285,8 +266,10 @@ public class RequestsApiTest extends ApiTests {
       .withRequestLevel(requestLevel)
       .withRequesterId(requesterId)
       .withInstanceId(instanceId)
-      .create(),
-      requestStorageUrl()).getJson();
+      .create();
+    entity.remove("itemId");
+    entity.remove("holdingsRecordId");
+    JsonObject representation = createEntity(entity, requestStorageUrl()).getJson();
 
     assertThat(representation.getString("id"), is(id.toString()));
     assertThat(representation.getString("requestType"), is("Recall"));
@@ -1965,6 +1948,7 @@ public class RequestsApiTest extends ApiTests {
       .itemId(UUID.randomUUID().toString())
       .requestType("Hold")
       .requestLevel("Item")
+      .holdingsRecordId(UUID.randomUUID().toString())
       .instanceId(UUID.randomUUID().toString())
       .pickupServicePointId(UUID.randomUUID().toString());
   }
