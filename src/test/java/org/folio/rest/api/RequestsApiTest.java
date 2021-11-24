@@ -16,14 +16,20 @@ import static org.folio.rest.support.clients.CqlQuery.exactMatch;
 import static org.folio.rest.support.clients.CqlQuery.fromTemplate;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.equivalentTo;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
+import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasErrorWith;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
+import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessageContaining;
 import static org.folio.rest.support.matchers.ValidationResponseMatchers.isValidationResponseWhich;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.both;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.hasXPath;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
@@ -56,6 +62,7 @@ import org.folio.rest.support.clients.ResourceClient;
 import org.folio.rest.support.dto.RequestDto;
 import org.folio.rest.support.spring.TestContextConfiguration;
 import org.folio.util.StringUtil;
+import org.hamcrest.CoreMatchers;
 import org.hamcrest.junit.MatcherAssert;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -132,23 +139,23 @@ public class RequestsApiTest extends ApiTests {
 
     JsonObject representation = createEntity(
       new RequestRequestBuilder()
-      .recall()
-      .toHoldShelf()
-      .withId(id)
-      .withRequestDate(requestDate)
-      .withItemId(itemId)
-      .withRequesterId(requesterId)
-      .withProxyId(proxyId)
-      .withRequestExpiration(requestExpirationDate)
-      .withHoldShelfExpiration(holdShelfExpirationDate)
-      .withItem(nod)
-      .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
-      .withProxy("Stuart", "Rebecca", "6059539205")
-      .withStatus(OPEN_NOT_YET_FILLED)
-      .withPosition(1)
-      .withPickupServicePointId(pickupServicePointId)
-      .withTags(new Tags().withTagList(asList("new", "important")))
-      .create(),
+        .recall()
+        .toHoldShelf()
+        .withId(id)
+        .withRequestDate(requestDate)
+        .withItemId(itemId)
+        .withRequesterId(requesterId)
+        .withProxyId(proxyId)
+        .withRequestExpiration(requestExpirationDate)
+        .withHoldShelfExpiration(holdShelfExpirationDate)
+        .withItem(nod)
+        .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
+        .withProxy("Stuart", "Rebecca", "6059539205")
+        .withStatus(OPEN_NOT_YET_FILLED)
+        .withPosition(1)
+        .withPickupServicePointId(pickupServicePointId)
+        .withTags(new Tags().withTagList(asList("new", "important")))
+        .create(),
       requestStorageUrl()).getJson();
 
     assertThat(representation.getString("id"), is(id.toString()));
@@ -166,14 +173,14 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.containsKey("patronComments"), is(false));
 
     assertThat(representation.containsKey("item"), is(true));
+
     JsonObject item = representation.getJsonObject("item");
+    assertThat(item.getString("title"), is("Nod"));
     assertThat(item.getString("barcode"), is("565578437802"));
 
-    assertThat(representation.containsKey("instance"), is(true));
-    JsonObject instance = representation.getJsonObject("instance");
-    assertThat(instance.getString("title"), is("Nod"));
-    JsonArray identifiers = instance.getJsonArray("identifiers");
+    JsonArray identifiers = item.getJsonArray("identifiers");
     assertThat(identifiers.size(), is(2));
+
     assertThat(identifiers.getJsonObject(0).getString("identifierTypeId"),
       is(isbnIdentifierId.toString()));
     assertThat(identifiers.getJsonObject(0).getString("value"),
@@ -214,6 +221,80 @@ public class RequestsApiTest extends ApiTests {
 
     assertThat(tagsRepresentation.containsKey("tagList"), is(true));
     assertThat(tagsRepresentation.getJsonArray("tagList"), contains("new", "important"));
+  }
+
+  @Test
+  @Parameters({"Title", "Item"})
+  public void canCreateTitleAndItemLevelRequestsWithHoldingsRecordIdAndItemId(String requestLevel)
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID id = UUID.randomUUID();
+    UUID itemId = UUID.randomUUID();
+    UUID holdingsRecordId = UUID.randomUUID();
+    UUID instanceId = UUID.randomUUID();
+    UUID requesterId = UUID.randomUUID();
+    DateTime requestDate = DateTime.now();
+
+    JsonObject representation = createEntity(
+      new RequestRequestBuilder()
+      .recall()
+      .toHoldShelf()
+      .withId(id)
+      .withRequestDate(requestDate)
+      .withItemId(itemId)
+      .withRequestLevel(requestLevel)
+      .withRequesterId(requesterId)
+      .withInstanceId(instanceId)
+      .withHoldingsRecordId(holdingsRecordId)
+      .create(),
+      requestStorageUrl()).getJson();
+
+    assertThat(representation.getString("id"), is(id.toString()));
+    assertThat(representation.getString("requestType"), is("Recall"));
+    assertThat(representation.getString("requestLevel"), is(requestLevel));
+    assertThat(new DateTime(representation.getString("requestDate")), is(requestDate));
+    assertThat(representation.getString("itemId"), is(itemId.toString()));
+    assertThat(representation.getString("instanceId"), is(instanceId.toString()));
+    assertThat(representation.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
+    assertThat(representation.getString("requesterId"), is(requesterId.toString()));
+    assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
+  }
+
+  @Test
+  public void canCreateATitleLevelRequestWithoutHoldingsRecordIdAndItemId()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID id = UUID.randomUUID();
+    UUID instanceId = UUID.randomUUID();
+    String requestLevel = "Title";
+    UUID requesterId = UUID.randomUUID();
+    DateTime requestDate = DateTime.now();
+
+    JsonObject representation = createEntity(
+      new RequestRequestBuilder()
+      .recall()
+      .toHoldShelf()
+      .withId(id)
+      .withRequestDate(requestDate)
+      .withRequestLevel(requestLevel)
+      .withRequesterId(requesterId)
+      .withInstanceId(instanceId)
+      .create(),
+      requestStorageUrl()).getJson();
+
+    assertThat(representation.getString("id"), is(id.toString()));
+    assertThat(representation.getString("requestType"), is("Recall"));
+    assertThat(representation.getString("requestLevel"), is(requestLevel));
+    assertThat(new DateTime(representation.getString("requestDate")), is(requestDate));
+    assertThat(representation.getString("instanceId"), is(instanceId.toString()));
+    assertThat(representation.getString("requesterId"), is(requesterId.toString()));
+    assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
   }
 
   @Test
@@ -924,6 +1005,61 @@ public class RequestsApiTest extends ApiTests {
 
     assertThat(response, isValidationResponseWhich(hasMessage(
       "Cannot have more than one request with the same position in the queue")));
+  }
+
+  @Test
+  public void cannotCreateItemLevelRequestIfItemIdAndHoldingsRecordIdAreNull()
+    throws MalformedURLException,
+    ExecutionException,
+    InterruptedException,
+    TimeoutException {
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    JsonObject request =
+      new RequestRequestBuilder()
+        .recall()
+        .toHoldShelf()
+        .create();
+    request.remove("holdingsRecordId");
+    request.remove("itemId");
+
+    client.post(requestStorageUrl(), request, TENANT_ID, ResponseHandler.json(createCompleted));
+
+    JsonObject response = createCompleted.get(5, TimeUnit.SECONDS).getJson();
+
+    assertThat(response, hasErrorWith(hasMessageContaining("ItemId in Item level request should not be null")));
+    assertThat(response, hasErrorWith(hasMessageContaining("HoldingsRecordId in Item level request should not be null")));
+  }
+
+  @Test
+  @Parameters(
+    {"holdingsRecordId", "itemId"}
+  )
+  public void cannotCreateTitleLevelRequestIfOneOfItemIdAndHoldingsRecordIdIsNotPresent(String property)
+    throws MalformedURLException,
+    ExecutionException,
+    InterruptedException,
+    TimeoutException {
+    String requestLevel = "Title";
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    JsonObject request =
+      new RequestRequestBuilder()
+        .recall()
+        .toHoldShelf()
+        .withRequestLevel(requestLevel)
+        .create();
+    request.remove(property);
+
+    client.post(requestStorageUrl(), request, TENANT_ID, ResponseHandler.json(createCompleted));
+
+    JsonObject response = createCompleted.get(5, TimeUnit.SECONDS).getJson();
+
+    assertThat(response, hasErrorWith(
+      hasMessageContaining(
+        "In Title level request, there should be either both itemId and holdingsRecordId, " +
+          "or no such fields at all")));
   }
 
   @Test
