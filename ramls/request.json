@@ -8,11 +8,6 @@
       "type": "string",
       "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
     },
-    "holdingsRecordId": {
-      "description": "UUID of the request",
-      "type": "string",
-      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
-    },
     "requestLevel": {
       "description": "Level of the request - Item or Title",
       "type": "string",
@@ -44,6 +39,11 @@
     },
     "instanceId": {
       "description": "ID of the instance being requested",
+      "type": "string",
+      "$ref": "raml-util/schemas/uuid.schema"
+    },
+    "holdingsRecordId": {
+      "description": "ID of the holdings record being requested",
       "type": "string",
       "$ref": "raml-util/schemas/uuid.schema"
     },
@@ -230,10 +230,10 @@
   },
   "additionalProperties": false,
   "required": [
-    "itemId",
     "instanceId",
     "requesterId",
     "requestType",
+    "requestLevel",
     "requestDate",
     "fulfilmentPreference"
   ]
