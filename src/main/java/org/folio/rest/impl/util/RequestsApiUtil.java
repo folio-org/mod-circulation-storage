@@ -35,10 +35,7 @@ public class RequestsApiUtil {
     List<Error> errorList = new ArrayList<>();
     errorList.add(error);
 
-    Errors errors = new Errors();
-    errors.setErrors(errorList);
-
-    return errors;
+    return new Errors().withErrors(errorList);
   }
 
   public static Errors validateRequest(Request request){
@@ -60,9 +57,7 @@ public class RequestsApiUtil {
           "Title level request must have both itemId and holdingsRecordId or neither"));
       }
 
-    Errors errors = new Errors();
-    errors.setErrors(errorList);
-    return errors;
+    return new Errors().withErrors(errorList);
   }
 
   public static boolean hasInvalidFieldCombination(
