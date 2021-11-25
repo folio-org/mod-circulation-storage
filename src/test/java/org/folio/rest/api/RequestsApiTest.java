@@ -1,6 +1,7 @@
 package org.folio.rest.api;
 
 import static java.net.HttpURLConnection.HTTP_CREATED;
+import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
@@ -133,23 +134,23 @@ public class RequestsApiTest extends ApiTests {
 
     JsonObject representation = createEntity(
       new RequestRequestBuilder()
-        .recall()
-        .toHoldShelf()
-        .withId(id)
-        .withRequestDate(requestDate)
-        .withItemId(itemId)
-        .withRequesterId(requesterId)
-        .withProxyId(proxyId)
-        .withRequestExpiration(requestExpirationDate)
-        .withHoldShelfExpiration(holdShelfExpirationDate)
-        .withItem(nod)
-        .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
-        .withProxy("Stuart", "Rebecca", "6059539205")
-        .withStatus(OPEN_NOT_YET_FILLED)
-        .withPosition(1)
-        .withPickupServicePointId(pickupServicePointId)
-        .withTags(new Tags().withTagList(asList("new", "important")))
-        .create(),
+      .recall()
+      .toHoldShelf()
+      .withId(id)
+      .withRequestDate(requestDate)
+      .withItemId(itemId)
+      .withRequesterId(requesterId)
+      .withProxyId(proxyId)
+      .withRequestExpiration(requestExpirationDate)
+      .withHoldShelfExpiration(holdShelfExpirationDate)
+      .withItem(nod)
+      .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
+      .withProxy("Stuart", "Rebecca", "6059539205")
+      .withStatus(OPEN_NOT_YET_FILLED)
+      .withPosition(1)
+      .withPickupServicePointId(pickupServicePointId)
+      .withTags(new Tags().withTagList(asList("new", "important")))
+      .create(),
       requestStorageUrl()).getJson();
 
     assertThat(representation.getString("id"), is(id.toString()));
@@ -182,25 +183,37 @@ public class RequestsApiTest extends ApiTests {
     assertThat(identifiers.getJsonObject(1).getString("identifierTypeId"),
       is(issnIdentifierId.toString()));
     assertThat(identifiers.getJsonObject(1).getString("value"), is("2193988"));
+
     assertThat(representation.containsKey("requester"), is(true));
+
     final JsonObject requesterRepresentation = representation.getJsonObject("requester");
+
     assertThat(requesterRepresentation.getString("lastName"), is("Jones"));
     assertThat(requesterRepresentation.getString("firstName"), is("Stuart"));
     assertThat(requesterRepresentation.getString("middleName"), is("Anthony"));
     assertThat(requesterRepresentation.getString("barcode"), is("6837502674015"));
+
     assertThat("has information taken from proxying user",
       representation.containsKey("proxy"), is(true));
+
     final JsonObject proxyRepresentation = representation.getJsonObject("proxy");
+
     assertThat("last name is taken from proxying user",
       proxyRepresentation.getString("lastName"), is("Stuart"));
+
     assertThat("first name is taken from proxying user",
       proxyRepresentation.getString("firstName"), is("Rebecca"));
+
     assertThat("middle name is not taken from proxying user",
       proxyRepresentation.containsKey("middleName"), is(false));
+
     assertThat("barcode is taken from proxying user",
       proxyRepresentation.getString("barcode"), is("6059539205"));
+
     assertThat(representation.containsKey("tags"), is(true));
+
     final JsonObject tagsRepresentation = representation.getJsonObject("tags");
+
     assertThat(tagsRepresentation.containsKey("tagList"), is(true));
     assertThat(tagsRepresentation.getJsonArray("tagList"), contains("new", "important"));
   }
@@ -246,6 +259,43 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
+  @Parameters({"Title", "Item"})
+  public void canPutTitleAndItemLevelRequestsWithHoldingsRecordIdAndItemId(String requestLevel)
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID id = UUID.randomUUID();
+    UUID itemId = UUID.randomUUID();
+    UUID holdingsRecordId = UUID.randomUUID();
+    UUID instanceId = UUID.randomUUID();
+    UUID requesterId = UUID.randomUUID();
+    DateTime requestDate = DateTime.now();
+
+    JsonObject request = new RequestRequestBuilder()
+      .recall()
+      .toHoldShelf()
+      .withId(id)
+      .withRequestDate(requestDate)
+      .withItemId(itemId)
+      .withRequestLevel(requestLevel)
+      .withRequesterId(requesterId)
+      .withInstanceId(instanceId)
+      .withHoldingsRecordId(holdingsRecordId).create();
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    client.put(requestStorageUrl(String.format("/%s", id)),
+      request, TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(HTTP_NO_CONTENT));
+  }
+
+  @Test
   public void canCreateATitleLevelRequestWithoutHoldingsRecordIdAndItemId()
     throws InterruptedException,
     MalformedURLException,
@@ -278,6 +328,42 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getString("instanceId"), is(instanceId.toString()));
     assertThat(representation.getString("requesterId"), is(requesterId.toString()));
     assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
+  }
+
+  @Test
+  public void canPutATitleLevelRequestWithoutHoldingsRecordIdAndItemId()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID id = UUID.randomUUID();
+    UUID instanceId = UUID.randomUUID();
+    String requestLevel = "Title";
+    UUID requesterId = UUID.randomUUID();
+    DateTime requestDate = DateTime.now();
+
+    JsonObject request = new RequestRequestBuilder()
+      .recall()
+      .toHoldShelf()
+      .withId(id)
+      .withRequestDate(requestDate)
+      .withRequestLevel(requestLevel)
+      .withRequesterId(requesterId)
+      .withInstanceId(instanceId)
+      .create();
+    request.remove("itemId");
+    request.remove("holdingsRecordId");
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    client.put(requestStorageUrl(String.format("/%s", id)),
+      request, TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(HTTP_NO_CONTENT));
   }
 
   @Test
@@ -1019,6 +1105,37 @@ public class RequestsApiTest extends ApiTests {
     {"holdingsRecordId", "itemId"}
   )
   public void cannotCreateTitleLevelRequestIfOneOfItemIdAndHoldingsRecordIdIsNotPresent(String property)
+    throws MalformedURLException,
+    ExecutionException,
+    InterruptedException,
+    TimeoutException {
+    String requestLevel = "Title";
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    JsonObject request =
+      new RequestRequestBuilder()
+        .recall()
+        .toHoldShelf()
+        .withRequestLevel(requestLevel)
+        .create();
+    request.remove(property);
+
+    client.post(requestStorageUrl(), request, TENANT_ID, ResponseHandler.json(createCompleted));
+
+    JsonObject response = createCompleted.get(5, TimeUnit.SECONDS).getJson();
+
+    assertThat(response, hasErrorWith(
+      hasMessageContaining(
+        "In Title level request, there should be either both itemId and holdingsRecordId, " +
+          "or no such fields at all")));
+  }
+
+  @Test
+  @Parameters(
+    {"holdingsRecordId", "itemId"}
+  )
+  public void cannotPutTitleLevelRequestIfOneOfItemIdAndHoldingsRecordIdIsNotPresent(String property)
     throws MalformedURLException,
     ExecutionException,
     InterruptedException,
