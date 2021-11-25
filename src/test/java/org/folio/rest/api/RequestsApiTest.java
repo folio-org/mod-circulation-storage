@@ -110,16 +110,15 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateARequest()
-    throws InterruptedException,
-    MalformedURLException,
-    TimeoutException,
-    ExecutionException {
+  public void canCreateARequest() throws InterruptedException, MalformedURLException,
+    TimeoutException, ExecutionException {
 
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
     UUID requesterId = UUID.randomUUID();
     UUID proxyId = UUID.randomUUID();
+    UUID holdingsRecordId = UUID.randomUUID();
+    UUID instanceId = UUID.randomUUID();
     UUID pickupServicePointId = UUID.randomUUID();
     DateTime requestDate = new DateTime(2017, 7, 22, 10, 22, 54, DateTimeZone.UTC);
     DateTime requestExpirationDate = new DateTime(2017, 7, 30, 0, 0, DateTimeZone.UTC);
@@ -141,9 +140,11 @@ public class RequestsApiTest extends ApiTests {
       .withItemId(itemId)
       .withRequesterId(requesterId)
       .withProxyId(proxyId)
-      .withRequestExpiration(requestExpirationDate)
-      .withHoldShelfExpiration(holdShelfExpirationDate)
+      .withRequestExpirationDate(requestExpirationDate)
+      .withHoldShelfExpirationDate(holdShelfExpirationDate)
       .withItem(nod)
+      .withHoldingsRecordId(holdingsRecordId)
+      .withInstanceId(instanceId)
       .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
       .withProxy("Stuart", "Rebecca", "6059539205")
       .withStatus(OPEN_NOT_YET_FILLED)
@@ -157,6 +158,8 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getString("requestType"), is("Recall"));
     assertThat(representation.getString("requestDate"), is(equivalentTo(requestDate)));
     assertThat(representation.getString("itemId"), is(itemId.toString()));
+    assertThat(representation.getString("instanceId"), is(instanceId.toString()));
+    assertThat(representation.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
     assertThat(representation.getString("requesterId"), is(requesterId.toString()));
     assertThat(representation.getString("proxyUserId"), is(proxyId.toString()));
     assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
@@ -216,154 +219,6 @@ public class RequestsApiTest extends ApiTests {
 
     assertThat(tagsRepresentation.containsKey("tagList"), is(true));
     assertThat(tagsRepresentation.getJsonArray("tagList"), contains("new", "important"));
-  }
-
-  @Test
-  @Parameters({"Title", "Item"})
-  public void canCreateTitleAndItemLevelRequestsWithHoldingsRecordIdAndItemId(String requestLevel)
-    throws InterruptedException,
-    MalformedURLException,
-    TimeoutException,
-    ExecutionException {
-
-    UUID id = UUID.randomUUID();
-    UUID itemId = UUID.randomUUID();
-    UUID holdingsRecordId = UUID.randomUUID();
-    UUID instanceId = UUID.randomUUID();
-    UUID requesterId = UUID.randomUUID();
-    DateTime requestDate = DateTime.now();
-
-    JsonObject representation = createEntity(
-      new RequestRequestBuilder()
-      .recall()
-      .toHoldShelf()
-      .withId(id)
-      .withRequestDate(requestDate)
-      .withItemId(itemId)
-      .withRequestLevel(requestLevel)
-      .withRequesterId(requesterId)
-      .withInstanceId(instanceId)
-      .withHoldingsRecordId(holdingsRecordId)
-      .create(),
-      requestStorageUrl()).getJson();
-
-    assertThat(representation.getString("id"), is(id.toString()));
-    assertThat(representation.getString("requestType"), is("Recall"));
-    assertThat(representation.getString("requestLevel"), is(requestLevel));
-    assertThat(new DateTime(representation.getString("requestDate")), is(requestDate));
-    assertThat(representation.getString("itemId"), is(itemId.toString()));
-    assertThat(representation.getString("instanceId"), is(instanceId.toString()));
-    assertThat(representation.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
-    assertThat(representation.getString("requesterId"), is(requesterId.toString()));
-    assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
-  }
-
-  @Test
-  @Parameters({"Title", "Item"})
-  public void canPutTitleAndItemLevelRequestsWithHoldingsRecordIdAndItemId(String requestLevel)
-    throws InterruptedException,
-    MalformedURLException,
-    TimeoutException,
-    ExecutionException {
-
-    UUID id = UUID.randomUUID();
-    UUID itemId = UUID.randomUUID();
-    UUID holdingsRecordId = UUID.randomUUID();
-    UUID instanceId = UUID.randomUUID();
-    UUID requesterId = UUID.randomUUID();
-    DateTime requestDate = DateTime.now();
-
-    JsonObject request = new RequestRequestBuilder()
-      .recall()
-      .toHoldShelf()
-      .withId(id)
-      .withRequestDate(requestDate)
-      .withItemId(itemId)
-      .withRequestLevel(requestLevel)
-      .withRequesterId(requesterId)
-      .withInstanceId(instanceId)
-      .withHoldingsRecordId(holdingsRecordId).create();
-
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
-
-    client.put(requestStorageUrl(String.format("/%s", id)),
-      request, TENANT_ID,
-      ResponseHandler.json(createCompleted));
-
-    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(response.getStatusCode(), is(HTTP_NO_CONTENT));
-  }
-
-  @Test
-  public void canCreateATitleLevelRequestWithoutHoldingsRecordIdAndItemId()
-    throws InterruptedException,
-    MalformedURLException,
-    TimeoutException,
-    ExecutionException {
-
-    UUID id = UUID.randomUUID();
-    UUID instanceId = UUID.randomUUID();
-    String requestLevel = "Title";
-    UUID requesterId = UUID.randomUUID();
-    DateTime requestDate = DateTime.now();
-
-    JsonObject entity = new RequestRequestBuilder()
-      .recall()
-      .toHoldShelf()
-      .withId(id)
-      .withRequestDate(requestDate)
-      .withRequestLevel(requestLevel)
-      .withRequesterId(requesterId)
-      .withInstanceId(instanceId)
-      .create();
-    entity.remove("itemId");
-    entity.remove("holdingsRecordId");
-    JsonObject representation = createEntity(entity, requestStorageUrl()).getJson();
-
-    assertThat(representation.getString("id"), is(id.toString()));
-    assertThat(representation.getString("requestType"), is("Recall"));
-    assertThat(representation.getString("requestLevel"), is(requestLevel));
-    assertThat(new DateTime(representation.getString("requestDate")), is(requestDate));
-    assertThat(representation.getString("instanceId"), is(instanceId.toString()));
-    assertThat(representation.getString("requesterId"), is(requesterId.toString()));
-    assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
-  }
-
-  @Test
-  public void canPutATitleLevelRequestWithoutHoldingsRecordIdAndItemId()
-    throws InterruptedException,
-    MalformedURLException,
-    TimeoutException,
-    ExecutionException {
-
-    UUID id = UUID.randomUUID();
-    UUID instanceId = UUID.randomUUID();
-    String requestLevel = "Title";
-    UUID requesterId = UUID.randomUUID();
-    DateTime requestDate = DateTime.now();
-
-    JsonObject request = new RequestRequestBuilder()
-      .recall()
-      .toHoldShelf()
-      .withId(id)
-      .withRequestDate(requestDate)
-      .withRequestLevel(requestLevel)
-      .withRequesterId(requesterId)
-      .withInstanceId(instanceId)
-      .create();
-    request.remove("itemId");
-    request.remove("holdingsRecordId");
-
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
-
-    client.put(requestStorageUrl(String.format("/%s", id)),
-      request, TENANT_ID,
-      ResponseHandler.json(createCompleted));
-
-    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(response.getStatusCode(), is(HTTP_NO_CONTENT));
   }
 
   @Test
@@ -763,8 +618,8 @@ public class RequestsApiTest extends ApiTests {
       .withItemId(itemId)
       .withRequesterId(requesterId)
       .toHoldShelf()
-      .withRequestExpiration(requestExpirationDate)
-      .withHoldShelfExpiration(holdShelfExpirationDate)
+      .withRequestExpirationDate(requestExpirationDate)
+      .withHoldShelfExpirationDate(holdShelfExpirationDate)
       .withItem("Nod", "565578437802")
       .withRequester("Smith", "Jessica", "721076398251")
       .create(),
@@ -1078,10 +933,7 @@ public class RequestsApiTest extends ApiTests {
 
   @Test
   public void cannotCreateItemLevelRequestIfItemIdAndHoldingsRecordIdAreNull()
-    throws MalformedURLException,
-    ExecutionException,
-    InterruptedException,
-    TimeoutException {
+    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     JsonObject request =
@@ -1096,8 +948,10 @@ public class RequestsApiTest extends ApiTests {
 
     JsonObject response = createCompleted.get(5, TimeUnit.SECONDS).getJson();
 
-    assertThat(response, hasErrorWith(hasMessageContaining("ItemId in Item level request should not be null")));
-    assertThat(response, hasErrorWith(hasMessageContaining("HoldingsRecordId in Item level request should not be null")));
+    assertThat(response, hasErrorWith(hasMessageContaining(
+      "Item ID in item level request should not be null")));
+    assertThat(response, hasErrorWith(hasMessageContaining(
+      "Holdings record ID in item level request should not be null")));
   }
 
   @Test
@@ -1125,10 +979,8 @@ public class RequestsApiTest extends ApiTests {
 
     JsonObject response = createCompleted.get(5, TimeUnit.SECONDS).getJson();
 
-    assertThat(response, hasErrorWith(
-      hasMessageContaining(
-        "In Title level request, there should be either both itemId and holdingsRecordId, " +
-          "or no such fields at all")));
+    assertThat(response, hasErrorWith(hasMessageContaining(
+        "Title level request must have both itemId and holdingsRecordId or neither")));
   }
 
   @Test
@@ -1136,10 +988,7 @@ public class RequestsApiTest extends ApiTests {
     {"holdingsRecordId", "itemId"}
   )
   public void cannotPutTitleLevelRequestIfOneOfItemIdAndHoldingsRecordIdIsNotPresent(String property)
-    throws MalformedURLException,
-    ExecutionException,
-    InterruptedException,
-    TimeoutException {
+    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
     String requestLevel = "Title";
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
@@ -1156,10 +1005,8 @@ public class RequestsApiTest extends ApiTests {
 
     JsonObject response = createCompleted.get(5, TimeUnit.SECONDS).getJson();
 
-    assertThat(response, hasErrorWith(
-      hasMessageContaining(
-        "In Title level request, there should be either both itemId and holdingsRecordId, " +
-          "or no such fields at all")));
+    assertThat(response, hasErrorWith(hasMessageContaining(
+        "Title level request must have both itemId and holdingsRecordId or neither")));
   }
 
   @Test
@@ -1243,8 +1090,8 @@ public class RequestsApiTest extends ApiTests {
       .withItemId(itemId)
       .withRequesterId(requesterId)
       .toHoldShelf()
-      .withRequestExpiration(requestExpirationDate)
-      .withHoldShelfExpiration(holdShelfExpirationDate)
+      .withRequestExpirationDate(requestExpirationDate)
+      .withHoldShelfExpirationDate(holdShelfExpirationDate)
       .withItem("Nod", "565578437802")
       .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
       .withPosition(3)
