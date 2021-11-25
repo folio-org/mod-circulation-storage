@@ -958,7 +958,8 @@ public class RequestsApiTest extends ApiTests {
   @Parameters(
     {"holdingsRecordId", "itemId"}
   )
-  public void cannotCreateTitleLevelRequestIfOneOfItemIdAndHoldingsRecordIdIsNotPresent(String property)
+  public void cannotCreateTitleLevelRequestIfOneOfItemIdAndHoldingsRecordIdIsNotPresent(
+    String propertyToRemove)
     throws MalformedURLException,
     ExecutionException,
     InterruptedException,
@@ -973,7 +974,7 @@ public class RequestsApiTest extends ApiTests {
         .toHoldShelf()
         .withRequestLevel(requestLevel)
         .create();
-    request.remove(property);
+    request.remove(propertyToRemove);
 
     client.post(requestStorageUrl(), request, TENANT_ID, ResponseHandler.json(createCompleted));
 
@@ -987,7 +988,8 @@ public class RequestsApiTest extends ApiTests {
   @Parameters(
     {"holdingsRecordId", "itemId"}
   )
-  public void cannotPutTitleLevelRequestIfOneOfItemIdAndHoldingsRecordIdIsNotPresent(String property)
+  public void cannotPutTitleLevelRequestIfOneOfItemIdAndHoldingsRecordIdIsNotPresent(String
+    propertyToRemove)
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
     String requestLevel = "Title";
 
@@ -999,7 +1001,7 @@ public class RequestsApiTest extends ApiTests {
         .toHoldShelf()
         .withRequestLevel(requestLevel)
         .create();
-    request.remove(property);
+    request.remove(propertyToRemove);
 
     client.post(requestStorageUrl(), request, TENANT_ID, ResponseHandler.json(createCompleted));
 
