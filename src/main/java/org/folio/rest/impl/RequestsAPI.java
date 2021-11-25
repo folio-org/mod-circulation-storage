@@ -76,8 +76,11 @@ public class RequestsAPI implements RequestStorage {
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
-    Errors errors = RequestsApiUtil.requestStructureIsValid(entity);
-    if (errors.getErrors().isEmpty()) {
+    Errors errors = RequestsApiUtil.validateRequest(entity);
+    if (!errors.getErrors().isEmpty()) {
+      asyncResultHandler.handle(succeededFuture(PostRequestStorageRequestsResponse
+        .respond422WithApplicationJson(errors)));
+    } else {
       PgUtil.post(REQUEST_TABLE, entity, okapiHeaders, vertxContext,
         PostRequestStorageRequestsResponse.class, reply -> {
           if (isSamePositionInQueueError(reply)) {
@@ -88,9 +91,6 @@ public class RequestsAPI implements RequestStorage {
           }
           asyncResultHandler.handle(reply);
         });
-    } else{
-      asyncResultHandler.handle(succeededFuture(PostRequestStorageRequestsResponse
-          .respond422WithApplicationJson(errors)));
     }
   }
 
@@ -128,9 +128,12 @@ public class RequestsAPI implements RequestStorage {
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
-    Errors errors = RequestsApiUtil.requestStructureIsValid(entity);
+    Errors errors = RequestsApiUtil.validateRequest(entity);
 
-    if(errors.getErrors().isEmpty()) {
+    if (!errors.getErrors().isEmpty()) {
+      asyncResultHandler.handle(succeededFuture(PutRequestStorageRequestsByRequestIdResponse
+        .respond422WithApplicationJson(errors)));
+    } else {
       // TODO: On insert don't return 204, we must return 201!
       MyPgUtil.putUpsert204(REQUEST_TABLE, entity, requestId, okapiHeaders, vertxContext,
         PutRequestStorageRequestsByRequestIdResponse.class, reply -> {
@@ -142,9 +145,6 @@ public class RequestsAPI implements RequestStorage {
           }
           asyncResultHandler.handle(reply);
         });
-    } else {
-      asyncResultHandler.handle(succeededFuture(PutRequestStorageRequestsByRequestIdResponse
-          .respond422WithApplicationJson(errors)));
     }
   }
 
