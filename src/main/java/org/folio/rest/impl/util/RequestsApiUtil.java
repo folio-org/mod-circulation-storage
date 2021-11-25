@@ -27,9 +27,8 @@ public class RequestsApiUtil {
   }
 
   public static Errors samePositionInQueueError(String item, Integer position) {
-    Error error = new Error();
-
-    error.withMessage("Cannot have more than one request with the same position in the queue")
+    Error error = createError(
+      "Cannot have more than one request with the same position in the queue")
       .withAdditionalProperty("itemId", item)
       .withAdditionalProperty("position", position);
 
@@ -42,31 +41,37 @@ public class RequestsApiUtil {
     return errors;
   }
 
-  public static Errors requestStructureIsValid(Request request){
+  public static Errors validateRequest(Request request){
     Request.RequestLevel requestLevel = request.getRequestLevel();
     List<Error> errorList = new ArrayList<>();
+    boolean itemIdIsNotPresent = request.getItemId() == null;
+    boolean holdingsRecordIdIsNotPresent = request.getHoldingsRecordId() == null;
     if (requestLevel == Request.RequestLevel.ITEM) {
-      if (request.getItemId() == null) {
-        Error error = new Error();
-        error.withMessage("ItemId in Item level request should not be null");
-        errorList.add(error);
+      if (itemIdIsNotPresent) {
+        errorList.add(createError("Item ID in item level request should not be null"));
       }
 
-      if (request.getHoldingsRecordId() == null){
-        Error error = new Error();
-        error.withMessage("HoldingsRecordId in Item level request should not be null");
-        errorList.add(error);
+      if (holdingsRecordIdIsNotPresent){
+        errorList.add(createError("Holdings record ID in item level request should not be null"));
       }
-    } else if (requestLevel == Request.RequestLevel.TITLE &&
-      ((request.getItemId() != null && request.getHoldingsRecordId() == null)
-      || (request.getItemId() == null && request.getHoldingsRecordId() != null))){
-        Error error = new Error();
-        error.withMessage("In Title level request, there should be either both itemId and holdingsRecordId, or no such fields at all");
-        errorList.add(error);
+    } else if (requestLevel == Request.RequestLevel.TITLE && hasInvalidFieldCombination(request,
+        holdingsRecordIdIsNotPresent, itemIdIsNotPresent)){
+        errorList.add(createError(
+          "Title level request must have both itemId and holdingsRecordId or neither"));
       }
 
     Errors errors = new Errors();
     errors.setErrors(errorList);
     return errors;
+  }
+
+  public static boolean hasInvalidFieldCombination(
+    Request request, boolean holdingsRecordIdIsNotPresent, boolean itemIdIsNotPresent){
+    return ((request.getItemId() != null && holdingsRecordIdIsNotPresent)
+      || (itemIdIsNotPresent && request.getHoldingsRecordId() != null));
+  }
+
+  private static Error createError(String message){
+    return new Error().withMessage(message);
   }
 }
