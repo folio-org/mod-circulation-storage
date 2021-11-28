@@ -78,7 +78,7 @@ public class ValidationErrorMatchers {
 
   private static String getParameter(List<JsonObject> parameters, String key) {
     return parameters.stream().filter(parameter ->
-      Objects.equals(parameter.getString("key"), key))
+        Objects.equals(parameter.getString("key"), key))
       .findFirst()
       .map(parameter -> parameter.getString("value"))
       .orElse(null);
