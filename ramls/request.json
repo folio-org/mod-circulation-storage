@@ -231,6 +231,8 @@
   "additionalProperties": false,
   "required": [
     "instanceId",
+    "itemId",
+    "holdingsRecordId",
     "requesterId",
     "requestType",
     "requestLevel",
