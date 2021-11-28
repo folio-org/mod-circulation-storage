@@ -1,7 +1,6 @@
 package org.folio.rest.api;
 
 import static java.net.HttpURLConnection.HTTP_CREATED;
-import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
@@ -36,6 +35,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -932,7 +932,9 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotCreateItemLevelRequestIfItemIdAndHoldingsRecordIdAreNull()
+  @Parameters(method = "itemIdAndHoldingsRecordStates")
+  public void cannotCreateItemLevelRequestIfItemIdAndHoldingsRecordIdAreNull(UUID itemId,
+    UUID holdingsRecordId, List<String> messages)
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
@@ -940,18 +942,15 @@ public class RequestsApiTest extends ApiTests {
       new RequestRequestBuilder()
         .recall()
         .toHoldShelf()
+        .withHoldingsRecordId(holdingsRecordId)
+        .withItemId(itemId)
         .create();
-    request.remove("holdingsRecordId");
-    request.remove("itemId");
 
     client.post(requestStorageUrl(), request, TENANT_ID, ResponseHandler.json(createCompleted));
 
     JsonObject response = createCompleted.get(5, TimeUnit.SECONDS).getJson();
 
-    assertThat(response, hasErrorWith(hasMessageContaining(
-      "Item ID in item level request should not be null")));
-    assertThat(response, hasErrorWith(hasMessageContaining(
-      "Holdings record ID in item level request should not be null")));
+    messages.forEach(message -> hasErrorWithMessage(response, message));
   }
 
   @Test
@@ -1944,6 +1943,17 @@ public class RequestsApiTest extends ApiTests {
       postResponse.getBody()), postResponse.getStatusCode(), is(HTTP_CREATED));
 
     return new IndividualResource(postResponse);
+  }
+
+  private Object[] itemIdAndHoldingsRecordStates(){
+    return new Object[] {
+       new Object[] { null, UUID.randomUUID().toString(), List.of(
+        "Item ID in item level request should not be null")}
+    };
+  }
+
+  private void hasErrorWithMessage(JsonObject response, String message){
+      assertThat(response, hasErrorWith(hasMessage(message)));
   }
 
   private List<JsonObject> findRequestsByQuery(String query, Object... params)
