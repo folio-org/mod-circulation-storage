@@ -6,6 +6,7 @@ import java.util.List;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Request;
+import org.folio.rest.jaxrs.model.Request.RequestLevel;
 
 /**
  * Utility methods for Requests resource.
@@ -32,18 +33,15 @@ public class RequestsApiUtil {
       .withAdditionalProperty("itemId", item)
       .withAdditionalProperty("position", position);
 
-    List<Error> errorList = new ArrayList<>();
-    errorList.add(error);
-
-    return new Errors().withErrors(errorList);
+    return new Errors().withErrors(List.of(error));
   }
 
   public static Errors validateRequest(Request request){
-    Request.RequestLevel requestLevel = request.getRequestLevel();
+    RequestLevel requestLevel = request.getRequestLevel();
     List<Error> errorList = new ArrayList<>();
     boolean itemIdIsNotPresent = request.getItemId() == null;
     boolean holdingsRecordIdIsNotPresent = request.getHoldingsRecordId() == null;
-    if (requestLevel == Request.RequestLevel.ITEM) {
+    if (requestLevel == RequestLevel.ITEM) {
       if (itemIdIsNotPresent) {
         errorList.add(createError("Item ID in item level request should not be null"));
       }
@@ -51,19 +49,13 @@ public class RequestsApiUtil {
       if (holdingsRecordIdIsNotPresent){
         errorList.add(createError("Holdings record ID in item level request should not be null"));
       }
-    } else if (requestLevel == Request.RequestLevel.TITLE && hasInvalidFieldCombination(request,
-        holdingsRecordIdIsNotPresent, itemIdIsNotPresent)){
+    } else if (requestLevel == RequestLevel.TITLE &&
+      (itemIdIsNotPresent ^ holdingsRecordIdIsNotPresent)){
         errorList.add(createError(
           "Title level request must have both itemId and holdingsRecordId or neither"));
       }
 
     return new Errors().withErrors(errorList);
-  }
-
-  public static boolean hasInvalidFieldCombination(
-    Request request, boolean holdingsRecordIdIsNotPresent, boolean itemIdIsNotPresent){
-    return ((request.getItemId() != null && holdingsRecordIdIsNotPresent)
-      || (itemIdIsNotPresent && request.getHoldingsRecordId() != null));
   }
 
   private static Error createError(String message){
