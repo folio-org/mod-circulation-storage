@@ -1001,7 +1001,8 @@ public class RequestsApiTest extends ApiTests {
         .create();
     request.remove(propertyToRemove);
 
-    client.put(requestStorageUrl(), request, TENANT_ID, ResponseHandler.json(createCompleted));
+    client.put(requestStorageUrl(String.format("/%s", request.getString("id"))),
+      request, TENANT_ID, ResponseHandler.json(createCompleted));
 
     JsonObject response = createCompleted.get(5, TimeUnit.SECONDS).getJson();
 
@@ -1260,7 +1261,7 @@ public class RequestsApiTest extends ApiTests {
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
-    client.put(requestStorageUrl("/"+requestId.toString()),
+    client.put(requestStorageUrl("/"+ requestId),
       j1, TENANT_ID,
       ResponseHandler.json(createCompleted));
 
@@ -1313,7 +1314,7 @@ public class RequestsApiTest extends ApiTests {
 
     CompletableFuture<JsonResponse> getRequestsCompleted2 = new CompletableFuture<>();
 
-    String query = String.format("proxyUserId<>%s", UUID.randomUUID().toString());
+    String query = String.format("proxyUserId<>%s", UUID.randomUUID());
     client.get(requestStorageUrl() + "?query=" + URLEncoder.encode(query, UTF_8),
       TENANT_ID, ResponseHandler.json(getRequestsCompleted2));
 
@@ -1449,7 +1450,7 @@ public class RequestsApiTest extends ApiTests {
       itemId,
       OPEN_NOT_YET_FILLED, OPEN_AWAITING_PICKUP,
       OPEN_IN_TRANSIT, OPEN_AWAITING_DELIVERY),
-      "UTF-8");
+      UTF_8);
 
     client.get(requestStorageUrl() + String.format("?query=%s", query),
       TENANT_ID, ResponseHandler.json(getRequestsCompleted));
@@ -1534,7 +1535,7 @@ public class RequestsApiTest extends ApiTests {
 
     CompletableFuture<JsonResponse> getRequestsCompleted = new CompletableFuture<>();
 
-    String query = URLEncoder.encode(String.format("status=\"%s\"", OPEN_NOT_YET_FILLED), "UTF-8");
+    String query = URLEncoder.encode(String.format("status=\"%s\"", OPEN_NOT_YET_FILLED), UTF_8);
 
     client.get(requestStorageUrl() + String.format("?query=%s", query),
       TENANT_ID, ResponseHandler.json(getRequestsCompleted));
@@ -1596,7 +1597,7 @@ public class RequestsApiTest extends ApiTests {
 
     String query = URLEncoder.encode(
       String.format("itemId==%s sortBy requestDate/sort.ascending", itemId),
-      "UTF-8");
+      UTF_8);
 
     client.get(requestStorageUrl() + String.format("?query=%s", query),
       TENANT_ID, ResponseHandler.json(getRequestsCompleted));
@@ -1670,7 +1671,7 @@ public class RequestsApiTest extends ApiTests {
 
     String query = URLEncoder.encode(
       String.format("itemId==%s sortBy position/sort.ascending", itemId),
-      "UTF-8");
+      UTF_8);
 
     client.get(requestStorageUrl() + String.format("?query=%s", query),
       TENANT_ID, ResponseHandler.json(getRequestsCompleted));
