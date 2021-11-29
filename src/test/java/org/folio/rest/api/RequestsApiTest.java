@@ -35,7 +35,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -932,25 +931,27 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  @Parameters(method = "itemIdAndHoldingsRecordStates")
-  public void cannotCreateItemLevelRequestIfItemIdAndHoldingsRecordIdAreNull(UUID itemId,
-    UUID holdingsRecordId, List<String> messages)
+  public void cannotCreateItemLevelRequestIfItemIdAndHoldingsRecordIdAreNull()
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
-    JsonObject request =
+      JsonObject request =
       new RequestRequestBuilder()
         .recall()
         .toHoldShelf()
-        .withHoldingsRecordId(holdingsRecordId)
-        .withItemId(itemId)
         .create();
+
+      request.remove("holdingsRecordId");
+      request.remove("itemId");
 
     client.post(requestStorageUrl(), request, TENANT_ID, ResponseHandler.json(createCompleted));
 
     JsonObject response = createCompleted.get(5, TimeUnit.SECONDS).getJson();
 
-    messages.forEach(message -> hasErrorWithMessage(response, message));
+    assertThat(response, hasErrorWith(hasMessageContaining(
+      "Item ID in item level request should not be absent")));
+    assertThat(response, hasErrorWith(hasMessageContaining(
+      "Holdings record ID in item level request should not be absent")));
   }
 
   @Test
@@ -1945,17 +1946,6 @@ public class RequestsApiTest extends ApiTests {
     return new IndividualResource(postResponse);
   }
 
-  private Object[] itemIdAndHoldingsRecordStates(){
-    return new Object[] {
-       new Object[] { null, UUID.randomUUID().toString(), List.of(
-        "Item ID in item level request should not be null")}
-    };
-  }
-
-  private void hasErrorWithMessage(JsonObject response, String message){
-      assertThat(response, hasErrorWith(hasMessage(message)));
-  }
-
   private List<JsonObject> findRequestsByQuery(String query, Object... params)
     throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 
@@ -1993,5 +1983,9 @@ public class RequestsApiTest extends ApiTests {
 
     return StorageTestSuite.storageUrl(
       CANCEL_REASON_URL + subPath);
+  }
+
+  public interface BiConsumerForTest{
+    void accept(String key);
   }
 }
