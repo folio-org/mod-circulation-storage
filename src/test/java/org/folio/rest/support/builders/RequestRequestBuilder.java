@@ -5,12 +5,16 @@ import java.util.stream.Collectors;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import lombok.AllArgsConstructor;
+import lombok.With;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import org.folio.rest.jaxrs.model.Tags;
 
+@AllArgsConstructor
+@With
 public class RequestRequestBuilder extends JsonBuilder {
   public static final String OPEN_NOT_YET_FILLED = "Open - Not yet filled";
   public static final String OPEN_AWAITING_PICKUP = "Open - Awaiting pickup";
@@ -45,6 +49,7 @@ public class RequestRequestBuilder extends JsonBuilder {
   private final UUID pickupServicePointId;
   private final Tags tags;
   private final String patronComments;
+  private final UUID holdingsRecordId;
 
   public RequestRequestBuilder() {
     this(UUID.randomUUID(),
@@ -70,65 +75,15 @@ public class RequestRequestBuilder extends JsonBuilder {
       1,
       null,
       null,
-      null);
-  }
-
-  private RequestRequestBuilder(
-    UUID id,
-    String requestType,
-    String requestLevel,
-    DateTime requestDate,
-    UUID itemId,
-    UUID instanceId,
-    UUID requesterId,
-    UUID proxyId,
-    String fulfilmentPreference,
-    UUID deliveryAddressTypeId,
-    DateTime requestExpirationDate,
-    DateTime holdShelfExpirationDate,
-    RequestItemSummary itemSummary,
-    PatronSummary requesterSummary,
-    PatronSummary proxySummary,
-    String status,
-    UUID cancellationReasonId,
-    UUID cancelledByUserId,
-    String cancellationAdditionalInformation,
-    DateTime cancelledDate,
-    Integer position,
-    UUID pickupServicePointId,
-    Tags tags,
-    String patronComments) {
-
-    this.id = id;
-    this.requestType = requestType;
-    this.requestLevel = requestLevel;
-    this.requestDate = requestDate;
-    this.itemId = itemId;
-    this.instanceId = instanceId;
-    this.requesterId = requesterId;
-    this.proxyId = proxyId;
-    this.fulfilmentPreference = fulfilmentPreference;
-    this.deliveryAddressTypeId = deliveryAddressTypeId;
-    this.requestExpirationDate = requestExpirationDate;
-    this.holdShelfExpirationDate = holdShelfExpirationDate;
-    this.itemSummary = itemSummary;
-    this.requesterSummary = requesterSummary;
-    this.proxySummary = proxySummary;
-    this.status = status;
-    this.cancellationReasonId = cancellationReasonId;
-    this.cancelledByUserId = cancelledByUserId;
-    this.cancellationAdditionalInformation = cancellationAdditionalInformation;
-    this.cancelledDate = cancelledDate;
-    this.position = position;
-    this.pickupServicePointId = pickupServicePointId;
-    this.tags = tags;
-    this.patronComments = patronComments;
+      null,
+       UUID.randomUUID());
   }
 
   public JsonObject create() {
     JsonObject request = new JsonObject();
 
     put(request, "id", this.id);
+    put(request, "holdingsRecordId", this.holdingsRecordId);
     put(request, "requestType", this.requestType);
     put(request, "requestLevel", this.requestLevel);
     put(request, "requestDate", this.requestDate);
@@ -202,68 +157,12 @@ public class RequestRequestBuilder extends JsonBuilder {
     return request;
   }
 
-  public RequestRequestBuilder withRequestType(String requestType) {
-    return new RequestRequestBuilder(
-      this.id,
-      requestType,
-      this.requestLevel,
-      this.requestDate,
-      this.itemId,
-      this.instanceId,
-      this.requesterId,
-      this.proxyId,
-      this.fulfilmentPreference,
-      this.deliveryAddressTypeId,
-      this.requestExpirationDate,
-      this.holdShelfExpirationDate,
-      this.itemSummary,
-      this.requesterSummary,
-      this.proxySummary,
-      this.status,
-      this.cancellationReasonId,
-      this.cancelledByUserId,
-      this.cancellationAdditionalInformation,
-      this.cancelledDate,
-      this.position,
-      this.pickupServicePointId,
-      this.tags,
-      this.patronComments);
-  }
-
   public RequestRequestBuilder recall() {
     return withRequestType("Recall");
   }
 
   public RequestRequestBuilder hold() {
     return withRequestType("Hold");
-  }
-
-  public RequestRequestBuilder withId(UUID newId) {
-    return new RequestRequestBuilder(
-      newId,
-      this.requestType,
-      this.requestLevel,
-      this.requestDate,
-      this.itemId,
-      this.instanceId,
-      this.requesterId,
-      this.proxyId,
-      this.fulfilmentPreference,
-      this.deliveryAddressTypeId,
-      this.requestExpirationDate,
-      this.holdShelfExpirationDate,
-      this.itemSummary,
-      this.requesterSummary,
-      this.proxySummary,
-      this.status,
-      this.cancellationReasonId,
-      this.cancelledByUserId,
-      this.cancellationAdditionalInformation,
-      this.cancelledDate,
-      this.position,
-      this.pickupServicePointId,
-      this.tags,
-      this.patronComments);
   }
 
   public RequestRequestBuilder withNoId() {
@@ -291,91 +190,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position,
       this.pickupServicePointId,
       this.tags,
-      this.patronComments);
-  }
-
-  public RequestRequestBuilder withRequestDate(DateTime requestDate) {
-    return new RequestRequestBuilder(
-      this.id,
-      this.requestType,
-      this.requestLevel,
-      requestDate,
-      this.itemId,
-      this.instanceId,
-      this.requesterId,
-      this.proxyId,
-      this.fulfilmentPreference,
-      this.deliveryAddressTypeId,
-      this.requestExpirationDate,
-      this.holdShelfExpirationDate,
-      this.itemSummary,
-      this.requesterSummary,
-      this.proxySummary,
-      this.status,
-      this.cancellationReasonId,
-      this.cancelledByUserId,
-      this.cancellationAdditionalInformation,
-      this.cancelledDate,
-      this.position,
-      this.pickupServicePointId,
-      this.tags,
-      this.patronComments);
-  }
-
-  public RequestRequestBuilder withItemId(UUID itemId) {
-    return new RequestRequestBuilder(
-      this.id,
-      this.requestType,
-      this.requestLevel,
-      this.requestDate,
-      itemId,
-      this.instanceId,
-      this.requesterId,
-      this.proxyId,
-      this.fulfilmentPreference,
-      this.deliveryAddressTypeId,
-      this.requestExpirationDate,
-      this.holdShelfExpirationDate,
-      this.itemSummary,
-      this.requesterSummary,
-      this.proxySummary,
-      this.status,
-      this.cancellationReasonId,
-      this.cancelledByUserId,
-      this.cancellationAdditionalInformation,
-      this.cancelledDate,
-      this.position,
-      this.pickupServicePointId,
-      this.tags,
-      this.patronComments);
-  }
-
-  public RequestRequestBuilder withRequesterId(UUID requesterId) {
-    return new RequestRequestBuilder(
-      this.id,
-      this.requestType,
-      this.requestLevel,
-      this.requestDate,
-      this.itemId,
-      this.instanceId,
-      requesterId,
-      this.proxyId,
-      this.fulfilmentPreference,
-      this.deliveryAddressTypeId,
-      this.requestExpirationDate,
-      this.holdShelfExpirationDate,
-      this.itemSummary,
-      this.requesterSummary,
-      this.proxySummary,
-      this.status,
-      this.cancellationReasonId,
-      this.cancelledByUserId,
-      this.cancellationAdditionalInformation,
-      this.cancelledDate,
-      this.position,
-      this.pickupServicePointId,
-      this.tags,
-      this.patronComments);
+      this.patronComments,
+      this.holdingsRecordId);
   }
 
   public RequestRequestBuilder toHoldShelf() {
@@ -384,91 +200,7 @@ public class RequestRequestBuilder extends JsonBuilder {
 
   public RequestRequestBuilder deliverToAddress(UUID addressTypeId) {
     return withFulfilmentPreference("Delivery")
-      .withDeliveryAddressType(addressTypeId);
-  }
-
-  public RequestRequestBuilder withFulfilmentPreference(String fulfilmentPreference) {
-    return new RequestRequestBuilder(
-      this.id,
-      this.requestType,
-      this.requestLevel,
-      this.requestDate,
-      this.itemId,
-      this.instanceId,
-      this.requesterId,
-      this.proxyId,
-      fulfilmentPreference,
-      this.deliveryAddressTypeId,
-      this.requestExpirationDate,
-      this.holdShelfExpirationDate,
-      this.itemSummary,
-      this.requesterSummary,
-      this.proxySummary,
-      this.status,
-      this.cancellationReasonId,
-      this.cancelledByUserId,
-      this.cancellationAdditionalInformation,
-      this.cancelledDate,
-      this.position,
-      this.pickupServicePointId,
-      this.tags,
-      this.patronComments);
-  }
-
-  public RequestRequestBuilder withRequestExpiration(DateTime requestExpiration) {
-    return new RequestRequestBuilder(
-      this.id,
-      this.requestType,
-      this.requestLevel,
-      this.requestDate,
-      this.itemId,
-      this.instanceId,
-      this.requesterId,
-      this.proxyId,
-      this.fulfilmentPreference,
-      this.deliveryAddressTypeId,
-      requestExpiration,
-      this.holdShelfExpirationDate,
-      this.itemSummary,
-      this.requesterSummary,
-      this.proxySummary,
-      this.status,
-      this.cancellationReasonId,
-      this.cancelledByUserId,
-      this.cancellationAdditionalInformation,
-      this.cancelledDate,
-      this.position,
-      this.pickupServicePointId,
-      this.tags,
-      this.patronComments);
-  }
-
-  public RequestRequestBuilder withHoldShelfExpiration(DateTime holdShelfExpiration) {
-    return new RequestRequestBuilder(
-      this.id,
-      this.requestType,
-      this.requestLevel,
-      this.requestDate,
-      this.itemId,
-      this.instanceId,
-      this.requesterId,
-      this.proxyId,
-      this.fulfilmentPreference,
-      this.deliveryAddressTypeId,
-      this.requestExpirationDate,
-      holdShelfExpiration,
-      this.itemSummary,
-      this.requesterSummary,
-      this.proxySummary,
-      this.status,
-      this.cancellationReasonId,
-      this.cancelledByUserId,
-      this.cancellationAdditionalInformation,
-      this.cancelledDate,
-      this.position,
-      this.pickupServicePointId,
-      this.tags,
-      this.patronComments);
+      .withDeliveryAddressTypeId(addressTypeId);
   }
 
   public RequestRequestBuilder withItem(String title, String barcode) {
@@ -500,7 +232,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position,
       this.pickupServicePointId,
       this.tags,
-      this.patronComments);
+      this.patronComments,
+      this.holdingsRecordId);
   }
 
   public RequestRequestBuilder withRequester(
@@ -533,7 +266,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position,
       this.pickupServicePointId,
       this.tags,
-      this.patronComments);
+      this.patronComments,
+      this.holdingsRecordId);
   }
 
   public RequestRequestBuilder withRequester(
@@ -565,7 +299,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position,
       this.pickupServicePointId,
       this.tags,
-      this.patronComments);
+      this.patronComments,
+      this.holdingsRecordId);
   }
 
   public RequestRequestBuilder withProxy(
@@ -597,321 +332,12 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.position,
       this.pickupServicePointId,
       this.tags,
-      this.patronComments);
+      this.patronComments,
+      this.holdingsRecordId);
   }
-
-  public RequestRequestBuilder withDeliveryAddressType(UUID deliverAddressType) {
-    return new RequestRequestBuilder(
-      this.id,
-      this.requestType,
-      this.requestLevel,
-      this.requestDate,
-      this.itemId,
-      this.instanceId,
-      this.requesterId,
-      this.proxyId,
-      this.fulfilmentPreference,
-      deliverAddressType,
-      this.requestExpirationDate,
-      this.holdShelfExpirationDate,
-      this.itemSummary,
-      this.requesterSummary,
-      this.proxySummary,
-      this.status,
-      this.cancellationReasonId,
-      this.cancelledByUserId,
-      this.cancellationAdditionalInformation,
-      this.cancelledDate,
-      this.position,
-      this.pickupServicePointId,
-      this.tags,
-      this.patronComments);
-  }
-
-  public RequestRequestBuilder withStatus(String status) {
-    return new RequestRequestBuilder(
-      this.id,
-      this.requestType,
-      this.requestLevel,
-      this.requestDate,
-      this.itemId,
-      this.instanceId,
-      this.requesterId,
-      this.proxyId,
-      this.fulfilmentPreference,
-      this.deliveryAddressTypeId,
-      this.requestExpirationDate,
-      this.holdShelfExpirationDate,
-      this.itemSummary,
-      this.requesterSummary,
-      this.proxySummary,
-      status,
-      this.cancellationReasonId,
-      this.cancelledByUserId,
-      this.cancellationAdditionalInformation,
-      this.cancelledDate,
-      this.position,
-      this.pickupServicePointId,
-      this.tags,
-      this.patronComments);
-  }
-
-  public RequestRequestBuilder withProxyId(UUID proxyId) {
-    return new RequestRequestBuilder(
-      this.id,
-      this.requestType,
-      this.requestLevel,
-      this.requestDate,
-      this.itemId,
-      this.instanceId,
-      this.requesterId,
-      proxyId,
-      this.fulfilmentPreference,
-      this.deliveryAddressTypeId,
-      this.requestExpirationDate,
-      this.holdShelfExpirationDate,
-      this.itemSummary,
-      this.requesterSummary,
-      this.proxySummary,
-      this.status,
-      this.cancellationReasonId,
-      this.cancelledByUserId,
-      this.cancellationAdditionalInformation,
-      this.cancelledDate,
-      this.position,
-      this.pickupServicePointId,
-      this.tags,
-      this.patronComments);
-  }
-
-  public RequestRequestBuilder withPosition(Integer newPosition) {
-    return new RequestRequestBuilder(
-      this.id,
-      this.requestType,
-      this.requestLevel,
-      this.requestDate,
-      this.itemId,
-      this.instanceId,
-      this.requesterId,
-      this.proxyId,
-      this.fulfilmentPreference,
-      this.deliveryAddressTypeId,
-      this.requestExpirationDate,
-      this.holdShelfExpirationDate,
-      this.itemSummary,
-      this.requesterSummary,
-      this.proxySummary,
-      this.status,
-      this.cancellationReasonId,
-      this.cancelledByUserId,
-      this.cancellationAdditionalInformation,
-      this.cancelledDate,
-      newPosition,
-      this.pickupServicePointId,
-      this.tags,
-      this.patronComments);
-  }
-
   public RequestRequestBuilder withNoPosition() {
     return withPosition(null);
   }
-
-  public RequestRequestBuilder withCancellationReasonId(UUID cancellationReasonId) {
-    return new RequestRequestBuilder(
-      this.id,
-      this.requestType,
-      this.requestLevel,
-      this.requestDate,
-      this.itemId,
-      this.instanceId,
-      this.requesterId,
-      this.proxyId,
-      this.fulfilmentPreference,
-      this.deliveryAddressTypeId,
-      this.requestExpirationDate,
-      this.holdShelfExpirationDate,
-      this.itemSummary,
-      this.requesterSummary,
-      this.proxySummary,
-      this.status,
-      cancellationReasonId,
-      this.cancelledByUserId,
-      this.cancellationAdditionalInformation,
-      this.cancelledDate,
-      this.position,
-      this.pickupServicePointId,
-      this.tags,
-      this.patronComments);
-  }
-
-  public RequestRequestBuilder withCancelledByUserId(UUID cancelledByUserId) {
-    return new RequestRequestBuilder(
-      this.id,
-      this.requestType,
-      this.requestLevel,
-      this.requestDate,
-      this.itemId,
-      this.instanceId,
-      this.requesterId,
-      this.proxyId,
-      this.fulfilmentPreference,
-      this.deliveryAddressTypeId,
-      this.requestExpirationDate,
-      this.holdShelfExpirationDate,
-      this.itemSummary,
-      this.requesterSummary,
-      this.proxySummary,
-      this.status,
-      this.cancellationReasonId,
-      cancelledByUserId,
-      this.cancellationAdditionalInformation,
-      this.cancelledDate,
-      this.position,
-      this.pickupServicePointId,
-      this.tags,
-      this.patronComments);
-  }
-
-  public RequestRequestBuilder withCancellationAdditionalInformation(String cancellationAdditionalInformation) {
-    return new RequestRequestBuilder(
-      this.id,
-      this.requestType,
-      this.requestLevel,
-      this.requestDate,
-      this.itemId,
-      this.instanceId,
-      this.requesterId,
-      this.proxyId,
-      this.fulfilmentPreference,
-      this.deliveryAddressTypeId,
-      this.requestExpirationDate,
-      this.holdShelfExpirationDate,
-      this.itemSummary,
-      this.requesterSummary,
-      this.proxySummary,
-      this.status,
-      this.cancellationReasonId,
-      this.cancelledByUserId,
-      cancellationAdditionalInformation,
-      this.cancelledDate,
-      this.position,
-      this.pickupServicePointId,
-      this.tags,
-      this.patronComments);
-  }
-
-  public RequestRequestBuilder withCancelledDate(DateTime cancelledDate) {
-    return new RequestRequestBuilder(
-      this.id,
-      this.requestType,
-      this.requestLevel,
-      this.requestDate,
-      this.itemId,
-      this.instanceId,
-      this.requesterId,
-      this.proxyId,
-      this.fulfilmentPreference,
-      this.deliveryAddressTypeId,
-      this.requestExpirationDate,
-      this.holdShelfExpirationDate,
-      this.itemSummary,
-      this.requesterSummary,
-      this.proxySummary,
-      this.status,
-      this.cancellationReasonId,
-      this.cancelledByUserId,
-      this.cancellationAdditionalInformation,
-      cancelledDate,
-      this.position,
-      this.pickupServicePointId,
-      this.tags,
-      this.patronComments);
-  }
-
-  public RequestRequestBuilder withPickupServicePointId(UUID pickupServicePointId) {
-    return new RequestRequestBuilder(
-      this.id,
-      this.requestType,
-      this.requestLevel,
-      this.requestDate,
-      this.itemId,
-      this.instanceId,
-      this.requesterId,
-      this.proxyId,
-      this.fulfilmentPreference,
-      this.deliveryAddressTypeId,
-      this.requestExpirationDate,
-      this.holdShelfExpirationDate,
-      this.itemSummary,
-      this.requesterSummary,
-      this.proxySummary,
-      this.status,
-      this.cancellationReasonId,
-      this.cancelledByUserId,
-      this.cancellationAdditionalInformation,
-      this.cancelledDate,
-      this.position,
-      pickupServicePointId,
-      this.tags,
-      this.patronComments);
-  }
-
-  public RequestRequestBuilder withTags(Tags tags) {
-    return new RequestRequestBuilder(
-      this.id,
-      this.requestType,
-      this.requestLevel,
-      this.requestDate,
-      this.itemId,
-      this.instanceId,
-      this.requesterId,
-      this.proxyId,
-      this.fulfilmentPreference,
-      this.deliveryAddressTypeId,
-      this.requestExpirationDate,
-      this.holdShelfExpirationDate,
-      this.itemSummary,
-      this.requesterSummary,
-      this.proxySummary,
-      this.status,
-      this.cancellationReasonId,
-      this.cancelledByUserId,
-      this.cancellationAdditionalInformation,
-      this.cancelledDate,
-      this.position,
-      this.pickupServicePointId,
-      tags,
-      this.patronComments);
-  }
-
-  public RequestRequestBuilder withPatronComments(String patronComments) {
-    return new RequestRequestBuilder(
-      this.id,
-      this.requestType,
-      this.requestLevel,
-      this.requestDate,
-      this.itemId,
-      this.instanceId,
-      this.requesterId,
-      this.proxyId,
-      this.fulfilmentPreference,
-      this.deliveryAddressTypeId,
-      this.requestExpirationDate,
-      this.holdShelfExpirationDate,
-      this.itemSummary,
-      this.requesterSummary,
-      this.proxySummary,
-      this.status,
-      this.cancellationReasonId,
-      this.cancelledByUserId,
-      this.cancellationAdditionalInformation,
-      this.cancelledDate,
-      this.position,
-      this.pickupServicePointId,
-      this.tags,
-      patronComments);
-  }
-
   private class PatronSummary {
     final String lastName;
     final String firstName;
