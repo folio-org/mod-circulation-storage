@@ -109,7 +109,8 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateARequest() throws InterruptedException, MalformedURLException,
+  @Parameters({"Item", "Title"})
+  public void canCreateARequest(String requestLevel) throws InterruptedException, MalformedURLException,
     TimeoutException, ExecutionException {
 
     UUID id = UUID.randomUUID();
@@ -138,6 +139,7 @@ public class RequestsApiTest extends ApiTests {
       .withRequestDate(requestDate)
       .withItemId(itemId)
       .withRequesterId(requesterId)
+      .withRequestLevel(requestLevel)
       .withProxyId(proxyId)
       .withRequestExpirationDate(requestExpirationDate)
       .withHoldShelfExpirationDate(holdShelfExpirationDate)
@@ -928,87 +930,6 @@ public class RequestsApiTest extends ApiTests {
 
     assertThat(response, isValidationResponseWhich(hasMessage(
       "Cannot have more than one request with the same position in the queue")));
-  }
-
-  @Test
-  public void cannotCreateItemLevelRequestIfItemIdAndHoldingsRecordIdAreNull()
-    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
-
-      JsonObject request =
-      new RequestRequestBuilder()
-        .recall()
-        .toHoldShelf()
-        .create();
-
-      request.remove("holdingsRecordId");
-      request.remove("itemId");
-
-    client.post(requestStorageUrl(), request, TENANT_ID, ResponseHandler.json(createCompleted));
-
-    JsonObject response = createCompleted.get(5, TimeUnit.SECONDS).getJson();
-
-    assertThat(response, hasErrorWith(hasMessageContaining(
-      "Item ID in item level request should not be absent")));
-    assertThat(response, hasErrorWith(hasMessageContaining(
-      "Holdings record ID in item level request should not be absent")));
-  }
-
-  @Test
-  @Parameters(
-    {"holdingsRecordId", "itemId"}
-  )
-  public void cannotCreateTitleLevelRequestIfOneOfItemIdAndHoldingsRecordIdIsNotPresent(
-    String propertyToRemove)
-    throws MalformedURLException,
-    ExecutionException,
-    InterruptedException,
-    TimeoutException {
-    String requestLevel = "Title";
-
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
-
-    JsonObject request =
-      new RequestRequestBuilder()
-        .recall()
-        .toHoldShelf()
-        .withRequestLevel(requestLevel)
-        .create();
-    request.remove(propertyToRemove);
-
-    client.post(requestStorageUrl(), request, TENANT_ID, ResponseHandler.json(createCompleted));
-
-    JsonObject response = createCompleted.get(5, TimeUnit.SECONDS).getJson();
-
-    assertThat(response, hasErrorWith(hasMessageContaining(
-        "Title level request must have both itemId and holdingsRecordId or neither")));
-  }
-
-  @Test
-  @Parameters(
-    {"holdingsRecordId", "itemId"}
-  )
-  public void cannotPutTitleLevelRequestIfOneOfItemIdAndHoldingsRecordIdIsNotPresent(String
-    propertyToRemove)
-    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
-    String requestLevel = "Title";
-
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
-
-    JsonObject request =
-      new RequestRequestBuilder()
-        .recall()
-        .toHoldShelf()
-        .withRequestLevel(requestLevel)
-        .create();
-    request.remove(propertyToRemove);
-
-    client.post(requestStorageUrl(), request, TENANT_ID, ResponseHandler.json(createCompleted));
-
-    JsonObject response = createCompleted.get(5, TimeUnit.SECONDS).getJson();
-
-    assertThat(response, hasErrorWith(hasMessageContaining(
-        "Title level request must have both itemId and holdingsRecordId or neither")));
   }
 
   @Test
