@@ -957,9 +957,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  @Parameters(
-    {"holdingsRecordId", "itemId"}
-  )
+  @Parameters({"holdingsRecordId", "itemId"})
   public void cannotCreateTitleLevelRequestIfOneOfItemIdAndHoldingsRecordIdIsNotPresent(
     String propertyToRemove)
     throws MalformedURLException,
@@ -987,9 +985,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  @Parameters(
-    {"holdingsRecordId", "itemId"}
-  )
+  @Parameters({"holdingsRecordId", "itemId"})
   public void cannotPutTitleLevelRequestIfOneOfItemIdAndHoldingsRecordIdIsNotPresent(String
     propertyToRemove)
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
@@ -1005,7 +1001,7 @@ public class RequestsApiTest extends ApiTests {
         .create();
     request.remove(propertyToRemove);
 
-    client.post(requestStorageUrl(), request, TENANT_ID, ResponseHandler.json(createCompleted));
+    client.put(requestStorageUrl(), request, TENANT_ID, ResponseHandler.json(createCompleted));
 
     JsonObject response = createCompleted.get(5, TimeUnit.SECONDS).getJson();
 

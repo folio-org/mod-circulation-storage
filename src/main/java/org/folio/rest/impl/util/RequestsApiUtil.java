@@ -36,26 +36,33 @@ public class RequestsApiUtil {
     return new Errors().withErrors(List.of(error));
   }
 
-  public static Errors validateRequest(Request request){
+  public static Errors validateRequest(Request request) {
     RequestLevel requestLevel = request.getRequestLevel();
     List<Error> errorList = new ArrayList<>();
-    boolean itemIdIsNotPresent = request.getItemId() == null;
-    boolean holdingsRecordIdIsNotPresent = request.getHoldingsRecordId() == null;
+    boolean isItemIdAbsent = request.getItemId() == null;
+    boolean isHoldingsRecordIdAbsent = request.getHoldingsRecordId() == null;
     if (requestLevel == RequestLevel.ITEM) {
-      if (itemIdIsNotPresent) {
+      if (isItemIdAbsent) {
         errorList.add(createError("Item ID in item level request should not be absent"));
       }
 
-      if (holdingsRecordIdIsNotPresent){
+      if (isHoldingsRecordIdAbsent){
         errorList.add(createError("Holdings record ID in item level request should not be absent"));
       }
-    } else if (requestLevel == RequestLevel.TITLE &&
-      (itemIdIsNotPresent ^ holdingsRecordIdIsNotPresent)){
+    } else if (requestLevel == RequestLevel.TITLE && isWrongFieldsCombination(isItemIdAbsent,
+      isHoldingsRecordIdAbsent)) {
+
         errorList.add(createError(
           "Title level request must have both itemId and holdingsRecordId or neither"));
       }
 
     return new Errors().withErrors(errorList);
+  }
+
+  private static boolean isWrongFieldsCombination(boolean isItemIdAbsent,
+    boolean isHoldingsRecordIdAbsent) {
+
+    return isItemIdAbsent ^ isHoldingsRecordIdAbsent;
   }
 
   private static Error createError(String message){
