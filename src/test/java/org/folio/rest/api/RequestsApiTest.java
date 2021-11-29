@@ -109,7 +109,8 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateARequest() throws InterruptedException, MalformedURLException,
+  @Parameters({"Title", "Item"})
+  public void canCreateARequest(String requestLevel) throws InterruptedException, MalformedURLException,
     TimeoutException, ExecutionException {
 
     UUID id = UUID.randomUUID();
@@ -141,6 +142,7 @@ public class RequestsApiTest extends ApiTests {
       .withProxyId(proxyId)
       .withRequestExpirationDate(requestExpirationDate)
       .withHoldShelfExpirationDate(holdShelfExpirationDate)
+      .withRequestLevel(requestLevel)
       .withItem(nod)
       .withHoldingsRecordId(holdingsRecordId)
       .withInstanceId(instanceId)
