@@ -43,11 +43,11 @@ public class RequestsApiUtil {
     boolean holdingsRecordIdIsNotPresent = request.getHoldingsRecordId() == null;
     if (requestLevel == RequestLevel.ITEM) {
       if (itemIdIsNotPresent) {
-        errorList.add(createError("Item ID in item level request should not be null"));
+        errorList.add(createError("Item ID in item level request should not be absent"));
       }
 
       if (holdingsRecordIdIsNotPresent){
-        errorList.add(createError("Holdings record ID in item level request should not be null"));
+        errorList.add(createError("Holdings record ID in item level request should not be absent"));
       }
     } else if (requestLevel == RequestLevel.TITLE &&
       (itemIdIsNotPresent ^ holdingsRecordIdIsNotPresent)){
