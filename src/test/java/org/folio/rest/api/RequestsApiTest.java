@@ -1984,8 +1984,4 @@ public class RequestsApiTest extends ApiTests {
     return StorageTestSuite.storageUrl(
       CANCEL_REASON_URL + subPath);
   }
-
-  public interface BiConsumerForTest{
-    void accept(String key);
-  }
 }
