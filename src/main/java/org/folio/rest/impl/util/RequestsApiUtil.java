@@ -56,6 +56,7 @@ public class RequestsApiUtil {
           "Title level request must have both itemId and holdingsRecordId or neither"));
       }
 
+    System.out.println(errorList);
     return new Errors().withErrors(errorList);
   }
 
