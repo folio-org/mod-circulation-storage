@@ -11,7 +11,7 @@
     "requestLevel": {
       "description": "Level of the request - Item or Title",
       "type": "string",
-      "enum": ["Item", "Title"]
+      "enum": ["Item"]
     },
     "requestType": {
       "description": "Whether the item should be held upon return, recalled or paged for",

@@ -16,9 +16,7 @@ import static org.folio.rest.support.clients.CqlQuery.exactMatch;
 import static org.folio.rest.support.clients.CqlQuery.fromTemplate;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.equivalentTo;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
-import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasErrorWith;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
-import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessageContaining;
 import static org.folio.rest.support.matchers.ValidationResponseMatchers.isValidationResponseWhich;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -109,8 +107,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  @Parameters({"Title", "Item"})
-  public void canCreateARequest(String requestLevel) throws InterruptedException, MalformedURLException,
+  public void canCreateARequest() throws InterruptedException, MalformedURLException,
     TimeoutException, ExecutionException {
 
     UUID id = UUID.randomUUID();
@@ -142,7 +139,6 @@ public class RequestsApiTest extends ApiTests {
       .withProxyId(proxyId)
       .withRequestExpirationDate(requestExpirationDate)
       .withHoldShelfExpirationDate(holdShelfExpirationDate)
-      .withRequestLevel(requestLevel)
       .withItem(nod)
       .withHoldingsRecordId(holdingsRecordId)
       .withInstanceId(instanceId)
