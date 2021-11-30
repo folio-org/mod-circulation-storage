@@ -109,7 +109,6 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  @Parameters({"Title", "Item"})
   public void canCreateARequest(String requestLevel) throws InterruptedException, MalformedURLException,
     TimeoutException, ExecutionException {
 
