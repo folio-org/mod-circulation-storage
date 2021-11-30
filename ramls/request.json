@@ -230,10 +230,12 @@
   },
   "additionalProperties": false,
   "required": [
-    "itemId",
     "instanceId",
+    "itemId",
+    "holdingsRecordId",
     "requesterId",
     "requestType",
+    "requestLevel",
     "requestDate",
     "fulfilmentPreference"
   ]

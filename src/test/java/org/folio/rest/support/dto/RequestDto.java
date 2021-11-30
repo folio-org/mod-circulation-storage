@@ -22,6 +22,7 @@ public class RequestDto {
   String fulfilmentPreference = "Hold Shelf";
   String requesterId;
   String itemId;
+  String holdingsRecordId;
   String instanceId;
   String requestType;
   String requestLevel;
