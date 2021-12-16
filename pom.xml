@@ -172,7 +172,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
     <vertx-version>4.1.0.CR1</vertx-version>
-    <raml-module-builder-version>33.0.0</raml-module-builder-version>
+    <raml-module-builder-version>33.0.4</raml-module-builder-version>
     <spring.version>5.2.7.RELEASE</spring.version>
     <argLine />
   </properties>
