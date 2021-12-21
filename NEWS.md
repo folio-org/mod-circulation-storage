@@ -1,3 +1,7 @@
+## 13.0.1 2021-12-21
+
+* Upgrade to RMB 33.0.4 and Log4j 2.16.0 (CIRCSTORE-314)
+
 ## 13.0.0 2021-06-11
 
 * Includes migration for missing staff slips (CIRCSTORE-273)
