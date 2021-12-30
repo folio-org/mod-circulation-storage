@@ -76,8 +76,7 @@ public class RequestsAPI implements RequestStorage {
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
-
-    PgUtil.post(REQUEST_TABLE, entity, okapiHeaders, vertxContext,
+      PgUtil.post(REQUEST_TABLE, entity, okapiHeaders, vertxContext,
         PostRequestStorageRequestsResponse.class, reply -> {
           if (isSamePositionInQueueError(reply)) {
             asyncResultHandler.handle(succeededFuture(
@@ -123,9 +122,8 @@ public class RequestsAPI implements RequestStorage {
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
-
-    // TODO: On insert don't return 204, we must return 201!
-    MyPgUtil.putUpsert204(REQUEST_TABLE, entity, requestId, okapiHeaders, vertxContext,
+      // TODO: On insert don't return 204, we must return 201!
+      MyPgUtil.putUpsert204(REQUEST_TABLE, entity, requestId, okapiHeaders, vertxContext,
         PutRequestStorageRequestsByRequestIdResponse.class, reply -> {
           if (isSamePositionInQueueErrorOnUpsert(reply)) {
             asyncResultHandler.handle(succeededFuture(

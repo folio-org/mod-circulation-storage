@@ -8,6 +8,11 @@
       "type": "string",
       "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
     },
+    "requestLevel": {
+      "description": "Level of the request - Item or Title",
+      "type": "string",
+      "enum": ["Item"]
+    },
     "requestType": {
       "description": "Whether the item should be held upon return, recalled or paged for",
       "type": "string",
@@ -31,6 +36,16 @@
       "description": "ID of the user representing a proxy for the patron",
       "type": "string",
       "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+    },
+    "instanceId": {
+      "description": "ID of the instance being requested",
+      "type": "string",
+      "$ref": "raml-util/schemas/uuid.schema"
+    },
+    "holdingsRecordId": {
+      "description": "ID of the holdings record being requested",
+      "type": "string",
+      "$ref": "raml-util/schemas/uuid.schema"
     },
     "itemId": {
       "description": "ID of the item being requested",
@@ -69,19 +84,15 @@
       "format": "date-time"
     },
     "position": {
-      "description": "position of the request in a per-item request queue",
+      "description": "Position of the request in the unified request queue",
       "type": "integer"
     },
-    "item": {
-      "description": "Copy of some item metadata (used for searching and sorting)",
+    "instance": {
+      "description": "Copy of some instance metadata (used for searching and sorting)",
       "type": "object",
       "properties": {
         "title": {
           "description": "title of the item",
-          "type": "string"
-        },
-        "barcode": {
-          "description": "barcode of the item",
           "type": "string"
         },
         "identifiers": {
@@ -107,6 +118,16 @@
               "identifierTypeId"
             ]
           }
+        }
+      }
+    },
+    "item": {
+      "description": "Copy of some item metadata (used for searching and sorting)",
+      "type": "object",
+      "properties": {
+        "barcode": {
+          "description": "barcode of the item",
+          "type": "string"
         }
       },
       "additionalProperties": false
@@ -209,9 +230,12 @@
   },
   "additionalProperties": false,
   "required": [
+    "instanceId",
     "itemId",
+    "holdingsRecordId",
     "requesterId",
     "requestType",
+    "requestLevel",
     "requestDate",
     "fulfilmentPreference"
   ]

@@ -18,7 +18,6 @@ import static org.folio.rest.support.matchers.TextDateTimeMatcher.equivalentTo;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
 import static org.folio.rest.support.matchers.ValidationResponseMatchers.isValidationResponseWhich;
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
@@ -108,16 +107,15 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateARequest()
-    throws InterruptedException,
-    MalformedURLException,
-    TimeoutException,
-    ExecutionException {
+  public void canCreateARequest() throws InterruptedException, MalformedURLException,
+    TimeoutException, ExecutionException {
 
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
     UUID requesterId = UUID.randomUUID();
     UUID proxyId = UUID.randomUUID();
+    UUID holdingsRecordId = UUID.randomUUID();
+    UUID instanceId = UUID.randomUUID();
     UUID pickupServicePointId = UUID.randomUUID();
     DateTime requestDate = new DateTime(2017, 7, 22, 10, 22, 54, DateTimeZone.UTC);
     DateTime requestExpirationDate = new DateTime(2017, 7, 30, 0, 0, DateTimeZone.UTC);
@@ -139,9 +137,11 @@ public class RequestsApiTest extends ApiTests {
       .withItemId(itemId)
       .withRequesterId(requesterId)
       .withProxyId(proxyId)
-      .withRequestExpiration(requestExpirationDate)
-      .withHoldShelfExpiration(holdShelfExpirationDate)
+      .withRequestExpirationDate(requestExpirationDate)
+      .withHoldShelfExpirationDate(holdShelfExpirationDate)
       .withItem(nod)
+      .withHoldingsRecordId(holdingsRecordId)
+      .withInstanceId(instanceId)
       .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
       .withProxy("Stuart", "Rebecca", "6059539205")
       .withStatus(OPEN_NOT_YET_FILLED)
@@ -155,6 +155,8 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getString("requestType"), is("Recall"));
     assertThat(representation.getString("requestDate"), is(equivalentTo(requestDate)));
     assertThat(representation.getString("itemId"), is(itemId.toString()));
+    assertThat(representation.getString("instanceId"), is(instanceId.toString()));
+    assertThat(representation.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
     assertThat(representation.getString("requesterId"), is(requesterId.toString()));
     assertThat(representation.getString("proxyUserId"), is(proxyId.toString()));
     assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
@@ -166,14 +168,14 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.containsKey("patronComments"), is(false));
 
     assertThat(representation.containsKey("item"), is(true));
-
     JsonObject item = representation.getJsonObject("item");
-    assertThat(item.getString("title"), is("Nod"));
     assertThat(item.getString("barcode"), is("565578437802"));
 
-    JsonArray identifiers = item.getJsonArray("identifiers");
+    assertThat(representation.containsKey("instance"), is(true));
+    JsonObject instance = representation.getJsonObject("instance");
+    assertThat(instance.getString("title"), is("Nod"));
+    JsonArray identifiers = instance.getJsonArray("identifiers");
     assertThat(identifiers.size(), is(2));
-
     assertThat(identifiers.getJsonObject(0).getString("identifierTypeId"),
       is(isbnIdentifierId.toString()));
     assertThat(identifiers.getJsonObject(0).getString("value"),
@@ -613,8 +615,8 @@ public class RequestsApiTest extends ApiTests {
       .withItemId(itemId)
       .withRequesterId(requesterId)
       .toHoldShelf()
-      .withRequestExpiration(requestExpirationDate)
-      .withHoldShelfExpiration(holdShelfExpirationDate)
+      .withRequestExpirationDate(requestExpirationDate)
+      .withHoldShelfExpirationDate(holdShelfExpirationDate)
       .withItem("Nod", "565578437802")
       .withRequester("Smith", "Jessica", "721076398251")
       .create(),
@@ -632,8 +634,10 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getString("holdShelfExpirationDate"), is(equivalentTo(holdShelfExpirationDate)));
 
     assertThat(representation.containsKey("item"), is(true));
-    assertThat(representation.getJsonObject("item").getString("title"), is("Nod"));
     assertThat(representation.getJsonObject("item").getString("barcode"), is("565578437802"));
+
+    assertThat(representation.containsKey("instance"), is(true));
+    assertThat(representation.getJsonObject("instance").getString("title"), is("Nod"));
 
     assertThat(representation.containsKey("requester"), is(true));
     assertThat(representation.getJsonObject("requester").getString("lastName"), is("Smith"));
@@ -751,8 +755,9 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getInteger("position"), is(2));
 
     assertThat(representation.containsKey("item"), is(true));
-    assertThat(representation.getJsonObject("item").getString("title"), is("Nod"));
     assertThat(representation.getJsonObject("item").getString("barcode"), is("565578437802"));
+    assertThat(representation.containsKey("instance"), is(true));
+    assertThat(representation.getJsonObject("instance").getString("title"), is("Nod"));
 
     assertThat(representation.containsKey("requester"), is(true));
 
@@ -1004,8 +1009,8 @@ public class RequestsApiTest extends ApiTests {
       .withItemId(itemId)
       .withRequesterId(requesterId)
       .toHoldShelf()
-      .withRequestExpiration(requestExpirationDate)
-      .withHoldShelfExpiration(holdShelfExpirationDate)
+      .withRequestExpirationDate(requestExpirationDate)
+      .withHoldShelfExpirationDate(holdShelfExpirationDate)
       .withItem("Nod", "565578437802")
       .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
       .withPosition(3)
@@ -1025,8 +1030,10 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getInteger("position"), is(3));
 
     assertThat(representation.containsKey("item"), is(true));
-    assertThat(representation.getJsonObject("item").getString("title"), is("Nod"));
     assertThat(representation.getJsonObject("item").getString("barcode"), is("565578437802"));
+
+    assertThat(representation.containsKey("instance"), is(true));
+    assertThat(representation.getJsonObject("instance").getString("title"), is("Nod"));
 
     assertThat(representation.containsKey("requester"), is(true));
     assertThat(representation.getJsonObject("requester").getString("lastName"), is("Jones"));
@@ -1172,7 +1179,7 @@ public class RequestsApiTest extends ApiTests {
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
-    client.put(requestStorageUrl("/"+requestId.toString()),
+    client.put(requestStorageUrl("/"+ requestId),
       j1, TENANT_ID,
       ResponseHandler.json(createCompleted));
 
@@ -1225,7 +1232,7 @@ public class RequestsApiTest extends ApiTests {
 
     CompletableFuture<JsonResponse> getRequestsCompleted2 = new CompletableFuture<>();
 
-    String query = String.format("proxyUserId<>%s", UUID.randomUUID().toString());
+    String query = String.format("proxyUserId<>%s", UUID.randomUUID());
     client.get(requestStorageUrl() + "?query=" + URLEncoder.encode(query, UTF_8),
       TENANT_ID, ResponseHandler.json(getRequestsCompleted2));
 
@@ -1361,7 +1368,7 @@ public class RequestsApiTest extends ApiTests {
       itemId,
       OPEN_NOT_YET_FILLED, OPEN_AWAITING_PICKUP,
       OPEN_IN_TRANSIT, OPEN_AWAITING_DELIVERY),
-      "UTF-8");
+      UTF_8);
 
     client.get(requestStorageUrl() + String.format("?query=%s", query),
       TENANT_ID, ResponseHandler.json(getRequestsCompleted));
@@ -1446,7 +1453,7 @@ public class RequestsApiTest extends ApiTests {
 
     CompletableFuture<JsonResponse> getRequestsCompleted = new CompletableFuture<>();
 
-    String query = URLEncoder.encode(String.format("status=\"%s\"", OPEN_NOT_YET_FILLED), "UTF-8");
+    String query = URLEncoder.encode(String.format("status=\"%s\"", OPEN_NOT_YET_FILLED), UTF_8);
 
     client.get(requestStorageUrl() + String.format("?query=%s", query),
       TENANT_ID, ResponseHandler.json(getRequestsCompleted));
@@ -1508,7 +1515,7 @@ public class RequestsApiTest extends ApiTests {
 
     String query = URLEncoder.encode(
       String.format("itemId==%s sortBy requestDate/sort.ascending", itemId),
-      "UTF-8");
+      UTF_8);
 
     client.get(requestStorageUrl() + String.format("?query=%s", query),
       TENANT_ID, ResponseHandler.json(getRequestsCompleted));
@@ -1582,7 +1589,7 @@ public class RequestsApiTest extends ApiTests {
 
     String query = URLEncoder.encode(
       String.format("itemId==%s sortBy position/sort.ascending", itemId),
-      "UTF-8");
+      UTF_8);
 
     client.get(requestStorageUrl() + String.format("?query=%s", query),
       TENANT_ID, ResponseHandler.json(getRequestsCompleted));
@@ -1748,7 +1755,7 @@ public class RequestsApiTest extends ApiTests {
       requestStorageUrl());
 
     List<JsonObject> isbnRequests = findRequestsByQuery(
-      "item.identifiers = %s and item.identifiers = %s", isbnIdentifierId, isbn);
+      "instance.identifiers = %s and instance.identifiers = %s", isbnIdentifierId, isbn);
 
     assertThat(isbnRequests.size(), is(2));
     assertThat(isbnRequests.get(0).getString("id"), is(nodRequestId.toString()));
@@ -1823,6 +1830,9 @@ public class RequestsApiTest extends ApiTests {
       .requesterId(UUID.randomUUID().toString())
       .itemId(UUID.randomUUID().toString())
       .requestType("Hold")
+      .requestLevel("Item")
+      .holdingsRecordId(UUID.randomUUID().toString())
+      .instanceId(UUID.randomUUID().toString())
       .pickupServicePointId(UUID.randomUUID().toString());
   }
 
