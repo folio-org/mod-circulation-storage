@@ -1,0 +1,8 @@
+{
+  "topics": [
+    {
+      "name": "circulation.request",
+      "numPartitions": 50
+    }
+  ]
+}

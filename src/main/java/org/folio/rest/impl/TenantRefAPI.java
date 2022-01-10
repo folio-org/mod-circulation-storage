@@ -1,13 +1,17 @@
 package org.folio.rest.impl;
 
-import io.vertx.core.Context;
-import io.vertx.core.Future;
+import static org.folio.support.Environment.environmentName;
+
 import java.util.Map;
 
+import io.vertx.core.Context;
+import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import org.folio.kafka.topic.KafkaAdminClientService;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.tools.utils.TenantLoading;
@@ -28,6 +32,7 @@ public class TenantRefAPI extends TenantAPI {
       Map<String, String> headers, Context vertxContext) {
 
     return (new TlrDataMigrationService(attributes, vertxContext, headers).migrate())
+      .compose(r -> new KafkaAdminClientService(vertxContext.owner()).createKafkaTopics(tenantId, environmentName()))
       .compose(r -> super.loadData(attributes, tenantId, headers, vertxContext))
       .compose(superRecordsLoaded -> {
         log.info("Initializing of tenant's data");
