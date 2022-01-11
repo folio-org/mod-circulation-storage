@@ -99,7 +99,7 @@ public class TenantRefApiTests {
     new WireMockConfiguration().dynamicPort());
 
   @BeforeClass
-  public static void beforeAll(final TestContext context) {
+  public static void beforeAll(final TestContext context) throws Exception {
     Async async = context.async();
 
     vertx = Vertx.vertx();
@@ -107,6 +107,8 @@ public class TenantRefApiTests {
       WebClient.create(vertx));
 
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
+
+    StorageTestSuite.before();
 
     DeploymentOptions deploymentOptions = new DeploymentOptions()
       .setConfig(new JsonObject().put("http.port", PORT));
@@ -140,8 +142,9 @@ public class TenantRefApiTests {
   }
 
   @AfterClass
-  public static void afterAll(final TestContext context) {
+  public static void afterAll(final TestContext context) throws Exception {
     deleteTenant(tenantClient);
+    StorageTestSuite.after();
     Async async = context.async();
     vertx.close(context.asyncAssertSuccess(res -> {
       PostgresClient.stopPostgresTester();

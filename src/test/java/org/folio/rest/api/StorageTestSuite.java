@@ -24,6 +24,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.github.tomakehurst.wiremock.WireMockServer;
 
+import org.folio.kafka.KafkaProperties;
 import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.api.loans.LoansAnonymizationApiTest;
@@ -48,6 +49,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import org.testcontainers.containers.KafkaContainer;
+import org.testcontainers.utility.DockerImageName;
 
 @RunWith(Suite.class)
 
@@ -89,6 +92,9 @@ public class StorageTestSuite {
   private static boolean initialised = false;
   private static MockServer mockServer;
   private static final WireMockServer wireMockServer = new WireMockServer(PROXY_PORT);
+
+  private static final KafkaContainer kafkaContainer
+    = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:5.4.3"));
 
   /**
    * Return a URL for the path and the parameters.
@@ -134,6 +140,12 @@ public class StorageTestSuite {
 
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
 
+    kafkaContainer.start();
+    log.info("starting Kafka host={} port={}",
+      kafkaContainer.getHost(), kafkaContainer.getFirstMappedPort());
+    KafkaProperties.setHost(kafkaContainer.getHost());
+    KafkaProperties.setPort(kafkaContainer.getFirstMappedPort());
+
     DeploymentOptions options = new DeploymentOptions();
     options.setConfig(new JsonObject().put("http.port", VERTICLE_PORT));
     startVerticle(options);
@@ -165,6 +177,8 @@ public class StorageTestSuite {
     initialised = false;
 
     removeTenant(TENANT_ID);
+
+    kafkaContainer.stop();
 
     mockServer.close();
 
