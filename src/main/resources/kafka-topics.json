@@ -3,6 +3,10 @@
     {
       "name": "circulation.request",
       "numPartitions": 50
+    },
+    {
+      "name": "circulation.loan",
+      "numPartitions": 50
     }
   ]
 }
