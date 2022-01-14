@@ -93,16 +93,19 @@ public class LoanService {
           .respond400WithTextPlain(validationResult.getRight()));
     }
 
-    var response = PgUtil.post(LOAN_TABLE, loan, okapiHeaders, vertxContext,
-          LoanStorage.PostLoanStorageLoansResponse.class);
+    Promise<Response> promise = Promise.promise();
 
-    if (isMultipleOpenLoanError(response)) {
-      response = respondWithErrors(
-          LoanStorage.PostLoanStorageLoansResponse::respond422WithApplicationJson,
-          moreThanOneOpenLoanError(loan));
-    }
+    PgUtil.post(LOAN_TABLE, loan, okapiHeaders, vertxContext,
+        LoanStorage.PostLoanStorageLoansResponse.class, reply -> {
+          if (isMultipleOpenLoanError(reply)) {
+            promise.complete(LoanStorage.PostLoanStorageLoansResponse
+                .respond422WithApplicationJson(moreThanOneOpenLoanError(loan)));
+          } else {
+            promise.handle(reply);
+          }
+        });
 
-    return response;
+    return promise.future();
   }
 
   public Future<Response> update(String loanId, Loan loan) {
