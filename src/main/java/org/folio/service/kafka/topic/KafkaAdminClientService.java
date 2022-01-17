@@ -1,9 +1,9 @@
-package org.folio.kafka.topic;
+package org.folio.service.kafka.topic;
 
 import static io.vertx.kafka.admin.KafkaAdminClient.create;
 import static org.apache.logging.log4j.LogManager.getLogger;
 
-import static org.folio.kafka.KafkaProperties.getReplicationFactor;
+import static org.folio.service.kafka.KafkaProperties.getReplicationFactor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +22,7 @@ import io.vertx.kafka.admin.NewTopic;
 import org.apache.logging.log4j.Logger;
 
 import org.folio.kafka.KafkaConfig;
-import org.folio.kafka.KafkaProperties;
+import org.folio.service.kafka.KafkaProperties;
 import org.folio.util.ResourceUtil;
 
 public class KafkaAdminClientService {
@@ -106,14 +106,16 @@ public class KafkaAdminClientService {
   }
 
   private NewTopic qualifyName(NewTopic topic, String environmentName, String tenantId) {
-    return topic.setName(String.join(".", environmentName, tenantId, topic.getName()));
+    var kt = KafkaTopic.forName(topic.getName(), tenantId, environmentName);
+    
+    return topic.setName(kt.getQualifiedName());
   }
 
   private Stream<NewTopic> readTopics() {
     final JsonObject topics = new JsonObject(ResourceUtil.asString(KAFKA_TOPICS_FILE));
 
     return topics.getJsonArray("topics", new JsonArray()).stream()
-      .map(obj -> (JsonObject) obj)
+      .map(JsonObject.class::cast)
       .map(NewTopic::new);
   }
 }

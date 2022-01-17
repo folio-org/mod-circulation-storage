@@ -1,9 +1,10 @@
-package org.folio.kafka;
+package org.folio.service.kafka;
 
 import static java.lang.Short.parseShort;
 import static java.lang.System.getenv;
 
 public final class KafkaProperties {
+
   private static String port = getenv().getOrDefault("KAFKA_PORT", "9092");
   private static String host = getenv().getOrDefault("KAFKA_HOST", "localhost");
 
@@ -26,4 +27,5 @@ public final class KafkaProperties {
   public static String getHost() {
     return host;
   }
+
 }

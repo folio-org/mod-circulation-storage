@@ -1,11 +1,15 @@
 {
   "topics": [
     {
-      "name": "circulation.request",
+      "name": "request",
       "numPartitions": 50
     },
     {
-      "name": "circulation.loan",
+      "name": "loan",
+      "numPartitions": 50
+    },
+    {
+      "name": "check-in",
       "numPartitions": 50
     }
   ]

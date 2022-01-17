@@ -11,11 +11,11 @@ import io.vertx.core.Vertx;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import org.folio.kafka.topic.KafkaAdminClientService;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.tools.utils.TenantLoading;
 import org.folio.service.PubSubRegistrationService;
+import org.folio.service.kafka.topic.KafkaAdminClientService;
 import org.folio.service.tlr.TlrDataMigrationService;
 
 public class TenantRefAPI extends TenantAPI {
