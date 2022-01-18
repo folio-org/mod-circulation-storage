@@ -17,23 +17,23 @@ import org.folio.service.kafka.KafkaProducerRecordBuilder;
 import org.folio.service.kafka.KafkaProperties;
 import org.folio.service.kafka.topic.KafkaTopic;
 
-public class GenericDomainEventPublisher<K, T> {
+public class DomainEventPublisher<K, T> {
 
-  private static final Logger log = getLogger(GenericDomainEventPublisher.class);
+  private static final Logger log = getLogger(DomainEventPublisher.class);
 
   private final KafkaTopic kafkaTopic;
   private final KafkaProducerManager producerManager;
   private final FailureHandler failureHandler;
 
 
-  GenericDomainEventPublisher(KafkaTopic kafkaTopic, KafkaProducerManager producerManager,
+  DomainEventPublisher(KafkaTopic kafkaTopic, KafkaProducerManager producerManager,
       FailureHandler failureHandler) {
     this.kafkaTopic = kafkaTopic;
     this.producerManager = producerManager;
     this.failureHandler = failureHandler;
   }
 
-  public GenericDomainEventPublisher(Context vertxContext, KafkaTopic kafkaTopic, FailureHandler failureHandler) {
+  public DomainEventPublisher(Context vertxContext, KafkaTopic kafkaTopic, FailureHandler failureHandler) {
     this(kafkaTopic, createProducerManager(vertxContext), failureHandler);
   }
 

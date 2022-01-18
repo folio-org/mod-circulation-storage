@@ -5,6 +5,7 @@ import static io.vertx.core.Future.succeededFuture;
 import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
+import static org.folio.service.event.EntityChangedEventPublisherFactory.loanEventPublisher;
 import static org.folio.support.ModuleConstants.LOAN_CLASS;
 import static org.folio.support.ModuleConstants.LOAN_HISTORY_TABLE;
 import static org.folio.support.ModuleConstants.LOAN_TABLE;
@@ -43,6 +44,7 @@ import org.folio.rest.persist.MyPgUtil;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.ValidationHelper;
+import org.folio.service.event.EntityChangedEventPublisher;
 import org.folio.support.ResultHandlerFactory;
 import org.folio.support.ServerErrorResponder;
 import org.folio.support.UUIDValidation;
@@ -55,6 +57,7 @@ public class LoanService {
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
   private final PostgresClient postgresClient;
+  private final EntityChangedEventPublisher<String, Loan> eventPublisher;
 
 
   public LoanService(Context vertxContext, Map<String, String> okapiHeaders) {
@@ -62,6 +65,7 @@ public class LoanService {
     this.okapiHeaders = okapiHeaders;
 
     this.postgresClient = postgresClient(vertxContext, okapiHeaders);
+    this.eventPublisher = loanEventPublisher(vertxContext, okapiHeaders);
   }
 
   public Future<Response> findByQuery(String query, int offset, int limit) {
@@ -105,7 +109,8 @@ public class LoanService {
           }
         });
 
-    return promise.future();
+    return promise.future()
+        .compose(eventPublisher.publishCreated());
   }
 
   public Future<Response> update(String loanId, Loan loan) {
@@ -159,7 +164,8 @@ public class LoanService {
           .respond500WithTextPlain(e.getMessage()));
     }
 
-    return promise.future();
+    return promise.future()
+        .compose(eventPublisher.publishAllRemoved());
   }
 
   public Future<Response> getLoanHistory(String query, int offset, int limit) {
