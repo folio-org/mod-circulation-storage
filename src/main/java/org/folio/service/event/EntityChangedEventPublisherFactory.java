@@ -7,6 +7,7 @@ import java.util.Map;
 
 import io.vertx.core.Context;
 
+import org.folio.persist.LoanRepository;
 import org.folio.rest.jaxrs.model.Loan;
 import org.folio.service.kafka.topic.KafkaTopic;
 
@@ -24,8 +25,8 @@ public class EntityChangedEventPublisherFactory {
         new EntityChangedEventFactory<>(),
         new DomainEventPublisher<>(vertxContext,
             KafkaTopic.loan(tenantId(okapiHeaders), environmentName()),
-            FailureHandler.noOperation())
-    );
+            FailureHandler.noOperation()),
+        new LoanRepository(vertxContext, okapiHeaders));
   }
 
 }

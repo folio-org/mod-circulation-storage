@@ -5,26 +5,26 @@ import static org.folio.HttpStatus.HTTP_NO_CONTENT;
 
 import javax.ws.rs.core.Response;
 
-import lombok.experimental.UtilityClass;
-
 import org.folio.HttpStatus;
 
-@UtilityClass
-public class ResponseUtil {
+public final class ResponseUtil {
 
-  public boolean isUpdateSuccessResponse(Response response) {
+  private ResponseUtil() {
+  }
+
+  public static boolean isUpdateSuccessResponse(Response response) {
     return responseHasStatus(response, HTTP_NO_CONTENT);
   }
 
-  public boolean isDeleteSuccessResponse(Response response) {
+  public static boolean isDeleteSuccessResponse(Response response) {
     return responseHasStatus(response, HTTP_NO_CONTENT);
   }
 
-  public boolean isCreateSuccessResponse(Response response) {
+  public static boolean isCreateSuccessResponse(Response response) {
     return responseHasStatus(response, HTTP_CREATED);
   }
 
-  private boolean responseHasStatus(Response response, HttpStatus expectedStatus) {
+  private static boolean responseHasStatus(Response response, HttpStatus expectedStatus) {
     return response != null && response.getStatus() == expectedStatus.toInt();
   }
 

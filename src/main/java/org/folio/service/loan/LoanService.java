@@ -1,6 +1,7 @@
 package org.folio.service.loan;
 
 import static io.vertx.core.Future.succeededFuture;
+import static io.vertx.core.Promise.promise;
 
 import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
 import static org.folio.rest.persist.PgUtil.postgresClient;
@@ -31,6 +32,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 
+import org.folio.persist.LoanRepository;
 import org.folio.rest.impl.util.OkapiResponseUtil;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
@@ -57,6 +59,7 @@ public class LoanService {
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
   private final PostgresClient postgresClient;
+  private final LoanRepository repository;
   private final EntityChangedEventPublisher<String, Loan> eventPublisher;
 
 
@@ -65,6 +68,7 @@ public class LoanService {
     this.okapiHeaders = okapiHeaders;
 
     this.postgresClient = postgresClient(vertxContext, okapiHeaders);
+    this.repository = new LoanRepository(vertxContext, okapiHeaders);
     this.eventPublisher = loanEventPublisher(vertxContext, okapiHeaders);
   }
 
@@ -131,40 +135,52 @@ public class LoanService {
           "Open loan must have a user ID");
     }
 
-    Promise<Response> promise = Promise.promise();
+    return repository.getById(loanId)
+        .compose(oldLoan -> {
+          Promise<Response> putResult = Promise.promise();
 
-    MyPgUtil.putUpsert204(LOAN_TABLE, loan, loanId, okapiHeaders, vertxContext,
-        LoanStorage.PutLoanStorageLoansByLoanIdResponse.class, reply -> {
-          if (isMultipleOpenLoanErrorOnUpsert(reply)) {
-                promise.complete(LoanStorage.PutLoanStorageLoansByLoanIdResponse
+          MyPgUtil.putUpsert204(LOAN_TABLE, loan, loanId, okapiHeaders, vertxContext,
+              LoanStorage.PutLoanStorageLoansByLoanIdResponse.class, reply -> {
+                if (isMultipleOpenLoanErrorOnUpsert(reply)) {
+                  putResult.complete(LoanStorage.PutLoanStorageLoansByLoanIdResponse
                       .respond422WithApplicationJson(moreThanOneOpenLoanError(loan)));
-          } else {
-            promise.handle(reply);
-          }
-        });
+                } else {
+                  putResult.handle(reply);
+                }
+              });
 
-    return promise.future();
+          return putResult.future()
+              .compose(eventPublisher.publishUpdated(oldLoan));
+        });
   }
 
   public Future<Response> delete(String loanId) {
-    return PgUtil.deleteById(LOAN_TABLE, loanId, okapiHeaders, vertxContext,
-        LoanStorage.DeleteLoanStorageLoansByLoanIdResponse.class);
+    return repository.getById(loanId)
+        .compose(loan -> {
+          final Promise<Response> deleteResult = promise();
+
+          PgUtil.deleteById(LOAN_TABLE, loanId, okapiHeaders, vertxContext,
+              LoanStorage.DeleteLoanStorageLoansByLoanIdResponse.class, deleteResult);
+
+          return deleteResult.future()
+              .compose(eventPublisher.publishRemoved(loan));
+        });
   }
 
   public Future<Response> deleteAll() {
-    Promise<Response> promise = Promise.promise();
+    Promise<Response> deleteAllResult = Promise.promise();
 
     try {
       postgresClient.execute(String.format("TRUNCATE TABLE %s_%s.loan", tenantId(okapiHeaders), MODULE_NAME),
-          result -> promise.complete(result.succeeded()
+          result -> deleteAllResult.complete(result.succeeded()
               ? LoanStorage.DeleteLoanStorageLoansResponse.respond204()
               : LoanStorage.DeleteLoanStorageLoansResponse.respond500WithTextPlain(result.cause().getMessage())));
     } catch (Exception e) {
-      promise.complete(LoanStorage.DeleteLoanStorageLoansResponse
+      deleteAllResult.complete(LoanStorage.DeleteLoanStorageLoansResponse
           .respond500WithTextPlain(e.getMessage()));
     }
 
-    return promise.future()
+    return deleteAllResult.future()
         .compose(eventPublisher.publishAllRemoved());
   }
 
