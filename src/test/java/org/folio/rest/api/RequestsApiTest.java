@@ -937,14 +937,13 @@ public class RequestsApiTest extends ApiTests {
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
-      JsonObject request =
-      new RequestRequestBuilder()
+    JsonObject request = new RequestRequestBuilder()
         .recall()
         .toHoldShelf()
         .create();
 
-      request.remove("holdingsRecordId");
-      request.remove("itemId");
+    request.remove("holdingsRecordId");
+    request.remove("itemId");
 
     client.post(requestStorageUrl(), request, TENANT_ID, ResponseHandler.json(createCompleted));
 
@@ -957,22 +956,19 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  @Parameters({"holdingsRecordId", "itemId"})
+  @Parameters({ "holdingsRecordId", "itemId" })
   public void cannotCreateTitleLevelRequestIfOneOfItemIdAndHoldingsRecordIdIsNotPresent(
-    String propertyToRemove)
-    throws MalformedURLException,
-    ExecutionException,
-    InterruptedException,
+    String propertyToRemove) throws MalformedURLException, ExecutionException, InterruptedException,
     TimeoutException {
     String requestLevel = "Title";
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     JsonObject request = new RequestRequestBuilder()
-        .recall()
-        .toHoldShelf()
-        .withRequestLevel(requestLevel)
-        .create();
+      .recall()
+      .toHoldShelf()
+      .withRequestLevel(requestLevel)
+      .create();
     request.remove(propertyToRemove);
 
     client.post(requestStorageUrl(), request, TENANT_ID, ResponseHandler.json(createCompleted));
@@ -980,23 +976,23 @@ public class RequestsApiTest extends ApiTests {
     JsonObject response = createCompleted.get(5, TimeUnit.SECONDS).getJson();
 
     assertThat(response, hasErrorWith(hasMessageContaining(
-        "Title level request must have both itemId and holdingsRecordId or neither")));
+      "Title level request must have both itemId and holdingsRecordId or neither")));
   }
 
   @Test
-  @Parameters({"holdingsRecordId", "itemId"})
+  @Parameters({ "holdingsRecordId", "itemId" })
   public void cannotPutTitleLevelRequestIfOneOfItemIdAndHoldingsRecordIdIsNotPresent(String
-    propertyToRemove)
-    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
+    propertyToRemove) throws MalformedURLException, ExecutionException, InterruptedException,
+    TimeoutException {
     String requestLevel = "Title";
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     JsonObject request = new RequestRequestBuilder()
-        .recall()
-        .toHoldShelf()
-        .withRequestLevel(requestLevel)
-        .create();
+      .recall()
+      .toHoldShelf()
+      .withRequestLevel(requestLevel)
+      .create();
     request.remove(propertyToRemove);
 
     client.put(requestStorageUrl(String.format("/%s", request.getString("id"))),
@@ -1005,7 +1001,7 @@ public class RequestsApiTest extends ApiTests {
     JsonObject response = createCompleted.get(5, TimeUnit.SECONDS).getJson();
 
     assertThat(response, hasErrorWith(hasMessageContaining(
-        "Title level request must have both itemId and holdingsRecordId or neither")));
+      "Title level request must have both itemId and holdingsRecordId or neither")));
   }
 
   @Test
