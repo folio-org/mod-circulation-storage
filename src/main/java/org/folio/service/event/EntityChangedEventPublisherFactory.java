@@ -7,8 +7,10 @@ import java.util.Map;
 
 import io.vertx.core.Context;
 
+import org.folio.persist.CheckInRepository;
 import org.folio.persist.LoanRepository;
 import org.folio.persist.RequestRepository;
+import org.folio.rest.jaxrs.model.CheckIn;
 import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.service.kafka.topic.KafkaTopic;
@@ -40,6 +42,17 @@ public class EntityChangedEventPublisherFactory {
             KafkaTopic.request(tenantId(okapiHeaders), environmentName()),
             FailureHandler.noOperation()),
         new RequestRepository(vertxContext, okapiHeaders));
+  }
+
+  public static EntityChangedEventPublisher<String, CheckIn> checkInEventPublisher(
+      Context vertxContext, Map<String, String> okapiHeaders) {
+
+    return new EntityChangedEventPublisher<>(okapiHeaders, CheckIn::getId, NULL_ID,
+        new EntityChangedEventFactory<>(),
+        new DomainEventPublisher<>(vertxContext,
+            KafkaTopic.checkIn(tenantId(okapiHeaders), environmentName()),
+            FailureHandler.noOperation()),
+        new CheckInRepository(vertxContext, okapiHeaders));
   }
 
 }
