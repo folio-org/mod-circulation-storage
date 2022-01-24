@@ -54,7 +54,7 @@ import org.folio.support.VertxContextRunner;
 
 public class LoanService {
 
-  private static final Logger log = LogManager.getLogger();
+  private static final Logger log = LogManager.getLogger(LoanService.class);
 
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
@@ -101,19 +101,19 @@ public class LoanService {
           .respond400WithTextPlain(validationResult.getRight()));
     }
 
-    Promise<Response> promise = Promise.promise();
+    Promise<Response> createResult = Promise.promise();
 
     PgUtil.post(LOAN_TABLE, loan, okapiHeaders, vertxContext,
         LoanStorage.PostLoanStorageLoansResponse.class, reply -> {
           if (isMultipleOpenLoanError(reply)) {
-            promise.complete(LoanStorage.PostLoanStorageLoansResponse
+            createResult.complete(LoanStorage.PostLoanStorageLoansResponse
                 .respond422WithApplicationJson(moreThanOneOpenLoanError(loan)));
           } else {
-            promise.handle(reply);
+            createResult.handle(reply);
           }
         });
 
-    return promise.future()
+    return createResult.future()
         .compose(eventPublisher.publishCreated());
   }
 

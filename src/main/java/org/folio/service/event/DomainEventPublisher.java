@@ -38,7 +38,8 @@ public class DomainEventPublisher<K, T> {
   }
 
   public Future<Void> publish(K key, DomainEvent<T> event, Map<String, String> okapiHeaders) {
-    log.debug("Sending domain event with key [{}], payload [{}]", key, event);
+    // TODO (Dima Tkachenko): temporary level up the severity to view events in the log for testing purposes
+    log.info("Sending domain event with key [{}], payload [{}]", key, event);
 
     KafkaProducerRecordBuilder<K, DomainEvent<T>> builder = new KafkaProducerRecordBuilder<>();
     KafkaProducerRecord<K, String> producerRecord = builder

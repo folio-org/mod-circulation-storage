@@ -1,8 +1,9 @@
 package org.folio.service.request;
 
 import static java.util.stream.IntStream.rangeClosed;
-import static org.folio.rest.impl.RequestsAPI.REQUEST_TABLE;
+
 import static org.folio.rest.persist.PostgresClient.convertToPsqlStandard;
+import static org.folio.support.ModuleConstants.REQUEST_TABLE;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,17 +11,17 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.folio.rest.jaxrs.model.Request;
-import org.folio.rest.persist.SQLConnection;
-import org.folio.service.BatchResourceService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.folio.rest.jaxrs.model.Request;
+import org.folio.rest.persist.SQLConnection;
+import org.folio.service.BatchResourceService;
 
 public class RequestBatchResourceService {
   private static final Logger LOG = LoggerFactory.getLogger(RequestBatchResourceService.class);
