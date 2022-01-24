@@ -992,8 +992,7 @@ public class RequestsApiTest extends ApiTests {
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
-    JsonObject request =
-      new RequestRequestBuilder()
+    JsonObject request = new RequestRequestBuilder()
         .recall()
         .toHoldShelf()
         .withRequestLevel(requestLevel)
