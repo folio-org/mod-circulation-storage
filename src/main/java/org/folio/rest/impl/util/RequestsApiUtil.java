@@ -52,9 +52,9 @@ public class RequestsApiUtil {
     } else if (requestLevel == RequestLevel.TITLE && isWrongFieldsCombination(isItemIdAbsent,
       isHoldingsRecordIdAbsent)) {
 
-        errorList.add(createError(
-          "Title level request must have both itemId and holdingsRecordId or neither"));
-      }
+      errorList.add(createError(
+        "Title level request must have both itemId and holdingsRecordId or neither"));
+    }
 
     return new Errors().withErrors(errorList);
   }
