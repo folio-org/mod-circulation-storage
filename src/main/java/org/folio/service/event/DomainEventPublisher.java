@@ -38,9 +38,6 @@ public class DomainEventPublisher<K, T> {
   }
 
   public Future<Void> publish(K key, DomainEvent<T> event, Map<String, String> okapiHeaders) {
-    // TODO (Dima Tkachenko): temporary level up the severity to view events in the log for testing purposes
-    log.info("Sending domain event with key [{}], payload [{}]", key, event);
-
     KafkaProducerRecordBuilder<K, DomainEvent<T>> builder = new KafkaProducerRecordBuilder<>();
     KafkaProducerRecord<K, String> producerRecord = builder
         .key(key).value(event).topic(kafkaTopic).propagateOkapiHeaders(okapiHeaders)
@@ -48,14 +45,17 @@ public class DomainEventPublisher<K, T> {
 
     KafkaProducer<K, String> producer = getOrCreateProducer();
 
+    // TODO (Dima Tkachenko): temporary level up the severity to view events in the log for testing purposes
+    log.info("Sending domain event with key [{}], kafka record [{}]", key, producerRecord);
+
     return producer.send(producerRecord)
         .<Void>map(notUsed -> null)
         .onComplete(result -> {
           producer.end(par -> producer.close());
 
           if (result.failed()) {
-            log.error("Unable to send domain event with key [{}], payload [{}]",
-                key, event, result.cause());
+            log.error("Unable to send domain event with key [{}], kafka record [{}]",
+                key, producerRecord, result.cause());
 
             failureHandler.handle(result.cause(), producerRecord);
           }

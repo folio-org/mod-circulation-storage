@@ -2,15 +2,15 @@
   "topics": [
     {
       "name": "request",
-      "numPartitions": 50
+      "numPartitions": 10
     },
     {
       "name": "loan",
-      "numPartitions": 50
+      "numPartitions": 10
     },
     {
       "name": "check-in",
-      "numPartitions": 50
+      "numPartitions": 10
     }
   ]
 }
