@@ -117,7 +117,7 @@ public class LoanService {
         .compose(eventPublisher.publishCreated());
   }
 
-  public Future<Response> update(String loanId, Loan loan) {
+  public Future<Response> createOrUpdate(String loanId, Loan loan) {
     if (loan.getStatus() == null) {
       loan.setStatus(new Status().withName(OPEN_LOAN_STATUS));
     }
@@ -137,20 +137,22 @@ public class LoanService {
 
     return repository.getById(loanId)
         .compose(oldLoan -> {
-          Promise<Response> putResult = Promise.promise();
+          Promise<Response> result = Promise.promise();
 
           MyPgUtil.putUpsert204(LOAN_TABLE, loan, loanId, okapiHeaders, vertxContext,
               LoanStorage.PutLoanStorageLoansByLoanIdResponse.class, reply -> {
                 if (isMultipleOpenLoanErrorOnUpsert(reply)) {
-                  putResult.complete(LoanStorage.PutLoanStorageLoansByLoanIdResponse
+                  result.complete(LoanStorage.PutLoanStorageLoansByLoanIdResponse
                       .respond422WithApplicationJson(moreThanOneOpenLoanError(loan)));
                 } else {
-                  putResult.handle(reply);
+                  result.handle(reply);
                 }
               });
 
-          return putResult.future()
-              .compose(eventPublisher.publishUpdated(oldLoan));
+          return result.future()
+              .compose(oldLoan != null
+                  ? eventPublisher.publishUpdated(oldLoan)
+                  : Future::succeededFuture);
         });
   }
 

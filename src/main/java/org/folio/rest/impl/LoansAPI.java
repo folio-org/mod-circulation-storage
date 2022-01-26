@@ -103,7 +103,7 @@ public class LoansAPI implements LoanStorage {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    new LoanService(vertxContext, okapiHeaders).update(loanId, loan)
+    new LoanService(vertxContext, okapiHeaders).createOrUpdate(loanId, loan)
         .onComplete(asyncResultHandler);
   }
 
