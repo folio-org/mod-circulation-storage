@@ -247,7 +247,7 @@ public class RequestPoliciesApiTest extends ApiTests {
         ResponseHandler.json(getCompleted));
 
     JsonResponse responseGet = getCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
-    assertThat(responseGet, isOk());
+    assertThat(responseGet, isBadRequest());
 
     assertThat("expected error message not found", responseGet.getBody().toLowerCase(), containsString("offset"));
   }
