@@ -4,6 +4,7 @@ import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.Promise.promise;
 import static java.lang.String.format;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -14,18 +15,17 @@ import java.util.stream.Collectors;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.json.JsonArray;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.interfaces.Results;
 
 public abstract class AbstractRepository<T> {
 
-  protected final PostgresClientFuturized postgresClientFuturized;
   protected final PostgresClient postgresClient;
   protected final String tableName;
   protected final Class<T> recordType;
@@ -34,22 +34,25 @@ public abstract class AbstractRepository<T> {
   protected AbstractRepository(PostgresClient postgresClient, String tableName,
       Class<T> recordType) {
 
-    this.postgresClientFuturized = new PostgresClientFuturized(postgresClient);
     this.postgresClient = postgresClient;
     this.tableName = tableName;
     this.recordType = recordType;
   }
 
   public Future<String> save(String id, T entity) {
-    return postgresClientFuturized.save(tableName, id, entity);
+    return postgresClient.save(tableName, id, entity);
   }
 
   public Future<T> getById(String id) {
-    return postgresClientFuturized.getById(tableName, id, recordType);
+    return postgresClient.getById(tableName, id, recordType);
   }
 
   public Future<List<T>> get(Criterion criterion) {
-    return postgresClientFuturized.get(tableName, recordType, criterion);
+    final Promise<Results<T>> getItemsResult = promise();
+
+    postgresClient.get(tableName, recordType, criterion, false, getItemsResult);
+
+    return getItemsResult.future().map(Results::getResults);
   }
 
   public Future<List<T>> get(AsyncResult<SQLConnection> connection, Criterion criterion) {
@@ -61,7 +64,11 @@ public abstract class AbstractRepository<T> {
   }
 
   public Future<Map<String, T>> getById(Collection<String> ids) {
-    return postgresClientFuturized.getById(tableName, ids, recordType);
+    final Promise<Map<String, T>> promise = promise();
+
+    postgresClient.getById(tableName, new JsonArray(new ArrayList<>(ids)), recordType, promise);
+
+    return promise.future();
   }
 
   public <V> Future<Map<String, T>> getById(Collection<V> records, Function<V, String> mapper) {
@@ -101,12 +108,16 @@ public abstract class AbstractRepository<T> {
     return promise.future();
   }
 
+  public Future<String> upsert(String id, T rec) {
+    return postgresClient.upsert(tableName, id, rec);
+  }
+
   public Future<RowSet<Row>> deleteAll() {
-    return postgresClientFuturized.delete(tableName, new Criterion());
+    return postgresClient.delete(tableName, new Criterion());
   }
 
   public Future<RowSet<Row>> deleteById(String id) {
-    return postgresClientFuturized.deleteById(tableName, id);
+    return postgresClient.delete(tableName, id);
   }
 
 }

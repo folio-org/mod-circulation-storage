@@ -12,6 +12,9 @@ import static org.folio.support.ModuleConstants.LOAN_HISTORY_TABLE;
 import static org.folio.support.ModuleConstants.LOAN_TABLE;
 import static org.folio.support.ModuleConstants.MODULE_NAME;
 import static org.folio.support.ModuleConstants.OPEN_LOAN_STATUS;
+import static org.folio.support.ResponseUtil.badRequestResponse;
+import static org.folio.support.ResponseUtil.isCreateSuccessResponse;
+import static org.folio.support.ResponseUtil.noContentResponse;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -42,11 +45,11 @@ import org.folio.rest.jaxrs.model.LoansHistoryItem;
 import org.folio.rest.jaxrs.model.LoansHistoryItems;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.jaxrs.resource.LoanStorage;
-import org.folio.rest.persist.MyPgUtil;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.ValidationHelper;
 import org.folio.service.event.EntityChangedEventPublisher;
+import org.folio.support.ResponseUtil;
 import org.folio.support.ResultHandlerFactory;
 import org.folio.support.ServerErrorResponder;
 import org.folio.support.UUIDValidation;
@@ -136,24 +139,47 @@ public class LoanService {
     }
 
     return repository.getById(loanId)
-        .compose(oldLoan -> {
-          Promise<Response> result = Promise.promise();
+        .compose(
+            oldLoan -> upsert(loanId, loan, oldLoan)
+              .compose(publishCreatedOrUpdatedEvent(oldLoan))
+              .compose(toUpsertResponse())
+        )
+        .map(checkForMultipleOpenLoanError(loan))
+        .otherwise(ResponseUtil::internalErrorResponse);
+  }
 
-          MyPgUtil.putUpsert204(LOAN_TABLE, loan, loanId, okapiHeaders, vertxContext,
-              LoanStorage.PutLoanStorageLoansByLoanIdResponse.class, reply -> {
-                if (isMultipleOpenLoanErrorOnUpsert(reply)) {
-                  result.complete(LoanStorage.PutLoanStorageLoansByLoanIdResponse
-                      .respond422WithApplicationJson(moreThanOneOpenLoanError(loan)));
-                } else {
-                  result.handle(reply);
-                }
-              });
+  private Function<Response, Response> checkForMultipleOpenLoanError(Loan loan) {
+    return response -> isMultipleOpenLoanErrorOnUpsert(response)
+        ? LoanStorage.PutLoanStorageLoansByLoanIdResponse.respond422WithApplicationJson(moreThanOneOpenLoanError(loan))
+        : response;
+  }
 
-          return result.future()
-              .compose(oldLoan != null
-                  ? eventPublisher.publishUpdated(oldLoan)
-                  : Future::succeededFuture);
-        });
+  private Future<Response> upsert(String loanId, Loan loan, Loan oldLoan) {
+    return repository.upsert(loanId, loan)
+        .compose(
+            id -> toCreatedOrUpdatedResponse(id, oldLoan),
+            err -> succeededFuture(badRequestResponse(err)) // upsert failure is treated as BAD REQUEST in MyPgUtil.putUpsert204()
+        );
+  }
+
+  private Future<Response> toCreatedOrUpdatedResponse(String id, Loan oldLoan) {
+    return oldLoan == null
+        ? repository.getById(id).map(ResponseUtil::createdResponse)
+        : succeededFuture(noContentResponse());
+  }
+
+  private Function<Response, Future<Response>> publishCreatedOrUpdatedEvent(Loan oldLoan) {
+    return oldLoan == null
+        ? eventPublisher.publishCreated()
+        : eventPublisher.publishUpdated(oldLoan);
+  }
+
+  private Function<Response, Future<Response>> toUpsertResponse() {
+    return response -> succeededFuture(
+        isCreateSuccessResponse(response) // transform CREATED to NO_CONTENT (see MyPgUtil.putUpsert204() )
+            ? noContentResponse()
+            : response
+    );
   }
 
   public Future<Response> delete(String loanId) {
@@ -266,11 +292,10 @@ public class LoanService {
   }
 
   // Remove/Replace this function when MyPgUtil.putUpsert204() is removed/replaced.
-  private boolean isMultipleOpenLoanErrorOnUpsert(AsyncResult<Response> reply) {
-    return reply.succeeded()
-        && reply.result().getStatus() == HTTP_BAD_REQUEST.toInt()
-        && reply.result().hasEntity()
-        && reply.result().getEntity().toString().contains("loan_itemid_idx_unique");
+  private boolean isMultipleOpenLoanErrorOnUpsert(Response response) {
+    return response.getStatus() == HTTP_BAD_REQUEST.toInt()
+        && response.hasEntity()
+        && response.getEntity().toString().contains("loan_itemid_idx_unique");
   }
 
   private Errors moreThanOneOpenLoanError(Loan entity) {
