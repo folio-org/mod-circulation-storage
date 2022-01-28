@@ -11,6 +11,7 @@ import static org.folio.support.ModuleConstants.REQUEST_CLASS;
 import static org.folio.support.ModuleConstants.REQUEST_TABLE;
 
 import java.util.Map;
+import java.util.function.Function;
 
 import javax.ws.rs.core.Response;
 
@@ -18,6 +19,8 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import org.folio.persist.RequestRepository;
 import org.folio.rest.impl.util.OkapiResponseUtil;
@@ -26,18 +29,22 @@ import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.jaxrs.model.Requests;
 import org.folio.rest.jaxrs.resource.RequestStorage;
-import org.folio.rest.persist.MyPgUtil;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.service.event.EntityChangedEventPublisher;
+import org.folio.support.ResponseUtil;
+import org.folio.support.ServiceHelper;
 
 public class RequestService {
+
+  private static final Logger log = LogManager.getLogger(RequestService.class);
 
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
   private final PostgresClient postgresClient;
   private final RequestRepository repository;
   private final EntityChangedEventPublisher<String, Request> eventPublisher;
+  private final ServiceHelper<Request> helper;
 
 
   public RequestService(Context vertxContext, Map<String, String> okapiHeaders) {
@@ -47,6 +54,7 @@ public class RequestService {
     this.postgresClient = postgresClient(vertxContext, okapiHeaders);
     this.repository = new RequestRepository(vertxContext, okapiHeaders);
     this.eventPublisher = requestEventPublisher(vertxContext, okapiHeaders);
+    this.helper = new ServiceHelper<>(repository, eventPublisher);
   }
 
   public Future<Response> findByQuery(String query, int offset, int limit) {
@@ -76,25 +84,22 @@ public class RequestService {
         .compose(eventPublisher.publishCreated());
   }
 
-  public Future<Response> update(String requestId, Request request) {
-    return repository.getById(requestId)
-        .compose(oldRequest -> {
-          Promise<Response> putResult = Promise.promise();
+  public Future<Response> createOrUpdate(String requestId, Request request) {
+    return helper.upsertAndPublishEvents(requestId, request)
+        .map(checkForSamePositionInQueueError(request))
+        .otherwise(err -> {
+          log.error("Failed to store request: id = {}, request = [{}]",
+              requestId, helper.jsonStringOrEmpty(request), err);
 
-          // TODO: On insert don't return 204, we must return 201!
-          MyPgUtil.putUpsert204(REQUEST_TABLE, request, requestId, okapiHeaders, vertxContext,
-              RequestStorage.PutRequestStorageRequestsByRequestIdResponse.class, reply -> {
-                if (isSamePositionInQueueErrorOnUpsert(reply)) {
-                  putResult.complete(RequestStorage.PutRequestStorageRequestsByRequestIdResponse
-                      .respond422WithApplicationJson(samePositionInQueueError(request)));
-                } else {
-                  putResult.handle(reply);
-                }
-              });
-
-          return putResult.future()
-              .compose(eventPublisher.publishUpdated(oldRequest));
+          return ResponseUtil.internalErrorResponse(err);
         });
+  }
+
+  private Function<Response, Response> checkForSamePositionInQueueError(Request request) {
+    return response -> isSamePositionInQueueErrorOnUpsert(response)
+        ? RequestStorage.PutRequestStorageRequestsByRequestIdResponse.respond422WithApplicationJson(
+            samePositionInQueueError(request))
+        : response;
   }
 
   public Future<Response> delete(String requestId) {
@@ -139,13 +144,11 @@ public class RequestService {
   }
 
   // Remove/Replace this function when MyPgUtil.putUpsert204() is removed/replaced.
-  private boolean isSamePositionInQueueErrorOnUpsert(AsyncResult<Response> reply) {
-    return reply.succeeded()
-        && reply.result().getStatus() == HTTP_BAD_REQUEST.toInt()
-        && reply.result().hasEntity()
+  private boolean isSamePositionInQueueErrorOnUpsert(Response response) {
+    return response.getStatus() == HTTP_BAD_REQUEST.toInt()
+        && response.hasEntity()
         && RequestsApiUtil
-        .hasSamePositionConstraintViolated(reply.result().getEntity().toString());
-
+        .hasSamePositionConstraintViolated(response.getEntity().toString());
   }
 
 }

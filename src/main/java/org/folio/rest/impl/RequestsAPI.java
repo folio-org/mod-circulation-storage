@@ -90,7 +90,7 @@ public class RequestsAPI implements RequestStorage {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    new RequestService(vertxContext, okapiHeaders).update(requestId, request)
+    new RequestService(vertxContext, okapiHeaders).createOrUpdate(requestId, request)
         .onComplete(asyncResultHandler);
   }
 

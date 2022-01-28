@@ -12,9 +12,6 @@ import static org.folio.support.ModuleConstants.LOAN_HISTORY_TABLE;
 import static org.folio.support.ModuleConstants.LOAN_TABLE;
 import static org.folio.support.ModuleConstants.MODULE_NAME;
 import static org.folio.support.ModuleConstants.OPEN_LOAN_STATUS;
-import static org.folio.support.ResponseUtil.badRequestResponse;
-import static org.folio.support.ResponseUtil.isCreateSuccessResponse;
-import static org.folio.support.ResponseUtil.noContentResponse;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -52,6 +49,7 @@ import org.folio.service.event.EntityChangedEventPublisher;
 import org.folio.support.ResponseUtil;
 import org.folio.support.ResultHandlerFactory;
 import org.folio.support.ServerErrorResponder;
+import org.folio.support.ServiceHelper;
 import org.folio.support.UUIDValidation;
 import org.folio.support.VertxContextRunner;
 
@@ -64,6 +62,7 @@ public class LoanService {
   private final PostgresClient postgresClient;
   private final LoanRepository repository;
   private final EntityChangedEventPublisher<String, Loan> eventPublisher;
+  private final ServiceHelper<Loan> helper;
 
 
   public LoanService(Context vertxContext, Map<String, String> okapiHeaders) {
@@ -73,6 +72,7 @@ public class LoanService {
     this.postgresClient = postgresClient(vertxContext, okapiHeaders);
     this.repository = new LoanRepository(vertxContext, okapiHeaders);
     this.eventPublisher = loanEventPublisher(vertxContext, okapiHeaders);
+    this.helper = new ServiceHelper<>(repository, eventPublisher);
   }
 
   public Future<Response> findByQuery(String query, int offset, int limit) {
@@ -138,48 +138,13 @@ public class LoanService {
           "Open loan must have a user ID");
     }
 
-    return repository.getById(loanId)
-        .compose(
-            oldLoan -> upsert(loanId, loan, oldLoan)
-              .compose(publishCreatedOrUpdatedEvent(oldLoan))
-              .compose(toUpsertResponse())
-        )
+    return helper.upsertAndPublishEvents(loanId, loan)
         .map(checkForMultipleOpenLoanError(loan))
-        .otherwise(ResponseUtil::internalErrorResponse);
-  }
+        .otherwise(err -> {
+          log.error("Failed to store loan: id = {}, loan = [{}]", loanId, helper.jsonStringOrEmpty(loan), err);
 
-  private Function<Response, Response> checkForMultipleOpenLoanError(Loan loan) {
-    return response -> isMultipleOpenLoanErrorOnUpsert(response)
-        ? LoanStorage.PutLoanStorageLoansByLoanIdResponse.respond422WithApplicationJson(moreThanOneOpenLoanError(loan))
-        : response;
-  }
-
-  private Future<Response> upsert(String loanId, Loan loan, Loan oldLoan) {
-    return repository.upsert(loanId, loan)
-        .compose(
-            id -> toCreatedOrUpdatedResponse(id, oldLoan),
-            err -> succeededFuture(badRequestResponse(err)) // upsert failure is treated as BAD REQUEST in MyPgUtil.putUpsert204()
-        );
-  }
-
-  private Future<Response> toCreatedOrUpdatedResponse(String id, Loan oldLoan) {
-    return oldLoan == null
-        ? repository.getById(id).map(ResponseUtil::createdResponse)
-        : succeededFuture(noContentResponse());
-  }
-
-  private Function<Response, Future<Response>> publishCreatedOrUpdatedEvent(Loan oldLoan) {
-    return oldLoan == null
-        ? eventPublisher.publishCreated()
-        : eventPublisher.publishUpdated(oldLoan);
-  }
-
-  private Function<Response, Future<Response>> toUpsertResponse() {
-    return response -> succeededFuture(
-        isCreateSuccessResponse(response) // transform CREATED to NO_CONTENT (see MyPgUtil.putUpsert204() )
-            ? noContentResponse()
-            : response
-    );
+          return ResponseUtil.internalErrorResponse(err);
+        });
   }
 
   public Future<Response> delete(String loanId) {
@@ -289,6 +254,12 @@ public class LoanService {
   private boolean isMultipleOpenLoanError(AsyncResult<Response> reply) {
     return OkapiResponseUtil.containsErrorMessage(
         reply, "value already exists in table loan: ");
+  }
+
+  private Function<Response, Response> checkForMultipleOpenLoanError(Loan loan) {
+    return response -> isMultipleOpenLoanErrorOnUpsert(response)
+        ? LoanStorage.PutLoanStorageLoansByLoanIdResponse.respond422WithApplicationJson(moreThanOneOpenLoanError(loan))
+        : response;
   }
 
   // Remove/Replace this function when MyPgUtil.putUpsert204() is removed/replaced.
