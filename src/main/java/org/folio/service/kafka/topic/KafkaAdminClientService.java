@@ -26,9 +26,11 @@ import org.folio.service.kafka.KafkaProperties;
 import org.folio.util.ResourceUtil;
 
 public class KafkaAdminClientService {
+
   private static final Logger log = getLogger(KafkaAdminClientService.class);
   private static final String KAFKA_TOPICS_FILE = "kafka-topics.json";
   private final Supplier<KafkaAdminClient> clientFactory;
+
 
   public KafkaAdminClientService(Vertx vertx) {
     this(() -> create(vertx, KafkaConfig.builder()
@@ -46,11 +48,21 @@ public class KafkaAdminClientService {
       .map(topic -> qualifyName(topic, environmentName, tenantId))
       .map(topic -> topic.setReplicationFactor(getReplicationFactor()))
       .collect(Collectors.toList());
-    final KafkaAdminClient kafkaAdminClient = clientFactory.get();
-    return createKafkaTopics(1, topics, kafkaAdminClient)
-      .eventually(x -> kafkaAdminClient.close())
+
+    return withKafkaAdminClient(adminClient -> createKafkaTopics(1, topics, adminClient))
       .onSuccess(result -> log.info("Topics created successfully"))
       .onFailure(cause -> log.error("Unable to create topics", cause));
+  }
+
+  public Future<Void> deleteKafkaTopics(String tenantId, String environmentName) {
+    List<String> topicsToDelete = readTopics()
+        .map(topic -> qualifyName(topic, environmentName, tenantId))
+        .map(NewTopic::getName)
+        .collect(Collectors.toList());
+
+    return withKafkaAdminClient(kafkaAdminClient -> kafkaAdminClient.deleteTopics(topicsToDelete))
+        .onSuccess(x -> log.info("Topics deleted successfully"))
+        .onFailure(e -> log.error("Unable to delete topics", e));
   }
 
   private Future<Void> createKafkaTopics(int attempt, List<NewTopic> topics,
@@ -87,16 +99,6 @@ public class KafkaAdminClientService {
     return Future.future(promise -> vertx.setTimer(100, x -> promise.tryComplete()));
   }
 
-  public Future<Void> deleteKafkaTopics(String tenantId, String environmentName) {
-    List<String> topicsToDelete = readTopics()
-      .map(topic -> qualifyName(topic, environmentName, tenantId))
-      .map(NewTopic::getName)
-      .collect(Collectors.toList());
-    return withKafkaAdminClient(kafkaAdminClient -> kafkaAdminClient.deleteTopics(topicsToDelete))
-      .onSuccess(x -> log.info("Topics deleted successfully"))
-      .onFailure(e -> log.error("Unable to delete topics", e));
-  }
-
   private <T> Future<T> withKafkaAdminClient(Function<KafkaAdminClient, Future<T>> function) {
     final KafkaAdminClient kafkaAdminClient = clientFactory.get();
     return function.apply(kafkaAdminClient)
@@ -118,4 +120,5 @@ public class KafkaAdminClientService {
       .map(JsonObject.class::cast)
       .map(NewTopic::new);
   }
+
 }
