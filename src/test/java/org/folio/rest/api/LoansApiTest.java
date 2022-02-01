@@ -1,15 +1,6 @@
 package org.folio.rest.api;
 
 import static java.lang.Boolean.TRUE;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isBadRequest;
-import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNotFound;
-import static org.folio.rest.support.matchers.LoanMatchers.isClosed;
-import static org.folio.rest.support.matchers.LoanMatchers.isOpen;
-import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
-import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessageContaining;
-import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasParameter;
-import static org.folio.rest.support.matchers.ValidationResponseMatchers.isValidationResponseWhich;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.containsString;
@@ -22,9 +13,19 @@ import static org.hamcrest.core.IsNull.nullValue;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.joda.time.DateTime.parse;
 
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForLoan;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoLoanEvent;
+import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isBadRequest;
+import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNotFound;
+import static org.folio.rest.support.matchers.LoanMatchers.isClosed;
+import static org.folio.rest.support.matchers.LoanMatchers.isOpen;
+import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
+import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessageContaining;
+import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasParameter;
+import static org.folio.rest.support.matchers.ValidationResponseMatchers.isValidationResponseWhich;
+
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -37,15 +38,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import org.folio.rest.jaxrs.model.Metadata;
-import org.folio.rest.support.ApiTests;
-import org.folio.rest.support.IndividualResource;
-import org.folio.rest.support.JsonResponse;
-import org.folio.rest.support.ResponseHandler;
-import org.folio.rest.support.TextResponse;
-import org.folio.rest.support.builders.LoanRequestBuilder;
-import org.folio.rest.support.http.AssertingRecordClient;
-import org.folio.rest.support.http.InterfaceUrls;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -56,8 +50,15 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
+import org.folio.rest.jaxrs.model.Metadata;
+import org.folio.rest.support.ApiTests;
+import org.folio.rest.support.IndividualResource;
+import org.folio.rest.support.JsonResponse;
+import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.TextResponse;
+import org.folio.rest.support.builders.LoanRequestBuilder;
+import org.folio.rest.support.http.AssertingRecordClient;
+import org.folio.rest.support.http.InterfaceUrls;
 
 public class LoansApiTest extends ApiTests {
   private final AssertingRecordClient loansClient = new AssertingRecordClient(
@@ -170,6 +171,8 @@ public class LoansApiTest extends ApiTests {
     assertThat(parse(agedToLostDelayedBilling.getString("dateLostItemShouldBeBilled")),
       is(dateLostItemShouldBeBilled));
     assertThat(parse(agedToLostDelayedBilling.getString("agedToLostDate")), is(agedToLostDate));
+
+    assertCreateEventForLoan(loan);
   }
 
   @Test
@@ -203,6 +206,8 @@ public class LoansApiTest extends ApiTests {
 
     assertThat("recall changed due date is not true",
         loan.getBoolean("dueDateChangedByRecall"), is(TRUE));
+
+    assertCreateEventForLoan(loan);
   }
 
   @Test
@@ -256,6 +261,8 @@ public class LoansApiTest extends ApiTests {
 
     assertThat("due date does not match",
       loan.getString("dueDate"), is("2017-04-20T07:21:45.000+00:00"));
+
+    assertCreateEventForLoan(loan);
   }
 
   @Test
@@ -294,6 +301,8 @@ public class LoansApiTest extends ApiTests {
 
     assertThat("system return date does not match",
       loan.getString("systemReturnDate"), is("2017-04-01T12:00:00.000+00:00"));
+
+    assertCreateEventForLoan(loan);
   }
 
   @Test
@@ -319,6 +328,8 @@ public class LoansApiTest extends ApiTests {
 
     assertThat("should not have a user ID",
       loan.containsKey("userId"), is(false));
+
+    assertCreateEventForLoan(loan);
   }
 
   @Test
@@ -371,6 +382,8 @@ public class LoansApiTest extends ApiTests {
 
     assertThat("due date does not match",
       loan.getString("dueDate"), is("2017-03-29T21:14:43.000+00:00"));
+
+    assertCreateEventForLoan(loan);
   }
 
   @Test
@@ -398,6 +411,8 @@ public class LoansApiTest extends ApiTests {
       loan.getString("id"), is(id.toString()));
 
     assertThat(loan, isOpen());
+
+    assertCreateEventForLoan(loan);
   }
 
   @Test
@@ -425,6 +440,8 @@ public class LoansApiTest extends ApiTests {
       loan.getString("id"), is(id.toString()));
 
     assertThat(loan, isOpen());
+
+    assertCreateEventForLoan(loan);
   }
 
   @Test
@@ -443,6 +460,8 @@ public class LoansApiTest extends ApiTests {
     assertThat(response, isValidationResponseWhich(allOf(
       anyOf(hasMessage("must not be null"), hasMessage("darf nicht null sein")),  // any server language
       hasParameter("action", "null"))));
+
+    assertNoLoanEvent(loanRequest.getString("id"));
   }
 
   @Test
@@ -468,6 +487,8 @@ public class LoansApiTest extends ApiTests {
 
     assertThat(response.getBody(),
       containsString("return date must be a date time (in RFC3339 format)"));
+
+    assertNoLoanEvent(loanRequest.getString("id"));
   }
 
   @Test

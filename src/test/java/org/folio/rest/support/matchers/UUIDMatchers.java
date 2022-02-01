@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
+import org.hamcrest.TypeSafeMatcher;
 
 public class UUIDMatchers {
   public static TypeSafeDiagnosingMatcher<String> isUUID(UUID expected) {
@@ -27,4 +28,28 @@ public class UUIDMatchers {
       }
     };
   }
+
+  public static Matcher<String> hasUUIDFormat() {
+
+    return new TypeSafeMatcher<String>() {
+
+      @Override
+      protected boolean matchesSafely(String uuidAsString) {
+        try {
+          UUID.fromString(uuidAsString);
+        } catch (IllegalArgumentException ex) {
+          return false;
+        }
+
+        return true;
+      }
+
+      @Override
+      public void describeTo(Description description) {
+        description.appendText("should be an UUID string");
+      }
+
+    };
+  }
+
 }
