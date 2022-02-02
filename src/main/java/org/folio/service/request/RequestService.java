@@ -1,5 +1,6 @@
 package org.folio.service.request;
 
+import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.Promise.promise;
 
 import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
@@ -68,6 +69,13 @@ public class RequestService {
   }
 
   public Future<Response> create(Request request) {
+    Errors errors = RequestsApiUtil.validateRequest(request);
+
+    if (!errors.getErrors().isEmpty()) {
+      return succeededFuture(RequestStorage.PostRequestStorageRequestsResponse
+          .respond422WithApplicationJson(errors));
+    }
+
     Promise<Response> createResult = Promise.promise();
 
     PgUtil.post(REQUEST_TABLE, request, okapiHeaders, vertxContext,
@@ -85,6 +93,13 @@ public class RequestService {
   }
 
   public Future<Response> createOrUpdate(String requestId, Request request) {
+    Errors errors = RequestsApiUtil.validateRequest(request);
+
+    if (!errors.getErrors().isEmpty()) {
+      return succeededFuture(RequestStorage.PutRequestStorageRequestsByRequestIdResponse
+          .respond422WithApplicationJson(errors));
+    }
+
     return helper.upsertAndPublishEvents(requestId, request)
         .map(checkForSamePositionInQueueError(request))
         .otherwise(err -> {
