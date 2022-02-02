@@ -19,7 +19,9 @@ import static org.folio.rest.support.kafka.FakeKafkaConsumer.getCheckInEvents;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstLoanEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastCheckInEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastLoanEvent;
+import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastRequestEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLoanEvents;
+import static org.folio.rest.support.kafka.FakeKafkaConsumer.getRequestEvents;
 import static org.folio.rest.support.matchers.UUIDMatchers.hasUUIDFormat;
 
 import java.util.List;
@@ -93,6 +95,35 @@ public final class DomainEventAssertions {
   public static void assertNoCheckInEvent(String checkInId) {
     await().during(1, SECONDS)
         .until(() -> getCheckInEvents(checkInId), is(empty()));
+  }
+
+  public static void assertCreateEventForRequest(JsonObject request) {
+    final String requestId = request.getString("id");
+
+    await().until(() -> getRequestEvents(requestId).size(), greaterThan(0));
+
+    assertCreateEvent(getLastRequestEvent(requestId), request);
+  }
+
+  public static void assertNoRequestEvent(String requestId) {
+    await().during(1, SECONDS)
+      .until(() -> getRequestEvents(requestId), is(empty()));
+  }
+
+  public static void assertUpdateEventForRequest(JsonObject oldRequest, JsonObject newRequest) {
+    final String requestId = oldRequest.getString("id");
+
+    await().until(() -> getRequestEvents(requestId).size(), greaterThan(0));
+
+    assertUpdateEvent(getLastRequestEvent(requestId), oldRequest, newRequest);
+  }
+
+  public static void assertRemoveEventForRequest(JsonObject request) {
+    final String requestId = request.getString("id");
+
+    await().until(() -> getRequestEvents(requestId).size(), greaterThan(0));
+
+    assertRemoveEvent(getLastRequestEvent(requestId), request);
   }
 
   private static ConditionFactory await() {

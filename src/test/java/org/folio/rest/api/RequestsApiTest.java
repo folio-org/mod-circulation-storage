@@ -14,6 +14,10 @@ import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_IN_TRAN
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET_FILLED;
 import static org.folio.rest.support.clients.CqlQuery.exactMatch;
 import static org.folio.rest.support.clients.CqlQuery.fromTemplate;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForRequest;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoRequestEvent;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForRequest;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForRequest;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.equivalentTo;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
@@ -149,7 +153,8 @@ public class RequestsApiTest extends ApiTests {
       .withPickupServicePointId(pickupServicePointId)
       .withTags(new Tags().withTagList(asList("new", "important")))
       .create(),
-      requestStorageUrl()).getJson();
+      requestStorageUrl())
+      .getJson();
 
     assertThat(representation.getString("id"), is(id.toString()));
     assertThat(representation.getString("requestType"), is("Recall"));
@@ -216,6 +221,8 @@ public class RequestsApiTest extends ApiTests {
 
     assertThat(tagsRepresentation.containsKey("tagList"), is(true));
     assertThat(tagsRepresentation.getJsonArray("tagList"), contains("new", "important"));
+
+    assertCreateEventForRequest(representation);
   }
 
   @Test
@@ -243,6 +250,8 @@ public class RequestsApiTest extends ApiTests {
       requestStorageUrl()).getJson();
 
     assertThat(representation.getString("status"), is(status));
+
+    assertCreateEventForRequest(representation);
   }
 
   @Test
@@ -313,6 +322,8 @@ public class RequestsApiTest extends ApiTests {
     assertThat(fetchedRepresentation.getString("fulfilmentPreference"), is("Delivery"));
     assertThat(fetchedRepresentation.getString("deliveryAddressTypeId"),
       is(deliveryAddressTypeId.toString()));
+
+    assertCreateEventForRequest(representation);
   }
 
   @Test
@@ -348,6 +359,8 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.containsKey("holdShelfExpirationDate"), is(false));
     assertThat(representation.containsKey("item"), is(false));
     assertThat(representation.containsKey("requester"), is(false));
+
+    assertCreateEventForRequest(representation);
   }
 
   @Test
@@ -409,6 +422,8 @@ public class RequestsApiTest extends ApiTests {
     assertThat("Request should have update date close to when request was made",
       metadata.getString("updatedDate"),
       is(withinSecondsAfter(Seconds.seconds(2), requestMade)));
+
+    assertCreateEventForRequest(createdRequest);
   }
 
   @Test
@@ -425,6 +440,8 @@ public class RequestsApiTest extends ApiTests {
       requestStorageUrl()).getJson();
 
     assertThat(representation.getString("id"), is(notNullValue()));
+
+    assertCreateEventForRequest(representation);
   }
 
   @Test
@@ -452,6 +469,9 @@ public class RequestsApiTest extends ApiTests {
 
     assertThat(representation.getString("id"), is(notNullValue()));
     assertThat(representation2.getString("id"), is(notNullValue()));
+
+    assertCreateEventForRequest(representation);
+    assertCreateEventForRequest(representation2);
   }
 
   @Test
@@ -528,6 +548,8 @@ public class RequestsApiTest extends ApiTests {
 
     assertThat(response, isValidationResponseWhich(hasMessage(
       "Cannot have more than one request with the same position in the queue")));
+
+    assertNoRequestEvent(secondRequest.getString("id"));
   }
 
   @Test
@@ -679,6 +701,8 @@ public class RequestsApiTest extends ApiTests {
 
     assertThat(response, isValidationResponseWhich(hasMessage(
       "Cannot have more than one request with the same position in the queue")));
+
+    assertNoRequestEvent(secondRequest.getString("id"));
   }
 
   @Test
@@ -695,7 +719,7 @@ public class RequestsApiTest extends ApiTests {
     DateTime requestExpirationDate = new DateTime(2017, 7, 30, 0, 0, DateTimeZone.UTC);
     DateTime holdShelfExpirationDate = new DateTime(2017, 8, 31, 0, 0, DateTimeZone.UTC);
 
-    createEntity(
+    IndividualResource creationResponse = createEntity(
       new RequestRequestBuilder()
       .recall()
       .withId(id)
@@ -708,6 +732,8 @@ public class RequestsApiTest extends ApiTests {
       .withPosition(1)
       .create(),
       requestStorageUrl());
+
+    JsonObject createdRequest = creationResponse.getJson();
 
     JsonObject getAfterCreateResponse = getById(requestStorageUrl(String.format("/%s", id)));
 
@@ -784,6 +810,8 @@ public class RequestsApiTest extends ApiTests {
 
     assertThat("barcode is taken from proxying user",
       proxyRepresentation.getString("barcode"), is("6059539205"));
+
+    assertUpdateEventForRequest(createdRequest, representation);
   }
 
   @Test
@@ -836,6 +864,8 @@ public class RequestsApiTest extends ApiTests {
     JsonObject representation = getById(requestStorageUrl(String.format("/%s", id)));
 
     assertThat(representation.getString("status"), is(status));
+
+    assertUpdateEventForRequest(getAfterCreateResponse, representation);
   }
 
   @Test
@@ -943,8 +973,8 @@ public class RequestsApiTest extends ApiTests {
       request,
       requestStorageUrl());
 
-    JsonObject createdMetadata = createResponse.getJson()
-      .getJsonObject(METADATA_PROPERTY);
+    JsonObject createdRequest = createResponse.getJson();
+    JsonObject createdMetadata = createdRequest.getJsonObject(METADATA_PROPERTY);
 
     CompletableFuture<TextResponse> updateCompleted = new CompletableFuture<>();
 
@@ -985,6 +1015,8 @@ public class RequestsApiTest extends ApiTests {
 
     assertThat("Request should have updated date different to original updated date",
       metadata.getString("updatedDate"), is(not(createdMetadata.getString("updatedDate"))));
+
+    assertUpdateEventForRequest(createdRequest, updatedRequest);
   }
 
   @Test
@@ -1626,9 +1658,10 @@ public class RequestsApiTest extends ApiTests {
 
     UUID id = UUID.randomUUID();
 
-    createEntity(
+    JsonObject request = createEntity(
       new RequestRequestBuilder().withId(id).create(),
-      requestStorageUrl());
+      requestStorageUrl())
+      .getJson();
 
     client.delete(requestStorageUrl(String.format("/%s", id)),
       TENANT_ID,
@@ -1640,6 +1673,8 @@ public class RequestsApiTest extends ApiTests {
       createResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
     checkNotFound(requestStorageUrl(String.format("/%s", id)));
+
+    assertRemoveEventForRequest(request);
   }
 
   @Test
