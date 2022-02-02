@@ -151,18 +151,12 @@ public class OkapiHttpClient {
     String tenantId,
     Handler<AsyncResult<HttpResponse<Buffer>>> responseHandler) {
 
-    delete(url.toString(), tenantId, responseHandler);
-  }
-
-  public void delete(String url,
-    String tenantId,
-    Handler<AsyncResult<HttpResponse<Buffer>>> responseHandler) {
-
-    HttpRequest<Buffer> request = client.requestAbs(HttpMethod.DELETE, url);
+    HttpRequest<Buffer> request = client.requestAbs(HttpMethod.DELETE, url.toString());
 
     request.headers().add("Accept", "application/json, text/plain");
 
-    stdHeaders(request, null, tenantId, defaultUserId);
+    stdHeaders(request, url, tenantId, defaultUserId);
     request.send(responseHandler);
   }
+
 }

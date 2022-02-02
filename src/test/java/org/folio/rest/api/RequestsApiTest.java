@@ -16,6 +16,7 @@ import static org.folio.rest.support.clients.CqlQuery.exactMatch;
 import static org.folio.rest.support.clients.CqlQuery.fromTemplate;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForRequest;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoRequestEvent;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForRequest;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForRequest;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.equivalentTo;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
@@ -152,7 +153,8 @@ public class RequestsApiTest extends ApiTests {
       .withPickupServicePointId(pickupServicePointId)
       .withTags(new Tags().withTagList(asList("new", "important")))
       .create(),
-      requestStorageUrl()).getJson();
+      requestStorageUrl())
+      .getJson();
 
     assertThat(representation.getString("id"), is(id.toString()));
     assertThat(representation.getString("requestType"), is("Recall"));
@@ -927,13 +929,12 @@ public class RequestsApiTest extends ApiTests {
 
     UUID itemId = UUID.randomUUID();
 
-    JsonObject firstRequest = createEntity(
+    createEntity(
       new RequestRequestBuilder()
       .withItemId(itemId)
       .withPosition(1)
       .create(),
-      requestStorageUrl())
-      .getJson();
+      requestStorageUrl());
 
     final IndividualResource secondRequest = createEntity(
       new RequestRequestBuilder()
@@ -955,9 +956,6 @@ public class RequestsApiTest extends ApiTests {
 
     assertThat(response, isValidationResponseWhich(hasMessage(
       "Cannot have more than one request with the same position in the queue")));
-
-    assertCreateEventForRequest(firstRequest);
-    assertNoRequestEvent(secondRequest.getId());
   }
 
   @Test
@@ -1660,9 +1658,10 @@ public class RequestsApiTest extends ApiTests {
 
     UUID id = UUID.randomUUID();
 
-    createEntity(
+    JsonObject request = createEntity(
       new RequestRequestBuilder().withId(id).create(),
-      requestStorageUrl());
+      requestStorageUrl())
+      .getJson();
 
     client.delete(requestStorageUrl(String.format("/%s", id)),
       TENANT_ID,
@@ -1674,6 +1673,8 @@ public class RequestsApiTest extends ApiTests {
       createResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
     checkNotFound(requestStorageUrl(String.format("/%s", id)));
+
+    assertRemoveEventForRequest(request);
   }
 
   @Test
