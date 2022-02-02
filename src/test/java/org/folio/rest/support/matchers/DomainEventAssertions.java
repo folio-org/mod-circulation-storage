@@ -15,6 +15,8 @@ import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.okapi.common.XOkapiHeaders.URL;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.storageUrl;
+import static org.folio.rest.support.kafka.FakeKafkaConsumer.getCheckInEvents;
+import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastCheckInEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastLoanEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLoanEvents;
 import static org.folio.rest.support.matchers.UUIDMatchers.hasUUIDFormat;
@@ -77,6 +79,19 @@ public final class DomainEventAssertions {
     await().until(() -> getLoanEvents(loanId).size(), greaterThan(0));
 
     assertThat(getLoanEvents(loanId).size(), is(expectedCount));
+  }
+
+  public static void assertCreateEventForCheckIn(JsonObject checkIn) {
+    final String checkInId = checkIn.getString("id");
+
+    await().until(() -> getCheckInEvents(checkInId).size(), greaterThan(0));
+
+    assertCreateEvent(getLastCheckInEvent(checkInId), checkIn);
+  }
+
+  public static void assertNoCheckInEvent(String checkInId) {
+    await().during(1, SECONDS)
+        .until(() -> getCheckInEvents(checkInId), is(empty()));
   }
 
   private static ConditionFactory await() {
