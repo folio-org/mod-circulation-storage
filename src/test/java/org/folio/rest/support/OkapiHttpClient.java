@@ -1,6 +1,5 @@
 package org.folio.rest.support;
 
-import io.vertx.core.http.HttpMethod;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -10,11 +9,12 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class OkapiHttpClient {
 
@@ -151,18 +151,12 @@ public class OkapiHttpClient {
     String tenantId,
     Handler<AsyncResult<HttpResponse<Buffer>>> responseHandler) {
 
-    delete(url.toString(), tenantId, responseHandler);
-  }
-
-  public void delete(String url,
-    String tenantId,
-    Handler<AsyncResult<HttpResponse<Buffer>>> responseHandler) {
-
-    HttpRequest<Buffer> request = client.requestAbs(HttpMethod.DELETE, url);
+    HttpRequest<Buffer> request = client.requestAbs(HttpMethod.DELETE, url.toString());
 
     request.headers().add("Accept", "application/json, text/plain");
 
-    stdHeaders(request, null, tenantId, defaultUserId);
+    stdHeaders(request, url, tenantId, defaultUserId);
     request.send(responseHandler);
   }
+
 }
