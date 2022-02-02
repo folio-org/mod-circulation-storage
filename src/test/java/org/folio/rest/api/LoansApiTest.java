@@ -507,6 +507,8 @@ public class LoansApiTest extends ApiTests {
 
     loansClient.create(firstLoanRequest);
 
+    JsonObject firstLoan = loansClient.getById(firstLoanRequest.getString("id")).getJson();
+
     JsonObject secondLoanRequest = new LoanRequestBuilder()
       .withItemId(itemId)
       .open()
@@ -516,6 +518,9 @@ public class LoansApiTest extends ApiTests {
 
     assertThat(response, isValidationResponseWhich(hasMessage(
       "Cannot have more than one open loan for the same item")));
+
+    assertCreateEventForLoan(firstLoan);
+    assertNoLoanEvent(secondLoanRequest.getString("id"));
   }
 
   @Test
@@ -534,6 +539,8 @@ public class LoansApiTest extends ApiTests {
 
     loansClient.create(firstLoanRequest);
 
+    JsonObject firstLoan = loansClient.getById(firstLoanRequest.getString("id")).getJson();
+
     UUID secondLoanId = UUID.randomUUID();
 
     JsonObject secondLoanRequest = new LoanRequestBuilder()
@@ -547,6 +554,9 @@ public class LoansApiTest extends ApiTests {
 
     assertThat(createResponse, isValidationResponseWhich(hasMessage(
       "Cannot have more than one open loan for the same item")));
+
+    assertCreateEventForLoan(firstLoan);
+    assertNoLoanEvent(secondLoanId.toString());
   }
 
   @Test
@@ -565,12 +575,19 @@ public class LoansApiTest extends ApiTests {
 
     loansClient.create(closedLoanRequest);
 
+    JsonObject closedLoan = loansClient.getById(closedLoanRequest.getString("id")).getJson();
+
     JsonObject openLoanRequest = new LoanRequestBuilder()
       .withItemId(itemId)
       .open()
       .create();
 
     loansClient.create(openLoanRequest);
+
+    JsonObject openLoan = loansClient.getById(openLoanRequest.getString("id")).getJson();
+
+    assertCreateEventForLoan(closedLoan);
+    assertCreateEventForLoan(openLoan);
   }
 
   @Test
