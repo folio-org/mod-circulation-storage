@@ -1,5 +1,7 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForCheckIn;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoCheckInEvent;
 import static org.folio.rest.support.matchers.JsonMatchers.hasSameProperties;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasParameter;
@@ -56,6 +58,8 @@ public class CheckInStorageApiTest extends ApiTests {
     IndividualResource createResult = checkInClient.create(checkInToCreate);
 
     assertThat(createResult.getJson(), is(checkInToCreate));
+
+    assertCreateEventForCheckIn(checkInToCreate);
   }
 
   @Test
@@ -70,6 +74,7 @@ public class CheckInStorageApiTest extends ApiTests {
 
     assertThat(createResult.getId(), notNullValue());
     assertThat(createResult.getJson(), hasSameProperties(checkInToCreate));
+    assertCreateEventForCheckIn(checkInToCreate);
   }
 
   @Test
@@ -84,6 +89,8 @@ public class CheckInStorageApiTest extends ApiTests {
     assertThat(createResponse, isValidationResponseWhich(hasMessage("must not be null")));
     assertThat(createResponse, isValidationResponseWhich(hasParameter("occurredDateTime", "null")));
     assertThat(checkInClient.attemptGetById(recordId).getStatusCode(), is(404));
+
+    assertNoCheckInEvent(checkInToCreate.getString("id"));
   }
 
   @Test
@@ -186,6 +193,8 @@ public class CheckInStorageApiTest extends ApiTests {
     IndividualResource createResult = checkInClient.create(checkInToCreate);
 
     assertThat(createResult.getJson(), is(checkInToCreate));
+
+    assertCreateEventForCheckIn(checkInToCreate);
   }
 
   @Test
@@ -205,6 +214,8 @@ public class CheckInStorageApiTest extends ApiTests {
     assertThat(createResult,
       isValidationResponseWhich(hasParameter("requestQueueSize", "-1")));
     assertThat(checkInClient.attemptGetById(recordId).getStatusCode(), is(404));
+
+    assertNoCheckInEvent(checkInToCreate.getString("id"));
   }
 
   private CheckInBuilder createSampleCheckIn() {

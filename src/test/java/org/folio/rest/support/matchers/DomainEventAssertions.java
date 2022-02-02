@@ -15,6 +15,8 @@ import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.okapi.common.XOkapiHeaders.URL;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.storageUrl;
+import static org.folio.rest.support.kafka.FakeKafkaConsumer.getCheckInEvents;
+import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstCheckInEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstLoanEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastLoanEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLoanEvents;
@@ -74,6 +76,19 @@ public final class DomainEventAssertions {
         .until(() -> getLoanEvents(loanId), is(empty()));
   }
 
+  public static void assertCreateEventForCheckIn(JsonObject checkIn) {
+    final String checkInId = checkIn.getString("id");
+
+    await().until(() -> getCheckInEvents(checkInId).size(), greaterThan(0));
+
+    assertCreateEvent(getFirstCheckInEvent(checkInId), checkIn);
+  }
+
+  public static void assertNoCheckInEvent(String checkInId) {
+    await().during(1, SECONDS)
+      .until(() -> getCheckInEvents(checkInId), is(empty()));
+  }
+
   private static ConditionFactory await() {
     return Awaitility.await().atMost(5, SECONDS);
   }
@@ -82,8 +97,9 @@ public final class DomainEventAssertions {
     assertThat("Create event should be present", createEvent.value(), is(notNullValue()));
     assertBasicEventFields(createEvent, DomainEventType.CREATED);
 
-    assertThat(createEvent.value().getJsonObject("old"), nullValue());
-    assertThat(createEvent.value().getJsonObject("new"), is(newRecord));
+    JsonObject data = createEvent.value().getJsonObject("data");
+    assertThat(data.getJsonObject("old"), nullValue());
+    assertThat(data.getJsonObject("new"), is(newRecord));
 
     assertHeaders(createEvent.headers());
   }
@@ -93,8 +109,9 @@ public final class DomainEventAssertions {
     assertThat("Update event should be present", updateEvent.value(), is(notNullValue()));
     assertBasicEventFields(updateEvent, DomainEventType.UPDATED);
 
-    assertThat(updateEvent.value().getJsonObject("old"), is(oldRecord));
-    assertThat(updateEvent.value().getJsonObject("new"), is(newRecord));
+    JsonObject data = updateEvent.value().getJsonObject("data");
+    assertThat(data.getJsonObject("old"), is(oldRecord));
+    assertThat(data.getJsonObject("new"), is(newRecord));
 
     assertHeaders(updateEvent.headers());
   }
@@ -113,8 +130,9 @@ public final class DomainEventAssertions {
     assertThat("Delete event should be present", deleteEvent.value(), is(notNullValue()));
     assertBasicEventFields(deleteEvent, DomainEventType.DELETED);
 
-    assertThat(deleteEvent.value().getJsonObject("new"), nullValue());
-    assertThat(deleteEvent.value().getJsonObject("old"), is(record));
+    JsonObject data = deleteEvent.value().getJsonObject("data");
+    assertThat(data.getJsonObject("new"), nullValue());
+    assertThat(data.getJsonObject("old"), is(record));
 
     assertHeaders(deleteEvent.headers());
   }
@@ -123,7 +141,8 @@ public final class DomainEventAssertions {
     assertThat("Delete All event should be present", deleteEvent.value(), is(notNullValue()));
     assertBasicEventFields(deleteEvent, DomainEventType.ALL_DELETED);
 
-    assertThat(deleteEvent.value().getJsonObject("new"), nullValue());
+    JsonObject data = deleteEvent.value().getJsonObject("data");
+    assertThat(data.getJsonObject("new"), nullValue());
     assertThat(deleteEvent.value().getJsonObject("old"), nullValue());
 
     assertHeaders(deleteEvent.headers());
