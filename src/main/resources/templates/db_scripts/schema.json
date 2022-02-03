@@ -21,6 +21,14 @@
           "whereClause": "WHERE lower(f_unaccent((jsonb->'status'->>'name'))) LIKE 'open'"
         }
       ],
+      "likeIndex": [
+        {
+          "fieldName": "itemId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        }
+      ],
       "ginIndex": [
         {
           "fieldName": "userId",
