@@ -8,6 +8,9 @@ public final class KafkaProperties {
   private static String port = getenv().getOrDefault("KAFKA_PORT", "9092");
   private static String host = getenv().getOrDefault("KAFKA_HOST", "localhost");
 
+  private KafkaProperties() {
+  }
+
   public static void setPort(int port) {
     KafkaProperties.port = String.valueOf(port);
   }
