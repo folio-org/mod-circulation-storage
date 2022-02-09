@@ -5,7 +5,6 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
-
 import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_PICKUP_EXPIRED;
 import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_UNFILLED;
 import static org.folio.rest.jaxrs.model.Request.Status.OPEN_AWAITING_DELIVERY;
@@ -32,6 +31,14 @@ import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.folio.okapi.common.GenericCompositeFuture;
+import org.folio.rest.jaxrs.model.Request;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.SQLConnection;
+import org.folio.service.EventPublisherService;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -39,14 +46,6 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import org.folio.okapi.common.GenericCompositeFuture;
-import org.folio.rest.jaxrs.model.Request;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.SQLConnection;
-import org.folio.service.EventPublisherService;
 
 public class ExpirationTool {
   private static final Logger log = LogManager.getLogger();

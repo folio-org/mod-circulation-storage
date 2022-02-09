@@ -1,18 +1,6 @@
 package org.folio.rest.api;
 
 import static java.lang.Boolean.TRUE;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNot.not;
-import static org.hamcrest.core.IsNull.notNullValue;
-import static org.hamcrest.core.IsNull.nullValue;
-import static org.hamcrest.junit.MatcherAssert.assertThat;
-import static org.joda.time.DateTime.parse;
-
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForLoan;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertLoanEventCount;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoLoanEvent;
@@ -26,6 +14,17 @@ import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessageContaining;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasParameter;
 import static org.folio.rest.support.matchers.ValidationResponseMatchers.isValidationResponseWhich;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNot.not;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.hamcrest.core.IsNull.nullValue;
+import static org.hamcrest.junit.MatcherAssert.assertThat;
+import static org.joda.time.DateTime.parse;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -41,8 +40,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
+import org.folio.rest.jaxrs.model.Metadata;
+import org.folio.rest.support.ApiTests;
+import org.folio.rest.support.IndividualResource;
+import org.folio.rest.support.JsonResponse;
+import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.TextResponse;
+import org.folio.rest.support.builders.LoanRequestBuilder;
+import org.folio.rest.support.http.AssertingRecordClient;
+import org.folio.rest.support.http.InterfaceUrls;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -53,15 +59,8 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import org.folio.rest.jaxrs.model.Metadata;
-import org.folio.rest.support.ApiTests;
-import org.folio.rest.support.IndividualResource;
-import org.folio.rest.support.JsonResponse;
-import org.folio.rest.support.ResponseHandler;
-import org.folio.rest.support.TextResponse;
-import org.folio.rest.support.builders.LoanRequestBuilder;
-import org.folio.rest.support.http.AssertingRecordClient;
-import org.folio.rest.support.http.InterfaceUrls;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 public class LoansApiTest extends ApiTests {
   private final AssertingRecordClient loansClient = new AssertingRecordClient(

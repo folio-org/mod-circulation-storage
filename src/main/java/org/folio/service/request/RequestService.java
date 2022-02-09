@@ -2,7 +2,6 @@ package org.folio.service.request;
 
 import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.Promise.promise;
-
 import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
@@ -16,13 +15,8 @@ import java.util.function.Function;
 
 import javax.ws.rs.core.Response;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import org.folio.persist.RequestRepository;
 import org.folio.rest.impl.util.OkapiResponseUtil;
 import org.folio.rest.impl.util.RequestsApiUtil;
@@ -36,6 +30,11 @@ import org.folio.service.event.EntityChangedEventPublisher;
 import org.folio.support.ResponseUtil;
 import org.folio.support.ServiceHelper;
 
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
+
 public class RequestService {
 
   private static final Logger log = LogManager.getLogger(RequestService.class);
@@ -46,7 +45,6 @@ public class RequestService {
   private final RequestRepository repository;
   private final EntityChangedEventPublisher<String, Request> eventPublisher;
   private final ServiceHelper<Request> helper;
-
 
   public RequestService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;

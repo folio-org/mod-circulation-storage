@@ -12,6 +12,11 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.folio.rest.persist.Criteria.Criterion;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.SQLConnection;
+import org.folio.rest.persist.interfaces.Results;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -19,17 +24,11 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.SQLConnection;
-import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.interfaces.Results;
-
 public abstract class AbstractRepository<T> {
 
   protected final PostgresClient postgresClient;
   protected final String tableName;
   protected final Class<T> recordType;
-
 
   protected AbstractRepository(PostgresClient postgresClient, String tableName,
       Class<T> recordType) {

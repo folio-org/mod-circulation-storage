@@ -108,7 +108,7 @@ env variable, this property has following description:
 > The replication factor controls how many servers will replicate each message that is written.
 > If replication factor set to 3 then up to 2 servers can fail before access to the data will be lost.
 
-The default configuration for this property is `1` for production environments
+The default configuration for this property is `1`, for production environments
 it is usually `3`.
 
 There is another important property - `number of partitions` for a topic - it has following

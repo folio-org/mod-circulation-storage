@@ -4,18 +4,18 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 
 import java.util.Map;
 
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.kafka.client.producer.KafkaProducer;
-import io.vertx.kafka.client.producer.KafkaProducerRecord;
 import org.apache.logging.log4j.Logger;
-
 import org.folio.kafka.KafkaConfig;
 import org.folio.kafka.KafkaProducerManager;
 import org.folio.kafka.SimpleKafkaProducerManager;
 import org.folio.service.kafka.KafkaProducerRecordBuilder;
 import org.folio.service.kafka.KafkaProperties;
 import org.folio.service.kafka.topic.KafkaTopic;
+
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.kafka.client.producer.KafkaProducer;
+import io.vertx.kafka.client.producer.KafkaProducerRecord;
 
 public class DomainEventPublisher<K, T> {
 
@@ -24,7 +24,6 @@ public class DomainEventPublisher<K, T> {
   private final KafkaTopic kafkaTopic;
   private final KafkaProducerManager producerManager;
   private final FailureHandler failureHandler;
-
 
   DomainEventPublisher(KafkaTopic kafkaTopic, KafkaProducerManager producerManager,
       FailureHandler failureHandler) {

@@ -6,9 +6,9 @@ import static org.folio.support.ModuleConstants.REQUEST_TABLE;
 
 import java.util.Map;
 
-import io.vertx.core.Context;
-
 import org.folio.rest.jaxrs.model.Request;
+
+import io.vertx.core.Context;
 
 public class RequestRepository extends AbstractRepository<Request> {
 

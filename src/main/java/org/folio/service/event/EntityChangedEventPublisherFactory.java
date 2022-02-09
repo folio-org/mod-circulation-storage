@@ -5,8 +5,6 @@ import static org.folio.support.Environment.environmentName;
 
 import java.util.Map;
 
-import io.vertx.core.Context;
-
 import org.folio.persist.CheckInRepository;
 import org.folio.persist.LoanRepository;
 import org.folio.persist.RequestRepository;
@@ -14,6 +12,8 @@ import org.folio.rest.jaxrs.model.CheckIn;
 import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.service.kafka.topic.KafkaTopic;
+
+import io.vertx.core.Context;
 
 public class EntityChangedEventPublisherFactory {
 

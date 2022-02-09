@@ -2,6 +2,7 @@ package org.folio.service.kafka.topic;
 
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
+import static org.folio.support.Environment.environmentName;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.instanceOf;
@@ -12,22 +13,21 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import static org.folio.support.Environment.environmentName;
-
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.apache.kafka.common.errors.TopicExistsException;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 
 import io.vertx.core.Future;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.kafka.admin.KafkaAdminClient;
 import io.vertx.kafka.admin.NewTopic;
-import org.apache.kafka.common.errors.TopicExistsException;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
 
 @RunWith(VertxUnitRunner.class)
 public class KafkaAdminClientServiceTest {
@@ -39,7 +39,6 @@ public class KafkaAdminClientServiceTest {
   );
 
   private KafkaAdminClient mockClient;
-
 
   @Before
   public void setUp() {

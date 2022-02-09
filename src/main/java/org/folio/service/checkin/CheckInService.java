@@ -8,22 +8,21 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Promise;
-
 import org.folio.rest.jaxrs.model.CheckIn;
 import org.folio.rest.jaxrs.model.CheckIns;
 import org.folio.rest.jaxrs.resource.CheckInStorageCheckIns;
 import org.folio.rest.persist.PgUtil;
 import org.folio.service.event.EntityChangedEventPublisher;
 
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
+
 public class CheckInService {
 
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
   private final EntityChangedEventPublisher<String, CheckIn> eventPublisher;
-
 
   public CheckInService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;

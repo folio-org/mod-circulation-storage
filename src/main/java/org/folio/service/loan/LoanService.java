@@ -2,7 +2,6 @@ package org.folio.service.loan;
 
 import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.Promise.promise;
-
 import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
@@ -22,16 +21,10 @@ import java.util.function.Function;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.core.Response;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.joda.time.DateTime;
-
 import org.folio.persist.LoanRepository;
 import org.folio.rest.impl.util.OkapiResponseUtil;
 import org.folio.rest.jaxrs.model.Error;
@@ -52,6 +45,12 @@ import org.folio.support.ServerErrorResponder;
 import org.folio.support.ServiceHelper;
 import org.folio.support.UUIDValidation;
 import org.folio.support.VertxContextRunner;
+import org.joda.time.DateTime;
+
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
 
 public class LoanService {
 
@@ -63,7 +62,6 @@ public class LoanService {
   private final LoanRepository repository;
   private final EntityChangedEventPublisher<String, Loan> eventPublisher;
   private final ServiceHelper<Loan> helper;
-
 
   public LoanService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
@@ -251,6 +249,7 @@ public class LoanService {
 
     return new ImmutablePair<>(valid, messages.toString());
   }
+
   private boolean isMultipleOpenLoanError(AsyncResult<Response> reply) {
     return OkapiResponseUtil.containsErrorMessage(
         reply, "value already exists in table loan: ");

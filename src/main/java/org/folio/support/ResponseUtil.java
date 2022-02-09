@@ -1,7 +1,6 @@
 package org.folio.support;
 
 import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
-
 import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
 import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_INTERNAL_SERVER_ERROR;

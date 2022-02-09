@@ -1,7 +1,6 @@
 package org.folio.service.kafka;
 
 import static io.vertx.kafka.client.producer.KafkaProducerRecord.create;
-
 import static org.folio.dbschema.ObjectMapperTool.getMapper;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.okapi.common.XOkapiHeaders.URL;
@@ -10,10 +9,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import io.vertx.kafka.client.producer.KafkaProducerRecord;
-
 import org.folio.service.kafka.topic.KafkaTopic;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+
+import io.vertx.kafka.client.producer.KafkaProducerRecord;
 
 public final class KafkaProducerRecordBuilder<K, V> {
 
@@ -24,7 +24,6 @@ public final class KafkaProducerRecordBuilder<K, V> {
   private K key;
   private String topic;
   private final Map<String, String> headers = new HashMap<>();
-
 
   public KafkaProducerRecordBuilder<K, V> value(V value) {
     this.value = value;

@@ -1,7 +1,6 @@
 package org.folio.support;
 
 import static io.vertx.core.Future.succeededFuture;
-
 import static org.folio.support.ResponseUtil.badRequestResponse;
 import static org.folio.support.ResponseUtil.isCreateSuccessResponse;
 import static org.folio.support.ResponseUtil.noContentResponse;
@@ -10,20 +9,19 @@ import java.util.function.Function;
 
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.lang3.StringUtils;
+import org.folio.persist.AbstractRepository;
+import org.folio.service.event.EntityChangedEventPublisher;
+
 import io.vertx.core.Future;
 import io.vertx.core.json.EncodeException;
 import io.vertx.core.json.Json;
-import org.apache.commons.lang3.StringUtils;
-
-import org.folio.persist.AbstractRepository;
-import org.folio.service.event.EntityChangedEventPublisher;
 
 public class ServiceHelper<T> {
 
   private final AbstractRepository<T> repository;
   private final EntityChangedEventPublisher<String, T> eventPublisher;
 
-  
   public ServiceHelper(AbstractRepository<T> repository,
       EntityChangedEventPublisher<String, T> eventPublisher) {
     this.repository = repository;

@@ -2,7 +2,6 @@ package org.folio.service.kafka.topic;
 
 import static io.vertx.kafka.admin.KafkaAdminClient.create;
 import static org.apache.logging.log4j.LogManager.getLogger;
-
 import static org.folio.service.kafka.KafkaProperties.getReplicationFactor;
 
 import java.util.ArrayList;
@@ -12,6 +11,11 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.logging.log4j.Logger;
+import org.folio.kafka.KafkaConfig;
+import org.folio.service.kafka.KafkaProperties;
+import org.folio.util.ResourceUtil;
+
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -19,18 +23,12 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.admin.KafkaAdminClient;
 import io.vertx.kafka.admin.NewTopic;
-import org.apache.logging.log4j.Logger;
-
-import org.folio.kafka.KafkaConfig;
-import org.folio.service.kafka.KafkaProperties;
-import org.folio.util.ResourceUtil;
 
 public class KafkaAdminClientService {
 
   private static final Logger log = getLogger(KafkaAdminClientService.class);
   private static final String KAFKA_TOPICS_FILE = "kafka-topics.json";
   private final Supplier<KafkaAdminClient> clientFactory;
-
 
   public KafkaAdminClientService(Vertx vertx) {
     this(() -> create(vertx, KafkaConfig.builder()

@@ -6,7 +6,6 @@ public class KafkaTopic {
 
   private final String qualifiedName;
 
-
   KafkaTopic(String qualifiedName) {
     this.qualifiedName = qualifiedName;
   }

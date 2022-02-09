@@ -6,9 +6,9 @@ import static org.folio.support.ModuleConstants.LOAN_TABLE;
 
 import java.util.Map;
 
-import io.vertx.core.Context;
-
 import org.folio.rest.jaxrs.model.Loan;
+
+import io.vertx.core.Context;
 
 public class LoanRepository extends AbstractRepository<Loan> {
 

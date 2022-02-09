@@ -6,9 +6,9 @@ import static org.folio.support.ModuleConstants.CHECKIN_TABLE;
 
 import java.util.Map;
 
-import io.vertx.core.Context;
-
 import org.folio.rest.jaxrs.model.CheckIn;
+
+import io.vertx.core.Context;
 
 public class CheckInRepository extends AbstractRepository<CheckIn> {
 

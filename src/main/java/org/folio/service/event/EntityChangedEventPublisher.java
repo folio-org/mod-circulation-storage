@@ -2,7 +2,6 @@ package org.folio.service.event;
 
 import static io.vertx.core.Future.succeededFuture;
 import static org.apache.logging.log4j.LogManager.getLogger;
-
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.folio.support.ResponseUtil.isCreateSuccessResponse;
 import static org.folio.support.ResponseUtil.isDeleteSuccessResponse;
@@ -13,10 +12,10 @@ import java.util.function.Function;
 
 import javax.ws.rs.core.Response;
 
-import io.vertx.core.Future;
 import org.apache.logging.log4j.Logger;
-
 import org.folio.persist.AbstractRepository;
+
+import io.vertx.core.Future;
 
 public class EntityChangedEventPublisher<K, T> {
 
@@ -28,7 +27,6 @@ public class EntityChangedEventPublisher<K, T> {
   private final EntityChangedEventFactory<T> eventFactory;
   private final DomainEventPublisher<K, EntityChangedData<T>> eventPublisher;
   private final AbstractRepository<T> repository;
-
 
   EntityChangedEventPublisher(Map<String, String> okapiHeaders,
       Function<T, K> keyExtractor, K nullKey,

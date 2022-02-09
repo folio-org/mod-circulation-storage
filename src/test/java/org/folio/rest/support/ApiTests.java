@@ -1,10 +1,9 @@
 package org.folio.rest.support;
 
 import static java.net.HttpURLConnection.HTTP_CREATED;
+import static org.folio.rest.support.kafka.FakeKafkaConsumer.removeAllEvents;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-
-import static org.folio.rest.support.kafka.FakeKafkaConsumer.removeAllEvents;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -13,16 +12,16 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
-import lombok.SneakyThrows;
+import org.folio.rest.api.StorageTestSuite;
+import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.core.Is;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
-import org.folio.rest.api.StorageTestSuite;
-import org.folio.rest.support.kafka.FakeKafkaConsumer;
+import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
+import lombok.SneakyThrows;
 
 public class ApiTests {
   private static boolean runningOnOwn;

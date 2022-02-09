@@ -4,14 +4,14 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Handler;
-
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.resource.LoanStorage;
 import org.folio.service.loan.LoanService;
+
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Handler;
 
 public class LoansAPI implements LoanStorage {
 

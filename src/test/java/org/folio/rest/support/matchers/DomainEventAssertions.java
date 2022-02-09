@@ -2,14 +2,6 @@ package org.folio.rest.support.matchers;
 
 import static io.vertx.core.MultiMap.caseInsensitiveMultiMap;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertEquals;
-
 import static org.folio.kafka.KafkaHeaderUtils.kafkaHeadersToMap;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.okapi.common.XOkapiHeaders.URL;
@@ -23,25 +15,31 @@ import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastRequestEvent
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLoanEvents;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getRequestEvents;
 import static org.folio.rest.support.matchers.UUIDMatchers.hasUUIDFormat;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.assertEquals;
 
 import java.util.List;
+
+import org.awaitility.Awaitility;
+import org.awaitility.core.ConditionFactory;
+import org.folio.service.event.DomainEventType;
 
 import io.vertx.core.MultiMap;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.producer.KafkaHeader;
 import lombok.SneakyThrows;
-import org.awaitility.Awaitility;
-import org.awaitility.core.ConditionFactory;
-
-import org.folio.service.event.DomainEventType;
 
 public final class DomainEventAssertions {
 
   private static final String NULL_ID = "00000000-0000-0000-0000-000000000000";
 
   private DomainEventAssertions() { }
-
 
   public static void assertCreateEventForLoan(JsonObject loan) {
     final String loanId = loan.getString("id");

@@ -11,14 +11,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.folio.service.kafka.KafkaProperties;
+
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.serialization.JsonObjectDeserializer;
-import org.apache.kafka.common.serialization.StringDeserializer;
-
-import org.folio.service.kafka.KafkaProperties;
 
 public final class FakeKafkaConsumer {
 
@@ -38,7 +38,6 @@ public final class FakeKafkaConsumer {
           REQUEST_TOPIC_NAME, requestEvents,
           CHECKIN_TOPIC_NAME, checkInEvents
       );
-  
 
   public FakeKafkaConsumer consume(Vertx vertx) {
     final KafkaConsumer<String, JsonObject> consumer = create(vertx, consumerProperties());
