@@ -1,18 +1,27 @@
 package org.folio.rest.impl;
 
-import io.vertx.core.Context;
-import io.vertx.core.Future;
+import static org.folio.support.Environment.environmentName;
+
 import java.util.Map;
 
-import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
+import javax.ws.rs.core.Response;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.tools.utils.TenantLoading;
+import org.folio.rest.tools.utils.TenantTool;
 import org.folio.service.PubSubRegistrationService;
+import org.folio.service.kafka.topic.KafkaAdminClientService;
 import org.folio.service.tlr.TlrDataMigrationService;
+
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 
 public class TenantRefAPI extends TenantAPI {
 
@@ -28,6 +37,7 @@ public class TenantRefAPI extends TenantAPI {
       Map<String, String> headers, Context vertxContext) {
 
     return (new TlrDataMigrationService(attributes, vertxContext, headers).migrate())
+      .compose(r -> new KafkaAdminClientService(vertxContext.owner()).createKafkaTopics(tenantId, environmentName()))
       .compose(r -> super.loadData(attributes, tenantId, headers, vertxContext))
       .compose(superRecordsLoaded -> {
         log.info("Initializing of tenant's data");
@@ -58,6 +68,17 @@ public class TenantRefAPI extends TenantAPI {
         });
         return promise.future();
       });
+  }
+
+  @Validate
+  @Override
+  public void postTenant(TenantAttributes tenantAttributes, Map<String, String> headers,
+                         Handler<AsyncResult<Response>> handler, Context context) {
+    // delete Kafka topics if tenant purged
+    Future<Void> result = tenantAttributes.getPurge() != null && tenantAttributes.getPurge()
+      ? new KafkaAdminClientService(context.owner()).deleteKafkaTopics(TenantTool.tenantId(headers), environmentName())
+      : Future.succeededFuture();
+    result.onComplete(x -> super.postTenant(tenantAttributes, headers, handler, context));
   }
 
 }

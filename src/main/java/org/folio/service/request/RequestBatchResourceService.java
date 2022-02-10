@@ -1,8 +1,8 @@
 package org.folio.service.request;
 
 import static java.util.stream.IntStream.rangeClosed;
-import static org.folio.rest.impl.RequestsAPI.REQUEST_TABLE;
 import static org.folio.rest.persist.PostgresClient.convertToPsqlStandard;
+import static org.folio.support.ModuleConstants.REQUEST_TABLE;
 
 import java.util.ArrayList;
 import java.util.List;

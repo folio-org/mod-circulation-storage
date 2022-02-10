@@ -1,7 +1,11 @@
 package org.folio.rest.api;
 
 import static java.lang.Boolean.TRUE;
-import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForLoan;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertLoanEventCount;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoLoanEvent;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForLoan;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForLoan;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isBadRequest;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNotFound;
 import static org.folio.rest.support.matchers.LoanMatchers.isClosed;
@@ -24,7 +28,6 @@ import static org.joda.time.DateTime.parse;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -170,6 +173,8 @@ public class LoansApiTest extends ApiTests {
     assertThat(parse(agedToLostDelayedBilling.getString("dateLostItemShouldBeBilled")),
       is(dateLostItemShouldBeBilled));
     assertThat(parse(agedToLostDelayedBilling.getString("agedToLostDate")), is(agedToLostDate));
+
+    assertCreateEventForLoan(loan);
   }
 
   @Test
@@ -203,6 +208,8 @@ public class LoansApiTest extends ApiTests {
 
     assertThat("recall changed due date is not true",
         loan.getBoolean("dueDateChangedByRecall"), is(TRUE));
+
+    assertCreateEventForLoan(loan);
   }
 
   @Test
@@ -256,6 +263,8 @@ public class LoansApiTest extends ApiTests {
 
     assertThat("due date does not match",
       loan.getString("dueDate"), is("2017-04-20T07:21:45.000+00:00"));
+
+    assertCreateEventForLoan(loan);
   }
 
   @Test
@@ -294,6 +303,8 @@ public class LoansApiTest extends ApiTests {
 
     assertThat("system return date does not match",
       loan.getString("systemReturnDate"), is("2017-04-01T12:00:00.000+00:00"));
+
+    assertCreateEventForLoan(loan);
   }
 
   @Test
@@ -319,6 +330,8 @@ public class LoansApiTest extends ApiTests {
 
     assertThat("should not have a user ID",
       loan.containsKey("userId"), is(false));
+
+    assertCreateEventForLoan(loan);
   }
 
   @Test
@@ -371,6 +384,8 @@ public class LoansApiTest extends ApiTests {
 
     assertThat("due date does not match",
       loan.getString("dueDate"), is("2017-03-29T21:14:43.000+00:00"));
+
+    assertCreateEventForLoan(loan);
   }
 
   @Test
@@ -398,6 +413,8 @@ public class LoansApiTest extends ApiTests {
       loan.getString("id"), is(id.toString()));
 
     assertThat(loan, isOpen());
+
+    assertCreateEventForLoan(loan);
   }
 
   @Test
@@ -425,6 +442,8 @@ public class LoansApiTest extends ApiTests {
       loan.getString("id"), is(id.toString()));
 
     assertThat(loan, isOpen());
+
+    assertCreateEventForLoan(loan);
   }
 
   @Test
@@ -443,6 +462,8 @@ public class LoansApiTest extends ApiTests {
     assertThat(response, isValidationResponseWhich(allOf(
       anyOf(hasMessage("must not be null"), hasMessage("darf nicht null sein")),  // any server language
       hasParameter("action", "null"))));
+
+    assertNoLoanEvent(loanRequest.getString("id"));
   }
 
   @Test
@@ -468,6 +489,8 @@ public class LoansApiTest extends ApiTests {
 
     assertThat(response.getBody(),
       containsString("return date must be a date time (in RFC3339 format)"));
+
+    assertNoLoanEvent(loanRequest.getString("id"));
   }
 
   @Test
@@ -486,6 +509,8 @@ public class LoansApiTest extends ApiTests {
 
     loansClient.create(firstLoanRequest);
 
+    JsonObject firstLoan = loansClient.getById(firstLoanRequest.getString("id")).getJson();
+
     JsonObject secondLoanRequest = new LoanRequestBuilder()
       .withItemId(itemId)
       .open()
@@ -495,6 +520,9 @@ public class LoansApiTest extends ApiTests {
 
     assertThat(response, isValidationResponseWhich(hasMessage(
       "Cannot have more than one open loan for the same item")));
+
+    assertCreateEventForLoan(firstLoan);
+    assertNoLoanEvent(secondLoanRequest.getString("id"));
   }
 
   @Test
@@ -513,6 +541,8 @@ public class LoansApiTest extends ApiTests {
 
     loansClient.create(firstLoanRequest);
 
+    JsonObject firstLoan = loansClient.getById(firstLoanRequest.getString("id")).getJson();
+
     UUID secondLoanId = UUID.randomUUID();
 
     JsonObject secondLoanRequest = new LoanRequestBuilder()
@@ -526,6 +556,9 @@ public class LoansApiTest extends ApiTests {
 
     assertThat(createResponse, isValidationResponseWhich(hasMessage(
       "Cannot have more than one open loan for the same item")));
+
+    assertCreateEventForLoan(firstLoan);
+    assertNoLoanEvent(secondLoanId.toString());
   }
 
   @Test
@@ -544,12 +577,19 @@ public class LoansApiTest extends ApiTests {
 
     loansClient.create(closedLoanRequest);
 
+    JsonObject closedLoan = loansClient.getById(closedLoanRequest.getString("id")).getJson();
+
     JsonObject openLoanRequest = new LoanRequestBuilder()
       .withItemId(itemId)
       .open()
       .create();
 
     loansClient.create(openLoanRequest);
+
+    JsonObject openLoan = loansClient.getById(openLoanRequest.getString("id")).getJson();
+
+    assertCreateEventForLoan(closedLoan);
+    assertCreateEventForLoan(openLoan);
   }
 
   @Test
@@ -569,12 +609,19 @@ public class LoansApiTest extends ApiTests {
 
     loansClient.create(firstLoanRequest);
 
+    JsonObject firstLoan = loansClient.getById(firstLoanRequest.getString("id")).getJson();
+
     JsonObject secondLoanRequest = new LoanRequestBuilder()
       .withItemId(secondItemId)
       .open()
       .create();
 
     loansClient.create(secondLoanRequest);
+
+    JsonObject secondLoan = loansClient.getById(secondLoanRequest.getString("id")).getJson();
+
+    assertCreateEventForLoan(firstLoan);
+    assertCreateEventForLoan(secondLoan);
   }
 
   @Test
@@ -592,6 +639,7 @@ public class LoansApiTest extends ApiTests {
       .create();
 
     loansClient.create(firstLoanRequest);
+    JsonObject firstLoan = loansClient.getById(firstLoanRequest.getString("id")).getJson();
 
     JsonObject secondLoanRequest = new LoanRequestBuilder()
       .withItemId(itemId)
@@ -599,6 +647,10 @@ public class LoansApiTest extends ApiTests {
       .create();
 
     loansClient.create(secondLoanRequest);
+    JsonObject secondLoan = loansClient.getById(secondLoanRequest.getString("id")).getJson();
+
+    assertCreateEventForLoan(firstLoan);
+    assertCreateEventForLoan(secondLoan);
   }
 
   @Test
@@ -617,6 +669,7 @@ public class LoansApiTest extends ApiTests {
       .create();
 
     loansClient.create(firstLoanRequest);
+    JsonObject firstLoan = loansClient.getById(firstLoanRequest.getString("id")).getJson();
 
     JsonObject secondLoanRequest = new LoanRequestBuilder()
       .withItemId(secondItemId)
@@ -624,6 +677,10 @@ public class LoansApiTest extends ApiTests {
       .create();
 
     loansClient.create(secondLoanRequest);
+    JsonObject secondLoan = loansClient.getById(secondLoanRequest.getString("id")).getJson();
+
+    assertCreateEventForLoan(firstLoan);
+    assertCreateEventForLoan(secondLoan);
   }
 
   @Test
@@ -702,7 +759,9 @@ public class LoansApiTest extends ApiTests {
       .withDueDate(loanDate.plus(Period.days(14)))
       .create());
 
-    LoanRequestBuilder returnedLoan = LoanRequestBuilder.from(loan.copyJson())
+    JsonObject createdLoan = loan.copyJson();
+
+    LoanRequestBuilder returnedLoan = LoanRequestBuilder.from(createdLoan)
       .closed()
       .withAction("checkedin")
       .withItemStatus("Available")
@@ -725,6 +784,9 @@ public class LoansApiTest extends ApiTests {
 
     assertThat("action is not checkedin",
       updatedLoan.getString("action"), is("checkedin"));
+
+    assertCreateEventForLoan(createdLoan);
+    assertUpdateEventForLoan(createdLoan, updatedLoan);
   }
 
   @Test
@@ -766,6 +828,9 @@ public class LoansApiTest extends ApiTests {
 
     assertThat("Should not have a user ID",
       anonymisedLoan.getJson().containsKey("userId"), is(false));
+
+    assertCreateEventForLoan(loan.getJson());
+    assertUpdateEventForLoan(closedLoan.getJson(), anonymisedLoan.getJson());
   }
 
   @Test
@@ -775,7 +840,9 @@ public class LoansApiTest extends ApiTests {
     TimeoutException,
     ExecutionException {
 
+    final UUID loanId = UUID.randomUUID();
     final LoanRequestBuilder loanRequest = new LoanRequestBuilder()
+      .withId(loanId)
       .open()
       .withNoUserId();
 
@@ -783,6 +850,8 @@ public class LoansApiTest extends ApiTests {
 
     assertThat(putResponse, isValidationResponseWhich(
       hasMessage("Open loan must have a user ID")));
+
+    assertNoLoanEvent(loanId.toString());
   }
 
   @Test
@@ -804,6 +873,8 @@ public class LoansApiTest extends ApiTests {
 
     assertThat(putResponse, isValidationResponseWhich(
       hasMessage("Open loan must have a user ID")));
+
+    assertNoLoanEvent(loanId.toString());
   }
 
   @Test
@@ -831,6 +902,9 @@ public class LoansApiTest extends ApiTests {
 
     assertThat(putResponse, isValidationResponseWhich(
       hasMessage("Open loan must have a user ID")));
+
+    assertCreateEventForLoan(loan.getJson());
+    assertLoanEventCount(loanId.toString(), 1);
   }
 
   @Test
@@ -847,7 +921,9 @@ public class LoansApiTest extends ApiTests {
       .withDueDate(loanDate.plus(Period.days(14)))
       .create());
 
-    LoanRequestBuilder returnedLoan = LoanRequestBuilder.from(loan.getJson())
+    JsonObject createdLoan = loan.getJson();
+
+    LoanRequestBuilder returnedLoan = LoanRequestBuilder.from(createdLoan)
       .withDueDate(new DateTime(2017, DateTimeConstants.MARCH, 30, 13, 25, 46, DateTimeZone.UTC))
       .withAction("renewed")
       .withActionComment("test action comment")
@@ -875,6 +951,9 @@ public class LoansApiTest extends ApiTests {
 
     assertThat("item status is not checked out",
       updatedLoan.getString("itemStatus"), is("Checked out"));
+
+    assertCreateEventForLoan(createdLoan);
+    assertUpdateEventForLoan(createdLoan, updatedLoan);
   }
 
   @Test
@@ -888,7 +967,8 @@ public class LoansApiTest extends ApiTests {
       .open()
       .create());
 
-    LoanRequestBuilder returnedLoan = LoanRequestBuilder.from(loan.copyJson())
+    JsonObject createdLoan = loan.copyJson();
+    LoanRequestBuilder returnedLoan = LoanRequestBuilder.from(createdLoan)
       .withNoStatus();
 
     loansClient.replace(loan.getId(), returnedLoan);
@@ -897,6 +977,9 @@ public class LoansApiTest extends ApiTests {
       .getJson();
 
     assertThat(updatedLoan, isOpen());
+
+    assertCreateEventForLoan(createdLoan);
+    assertUpdateEventForLoan(createdLoan, updatedLoan);
   }
 
   @Test
@@ -913,7 +996,7 @@ public class LoansApiTest extends ApiTests {
       .open()
       .create();
 
-    loansClient.create(openLoanRequest);
+    IndividualResource openLoan = loansClient.create(openLoanRequest);
 
     JsonObject closedLoanRequest = new LoanRequestBuilder()
       .withItemId(itemId)
@@ -922,7 +1005,8 @@ public class LoansApiTest extends ApiTests {
 
     IndividualResource closedLoan = loansClient.create(closedLoanRequest);
 
-    LoanRequestBuilder reopenLoanRequest = LoanRequestBuilder.from(closedLoan.getJson())
+    JsonObject closed = closedLoan.getJson();
+    LoanRequestBuilder reopenLoanRequest = LoanRequestBuilder.from(closed)
       .open();
 
     JsonResponse replaceResponse = loansClient.attemptCreateOrReplace(
@@ -930,6 +1014,10 @@ public class LoansApiTest extends ApiTests {
 
     assertThat(replaceResponse, isValidationResponseWhich(hasMessage(
       "Cannot have more than one open loan for the same item")));
+
+    assertCreateEventForLoan(openLoan.getJson());
+    assertCreateEventForLoan(closed);
+    assertLoanEventCount(closed.getString("id"), 1);
   }
 
   @Test
@@ -957,6 +1045,10 @@ public class LoansApiTest extends ApiTests {
 
     assertThat(response.getBody(),
       containsString("return date must be a date time (in RFC3339 format)"));
+
+    JsonObject created = loan.getJson();
+    assertCreateEventForLoan(created);
+    assertLoanEventCount(created.getString("id"), 1);
   }
 
   @Test
@@ -1261,13 +1353,17 @@ public class LoansApiTest extends ApiTests {
 
     UUID id = UUID.randomUUID();
 
-    loansClient.create(new LoanRequestBuilder().withId(id).create());
+    IndividualResource loanResouce = loansClient.create(new LoanRequestBuilder().withId(id).create());
 
     loansClient.deleteById(id);
 
     JsonResponse getResponse = loansClient.attemptGetById(id);
 
     assertThat(getResponse, isNotFound());
+
+    JsonObject loan = loanResouce.getJson();
+    assertCreateEventForLoan(loan);
+    assertRemoveEventForLoan(loan);
   }
 
   @Test
@@ -1290,6 +1386,8 @@ public class LoansApiTest extends ApiTests {
 
     assertThat(response, isValidationResponseWhich(
       hasMessageContaining("Unrecognized field")));
+
+    assertNoLoanEvent(id.toString());
   }
 
   @Test
@@ -1313,6 +1411,8 @@ public class LoansApiTest extends ApiTests {
 
     assertThat(response, isValidationResponseWhich(
       hasMessageContaining("Unrecognized field")));
+
+    assertNoLoanEvent(id.toString());
   }
 
   @Test

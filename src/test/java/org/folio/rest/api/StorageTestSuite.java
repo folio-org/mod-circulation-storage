@@ -19,16 +19,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import lombok.SneakyThrows;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.github.tomakehurst.wiremock.WireMockServer;
-
 import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.api.loans.LoansAnonymizationApiTest;
-import org.folio.rest.api.migration.StaffSlipsPickRequestMigrationScriptTest;
 import org.folio.rest.api.migration.StaffSlipsHoldTransitMigrationScriptTest;
+import org.folio.rest.api.migration.StaffSlipsPickRequestMigrationScriptTest;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.JsonResponse;
@@ -36,11 +34,16 @@ import org.folio.rest.support.OkapiHttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.tools.utils.NetworkUtils;
+import org.folio.service.kafka.KafkaProperties;
 import org.folio.support.MockServer;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
+import org.testcontainers.containers.KafkaContainer;
+import org.testcontainers.utility.DockerImageName;
+
+import com.github.tomakehurst.wiremock.WireMockServer;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
@@ -48,6 +51,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import lombok.SneakyThrows;
 
 @RunWith(Suite.class)
 
@@ -89,6 +93,9 @@ public class StorageTestSuite {
   private static boolean initialised = false;
   private static MockServer mockServer;
   private static final WireMockServer wireMockServer = new WireMockServer(PROXY_PORT);
+
+  private static final KafkaContainer kafkaContainer
+    = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:5.4.3"));
 
   /**
    * Return a URL for the path and the parameters.
@@ -134,6 +141,12 @@ public class StorageTestSuite {
 
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
 
+    kafkaContainer.start();
+    log.info("starting Kafka host={} port={}",
+      kafkaContainer.getHost(), kafkaContainer.getFirstMappedPort());
+    KafkaProperties.setHost(kafkaContainer.getHost());
+    KafkaProperties.setPort(kafkaContainer.getFirstMappedPort());
+
     DeploymentOptions options = new DeploymentOptions();
     options.setConfig(new JsonObject().put("http.port", VERTICLE_PORT));
     startVerticle(options);
@@ -165,6 +178,8 @@ public class StorageTestSuite {
     initialised = false;
 
     removeTenant(TENANT_ID);
+
+    kafkaContainer.stop();
 
     mockServer.close();
 

@@ -74,6 +74,7 @@ The `userId` parameter is checked to take the form of a UUID to try to reduce th
   - pgcrypto
   - unaccent
   - pg_trgm
+- Kafka 2.6 (running and listening on localhost:9092)
 
 ### Optional
 
@@ -95,6 +96,26 @@ More information is available on the [developer site](https://dev.folio.org/guid
 
 Run the `setup-test-db.sh` script in the inventory-storage directory to setup Postgres with a database to be used in tests.
 This is only required to run tests against an external Postgres instance, the default is to use an embedded Postgres instance.
+
+### Kafka
+
+Mod-circulation-storage implements domain event pattern and requires kafka to be listening to
+`localhost:9092`. You can override kafka port and host by setting `KAFKA_PORT` and
+`KAFKA_HOST` environment variables.
+
+For production deployments it is also required to set `REPLICATION_FACTOR`
+env variable, this property has following description:
+> The replication factor controls how many servers will replicate each message that is written.
+> If replication factor set to 3 then up to 2 servers can fail before access to the data will be lost.
+
+The default configuration for this property is `1`, for production environments
+it is usually `3`.
+
+There is another important property - `number of partitions` for a topic - it has following
+description:
+> The partition count controls how many logs the topic will be sharded into.
+
+This property has fixed value - `10`.
 
 ## Common activities
 
@@ -197,3 +218,45 @@ removing positions for these request, so we will do:
 1. `UPDATE requests SET jsonb = A WHERE id = A`;
 1. `UPDATE requests SET jsonb = B WHERE id = B`;
 1. `UPDATE requests SET jsonb = C WHERE id = C`;
+
+# Domain event pattern
+
+The pattern means that every time when a domain entity is created/updated/removed
+a message is posted to kafka topic. Currently domain events are supported for _loans_, _requests_, _check-in_ entities. 
+The events are posted into the following topics: 
+* `circulation.loan` - for loans;
+* `circulation.request` - for requests;
+* `circulation.check-in` - for check-in records.
+
+The event payload has following structure:
+```javascript
+{
+  "id": "12bb13f6-d0fa-41b5-b0ad-d6561975121b",  // event UUID
+  "type": "CREATED|UPDATED|DELETED|ALL_DELETED", // type of the event
+  "tenant": "diku",                              // tenant name
+  "timestamp": 1642707670092,                    // event creation timestamp in Unix Epoch time 
+  "data": {
+    "old": {...},                                // the entity before update or delete
+    "new": {...},                                // the entity after update or create  
+  }
+}
+```
+
+`X-Okapi-Url` and `X-Okapi-Tenant` headers are set from the request to the kafka message.
+
+Kafka partition key for all the events is **entity id**.
+
+## Domain events for delete all APIs
+
+There are delete all APIs for loan and request records. For such
+APIs we're issuing a special domain event of `ALL_DELETED` type:
+* Partition key: `00000000-0000-0000-0000-000000000000`
+* Event payload:
+```javascript
+{
+  "id": "12bb13f6-d0fa-41b5-b0ad-d6561975121b",
+  "type": "ALL_DELETED",
+  "tenant": "diku",
+  "timestamp": 1642707670092
+}
+```
