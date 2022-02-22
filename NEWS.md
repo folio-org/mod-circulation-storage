@@ -1,3 +1,18 @@
+## 14.0.0 2022-02-22
+
+* Add Kafka message queues to select circulation storage record types (UXPROD-3380)
+* Add a dependency on mod-inventory-storage interfaces (CIRCSTORE-320)
+* Create likeIndex for itemId to improve performance of Items In Transit Report (CIRCSTORE-321)
+* Upgrade to RMB 33.2.4 (CIRCSTORE-318)
+* TLR feature (UXPROD-1796)
+* Use new api-lint and api-doc CI facilities (FOLIO-3231)
+* Verbose priority line in default circulation rules (CIRCSTORE-317)
+* TLR data migration (UXPROD-3330)
+* Upgrade to RMB 33.1.3 (CIRCSTORE-312)
+* Upgrade to RMB 33.1.1, Vert.x 4.2.1, Spring 5.2.18, PubSub 2.4.0 (CIRCSTORE-304)
+* Remove embed_postgres
+* Set metadata in POST request storage batch endpoint (CIRCSTORE-288)
+
 ## 13.1.0 2021-09-30
 
 * Fixes to code coverage, docker containers, and code owners (CIRCSTORE-289, CIRCSTORE-287, CIRCSTORE-259, CIRCSTORE-281)
