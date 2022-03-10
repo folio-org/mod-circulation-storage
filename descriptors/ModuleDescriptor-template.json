@@ -836,6 +836,11 @@
       "description": "Delete patron action session by id"
     },
     {
+      "permissionName": "patron-action-session-storage.expired-session-patron-ids.collection.get",
+      "displayName": "Circulation storage - get expired session patrons ids collection",
+      "description": "Get expired session patrons ids collection from storage"
+    },
+    {
       "permissionName": "circulation-storage.all",
       "displayName": "Circulation storage module - all permissions",
       "description": "Entire set of permissions needed to use the circulation storage module",
