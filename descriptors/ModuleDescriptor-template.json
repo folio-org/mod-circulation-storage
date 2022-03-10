@@ -837,8 +837,8 @@
     },
     {
       "permissionName": "patron-action-session-storage.expired-session-patron-ids.collection.get",
-      "displayName": "Circulation storage - get expired session patrons ids collection",
-      "description": "Get expired session patrons ids collection from storage"
+      "displayName": "Circulation storage - get expired session patron ids collection",
+      "description": "Get expired session patron ids collection from storage"
     },
     {
       "permissionName": "circulation-storage.all",
