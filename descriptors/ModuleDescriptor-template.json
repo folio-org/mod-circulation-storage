@@ -500,6 +500,17 @@
           ],
           "unit": "minute",
           "delay": "2"
+        },
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/tlr-feature-toggle",
+          "modulePermissions": [
+            "configuration.entries.collection.get"
+          ],
+          "unit": "minute",
+          "delay": "5"
         }
       ]
     }

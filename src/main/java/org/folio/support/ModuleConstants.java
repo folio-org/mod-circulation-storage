@@ -1,5 +1,6 @@
 package org.folio.support;
 
+import org.folio.persist.TlrFeatureToggleJob;
 import org.folio.rest.jaxrs.model.CheckIn;
 import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.Request;
@@ -15,6 +16,9 @@ public class ModuleConstants {
   public static final Class<Request> REQUEST_CLASS = Request.class;
   public static final String CHECKIN_TABLE = "check_in";
   public static final Class<CheckIn> CHECKIN_CLASS = CheckIn.class;
+  public static final String TLR_FEATURE_TOGGLE_JOB_TABLE = "tlr_feature_toggle_job";
+  public static final Class<TlrFeatureToggleJob> TLR_FEATURE_TOGGLE_JOB_CLASS =
+    TlrFeatureToggleJob.class;
 
   private ModuleConstants(){
   }
