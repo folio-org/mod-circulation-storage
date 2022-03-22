@@ -1,0 +1,67 @@
+#%RAML 1.0
+title: Tlr Feature Toggle Job
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost:9130
+
+documentation:
+  - title: Tlr Feature Toggle Job API
+    content: <b>Storage for tlr feature toggle job</b>
+
+types:
+  tlr-feature-toggle-job: !include tlr-feature-toggle-job.json
+  errors: !include raml-util/schemas/errors.schema
+  parameters: !include raml-util/schemas/parameters.schema
+
+traits:
+  language: !include raml-util/traits/language.raml
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+
+/tlr-toggle-job-storage:
+    post:
+      is: [validate]
+      body:
+        application/json:
+          type: tlr-feature-toggle-job
+      responses:
+        201:
+          description: "Toggle job was created successfully"
+          body:
+            application/json:
+              type: tlr-feature-toggle-job
+              example: !include examples/tlr-feature-toggle-job.json
+        422:
+          description: "Job request is not valid"
+          body:
+            text/plain:
+              example: "The job is not valid"
+        500:
+          description: "Internal server error"
+          body:
+            text/plain:
+              example: "Internal server error, please contact administrator"
+    /{toggleJobId}:
+      get:
+        description: "Checks tlr-feature-toggle-job status of job"
+        responses:
+          200:
+            body:
+              application/json:
+                schema: tlr-feature-toggle-job
+                example: !include examples/tlr-feature-toggle-job.json
+          404:
+            description: "The job was not found"
+            body:
+              text/plain:
+                example: "Bad request, e.g. invalid user UUID"
+          500:
+            description: "Internal server error, e.g. due to misconfiguration"
+            body:
+              text/plain:
+                example: "Internal server error, contact administrator"

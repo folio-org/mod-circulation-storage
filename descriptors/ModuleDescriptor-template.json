@@ -395,6 +395,24 @@
           "methods": ["DELETE"],
           "pathPattern": "/scheduled-notice-storage/scheduled-notices/{id}",
           "permissionsRequired": ["scheduled-notice-storage.scheduled-notices.item.delete"]
+        },
+        {
+          "methods":[
+            "POST"
+          ],
+          "pathPattern":"/tlr-toggle-job-storage",
+          "permissionsRequired": [
+            "tlr.toggle.job.post"
+          ]
+        },
+        {
+          "methods":[
+            "GET"
+          ],
+          "pathPattern":"/tlr-toggle-job-storage/{toggleJobId}",
+          "permissionsRequired": [
+            "tlr.toggle.job.get"
+          ]
         }
       ]
     },
