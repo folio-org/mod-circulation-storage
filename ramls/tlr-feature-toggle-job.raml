@@ -1,15 +1,15 @@
 #%RAML 1.0
-title: Toggle Job
+title: Tlr Feature Toggle Job
 version: v1.0
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost:9130
 
 documentation:
-  - title: Toggle Job API
-    content: <b>Storage for toggle job</b>
+  - title: Tlr Feature Toggle Job API
+    content: <b>Storage for tlr feature toggle job</b>
 
 types:
-  toggle-job: !include toggle-job.json
+  tlr-feature-toggle-job: !include tlr-feature-toggle-job.json
   errors: !include raml-util/schemas/errors.schema
   parameters: !include raml-util/schemas/parameters.schema
 
@@ -28,14 +28,14 @@ resourceTypes:
       is: [validate]
       body:
         application/json:
-          type: toggle-job
+          type: tlr-feature-toggle-job
       responses:
         201:
           description: "Toggle job was created successfully"
           body:
             application/json:
-              type: toggle-job
-              example: !include examples/toggle-job.json
+              type: tlr-feature-toggle-job
+              example: !include examples/tlr-feature-toggle-job.json
         422:
           description: "Job request is not valid"
           body:
@@ -48,13 +48,13 @@ resourceTypes:
               example: "Internal server error, please contact administrator"
     /{toggleJobId}:
       get:
-        description: "Checks toggle-job status of job"
+        description: "Checks tlr-feature-toggle-job status of job"
         responses:
           200:
             body:
               application/json:
-                schema: toggle-job
-                example: !include examples/toggle-job.json
+                schema: tlr-feature-toggle-job
+                example: !include examples/tlr-feature-toggle-job.json
           404:
             description: "The job was not found"
             body:
