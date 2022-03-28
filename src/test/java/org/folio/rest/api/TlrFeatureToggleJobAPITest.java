@@ -44,7 +44,7 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
   }
 
   @Test
-  public void canCreateTlrFeatureToggleJob() throws MalformedURLException, ExecutionException,
+  public void canCreateTlrFeatureToggleJobAndGetItById() throws MalformedURLException, ExecutionException,
     InterruptedException, TimeoutException {
 
     String jobId = UUID.randomUUID().toString();
