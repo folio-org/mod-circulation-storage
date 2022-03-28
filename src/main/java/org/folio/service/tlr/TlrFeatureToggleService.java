@@ -2,7 +2,7 @@ package org.folio.service.tlr;
 
 import static io.vertx.core.Future.succeededFuture;
 
-import org.folio.persist.TlrFeatureToggleJob;
+import org.folio.rest.jaxrs.model.TlrFeatureToggleJob;
 
 import io.vertx.core.Future;
 

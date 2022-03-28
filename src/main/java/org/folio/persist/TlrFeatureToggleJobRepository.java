@@ -6,6 +6,8 @@ import static org.folio.support.ModuleConstants.TLR_FEATURE_TOGGLE_JOB_TABLE;
 
 import java.util.Map;
 
+import org.folio.rest.jaxrs.model.TlrFeatureToggleJob;
+
 import io.vertx.core.Context;
 
 public class TlrFeatureToggleJobRepository extends AbstractRepository<TlrFeatureToggleJob> {

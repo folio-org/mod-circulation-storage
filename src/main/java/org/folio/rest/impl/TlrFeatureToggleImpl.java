@@ -10,8 +10,8 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
-import org.folio.persist.TlrFeatureToggleJob;
 import org.folio.persist.TlrFeatureToggleJobRepository;
+import org.folio.rest.jaxrs.model.TlrFeatureToggleJob;
 import org.folio.rest.jaxrs.resource.TlrFeatureToggle;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;

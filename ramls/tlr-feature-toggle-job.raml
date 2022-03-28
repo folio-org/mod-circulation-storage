@@ -6,7 +6,7 @@ baseUri: http://localhost:9130
 
 documentation:
   - title: Tlr Feature Toggle Job API
-    content: <b>Storage for tlr feature toggle job</b>
+    content: <b>Storage for TLR feature toggle job</b>
 
 types:
   tlr-feature-toggle-job: !include tlr-feature-toggle-job.json
@@ -31,16 +31,16 @@ resourceTypes:
           type: tlr-feature-toggle-job
       responses:
         201:
-          description: "Toggle job was created successfully"
+          description: "TLR feature toggle job was created successfully"
           body:
             application/json:
               type: tlr-feature-toggle-job
               example: !include examples/tlr-feature-toggle-job.json
         422:
-          description: "Job request is not valid"
+          description: "TLR feature toggle job is not valid"
           body:
             text/plain:
-              example: "The job is not valid"
+              example: "TLR feature toggle job is not valid"
         500:
           description: "Internal server error"
           body:
@@ -48,7 +48,7 @@ resourceTypes:
               example: "Internal server error, please contact administrator"
     /{toggleJobId}:
       get:
-        description: "Checks tlr-feature-toggle-job status of job"
+        description: "Checks status of TLR feature toggle job"
         responses:
           200:
             body:
@@ -56,10 +56,10 @@ resourceTypes:
                 schema: tlr-feature-toggle-job
                 example: !include examples/tlr-feature-toggle-job.json
           404:
-            description: "The job was not found"
+            description: "The TLR feature toggle job was not found"
             body:
               text/plain:
-                example: "Bad request, e.g. invalid user UUID"
+                example: "Bad request, e.g. invalid TLR feature toggle job UUID"
           500:
             description: "Internal server error, e.g. due to misconfiguration"
             body:

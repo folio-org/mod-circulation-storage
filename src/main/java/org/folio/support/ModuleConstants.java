@@ -1,9 +1,9 @@
 package org.folio.support;
 
-import org.folio.persist.TlrFeatureToggleJob;
 import org.folio.rest.jaxrs.model.CheckIn;
 import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.Request;
+import org.folio.rest.jaxrs.model.TlrFeatureToggleJob;
 
 public class ModuleConstants {
   public static final String MODULE_NAME = "mod_circulation_storage";
