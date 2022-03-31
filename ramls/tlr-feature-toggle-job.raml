@@ -1,0 +1,58 @@
+#%RAML 1.0
+title: TLR Feature Toggle Job
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost:9130
+
+documentation:
+  - title: TLR Feature Toggle Job API
+    content: <b>Storage for TLR feature toggle job</b>
+
+types:
+  tlr-feature-toggle-job: !include tlr-feature-toggle-job.json
+  tlr-feature-toggle-jobs: !include tlr-feature-toggle-jobs.json
+  errors: !include raml-util/schemas/errors.schema
+  parameters: !include raml-util/schemas/parameters.schema
+
+traits:
+  language: !include raml-util/traits/language.raml
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+
+/tlr-feature-toggle-job-storage:
+  /tlr-feature-toggle-jobs:
+    displayName: TLR feature jobs
+    type:
+      collection:
+        exampleCollection: !include examples/tlr-feature-toggle-jobs.json
+        exampleItem: !include examples/tlr-feature-toggle-job.json
+        schemaCollection: tlr-feature-toggle-jobs
+        schemaItem: tlr-feature-toggle-job
+    get:
+      is: [pageable,
+        searchable: {description: "by using CQL",
+                        example: "status=\"in-progress\""}
+      ]
+    post:
+      is: [validate]
+      body:
+        application/json:
+          type: tlr-feature-toggle-job
+    /{id}:
+      type:
+        collection-item:
+          exampleItem: !include examples/tlr-feature-toggle-job.json
+          schema: tlr-feature-toggle-job
+      get:
+        description: "Checks status of TLR feature toggle job"
+      put:
+        description: "Updates TLR feature toggle job"
+        is: [validate]
+      delete:
+        description: "Removes TLR feature toggle job"
+        is: [language]

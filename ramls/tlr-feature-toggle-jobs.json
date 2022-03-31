@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Collection of TLR feature toggle jobs",
+  "type": "object",
+  "properties": {
+    "tlrFeatureToggleJobs": {
+      "description": "List of TLR feature toggle jobs",
+      "id": "tlrFeatureToggleJobs",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "tlr-feature-toggle-job.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "tlrFeatureToggleJobs",
+    "totalRecords"
+  ]
+}
+

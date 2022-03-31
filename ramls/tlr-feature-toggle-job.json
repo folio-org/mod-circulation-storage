@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "description": "TLR feature toggle job schema",
+  "properties": {
+    "id": {
+      "description" : "TLR feature toggle job ID",
+      "type": "string",
+      "$ref": "raml-util/schemas/uuid.schema"
+    },
+    "status": {
+      "description": "Status of TLR feature toggle job",
+      "type": "string",
+      "enum": [
+        "open",
+        "in-progress",
+        "done",
+        "failed"
+      ]
+    },
+    "numberOfUpdatedRequests": {
+      "description": "Number of updated requests",
+      "type": "integer"
+    },
+    "errors": {
+      "description": "Contains array of errors",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "metadata": {
+      "description": "Metadata about creation and changes, provided by the server (client should not provide)",
+      "type": "object",
+      "$ref": "raml-util/schemas/metadata.schema"
+    }
+  },
+  "additionalProperties": false
+}

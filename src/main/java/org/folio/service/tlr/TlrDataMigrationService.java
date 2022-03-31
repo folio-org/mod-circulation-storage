@@ -144,7 +144,7 @@ public class TlrDataMigrationService {
         .compose(r -> failIfErrorsOccurred())
     );
   }
-  
+
   private static Collection<Batch> buildBatches(int numberOfBatches, Conn connection) {
     return range(0, numberOfBatches)
       .boxed()

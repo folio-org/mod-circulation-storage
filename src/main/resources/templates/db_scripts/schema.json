@@ -348,6 +348,11 @@
       "fromModuleVersion": "11.0.0",
       "withMetadata": true,
       "withAuditing": false
+    },
+    {
+      "tableName": "tlr_feature_toggle_job",
+      "withMetadata": true,
+      "withAuditing": false
     }
   ],
   "scripts": [
