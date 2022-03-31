@@ -57,8 +57,7 @@ public class TlrDataMigrationService {
 
   private static final String TLR_MIGRATION_MODULE_VERSION = "mod-circulation-storage-13.2.0";
   private static final String REQUEST_TABLE = "request";
-  private static final String
-    ITEMS_STORAGE_URL = "/item-storage/items";
+  private static final String ITEMS_STORAGE_URL = "/item-storage/items";
   private static final String HOLDINGS_STORAGE_URL = "/holdings-storage/holdings";
 
   private static final String ITEM_REQUEST_LEVEL = "Item";
@@ -145,7 +144,7 @@ public class TlrDataMigrationService {
         .compose(r -> failIfErrorsOccurred())
     );
   }
-  
+
   private static Collection<Batch> buildBatches(int numberOfBatches, Conn connection) {
     return range(0, numberOfBatches)
       .boxed()

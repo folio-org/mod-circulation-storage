@@ -1,5 +1,8 @@
 package org.folio.rest.impl;
 
+import static org.folio.support.ModuleConstants.TLR_FEATURE_TOGGLE_JOB_CLASS;
+import static org.folio.support.ModuleConstants.TLR_FEATURE_TOGGLE_JOB_TABLE;
+
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
@@ -15,14 +18,12 @@ import io.vertx.core.Handler;
 
 public class TlrFeatureToggleJobAPI implements TlrFeatureToggleJobStorage {
 
-  private static final String TLR_FEATURE_TOGGLE_JOB_TABLE = "tlr_feature_toggle_job";
-
   @Override
   public void getTlrFeatureToggleJobStorageTlrFeatureToggleJobs(int offset, int limit,
     String query, String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-    PgUtil.get(TLR_FEATURE_TOGGLE_JOB_TABLE, TlrFeatureToggleJob.class, TlrFeatureToggleJobs.class,
+    PgUtil.get(TLR_FEATURE_TOGGLE_JOB_TABLE, TLR_FEATURE_TOGGLE_JOB_CLASS, TlrFeatureToggleJobs.class,
       query, offset, limit, okapiHeaders, vertxContext,
       GetTlrFeatureToggleJobStorageTlrFeatureToggleJobsResponse.class, asyncResultHandler);
   }
@@ -41,7 +42,7 @@ public class TlrFeatureToggleJobAPI implements TlrFeatureToggleJobStorage {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    PgUtil.getById(TLR_FEATURE_TOGGLE_JOB_TABLE, TlrFeatureToggleJob.class, id,
+    PgUtil.getById(TLR_FEATURE_TOGGLE_JOB_TABLE, TLR_FEATURE_TOGGLE_JOB_CLASS, id,
       okapiHeaders, vertxContext,
       GetTlrFeatureToggleJobStorageTlrFeatureToggleJobsByIdResponse.class, asyncResultHandler);
   }

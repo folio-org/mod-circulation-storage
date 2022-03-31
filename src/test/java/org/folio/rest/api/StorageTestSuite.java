@@ -78,7 +78,8 @@ import lombok.SneakyThrows;
   StaffSlipsHoldTransitMigrationScriptTest.class,
   RequestUpdateTriggerTest.class,
   JsonPropertyWriterTest.class,
-  IsbnNormalizationTest.class
+  IsbnNormalizationTest.class,
+  TlrFeatureToggleJobAPITest.class
 })
 public class StorageTestSuite {
 
