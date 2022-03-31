@@ -400,18 +400,45 @@
           "methods":[
             "POST"
           ],
-          "pathPattern":"/tlr-toggle-job-storage",
+          "pathPattern":"/tlr-feature-toggle-job-storage/tlr-feature-toggle-jobs",
           "permissionsRequired": [
-            "tlr.toggle.job.post"
+            "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.post"
           ]
         },
         {
           "methods":[
             "GET"
           ],
-          "pathPattern":"/tlr-toggle-job-storage/{toggleJobId}",
+          "pathPattern":"/tlr-feature-toggle-job-storage/tlr-feature-toggle-jobs",
           "permissionsRequired": [
-            "tlr.toggle.job.get"
+            "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.collection.get"
+          ]
+        },
+        {
+          "methods":[
+            "GET"
+          ],
+          "pathPattern":"/tlr-feature-toggle-job-storage/tlr-feature-toggle-jobs/{id}",
+          "permissionsRequired": [
+            "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.get"
+          ]
+        },
+        {
+          "methods":[
+            "PUT"
+          ],
+          "pathPattern":"/tlr-feature-toggle-job-storage/tlr-feature-toggle-jobs/{id}",
+          "permissionsRequired": [
+            "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.put"
+          ]
+        },
+        {
+          "methods":[
+            "DELETE"
+          ],
+          "pathPattern":"/tlr-feature-toggle-job-storage/tlr-feature-toggle-jobs/{id}",
+          "permissionsRequired": [
+            "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.delete"
           ]
         }
       ]
@@ -518,17 +545,6 @@
           ],
           "unit": "minute",
           "delay": "2"
-        },
-        {
-          "methods": [
-            "POST"
-          ],
-          "pathPattern": "/tlr-feature-toggle",
-          "modulePermissions": [
-            "configuration.entries.collection.get"
-          ],
-          "unit": "minute",
-          "delay": "5"
         }
       ]
     }

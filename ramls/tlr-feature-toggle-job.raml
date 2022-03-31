@@ -1,15 +1,16 @@
 #%RAML 1.0
-title: Tlr Feature Toggle Job
+title: TLR Feature Toggle Job
 version: v1.0
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost:9130
 
 documentation:
-  - title: Tlr Feature Toggle Job API
+  - title: TLR Feature Toggle Job API
     content: <b>Storage for TLR feature toggle job</b>
 
 types:
   tlr-feature-toggle-job: !include tlr-feature-toggle-job.json
+  tlr-feature-toggle-jobs: !include tlr-feature-toggle-jobs.json
   errors: !include raml-util/schemas/errors.schema
   parameters: !include raml-util/schemas/parameters.schema
 
@@ -23,54 +24,35 @@ resourceTypes:
   collection: !include raml-util/rtypes/collection.raml
   collection-item: !include raml-util/rtypes/item-collection.raml
 
-/tlr-toggle-job-storage:
+/tlr-feature-toggle-job-storage:
+  /tlr-feature-toggle-jobs:
+    displayName: TLR feature jobs
+    type:
+      collection:
+        exampleCollection: !include examples/tlr-feature-toggle-jobs.json
+        exampleItem: !include examples/tlr-feature-toggle-job.json
+        schemaCollection: tlr-feature-toggle-jobs
+        schemaItem: tlr-feature-toggle-job
+    get:
+      is: [pageable,
+        searchable: {description: "by using CQL",
+                        example: "status=\"in-progress\""}
+      ]
     post:
       is: [validate]
       body:
         application/json:
           type: tlr-feature-toggle-job
-      responses:
-        201:
-          description: "TLR feature toggle job was created successfully"
-          headers:
-            Location:
-              description: URI to the created <<resourcePathName|!singularize>> item
-          body:
-            application/json:
-              type: tlr-feature-toggle-job
-              example: !include examples/tlr-feature-toggle-job.json
-        422:
-          description: "TLR feature toggle job is not valid"
-          body:
-            text/plain:
-              example: "TLR feature toggle job is not valid"
-        400:
-          description: "Bad request, e.g. malformed request body or query parameter. Details of the error (e.g. name of the parameter or line/character number with malformed data) provided in the response."
-          body:
-            text/plain:
-              example: |
-                "unable to add <<resourcePathName|!singularize>> -- malformed JSON at 13:3"
-        500:
-          description: "Internal server error"
-          body:
-            text/plain:
-              example: "Internal server error, please contact administrator"
-    /{toggleJobId}:
+    /{id}:
+      type:
+        collection-item:
+          exampleItem: !include examples/tlr-feature-toggle-job.json
+          schema: tlr-feature-toggle-job
       get:
         description: "Checks status of TLR feature toggle job"
-        responses:
-          200:
-            body:
-              application/json:
-                schema: tlr-feature-toggle-job
-                example: !include examples/tlr-feature-toggle-job.json
-          404:
-            description: "The TLR feature toggle job was not found"
-            body:
-              text/plain:
-                example: "Bad request, e.g. invalid TLR feature toggle job UUID"
-          500:
-            description: "Internal server error, e.g. due to misconfiguration"
-            body:
-              text/plain:
-                example: "Internal server error, contact administrator"
+      put:
+        description: "Updates TLR feature toggle job"
+        is: [validate]
+      delete:
+        description: "Removes TLR feature toggle job"
+        is: [language]

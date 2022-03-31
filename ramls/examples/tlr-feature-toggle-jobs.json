@@ -1,0 +1,15 @@
+{
+  "tlrFeatureToggleJobs": [
+    {
+      "id": "a28dc77a-995b-43d4-9af8-a7b345a13bce",
+      "status": "done",
+      "numberOfUpdatedRequests": 10
+    },
+    {
+      "id": "bedd2cda-2bdc-4b95-847c-9e1f8c50786a",
+      "status": "in-progress",
+      "numberOfUpdatedRequests": 2
+    }
+  ],
+  "totalRecords": 2
+}
