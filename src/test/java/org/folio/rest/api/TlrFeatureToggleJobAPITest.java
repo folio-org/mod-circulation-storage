@@ -11,7 +11,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
 import java.net.MalformedURLException;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -48,17 +47,17 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
   public void canCreateAndDeleteTlrFeatureToggleJob() throws MalformedURLException,
     ExecutionException, InterruptedException, TimeoutException {
 
-    String jobId = UUID.randomUUID().toString();
     int numberOfUpdates = 10;
-    TlrFeatureToggleJob tlrFeatureToggleJob = createTlrFeatureToggleJob(jobId, numberOfUpdates);
+    TlrFeatureToggleJob tlrFeatureToggleJob = createTlrFeatureToggleJob(numberOfUpdates);
     JsonResponse postResponse = postTlrFeatureToggleJob(tlrFeatureToggleJob);
     assertThat(postResponse.getStatusCode(), is(HTTP_CREATED));
-    checkResponse(jobId, numberOfUpdates, postResponse.getJson());
+    checkResponse(numberOfUpdates, postResponse.getJson());
 
     Response getResponse = getTlrFeatureToggleJobs();
     assertThat(getResponse.getStatusCode(), is(HTTP_OK));
     assertThat(getResponse.getJson().getInteger("totalRecords"), is(1));
 
+    String jobId = postResponse.getJson().getString("id");
     Response deleteResponse = deleteTlrFeatureToggleJob(jobId);
     assertThat(deleteResponse.getStatusCode(), is(HTTP_NO_CONTENT));
 
@@ -71,34 +70,33 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
   public void canGetAndUpdateTlrFeatureToggleJobById() throws MalformedURLException,
     ExecutionException, InterruptedException, TimeoutException {
 
-    String jobId = UUID.randomUUID().toString();
     int numberOfUpdates = 10;
-    TlrFeatureToggleJob tlrFeatureToggleJob = createTlrFeatureToggleJob(jobId, numberOfUpdates);
+    TlrFeatureToggleJob tlrFeatureToggleJob = createTlrFeatureToggleJob(numberOfUpdates);
     JsonResponse postResponse = postTlrFeatureToggleJob(tlrFeatureToggleJob);
     assertThat(postResponse.getStatusCode(), is(HTTP_CREATED));
-    checkResponse(jobId, numberOfUpdates, postResponse.getJson());
+    checkResponse(numberOfUpdates, postResponse.getJson());
 
+    String jobId = postResponse.getJson().getString("id");
     Response responseById = getTlrFeatureToggleJobById(jobId);
     assertThat(responseById.getStatusCode(), is(HTTP_OK));
-    checkResponse(jobId, numberOfUpdates, responseById.getJson());
+    checkResponse(numberOfUpdates, responseById.getJson());
 
-    TlrFeatureToggleJob tlrFeatureToggleJobForUpdate = createTlrFeatureToggleJob(jobId, 0);
+    TlrFeatureToggleJob tlrFeatureToggleJobForUpdate = createTlrFeatureToggleJob(0)
+      .withId(jobId);
     JsonResponse updateResponse = putTlrFeatureToggleJob(tlrFeatureToggleJobForUpdate);
     assertThat(updateResponse.getStatusCode(), is(HTTP_NO_CONTENT));
 
     Response responseByIdAfterUpdate = getTlrFeatureToggleJobById(jobId);
-    checkResponse(jobId, 0, responseByIdAfterUpdate.getJson());
+    checkResponse(0, responseByIdAfterUpdate.getJson());
   }
 
-  private void checkResponse(String jobId, int numberOfUpdates, JsonObject representation) {
-    assertThat(representation.getString("id"), is(jobId));
+  private void checkResponse(int numberOfUpdates, JsonObject representation) {
     assertThat(representation.getInteger("numberOfUpdatedRequests"), is(numberOfUpdates));
     assertThat(representation.getString("status"), is(OPEN.toString()));
   }
 
-  private TlrFeatureToggleJob createTlrFeatureToggleJob(String id, int numberOfUpdates) {
+  private TlrFeatureToggleJob createTlrFeatureToggleJob(int numberOfUpdates) {
     return new TlrFeatureToggleJob()
-      .withId(id)
       .withStatus(OPEN)
       .withNumberOfUpdatedRequests(numberOfUpdates);
    }

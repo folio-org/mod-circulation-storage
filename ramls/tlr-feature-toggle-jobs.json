@@ -5,7 +5,7 @@
   "properties": {
     "tlrFeatureToggleJobs": {
       "description": "List of TLR feature toggle jobs",
-      "id": "tlr feature toggle jobs",
+      "id": "tlrFeatureToggleJobs",
       "type": "array",
       "items": {
         "type": "object",
@@ -17,7 +17,7 @@
     }
   },
   "required": [
-    "tlr feature toggle jobs",
+    "tlrFeatureToggleJobs",
     "totalRecords"
   ]
 }
