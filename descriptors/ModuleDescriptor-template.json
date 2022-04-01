@@ -962,7 +962,12 @@
         "patron-action-session-storage.expired-session-patron-ids.collection.get",
         "check-in-storage.check-ins.collection.get",
         "check-in-storage.check-ins.item.post",
-        "check-in-storage.check-ins.item.get"
+        "check-in-storage.check-ins.item.get",
+        "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.post",
+        "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.collection.get",
+        "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.get",
+        "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.put",
+        "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.delete"
       ]
     },
     {
