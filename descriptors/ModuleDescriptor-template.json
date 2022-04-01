@@ -994,6 +994,26 @@
       "permissionName": "circulation-storage.request-policies.item.delete",
       "displayName": "Circulation storage - delete individual request policy",
       "description": "Delete individual request policy from storage"
+    },
+    {
+      "permissionName": "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.post",
+      "displayName": "Circulation storage - post tlr feature toggle job",
+      "description": "Create tlr feature toggle job"
+    },
+    {
+      "permissionName": "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.collection.get",
+      "displayName": "Circulation storage - get tlr feature toggle job collection",
+      "description": "Get tlr feature toggle job collection"
+    },
+    {
+      "permissionName": "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.put",
+      "displayName": "Circulation storage - put tlr feature toggle job",
+      "description": "Update tlr feature toggle job"
+    },
+    {
+      "permissionName": "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.delete",
+      "displayName": "Circulation storage - delete tlr feature toggle job",
+      "description": "Delete tlr feature toggle job"
     }
   ],
   "launchDescriptor": {
