@@ -1006,6 +1006,11 @@
       "description": "Get tlr feature toggle job collection"
     },
     {
+      "permissionName": "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.get",
+      "displayName": "Circulation storage - get tlr feature toggle job",
+      "description": "Get tlr feature toggle job"
+    },
+    {
       "permissionName": "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.put",
       "displayName": "Circulation storage - put tlr feature toggle job",
       "description": "Update tlr feature toggle job"
