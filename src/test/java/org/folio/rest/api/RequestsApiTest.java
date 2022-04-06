@@ -1937,7 +1937,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void canFilterByRequestTitleAndCheckTotalRecordsWhenTheCountIsMoreThousand()
+  public void canFilterByRequestLevelAndCheckTotalRecordsWhenTheCountIsMoreThousand()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -1990,7 +1990,7 @@ public class RequestsApiTest extends ApiTests {
     assertThat(itemLevelRequestsJson.getInteger("totalRecords"), is(itemLevelRequestCount));
 
     assertThat(titleLevelRequestsJson.getJsonArray("requests").size(), is(100));
-    assertThat(titleLevelRequestsJson.getInteger("totalRecords"), is(itemLevelRequestCount));
+    assertThat(titleLevelRequestsJson.getInteger("totalRecords"), is(titleLevelRequests));
   }
 
   private RequestDto.RequestDtoBuilder holdShelfOpenRequest() {
