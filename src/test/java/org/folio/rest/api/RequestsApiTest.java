@@ -1971,11 +1971,18 @@ public class RequestsApiTest extends ApiTests {
     CompletableFuture<JsonResponse> itemLevelRequestsCompleted = new CompletableFuture<>();
     CompletableFuture<JsonResponse> titleLevelRequestsCompleted = new CompletableFuture<>();
 
+    String queryForItemLevel = URLEncoder.encode(
+      String.format("requestLevel=\"%s\"", "Item" ),
+      UTF_8);
 
-    client.get(requestStorageUrl() + "?limit=100&query=requestLevel==\"Item\"", TENANT_ID,
+    client.get(requestStorageUrl() + String.format("?limit=100&query=%s", queryForItemLevel), TENANT_ID,
       ResponseHandler.json(itemLevelRequestsCompleted));
 
-    client.get(requestStorageUrl() + "?limit=100&query=requestLevel==\"Title\"", TENANT_ID,
+    String queryForTitleLevel = URLEncoder.encode(
+      String.format("requestLevel=\"%s\"", "Title" ),
+      UTF_8);
+
+    client.get(requestStorageUrl() + String.format("?limit=100&query=%s", queryForTitleLevel), TENANT_ID,
       ResponseHandler.json(titleLevelRequestsCompleted));
 
     JsonResponse itemLevelRequests = itemLevelRequestsCompleted.get(5, TimeUnit.SECONDS);
