@@ -1936,6 +1936,63 @@ public class RequestsApiTest extends ApiTests {
     assertThat(allOpenRequests, hasItems(awaitingPickupRequest, notYetFilledRequest));
   }
 
+  @Test
+  public void canFilterByRequestTitleAndCheckTotalRecordsWhenTheCountIsMoreThousand()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    final int itemLevelRequestCount = 1100;
+    final int titleLevelRequestCount = 1200;
+
+    for (int i = 0; i < itemLevelRequestCount; i++) {
+      createEntity(
+        new RequestRequestBuilder()
+          .withItemId(UUID.randomUUID())
+          .withPosition(i)
+          .withRequestLevel("Item")
+          .hold()
+          .withStatus(OPEN_NOT_YET_FILLED).create(),
+        requestStorageUrl());
+    }
+
+    for (int i = 0; i < titleLevelRequestCount; i++) {
+      createEntity(
+        new RequestRequestBuilder()
+          .withInstanceId(UUID.randomUUID())
+          .withPosition(i)
+          .withRequestLevel("Title")
+          .hold()
+          .withStatus(OPEN_NOT_YET_FILLED).create(),
+        requestStorageUrl());
+    }
+
+    CompletableFuture<JsonResponse> itemLevelRequestsCompleted = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> titleLevelRequestsCompleted = new CompletableFuture<>();
+
+
+    client.get(requestStorageUrl() + "?limit=100&query=requestLevel==\"Item\"", TENANT_ID,
+      ResponseHandler.json(itemLevelRequestsCompleted));
+
+    client.get(requestStorageUrl() + "?limit=100&query=requestLevel==\"Title\"", TENANT_ID,
+      ResponseHandler.json(titleLevelRequestsCompleted));
+
+    JsonResponse itemLevelRequests = itemLevelRequestsCompleted.get(5, TimeUnit.SECONDS);
+    JsonResponse titleLevelRequests = titleLevelRequestsCompleted.get(5, TimeUnit.SECONDS);
+
+    JsonObject itemLevelRequestsJson = itemLevelRequests.getJson();
+    JsonObject titleLevelRequestsJson = titleLevelRequests.getJson();
+
+
+
+    assertThat(itemLevelRequestsJson.getJsonArray("requests").size(), is(100));
+    assertThat(itemLevelRequestsJson.getInteger("totalRecords"), is(itemLevelRequestCount));
+
+    assertThat(titleLevelRequestsJson.getJsonArray("requests").size(), is(100));
+    assertThat(titleLevelRequestsJson.getInteger("totalRecords"), is(itemLevelRequestCount));
+  }
+
   private RequestDto.RequestDtoBuilder holdShelfOpenRequest() {
     return RequestDto.builder()
       .requesterId(UUID.randomUUID().toString())
