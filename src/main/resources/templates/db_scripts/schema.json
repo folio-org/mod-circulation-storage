@@ -115,6 +115,13 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": false
+        },
+        {
+          "fieldName": "dateLostItemShouldBeBilled",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false,
+          "sqlExpression": "(jsonb->'agedToLostDelayedBilling'->>'dateLostItemShouldBeBilled')"
         }
       ],
       "fullTextIndex": [
