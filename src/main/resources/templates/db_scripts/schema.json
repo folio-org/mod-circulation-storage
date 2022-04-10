@@ -117,10 +117,11 @@
           "removeAccents": false
         },
         {
-          "fieldName": "agedToLostDelayedBilling.dateLostItemShouldBeBilled",
+          "fieldName": "dateLostItemShouldBeBilled",
           "tOps": "ADD",
           "caseSensitive": false,
-          "removeAccents": false
+          "removeAccents": false,
+          "sqlExpression": "(jsonb->'agedToLostDelayedBilling'->>'dateLostItemShouldBeBilled')"
         }
       ],
       "fullTextIndex": [
