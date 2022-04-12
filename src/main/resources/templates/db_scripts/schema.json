@@ -225,6 +225,13 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": false
+        },
+        {
+          "fieldName": "awaitingPickupRequestClosedDate",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false,
+          "sqlExpression": "(jsonb->'awaitingPickupRequestClosedDate')"
         }
       ],
       "customSnippetPath": "requestUpdateTrigger.sql"
