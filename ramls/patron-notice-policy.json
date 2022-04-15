@@ -259,7 +259,8 @@
                   "Paging request",
                   "Available",
                   "Hold expiration",
-                  "Request cancellation"
+                  "Request cancellation",
+                  "Title level request expiration"
                 ]
               },
               "sendBy": {
