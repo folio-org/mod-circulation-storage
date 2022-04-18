@@ -44,7 +44,8 @@
         "Aged to lost",
         "Aged to lost - fine charged",
         "Aged to lost & item returned - fine adjusted",
-        "Aged to lost & item replaced - fine adjusted"
+        "Aged to lost & item replaced - fine adjusted",
+        "Title level request expiration"
       ]
     },
     "noticeConfig": {
