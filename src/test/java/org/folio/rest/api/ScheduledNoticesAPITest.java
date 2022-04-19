@@ -57,7 +57,8 @@ public class ScheduledNoticesAPITest extends ApiTests {
     "Aged to lost",
     "Aged to lost - fine charged",
     "Aged to lost & item returned - fine adjusted",
-    "Aged to lost & item replaced - fine adjusted"
+    "Aged to lost & item replaced - fine adjusted",
+    "Title level request expiration"
   );
 
   private static final RecurringPeriod ONE_DAY_PERIOD = new RecurringPeriod()
@@ -117,8 +118,8 @@ public class ScheduledNoticesAPITest extends ApiTests {
     JsonResponse response = getCompleted.get(5, SECONDS);
     ScheduledNotices scheduledNotices = response.getJson().mapTo(ScheduledNotices.class);
 
-    assertThat(scheduledNotices.getScheduledNotices().size(), is(9));
-    assertThat(scheduledNotices.getTotalRecords(), is(9));
+    assertThat(scheduledNotices.getScheduledNotices().size(), is(ALL_TRIGGERING_EVENTS.size()));
+    assertThat(scheduledNotices.getTotalRecords(), is(ALL_TRIGGERING_EVENTS.size()));
   }
 
   private void createScheduledNotice(String triggeringEvent)

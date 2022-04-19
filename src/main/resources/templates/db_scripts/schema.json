@@ -115,6 +115,13 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": false
+        },
+        {
+          "fieldName": "dateLostItemShouldBeBilled",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false,
+          "sqlExpression": "(jsonb->'agedToLostDelayedBilling'->>'dateLostItemShouldBeBilled')"
         }
       ],
       "fullTextIndex": [
@@ -209,6 +216,12 @@
         },
         {
           "fieldName": "status",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
+          "fieldName": "requestLevel",
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": false
@@ -346,6 +359,11 @@
     {
       "tableName": "check_in",
       "fromModuleVersion": "11.0.0",
+      "withMetadata": true,
+      "withAuditing": false
+    },
+    {
+      "tableName": "tlr_feature_toggle_job",
       "withMetadata": true,
       "withAuditing": false
     }

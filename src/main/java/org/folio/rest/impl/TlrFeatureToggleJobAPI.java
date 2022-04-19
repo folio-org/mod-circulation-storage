@@ -1,37 +1,68 @@
 package org.folio.rest.impl;
 
+import static org.folio.support.ModuleConstants.TLR_FEATURE_TOGGLE_JOB_CLASS;
+import static org.folio.support.ModuleConstants.TLR_FEATURE_TOGGLE_JOB_TABLE;
+
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
-import org.folio.persist.TlrFeatureToggleJob;
-import org.folio.rest.jaxrs.resource.TlrToggleJobStorage;
+import org.folio.rest.jaxrs.model.TlrFeatureToggleJob;
+import org.folio.rest.jaxrs.model.TlrFeatureToggleJobs;
+import org.folio.rest.jaxrs.resource.TlrFeatureToggleJobStorage;
 import org.folio.rest.persist.PgUtil;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
 
-public class TlrFeatureToggleJobAPI implements TlrToggleJobStorage {
-
-  private static final String TOGGLE_JOB_TABLE = "toggle_job";
+public class TlrFeatureToggleJobAPI implements TlrFeatureToggleJobStorage {
 
   @Override
-  public void postTlrToggleJobStorage(org.folio.rest.jaxrs.model.TlrFeatureToggleJob entity,
-    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void getTlrFeatureToggleJobStorageTlrFeatureToggleJobs(int offset, int limit,
+    String query, String lang, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-    PgUtil.post(TOGGLE_JOB_TABLE, entity, okapiHeaders, vertxContext,
-      TlrToggleJobStorage.PostTlrToggleJobStorageResponse.class, asyncResultHandler);
+    PgUtil.get(TLR_FEATURE_TOGGLE_JOB_TABLE, TLR_FEATURE_TOGGLE_JOB_CLASS, TlrFeatureToggleJobs.class,
+      query, offset, limit, okapiHeaders, vertxContext,
+      GetTlrFeatureToggleJobStorageTlrFeatureToggleJobsResponse.class, asyncResultHandler);
   }
 
   @Override
-  public void getTlrToggleJobStorageByToggleJobId(String toggleJobId,
+  public void postTlrFeatureToggleJobStorageTlrFeatureToggleJobs(String lang,
+    TlrFeatureToggleJob entity, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
+    PgUtil.post(TLR_FEATURE_TOGGLE_JOB_TABLE, entity, okapiHeaders, vertxContext,
+      PostTlrFeatureToggleJobStorageTlrFeatureToggleJobsResponse.class, asyncResultHandler);
+  }
+
+  @Override
+  public void getTlrFeatureToggleJobStorageTlrFeatureToggleJobsById(String id, String lang,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-      PgUtil.getById(TOGGLE_JOB_TABLE, TlrFeatureToggleJob.class, toggleJobId, okapiHeaders,
-        vertxContext, TlrToggleJobStorage.GetTlrToggleJobStorageByToggleJobIdResponse.class,
-        asyncResultHandler);
+    PgUtil.getById(TLR_FEATURE_TOGGLE_JOB_TABLE, TLR_FEATURE_TOGGLE_JOB_CLASS, id,
+      okapiHeaders, vertxContext,
+      GetTlrFeatureToggleJobStorageTlrFeatureToggleJobsByIdResponse.class, asyncResultHandler);
+  }
+
+  @Override
+  public void putTlrFeatureToggleJobStorageTlrFeatureToggleJobsById(String id, String lang,
+    TlrFeatureToggleJob entity, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
+    PgUtil.put(TLR_FEATURE_TOGGLE_JOB_TABLE, entity, id, okapiHeaders,
+      vertxContext, PutTlrFeatureToggleJobStorageTlrFeatureToggleJobsByIdResponse.class,
+      asyncResultHandler);
+  }
+
+  @Override
+  public void deleteTlrFeatureToggleJobStorageTlrFeatureToggleJobsById(String id, String lang,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+    PgUtil.deleteById(TLR_FEATURE_TOGGLE_JOB_TABLE, id, okapiHeaders, vertxContext,
+      DeleteTlrFeatureToggleJobStorageTlrFeatureToggleJobsByIdResponse.class, asyncResultHandler);
   }
 }

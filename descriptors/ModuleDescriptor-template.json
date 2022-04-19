@@ -400,18 +400,45 @@
           "methods":[
             "POST"
           ],
-          "pathPattern":"/tlr-toggle-job-storage",
+          "pathPattern":"/tlr-feature-toggle-job-storage/tlr-feature-toggle-jobs",
           "permissionsRequired": [
-            "tlr.toggle.job.post"
+            "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.post"
           ]
         },
         {
           "methods":[
             "GET"
           ],
-          "pathPattern":"/tlr-toggle-job-storage/{toggleJobId}",
+          "pathPattern":"/tlr-feature-toggle-job-storage/tlr-feature-toggle-jobs",
           "permissionsRequired": [
-            "tlr.toggle.job.get"
+            "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.collection.get"
+          ]
+        },
+        {
+          "methods":[
+            "GET"
+          ],
+          "pathPattern":"/tlr-feature-toggle-job-storage/tlr-feature-toggle-jobs/{id}",
+          "permissionsRequired": [
+            "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.get"
+          ]
+        },
+        {
+          "methods":[
+            "PUT"
+          ],
+          "pathPattern":"/tlr-feature-toggle-job-storage/tlr-feature-toggle-jobs/{id}",
+          "permissionsRequired": [
+            "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.put"
+          ]
+        },
+        {
+          "methods":[
+            "DELETE"
+          ],
+          "pathPattern":"/tlr-feature-toggle-job-storage/tlr-feature-toggle-jobs/{id}",
+          "permissionsRequired": [
+            "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.delete"
           ]
         }
       ]
@@ -946,7 +973,12 @@
         "patron-action-session-storage.expired-session-patron-ids.collection.get",
         "check-in-storage.check-ins.collection.get",
         "check-in-storage.check-ins.item.post",
-        "check-in-storage.check-ins.item.get"
+        "check-in-storage.check-ins.item.get",
+        "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.post",
+        "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.collection.get",
+        "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.get",
+        "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.put",
+        "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.delete"
       ]
     },
     {
@@ -978,6 +1010,31 @@
       "permissionName": "circulation-storage.request-policies.item.delete",
       "displayName": "Circulation storage - delete individual request policy",
       "description": "Delete individual request policy from storage"
+    },
+    {
+      "permissionName": "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.post",
+      "displayName": "Circulation storage - post tlr feature toggle job",
+      "description": "Create tlr feature toggle job"
+    },
+    {
+      "permissionName": "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.collection.get",
+      "displayName": "Circulation storage - get tlr feature toggle job collection",
+      "description": "Get tlr feature toggle job collection"
+    },
+    {
+      "permissionName": "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.get",
+      "displayName": "Circulation storage - get tlr feature toggle job",
+      "description": "Get tlr feature toggle job"
+    },
+    {
+      "permissionName": "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.put",
+      "displayName": "Circulation storage - put tlr feature toggle job",
+      "description": "Update tlr feature toggle job"
+    },
+    {
+      "permissionName": "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.delete",
+      "displayName": "Circulation storage - delete tlr feature toggle job",
+      "description": "Delete tlr feature toggle job"
     }
   ],
   "launchDescriptor": {

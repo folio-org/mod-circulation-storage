@@ -1,15 +1,15 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
-  "description": "Toggle job schema",
+  "description": "TLR feature toggle job schema",
   "properties": {
     "id": {
-      "description" : "Toggle job ID",
+      "description" : "TLR feature toggle job ID",
       "type": "string",
       "$ref": "raml-util/schemas/uuid.schema"
     },
     "status": {
-      "description": "Status of toggle job",
+      "description": "Status of TLR feature toggle job",
       "type": "string",
       "enum": [
         "open",
