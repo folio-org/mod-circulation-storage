@@ -22,14 +22,17 @@ import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.clients.RestAssuredClient;
+import org.folio.rest.support.spring.TestContextConfiguration;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
 
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 
+@ContextConfiguration(classes = TestContextConfiguration.class)
 public class TlrFeatureToggleJobAPITest extends ApiTests {
 
   @Autowired
