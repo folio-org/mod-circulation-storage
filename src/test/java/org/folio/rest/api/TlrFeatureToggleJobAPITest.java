@@ -24,9 +24,13 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.clients.RestAssuredClient;
 import org.folio.rest.support.spring.TestContextConfiguration;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.rules.SpringClassRule;
+import org.springframework.test.context.junit4.rules.SpringMethodRule;
 
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
@@ -34,13 +38,17 @@ import io.vertx.sqlclient.RowSet;
 
 @ContextConfiguration(classes = TestContextConfiguration.class)
 public class TlrFeatureToggleJobAPITest extends ApiTests {
-
-  @Autowired
-  public RestAssuredClient restAssuredClient;
-
   private static final String TLR_TOGGLE_JOB_URL =
     "/tlr-feature-toggle-job-storage/tlr-feature-toggle-jobs";
   private static final String TLR_FEATURE_TOGGLE_JOB_TABLE = "tlr_feature_toggle_job";
+
+  @ClassRule
+  public static final SpringClassRule classRule = new SpringClassRule();
+  @Rule
+  public final SpringMethodRule methodRule = new SpringMethodRule();
+
+  @Autowired
+  public RestAssuredClient restAssuredClient;
 
   @Before
   public void beforeEach() throws Exception {
