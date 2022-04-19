@@ -67,7 +67,7 @@ public class TlrFeatureToggleImpl implements TlrFeatureToggle {
 
     return refuseWhenJobsInProgressExist(repository)
       .compose(v -> findJobsByStatus(repository, TlrFeatureToggleJob.Status.OPEN.value()))
-      .compose(this::run);
+      .compose(openJobs -> this.run(repository, openJobs));
   }
 
   private Future<List<TlrFeatureToggleJob>> findJobsByStatus(
@@ -80,13 +80,14 @@ public class TlrFeatureToggleImpl implements TlrFeatureToggle {
         .setVal(status)));
   }
 
-  private Future<Void> run(List<TlrFeatureToggleJob> openJobs) {
+  private Future<Void> run(TlrFeatureToggleJobRepository repository,
+    List<TlrFeatureToggleJob> openJobs) {
+
     if (openJobs.isEmpty()) {
       return succeededFuture();
     }
 
-    TlrFeatureToggleService service = new TlrFeatureToggleService();
-    return service.run(openJobs.get(0));
+    return new TlrFeatureToggleService(repository).run(openJobs.get(0));
   }
 
   private Future<Void> refuseWhenJobsInProgressExist(TlrFeatureToggleJobRepository repository) {
