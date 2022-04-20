@@ -22,8 +22,7 @@ public class TlrFeatureToggleService {
     log.info("Processing job {}", job.getId());
 
     job.setStatus(TlrFeatureToggleJob.Status.IN_PROGRESS);
-    repository.save(job.getId(), job);
-
-    return succeededFuture();
+    return repository.save(job.getId(), job)
+      .mapEmpty();
   }
 }
