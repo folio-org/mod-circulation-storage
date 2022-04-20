@@ -118,7 +118,7 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
     io.restassured.response.Response response = restAssuredClient.post(
       "/tlr-feature-toggle-job/start", new JsonObject());
 
-    assertThat(response.getStatusCode(), is(HTTP_NO_CONTENT));
+    assertThat(response.getStatusCode(), is(202));
 
     Response updatedJob = getTlrFeatureToggleJobById(
       postResponse.getJson().getString("id"));
