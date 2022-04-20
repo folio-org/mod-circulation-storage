@@ -125,14 +125,33 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
     assertThat(updatedJob.getJson().getString("status"), is(IN_PROGRESS.toString()));
   }
 
+  @Test
+  public void processingShouldFailWith422IfThereAreRunningJobs() throws MalformedURLException,
+    ExecutionException, InterruptedException, TimeoutException  {
+
+    TlrFeatureToggleJob tlrFeatureToggleJob = createTlrFeatureToggleJobWithStatus(IN_PROGRESS);
+    JsonResponse postResponse = postTlrFeatureToggleJob(tlrFeatureToggleJob);
+    assertThat(postResponse.getStatusCode(), is(HTTP_CREATED));
+
+    io.restassured.response.Response response = restAssuredClient.post(
+      "/tlr-feature-toggle-job/start", new JsonObject());
+    assertThat(response.getStatusCode(), is(422));
+  }
+
   private void checkResponse(int numberOfUpdates, JsonObject representation) {
     assertThat(representation.getInteger("numberOfUpdatedRequests"), is(numberOfUpdates));
     assertThat(representation.getString("status"), is(OPEN.toString()));
   }
 
   private TlrFeatureToggleJob createTlrFeatureToggleJob() {
+    return createTlrFeatureToggleJobWithStatus(OPEN);
+  }
+
+  private TlrFeatureToggleJob createTlrFeatureToggleJobWithStatus(
+    TlrFeatureToggleJob.Status status) {
+
     return new TlrFeatureToggleJob()
-      .withStatus(OPEN);
+      .withStatus(status);
   }
 
   private TlrFeatureToggleJob createTlrFeatureToggleJob(int numberOfUpdates) {
