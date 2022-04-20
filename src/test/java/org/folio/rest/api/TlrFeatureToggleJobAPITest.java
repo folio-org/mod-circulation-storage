@@ -5,6 +5,7 @@ import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.jaxrs.model.TlrFeatureToggleJob.Status.IN_PROGRESS;
 import static org.folio.rest.jaxrs.model.TlrFeatureToggleJob.Status.OPEN;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -117,9 +118,11 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
     io.restassured.response.Response response = restAssuredClient.post(
       "/tlr-feature-toggle-job-processing", new JsonObject());
 
-    System.out.println(response.getStatusCode());
-    System.out.println(response.getBody());
     assertThat(response.getStatusCode(), is(HTTP_NO_CONTENT));
+
+    Response updatedJob = getTlrFeatureToggleJobById(
+      postResponse.getJson().getString("id"));
+    assertThat(updatedJob.getJson().getString("status"), is(IN_PROGRESS.toString()));
   }
 
   private void checkResponse(int numberOfUpdates, JsonObject representation) {

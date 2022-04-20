@@ -17,7 +17,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
 
-@Path("/tlr-feature-toggle")
+@Path("/tlr-feature-toggle-job-processing")
 public interface TlrFeatureToggle {
 
   @POST
