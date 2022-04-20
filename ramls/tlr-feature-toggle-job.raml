@@ -56,3 +56,18 @@ resourceTypes:
       delete:
         description: "Removes TLR feature toggle job"
         is: [language]
+/tlr-feature-toggle-job/start:
+  post:
+    responses:
+      202:
+        description: "TLR feature toggle job start request is accepted for processing"
+      422:
+        description: "TLR feature toggle job is already running"
+        body:
+          application/json:
+            type: errors
+      500:
+        description: "Internal server error"
+        body:
+          text/plain:
+            example: "Internal server error, please contact administrator"

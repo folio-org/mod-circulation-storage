@@ -3,9 +3,9 @@ package org.folio.rest.impl;
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static java.util.Collections.singletonList;
-import static org.folio.rest.jaxrs.resource.TlrFeatureToggle.TlrFeatureToggleResponse.respond204;
-import static org.folio.rest.jaxrs.resource.TlrFeatureToggle.TlrFeatureToggleResponse.respond422WithApplicationJson;
-import static org.folio.rest.jaxrs.resource.TlrFeatureToggle.TlrFeatureToggleResponse.respond500WithTextPlain;
+import static org.folio.rest.jaxrs.resource.TlrFeatureToggleJobStart.PostTlrFeatureToggleJobStartResponse.respond202;
+import static org.folio.rest.jaxrs.resource.TlrFeatureToggleJobStart.PostTlrFeatureToggleJobStartResponse.respond422WithApplicationJson;
+import static org.folio.rest.jaxrs.resource.TlrFeatureToggleJobStart.PostTlrFeatureToggleJobStartResponse.respond500WithTextPlain;
 
 import java.util.List;
 import java.util.Map;
@@ -18,7 +18,7 @@ import org.folio.persist.TlrFeatureToggleJobRepository;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.TlrFeatureToggleJob;
-import org.folio.rest.jaxrs.resource.TlrFeatureToggle;
+import org.folio.rest.jaxrs.resource.TlrFeatureToggleJobStart;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.service.tlr.TlrFeatureToggleService;
@@ -29,19 +29,19 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 
-public class TlrFeatureToggleImpl implements TlrFeatureToggle {
+public class TlrFeatureToggleImpl implements TlrFeatureToggleJobStart {
   private static final Logger log = LogManager.getLogger(TlrFeatureToggleImpl.class);
 
   public static final String STATUS_FIELD = "'status'";
 
   @Override
-  public void tlrFeatureToggle(Map<String, String> okapiHeaders,
+  public void postTlrFeatureToggleJobStart(Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     vertxContext.runOnContext(v -> handle(okapiHeaders, vertxContext)
       .onComplete(result -> {
         if (result.succeeded()) {
-          asyncResultHandler.handle(succeededFuture(respond204()));
+          asyncResultHandler.handle(succeededFuture(respond202()));
         } else {
           log.error("TLR feature toggle job failed", result.cause());
 

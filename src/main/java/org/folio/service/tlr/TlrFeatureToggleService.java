@@ -1,7 +1,5 @@
 package org.folio.service.tlr;
 
-import static io.vertx.core.Future.succeededFuture;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.TlrFeatureToggleJobRepository;
