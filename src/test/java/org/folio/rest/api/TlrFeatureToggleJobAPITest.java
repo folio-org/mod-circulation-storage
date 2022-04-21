@@ -126,7 +126,7 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
   }
 
   @Test
-  public void processingShouldFailWith422IfThereAreRunningJobs() throws MalformedURLException,
+  public void processingShouldRespondWith202WhenThereAreRunningJobs() throws MalformedURLException,
     ExecutionException, InterruptedException, TimeoutException  {
 
     TlrFeatureToggleJob tlrFeatureToggleJob = createTlrFeatureToggleJobWithStatus(IN_PROGRESS);
@@ -135,7 +135,7 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
 
     io.restassured.response.Response response = restAssuredClient.post(
       "/tlr-feature-toggle-job/start", new JsonObject());
-    assertThat(response.getStatusCode(), is(422));
+    assertThat(response.getStatusCode(), is(202));
   }
 
   private void checkResponse(int numberOfUpdates, JsonObject representation) {
