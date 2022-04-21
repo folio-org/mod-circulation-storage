@@ -6,6 +6,7 @@ import static java.util.Collections.singletonList;
 import static org.folio.rest.jaxrs.resource.TlrFeatureToggleJobStart.PostTlrFeatureToggleJobStartResponse.respond202;
 import static org.folio.rest.jaxrs.resource.TlrFeatureToggleJobStart.PostTlrFeatureToggleJobStartResponse.respond422WithApplicationJson;
 import static org.folio.rest.jaxrs.resource.TlrFeatureToggleJobStart.PostTlrFeatureToggleJobStartResponse.respond500WithTextPlain;
+import static org.folio.support.ModuleConstants.TLR_FEATURE_TOGGLE_JOB_STATUS_FIELD;
 
 import java.util.List;
 import java.util.Map;
@@ -32,8 +33,6 @@ import io.vertx.core.Handler;
 public class TlrFeatureToggleImpl implements TlrFeatureToggleJobStart {
   private static final Logger log = LogManager.getLogger(TlrFeatureToggleImpl.class);
 
-  public static final String STATUS_FIELD = "'status'";
-
   @Override
   public void postTlrFeatureToggleJobStart(Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
@@ -51,8 +50,7 @@ public class TlrFeatureToggleImpl implements TlrFeatureToggleJobStart {
 
             asyncResultHandler.handle(succeededFuture(respond422WithApplicationJson(
               new Errors().withErrors(singletonList(error)))));
-          }
-          else {
+          } else {
             asyncResultHandler.handle(
               succeededFuture(respond500WithTextPlain(result.cause().getMessage())));
           }
@@ -67,7 +65,14 @@ public class TlrFeatureToggleImpl implements TlrFeatureToggleJobStart {
 
     return refuseWhenJobsInProgressExist(repository)
       .compose(v -> findJobsByStatus(repository, TlrFeatureToggleJob.Status.OPEN.value()))
-      .compose(openJobs -> this.run(repository, openJobs));
+      .compose(openJobs -> runJobAndReturnImmediately(repository, openJobs));
+  }
+
+  private Future<Void> runJobAndReturnImmediately(TlrFeatureToggleJobRepository repository,
+    List<TlrFeatureToggleJob> openJobs) {
+
+    this.run(repository, openJobs);
+    return succeededFuture();
   }
 
   private Future<List<TlrFeatureToggleJob>> findJobsByStatus(
@@ -75,7 +80,7 @@ public class TlrFeatureToggleImpl implements TlrFeatureToggleJobStart {
 
     return repository.get(new Criterion()
       .addCriterion(new Criteria()
-        .addField(STATUS_FIELD)
+        .addField(TLR_FEATURE_TOGGLE_JOB_STATUS_FIELD)
         .setOperation("=")
         .setVal(status)));
   }

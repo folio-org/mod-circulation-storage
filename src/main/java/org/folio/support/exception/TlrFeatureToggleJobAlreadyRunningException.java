@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 
 import org.folio.rest.jaxrs.model.TlrFeatureToggleJob;
 
-public class TlrFeatureToggleJobAlreadyRunningException  extends Exception {
+public class TlrFeatureToggleJobAlreadyRunningException extends Exception {
   public TlrFeatureToggleJobAlreadyRunningException(List<TlrFeatureToggleJob> jobsInProgress) {
     super(format("Can not run TLR feature toggle job: found job(s) in progress. Job IDs: %s",
       jobsInProgress.stream()
