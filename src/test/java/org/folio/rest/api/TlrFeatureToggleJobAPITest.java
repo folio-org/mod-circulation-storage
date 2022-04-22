@@ -5,6 +5,7 @@ import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.jaxrs.model.TlrFeatureToggleJob.Status.IN_PROGRESS;
 import static org.folio.rest.jaxrs.model.TlrFeatureToggleJob.Status.OPEN;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -21,18 +22,34 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.Response;
+import org.folio.rest.support.clients.RestAssuredClient;
+import org.folio.rest.support.spring.TestContextConfiguration;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.rules.SpringClassRule;
+import org.springframework.test.context.junit4.rules.SpringMethodRule;
 
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 
+@ContextConfiguration(classes = TestContextConfiguration.class)
 public class TlrFeatureToggleJobAPITest extends ApiTests {
-
   private static final String TLR_TOGGLE_JOB_URL =
     "/tlr-feature-toggle-job-storage/tlr-feature-toggle-jobs";
   private static final String TLR_FEATURE_TOGGLE_JOB_TABLE = "tlr_feature_toggle_job";
+
+  @ClassRule
+  public static final SpringClassRule classRule = new SpringClassRule();
+  @Rule
+  public final SpringMethodRule methodRule = new SpringMethodRule();
+
+  @Autowired
+  public RestAssuredClient restAssuredClient;
 
   @Before
   public void beforeEach() throws Exception {
@@ -90,16 +107,57 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
     checkResponse(0, responseByIdAfterUpdate.getJson());
   }
 
+  @Test
+  public void processingShouldSwitchJobStatusFromOpenToInProgress() throws MalformedURLException,
+    ExecutionException, InterruptedException, TimeoutException  {
+
+    TlrFeatureToggleJob tlrFeatureToggleJob = createTlrFeatureToggleJob();
+    JsonResponse postResponse = postTlrFeatureToggleJob(tlrFeatureToggleJob);
+    assertThat(postResponse.getStatusCode(), is(HTTP_CREATED));
+
+    io.restassured.response.Response response = restAssuredClient.post(
+      "/tlr-feature-toggle-job/start", new JsonObject());
+
+    assertThat(response.getStatusCode(), is(202));
+
+    Response updatedJob = getTlrFeatureToggleJobById(
+      postResponse.getJson().getString("id"));
+    assertThat(updatedJob.getJson().getString("status"), is(IN_PROGRESS.toString()));
+  }
+
+  @Test
+  public void processingShouldRespondWith202WhenThereAreRunningJobs() throws MalformedURLException,
+    ExecutionException, InterruptedException, TimeoutException  {
+
+    TlrFeatureToggleJob tlrFeatureToggleJob = createTlrFeatureToggleJobWithStatus(IN_PROGRESS);
+    JsonResponse postResponse = postTlrFeatureToggleJob(tlrFeatureToggleJob);
+    assertThat(postResponse.getStatusCode(), is(HTTP_CREATED));
+
+    io.restassured.response.Response response = restAssuredClient.post(
+      "/tlr-feature-toggle-job/start", new JsonObject());
+    assertThat(response.getStatusCode(), is(202));
+  }
+
   private void checkResponse(int numberOfUpdates, JsonObject representation) {
     assertThat(representation.getInteger("numberOfUpdatedRequests"), is(numberOfUpdates));
     assertThat(representation.getString("status"), is(OPEN.toString()));
   }
 
-  private TlrFeatureToggleJob createTlrFeatureToggleJob(int numberOfUpdates) {
+  private TlrFeatureToggleJob createTlrFeatureToggleJob() {
+    return createTlrFeatureToggleJobWithStatus(OPEN);
+  }
+
+  private TlrFeatureToggleJob createTlrFeatureToggleJobWithStatus(
+    TlrFeatureToggleJob.Status status) {
+
     return new TlrFeatureToggleJob()
-      .withStatus(OPEN)
+      .withStatus(status);
+  }
+
+  private TlrFeatureToggleJob createTlrFeatureToggleJob(int numberOfUpdates) {
+    return createTlrFeatureToggleJob()
       .withNumberOfUpdatedRequests(numberOfUpdates);
-   }
+  }
 
   private JsonResponse postTlrFeatureToggleJob(TlrFeatureToggleJob body)
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
