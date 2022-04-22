@@ -56,3 +56,8 @@ resourceTypes:
       delete:
         description: "Removes TLR feature toggle job"
         is: [language]
+/tlr-feature-toggle-job/start:
+  post:
+    responses:
+      202:
+        description: "TLR feature toggle job start request is accepted for processing"

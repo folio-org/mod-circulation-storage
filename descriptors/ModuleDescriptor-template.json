@@ -550,7 +550,7 @@
           "methods": [
             "POST"
           ],
-          "pathPattern": "/tlr-feature-toggle",
+          "pathPattern": "/tlr-feature-toggle-job/start",
           "modulePermissions": [
             "configuration.entries.collection.get"
           ],
