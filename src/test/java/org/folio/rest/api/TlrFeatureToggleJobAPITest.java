@@ -225,7 +225,7 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
     UUID secondItemId = UUID.randomUUID();
     IntStream.range(1, 4)
       .forEach(position -> createRequest(UUID.randomUUID(), firstItemId, position));
-    IntStream.range(1, 4)
+    IntStream.range(4, 7)
       .forEach(position -> createRequest(UUID.randomUUID(), secondItemId, position));
   }
 
@@ -346,11 +346,5 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
     StorageTestSuite.getWireMockServer().stubFor(WireMock.get(urlPathMatching(
       "/configurations/entries.*"))
       .willReturn(ok().withBody(mapFrom(tlrSettingsConfiguration).encodePrettily())));
-  }
-
-  public int getRandomNumber(int min, int max) {
-    return new Random().ints(min, max)
-      .findFirst()
-      .getAsInt();
   }
 }
