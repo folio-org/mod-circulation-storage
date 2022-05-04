@@ -131,6 +131,10 @@ public class StorageTestSuite {
     return vertx;
   }
 
+  public static WireMockServer getWireMockServer() {
+    return wireMockServer;
+  }
+
   @BeforeClass
   public static void before()
     throws IOException,

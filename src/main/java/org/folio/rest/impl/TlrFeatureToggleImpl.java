@@ -51,17 +51,17 @@ public class TlrFeatureToggleImpl implements TlrFeatureToggleJobStart {
 
     return refuseWhenJobsInProgressExist(repository)
       .compose(v -> findJobsByStatus(repository, TlrFeatureToggleJob.Status.OPEN.value()))
-      .compose(openJobs -> runJobAndReturnImmediately(repository, openJobs));
+      .compose(openJobs -> runJobAndReturnImmediately(okapiHeaders, vertxContext, openJobs));
   }
 
-  private Future<Void> runJobAndReturnImmediately(TlrFeatureToggleJobRepository repository,
-    List<TlrFeatureToggleJob> openJobs) {
+  private Future<Void> runJobAndReturnImmediately(Map<String, String> okapiHeaders,
+    Context vertxContext, List<TlrFeatureToggleJob> openJobs) {
 
     if (openJobs.isEmpty()) {
       return succeededFuture();
     }
 
-    this.run(repository, openJobs);
+    this.run(okapiHeaders, vertxContext, openJobs);
     return succeededFuture();
   }
 
@@ -75,14 +75,14 @@ public class TlrFeatureToggleImpl implements TlrFeatureToggleJobStart {
         .setVal(status)));
   }
 
-  private Future<Void> run(TlrFeatureToggleJobRepository repository,
+  private Future<Void> run(Map<String, String> okapiHeaders, Context vertxContext,
     List<TlrFeatureToggleJob> openJobs) {
 
     if (openJobs.isEmpty()) {
       return succeededFuture();
     }
 
-    return new TlrFeatureToggleService(repository).run(openJobs.get(0));
+    return new TlrFeatureToggleService(okapiHeaders, vertxContext).run(openJobs.get(0));
   }
 
   private Future<Void> refuseWhenJobsInProgressExist(TlrFeatureToggleJobRepository repository) {
