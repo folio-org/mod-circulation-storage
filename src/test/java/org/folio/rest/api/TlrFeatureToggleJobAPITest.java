@@ -342,7 +342,7 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
 
   private void stubTlrSettings(boolean isTlrEnabled) {
     final var tlrSettingsConfiguration = new TlrSettingsConfiguration(
-      isTlrEnabled, false, null, null, null);
+      isTlrEnabled, false, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
     StorageTestSuite.getWireMockServer().stubFor(WireMock.get(urlPathMatching(
       "/configurations/entries.*"))
       .willReturn(ok().withBody(mapFrom(tlrSettingsConfiguration).encodePrettily())));
