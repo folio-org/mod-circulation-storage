@@ -16,7 +16,7 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public class TlrSettingsConfiguration {
-  protected static final Logger log = LogManager.getLogger(MethodHandles.lookup().lookupClass());
+  private static final Logger log = LogManager.getLogger(MethodHandles.lookup().lookupClass());
 
   private final boolean titleLevelRequestsFeatureEnabled;
   private final boolean createTitleLevelRequestsByDefault;
@@ -35,7 +35,7 @@ public class TlrSettingsConfiguration {
       );
     }
     catch (IllegalArgumentException e) {
-      log.error("Failed to parse TLR setting configuration");
+      log.error("Failed to parse TLR setting configuration", e);
       return null;
     }
   }
