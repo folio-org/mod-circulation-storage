@@ -74,7 +74,7 @@ public class TlrFeatureToggleService {
       .compose(j -> tlrFeatureToggleJobRepository.update(job.getId(), job.withStatus(IN_PROGRESS)))
       .compose(r -> configurationClient.getTlrSettings())
       .compose(this::fetchAndGroupOpenRequests)
-      .map(this::updatePosition)
+      .map(groupedRequests -> updatePosition(groupedRequests, job))
       .compose(requestRepository::update)
       .compose(r -> tlrFeatureToggleJobRepository.update(job.getId(), job.withStatus(DONE)))
       .mapEmpty();
@@ -115,19 +115,23 @@ public class TlrFeatureToggleService {
   private GroupedCriterias buildGroupedCriterias(List<Criteria> criterias) {
     GroupedCriterias groupedCriterias = new GroupedCriterias();
     criterias.forEach(criteria -> groupedCriterias.addCriteria(criteria, "OR"));
+
     return groupedCriterias;
   }
 
-  private List<Request> updatePosition(Map<String, List<Request>> groupedRequests) {
+  private List<Request> updatePosition(Map<String, List<Request>> groupedRequests,
+    TlrFeatureToggleJob job) {
+
     List<Request> updatedRequests = new ArrayList<>();
-      for (var requests : groupedRequests.values()) {
-        requests.sort(Comparator.comparingInt(Request::getPosition));
-        int position = 1;
-        for (var request : requests) {
-          request.setPosition(position++);
-        }
-        updatedRequests.addAll(requests);
+    for (var requests : groupedRequests.values()) {
+      requests.sort(Comparator.comparingInt(Request::getPosition));
+      int position = 1;
+      for (var request : requests) {
+        request.setPosition(position++);
       }
+      updatedRequests.addAll(requests);
+    }
+    job.setNumberOfUpdatedRequests(updatedRequests.size());
 
     return updatedRequests;
   }
@@ -138,7 +142,7 @@ public class TlrFeatureToggleService {
         .addField(TLR_FEATURE_TOGGLE_JOB_STATUS_FIELD)
         .setOperation("=")
         .setVal(status))
-      .setOrder(new Order(String.format("jsonb->>'%s'","metadata,createdDate"),
+      .setOrder(new Order(String.format("jsonb->>'%s'", "metadata,createdDate"),
         Order.ORDER.DESC)));
   }
 

@@ -29,11 +29,9 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import org.awaitility.Awaitility;
 import org.folio.rest.configuration.TlrSettingsConfiguration;
 import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.jaxrs.model.Tags;
@@ -48,7 +46,6 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.RequestRequestBuilder;
 import org.folio.rest.support.clients.RestAssuredClient;
 import org.folio.rest.support.spring.TestContextConfiguration;
-import org.folio.support.MockServer;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Before;
@@ -183,8 +180,11 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
     JsonResponse postResponse = postTlrFeatureToggleJob(tlrFeatureToggleJob);
     assertThat(postResponse.getStatusCode(), is(HTTP_CREATED));
     restAssuredClient.post(TLR_TOGGLE_JOB_START_URL, new JsonObject());
-    await().until(() -> getTlrFeatureToggleJobById(postResponse.getJson().getString("id"))
+    String jobId = postResponse.getJson().getString("id");
+    await().until(() -> getTlrFeatureToggleJobById(jobId)
       .getJson().getString("status"), is(DONE.toString()));
+    assertThat(getTlrFeatureToggleJobById(jobId).getJson().getInteger(
+      "numberOfUpdatedRequests"), is(7));
 
     Response getResponse = getRequests();
     assertThat(getResponse.getStatusCode(), is(200));
@@ -220,8 +220,11 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
     JsonResponse postResponse = postTlrFeatureToggleJob(tlrFeatureToggleJob);
     assertThat(postResponse.getStatusCode(), is(HTTP_CREATED));
     restAssuredClient.post(TLR_TOGGLE_JOB_START_URL, new JsonObject());
-    await().until(() -> getTlrFeatureToggleJobById(postResponse.getJson().getString("id"))
+    String jobId = postResponse.getJson().getString("id");
+    await().until(() -> getTlrFeatureToggleJobById(jobId)
       .getJson().getString("status"), is(DONE.toString()));
+    assertThat(getTlrFeatureToggleJobById(jobId).getJson().getInteger(
+      "numberOfUpdatedRequests"), is(4));
 
     Response getResponse = getRequests();
     assertThat(getResponse.getStatusCode(), is(200));
