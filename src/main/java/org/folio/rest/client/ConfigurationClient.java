@@ -19,21 +19,22 @@ import io.vertx.core.Vertx;
 
 public class ConfigurationClient extends OkapiClient {
   private static final Logger log = LogManager.getLogger(MethodHandles.lookup().lookupClass());
+  private static final String CONFIGURATIONS_URL = "/configurations/entries?query=%s";
+  private static final String TLR_SETTINGS_QUERY = "module==\"SETTINGS\" and configName==\"TLR\"";
 
   public ConfigurationClient(Vertx vertx, Map<String, String> okapiHeaders) {
     super(vertx, okapiHeaders);
   }
 
   public Future<TlrSettingsConfiguration> getTlrSettings() {
-    String query = cqlAnd(cqlExactMatch("module", "SETTINGS"),
-      cqlExactMatch("configName", "TLR"));
-    String url = format("/configurations/entries?query=%s", StringUtil.urlEncode(query));
+    String url = format(CONFIGURATIONS_URL, StringUtil.urlEncode(TLR_SETTINGS_QUERY));
 
-    return okapiGetAbs(url).send()
+    return okapiGetAbs(url)
+      .send()
       .compose(response -> {
         int responseStatus = response.statusCode();
         if (responseStatus != 200) {
-          String errorMessage = String.format("Failed to find TLR configuration. Response: %d %s",
+          String errorMessage = format("Failed to find TLR configuration. Response: %d %s",
             responseStatus, response.bodyAsString());
           log.error(errorMessage);
           return failedFuture(new HttpException(GET, url, response));
@@ -41,13 +42,5 @@ public class ConfigurationClient extends OkapiClient {
           return succeededFuture(TlrSettingsConfiguration.from(response.bodyAsJsonObject()));
         }
       });
-  }
-
-  private String cqlExactMatch(String index, String value) {
-    return format("%s==\"%s\"", index, value);
-  }
-
-  private String cqlAnd(String left, String right) {
-    return format("%s and %s", left, right);
   }
 }

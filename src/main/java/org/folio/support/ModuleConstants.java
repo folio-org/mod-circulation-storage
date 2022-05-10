@@ -17,7 +17,8 @@ public class ModuleConstants {
   public static final String CHECKIN_TABLE = "check_in";
   public static final Class<CheckIn> CHECKIN_CLASS = CheckIn.class;
   public static final String TLR_FEATURE_TOGGLE_JOB_TABLE = "tlr_feature_toggle_job";
-  public static final String STATUS_FIELD = "'status'";
+  public static final String TLR_FEATURE_TOGGLE_JOB_STATUS_FIELD = "'status'";
+  public static final String REQUEST_STATUS_FIELD = "'status'";
   public static final Class<TlrFeatureToggleJob> TLR_FEATURE_TOGGLE_JOB_CLASS =
     TlrFeatureToggleJob.class;
 

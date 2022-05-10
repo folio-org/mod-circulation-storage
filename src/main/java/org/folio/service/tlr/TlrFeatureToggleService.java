@@ -9,7 +9,8 @@ import static org.folio.rest.jaxrs.model.Request.Status.OPEN_IN_TRANSIT;
 import static org.folio.rest.jaxrs.model.Request.Status.OPEN_NOT_YET_FILLED;
 import static org.folio.rest.jaxrs.model.TlrFeatureToggleJob.Status.DONE;
 import static org.folio.rest.jaxrs.model.TlrFeatureToggleJob.Status.IN_PROGRESS;
-import static org.folio.support.ModuleConstants.STATUS_FIELD;
+import static org.folio.support.ModuleConstants.REQUEST_STATUS_FIELD;
+import static org.folio.support.ModuleConstants.TLR_FEATURE_TOGGLE_JOB_STATUS_FIELD;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ import org.folio.rest.jaxrs.model.TlrFeatureToggleJob;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.GroupedCriterias;
+import org.folio.rest.persist.Criteria.Order;
 import org.folio.support.exception.TlrFeatureToggleJobAlreadyRunningException;
 
 import io.vertx.core.Context;
@@ -52,19 +54,27 @@ public class TlrFeatureToggleService {
   }
 
   public Future<Void> handle() {
-    return refuseWhenJobsInProgressExist()
+    return succeededFuture()
+      .compose(v -> refuseWhenJobsInProgressExist())
       .compose(v -> findJobsByStatus(TlrFeatureToggleJob.Status.OPEN.value()))
-      .compose(this::runJobAndReturnImmediately);
+      .compose(this::run);
+  }
+
+  private Future<Void> run(List<TlrFeatureToggleJob> openJobs) {
+    return openJobs.stream()
+      .findFirst()
+      .map(this::run)
+      .orElse(succeededFuture());
   }
 
   private Future<Void> run(TlrFeatureToggleJob job) {
-    log.info("Processing job {}", job.getId());
+    log.info("Processing TLR feature toggle job {}", job.getId());
 
     return succeededFuture(job)
       .compose(j -> tlrFeatureToggleJobRepository.update(job.getId(), job.withStatus(IN_PROGRESS)))
       .compose(r -> configurationClient.getTlrSettings())
       .compose(this::fetchAndGroupOpenRequests)
-      .compose(this::updatePosition)
+      .map(this::updatePosition)
       .compose(requestRepository::update)
       .compose(r -> tlrFeatureToggleJobRepository.update(job.getId(), job.withStatus(DONE)))
       .mapEmpty();
@@ -87,36 +97,30 @@ public class TlrFeatureToggleService {
   }
 
   private Future<List<Request>> fetchOpenRequests() {
-    GroupedCriterias statusCriterias = buildGroupedCriterias(getStatusCriterias(), "OR");
-
-    return requestRepository.get(new Criterion().addGroupOfCriterias(statusCriterias));
-//      .addCriterion(new Criteria()
-//        .addField(STATUS_FIELD)
-//        .setOperation("=")
-//        .setVal(OPEN_NOT_YET_FILLED.toString())));
+    return requestRepository.get(new Criterion().addGroupOfCriterias(
+      buildGroupedCriterias(getStatusCriterias())));
   }
 
   private List<Criteria> getStatusCriterias() {
     return OPEN_REQUEST_STATUSES.stream()
       .map(status -> List.of(
         new Criteria()
-          .addField(STATUS_FIELD)
+          .addField(REQUEST_STATUS_FIELD)
           .setOperation("=")
           .setVal(status.toString())))
       .flatMap(Collection::stream)
       .collect(toList());
   }
 
-  private GroupedCriterias buildGroupedCriterias(List<Criteria> criterias, String op) {
+  private GroupedCriterias buildGroupedCriterias(List<Criteria> criterias) {
     GroupedCriterias groupedCriterias = new GroupedCriterias();
-    criterias.forEach(criteria -> groupedCriterias.addCriteria(criteria, op));
+    criterias.forEach(criteria -> groupedCriterias.addCriteria(criteria, "OR"));
     return groupedCriterias;
   }
 
-  private Future<List<Request>> updatePosition(Map<String, List<Request>> groupedRequests) {
+  private List<Request> updatePosition(Map<String, List<Request>> groupedRequests) {
     List<Request> updatedRequests = new ArrayList<>();
-      for (var entry : groupedRequests.entrySet()) {
-        List<Request> requests = entry.getValue();
+      for (var requests : groupedRequests.values()) {
         requests.sort(Comparator.comparingInt(Request::getPosition));
         int position = 1;
         for (var request : requests) {
@@ -125,37 +129,17 @@ public class TlrFeatureToggleService {
         updatedRequests.addAll(requests);
       }
 
-    return succeededFuture(updatedRequests);
-  }
-//
-//  private Future<Void> updateRequests(List<Request> updatedRequests) {
-//    return requestRepository.update(updatedRequests)
-//      .compose(v -> null);
-//  }
-
-  private Future<Void> runJobAndReturnImmediately(List<TlrFeatureToggleJob> openJobs) {
-    if (openJobs.isEmpty()) {
-      return succeededFuture();
-    }
-    this.run(openJobs);
-
-    return succeededFuture();
+    return updatedRequests;
   }
 
-  private Future<Void> run(List<TlrFeatureToggleJob> openJobs) {
-    if (openJobs.isEmpty()) {
-      return succeededFuture();
-    }
-
-    return run(openJobs.get(0));
-  }
-
-    private Future<List<TlrFeatureToggleJob>> findJobsByStatus(String status) {
+  private Future<List<TlrFeatureToggleJob>> findJobsByStatus(String status) {
     return tlrFeatureToggleJobRepository.get(new Criterion()
       .addCriterion(new Criteria()
-        .addField(STATUS_FIELD)
+        .addField(TLR_FEATURE_TOGGLE_JOB_STATUS_FIELD)
         .setOperation("=")
-        .setVal(status)));
+        .setVal(status))
+      .setOrder(new Order(String.format("jsonb->>'%s'","metadata,createdDate"),
+        Order.ORDER.DESC)));
   }
 
   private Future<Void> refuseWhenJobsInProgressExist() {

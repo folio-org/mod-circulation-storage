@@ -23,26 +23,32 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.core.Is.is;
 
 import java.net.MalformedURLException;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
+import org.awaitility.Awaitility;
 import org.folio.rest.configuration.TlrSettingsConfiguration;
+import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.jaxrs.model.Tags;
 import org.folio.rest.jaxrs.model.TlrFeatureToggleJob;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.ApiTests;
+import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonArrayHelper;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.RequestRequestBuilder;
 import org.folio.rest.support.clients.RestAssuredClient;
 import org.folio.rest.support.spring.TestContextConfiguration;
+import org.folio.support.MockServer;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Before;
@@ -142,7 +148,7 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
     assertThat(postResponse.getStatusCode(), is(HTTP_CREATED));
 
     io.restassured.response.Response response = restAssuredClient.post(
-      "/tlr-feature-toggle-job/start", new JsonObject());
+      TLR_TOGGLE_JOB_START_URL, new JsonObject());
 
     assertThat(response.getStatusCode(), is(202));
 
@@ -160,47 +166,45 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
     assertThat(postResponse.getStatusCode(), is(HTTP_CREATED));
 
     io.restassured.response.Response response = restAssuredClient.post(
-      "/tlr-feature-toggle-job/start", new JsonObject());
+      TLR_TOGGLE_JOB_START_URL, new JsonObject());
     assertThat(response.getStatusCode(), is(202));
   }
 
   @Test
-  public void processingShouldRecalculatePositionsForInstanceAndTitleLevelRequests()
+  public void processingShouldRecalculatePositionsForTitleLevelRequests()
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
     stubTlrSettings(true);
     UUID firstInstanceId = UUID.randomUUID();
     UUID secondInstanceId = UUID.randomUUID();
-    createTitleLevelRequestsQueue(firstInstanceId, secondInstanceId);
+    var initialQueue = createItemLevelRequestsQueue(firstInstanceId, secondInstanceId);
 
     TlrFeatureToggleJob tlrFeatureToggleJob = createTlrFeatureToggleJob();
     JsonResponse postResponse = postTlrFeatureToggleJob(tlrFeatureToggleJob);
     assertThat(postResponse.getStatusCode(), is(HTTP_CREATED));
-    io.restassured.response.Response jobPostResponse = restAssuredClient.post(
-      TLR_TOGGLE_JOB_START_URL, new JsonObject());
-    assertThat(jobPostResponse.getStatusCode(), is(202));
+    restAssuredClient.post(TLR_TOGGLE_JOB_START_URL, new JsonObject());
+    await().until(() -> getTlrFeatureToggleJobById(postResponse.getJson().getString("id"))
+      .getJson().getString("status"), is(DONE.toString()));
 
     Response getResponse = getRequests();
     assertThat(getResponse.getStatusCode(), is(200));
     List<JsonObject> updatedRequests = JsonArrayHelper.toList(getResponse.getJson()
       .getJsonArray("requests"));
     assertThat(updatedRequests, hasSize(7));
-    List<String> firstInstancePositions = updatedRequests.stream()
+    var firstInstanceRequestsQueue = updatedRequests.stream()
       .filter(request -> firstInstanceId.toString().equals(request.getString("instanceId")))
-      .map(request -> request.getString("position"))
       .collect(Collectors.toList());
-    assertThat(firstInstancePositions, hasSize(5));
-    assertThat(firstInstancePositions.containsAll(List.of("1", "2", "3", "4", "5")), is(true));
+    checkPosition(initialQueue.get(0), firstInstanceRequestsQueue, 1);
+    checkPosition(initialQueue.get(3), firstInstanceRequestsQueue, 2);
+    checkPosition(initialQueue.get(1), firstInstanceRequestsQueue, 3);
+    checkPosition(initialQueue.get(4), firstInstanceRequestsQueue, 4);
+    checkPosition(initialQueue.get(2), firstInstanceRequestsQueue, 5);
 
-    List<String> secondInstancePositions = updatedRequests.stream()
+    var secondInstanceRequestsQueue = updatedRequests.stream()
       .filter(request -> secondInstanceId.toString().equals(request.getString("instanceId")))
-      .map(request -> request.getString("position"))
       .collect(Collectors.toList());
-    assertThat(secondInstancePositions, hasSize(2));
-    assertThat(firstInstancePositions.containsAll(List.of("1", "2")), is(true));
-
-    Response updatedJob = getTlrFeatureToggleJobById(postResponse.getJson().getString("id"));
-    await().until(() -> updatedJob.getJson().getString("status"), is(DONE.toString()));
+    checkPosition(initialQueue.get(5), secondInstanceRequestsQueue, 1);
+    checkPosition(initialQueue.get(6), secondInstanceRequestsQueue, 2);
   }
 
   @Test
@@ -210,66 +214,92 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
     stubTlrSettings(false);
     UUID firstItemId = UUID.randomUUID();
     UUID secondItemId = UUID.randomUUID();
-    createItemLevelRequestsQueue(firstItemId, secondItemId);
+    var initialQueue = createTitleLevelRequestsQueue(firstItemId, secondItemId);
 
     TlrFeatureToggleJob tlrFeatureToggleJob = createTlrFeatureToggleJob();
     JsonResponse postResponse = postTlrFeatureToggleJob(tlrFeatureToggleJob);
     assertThat(postResponse.getStatusCode(), is(HTTP_CREATED));
-    io.restassured.response.Response jobPostResponse = restAssuredClient.post(
-      TLR_TOGGLE_JOB_START_URL, new JsonObject());
-    assertThat(jobPostResponse.getStatusCode(), is(202));
+    restAssuredClient.post(TLR_TOGGLE_JOB_START_URL, new JsonObject());
+    await().until(() -> getTlrFeatureToggleJobById(postResponse.getJson().getString("id"))
+      .getJson().getString("status"), is(DONE.toString()));
 
     Response getResponse = getRequests();
     assertThat(getResponse.getStatusCode(), is(200));
     List<JsonObject> updatedRequests = JsonArrayHelper.toList(getResponse.getJson()
       .getJsonArray("requests"));
     assertThat(updatedRequests, hasSize(4));
-    List<String> firstItemPositions = updatedRequests.stream()
+    var firstItemRequestsQueue = updatedRequests.stream()
       .filter(request -> firstItemId.toString().equals(request.getString("itemId")))
-      .map(request -> request.getString("position"))
       .collect(Collectors.toList());
-    assertThat(firstItemPositions, hasSize(2));
-    assertThat(firstItemPositions.containsAll(List.of("1", "2")), is(true));
+    checkPosition(initialQueue.get(0), firstItemRequestsQueue, 1);
+    checkPosition(initialQueue.get(1), firstItemRequestsQueue, 2);
 
-    List<String> secondInstancePositions = updatedRequests.stream()
+    var secondItemRequestsQueue = updatedRequests.stream()
       .filter(request -> secondItemId.toString().equals(request.getString("itemId")))
-      .map(request -> request.getString("position"))
       .collect(Collectors.toList());
-    assertThat(secondInstancePositions, hasSize(2));
-    assertThat(secondInstancePositions.containsAll(List.of("1", "2")), is(true));
-
-    Response updatedJob = getTlrFeatureToggleJobById(postResponse.getJson().getString("id"));
-    await().until(() -> updatedJob.getJson().getString("status"), is(DONE.toString()));
+    checkPosition(initialQueue.get(2), secondItemRequestsQueue, 1);
+    checkPosition(initialQueue.get(3), secondItemRequestsQueue, 2);
   }
 
-  private void createTitleLevelRequestsQueue(UUID firstInstanceId, UUID secondInstanceId) {
-    String requestLevel = "Title";
-    createRequest(firstInstanceId, UUID.randomUUID(), 1, requestLevel, OPEN_NOT_YET_FILLED);
-    createRequest(firstInstanceId, UUID.randomUUID(), 2, requestLevel, OPEN_AWAITING_PICKUP);
-    createRequest(firstInstanceId, UUID.randomUUID(), 3, requestLevel, OPEN_IN_TRANSIT);
-    createRequest(firstInstanceId, UUID.randomUUID(), 1, requestLevel, OPEN_AWAITING_DELIVERY);
-    createRequest(firstInstanceId, UUID.randomUUID(), 2, requestLevel, OPEN_AWAITING_PICKUP);
-    createRequest(secondInstanceId, UUID.randomUUID(), 1, requestLevel, OPEN_IN_TRANSIT);
-    createRequest(secondInstanceId, UUID.randomUUID(), 2, requestLevel, OPEN_AWAITING_DELIVERY);
+  private void checkPosition(JsonObject jsonObject, List<JsonObject> queue,
+    int expectedPosition) {
+
+    assertThat(queue.stream()
+      .filter(json -> json.getString("id").equals(jsonObject.getString("id")))
+      .findFirst()
+      .map(json -> json.getInteger("position"))
+      .get(), is(expectedPosition));
   }
 
-  private void createItemLevelRequestsQueue(UUID firstItemId, UUID secondItemId) {
+  private List<JsonObject> createItemLevelRequestsQueue(UUID firstInstanceId, UUID secondInstanceId) {
     String requestLevel = "Item";
-    createRequest(UUID.randomUUID(), firstItemId, 1, requestLevel, OPEN_NOT_YET_FILLED);
-    createRequest(UUID.randomUUID(), firstItemId,2, requestLevel, OPEN_AWAITING_PICKUP);
-    createRequest(UUID.randomUUID(), secondItemId, 1, requestLevel, OPEN_IN_TRANSIT);
-    createRequest(UUID.randomUUID(), secondItemId, 2, requestLevel, OPEN_AWAITING_DELIVERY);
+    List<IndividualResource> createdRequests = new ArrayList<>();
+    createdRequests.add(createRequest(firstInstanceId, UUID.randomUUID(), 1, requestLevel,
+      OPEN_NOT_YET_FILLED));
+    createdRequests.add(createRequest(firstInstanceId, UUID.randomUUID(), 2, requestLevel,
+      OPEN_AWAITING_PICKUP));
+    createdRequests.add(createRequest(firstInstanceId, UUID.randomUUID(), 3, requestLevel,
+      OPEN_IN_TRANSIT));
+    createdRequests.add(createRequest(firstInstanceId, UUID.randomUUID(), 1, requestLevel,
+      OPEN_AWAITING_DELIVERY));
+    createdRequests.add(createRequest(firstInstanceId, UUID.randomUUID(), 2, requestLevel,
+      OPEN_AWAITING_PICKUP));
+    createdRequests.add(createRequest(secondInstanceId, UUID.randomUUID(), 1, requestLevel,
+      OPEN_IN_TRANSIT));
+    createdRequests.add(createRequest(secondInstanceId, UUID.randomUUID(), 2, requestLevel,
+      OPEN_AWAITING_DELIVERY));
+
+    return createdRequests.stream()
+      .map(IndividualResource::getJson)
+      .collect(Collectors.toList());
   }
 
-  private void createRequest(UUID instanceId, UUID itemId, int position, String requestLevel,
-    String status) {
+  private List<JsonObject> createTitleLevelRequestsQueue(UUID firstItemId, UUID secondItemId) {
+    String requestLevel = "Title";
+    List<IndividualResource> createdRequests = new ArrayList<>();
+    createdRequests.add(createRequest(UUID.randomUUID(), firstItemId, 1, requestLevel,
+      OPEN_NOT_YET_FILLED));
+    createdRequests.add(createRequest(UUID.randomUUID(), firstItemId,2, requestLevel,
+      OPEN_AWAITING_PICKUP));
+    createdRequests.add(createRequest(UUID.randomUUID(), secondItemId, 1, requestLevel,
+      OPEN_IN_TRANSIT));
+    createdRequests.add(createRequest(UUID.randomUUID(), secondItemId, 2, requestLevel,
+      OPEN_AWAITING_DELIVERY));
+
+    return createdRequests.stream()
+      .map(IndividualResource::getJson)
+      .collect(Collectors.toList());
+  }
+
+  private IndividualResource createRequest(UUID instanceId, UUID itemId, int position,
+    String requestLevel, String status) {
 
     DateTime requestDate = new DateTime(2021, 7, 22, 10, 22, 54, DateTimeZone.UTC);
     DateTime requestExpirationDate = new DateTime(2021, 7, 30, 0, 0, DateTimeZone.UTC);
     DateTime holdShelfExpirationDate = new DateTime(2021, 8, 31, 0, 0, DateTimeZone.UTC);
 
     try {
-      createEntity(
+      return createEntity(
         new RequestRequestBuilder()
           .hold()
           .toHoldShelf()
@@ -285,7 +315,7 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
           .withInstanceId(instanceId)
           .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
           .withProxy("Stuart", "Rebecca", "6059539205")
-          .withStatus(OPEN_NOT_YET_FILLED)
+          .withStatus(status)
           .withPosition(position)
           .withPickupServicePointId(UUID.randomUUID())
           .withTags(new Tags().withTagList(asList("new", "important")))
@@ -293,6 +323,7 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
     } catch (Exception e) {
       e.printStackTrace();
     }
+    return null;
   }
 
   private void checkResponse(int numberOfUpdates, JsonObject representation) {
@@ -308,7 +339,9 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
     TlrFeatureToggleJob.Status status) {
 
     return new TlrFeatureToggleJob()
-      .withStatus(status);
+      .withStatus(status)
+      .withMetadata(new Metadata()
+        .withCreatedDate(new Date()));
   }
 
   private TlrFeatureToggleJob createTlrFeatureToggleJob(int numberOfUpdates) {
