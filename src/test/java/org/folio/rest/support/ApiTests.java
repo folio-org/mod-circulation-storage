@@ -31,9 +31,7 @@ public class ApiTests {
   protected static FakeKafkaConsumer kafkaConsumer;
 
   @BeforeClass
-  public static void before()
-    throws Exception {
-
+  public static void before() throws Exception {
     if(StorageTestSuite.isNotInitialised()) {
       System.out.println("Running test on own, initialising suite manually");
       runningOnOwn = true;
