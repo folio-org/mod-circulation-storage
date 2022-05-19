@@ -232,19 +232,11 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
   }
 
   @Test
-  public void processingShouldFailWhenConfigurationIsNotFound()
-    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
+  public void processingShouldFailWhenConfigurationIsNotFound() throws MalformedURLException,
+    ExecutionException, InterruptedException, TimeoutException {
 
     stub404ForTlrSettings();
-    TlrFeatureToggleJob tlrFeatureToggleJob = createTlrFeatureToggleJob();
-    JsonResponse postResponse = postTlrFeatureToggleJob(tlrFeatureToggleJob);
-    assertThat(postResponse.getStatusCode(), is(HTTP_CREATED));
-    restAssuredClient.post(TLR_TOGGLE_JOB_START_URL, new JsonObject());
-    String jobId = postResponse.getJson().getString("id");
-    await().until(() -> getTlrFeatureToggleJobById(jobId)
-      .getJson().getString("status"), is(FAILED.toString()));
-    assertThat(getTlrFeatureToggleJobById(jobId).getJson().getString("errors")
-      .contains("Resource not found"), is(true));
+    checkFailedTlrFeatureToggleJob("Resource not found");
   }
 
   @Test
@@ -252,15 +244,7 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
     stubWithInvalidTlrSettings();
-    TlrFeatureToggleJob tlrFeatureToggleJob = createTlrFeatureToggleJob();
-    JsonResponse postResponse = postTlrFeatureToggleJob(tlrFeatureToggleJob);
-    assertThat(postResponse.getStatusCode(), is(HTTP_CREATED));
-    restAssuredClient.post(TLR_TOGGLE_JOB_START_URL, new JsonObject());
-    String jobId = postResponse.getJson().getString("id");
-    await().until(() -> getTlrFeatureToggleJobById(jobId)
-      .getJson().getString("status"), is(FAILED.toString()));
-    assertThat(getTlrFeatureToggleJobById(jobId).getJson().getString("errors")
-      .contains("Invalid configurations response"), is(true));
+    checkFailedTlrFeatureToggleJob("Invalid configurations response");
   }
 
   @Test
@@ -270,17 +254,7 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
     stubTlrSettings(false);
     UUID firstItemId = UUID.randomUUID();
     createTitleLevelRequestsQueue(firstItemId, null);
-
-    TlrFeatureToggleJob tlrFeatureToggleJob = createTlrFeatureToggleJob();
-    JsonResponse postResponse = postTlrFeatureToggleJob(tlrFeatureToggleJob);
-    assertThat(postResponse.getStatusCode(), is(HTTP_CREATED));
-    restAssuredClient.post(TLR_TOGGLE_JOB_START_URL, new JsonObject());
-    String jobId = postResponse.getJson().getString("id");
-
-    await().until(() -> getTlrFeatureToggleJobById(jobId)
-      .getJson().getString("status"), is(FAILED.toString()));
-    assertThat(getTlrFeatureToggleJobById(jobId).getJson().getString("errors")
-      .contains("element cannot be mapped to a null key"), is(true));
+    checkFailedTlrFeatureToggleJob("element cannot be mapped to a null key");
   }
 
   private void checkPosition(JsonObject jsonObject, List<JsonObject> queue,
@@ -291,6 +265,20 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
       .findFirst()
       .map(json -> json.getInteger("position"))
       .get(), is(expectedPosition));
+  }
+
+  private void checkFailedTlrFeatureToggleJob(String errorMessage)
+    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
+
+    TlrFeatureToggleJob tlrFeatureToggleJob = createTlrFeatureToggleJob();
+    JsonResponse postResponse = postTlrFeatureToggleJob(tlrFeatureToggleJob);
+    assertThat(postResponse.getStatusCode(), is(HTTP_CREATED));
+    restAssuredClient.post(TLR_TOGGLE_JOB_START_URL, new JsonObject());
+    String jobId = postResponse.getJson().getString("id");
+    await().until(() -> getTlrFeatureToggleJobById(jobId)
+      .getJson().getString("status"), is(FAILED.toString()));
+    assertThat(getTlrFeatureToggleJobById(jobId).getJson().getString("errors")
+      .contains(errorMessage), is(true));
   }
 
   private List<JsonObject> createItemLevelRequestsQueue(UUID firstInstanceId, UUID secondInstanceId) {

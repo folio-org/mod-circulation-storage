@@ -80,7 +80,7 @@ public class TlrFeatureToggleService {
       .map(groupedRequests -> updatePosition(groupedRequests, job))
       .compose(requestRepository::update)
       .compose(r -> updateJobStatus(job, DONE))
-      .recover(t -> updateJobAsFailed(job, t.getLocalizedMessage()))
+      .recover(throwable -> updateJobAsFailed(job, throwable))
       .mapEmpty();
   }
 
@@ -157,8 +157,10 @@ public class TlrFeatureToggleService {
         : failedFuture(new TlrFeatureToggleJobAlreadyRunningException(jobList)));
   }
 
-  private Future<RowSet<Row>> updateJobAsFailed(TlrFeatureToggleJob job, String errorMessage) {
-    job.getErrors().add(errorMessage);
+  private Future<RowSet<Row>> updateJobAsFailed(TlrFeatureToggleJob job,
+    Throwable throwable) {
+
+    job.getErrors().add(throwable.getLocalizedMessage());
 
     return updateJobStatus(job, FAILED);
   }
