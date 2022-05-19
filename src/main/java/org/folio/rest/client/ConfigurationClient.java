@@ -53,7 +53,7 @@ public class ConfigurationClient extends OkapiClient {
               .map(tlrConfig -> succeededFuture(TlrSettingsConfiguration.from(tlrConfig)))
               .orElse(failedFuture("Failed to find TLR configuration"));
           } catch (JsonProcessingException e) {
-            log.error("Failed to parse response: " + response.bodyAsString());
+            log.error(String.format("Failed to parse response: %s", response.bodyAsString()));
             return failedFuture(e);
           }
         }
