@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
 import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static io.vertx.core.json.JsonObject.mapFrom;
@@ -11,6 +12,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.jaxrs.model.TlrFeatureToggleJob.Status.DONE;
+import static org.folio.rest.jaxrs.model.TlrFeatureToggleJob.Status.FAILED;
 import static org.folio.rest.jaxrs.model.TlrFeatureToggleJob.Status.IN_PROGRESS;
 import static org.folio.rest.jaxrs.model.TlrFeatureToggleJob.Status.OPEN;
 import static org.folio.rest.support.ResponseHandler.json;
@@ -33,6 +35,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import org.folio.rest.configuration.TlrSettingsConfiguration;
+import org.folio.rest.jaxrs.model.Config;
+import org.folio.rest.jaxrs.model.KvConfigurations;
 import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.jaxrs.model.Tags;
 import org.folio.rest.jaxrs.model.TlrFeatureToggleJob;
@@ -137,7 +141,7 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
   }
 
   @Test
-  public void processingShouldSwitchJobStatusFromOpenToInProgress() throws MalformedURLException,
+  public void processingShouldFailJobWhenConfigurationIsNotFound() throws MalformedURLException,
     ExecutionException, InterruptedException, TimeoutException  {
 
     TlrFeatureToggleJob tlrFeatureToggleJob = createTlrFeatureToggleJob();
@@ -149,9 +153,9 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
 
     assertThat(response.getStatusCode(), is(202));
 
-    Response updatedJob = getTlrFeatureToggleJobById(
-      postResponse.getJson().getString("id"));
-    assertThat(updatedJob.getJson().getString("status"), is(IN_PROGRESS.toString()));
+    String jobId = postResponse.getJson().getString("id");
+    await().until(() -> getTlrFeatureToggleJobById(jobId)
+      .getJson().getString("status"), is(FAILED.toString()));
   }
 
   @Test
@@ -244,6 +248,42 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
     checkPosition(initialQueue.get(3), secondItemRequestsQueue, 2);
   }
 
+  @Test
+  public void processingShouldFailWhenConfigurationIsNotFound()
+    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
+
+    stub404ForTlrSettings();
+    TlrFeatureToggleJob tlrFeatureToggleJob = createTlrFeatureToggleJob();
+    JsonResponse postResponse = postTlrFeatureToggleJob(tlrFeatureToggleJob);
+    assertThat(postResponse.getStatusCode(), is(HTTP_CREATED));
+    restAssuredClient.post(TLR_TOGGLE_JOB_START_URL, new JsonObject());
+    String jobId = postResponse.getJson().getString("id");
+    await().until(() -> getTlrFeatureToggleJobById(jobId)
+      .getJson().getString("status"), is(FAILED.toString()));
+    assertThat(getTlrFeatureToggleJobById(jobId).getJson().getString("errors")
+      .contains("Resource not found"), is(true));
+  }
+
+  @Test
+  public void processingShouldFailWhenItemIdIsNull()
+    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
+
+    stubTlrSettings(false);
+    UUID firstItemId = UUID.randomUUID();
+    createTitleLevelRequestsQueue(firstItemId, null);
+
+    TlrFeatureToggleJob tlrFeatureToggleJob = createTlrFeatureToggleJob();
+    JsonResponse postResponse = postTlrFeatureToggleJob(tlrFeatureToggleJob);
+    assertThat(postResponse.getStatusCode(), is(HTTP_CREATED));
+    restAssuredClient.post(TLR_TOGGLE_JOB_START_URL, new JsonObject());
+    String jobId = postResponse.getJson().getString("id");
+
+    await().until(() -> getTlrFeatureToggleJobById(jobId)
+      .getJson().getString("status"), is(FAILED.toString()));
+    assertThat(getTlrFeatureToggleJobById(jobId).getJson().getString("errors")
+      .contains("element cannot be mapped to a null key"), is(true));
+  }
+
   private void checkPosition(JsonObject jsonObject, List<JsonObject> queue,
     int expectedPosition) {
 
@@ -297,24 +337,20 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
   private IndividualResource createRequest(UUID instanceId, UUID itemId, int position,
     String requestLevel, String status) {
 
-    DateTime requestDate = new DateTime(2021, 7, 22, 10, 22, 54, DateTimeZone.UTC);
-    DateTime requestExpirationDate = new DateTime(2021, 7, 30, 0, 0, DateTimeZone.UTC);
-    DateTime holdShelfExpirationDate = new DateTime(2021, 8, 31, 0, 0, DateTimeZone.UTC);
-
     try {
       return createEntity(
         new RequestRequestBuilder()
           .hold()
           .toHoldShelf()
           .withId(UUID.randomUUID())
-          .withRequestDate(requestDate)
+          .withRequestDate(new DateTime(2021, 7, 22, 10, 22, 54, DateTimeZone.UTC))
           .withItemId(itemId)
           .withRequesterId(UUID.randomUUID())
           .withProxyId(UUID.randomUUID())
-          .withRequestExpirationDate(requestExpirationDate)
-          .withHoldShelfExpirationDate(holdShelfExpirationDate)
+          .withRequestExpirationDate(new DateTime(2021, 8, 31, 0, 0, DateTimeZone.UTC))
+          .withHoldShelfExpirationDate(new DateTime(2021, 8, 31, 0, 0, DateTimeZone.UTC))
           .withRequestLevel(requestLevel)
-          .withHoldingsRecordId(UUID.randomUUID())
+          .withHoldingsRecordId(itemId != null ? UUID.randomUUID() : null)
           .withInstanceId(instanceId)
           .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
           .withProxy("Stuart", "Rebecca", "6059539205")
@@ -415,6 +451,16 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
       isTlrEnabled, false, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
     StorageTestSuite.getWireMockServer().stubFor(WireMock.get(urlPathMatching(
       "/configurations/entries.*"))
-      .willReturn(ok().withBody(mapFrom(tlrSettingsConfiguration).encodePrettily())));
+      .willReturn(ok().withBody(mapFrom(
+        new KvConfigurations()
+          .withConfigs(List.of(new Config()
+            .withValue(mapFrom(tlrSettingsConfiguration).encodePrettily()))))
+        .encodePrettily())));
+  }
+
+  private void stub404ForTlrSettings() {
+    StorageTestSuite.getWireMockServer().stubFor(WireMock.get(urlPathMatching(
+        "/configurations/entries.*"))
+      .willReturn(notFound().withBody("Resource not found")));
   }
 }

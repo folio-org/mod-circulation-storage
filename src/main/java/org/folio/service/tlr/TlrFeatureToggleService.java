@@ -8,6 +8,7 @@ import static org.folio.rest.jaxrs.model.Request.Status.OPEN_AWAITING_PICKUP;
 import static org.folio.rest.jaxrs.model.Request.Status.OPEN_IN_TRANSIT;
 import static org.folio.rest.jaxrs.model.Request.Status.OPEN_NOT_YET_FILLED;
 import static org.folio.rest.jaxrs.model.TlrFeatureToggleJob.Status.DONE;
+import static org.folio.rest.jaxrs.model.TlrFeatureToggleJob.Status.FAILED;
 import static org.folio.rest.jaxrs.model.TlrFeatureToggleJob.Status.IN_PROGRESS;
 import static org.folio.support.ModuleConstants.REQUEST_STATUS_FIELD;
 import static org.folio.support.ModuleConstants.TLR_FEATURE_TOGGLE_JOB_STATUS_FIELD;
@@ -36,6 +37,8 @@ import org.folio.support.exception.TlrFeatureToggleJobAlreadyRunningException;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 
 public class TlrFeatureToggleService {
   private static final Logger log = LogManager.getLogger(MethodHandles.lookup().lookupClass());
@@ -77,6 +80,7 @@ public class TlrFeatureToggleService {
       .map(groupedRequests -> updatePosition(groupedRequests, job))
       .compose(requestRepository::update)
       .compose(r -> tlrFeatureToggleJobRepository.update(job.getId(), job.withStatus(DONE)))
+      .recover(t -> updateJobAsFailed(job, t.getLocalizedMessage()))
       .mapEmpty();
   }
 
@@ -151,5 +155,11 @@ public class TlrFeatureToggleService {
       .compose(jobList -> jobList.isEmpty()
         ? succeededFuture()
         : failedFuture(new TlrFeatureToggleJobAlreadyRunningException(jobList)));
+  }
+
+  private Future<RowSet<Row>> updateJobAsFailed(TlrFeatureToggleJob job, String errorMessage) {
+    job.getErrors().add(errorMessage);
+
+    return tlrFeatureToggleJobRepository.update(job.getId(), job.withStatus(FAILED));
   }
 }
