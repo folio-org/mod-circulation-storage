@@ -1,7 +1,6 @@
 package org.folio.rest.client;
 
 import static io.vertx.core.Future.failedFuture;
-import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.http.HttpMethod.GET;
 import static java.lang.String.format;
 
@@ -50,10 +49,11 @@ public class ConfigurationClient extends OkapiClient {
               .findFirst()
               .map(Config::getValue)
               .map(JsonObject::new)
-              .map(tlrConfig -> succeededFuture(TlrSettingsConfiguration.from(tlrConfig)))
-              .orElse(failedFuture("Failed to find TLR configuration"));
+              .map(TlrSettingsConfiguration::from)
+              .map(Future::succeededFuture)
+              .orElseGet(() -> failedFuture("Failed to find TLR configuration"));
           } catch (JsonProcessingException e) {
-            log.error(String.format("Failed to parse response: %s", response.bodyAsString()));
+            log.error("Failed to parse response: {}", response.bodyAsString());
             return failedFuture(e);
           }
         }

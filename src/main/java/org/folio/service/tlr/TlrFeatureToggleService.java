@@ -74,12 +74,12 @@ public class TlrFeatureToggleService {
     log.info("Processing TLR feature toggle job {}", job.getId());
 
     return succeededFuture(job)
-      .compose(j -> tlrFeatureToggleJobRepository.update(job.getId(), job.withStatus(IN_PROGRESS)))
+      .compose(j -> updateJobStatus(job, IN_PROGRESS))
       .compose(r -> configurationClient.getTlrSettings())
       .compose(this::fetchAndGroupOpenRequests)
       .map(groupedRequests -> updatePosition(groupedRequests, job))
       .compose(requestRepository::update)
-      .compose(r -> tlrFeatureToggleJobRepository.update(job.getId(), job.withStatus(DONE)))
+      .compose(r -> updateJobStatus(job, DONE))
       .recover(t -> updateJobAsFailed(job, t.getLocalizedMessage()))
       .mapEmpty();
   }
@@ -160,6 +160,12 @@ public class TlrFeatureToggleService {
   private Future<RowSet<Row>> updateJobAsFailed(TlrFeatureToggleJob job, String errorMessage) {
     job.getErrors().add(errorMessage);
 
-    return tlrFeatureToggleJobRepository.update(job.getId(), job.withStatus(FAILED));
+    return updateJobStatus(job, FAILED);
+  }
+
+  private Future<RowSet<Row>> updateJobStatus(TlrFeatureToggleJob job,
+    TlrFeatureToggleJob.Status status) {
+
+    return tlrFeatureToggleJobRepository.update(job.getId(), job.withStatus(status));
   }
 }

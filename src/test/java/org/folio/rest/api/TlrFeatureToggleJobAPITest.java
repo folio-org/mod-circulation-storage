@@ -142,24 +142,6 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
   }
 
   @Test
-  public void processingShouldFailJobWhenConfigurationIsNotFound() throws MalformedURLException,
-    ExecutionException, InterruptedException, TimeoutException  {
-
-    TlrFeatureToggleJob tlrFeatureToggleJob = createTlrFeatureToggleJob();
-    JsonResponse postResponse = postTlrFeatureToggleJob(tlrFeatureToggleJob);
-    assertThat(postResponse.getStatusCode(), is(HTTP_CREATED));
-
-    io.restassured.response.Response response = restAssuredClient.post(
-      TLR_TOGGLE_JOB_START_URL, new JsonObject());
-
-    assertThat(response.getStatusCode(), is(202));
-
-    String jobId = postResponse.getJson().getString("id");
-    await().until(() -> getTlrFeatureToggleJobById(jobId)
-      .getJson().getString("status"), is(FAILED.toString()));
-  }
-
-  @Test
   public void processingShouldRespondWith202WhenThereAreRunningJobs() throws MalformedURLException,
     ExecutionException, InterruptedException, TimeoutException  {
 
