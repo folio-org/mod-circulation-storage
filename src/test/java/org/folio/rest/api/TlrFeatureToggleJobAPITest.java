@@ -74,6 +74,7 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
   private static final String TLR_TOGGLE_JOB_START_URL = "/tlr-feature-toggle-job/start";
   private static final String TLR_FEATURE_TOGGLE_JOB_TABLE = "tlr_feature_toggle_job";
   private static final String REQUEST_STORAGE_URL = "/request-storage/requests";
+  private static final String CONFIGURATIONS_ENTRIES = "/configurations/entries.*";
 
   @ClassRule
   public static final SpringClassRule classRule = new SpringClassRule();
@@ -265,6 +266,22 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
   }
 
   @Test
+  public void processingShouldFailWhenConfigurationIsInvalid()
+    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
+
+    stubWithInvalidTlrSettings();
+    TlrFeatureToggleJob tlrFeatureToggleJob = createTlrFeatureToggleJob();
+    JsonResponse postResponse = postTlrFeatureToggleJob(tlrFeatureToggleJob);
+    assertThat(postResponse.getStatusCode(), is(HTTP_CREATED));
+    restAssuredClient.post(TLR_TOGGLE_JOB_START_URL, new JsonObject());
+    String jobId = postResponse.getJson().getString("id");
+    await().until(() -> getTlrFeatureToggleJobById(jobId)
+      .getJson().getString("status"), is(FAILED.toString()));
+    assertThat(getTlrFeatureToggleJobById(jobId).getJson().getString("errors")
+      .contains("Invalid configurations response"), is(true));
+  }
+
+  @Test
   public void processingShouldFailWhenItemIdIsNull()
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
@@ -450,7 +467,7 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
     final var tlrSettingsConfiguration = new TlrSettingsConfiguration(
       isTlrEnabled, false, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
     StorageTestSuite.getWireMockServer().stubFor(WireMock.get(urlPathMatching(
-      "/configurations/entries.*"))
+        CONFIGURATIONS_ENTRIES))
       .willReturn(ok().withBody(mapFrom(
         new KvConfigurations()
           .withConfigs(List.of(new Config()
@@ -460,7 +477,13 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
 
   private void stub404ForTlrSettings() {
     StorageTestSuite.getWireMockServer().stubFor(WireMock.get(urlPathMatching(
-        "/configurations/entries.*"))
+        CONFIGURATIONS_ENTRIES))
       .willReturn(notFound().withBody("Resource not found")));
+  }
+
+  private void stubWithInvalidTlrSettings() {
+    StorageTestSuite.getWireMockServer().stubFor(WireMock.get(urlPathMatching(
+        CONFIGURATIONS_ENTRIES))
+      .willReturn(ok().withBody("Invalid configurations response")));
   }
 }
