@@ -1,7 +1,6 @@
 package org.folio.rest.client;
 
 import static io.vertx.core.Future.failedFuture;
-import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.http.HttpMethod.GET;
 import static java.lang.String.format;
 
@@ -11,11 +10,16 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.configuration.TlrSettingsConfiguration;
+import org.folio.rest.jaxrs.model.Config;
+import org.folio.rest.jaxrs.model.KvConfigurations;
 import org.folio.support.exception.HttpException;
 import org.folio.util.StringUtil;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 
 public class ConfigurationClient extends OkapiClient {
   private static final Logger log = LogManager.getLogger(MethodHandles.lookup().lookupClass());
@@ -39,7 +43,19 @@ public class ConfigurationClient extends OkapiClient {
           log.error(errorMessage);
           return failedFuture(new HttpException(GET, url, response));
         } else {
-          return succeededFuture(TlrSettingsConfiguration.from(response.bodyAsJsonObject()));
+          try {
+            return objectMapper.readValue(response.bodyAsString(), KvConfigurations.class)
+              .getConfigs().stream()
+              .findFirst()
+              .map(Config::getValue)
+              .map(JsonObject::new)
+              .map(TlrSettingsConfiguration::from)
+              .map(Future::succeededFuture)
+              .orElseGet(() -> failedFuture("Failed to find TLR configuration"));
+          } catch (JsonProcessingException e) {
+            log.error("Failed to parse response: {}", response.bodyAsString());
+            return failedFuture(e);
+          }
         }
       });
   }
