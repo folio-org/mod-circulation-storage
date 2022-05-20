@@ -7,6 +7,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.created;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.serverError;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static java.lang.String.format;
@@ -80,6 +81,7 @@ public class TenantRefApiTests {
   private static final String ANY_URL_PARAMS_REGEX_TEMPLATE = "\\?.*";
   private static final String FAIL_SECOND_CALL_SCENARIO = "Test scenario";
   private static final String FIRST_CALL_MADE_SCENARIO_STATE = "First call made";
+  private static final String DEFAULT_UUID = "00000000-0000-0000-0000-000000000000";
 
   private static StubMapping itemStorageStub;
   private static StubMapping holdingsStorageStub;
@@ -199,6 +201,13 @@ public class TenantRefApiTests {
     jobFailsWhenRemoteCallFails(context, async);
   }
 
+  @Test
+  public void jobFailsWhenItemWasNotFound(final TestContext context) {
+    Async async = context.async();
+    wireMock.removeStub(itemStorageStub);
+    jobFailsWhenRemoteCallFails(context, async);
+  }
+
   private void jobFailsWhenRemoteCallFails(TestContext context, Async async) {
     postTenant(context, PREVIOUS_MODULE_VERSION, MIGRATION_MODULE_VERSION)
       .onSuccess(job -> {
@@ -210,41 +219,51 @@ public class TenantRefApiTests {
   }
 
   @Test
-  public void jobFailsWhenItemWasNotFound(final TestContext context) {
+  public void useDefaultValuesForInstanceIdAndHoldingsRecordIdWhenItemWasNotFound(TestContext context) {
     Async async = context.async();
-    wireMock.removeStub(itemStorageStub);
-    jobFailsWhenFailedToFindInstanceIds(context, async, ITEM_STORAGE_URL, "items", items);
+
+    JsonObject randomRequest = requestsBeforeMigration.values()
+      .stream()
+      .findAny()
+      .orElseThrow();
+
+    randomRequest.put("itemId", UUID.randomUUID());
+    String requestId = getId(randomRequest);
+
+    postgresClient.update(REQUEST_TABLE_NAME, randomRequest, requestId)
+      .compose(r -> postTenant(context, PREVIOUS_MODULE_VERSION, MIGRATION_MODULE_VERSION))
+      .compose(job -> getRequestAsJson(requestId))
+      .onFailure(context::fail)
+      .onSuccess(updatedRequest -> {
+        context.assertEquals(DEFAULT_UUID, updatedRequest.getString("instanceId"));
+        context.assertEquals(DEFAULT_UUID, updatedRequest.getString("holdingsRecordId"));
+        validateMigrationResult(context, async);
+      });
+
   }
 
   @Test
-  public void jobFailsWhenHoldingsRecordWasNotFound(final TestContext context) {
+  public void changesMadeForAllBatchesAreRevertedInCaseOfError(TestContext context) {
     Async async = context.async();
-    wireMock.removeStub(holdingsStorageStub);
-    jobFailsWhenFailedToFindInstanceIds(context, async, HOLDINGS_STORAGE_URL,
-      "holdingsRecords", holdingRecords);
-  }
-
-  private void jobFailsWhenFailedToFindInstanceIds(TestContext context, Async async, String url,
-    String collectionName, List<JsonObject> entities) {
+    wireMock.removeStub(itemStorageStub);
 
     // first batch - return valid response
-    wireMock.stubFor(get(urlMatching(url + ANY_URL_PARAMS_REGEX_TEMPLATE))
+    wireMock.stubFor(get(urlMatching(ITEM_STORAGE_URL + ANY_URL_PARAMS_REGEX_TEMPLATE))
       .atPriority(0)
       .inScenario(FAIL_SECOND_CALL_SCENARIO)
-      .willReturn(ok().withBody(new JsonObject().put(collectionName, new JsonArray(entities)).encode()))
+      .willReturn(ok().withBody(new JsonObject().put("items", new JsonArray(items)).encodePrettily()))
       .willSetStateTo(FIRST_CALL_MADE_SCENARIO_STATE));
 
-    // second batch - return empty response
-    wireMock.stubFor(get(urlMatching(url + ANY_URL_PARAMS_REGEX_TEMPLATE))
+    // second batch - return 500
+    wireMock.stubFor(get(urlMatching(ITEM_STORAGE_URL + ANY_URL_PARAMS_REGEX_TEMPLATE))
       .atPriority(0)
       .inScenario(FAIL_SECOND_CALL_SCENARIO)
       .whenScenarioStateIs(FIRST_CALL_MADE_SCENARIO_STATE)
-      .willReturn(ok().withBody(new JsonObject().put(collectionName, new JsonArray()).encode())));
+      .willReturn(serverError()));
 
     postTenant(context, PREVIOUS_MODULE_VERSION, MIGRATION_MODULE_VERSION)
       .onSuccess(job -> {
-        context.assertTrue(job.getError().contains("failed to find instance IDs"));
-        // make sure that changes for all batches were reverted
+        context.assertFalse(job.getError().isEmpty());
         assertThatNoRequestsWereUpdated(context);
         async.complete();
       });
@@ -318,6 +337,10 @@ public class TenantRefApiTests {
       .map(rowSet -> StreamSupport.stream(rowSet.spliterator(), false)
         .map(row -> row.getJsonObject("jsonb"))
         .collect(toList()));
+  }
+
+  private static Future<JsonObject> getRequestAsJson(String requestId) {
+    return postgresClient.getById(REQUEST_TABLE_NAME, requestId);
   }
 
   private void validateMigrationResult(TestContext context, Async async) {
