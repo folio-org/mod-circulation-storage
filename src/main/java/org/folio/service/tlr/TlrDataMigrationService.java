@@ -51,7 +51,8 @@ import lombok.Setter;
  */
 public class TlrDataMigrationService {
   private static final Logger log = LogManager.getLogger(TlrDataMigrationService.class);
-  private static final String DEFAULT_UUID = "00000000-0000-0000-0000-000000000000";
+  // valid UUID version 4 variant 1
+  private static final String DEFAULT_UUID = "00000000-0000-4000-8000-000000000000";
 
   // safe number of UUIDs which fits into Okapi's URL length limit (4096 characters)
   private static final int BATCH_SIZE = 80;
