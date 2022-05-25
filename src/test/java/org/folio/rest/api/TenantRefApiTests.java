@@ -81,7 +81,7 @@ public class TenantRefApiTests {
   private static final String ANY_URL_PARAMS_REGEX_TEMPLATE = "\\?.*";
   private static final String FAIL_SECOND_CALL_SCENARIO = "Test scenario";
   private static final String FIRST_CALL_MADE_SCENARIO_STATE = "First call made";
-  private static final String DEFAULT_UUID = "00000000-0000-0000-0000-000000000000";
+  private static final String DEFAULT_UUID = "00000000-0000-4000-8000-000000000000";
 
   private static StubMapping itemStorageStub;
   private static StubMapping holdingsStorageStub;
