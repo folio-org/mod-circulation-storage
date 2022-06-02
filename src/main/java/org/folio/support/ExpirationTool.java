@@ -55,24 +55,10 @@ public class ExpirationTool {
     //do nothing
   }
 
-  public static Future<Void> doRequestExpiration(Map<String, String> okapiHeaders, Vertx vertx) {
-    final Promise<RowSet<Row>> promise = Promise.promise();
-    PostgresClient pgClient = PostgresClient.getInstance(vertx);
-
-    String tenantQuery = "select nspname from pg_catalog.pg_namespace where nspname LIKE '%_mod_circulation_storage';";
-
-    pgClient.select(tenantQuery, promise);
-
-    return promise.future()
-      .compose(rs -> GenericCompositeFuture.all(rowSetToStream(rs)
-        .map(row -> doRequestExpirationForTenant(okapiHeaders, vertx, getTenant(row.getString("nspname"))))
-        .collect(toList()))
-        .map(all -> null));
-  }
-
-  private static Future<Void> doRequestExpirationForTenant(Map<String, String> okapiHeaders, Vertx vertx, String tenant) {
+  public static Future<Void> doRequestExpirationForTenant(Map<String, String> okapiHeaders, Vertx vertx) {
     Promise<Void> promise = Promise.promise();
 
+    String tenant = okapiHeaders.get("X-Okapi-Tenant");
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
 
     List<JsonObject> context = new ArrayList<>();

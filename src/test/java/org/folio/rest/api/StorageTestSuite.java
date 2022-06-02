@@ -300,7 +300,7 @@ public class StorageTestSuite {
     deploymentComplete.get(30, TimeUnit.SECONDS);
   }
 
-  static private void prepareTenant(String tenantId, boolean loadSample) {
+  static protected void prepareTenant(String tenantId, boolean loadSample) {
     prepareTenant(tenantId, null, "mod-circulation-storage-1.0.0", loadSample);
   }
 
