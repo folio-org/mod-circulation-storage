@@ -54,10 +54,10 @@ public class ExpirationTool {
     //do nothing
   }
 
-  public static Future<Void> doRequestExpirationForTenant(Map<String, String> okapiHeaders, Vertx vertx) {
+  public static Future<Void> doRequestExpirationForTenant(Map<String, String> okapiHeaders, Vertx vertx,
+    String tenant) {
     Promise<Void> promise = Promise.promise();
 
-    String tenant = okapiHeaders.get("X-Okapi-Tenant");
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
 
     List<JsonObject> context = new ArrayList<>();
