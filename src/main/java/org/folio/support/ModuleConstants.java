@@ -21,7 +21,6 @@ public class ModuleConstants {
   public static final String ACTUAL_COST_RECORD_TABLE = "actual_cost_record";
   public static final Class<ActualCostRecord> ACTUAL_COST_RECORD_CLASS = ActualCostRecord.class;
   public static final String TLR_FEATURE_TOGGLE_JOB_STATUS_FIELD = "'status'";
-
   public static final String REQUEST_STATUS_FIELD = "'status'";
   public static final Class<TlrFeatureToggleJob> TLR_FEATURE_TOGGLE_JOB_CLASS =
     TlrFeatureToggleJob.class;
