@@ -57,21 +57,19 @@ public class ActualCostRecordAPITest extends ApiTests {
   @Test
   @SneakyThrows
   public void canCreateAndGetAndDeleteActualCostRecords() {
-    ActualCostRecord actualCostRecord1 = createActualCostRecord();
-    ActualCostRecord actualCostRecord2 = createActualCostRecord();
-    JsonObject actualCostRecordJson1 = mapFrom(actualCostRecord1);
-    JsonObject actualCostRecordJson2 = mapFrom(actualCostRecord2);
-    IndividualResource createResult1 = actualCostRecordClient.create(actualCostRecordJson1);
-    IndividualResource createResult2 = actualCostRecordClient.create(actualCostRecordJson2);
+    JsonObject actualCostRecord1 = toJsonObject(createActualCostRecord());
+    JsonObject actualCostRecord2 = toJsonObject(createActualCostRecord());
+    JsonObject createResult1 = actualCostRecordClient.create(actualCostRecord1).getJson();
+    JsonObject createResult2 = actualCostRecordClient.create(actualCostRecord2).getJson();
 
-    assertThat(createResult1.getJson(), hasSameProperties(actualCostRecordJson1));
-    assertThat(createResult2.getJson(), hasSameProperties(actualCostRecordJson2));
+    assertThat(createResult1, hasSameProperties(actualCostRecord1));
+    assertThat(createResult2, hasSameProperties(actualCostRecord2));
 
     List<JsonObject> actualCostRecords = new ArrayList<>(
       actualCostRecordClient.getMany("lossType==Aged to lost").getRecords());
 
-    assertThat(actualCostRecords, hasItems(hasSameProperties(actualCostRecordJson1),
-      hasSameProperties(actualCostRecordJson2)));
+    assertThat(actualCostRecords, hasItems(hasSameProperties(createResult1),
+      hasSameProperties(createResult2)));
 
     for (JsonObject current : actualCostRecords) {
       actualCostRecordClient.deleteById(UUID.fromString(current.getString("id")));
@@ -81,23 +79,21 @@ public class ActualCostRecordAPITest extends ApiTests {
   @Test
   @SneakyThrows
   public void canCreateAndGetAndUpdateActualCostRecord() {
-    ActualCostRecord actualCostRecord = createActualCostRecord();
-    JsonObject actualCostRecordJson = mapFrom(actualCostRecord);
-    IndividualResource createResult = actualCostRecordClient.create(actualCostRecordJson);
+    JsonObject actualCostRecord = toJsonObject(createActualCostRecord());
+    JsonObject createResult = actualCostRecordClient.create(actualCostRecord).getJson();
 
-    JsonObject json = createResult.getJson();
-    assertThat(json, hasSameProperties(actualCostRecordJson));
+    assertThat(createResult, hasSameProperties(actualCostRecord));
 
-    JsonObject updatedJson = json.put("lossType", DECLARED_LOST.value());
+    JsonObject updatedJson = createResult.put("lossType", DECLARED_LOST.value());
 
     actualCostRecordClient.attemptPutById(updatedJson);
 
-    IndividualResource fetchedActualCostRecord = actualCostRecordClient.getById(json.getString("id"));
+    IndividualResource fetchedActualCostRecord = actualCostRecordClient.getById(updatedJson.getString("id"));
 
-    JsonObject json1 = fetchedActualCostRecord.getJson();
+    JsonObject fetchedJson = fetchedActualCostRecord.getJson();
 
-    json1.remove("metadata");
-    assertThat(updatedJson, hasSameProperties(json1));
+    fetchedJson.remove("metadata");
+    assertThat(updatedJson, hasSameProperties(fetchedJson));
   }
 
   private ActualCostRecord createActualCostRecord() {
@@ -121,7 +117,7 @@ public class ActualCostRecordAPITest extends ApiTests {
       .withFeeFineType("Lost Item fee (actual cost)");
   }
 
-  private JsonObject mapFrom(ActualCostRecord actualCostRecord1)
+  private JsonObject toJsonObject(ActualCostRecord actualCostRecord1)
     throws JsonProcessingException {
     return new JsonObject(objectMapper.writeValueAsString(actualCostRecord1));
   }
