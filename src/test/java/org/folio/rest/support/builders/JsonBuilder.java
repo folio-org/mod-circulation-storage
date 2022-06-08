@@ -1,11 +1,16 @@
 package org.folio.rest.support.builders;
 
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.ISODateTimeFormat;
+import org.w3c.dom.stylesheets.LinkStyle;
 
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 public class JsonBuilder {
@@ -48,6 +53,12 @@ public class JsonBuilder {
   protected void put(JsonObject representation, String property, JsonObject value) {
     if(value != null) {
       representation.put(property, value);
+    }
+  }
+
+  protected void put(JsonObject representation, String property, List<?> value) {
+    if (value != null && !value.isEmpty()) {
+      representation.put(property, new JsonArray(value));
     }
   }
 

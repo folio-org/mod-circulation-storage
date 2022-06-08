@@ -440,6 +440,51 @@
           "permissionsRequired": [
             "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.delete"
           ]
+        },
+        {
+          "methods":[
+            "GET"
+          ],
+          "pathPattern":"/actual-cost-record-storage/actual-cost-records",
+          "permissionsRequired": [
+            "actual-cost-record-storage.actual-cost-records.collection.get"
+          ]
+        },
+        {
+          "methods":[
+            "GET"
+          ],
+          "pathPattern":"/actual-cost-record-storage/actual-cost-records/{id}",
+          "permissionsRequired": [
+            "actual-cost-record-storage.actual-cost-records.item.get"
+          ]
+        },
+        {
+          "methods":[
+            "POST"
+          ],
+          "pathPattern":"/actual-cost-record-storage/actual-cost-records/{id}",
+          "permissionsRequired": [
+            "actual-cost-record-storage.actual-cost-records.item.post"
+          ]
+        },
+        {
+          "methods":[
+            "PUT"
+          ],
+          "pathPattern":"/actual-cost-record-storage/actual-cost-records/{id}",
+          "permissionsRequired": [
+            "actual-cost-record-storage.actual-cost-records.item.put"
+          ]
+        },
+        {
+          "methods":[
+            "DELETE"
+          ],
+          "pathPattern":"/actual-cost-record-storage/actual-cost-records/{id}",
+          "permissionsRequired": [
+            "actual-cost-record-storage.actual-cost-records.item.delete"
+          ]
         }
       ]
     },

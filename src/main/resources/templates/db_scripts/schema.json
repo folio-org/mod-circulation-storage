@@ -366,6 +366,11 @@
       "tableName": "tlr_feature_toggle_job",
       "withMetadata": true,
       "withAuditing": false
+    },
+    {
+      "tableName": "actual_cost_record",
+      "withMetadata": true,
+      "withAuditing": false
     }
   ],
   "scripts": [
