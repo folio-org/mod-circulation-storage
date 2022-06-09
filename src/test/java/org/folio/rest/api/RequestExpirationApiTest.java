@@ -1,7 +1,9 @@
 package org.folio.rest.api;
 
+import lombok.SneakyThrows;
 import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.api.StorageTestSuite.prepareTenant;
 import static org.folio.rest.support.ResponseHandler.empty;
 import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_PICKUP_EXPIRED;
 import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_UNFILLED;
@@ -36,8 +38,8 @@ import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.RequestRequestBuilder;
-import org.folio.support.ExpirationTool;
 import org.folio.support.MockServer;
+import org.hamcrest.core.IsNull;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
@@ -45,6 +47,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import io.vertx.core.json.JsonObject;
+import static org.hamcrest.core.IsNull.*;
 
 public class RequestExpirationApiTest extends ApiTests {
 
@@ -790,14 +793,65 @@ public class RequestExpirationApiTest extends ApiTests {
     assertThat(response.getInteger("position"), is(1));
   }
 
-  private void expireRequests() throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+  @Test
+  @SneakyThrows
+  public void shouldOnlyExpireRequestsForSpecifiedTenant() {
+
+    UUID firstRequestId = UUID.randomUUID();
+    UUID firstItemId = UUID.randomUUID();
+    UUID secondRequestId = UUID.randomUUID();
+    UUID secondItemId = UUID.randomUUID();
+
+    createEntity(
+      new RequestRequestBuilder()
+        .hold()
+        .withId(firstRequestId)
+        .withRequestExpirationDate(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+        .withHoldShelfExpirationDate(new DateTime(2017, 7, 31, 10, 22, 54, DateTimeZone.UTC))
+        .withItemId(firstItemId)
+        .withPosition(1)
+        .withStatus(OPEN_AWAITING_PICKUP)
+        .create(),
+      requestStorageUrl());
+
+    String dummyTenant = "dummytenant";
+    prepareTenant(dummyTenant, true);
+    createEntity(new RequestRequestBuilder()
+        .hold()
+        .withId(secondRequestId)
+        .withRequestExpirationDate(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+        .withHoldShelfExpirationDate(new DateTime(2017, 7, 31, 10, 22, 54, DateTimeZone.UTC))
+        .withItemId(secondItemId)
+        .withPosition(1)
+        .withStatus(OPEN_AWAITING_PICKUP)
+        .create(),
+      requestStorageUrl(), dummyTenant);
+    expireRequestsForTenant(dummyTenant);
+
+    JsonObject requestFromDefaultTenant = getById(requestStorageUrl("/" + firstRequestId));
+
+    assertThat(requestFromDefaultTenant.getString("status"), is(OPEN_AWAITING_PICKUP));
+    assertThat(requestFromDefaultTenant.getInteger("position"), is(1));
+
+    JsonObject requestFromDummyTenant = getById(requestStorageUrl(String.format("/" + secondRequestId)), dummyTenant);
+    assertThat(requestFromDummyTenant.getString("status"), is(CLOSED_PICKUP_EXPIRED));
+    assertThat(requestFromDummyTenant.getInteger("position"), nullValue());
+  }
+
+  @SneakyThrows
+  private void expireRequestsForTenant(String tenantId) {
     final var createCompleted = new CompletableFuture<Response>();
 
-    client.post(requestExpirationUrl(), TENANT_ID, empty(createCompleted));
+    client.post(requestExpirationUrl(), tenantId, empty(createCompleted));
 
     final var postResponse = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(postResponse.getStatusCode(), is(204));
+  }
+
+  @SneakyThrows
+  private void expireRequests()  {
+    expireRequestsForTenant(TENANT_ID);
   }
 
   private void assertPublishedEvents(List<JsonObject> events) {
