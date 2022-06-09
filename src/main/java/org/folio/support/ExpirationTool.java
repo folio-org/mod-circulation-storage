@@ -34,7 +34,6 @@ import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.rest.impl.Headers;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.SQLConnection;
@@ -275,10 +274,4 @@ public class ExpirationTool {
     return promise.future().map(ur -> null);
   }
 
-  private static String getTenant(String nsTenant) {
-
-    String suffix = "_mod_circulation_storage";
-    int suffixLength = nsTenant.length() - suffix.length();
-    return nsTenant.substring(0, suffixLength);
-  }
 }

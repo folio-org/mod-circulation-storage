@@ -827,12 +827,12 @@ public class RequestExpirationApiTest extends ApiTests {
       requestStorageUrl(), dummyTenant);
     expireRequestsForTenant(dummyTenant);
 
-    JsonObject requestFromDefaultTenant = getById(requestStorageUrl(String.format("/%s", firstRequestId)));
+    JsonObject requestFromDefaultTenant = getById(requestStorageUrl("/" + firstRequestId));
 
     assertThat(requestFromDefaultTenant.getString("status"), is(OPEN_AWAITING_PICKUP));
     assertThat(requestFromDefaultTenant.getInteger("position"), is(1));
 
-    JsonObject requestFromDummyTenant = getById(requestStorageUrl(String.format("/%s", secondRequestId)), dummyTenant);
+    JsonObject requestFromDummyTenant = getById(requestStorageUrl(String.format("/" + secondRequestId)), dummyTenant);
     assertThat(requestFromDummyTenant.getString("status"), is(CLOSED_PICKUP_EXPIRED));
     assertThat(requestFromDummyTenant.getInteger("position"), IsNull.nullValue());
   }
