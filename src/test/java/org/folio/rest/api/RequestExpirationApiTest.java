@@ -47,6 +47,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import io.vertx.core.json.JsonObject;
+import static org.hamcrest.core.IsNull.*;
 
 public class RequestExpirationApiTest extends ApiTests {
 
@@ -834,7 +835,7 @@ public class RequestExpirationApiTest extends ApiTests {
 
     JsonObject requestFromDummyTenant = getById(requestStorageUrl(String.format("/" + secondRequestId)), dummyTenant);
     assertThat(requestFromDummyTenant.getString("status"), is(CLOSED_PICKUP_EXPIRED));
-    assertThat(requestFromDummyTenant.getInteger("position"), IsNull.nullValue());
+    assertThat(requestFromDummyTenant.getInteger("position"), nullValue());
   }
 
   @SneakyThrows
