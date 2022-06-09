@@ -57,7 +57,7 @@ public class ApiTests {
     }
   }
 
-  protected IndividualResource createEntity(JsonObject entity, URL url)
+  protected IndividualResource createEntity(JsonObject entity, URL url, String tenantId)
     throws InterruptedException,
     ExecutionException,
     TimeoutException {
@@ -65,7 +65,7 @@ public class ApiTests {
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     client.post(url,
-      entity, StorageTestSuite.TENANT_ID,
+      entity, tenantId,
       ResponseHandler.json(createCompleted));
 
     JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
@@ -76,14 +76,22 @@ public class ApiTests {
     return new IndividualResource(postResponse);
   }
 
-  protected JsonObject getById(URL url)
+  protected IndividualResource createEntity(JsonObject entity, URL url)
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    return createEntity(entity, url, StorageTestSuite.TENANT_ID);
+  }
+
+  protected JsonObject getById(URL url, String tenantId)
     throws InterruptedException,
     ExecutionException,
     TimeoutException {
 
     CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
 
-    client.get(url, StorageTestSuite.TENANT_ID,
+    client.get(url, tenantId,
       ResponseHandler.json(getCompleted));
 
     JsonResponse getResponse = getCompleted.get(5, TimeUnit.SECONDS);
@@ -92,6 +100,11 @@ public class ApiTests {
       getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
 
     return getResponse.getJson();
+  }
+
+  @SneakyThrows
+  protected JsonObject getById(URL url) {
+    return getById(url, StorageTestSuite.TENANT_ID);
   }
 
   protected void checkNotFound(URL url)
