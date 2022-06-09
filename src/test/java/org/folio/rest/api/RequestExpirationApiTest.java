@@ -39,6 +39,7 @@ import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.RequestRequestBuilder;
 import org.folio.support.MockServer;
+import org.hamcrest.core.IsNull;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
@@ -795,16 +796,18 @@ public class RequestExpirationApiTest extends ApiTests {
   @SneakyThrows
   public void shouldOnlyExpireRequestsForSpecifiedTenant() {
 
-    UUID id = UUID.randomUUID();
-    UUID itemId = UUID.randomUUID();
+    UUID firstRequestId = UUID.randomUUID();
+    UUID firstItemId = UUID.randomUUID();
+    UUID secondRequestId = UUID.randomUUID();
+    UUID secondItemId = UUID.randomUUID();
 
     createEntity(
       new RequestRequestBuilder()
         .hold()
-        .withId(id)
+        .withId(firstRequestId)
         .withRequestExpirationDate(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
         .withHoldShelfExpirationDate(new DateTime(2017, 7, 31, 10, 22, 54, DateTimeZone.UTC))
-        .withItemId(itemId)
+        .withItemId(firstItemId)
         .withPosition(1)
         .withStatus(OPEN_AWAITING_PICKUP)
         .create(),
@@ -812,12 +815,26 @@ public class RequestExpirationApiTest extends ApiTests {
 
     String dummyTenant = "dummytenant";
     prepareTenant(dummyTenant, true);
+    createEntity(new RequestRequestBuilder()
+        .hold()
+        .withId(secondRequestId)
+        .withRequestExpirationDate(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+        .withHoldShelfExpirationDate(new DateTime(2017, 7, 31, 10, 22, 54, DateTimeZone.UTC))
+        .withItemId(secondItemId)
+        .withPosition(1)
+        .withStatus(OPEN_AWAITING_PICKUP)
+        .create(),
+      requestStorageUrl(), dummyTenant);
     expireRequestsForTenant(dummyTenant);
 
-    JsonObject response = getById(requestStorageUrl(String.format("/%s", id)));
+    JsonObject requestFromDefaultTenant = getById(requestStorageUrl(String.format("/%s", firstRequestId)));
 
-    assertThat(response.getString("status"), is(OPEN_AWAITING_PICKUP));
-    assertThat(response.getInteger("position"), is(1));
+    assertThat(requestFromDefaultTenant.getString("status"), is(OPEN_AWAITING_PICKUP));
+    assertThat(requestFromDefaultTenant.getInteger("position"), is(1));
+
+    JsonObject requestFromDummyTenant = getById(requestStorageUrl(String.format("/%s", secondRequestId)), dummyTenant);
+    assertThat(requestFromDummyTenant.getString("status"), is(CLOSED_PICKUP_EXPIRED));
+    assertThat(requestFromDummyTenant.getInteger("position"), IsNull.nullValue());
   }
 
   @SneakyThrows
