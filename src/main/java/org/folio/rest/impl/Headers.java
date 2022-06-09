@@ -1,7 +1,7 @@
 package org.folio.rest.impl;
 
-class Headers {
+public class Headers {
   private Headers() {}
 
-  static final String TENANT_HEADER = "x-okapi-tenant";
+  public static final String TENANT_HEADER = "x-okapi-tenant";
 }
