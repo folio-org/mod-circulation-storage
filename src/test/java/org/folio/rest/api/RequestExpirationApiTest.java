@@ -793,7 +793,7 @@ public class RequestExpirationApiTest extends ApiTests {
 
   @Test
   @SneakyThrows
-  public void shouldExpireRequestWithAwaitingPickupExpiredFieldWhenExpirationJobIsCalledForTwoTenantsSimultaneously() {
+  public void shouldOnlyExpireRequestsForSpecifiedTenant() {
 
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
