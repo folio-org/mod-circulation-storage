@@ -5,7 +5,6 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import org.folio.support.EventType;
-import org.folio.support.JsonPropertyWriter;
 import org.folio.support.LogEventPayloadField;
 import org.folio.support.exception.LogEventType;
 
