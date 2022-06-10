@@ -103,5 +103,23 @@
       "$ref": "raml-util/schemas/metadata.schema"
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "userId",
+    "userBarcode",
+    "loanId",
+    "lossType",
+    "dateOfLoss",
+    "title",
+    "identifiers",
+    "itemBarcode",
+    "loanType",
+    "effectiveCallNumber",
+    "permanentItemLocation",
+    "feeFineOwnerId",
+    "feeFineOwner",
+    "feeFineTypeId",
+    "feeFineType"
+  ]
 }
