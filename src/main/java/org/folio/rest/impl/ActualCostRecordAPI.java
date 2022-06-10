@@ -39,8 +39,8 @@ public class ActualCostRecordAPI implements ActualCostRecordStorage {
     Context vertxContext) {
 
     PgUtil.getById(ACTUAL_COST_RECORD_TABLE, ACTUAL_COST_RECORD_CLASS, id,
-      okapiHeaders, vertxContext,
-      GetActualCostRecordStorageActualCostRecordsByIdResponse.class, asyncResultHandler);
+      okapiHeaders, vertxContext, GetActualCostRecordStorageActualCostRecordsByIdResponse.class,
+      asyncResultHandler);
   }
 
   public void putActualCostRecordStorageActualCostRecordsById(String id, String lang,

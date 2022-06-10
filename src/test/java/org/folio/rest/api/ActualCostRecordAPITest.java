@@ -7,11 +7,9 @@ import java.util.UUID;
 import org.folio.rest.jaxrs.model.ActualCostRecord;
 import org.folio.rest.jaxrs.model.Identifier;
 import org.folio.rest.support.ApiTests;
-import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.http.AssertingRecordClient;
 import org.folio.rest.support.http.InterfaceUrls;
 import org.folio.rest.support.spring.TestContextConfiguration;
-import org.hamcrest.core.Is;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Before;
@@ -32,7 +30,7 @@ import static org.folio.rest.jaxrs.model.ActualCostRecord.LossType.AGED_TO_LOST;
 import static org.folio.rest.jaxrs.model.ActualCostRecord.LossType.DECLARED_LOST;
 import static org.folio.rest.support.matchers.JsonMatchers.hasSameProperties;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.*;
+import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsIterableContaining.hasItems;
 
 @ContextConfiguration(classes = TestContextConfiguration.class)
