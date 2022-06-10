@@ -105,7 +105,6 @@
   },
   "additionalProperties": false,
   "required": [
-    "id",
     "userId",
     "userBarcode",
     "loanId",
