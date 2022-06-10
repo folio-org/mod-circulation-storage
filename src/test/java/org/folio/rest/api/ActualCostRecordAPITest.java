@@ -11,6 +11,7 @@ import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.http.AssertingRecordClient;
 import org.folio.rest.support.http.InterfaceUrls;
 import org.folio.rest.support.spring.TestContextConfiguration;
+import org.hamcrest.core.Is;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Before;
@@ -31,6 +32,7 @@ import static org.folio.rest.jaxrs.model.ActualCostRecord.LossType.AGED_TO_LOST;
 import static org.folio.rest.jaxrs.model.ActualCostRecord.LossType.DECLARED_LOST;
 import static org.folio.rest.support.matchers.JsonMatchers.hasSameProperties;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.*;
 import static org.hamcrest.core.IsIterableContaining.hasItems;
 
 @ContextConfiguration(classes = TestContextConfiguration.class)
@@ -74,6 +76,8 @@ public class ActualCostRecordAPITest extends ApiTests {
     for (JsonObject current : actualCostRecords) {
       actualCostRecordClient.deleteById(UUID.fromString(current.getString("id")));
     }
+
+    assertThat(actualCostRecordClient.getAll().getTotalRecords(), is(0));
   }
 
   @Test
@@ -88,9 +92,7 @@ public class ActualCostRecordAPITest extends ApiTests {
 
     actualCostRecordClient.attemptPutById(updatedJson);
 
-    IndividualResource fetchedActualCostRecord = actualCostRecordClient.getById(updatedJson.getString("id"));
-
-    JsonObject fetchedJson = fetchedActualCostRecord.getJson();
+    JsonObject fetchedJson = actualCostRecordClient.getById(updatedJson.getString("id")).getJson();
 
     fetchedJson.remove("metadata");
     assertThat(updatedJson, hasSameProperties(fetchedJson));

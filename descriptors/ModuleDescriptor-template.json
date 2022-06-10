@@ -463,7 +463,7 @@
           "methods":[
             "POST"
           ],
-          "pathPattern":"/actual-cost-record-storage/actual-cost-records/{id}",
+          "pathPattern":"/actual-cost-record-storage/actual-cost-records",
           "permissionsRequired": [
             "actual-cost-record-storage.actual-cost-records.item.post"
           ]

@@ -18,8 +18,8 @@ import static org.folio.support.ModuleConstants.ACTUAL_COST_RECORD_TABLE;
 public class ActualCostRecordAPI implements ActualCostRecordStorage {
 
   public void getActualCostRecordStorageActualCostRecords(int offset, int limit, String query,
-    String lang, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+    String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
 
     PgUtil.get(ACTUAL_COST_RECORD_TABLE, ACTUAL_COST_RECORD_CLASS, ActualCostRecords.class,
       query, offset, limit, okapiHeaders, vertxContext,
@@ -37,6 +37,7 @@ public class ActualCostRecordAPI implements ActualCostRecordStorage {
   public void getActualCostRecordStorageActualCostRecordsById(String id, String lang,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
+
     PgUtil.getById(ACTUAL_COST_RECORD_TABLE, ACTUAL_COST_RECORD_CLASS, id,
       okapiHeaders, vertxContext,
       GetActualCostRecordStorageActualCostRecordsByIdResponse.class, asyncResultHandler);
