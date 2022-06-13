@@ -284,15 +284,25 @@ public class TlrDataMigrationService {
     JsonObject item = migratedRequest.getJsonObject(ITEM_KEY);
     JsonObject instance = new JsonObject();
 
-    write(instance, TITLE_KEY, item.getString(TITLE_KEY));
-    write(instance, IDENTIFIERS_KEY, item.getJsonArray(IDENTIFIERS_KEY));
+    if (item != null) {
+      write(instance, TITLE_KEY, item.getString(TITLE_KEY));
+      write(instance, IDENTIFIERS_KEY, item.getJsonArray(IDENTIFIERS_KEY));
+
+      item.remove(TITLE_KEY);
+      item.remove(IDENTIFIERS_KEY);
+    }
+    else {
+      write(instance, TITLE_KEY, "");
+      write(instance, IDENTIFIERS_KEY, "");
+
+      log.warn("'item' field is missing from request {}, instance.title and " +
+          "instance.identifiers will be set to ''", context.getRequestId());
+    }
+
     write(migratedRequest, INSTANCE_ID_KEY, instanceId);
     write(migratedRequest, HOLDINGS_RECORD_ID_KEY, holdingsRecordId);
     write(migratedRequest, REQUEST_LEVEL_KEY, ITEM_REQUEST_LEVEL);
     write(migratedRequest, INSTANCE_KEY, instance);
-
-    item.remove(TITLE_KEY);
-    item.remove(IDENTIFIERS_KEY);
 
     context.setNewRequest(migratedRequest);
   }
