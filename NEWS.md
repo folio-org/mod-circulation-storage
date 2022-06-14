@@ -1,3 +1,7 @@
+## 14.0.1 2022-06-14
+* Use default UUID for missing `instanceId` and `holdingsRecordId` during TLR data migration (CIRCSTORE-340)
+* Handle invalid requests properly during TLR data migration (CIRCSTORE-344)
+
 ## 14.0.0 2022-02-22
 
 * Add Kafka message queues to select circulation storage record types (UXPROD-3380)
