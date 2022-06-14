@@ -15,6 +15,10 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.folio.HttpStatus.HTTP_CREATED;
+import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_CANCELLED;
+import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_FILLED;
+import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_PICKUP_EXPIRED;
+import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_UNFILLED;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -27,6 +31,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import org.apache.commons.io.IOUtils;
@@ -34,6 +39,7 @@ import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
 import org.folio.rest.jaxrs.model.Parameter;
+import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.jaxrs.model.TenantJob;
 import org.folio.rest.persist.PostgresClient;
@@ -65,8 +71,8 @@ import io.vertx.sqlclient.RowSet;
 public class TenantRefApiTests {
   protected static final String OLD_MODULE_VERSION = "13.0.0";
   protected static final String PREVIOUS_MODULE_VERSION = "13.1.0";
-  protected static final String MIGRATION_MODULE_VERSION = "13.2.0";
-  protected static final String NEXT_MODULE_VERSION = "13.4.0";
+  protected static final String TLR_MIGRATION_MODULE_VERSION = "14.0.0";
+  protected static final String NEXT_MODULE_VERSION = "14.1.0";
   protected static final String MODULE_NAME = "mod_circulation_storage";
   protected static final int PORT = NetworkUtils.nextFreePort();
   protected static final String URL = "http://localhost:" + PORT;
@@ -169,7 +175,7 @@ public class TenantRefApiTests {
   public void migrationShouldBeSkippedWhenUpgradingFromAlreadyMigratedVersion(final TestContext context) {
     Async async = context.async();
 
-    postTenant(context, MIGRATION_MODULE_VERSION, NEXT_MODULE_VERSION)
+    postTenant(context, TLR_MIGRATION_MODULE_VERSION, NEXT_MODULE_VERSION)
       .onSuccess(job -> {
         assertThatNoRequestsWereUpdated(context);
         async.complete();
@@ -180,7 +186,7 @@ public class TenantRefApiTests {
   public void jobCompletedWhenMigrationIsSuccessful(TestContext context) {
     Async async = context.async();
 
-    postTenant(context, PREVIOUS_MODULE_VERSION, MIGRATION_MODULE_VERSION)
+    postTenant(context, PREVIOUS_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION)
       .onSuccess(job -> {
         context.assertNull(job.getError());
         validateMigrationResult(context, async);
@@ -209,7 +215,7 @@ public class TenantRefApiTests {
   }
 
   private void jobFailsWhenRemoteCallFails(TestContext context, Async async) {
-    postTenant(context, PREVIOUS_MODULE_VERSION, MIGRATION_MODULE_VERSION)
+    postTenant(context, PREVIOUS_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION)
       .onSuccess(job -> {
         context.assertTrue(job.getError().contains("Request failed: GET"));
         context.assertTrue(job.getError().contains("Response: [404]"));
@@ -231,7 +237,7 @@ public class TenantRefApiTests {
     String requestId = getId(randomRequest);
 
     postgresClient.update(REQUEST_TABLE_NAME, randomRequest, requestId)
-      .compose(r -> postTenant(context, PREVIOUS_MODULE_VERSION, MIGRATION_MODULE_VERSION))
+      .compose(r -> postTenant(context, PREVIOUS_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION))
       .compose(job -> getRequestAsJson(requestId))
       .onFailure(context::fail)
       .onSuccess(updatedRequest -> {
@@ -261,7 +267,7 @@ public class TenantRefApiTests {
       .whenScenarioStateIs(FIRST_CALL_MADE_SCENARIO_STATE)
       .willReturn(serverError()));
 
-    postTenant(context, PREVIOUS_MODULE_VERSION, MIGRATION_MODULE_VERSION)
+    postTenant(context, PREVIOUS_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION)
       .onSuccess(job -> {
         context.assertFalse(job.getError().isEmpty());
         assertThatNoRequestsWereUpdated(context);
@@ -299,11 +305,36 @@ public class TenantRefApiTests {
       "request does not contain required ILR fields: " + getId(randomRequest));
   }
 
+  @Test
+  public void migrationRemovesPositionFromClosedRequests(TestContext context) {
+    Async async = context.async();
+
+    List<String> closedStatuses = Stream.of(CLOSED_FILLED, CLOSED_UNFILLED, CLOSED_PICKUP_EXPIRED,
+        CLOSED_CANCELLED)
+      .map(Request.Status::value)
+      .collect(toList());
+
+    postTenant(context, PREVIOUS_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION)
+      .compose(job -> getAllRequestsAsJson())
+      .onFailure(context::fail)
+      .onSuccess(requestsAfterMigration -> {
+        requestsAfterMigration.forEach(request -> {
+          Integer position = request.getInteger("position");
+          if (closedStatuses.contains(request.getString("status"))) {
+            context.assertNull(position);
+          } else {
+            context.assertNotNull(position);
+          }
+          async.complete();
+        });
+      });
+  }
+
   private void jobFailsWhenRequestValidationFails(TestContext context, Async async,
     JsonObject request, String expectedErrorMessage) {
 
     postgresClient.update(REQUEST_TABLE_NAME, request, getId(request))
-      .compose(r -> postTenant(context, PREVIOUS_MODULE_VERSION, MIGRATION_MODULE_VERSION))
+      .compose(r -> postTenant(context, PREVIOUS_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION))
       .onFailure(context::fail)
       .onSuccess(job -> {
         context.assertTrue(job.getError().contains(expectedErrorMessage));
