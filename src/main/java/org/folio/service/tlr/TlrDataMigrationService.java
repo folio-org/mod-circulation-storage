@@ -51,11 +51,13 @@ import lombok.Setter;
  */
 public class TlrDataMigrationService {
   private static final Logger log = LogManager.getLogger(TlrDataMigrationService.class);
+  // valid UUID version 4 variant 1
+  private static final String DEFAULT_UUID = "00000000-0000-4000-8000-000000000000";
 
   // safe number of UUIDs which fits into Okapi's URL length limit (4096 characters)
   private static final int BATCH_SIZE = 80;
 
-  private static final String TLR_MIGRATION_MODULE_VERSION = "mod-circulation-storage-13.2.0";
+  private static final String TLR_MIGRATION_MODULE_VERSION = "mod-circulation-storage-14.0.0";
   private static final String REQUEST_TABLE = "request";
   private static final String ITEMS_STORAGE_URL = "/item-storage/items";
   private static final String HOLDINGS_STORAGE_URL = "/holdings-storage/holdings";
@@ -160,7 +162,6 @@ public class TlrDataMigrationService {
       .compose(this::validateRequests)
       .compose(this::findHoldingsRecordIds)
       .compose(this::findInstanceIds)
-      .compose(this::failWhenNotAllInstanceIdsWereFound)
       .onSuccess(this::buildNewRequests)
       .compose(this::updateRequests)
       .onSuccess(r -> log.info("{} processing finished successfully", batch))
@@ -259,39 +260,46 @@ public class TlrDataMigrationService {
       ctx.setInstanceId(holdingsRecordIdInstanceId.get(ctx.getHoldingsRecordId())));
   }
 
-  private Future<Batch> failWhenNotAllInstanceIdsWereFound(Batch batch) {
-    List<String> failedContexts = batch.getRequestMigrationContexts()
-      .stream()
-      .filter(ctx -> ctx.getInstanceId() == null)
-      .map(RequestMigrationContext::toString)
-      .collect(toList());
-
-    return failedContexts.isEmpty()
-      ? succeededFuture(batch)
-      : failedFuture("failed to find instance IDs: " + join(lineSeparator(), failedContexts));
-  }
-
   private void buildNewRequests(Batch batch) {
     batch.getRequestMigrationContexts()
       .forEach(this::buildNewRequest);
   }
 
   private void buildNewRequest(RequestMigrationContext context) {
-    final JsonObject migratedRequest = context.getOldRequest().copy();
+    String holdingsRecordId = context.getHoldingsRecordId();
+    if (holdingsRecordId == null) {
+      holdingsRecordId = DEFAULT_UUID;
+      log.warn("Failed to determine holdingsRecordId for request {}, using default value: {}",
+        context.getRequestId(), holdingsRecordId);
+    }
 
+    String instanceId = context.getInstanceId();
+    if (instanceId == null) {
+      instanceId = DEFAULT_UUID;
+      log.warn("Failed to determine instanceId for request {}, using default value: {}",
+        context.getRequestId(), instanceId);
+    }
+
+    final JsonObject migratedRequest = context.getOldRequest().copy();
     JsonObject item = migratedRequest.getJsonObject(ITEM_KEY);
     JsonObject instance = new JsonObject();
 
-    write(instance, TITLE_KEY, item.getString(TITLE_KEY));
-    write(instance, IDENTIFIERS_KEY, item.getJsonArray(IDENTIFIERS_KEY));
+    if (item != null) {
+      write(instance, TITLE_KEY, item.getString(TITLE_KEY));
+      write(instance, IDENTIFIERS_KEY, item.getJsonArray(IDENTIFIERS_KEY));
 
+      item.remove(TITLE_KEY);
+      item.remove(IDENTIFIERS_KEY);
+    }
+    else {
+      log.warn("'item' field is missing from request {}, 'instance' field will not be " +
+        "added", context.getRequestId());
+    }
+
+    write(migratedRequest, INSTANCE_ID_KEY, instanceId);
+    write(migratedRequest, HOLDINGS_RECORD_ID_KEY, holdingsRecordId);
     write(migratedRequest, REQUEST_LEVEL_KEY, ITEM_REQUEST_LEVEL);
-    write(migratedRequest, INSTANCE_ID_KEY, context.getInstanceId());
-    write(migratedRequest, HOLDINGS_RECORD_ID_KEY, context.getHoldingsRecordId());
     write(migratedRequest, INSTANCE_KEY, instance);
-
-    item.remove(TITLE_KEY);
-    item.remove(IDENTIFIERS_KEY);
 
     context.setNewRequest(migratedRequest);
   }

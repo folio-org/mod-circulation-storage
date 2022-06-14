@@ -7,6 +7,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.created;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.serverError;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static java.lang.String.format;
@@ -14,6 +15,10 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.folio.HttpStatus.HTTP_CREATED;
+import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_CANCELLED;
+import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_FILLED;
+import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_PICKUP_EXPIRED;
+import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_UNFILLED;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -26,6 +31,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import org.apache.commons.io.IOUtils;
@@ -33,6 +39,7 @@ import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
 import org.folio.rest.jaxrs.model.Parameter;
+import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.jaxrs.model.TenantJob;
 import org.folio.rest.persist.PostgresClient;
@@ -64,8 +71,8 @@ import io.vertx.sqlclient.RowSet;
 public class TenantRefApiTests {
   protected static final String OLD_MODULE_VERSION = "13.0.0";
   protected static final String PREVIOUS_MODULE_VERSION = "13.1.0";
-  protected static final String MIGRATION_MODULE_VERSION = "13.2.0";
-  protected static final String NEXT_MODULE_VERSION = "13.4.0";
+  protected static final String TLR_MIGRATION_MODULE_VERSION = "14.0.0";
+  protected static final String NEXT_MODULE_VERSION = "14.1.0";
   protected static final String MODULE_NAME = "mod_circulation_storage";
   protected static final int PORT = NetworkUtils.nextFreePort();
   protected static final String URL = "http://localhost:" + PORT;
@@ -80,6 +87,7 @@ public class TenantRefApiTests {
   private static final String ANY_URL_PARAMS_REGEX_TEMPLATE = "\\?.*";
   private static final String FAIL_SECOND_CALL_SCENARIO = "Test scenario";
   private static final String FIRST_CALL_MADE_SCENARIO_STATE = "First call made";
+  private static final String DEFAULT_UUID = "00000000-0000-4000-8000-000000000000";
 
   private static StubMapping itemStorageStub;
   private static StubMapping holdingsStorageStub;
@@ -167,7 +175,7 @@ public class TenantRefApiTests {
   public void migrationShouldBeSkippedWhenUpgradingFromAlreadyMigratedVersion(final TestContext context) {
     Async async = context.async();
 
-    postTenant(context, MIGRATION_MODULE_VERSION, NEXT_MODULE_VERSION)
+    postTenant(context, TLR_MIGRATION_MODULE_VERSION, NEXT_MODULE_VERSION)
       .onSuccess(job -> {
         assertThatNoRequestsWereUpdated(context);
         async.complete();
@@ -178,7 +186,7 @@ public class TenantRefApiTests {
   public void jobCompletedWhenMigrationIsSuccessful(TestContext context) {
     Async async = context.async();
 
-    postTenant(context, PREVIOUS_MODULE_VERSION, MIGRATION_MODULE_VERSION)
+    postTenant(context, PREVIOUS_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION)
       .onSuccess(job -> {
         context.assertNull(job.getError());
         validateMigrationResult(context, async);
@@ -199,8 +207,15 @@ public class TenantRefApiTests {
     jobFailsWhenRemoteCallFails(context, async);
   }
 
+  @Test
+  public void jobFailsWhenItemWasNotFound(final TestContext context) {
+    Async async = context.async();
+    wireMock.removeStub(itemStorageStub);
+    jobFailsWhenRemoteCallFails(context, async);
+  }
+
   private void jobFailsWhenRemoteCallFails(TestContext context, Async async) {
-    postTenant(context, PREVIOUS_MODULE_VERSION, MIGRATION_MODULE_VERSION)
+    postTenant(context, PREVIOUS_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION)
       .onSuccess(job -> {
         context.assertTrue(job.getError().contains("Request failed: GET"));
         context.assertTrue(job.getError().contains("Response: [404]"));
@@ -210,41 +225,51 @@ public class TenantRefApiTests {
   }
 
   @Test
-  public void jobFailsWhenItemWasNotFound(final TestContext context) {
+  public void useDefaultValuesForInstanceIdAndHoldingsRecordIdWhenItemWasNotFound(TestContext context) {
     Async async = context.async();
-    wireMock.removeStub(itemStorageStub);
-    jobFailsWhenFailedToFindInstanceIds(context, async, ITEM_STORAGE_URL, "items", items);
+
+    JsonObject randomRequest = requestsBeforeMigration.values()
+      .stream()
+      .findAny()
+      .orElseThrow();
+
+    randomRequest.put("itemId", UUID.randomUUID());
+    String requestId = getId(randomRequest);
+
+    postgresClient.update(REQUEST_TABLE_NAME, randomRequest, requestId)
+      .compose(r -> postTenant(context, PREVIOUS_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION))
+      .compose(job -> getRequestAsJson(requestId))
+      .onFailure(context::fail)
+      .onSuccess(updatedRequest -> {
+        context.assertEquals(DEFAULT_UUID, updatedRequest.getString("instanceId"));
+        context.assertEquals(DEFAULT_UUID, updatedRequest.getString("holdingsRecordId"));
+        validateMigrationResult(context, async);
+      });
+
   }
 
   @Test
-  public void jobFailsWhenHoldingsRecordWasNotFound(final TestContext context) {
+  public void changesMadeForAllBatchesAreRevertedInCaseOfError(TestContext context) {
     Async async = context.async();
-    wireMock.removeStub(holdingsStorageStub);
-    jobFailsWhenFailedToFindInstanceIds(context, async, HOLDINGS_STORAGE_URL,
-      "holdingsRecords", holdingRecords);
-  }
-
-  private void jobFailsWhenFailedToFindInstanceIds(TestContext context, Async async, String url,
-    String collectionName, List<JsonObject> entities) {
+    wireMock.removeStub(itemStorageStub);
 
     // first batch - return valid response
-    wireMock.stubFor(get(urlMatching(url + ANY_URL_PARAMS_REGEX_TEMPLATE))
+    wireMock.stubFor(get(urlMatching(ITEM_STORAGE_URL + ANY_URL_PARAMS_REGEX_TEMPLATE))
       .atPriority(0)
       .inScenario(FAIL_SECOND_CALL_SCENARIO)
-      .willReturn(ok().withBody(new JsonObject().put(collectionName, new JsonArray(entities)).encode()))
+      .willReturn(ok().withBody(new JsonObject().put("items", new JsonArray(items)).encodePrettily()))
       .willSetStateTo(FIRST_CALL_MADE_SCENARIO_STATE));
 
-    // second batch - return empty response
-    wireMock.stubFor(get(urlMatching(url + ANY_URL_PARAMS_REGEX_TEMPLATE))
+    // second batch - return 500
+    wireMock.stubFor(get(urlMatching(ITEM_STORAGE_URL + ANY_URL_PARAMS_REGEX_TEMPLATE))
       .atPriority(0)
       .inScenario(FAIL_SECOND_CALL_SCENARIO)
       .whenScenarioStateIs(FIRST_CALL_MADE_SCENARIO_STATE)
-      .willReturn(ok().withBody(new JsonObject().put(collectionName, new JsonArray()).encode())));
+      .willReturn(serverError()));
 
-    postTenant(context, PREVIOUS_MODULE_VERSION, MIGRATION_MODULE_VERSION)
+    postTenant(context, PREVIOUS_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION)
       .onSuccess(job -> {
-        context.assertTrue(job.getError().contains("failed to find instance IDs"));
-        // make sure that changes for all batches were reverted
+        context.assertFalse(job.getError().isEmpty());
         assertThatNoRequestsWereUpdated(context);
         async.complete();
       });
@@ -280,11 +305,36 @@ public class TenantRefApiTests {
       "request does not contain required ILR fields: " + getId(randomRequest));
   }
 
+  @Test
+  public void migrationRemovesPositionFromClosedRequests(TestContext context) {
+    Async async = context.async();
+
+    List<String> closedStatuses = Stream.of(CLOSED_FILLED, CLOSED_UNFILLED, CLOSED_PICKUP_EXPIRED,
+        CLOSED_CANCELLED)
+      .map(Request.Status::value)
+      .collect(toList());
+
+    postTenant(context, PREVIOUS_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION)
+      .compose(job -> getAllRequestsAsJson())
+      .onFailure(context::fail)
+      .onSuccess(requestsAfterMigration -> {
+        requestsAfterMigration.forEach(request -> {
+          Integer position = request.getInteger("position");
+          if (closedStatuses.contains(request.getString("status"))) {
+            context.assertNull(position);
+          } else {
+            context.assertNotNull(position);
+          }
+          async.complete();
+        });
+      });
+  }
+
   private void jobFailsWhenRequestValidationFails(TestContext context, Async async,
     JsonObject request, String expectedErrorMessage) {
 
     postgresClient.update(REQUEST_TABLE_NAME, request, getId(request))
-      .compose(r -> postTenant(context, PREVIOUS_MODULE_VERSION, MIGRATION_MODULE_VERSION))
+      .compose(r -> postTenant(context, PREVIOUS_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION))
       .onFailure(context::fail)
       .onSuccess(job -> {
         context.assertTrue(job.getError().contains(expectedErrorMessage));
@@ -318,6 +368,10 @@ public class TenantRefApiTests {
       .map(rowSet -> StreamSupport.stream(rowSet.spliterator(), false)
         .map(row -> row.getJsonObject("jsonb"))
         .collect(toList()));
+  }
+
+  private static Future<JsonObject> getRequestAsJson(String requestId) {
+    return postgresClient.getById(REQUEST_TABLE_NAME, requestId);
   }
 
   private void validateMigrationResult(TestContext context, Async async) {
