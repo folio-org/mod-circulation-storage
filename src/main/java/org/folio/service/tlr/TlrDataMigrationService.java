@@ -292,8 +292,8 @@ public class TlrDataMigrationService {
       item.remove(IDENTIFIERS_KEY);
     }
     else {
-      log.warn("'item' field is missing from request {}, instance.title and " +
-          "instance.identifiers will be set to ''", context.getRequestId());
+      log.warn("'item' field is missing from request {}, 'instance' field will not be " +
+        "added", context.getRequestId());
     }
 
     write(migratedRequest, INSTANCE_ID_KEY, instanceId);
