@@ -15,6 +15,10 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.folio.HttpStatus.HTTP_CREATED;
+import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_CANCELLED;
+import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_FILLED;
+import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_PICKUP_EXPIRED;
+import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_UNFILLED;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -27,6 +31,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import org.apache.commons.io.IOUtils;
@@ -34,6 +39,7 @@ import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
 import org.folio.rest.jaxrs.model.Parameter;
+import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.jaxrs.model.TenantJob;
 import org.folio.rest.persist.PostgresClient;
@@ -82,6 +88,10 @@ public class TenantRefApiTests {
   private static final String FAIL_SECOND_CALL_SCENARIO = "Test scenario";
   private static final String FIRST_CALL_MADE_SCENARIO_STATE = "First call made";
   private static final String DEFAULT_UUID = "00000000-0000-4000-8000-000000000000";
+  private static final List<String> CLOSED_STATUSES =
+    Stream.of(CLOSED_FILLED, CLOSED_UNFILLED, CLOSED_PICKUP_EXPIRED, CLOSED_CANCELLED)
+      .map(Request.Status::value)
+      .collect(toList());
 
   private static StubMapping itemStorageStub;
   private static StubMapping holdingsStorageStub;
@@ -297,6 +307,26 @@ public class TenantRefApiTests {
 
     jobFailsWhenRequestValidationFails(context, async, randomRequest,
       "request does not contain required ILR fields: " + getId(randomRequest));
+  }
+
+  @Test
+  public void migrationRemovesPositionFromClosedRequests(TestContext context) {
+    Async async = context.async();
+
+    postTenant(context, PREVIOUS_MODULE_VERSION, MIGRATION_MODULE_VERSION)
+      .compose(job -> getAllRequestsAsJson())
+      .onFailure(context::fail)
+      .onSuccess(requestsAfterMigration -> {
+        requestsAfterMigration.forEach(request -> {
+          Integer position = request.getInteger("position");
+          if (CLOSED_STATUSES.contains(request.getString("status"))) {
+            context.assertNull(position);
+          } else {
+            context.assertNotNull(position);
+          }
+          async.complete();
+        });
+      });
   }
 
   private void jobFailsWhenRequestValidationFails(TestContext context, Async async,
