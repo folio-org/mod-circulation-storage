@@ -57,7 +57,7 @@ public class TlrDataMigrationService {
   // safe number of UUIDs which fits into Okapi's URL length limit (4096 characters)
   private static final int BATCH_SIZE = 80;
 
-  private static final String TLR_MIGRATION_MODULE_VERSION = "mod-circulation-storage-13.2.0";
+  private static final String TLR_MIGRATION_MODULE_VERSION = "mod-circulation-storage-14.0.0";
   private static final String REQUEST_TABLE = "request";
   private static final String ITEMS_STORAGE_URL = "/item-storage/items";
   private static final String HOLDINGS_STORAGE_URL = "/holdings-storage/holdings";

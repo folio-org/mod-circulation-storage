@@ -71,8 +71,8 @@ import io.vertx.sqlclient.RowSet;
 public class TenantRefApiTests {
   protected static final String OLD_MODULE_VERSION = "13.0.0";
   protected static final String PREVIOUS_MODULE_VERSION = "13.1.0";
-  protected static final String MIGRATION_MODULE_VERSION = "13.2.0";
-  protected static final String NEXT_MODULE_VERSION = "13.4.0";
+  protected static final String TLR_MIGRATION_MODULE_VERSION = "14.0.0";
+  protected static final String NEXT_MODULE_VERSION = "14.1.0";
   protected static final String MODULE_NAME = "mod_circulation_storage";
   protected static final int PORT = NetworkUtils.nextFreePort();
   protected static final String URL = "http://localhost:" + PORT;
@@ -88,10 +88,6 @@ public class TenantRefApiTests {
   private static final String FAIL_SECOND_CALL_SCENARIO = "Test scenario";
   private static final String FIRST_CALL_MADE_SCENARIO_STATE = "First call made";
   private static final String DEFAULT_UUID = "00000000-0000-4000-8000-000000000000";
-  private static final List<String> CLOSED_STATUSES =
-    Stream.of(CLOSED_FILLED, CLOSED_UNFILLED, CLOSED_PICKUP_EXPIRED, CLOSED_CANCELLED)
-      .map(Request.Status::value)
-      .collect(toList());
 
   private static StubMapping itemStorageStub;
   private static StubMapping holdingsStorageStub;
@@ -179,7 +175,7 @@ public class TenantRefApiTests {
   public void migrationShouldBeSkippedWhenUpgradingFromAlreadyMigratedVersion(final TestContext context) {
     Async async = context.async();
 
-    postTenant(context, MIGRATION_MODULE_VERSION, NEXT_MODULE_VERSION)
+    postTenant(context, TLR_MIGRATION_MODULE_VERSION, NEXT_MODULE_VERSION)
       .onSuccess(job -> {
         assertThatNoRequestsWereUpdated(context);
         async.complete();
@@ -190,7 +186,7 @@ public class TenantRefApiTests {
   public void jobCompletedWhenMigrationIsSuccessful(TestContext context) {
     Async async = context.async();
 
-    postTenant(context, PREVIOUS_MODULE_VERSION, MIGRATION_MODULE_VERSION)
+    postTenant(context, PREVIOUS_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION)
       .onSuccess(job -> {
         context.assertNull(job.getError());
         validateMigrationResult(context, async);
@@ -219,7 +215,7 @@ public class TenantRefApiTests {
   }
 
   private void jobFailsWhenRemoteCallFails(TestContext context, Async async) {
-    postTenant(context, PREVIOUS_MODULE_VERSION, MIGRATION_MODULE_VERSION)
+    postTenant(context, PREVIOUS_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION)
       .onSuccess(job -> {
         context.assertTrue(job.getError().contains("Request failed: GET"));
         context.assertTrue(job.getError().contains("Response: [404]"));
@@ -241,7 +237,7 @@ public class TenantRefApiTests {
     String requestId = getId(randomRequest);
 
     postgresClient.update(REQUEST_TABLE_NAME, randomRequest, requestId)
-      .compose(r -> postTenant(context, PREVIOUS_MODULE_VERSION, MIGRATION_MODULE_VERSION))
+      .compose(r -> postTenant(context, PREVIOUS_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION))
       .compose(job -> getRequestAsJson(requestId))
       .onFailure(context::fail)
       .onSuccess(updatedRequest -> {
@@ -271,7 +267,7 @@ public class TenantRefApiTests {
       .whenScenarioStateIs(FIRST_CALL_MADE_SCENARIO_STATE)
       .willReturn(serverError()));
 
-    postTenant(context, PREVIOUS_MODULE_VERSION, MIGRATION_MODULE_VERSION)
+    postTenant(context, PREVIOUS_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION)
       .onSuccess(job -> {
         context.assertFalse(job.getError().isEmpty());
         assertThatNoRequestsWereUpdated(context);
@@ -313,13 +309,18 @@ public class TenantRefApiTests {
   public void migrationRemovesPositionFromClosedRequests(TestContext context) {
     Async async = context.async();
 
-    postTenant(context, PREVIOUS_MODULE_VERSION, MIGRATION_MODULE_VERSION)
+    List<String> closedStatuses = Stream.of(CLOSED_FILLED, CLOSED_UNFILLED, CLOSED_PICKUP_EXPIRED,
+        CLOSED_CANCELLED)
+      .map(Request.Status::value)
+      .collect(toList());
+
+    postTenant(context, PREVIOUS_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION)
       .compose(job -> getAllRequestsAsJson())
       .onFailure(context::fail)
       .onSuccess(requestsAfterMigration -> {
         requestsAfterMigration.forEach(request -> {
           Integer position = request.getInteger("position");
-          if (CLOSED_STATUSES.contains(request.getString("status"))) {
+          if (closedStatuses.contains(request.getString("status"))) {
             context.assertNull(position);
           } else {
             context.assertNotNull(position);
@@ -333,7 +334,7 @@ public class TenantRefApiTests {
     JsonObject request, String expectedErrorMessage) {
 
     postgresClient.update(REQUEST_TABLE_NAME, request, getId(request))
-      .compose(r -> postTenant(context, PREVIOUS_MODULE_VERSION, MIGRATION_MODULE_VERSION))
+      .compose(r -> postTenant(context, PREVIOUS_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION))
       .onFailure(context::fail)
       .onSuccess(job -> {
         context.assertTrue(job.getError().contains(expectedErrorMessage));
