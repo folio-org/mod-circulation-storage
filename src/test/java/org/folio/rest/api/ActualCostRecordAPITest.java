@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.folio.rest.jaxrs.model.ActualCostRecord;
+import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.Identifier;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.http.AssertingRecordClient;
@@ -109,7 +110,10 @@ public class ActualCostRecordAPITest extends ApiTests {
         .withIdentifierTypeId(UUID.randomUUID().toString())))
       .withItemBarcode("888")
       .withLoanType("Can Circulate")
-      .withEffectiveCallNumber("f TX809.M17J66 1993")
+      .withEffectiveCallNumberComponents(new EffectiveCallNumberComponents()
+        .withCallNumber("callnumber")
+        .withPrefix("prefix")
+        .withSuffix("suffix"))
       .withPermanentItemLocation("Main circ desk")
       .withFeeFineOwnerId(UUID.randomUUID().toString())
       .withFeeFineOwner("Main circ desk")

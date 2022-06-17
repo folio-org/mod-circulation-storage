@@ -9,12 +9,12 @@
       "$ref": "raml-util/schemas/uuid.schema"
     },
     "userId": {
-      "description": "ID of a user which is charged actual cost fee",
+      "description": "User ID",
       "type": "string",
       "$ref": "raml-util/schemas/uuid.schema"
     },
     "userBarcode": {
-      "description": "Barcode of a user which is charged actual cost fee",
+      "description": "User barcode",
       "type": "string"
     },
     "loanId": {
@@ -22,7 +22,7 @@
       "type": "string",
       "$ref": "raml-util/schemas/uuid.schema"
     },
-    "lossType": {
+    "itemLossType": {
       "description": "How the item became lost",
       "type": "string",
       "enum": [
@@ -71,9 +71,32 @@
       "description": "Item's loan type name",
       "type": "string"
     },
-    "effectiveCallNumber": {
-      "description": "Effective call number of the item",
-      "type": "string"
+    "effectiveCallNumberComponents": {
+      "type": "object",
+      "description": "Elements of a full call number generated from the item or holding",
+      "properties": {
+        "callNumber": {
+          "type": "string",
+          "description": "Effective Call Number is an identifier assigned to an item or its holding and associated with the item.",
+          "readonly": true
+        },
+        "prefix": {
+          "type": "string",
+          "description": "Effective Call Number Prefix is the prefix of the identifier assigned to an item or its holding and associated with the item.",
+          "readonly": true
+        },
+        "suffix": {
+          "type": "string",
+          "description": "Effective Call Number Suffix is the suffix of the identifier assigned to an item or its holding and associated with the item.",
+          "readonly": true
+        },
+        "typeId": {
+          "type": "string",
+          "description": "Effective Call Number Type Id is the call number type id assigned to the item or associated holding.",
+          "$ref": "raml-util/schemas/uuid.schema",
+          "readonly": true
+        }
+      }
     },
     "permanentItemLocation": {
       "description": "Permanent item location",
@@ -108,7 +131,7 @@
     "userId",
     "userBarcode",
     "loanId",
-    "lossType",
+    "itemLossType",
     "dateOfLoss",
     "title",
     "identifiers",
