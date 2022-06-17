@@ -27,8 +27,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.vertx.core.json.JsonObject;
 import lombok.SneakyThrows;
-import static org.folio.rest.jaxrs.model.ActualCostRecord.LossType.AGED_TO_LOST;
-import static org.folio.rest.jaxrs.model.ActualCostRecord.LossType.DECLARED_LOST;
+import static org.folio.rest.jaxrs.model.ActualCostRecord.ItemLossType.AGED_TO_LOST;
+import static org.folio.rest.jaxrs.model.ActualCostRecord.ItemLossType.DECLARED_LOST;
 import static org.folio.rest.support.matchers.JsonMatchers.hasSameProperties;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -67,7 +67,7 @@ public class ActualCostRecordAPITest extends ApiTests {
     assertThat(createResult2, hasSameProperties(actualCostRecord2));
 
     List<JsonObject> actualCostRecords = new ArrayList<>(
-      actualCostRecordClient.getMany("lossType==Aged to lost").getRecords());
+      actualCostRecordClient.getMany("itemLossType==Aged to lost").getRecords());
 
     assertThat(actualCostRecords, hasItems(hasSameProperties(createResult1),
       hasSameProperties(createResult2)));
@@ -102,7 +102,7 @@ public class ActualCostRecordAPITest extends ApiTests {
       .withUserId(UUID.randomUUID().toString())
       .withUserBarcode("777")
       .withLoanId(UUID.randomUUID().toString())
-      .withLossType(AGED_TO_LOST)
+      .withItemLossType(AGED_TO_LOST)
       .withDateOfLoss(new DateTime(DateTimeZone.UTC).toDate())
       .withTitle("Test")
       .withIdentifiers(List.of(new Identifier()
