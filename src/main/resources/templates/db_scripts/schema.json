@@ -397,6 +397,11 @@
       "run": "after",
       "snippetPath": "add_staff_slips_hold_transit.sql",
       "fromModuleVersion": "12.3.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "removePositionFromClosedRequests.sql",
+      "fromModuleVersion": "14.0.0"
     }
   ]
 }
