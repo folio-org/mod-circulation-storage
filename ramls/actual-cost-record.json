@@ -131,7 +131,7 @@
     "identifiers",
     "itemBarcode",
     "loanType",
-    "effectiveCallNumber",
+    "effectiveCallNumberComponents",
     "permanentItemLocation",
     "feeFineOwnerId",
     "feeFineOwner",
