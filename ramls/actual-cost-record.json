@@ -64,11 +64,11 @@
       }
     },
     "itemBarcode": {
-      "description": "Text, with input likely validated by the barcode scanner",
+      "description": "Barcode of the lost item",
       "type": "string"
     },
     "loanType": {
-      "description": "Permanent loan type, is the default loan type for a given item.",
+      "description": "Loan type of the lost item",
       "type": "string"
     },
     "effectiveCallNumberComponents": {
@@ -93,7 +93,7 @@
       }
     },
     "permanentItemLocation": {
-      "description": "Permanent item location is the default location, shelving location, or holding which is a physical place where items are stored, or an Online location.",
+      "description": "Permanent item location of the lost item",
       "type": "string"
     },
     "feeFineOwnerId": {
@@ -106,12 +106,12 @@
       "type": "string"
     },
     "feeFineTypeId": {
-      "description": "Fee/fine id, UUID",
+      "description": "Fee fine type ID",
       "type": "string",
       "$ref": "raml-util/schemas/uuid.schema"
     },
     "feeFineType": {
-      "description": "Description of fee/fine that is up to the discretion of the user",
+      "description": "Fee fine type name",
       "type": "string"
     },
     "metadata": {
