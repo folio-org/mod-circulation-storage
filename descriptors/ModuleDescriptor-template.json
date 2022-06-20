@@ -332,6 +332,37 @@
       ]
     },
     {
+      "id": "actual-cost-record-storage",
+      "version": "0.1",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/actual-cost-record-storage/actual-cost-records",
+          "permissionsRequired": ["actual-cost-record-storage.actual-cost-records.collection.get"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/actual-cost-record-storage/actual-cost-records/{id}",
+          "permissionsRequired": ["actual-cost-record-storage.actual-cost-records.item.get"]
+        },
+        {
+          "methods": ["POST"],
+          "pathPattern": "/actual-cost-record-storage/actual-cost-records",
+          "permissionsRequired": ["actual-cost-record-storage.actual-cost-records.item.post"]
+        },
+        {
+          "methods": ["PUT"],
+          "pathPattern": "/actual-cost-record-storage/actual-cost-records/{id}",
+          "permissionsRequired": ["actual-cost-record-storage.actual-cost-records.item.put"]
+        },
+        {
+          "methods": ["DELETE"],
+          "pathPattern": "/actual-cost-record-storage/actual-cost-records/{id}",
+          "permissionsRequired": ["actual-cost-record-storage.actual-cost-records.item.delete"]
+        }
+      ]
+    },
+    {
       "id": "request-preference-storage",
       "version": "2.0",
       "handlers": [
@@ -978,7 +1009,12 @@
         "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.collection.get",
         "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.get",
         "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.put",
-        "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.delete"
+        "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.delete",
+        "actual-cost-record-storage.actual-cost-records.collection.get",
+        "actual-cost-record-storage.actual-cost-records.item.get",
+        "actual-cost-record-storage.actual-cost-records.item.post",
+        "actual-cost-record-storage.actual-cost-records.item.put",
+        "actual-cost-record-storage.actual-cost-records.item.delete"
       ]
     },
     {
@@ -1035,6 +1071,31 @@
       "permissionName": "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.delete",
       "displayName": "Circulation storage - delete tlr feature toggle job",
       "description": "Delete tlr feature toggle job"
+    },
+    {
+      "permissionName": "actual-cost-record-storage.actual-cost-records.item.post",
+      "displayName": "Circulation storage - post actual cost record",
+      "description": "Create actual cost record"
+    },
+    {
+      "permissionName": "actual-cost-record-storage.actual-cost-records.collection.get",
+      "displayName": "Circulation storage - get actual cost record collection",
+      "description": "Get actual cost record collection"
+    },
+    {
+      "permissionName": "actual-cost-record-storage.actual-cost-records.item.get",
+      "displayName": "Circulation storage - get actual cost record",
+      "description": "Get actual cost record"
+    },
+    {
+      "permissionName": "actual-cost-record-storage.actual-cost-records.item.put",
+      "displayName": "Circulation storage - put actual cost record",
+      "description": "Update actual cost record"
+    },
+    {
+      "permissionName": "actual-cost-record-storage.actual-cost-records.item.delete",
+      "displayName": "Circulation storage - delete actual cost record",
+      "description": "Delete actual cost record"
     }
   ],
   "launchDescriptor": {

@@ -18,6 +18,10 @@ public class InterfaceUrls {
     return storageUrl("/loan-storage/loans" + subPath);
   }
 
+  public static URL actualCostRecord(String subPath) throws MalformedURLException {
+    return storageUrl("/actual-cost-record-storage/actual-cost-records" + subPath);
+  }
+
   public static URL loanHistoryUrl(String subPath) throws MalformedURLException {
     return storageUrl("/loan-storage/loan-history" + subPath);
   }

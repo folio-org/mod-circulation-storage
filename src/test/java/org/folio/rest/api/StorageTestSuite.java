@@ -79,7 +79,8 @@ import lombok.SneakyThrows;
   RequestUpdateTriggerTest.class,
   JsonPropertyWriterTest.class,
   IsbnNormalizationTest.class,
-  TlrFeatureToggleJobAPITest.class
+  TlrFeatureToggleJobAPITest.class,
+  ActualCostRecordAPITest.class
 })
 public class StorageTestSuite {
 
