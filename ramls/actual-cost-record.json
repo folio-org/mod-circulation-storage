@@ -9,16 +9,16 @@
       "$ref": "raml-util/schemas/uuid.schema"
     },
     "userId": {
-      "description": "User ID",
+      "description": "ID of the patron the item was lent to",
       "type": "string",
       "$ref": "raml-util/schemas/uuid.schema"
     },
     "userBarcode": {
-      "description": "User barcode",
+      "description": "Barcode of the patron the item was lent to",
       "type": "string"
     },
     "loanId": {
-      "description": "Loan ID",
+      "description": "Unique ID (generated UUID) of the loan",
       "type": "string",
       "$ref": "raml-util/schemas/uuid.schema"
     },
@@ -36,7 +36,7 @@
       "format": "date-time"
     },
     "title": {
-      "description": "Title of the instance",
+      "description": "The primary title (or label) associated with the resource",
       "type": "string"
     },
     "identifiers": {
@@ -64,11 +64,11 @@
       }
     },
     "itemBarcode": {
-      "description": "Barcode of an item",
+      "description": "Text, with input likely validated by the barcode scanner",
       "type": "string"
     },
     "loanType": {
-      "description": "Item's loan type name",
+      "description": "Permanent loan type, is the default loan type for a given item.",
       "type": "string"
     },
     "effectiveCallNumberComponents": {
@@ -93,7 +93,7 @@
       }
     },
     "permanentItemLocation": {
-      "description": "Permanent item location",
+      "description": "Permanent item location is the default location, shelving location, or holding which is a physical place where items are stored, or an Online location.",
       "type": "string"
     },
     "feeFineOwnerId": {
@@ -106,12 +106,12 @@
       "type": "string"
     },
     "feeFineTypeId": {
-      "description": "Fee fine type ID",
+      "description": "Fee/fine id, UUID",
       "type": "string",
       "$ref": "raml-util/schemas/uuid.schema"
     },
     "feeFineType": {
-      "description": "Fee fine type name",
+      "description": "Description of fee/fine that is up to the discretion of the user",
       "type": "string"
     },
     "metadata": {
