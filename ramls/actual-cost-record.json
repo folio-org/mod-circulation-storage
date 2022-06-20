@@ -9,12 +9,12 @@
       "$ref": "raml-util/schemas/uuid.schema"
     },
     "userId": {
-      "description": "ID of the patron the item was lent to",
+      "description": "ID of the patron the actual cost record was created for",
       "type": "string",
       "$ref": "raml-util/schemas/uuid.schema"
     },
     "userBarcode": {
-      "description": "Barcode of the patron the item was lent to",
+      "description": "Barcode of the patron the actual cost record was created for",
       "type": "string"
     },
     "loanId": {
@@ -23,7 +23,7 @@
       "$ref": "raml-util/schemas/uuid.schema"
     },
     "itemLossType": {
-      "description": "How the item became lost",
+      "description": "Type of the item loss",
       "type": "string",
       "enum": [
         "Aged to lost",
@@ -31,7 +31,7 @@
       ]
     },
     "dateOfLoss": {
-      "description": "A date when the item was lost",
+      "description": "Date and time when the item was lost",
       "type": "string",
       "format": "date-time"
     },
@@ -97,21 +97,21 @@
       "type": "string"
     },
     "feeFineOwnerId": {
-      "description": "Fee fine owner ID",
+      "description": "Fee/fine owner ID",
       "type": "string",
       "$ref": "raml-util/schemas/uuid.schema"
     },
     "feeFineOwner": {
-      "description": "Fee fine owner name",
+      "description": "Fee/fine owner name",
       "type": "string"
     },
     "feeFineTypeId": {
-      "description": "Fee fine type ID",
+      "description": "Fee/fine type ID",
       "type": "string",
       "$ref": "raml-util/schemas/uuid.schema"
     },
     "feeFineType": {
-      "description": "Fee fine type name",
+      "description": "Fee/fine type name",
       "type": "string"
     },
     "metadata": {

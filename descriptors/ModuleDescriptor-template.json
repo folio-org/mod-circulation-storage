@@ -354,62 +354,11 @@
           "methods": ["PUT"],
           "pathPattern": "/actual-cost-record-storage/actual-cost-records/{id}",
           "permissionsRequired": ["actual-cost-record-storage.actual-cost-records.item.put"]
-        },
+        },g
         {
           "methods": ["DELETE"],
           "pathPattern": "/actual-cost-record-storage/actual-cost-records/{id}",
           "permissionsRequired": ["actual-cost-record-storage.actual-cost-records.item.delete"]
-        }
-      ]
-    },
-    {
-      "id": "tlr-feature-toggle-job-storage",
-      "version": "0.1",
-      "handlers": [
-        {
-          "methods":[
-            "POST"
-          ],
-          "pathPattern":"/tlr-feature-toggle-job-storage/tlr-feature-toggle-jobs",
-          "permissionsRequired": [
-            "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.post"
-          ]
-        },
-        {
-          "methods":[
-            "GET"
-          ],
-          "pathPattern":"/tlr-feature-toggle-job-storage/tlr-feature-toggle-jobs",
-          "permissionsRequired": [
-            "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.collection.get"
-          ]
-        },
-        {
-          "methods":[
-            "GET"
-          ],
-          "pathPattern":"/tlr-feature-toggle-job-storage/tlr-feature-toggle-jobs/{id}",
-          "permissionsRequired": [
-            "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.get"
-          ]
-        },
-        {
-          "methods":[
-            "PUT"
-          ],
-          "pathPattern":"/tlr-feature-toggle-job-storage/tlr-feature-toggle-jobs/{id}",
-          "permissionsRequired": [
-            "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.put"
-          ]
-        },
-        {
-          "methods":[
-            "DELETE"
-          ],
-          "pathPattern":"/tlr-feature-toggle-job-storage/tlr-feature-toggle-jobs/{id}",
-          "permissionsRequired": [
-            "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.delete"
-          ]
         }
       ]
     },
@@ -477,6 +426,51 @@
           "methods": ["DELETE"],
           "pathPattern": "/scheduled-notice-storage/scheduled-notices/{id}",
           "permissionsRequired": ["scheduled-notice-storage.scheduled-notices.item.delete"]
+        },
+        {
+          "methods":[
+            "POST"
+          ],
+          "pathPattern":"/tlr-feature-toggle-job-storage/tlr-feature-toggle-jobs",
+          "permissionsRequired": [
+            "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.post"
+          ]
+        },
+        {
+          "methods":[
+            "GET"
+          ],
+          "pathPattern":"/tlr-feature-toggle-job-storage/tlr-feature-toggle-jobs",
+          "permissionsRequired": [
+            "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.collection.get"
+          ]
+        },
+        {
+          "methods":[
+            "GET"
+          ],
+          "pathPattern":"/tlr-feature-toggle-job-storage/tlr-feature-toggle-jobs/{id}",
+          "permissionsRequired": [
+            "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.get"
+          ]
+        },
+        {
+          "methods":[
+            "PUT"
+          ],
+          "pathPattern":"/tlr-feature-toggle-job-storage/tlr-feature-toggle-jobs/{id}",
+          "permissionsRequired": [
+            "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.put"
+          ]
+        },
+        {
+          "methods":[
+            "DELETE"
+          ],
+          "pathPattern":"/tlr-feature-toggle-job-storage/tlr-feature-toggle-jobs/{id}",
+          "permissionsRequired": [
+            "tlr-feature-toggle-job-storage.tlr-feature-toggle-jobs.item.delete"
+          ]
         }
       ]
     },
