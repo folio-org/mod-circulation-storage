@@ -1,8 +1,11 @@
 package org.folio.rest.api;
 
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 import org.folio.rest.jaxrs.model.ActualCostRecord;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
@@ -89,11 +92,16 @@ public class ActualCostRecordAPITest extends ApiTests {
 
     UUID accountId = UUID.randomUUID();
     JsonObject updatedJson = createResult.put("accountId", accountId.toString());
+    updateActualCostRecordAndCheckThatAllPropertiesAreSame(updatedJson);
 
+    updatedJson.remove("accountId");
+    updateActualCostRecordAndCheckThatAllPropertiesAreSame(updatedJson);
+  }
+
+  private void updateActualCostRecordAndCheckThatAllPropertiesAreSame(JsonObject updatedJson)
+    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
     actualCostRecordClient.attemptPutById(updatedJson);
-
     JsonObject fetchedJson = actualCostRecordClient.getById(updatedJson.getString("id")).getJson();
-
     fetchedJson.remove("metadata");
     assertThat(updatedJson, hasSameProperties(fetchedJson));
   }
