@@ -87,12 +87,15 @@ public class ActualCostRecordAPITest extends ApiTests {
 
     assertThat(createResult, hasSameProperties(actualCostRecord));
 
-    JsonObject updatedJson = createResult.put("lossType", DECLARED_LOST.value());
+    UUID accountId = UUID.randomUUID();
+    JsonObject updatedJson = createResult.put("accountId", accountId);
 
     actualCostRecordClient.attemptPutById(updatedJson);
 
     JsonObject fetchedJson = actualCostRecordClient.getById(updatedJson.getString("id")).getJson();
 
+    assertThat(fetchedJson.getString("accountId"), is(accountId));
+    fetchedJson.remove("accountId");
     fetchedJson.remove("metadata");
     assertThat(updatedJson, hasSameProperties(fetchedJson));
   }
