@@ -28,7 +28,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.json.JsonObject;
 import lombok.SneakyThrows;
 import static org.folio.rest.jaxrs.model.ActualCostRecord.ItemLossType.AGED_TO_LOST;
-import static org.folio.rest.jaxrs.model.ActualCostRecord.ItemLossType.DECLARED_LOST;
 import static org.folio.rest.support.matchers.JsonMatchers.hasSameProperties;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -87,12 +86,19 @@ public class ActualCostRecordAPITest extends ApiTests {
 
     assertThat(createResult, hasSameProperties(actualCostRecord));
 
-    JsonObject updatedJson = createResult.put("lossType", DECLARED_LOST.value());
+    UUID accountId = UUID.randomUUID();
+    JsonObject updatedJson = createResult.put("accountId", accountId.toString());
+    updateActualCostRecordAndCheckTheResult(updatedJson);
 
+    updatedJson.remove("accountId");
+    updateActualCostRecordAndCheckTheResult(updatedJson);
+  }
+
+
+  @SneakyThrows
+  private void updateActualCostRecordAndCheckTheResult(JsonObject updatedJson) {
     actualCostRecordClient.attemptPutById(updatedJson);
-
     JsonObject fetchedJson = actualCostRecordClient.getById(updatedJson.getString("id")).getJson();
-
     fetchedJson.remove("metadata");
     assertThat(updatedJson, hasSameProperties(fetchedJson));
   }
@@ -120,6 +126,7 @@ public class ActualCostRecordAPITest extends ApiTests {
       .withFeeFineTypeId(UUID.randomUUID().toString())
       .withFeeFineType("Lost Item fee (actual cost)");
   }
+
 
   private JsonObject toJsonObject(ActualCostRecord actualCostRecord1)
     throws JsonProcessingException {
