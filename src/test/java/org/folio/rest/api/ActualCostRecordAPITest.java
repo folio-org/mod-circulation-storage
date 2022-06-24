@@ -1,11 +1,8 @@
 package org.folio.rest.api;
 
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 import org.folio.rest.jaxrs.model.ActualCostRecord;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
@@ -13,7 +10,6 @@ import org.folio.rest.jaxrs.model.Identifier;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.http.AssertingRecordClient;
 import org.folio.rest.support.http.InterfaceUrls;
-import org.folio.rest.support.matchers.UUIDMatchers;
 import org.folio.rest.support.spring.TestContextConfiguration;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -98,8 +94,9 @@ public class ActualCostRecordAPITest extends ApiTests {
     updateActualCostRecordAndCheckThatAllPropertiesAreSame(updatedJson);
   }
 
-  private void updateActualCostRecordAndCheckThatAllPropertiesAreSame(JsonObject updatedJson)
-    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+
+  @SneakyThrows
+  private void updateActualCostRecordAndCheckThatAllPropertiesAreSame(JsonObject updatedJson) {
     actualCostRecordClient.attemptPutById(updatedJson);
     JsonObject fetchedJson = actualCostRecordClient.getById(updatedJson.getString("id")).getJson();
     fetchedJson.remove("metadata");
@@ -129,6 +126,7 @@ public class ActualCostRecordAPITest extends ApiTests {
       .withFeeFineTypeId(UUID.randomUUID().toString())
       .withFeeFineType("Lost Item fee (actual cost)");
   }
+
 
   private JsonObject toJsonObject(ActualCostRecord actualCostRecord1)
     throws JsonProcessingException {
