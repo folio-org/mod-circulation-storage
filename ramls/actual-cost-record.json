@@ -97,7 +97,7 @@
       "type": "string"
     },
     "accountId": {
-      "description": "Account ID of the fee",
+      "description": "ID of the fee/fine created based on the actual cost record during its manual processing",
       "$ref": "raml-util/schemas/uuid.schema"
     },
     "feeFineOwnerId": {

@@ -88,15 +88,15 @@ public class ActualCostRecordAPITest extends ApiTests {
 
     UUID accountId = UUID.randomUUID();
     JsonObject updatedJson = createResult.put("accountId", accountId.toString());
-    updateActualCostRecordAndCheckThatAllPropertiesAreSame(updatedJson);
+    updateActualCostRecordAndCheckTheResult(updatedJson);
 
     updatedJson.remove("accountId");
-    updateActualCostRecordAndCheckThatAllPropertiesAreSame(updatedJson);
+    updateActualCostRecordAndCheckTheResult(updatedJson);
   }
 
 
   @SneakyThrows
-  private void updateActualCostRecordAndCheckThatAllPropertiesAreSame(JsonObject updatedJson) {
+  private void updateActualCostRecordAndCheckTheResult(JsonObject updatedJson) {
     actualCostRecordClient.attemptPutById(updatedJson);
     JsonObject fetchedJson = actualCostRecordClient.getById(updatedJson.getString("id")).getJson();
     fetchedJson.remove("metadata");
