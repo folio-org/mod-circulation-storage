@@ -10,6 +10,7 @@ import org.folio.rest.jaxrs.model.Identifier;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.http.AssertingRecordClient;
 import org.folio.rest.support.http.InterfaceUrls;
+import org.folio.rest.support.matchers.UUIDMatchers;
 import org.folio.rest.support.spring.TestContextConfiguration;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -28,7 +29,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.json.JsonObject;
 import lombok.SneakyThrows;
 import static org.folio.rest.jaxrs.model.ActualCostRecord.ItemLossType.AGED_TO_LOST;
-import static org.folio.rest.jaxrs.model.ActualCostRecord.ItemLossType.DECLARED_LOST;
 import static org.folio.rest.support.matchers.JsonMatchers.hasSameProperties;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -94,7 +94,7 @@ public class ActualCostRecordAPITest extends ApiTests {
 
     JsonObject fetchedJson = actualCostRecordClient.getById(updatedJson.getString("id")).getJson();
 
-    assertThat(fetchedJson.getString("accountId"), is(accountId));
+    assertThat(fetchedJson.getString("accountId"), UUIDMatchers.isUUID(accountId));
     fetchedJson.remove("accountId");
     fetchedJson.remove("metadata");
     assertThat(updatedJson, hasSameProperties(fetchedJson));
