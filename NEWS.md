@@ -1,3 +1,6 @@
+## 14.0.2 2022-06-27
+* Expire requests for only one tenant in the expiration job (CIRCTORE-342)
+
 ## 14.0.1 2022-06-14
 * Use default UUID for missing `instanceId` and `holdingsRecordId` during TLR data migration (CIRCSTORE-340)
 * Handle invalid requests properly during TLR data migration (CIRCSTORE-344)

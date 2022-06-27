@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static org.folio.rest.impl.Headers.TENANT_HEADER;
 import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_PICKUP_EXPIRED;
 import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_UNFILLED;
 import static org.folio.rest.jaxrs.model.Request.Status.OPEN_AWAITING_DELIVERY;
@@ -33,7 +34,6 @@ import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.okapi.common.GenericCompositeFuture;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.SQLConnection;
@@ -55,23 +55,10 @@ public class ExpirationTool {
     //do nothing
   }
 
-  public static Future<Void> doRequestExpiration(Map<String, String> okapiHeaders, Vertx vertx) {
-    final Promise<RowSet<Row>> promise = Promise.promise();
-    PostgresClient pgClient = PostgresClient.getInstance(vertx);
-
-    String tenantQuery = "select nspname from pg_catalog.pg_namespace where nspname LIKE '%_mod_circulation_storage';";
-
-    pgClient.select(tenantQuery, promise);
-
-    return promise.future()
-      .compose(rs -> GenericCompositeFuture.all(rowSetToStream(rs)
-        .map(row -> doRequestExpirationForTenant(okapiHeaders, vertx, getTenant(row.getString("nspname"))))
-        .collect(toList()))
-        .map(all -> null));
-  }
-
-  private static Future<Void> doRequestExpirationForTenant(Map<String, String> okapiHeaders, Vertx vertx, String tenant) {
+  public static Future<Void> doRequestExpirationForTenant(Map<String, String> okapiHeaders, Vertx vertx) {
     Promise<Void> promise = Promise.promise();
+
+    String tenant = okapiHeaders.get(TENANT_HEADER);
 
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
 
@@ -287,10 +274,4 @@ public class ExpirationTool {
     return promise.future().map(ur -> null);
   }
 
-  private static String getTenant(String nsTenant) {
-
-    String suffix = "_mod_circulation_storage";
-    int suffixLength = nsTenant.length() - suffix.length();
-    return nsTenant.substring(0, suffixLength);
-  }
 }
