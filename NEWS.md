@@ -1,3 +1,20 @@
+## 14.1.0 2022-06-27
+
+* Replace slf4j-log4j12/slf4j-api by log4j-slf4j-impl (CVE-2019-17571) (CIRCSTORE-325)
+* Add patron-action-session-storage.expired-session-patron-ids.collection.get to perm set (CIRCSTORE-326)
+* Create TLR feature toggle job POST, GET endpoints (CIRCSTORE-327)
+* Create a timer for TLR feature toggle jobs (CIRCSTORE-328)
+* Implement TLR feature toggle job service (CIRCSTORE-329)
+* Create actual-cost-record entity CRUD (CIRCSTORE-331)
+* Add `requestLevel` field of `request` object to database schema (CIRCSTORE-333)
+* Add index for `loan.agedToLostDelayedBilling.dateLostItemShouldBeBilled` field (CIRCSTORE-335)
+* Add `Title level request expiration` scheduled notice triggering event (CIRCSTORE-339)
+* Use default UUID for missing `instanceId` and `holdingsRecordId` during TLR data migration (CIRCSTORE-340)
+* Add TLR feature toggle job error handling and tests (CIRCSTORE-341)
+* Expire requests for only one tenant in the expiration job (CIRCSTORE-342)
+* Handle invalid requests properly during TLR data migration (CIRCSTORE-344)
+* Update to RMB 34.0.0 (CIRCSTORE-345)
+
 ## 14.0.0 2022-02-22
 
 * Add Kafka message queues to select circulation storage record types (UXPROD-3380)
