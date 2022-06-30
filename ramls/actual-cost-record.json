@@ -118,6 +118,11 @@
       "description": "Fee/fine type name",
       "type": "string"
     },
+    "expirationDate": {
+      "description": "Expiration date and time for items that were lost with actual cost",
+      "type": "string",
+      "format": "date-time"
+    },
     "metadata": {
       "description": "Metadata about creation and changes, provided by the server (client should not provide)",
       "type": "object",
