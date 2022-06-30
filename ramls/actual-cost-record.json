@@ -119,7 +119,7 @@
       "type": "string"
     },
     "expirationDate": {
-      "description": "Expiration date and time for items that were lost with actual cost",
+      "description": "Expiration date and time of actual cost record",
       "type": "string",
       "format": "date-time"
     },
