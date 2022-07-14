@@ -97,7 +97,7 @@ public class StorageTestSuite {
   private static final WireMockServer wireMockServer = new WireMockServer(PROXY_PORT);
 
   private static final KafkaContainer kafkaContainer
-    = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:5.4.3"));
+    = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.2.0"));
 
   /**
    * Return a URL for the path and the parameters.
