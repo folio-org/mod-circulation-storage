@@ -124,7 +124,8 @@ public class ActualCostRecordAPITest extends ApiTests {
       .withFeeFineOwnerId(UUID.randomUUID().toString())
       .withFeeFineOwner("Main circ desk")
       .withFeeFineTypeId(UUID.randomUUID().toString())
-      .withFeeFineType("Lost Item fee (actual cost)");
+      .withFeeFineType("Lost Item fee (actual cost)")
+      .withExpirationDate(new DateTime(DateTimeZone.UTC).toDate());
   }
 
 
