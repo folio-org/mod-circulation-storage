@@ -39,7 +39,6 @@ import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.RequestRequestBuilder;
 import org.folio.support.MockServer;
-import org.hamcrest.core.IsNull;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
@@ -795,6 +794,33 @@ public class RequestExpirationApiTest extends ApiTests {
 
   @Test
   @SneakyThrows
+  public void updatedDateIsUpdatedOnRequestExpiration() {
+    UUID requestId = UUID.randomUUID();
+
+    RequestRequestBuilder requestBuilder = new RequestRequestBuilder()
+      .hold()
+      .withId(requestId)
+      .withRequestExpirationDate(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+      .withItemId(UUID.randomUUID())
+      .withPosition(1)
+      .withStatus(OPEN_NOT_YET_FILLED);
+
+    JsonObject originalRequest = createEntity(requestBuilder.create(), requestStorageUrl())
+      .getJson();
+
+    expireRequests();
+    Awaitility.await()
+      .atMost(10, TimeUnit.SECONDS)
+      .until(MockServer::getPublishedEvents, hasSize(1));
+
+    JsonObject updatedRequest = getById(requestStorageUrl(String.format("/%s", requestId)));
+    assertThat(updatedRequest.getString("status"), is(CLOSED_UNFILLED));
+    assertThat("metadata.updatedDate should be updated upon request expiration",
+      getUpdatedDate(updatedRequest).isAfter(getUpdatedDate(originalRequest)));
+  }
+
+  @Test
+  @SneakyThrows
   public void shouldOnlyExpireRequestsForSpecifiedTenant() {
 
     UUID firstRequestId = UUID.randomUUID();
@@ -863,5 +889,9 @@ public class RequestExpirationApiTest extends ApiTests {
       Request updated = payload.getJsonObject(REQUESTS.value()).getJsonObject(UPDATED.value()).mapTo(Request.class);
       assertThat(original.getStatus(), not(equalTo(updated.getStatus())));
     });
+  }
+
+  private static DateTime getUpdatedDate(JsonObject request) {
+    return DateTime.parse(request.getJsonObject("metadata").getString("updatedDate"));
   }
 }

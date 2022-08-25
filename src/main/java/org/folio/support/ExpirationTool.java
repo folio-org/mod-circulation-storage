@@ -220,6 +220,7 @@ public class ExpirationTool {
       pair.put(ORIGINAL.value(), JsonObject.mapFrom(request));
       closedRequestsItemIds.add(request.getItemId());
       Request updatedRequest = changeRequestStatus(request).withPosition(null);
+      updatedRequest.getMetadata().withUpdatedDate(new Date());
       pair.put(UPDATED.value(), JsonObject.mapFrom(updatedRequest));
       context.add(pair);
       future = future.compose(v -> updateRequest(conn, vertx, tenant, updatedRequest));
