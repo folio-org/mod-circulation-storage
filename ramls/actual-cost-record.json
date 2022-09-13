@@ -29,6 +29,7 @@
     "user": {
       "description": "User info",
       "type": "object",
+      "javaType": "org.folio.rest.jaxrs.model.ActualCostRecordUser",
       "properties": {
         "id": {
           "description": "User ID",
@@ -61,6 +62,7 @@
     "loan": {
       "description": "Loan info",
       "type": "object",
+      "javaType": "org.folio.rest.jaxrs.model.ActualCostRecordLoan",
       "properties": {
         "id": {
           "description": "Loan ID",
@@ -76,6 +78,7 @@
     "item": {
       "description": "Item info",
       "type": "object",
+      "javaType": "org.folio.rest.jaxrs.model.ActualCostRecordItem",
       "properties": {
         "id": {
           "description": "Item ID",
@@ -151,6 +154,7 @@
     "instance": {
       "description": "Instance info",
       "type": "object",
+      "javaType": "org.folio.rest.jaxrs.model.ActualCostRecordInstance",
       "properties": {
         "id": {
           "description": "Instance ID",
@@ -167,6 +171,7 @@
           "minItems": 0,
           "items": {
             "type": "object",
+            "javaType": "org.folio.rest.jaxrs.model.ActualCostRecordIdentifier",
             "properties": {
               "value": {
                 "type": "string",
@@ -200,6 +205,7 @@
     "feeFine": {
       "description": "Fee/fine info",
       "type": "object",
+      "javaType": "org.folio.rest.jaxrs.model.ActualCostRecordFeeFine",
       "properties": {
         "accountId": {
           "description": "ID of the fee/fine (\"account\") instance",
