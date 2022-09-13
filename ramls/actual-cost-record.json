@@ -226,7 +226,6 @@
       },
       "additionalProperties": false,
       "required": [
-        "accountId",
         "ownerId",
         "owner",
         "typeId",
@@ -248,6 +247,7 @@
     "user",
     "loan",
     "item",
-    "instance"
+    "instance",
+    "feeFine"
   ]
 }
