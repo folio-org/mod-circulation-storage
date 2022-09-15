@@ -121,7 +121,7 @@
           "type": "string",
           "$ref": "raml-util/schemas/uuid.schema"
         },
-        "effectiveCallNumber": {
+        "effectiveCallNumberComponents": {
           "type": "object",
           "description": "Elements of a full call number generated from the item or holding",
           "properties": {

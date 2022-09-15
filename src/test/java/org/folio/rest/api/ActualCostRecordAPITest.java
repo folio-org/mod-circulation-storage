@@ -16,7 +16,7 @@ import org.folio.rest.jaxrs.model.ActualCostRecordInstance;
 import org.folio.rest.jaxrs.model.ActualCostRecordItem;
 import org.folio.rest.jaxrs.model.ActualCostRecordLoan;
 import org.folio.rest.jaxrs.model.ActualCostRecordUser;
-import org.folio.rest.jaxrs.model.EffectiveCallNumber;
+import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.http.AssertingRecordClient;
 import org.folio.rest.support.http.InterfaceUrls;
@@ -99,7 +99,6 @@ public class ActualCostRecordAPITest extends ApiTests {
     updateActualCostRecordAndCheckTheResult(updatedJson);
   }
 
-
   @SneakyThrows
   private void updateActualCostRecordAndCheckTheResult(JsonObject updatedJson) {
     actualCostRecordClient.attemptPutById(updatedJson);
@@ -132,7 +131,7 @@ public class ActualCostRecordAPITest extends ApiTests {
         .withLoanTypeId(randomId())
         .withLoanType("loan type")
         .withHoldingsRecordId(randomId())
-        .withEffectiveCallNumber(new EffectiveCallNumber()
+        .withEffectiveCallNumberComponents(new EffectiveCallNumberComponents()
           .withCallNumber("call number")
           .withPrefix("prefix")
           .withSuffix("suffix")))
