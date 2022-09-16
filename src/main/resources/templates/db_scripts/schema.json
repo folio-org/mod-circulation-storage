@@ -370,7 +370,15 @@
     {
       "tableName": "actual_cost_record",
       "withMetadata": true,
-      "withAuditing": false
+      "withAuditing": false,
+      "index": [
+        {
+          "fieldName": "loan.id",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        }
+      ]
     }
   ],
   "scripts": [

@@ -1,12 +1,22 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.support.matchers.JsonMatchers.hasSameProperties;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsIterableContaining.hasItems;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import org.folio.rest.jaxrs.model.ActualCostRecord;
+import org.folio.rest.jaxrs.model.ActualCostRecordFeeFine;
+import org.folio.rest.jaxrs.model.ActualCostRecordIdentifier;
+import org.folio.rest.jaxrs.model.ActualCostRecordInstance;
+import org.folio.rest.jaxrs.model.ActualCostRecordItem;
+import org.folio.rest.jaxrs.model.ActualCostRecordLoan;
+import org.folio.rest.jaxrs.model.ActualCostRecordUser;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
-import org.folio.rest.jaxrs.model.Identifier;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.http.AssertingRecordClient;
 import org.folio.rest.support.http.InterfaceUrls;
@@ -27,11 +37,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.vertx.core.json.JsonObject;
 import lombok.SneakyThrows;
-import static org.folio.rest.jaxrs.model.ActualCostRecord.ItemLossType.AGED_TO_LOST;
-import static org.folio.rest.support.matchers.JsonMatchers.hasSameProperties;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsIterableContaining.hasItems;
 
 @ContextConfiguration(classes = TestContextConfiguration.class)
 public class ActualCostRecordAPITest extends ApiTests {
@@ -66,7 +71,7 @@ public class ActualCostRecordAPITest extends ApiTests {
     assertThat(createResult2, hasSameProperties(actualCostRecord2));
 
     List<JsonObject> actualCostRecords = new ArrayList<>(
-      actualCostRecordClient.getMany("itemLossType==Aged to lost").getRecords());
+      actualCostRecordClient.getMany("lossType==Aged to lost").getRecords());
 
     assertThat(actualCostRecords, hasItems(hasSameProperties(createResult1),
       hasSameProperties(createResult2)));
@@ -94,7 +99,6 @@ public class ActualCostRecordAPITest extends ApiTests {
     updateActualCostRecordAndCheckTheResult(updatedJson);
   }
 
-
   @SneakyThrows
   private void updateActualCostRecordAndCheckTheResult(JsonObject updatedJson) {
     actualCostRecordClient.attemptPutById(updatedJson);
@@ -105,29 +109,50 @@ public class ActualCostRecordAPITest extends ApiTests {
 
   private ActualCostRecord createActualCostRecord() {
     return new ActualCostRecord()
-      .withUserId(UUID.randomUUID().toString())
-      .withUserBarcode("777")
-      .withLoanId(UUID.randomUUID().toString())
-      .withItemLossType(AGED_TO_LOST)
-      .withDateOfLoss(new DateTime(DateTimeZone.UTC).toDate())
-      .withTitle("Test")
-      .withIdentifiers(List.of(new Identifier()
-        .withValue("9781466636897")
-        .withIdentifierTypeId(UUID.randomUUID().toString())))
-      .withItemBarcode("888")
-      .withLoanType("Can Circulate")
-      .withEffectiveCallNumberComponents(new EffectiveCallNumberComponents()
-        .withCallNumber("callnumber")
-        .withPrefix("prefix")
-        .withSuffix("suffix"))
-      .withPermanentItemLocation("Main circ desk")
-      .withFeeFineOwnerId(UUID.randomUUID().toString())
-      .withFeeFineOwner("Main circ desk")
-      .withFeeFineTypeId(UUID.randomUUID().toString())
-      .withFeeFineType("Lost Item fee (actual cost)")
-      .withExpirationDate(new DateTime(DateTimeZone.UTC).toDate());
+      .withId(randomId())
+      .withLossType(ActualCostRecord.LossType.AGED_TO_LOST)
+      .withLossDate(new DateTime(DateTimeZone.UTC).toDate())
+      .withExpirationDate(new DateTime(DateTimeZone.UTC).toDate())
+      .withUser(new ActualCostRecordUser()
+        .withId(randomId())
+        .withBarcode("barcode")
+        .withFirstName("firstName")
+        .withLastName("lastName")
+        .withMiddleName("middleName"))
+      .withLoan(new ActualCostRecordLoan()
+        .withId(randomId()))
+      .withItem(new ActualCostRecordItem()
+        .withId(randomId())
+        .withBarcode("barcode")
+        .withMaterialTypeId(randomId())
+        .withMaterialType("material type")
+        .withPermanentLocationId(randomId())
+        .withPermanentLocation("permanent location")
+        .withLoanTypeId(randomId())
+        .withLoanType("loan type")
+        .withHoldingsRecordId(randomId())
+        .withEffectiveCallNumberComponents(new EffectiveCallNumberComponents()
+          .withCallNumber("call number")
+          .withPrefix("prefix")
+          .withSuffix("suffix")))
+      .withInstance(new ActualCostRecordInstance()
+        .withId(randomId())
+        .withTitle("title")
+        .withIdentifiers(List.of(new ActualCostRecordIdentifier()
+          .withIdentifierTypeId(randomId())
+          .withIdentifierType("identifier type")
+          .withValue("identifier value"))))
+      .withFeeFine(new ActualCostRecordFeeFine()
+        .withAccountId(randomId())
+        .withOwnerId(randomId())
+        .withOwner("fee/fine owner")
+        .withTypeId(randomId())
+        .withType("Lost Item fee (actual cost)"));
   }
 
+  private static String randomId() {
+    return UUID.randomUUID().toString();
+  }
 
   private JsonObject toJsonObject(ActualCostRecord actualCostRecord1)
     throws JsonProcessingException {
