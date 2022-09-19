@@ -1,8 +1,8 @@
 {
   "id": "89105c06-dbdb-4aa0-9695-d4d19c733270",
   "lossType": "Aged to lost",
-  "lossDate": "2022-01-01T22:25:37Z",
-  "expirationDate": "2022-02-01T23:59:59Z",
+  "lossDate": "2022-01-01T22:25:37.000+00:00",
+  "expirationDate": "2022-02-01T23:59:59.000+00:00",
   "user": {
     "id": "88805c06-dbdb-4aa0-9695-d4d19c733221",
     "barcode": "777",
@@ -25,19 +25,18 @@
     "holdingsRecordId": "68190dd4-9a88-4dbe-af1a-9048be222ac8",
     "effectiveCallNumberComponents": {
       "callNumber": "TX809.M17J66",
-      "suffix": "1993",
-      "prefix": "f"
+      "prefix": "f",
+      "suffix": "1993"
     }
   },
   "instance": {
     "id": "9dfe10e5-6db9-4f80-b574-7edc0f960288",
     "title": "Nod",
-    "identifiers": [
-      {
-        "identifierTypeId": "8261054f-be78-422d-bd51-4ed9f33c3422",
-        "identifierType": "ISBN",
-        "value": "9781466636897"
-      }
+    "identifiers": [{
+      "value": "9781466636897",
+      "identifierType": "ISBN",
+      "identifierTypeId": "8261054f-be78-422d-bd51-4ed9f33c3422"
+    }
     ]
   },
   "feeFine": {
@@ -46,5 +45,11 @@
     "owner": "Default owner",
     "typeId": "92ef9706-f1af-430d-9edd-78035689efa2",
     "type": "Overdue fine"
+  },
+  "metadata": {
+    "createdDate": "2022-09-19T14:09:41.284+00:00",
+    "createdByUserId": "5bcadcf1-2608-4cd3-b4e2-947ffe58d15f",
+    "updatedDate": "2022-09-19T14:09:41.284+00:00",
+    "updatedByUserId": "5bcadcf1-2608-4cd3-b4e2-947ffe58d15f"
   }
 }
