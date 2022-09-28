@@ -109,7 +109,6 @@ public class ActualCostRecordAPITest extends ApiTests {
 
   private ActualCostRecord createActualCostRecord() {
     return new ActualCostRecord()
-      .withId(randomId())
       .withLossType(ActualCostRecord.LossType.AGED_TO_LOST)
       .withLossDate(new DateTime(DateTimeZone.UTC).toDate())
       .withExpirationDate(new DateTime(DateTimeZone.UTC).toDate())
