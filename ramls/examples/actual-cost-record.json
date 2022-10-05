@@ -8,7 +8,9 @@
     "barcode": "777",
     "firstName": "John",
     "lastName": "Doe",
-    "middleName": "Robert"
+    "middleName": "Robert",
+    "patronGroupId": "4bb563d9-3f9d-4e1e-8d1d-04e75666d68f",
+    "patronGroup": "librarian"
   },
   "loan": {
     "id": "65de6432-be11-48ba-9686-a65101634040"
@@ -27,7 +29,11 @@
       "callNumber": "TX809.M17J66",
       "prefix": "f",
       "suffix": "1993"
-    }
+    },
+    "volume": "v. 2",
+    "enumeration": "v.73:no.1-6",
+    "chronology": "1985:July-Dec.",
+    "copyNumber": "c.1"
   },
   "instance": {
     "id": "9dfe10e5-6db9-4f80-b574-7edc0f960288",
