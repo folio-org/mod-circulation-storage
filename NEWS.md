@@ -1,3 +1,13 @@
+## 15.0.0 2022-10-18
+
+* Extend actual cost record schema (CIRCSTORE-349, CIRCSTORE-358, CIRCSTORE-362)
+* Allow compilation on ARM64 (CIRCSTORE-355)
+* Support holdings-storage 6.0, item-storage 10.0 (CIRCSTORE-357)
+* Update metadata.updatedDate upon request expiration (CIRCSTORE-350)
+* Make actual cost record ID optional (CIRCSTORE-361)
+* Update actual-cost-record-storage interface version (CIRCSTORE-364)
+* Upgrade to RMB 35.0.0 and Vertx 4.3.3 (CIRCSTORE-363)
+
 ## 14.1.0 2022-06-27
 
 * Replace slf4j-log4j12/slf4j-api by log4j-slf4j-impl (CVE-2019-17571) (CIRCSTORE-325)
