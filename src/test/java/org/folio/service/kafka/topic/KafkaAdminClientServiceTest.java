@@ -2,13 +2,15 @@ package org.folio.service.kafka.topic;
 
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
-import static org.folio.support.Environment.environmentName;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -17,7 +19,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import io.vertx.core.Vertx;
 import org.apache.kafka.common.errors.TopicExistsException;
+import org.folio.CirculationStorageKafkaTopic;
+import org.folio.kafka.services.KafkaAdminClientService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,6 +37,7 @@ import io.vertx.kafka.admin.NewTopic;
 @RunWith(VertxUnitRunner.class)
 public class KafkaAdminClientServiceTest {
 
+  private final String STUB_TENANT = "foo-tenant";
   private final Set<String> allExpectedTopics = Set.of(
       "folio.foo-tenant.circulation.request",
       "folio.foo-tenant.circulation.loan",
@@ -39,9 +45,11 @@ public class KafkaAdminClientServiceTest {
   );
 
   private KafkaAdminClient mockClient;
+  private Vertx vertx;
 
   @Before
   public void setUp() {
+    vertx = mock(Vertx.class);
     mockClient = mock(KafkaAdminClient.class);
   }
 
@@ -135,13 +143,20 @@ public class KafkaAdminClientServiceTest {
   }
 
   private Future<Void> createKafkaTopicsAsync(KafkaAdminClient client) {
-    return new KafkaAdminClientService(() -> client)
-        .createKafkaTopics("foo-tenant", environmentName());
+    try (var mocked = mockStatic(KafkaAdminClient.class)) {
+      mocked.when(() -> KafkaAdminClient.create(eq(vertx), anyMap())).thenReturn(client);
+
+      return new KafkaAdminClientService(vertx)
+        .createKafkaTopics(CirculationStorageKafkaTopic.values(), STUB_TENANT);
+    }
   }
 
   private Future<Void> deleteKafkaTopicsAsync(KafkaAdminClient client) {
-    return new KafkaAdminClientService(() -> client)
-        .deleteKafkaTopics("foo-tenant", environmentName());
-  }
+    try (var mocked = mockStatic(KafkaAdminClient.class)) {
+      mocked.when(() -> KafkaAdminClient.create(eq(vertx), anyMap())).thenReturn(client);
 
+      return new KafkaAdminClientService(vertx)
+        .deleteKafkaTopics(CirculationStorageKafkaTopic.values(), STUB_TENANT);
+    }
+  }
 }

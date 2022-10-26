@@ -8,37 +8,36 @@ import org.apache.logging.log4j.Logger;
 import org.folio.kafka.KafkaConfig;
 import org.folio.kafka.KafkaProducerManager;
 import org.folio.kafka.SimpleKafkaProducerManager;
-import org.folio.service.kafka.KafkaProducerRecordBuilder;
-import org.folio.service.kafka.KafkaProperties;
-import org.folio.service.kafka.topic.KafkaTopic;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
+import org.folio.kafka.services.KafkaEnvironmentProperties;
+import org.folio.kafka.services.KafkaProducerRecordBuilder;
 
 public class DomainEventPublisher<K, T> {
 
   private static final Logger log = getLogger(DomainEventPublisher.class);
 
-  private final KafkaTopic kafkaTopic;
+  private final String kafkaTopic;
   private final KafkaProducerManager producerManager;
   private final FailureHandler failureHandler;
 
-  DomainEventPublisher(KafkaTopic kafkaTopic, KafkaProducerManager producerManager,
+  DomainEventPublisher(String kafkaTopic, KafkaProducerManager producerManager,
       FailureHandler failureHandler) {
     this.kafkaTopic = kafkaTopic;
     this.producerManager = producerManager;
     this.failureHandler = failureHandler;
   }
 
-  public DomainEventPublisher(Context vertxContext, KafkaTopic kafkaTopic, FailureHandler failureHandler) {
+  public DomainEventPublisher(Context vertxContext, String kafkaTopic, FailureHandler failureHandler) {
     this(kafkaTopic, createProducerManager(vertxContext), failureHandler);
   }
 
   public Future<Void> publish(K key, DomainEvent<T> event, Map<String, String> okapiHeaders) {
     log.info("Publishing event: key = {}, eventId = {}, type = {}, topic = {}",
-        key, event.getId(), event.getType(), kafkaTopic.getQualifiedName());
+        key, event.getId(), event.getType(), kafkaTopic);
 
     KafkaProducerRecordBuilder<K, DomainEvent<T>> builder = new KafkaProducerRecordBuilder<>();
     KafkaProducerRecord<K, String> producerRecord = builder
@@ -68,13 +67,13 @@ public class DomainEventPublisher<K, T> {
   }
 
   private KafkaProducer<K, String> getOrCreateProducer(String prefix) {
-    return producerManager.createShared(prefix + kafkaTopic.getQualifiedName());
+    return producerManager.createShared(prefix + kafkaTopic);
   }
 
   private static KafkaProducerManager createProducerManager(Context vertxContext) {
     var kafkaConfig = KafkaConfig.builder()
-        .kafkaPort(KafkaProperties.getPort())
-        .kafkaHost(KafkaProperties.getHost())
+        .kafkaPort(KafkaEnvironmentProperties.port())
+        .kafkaHost(KafkaEnvironmentProperties.host())
         .build();
 
     return new SimpleKafkaProducerManager(vertxContext.owner(), kafkaConfig);

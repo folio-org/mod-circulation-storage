@@ -5,6 +5,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.any;
 import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
+import static java.lang.System.getenv;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
@@ -34,7 +35,6 @@ import org.folio.rest.support.OkapiHttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.tools.utils.NetworkUtils;
-import org.folio.service.kafka.KafkaProperties;
 import org.folio.support.MockServer;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -150,8 +150,8 @@ public class StorageTestSuite {
     kafkaContainer.start();
     log.info("starting Kafka host={} port={}",
       kafkaContainer.getHost(), kafkaContainer.getFirstMappedPort());
-    KafkaProperties.setHost(kafkaContainer.getHost());
-    KafkaProperties.setPort(kafkaContainer.getFirstMappedPort());
+    getenv().put("KAFKA_HOST", kafkaContainer.getHost());
+    getenv().put("KAFKA_PORT", String.valueOf(kafkaContainer.getFirstMappedPort()));
 
     DeploymentOptions options = new DeploymentOptions();
     options.setConfig(new JsonObject().put("http.port", VERTICLE_PORT));
