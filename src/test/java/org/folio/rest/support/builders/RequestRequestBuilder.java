@@ -165,6 +165,10 @@ public class RequestRequestBuilder extends JsonBuilder {
     return withRequestType("Hold");
   }
 
+  public RequestRequestBuilder page() {
+    return withRequestType("Page");
+  }
+
   public RequestRequestBuilder withNoId() {
     return new RequestRequestBuilder(
       null,
