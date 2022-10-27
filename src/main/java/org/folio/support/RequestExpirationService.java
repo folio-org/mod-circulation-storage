@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.rest.client.ConfigurationClient;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.SQLConnection;
@@ -50,25 +51,27 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 
-public class ExpirationTool {
+public class RequestExpirationService {
+  private Map<String, String> okapiHeaders;
+  private Vertx vertx;
+  private ConfigurationClient configurationClient;
   private static final Logger log = LogManager.getLogger();
   private static final String JSONB_COLUMN = "jsonb";
 
-  private ExpirationTool() {
-    //do nothing
+  public RequestExpirationService(Map<String, String> okapiHeaders, Vertx vertx) {
+    this.okapiHeaders = okapiHeaders;
+    this.vertx = vertx;
+    this.configurationClient = new ConfigurationClient(vertx, okapiHeaders);
   }
 
-  public static Future<Void> doRequestExpirationForTenant(Map<String, String> okapiHeaders, Vertx vertx) {
+  public Future<Void> doRequestExpirationForTenant() {
     Promise<Void> promise = Promise.promise();
-
     String tenant = okapiHeaders.get(TENANT_HEADER);
-
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
-
     List<JsonObject> context = new ArrayList<>();
 
-    pgClient.startTx(conn -> getExpiredRequests(conn, vertx, tenant)
-      .compose(requests -> processExpiredRequests(conn, tenant, vertx, requests, context))
+    pgClient.startTx(conn -> getExpiredRequests(conn, tenant)
+      .compose(expiredRequests -> processExpiredRequests(conn, tenant, expiredRequests, context))
       .onComplete(v -> {
         if (v.failed()) {
           pgClient.rollbackTx(conn, done -> {
@@ -86,31 +89,33 @@ public class ExpirationTool {
     return promise.future();
   }
 
-  private static Future<Void> processExpiredRequests(AsyncResult<SQLConnection> conn,
-    String tenant, Vertx vertx, List<Request> requests, List<JsonObject> context) {
+  private Future<Void> processExpiredRequests(AsyncResult<SQLConnection> conn,
+    String tenant, List<Request> expiredRequests, List<JsonObject> context) {
 
-    return processExpiredItemLevelRequests(conn, vertx, tenant, requests, context)
-      .compose(v -> processExpiredTitleLevelRequests(conn, vertx, tenant, requests, context));
+   return configurationClient.getTlrSettings()
+      .compose(settings -> settings.isTitleLevelRequestsFeatureEnabled()
+        ? processExpiredTitleLevelRequests(conn, tenant, expiredRequests, context)
+        : processExpiredItemLevelRequests(conn, tenant, expiredRequests, context));
   }
 
-  private static Future<Void> processExpiredItemLevelRequests(AsyncResult<SQLConnection> conn,
-    Vertx vertx, String tenant, List<Request> requests, List<JsonObject> context) {
+  private Future<Void> processExpiredItemLevelRequests(AsyncResult<SQLConnection> conn,
+    String tenant, List<Request> requests, List<JsonObject> context) {
 
-    return closeItemLevelRequests(conn, vertx, tenant, requests, context)
-      .compose(itemIds -> getOpenRequestsByItemIds(conn, vertx, tenant, itemIds))
-      .compose(requestList -> reorderItemLevelRequests(conn, vertx, tenant, requestList));
+    return closeItemLevelRequests(conn, tenant, requests, context)
+      .compose(itemIds -> getOpenRequestsByItemIds(conn, tenant, itemIds))
+      .compose(requestList -> reorderItemLevelRequests(conn, tenant, requestList));
   }
 
-  private static Future<Void> processExpiredTitleLevelRequests(AsyncResult<SQLConnection> conn,
-    Vertx vertx, String tenant, List<Request> requests, List<JsonObject> context) {
+  private Future<Void> processExpiredTitleLevelRequests(AsyncResult<SQLConnection> conn,
+    String tenant, List<Request> requests, List<JsonObject> context) {
 
-    return closeTitleLevelRequests(conn, vertx, tenant, requests, context)
-      .compose(instanceIds -> getOpenRequestsByInstanceIds(conn, vertx, tenant, instanceIds))
-      .compose(requestList -> reorderTitleLevelRequests(conn, vertx, tenant, requestList));
+    return closeTitleLevelRequests(conn, tenant, requests, context)
+      .compose(instanceIds -> getOpenRequestsByInstanceIds(conn, tenant, instanceIds))
+      .compose(requestList -> reorderTitleLevelRequests(conn, tenant, requestList));
   }
 
-  private static Future<List<Request>> getExpiredRequests(AsyncResult<SQLConnection> conn,
-    Vertx vertx, String tenant) {
+  private Future<List<Request>> getExpiredRequests(AsyncResult<SQLConnection> conn,
+    String tenant) {
 
     SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
     df.setTimeZone(TimeZone.getTimeZone(ZoneOffset.UTC));
@@ -143,8 +148,8 @@ public class ExpirationTool {
         .collect(toList()));
   }
 
-  private static Future<List<Request>> getOpenRequestsByItemIds(
-    AsyncResult<SQLConnection> conn, Vertx vertx, String tenant, Set<String> itemIds) {
+  private Future<List<Request>> getOpenRequestsByItemIds(
+    AsyncResult<SQLConnection> conn, String tenant, Set<String> itemIds) {
 
     if (itemIds.isEmpty()) {
       return succeededFuture(emptyList());
@@ -168,17 +173,17 @@ public class ExpirationTool {
       OPEN_IN_TRANSIT.value(),
       String.join(",", quotedItemIds));
 
-    return getOpenRequestsByAssociatedIds(conn, vertx, tenant, itemIds, where);
+    return getOpenRequestsByAssociatedIds(conn, tenant, where);
   }
 
-  private static Future<List<Request>> getOpenRequestsByInstanceIds(
-    AsyncResult<SQLConnection> conn, Vertx vertx, String tenant, Set<String> instanceIds) {
+  private Future<List<Request>> getOpenRequestsByInstanceIds(
+    AsyncResult<SQLConnection> conn, String tenant, Set<String> instanceIds) {
 
     if (instanceIds.isEmpty()) {
       return succeededFuture(emptyList());
     }
 
-    Set<String> quotedItemIds = instanceIds.stream()
+    Set<String> quotedInstanceIds = instanceIds.stream()
       .map(id -> format("'%s'", id))
       .collect(toSet());
     String where = format("WHERE " +
@@ -193,14 +198,13 @@ public class ExpirationTool {
       OPEN_AWAITING_PICKUP.value(),
       OPEN_AWAITING_DELIVERY.value(),
       OPEN_IN_TRANSIT.value(),
-      String.join(",", quotedItemIds));
+      String.join(",", quotedInstanceIds));
 
-    return getOpenRequestsByAssociatedIds(conn, vertx, tenant, instanceIds, where);
+    return getOpenRequestsByAssociatedIds(conn, tenant, where);
   }
 
-  private static Future<List<Request>> getOpenRequestsByAssociatedIds(
-    AsyncResult<SQLConnection> conn, Vertx vertx, String tenant, Set<String> associatedIds,
-    String query) {
+  private Future<List<Request>> getOpenRequestsByAssociatedIds(
+    AsyncResult<SQLConnection> conn, String tenant, String query) {
 
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
     Promise<RowSet<Row>> promise = Promise.promise();
@@ -217,7 +221,7 @@ public class ExpirationTool {
         .collect(toList()));
   }
 
-  private static Request changeRequestStatus(Request request) {
+  private Request changeRequestStatus(Request request) {
     if (request.getStatus() == OPEN_NOT_YET_FILLED ||
           request.getStatus() == OPEN_IN_TRANSIT ||
           request.getStatus() == OPEN_AWAITING_DELIVERY) {
@@ -228,8 +232,8 @@ public class ExpirationTool {
     return request;
   }
 
-  private static Future<Void> reorderItemLevelRequests(AsyncResult<SQLConnection> conn,
-    Vertx vertx, String tenant, List<Request> requests) {
+  private Future<Void> reorderItemLevelRequests(AsyncResult<SQLConnection> conn,
+    String tenant, List<Request> requests) {
 
     if (requests.isEmpty()) {
       return succeededFuture();
@@ -238,12 +242,12 @@ public class ExpirationTool {
     Map<String, List<Request>> groupedRequests = requests.stream()
       .collect(Collectors.groupingBy(Request::getItemId));
 
-    return resetPositionsForOpenRequestsByIdemIds(conn, vertx, tenant, groupedRequests.keySet())
-      .compose(v -> reorderGroupedRequests(conn, vertx, tenant, groupedRequests));
+    return resetPositionsForOpenRequestsByIdemIds(conn, tenant, groupedRequests.keySet())
+      .compose(v -> reorderGroupedRequests(conn, tenant, groupedRequests));
   }
 
-  private static Future<Void> reorderTitleLevelRequests(AsyncResult<SQLConnection> conn,
-    Vertx vertx, String tenant, List<Request> requests) {
+  private Future<Void> reorderTitleLevelRequests(AsyncResult<SQLConnection> conn,
+    String tenant, List<Request> requests) {
 
     if (requests.isEmpty()) {
       return succeededFuture();
@@ -252,57 +256,57 @@ public class ExpirationTool {
     Map<String, List<Request>> groupedRequests = requests.stream()
       .collect(Collectors.groupingBy(Request::getInstanceId));
 
-    return resetPositionsForOpenRequestsByInstanceIds(conn, vertx, tenant, groupedRequests.keySet())
-      .compose(v -> reorderGroupedRequests(conn, vertx, tenant, groupedRequests));
+    return resetPositionsForOpenRequestsByInstanceIds(conn, tenant, groupedRequests.keySet())
+      .compose(v -> reorderGroupedRequests(conn, tenant, groupedRequests));
   }
 
-  private static Future<Void> reorderGroupedRequests(AsyncResult<SQLConnection> conn,
-    Vertx vertx, String tenant, Map<String, List<Request>> groupedRequests) {
+  private Future<Void> reorderGroupedRequests(AsyncResult<SQLConnection> conn,
+    String tenant, Map<String, List<Request>> groupedRequests) {
 
     Future<Void> future = succeededFuture();
     for (Map.Entry<String, List<Request>> entry : groupedRequests.entrySet()) {
-      future = future.compose(v -> updateRequestsPositions(conn, vertx, tenant, entry.getValue()));
+      future = future.compose(v -> updateRequestsPositions(conn, tenant, entry.getValue()));
     }
 
     return future;
   }
 
-  private static Future<Void> updateRequestsPositions(AsyncResult<SQLConnection> conn,
-    Vertx vertx, String tenant, List<Request> requests) {
+  private Future<Void> updateRequestsPositions(AsyncResult<SQLConnection> conn,
+    String tenant, List<Request> requests) {
 
     requests.sort(Comparator.comparingInt(Request::getPosition));
     AtomicInteger pos = new AtomicInteger(1);
     Future<Void> future = succeededFuture();
 
     for (Request request : requests) {
-      future = future.compose(v -> updateRequest(conn, vertx, tenant, request.withPosition(pos.getAndIncrement())));
+      future = future.compose(v -> updateRequest(conn, tenant, request.withPosition(pos.getAndIncrement())));
     }
 
     return future;
   }
 
-  private static Future<Set<String>> closeItemLevelRequests(AsyncResult<SQLConnection> conn,
-    Vertx vertx, String tenant, List<Request> requests, List<JsonObject> context) {
+  private Future<Set<String>> closeItemLevelRequests(AsyncResult<SQLConnection> conn,
+    String tenant, List<Request> requests, List<JsonObject> context) {
 
     List<Request> itemLevelRequests = requests.stream()
       .filter(request -> request.getRequestLevel() == ITEM)
       .collect(toList());
 
-    return closeRequests(conn, vertx, tenant, itemLevelRequests, context, Request::getItemId);
+    return closeRequests(conn, tenant, itemLevelRequests, context, Request::getItemId);
   }
 
-  private static Future<Set<String>> closeTitleLevelRequests(AsyncResult<SQLConnection> conn,
-    Vertx vertx, String tenant, List<Request> requests, List<JsonObject> context) {
+  private Future<Set<String>> closeTitleLevelRequests(AsyncResult<SQLConnection> conn,
+    String tenant, List<Request> requests, List<JsonObject> context) {
 
     List<Request> titleLevelRequests = requests.stream()
       .filter(request -> request.getRequestLevel() == TITLE)
       .collect(toList());
 
-    return closeRequests(conn, vertx, tenant, titleLevelRequests, context, Request::getInstanceId);
+    return closeRequests(conn, tenant, titleLevelRequests, context, Request::getInstanceId);
   }
 
-  private static Future<Set<String>> closeRequests(AsyncResult<SQLConnection> conn,
-    Vertx vertx, String tenant, List<Request> requests, List<JsonObject> context,
+  private Future<Set<String>> closeRequests(AsyncResult<SQLConnection> conn,
+    String tenant, List<Request> requests, List<JsonObject> context,
     Function<Request, String> applyAssociatedId) {
 
     Future<Void> future = succeededFuture();
@@ -316,14 +320,14 @@ public class ExpirationTool {
       updatedRequest.getMetadata().withUpdatedDate(new Date());
       pair.put(UPDATED.value(), JsonObject.mapFrom(updatedRequest));
       context.add(pair);
-      future = future.compose(v -> updateRequest(conn, vertx, tenant, updatedRequest));
+      future = future.compose(v -> updateRequest(conn, tenant, updatedRequest));
     }
 
     return future.map(v -> closedRequestsAssociatedIds);
   }
 
-  private static Future<RowSet<Row>> resetPositionsForOpenRequestsByIdemIds(
-    AsyncResult<SQLConnection> conn, Vertx vertx, String tenant, Set<String> itemIds) {
+  private Future<RowSet<Row>> resetPositionsForOpenRequestsByIdemIds(
+    AsyncResult<SQLConnection> conn, String tenant, Set<String> itemIds) {
 
     if (itemIds.isEmpty()) {
      return succeededFuture();
@@ -348,11 +352,11 @@ public class ExpirationTool {
       OPEN_IN_TRANSIT.value(),
       String.join(",", quotedItemIds));
 
-    return resetPositions(conn, vertx, tenant, sql);
+    return resetPositions(conn, tenant, sql);
   }
 
-  private static Future<RowSet<Row>> resetPositionsForOpenRequestsByInstanceIds(
-    AsyncResult<SQLConnection> conn, Vertx vertx, String tenant, Set<String> instanceIds) {
+  private Future<RowSet<Row>> resetPositionsForOpenRequestsByInstanceIds(
+    AsyncResult<SQLConnection> conn, String tenant, Set<String> instanceIds) {
 
     if (instanceIds.isEmpty()) {
       return succeededFuture();
@@ -378,11 +382,11 @@ public class ExpirationTool {
       OPEN_IN_TRANSIT.value(),
       String.join(",", quotedInstanceIds));
 
-    return resetPositions(conn, vertx, tenant, sql);
+    return resetPositions(conn, tenant, sql);
   }
 
-  private static Future<RowSet<Row>> resetPositions(AsyncResult<SQLConnection> conn,
-    Vertx vertx, String tenant, String sql) {
+  private Future<RowSet<Row>> resetPositions(AsyncResult<SQLConnection> conn,
+    String tenant, String sql) {
 
     Promise<RowSet<Row>> promise = Promise.promise();
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
@@ -391,8 +395,8 @@ public class ExpirationTool {
     return promise.future().map(ur -> null);
   }
 
-  private static Future<Void> updateRequest(AsyncResult<SQLConnection> conn,
-     Vertx vertx, String tenant, Request request) {
+  private Future<Void> updateRequest(AsyncResult<SQLConnection> conn,
+    String tenant, Request request) {
 
     PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
     Promise<RowSet<Row>> promise = Promise.promise();
@@ -402,5 +406,4 @@ public class ExpirationTool {
 
     return promise.future().map(ur -> null);
   }
-
 }

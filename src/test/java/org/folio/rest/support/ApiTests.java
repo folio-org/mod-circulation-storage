@@ -1,18 +1,28 @@
 package org.folio.rest.support;
 
 import static java.net.HttpURLConnection.HTTP_CREATED;
+import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
+import static com.github.tomakehurst.wiremock.client.WireMock.ok;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.removeAllEvents;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static io.vertx.core.json.JsonObject.mapFrom;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
 import org.folio.rest.api.StorageTestSuite;
+import org.folio.rest.configuration.TlrSettingsConfiguration;
+import org.folio.rest.jaxrs.model.Config;
+import org.folio.rest.jaxrs.model.KvConfigurations;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.core.Is;
@@ -29,6 +39,7 @@ public class ApiTests {
 
   protected final OkapiHttpClient client = new OkapiHttpClient(StorageTestSuite.getVertx());
   protected static FakeKafkaConsumer kafkaConsumer;
+  private static final String CONFIGURATIONS_ENTRIES = "/configurations/entries.*";
 
   @BeforeClass
   public static void before() throws Exception {
@@ -123,5 +134,29 @@ public class ApiTests {
   @SneakyThrows
   protected <T> T get(CompletableFuture<T> future) {
     return future.get(5, TimeUnit.SECONDS);
+  }
+
+  protected void stubTlrSettings(boolean isTlrEnabled) {
+    final var tlrSettingsConfiguration = new TlrSettingsConfiguration(
+      isTlrEnabled, false, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
+    StorageTestSuite.getWireMockServer().stubFor(WireMock.get(urlPathMatching(
+        CONFIGURATIONS_ENTRIES))
+      .willReturn(ok().withBody(mapFrom(
+        new KvConfigurations()
+          .withConfigs(List.of(new Config()
+            .withValue(mapFrom(tlrSettingsConfiguration).encodePrettily()))))
+        .encodePrettily())));
+  }
+
+  protected void stub404ForTlrSettings() {
+    StorageTestSuite.getWireMockServer().stubFor(WireMock.get(urlPathMatching(
+        CONFIGURATIONS_ENTRIES))
+      .willReturn(notFound().withBody("Resource not found")));
+  }
+
+  protected void stubWithInvalidTlrSettings() {
+    StorageTestSuite.getWireMockServer().stubFor(WireMock.get(urlPathMatching(
+        CONFIGURATIONS_ENTRIES))
+      .willReturn(ok().withBody("Invalid configurations response")));
   }
 }
