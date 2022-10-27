@@ -5,7 +5,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.any;
 import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
-import static java.lang.System.getenv;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
@@ -105,7 +104,7 @@ public class StorageTestSuite {
    * <p>Example: storageUrl("/foo", "year", "2019", "name", "A & Co") may return an URL for
    * http://localhost:46131/foo?year=2019&name=A%20%26%20Co
    */
-  public static URL storageUrl(String path, String ... parameterKeyValue) throws MalformedURLException {
+  public static URL storageUrl(String path, String... parameterKeyValue) throws MalformedURLException {
     if (parameterKeyValue.length == 0) {
       return new URL("http", "localhost", PROXY_PORT, path);
     }
@@ -148,10 +147,11 @@ public class StorageTestSuite {
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
 
     kafkaContainer.start();
-    log.info("starting Kafka host={} port={}",
-      kafkaContainer.getHost(), kafkaContainer.getFirstMappedPort());
-    getenv().put("KAFKA_HOST", kafkaContainer.getHost());
-    getenv().put("KAFKA_PORT", String.valueOf(kafkaContainer.getFirstMappedPort()));
+    var host = kafkaContainer.getHost();
+    var port = String.valueOf(kafkaContainer.getFirstMappedPort());
+    log.info("Starting Kafka host={} port={}", host, port);
+    System.setProperty("KAFKA_PORT", port);
+    System.setProperty("KAFKA_HOST", host);
 
     DeploymentOptions options = new DeploymentOptions();
     options.setConfig(new JsonObject().put("http.port", VERTICLE_PORT));
@@ -306,7 +306,7 @@ public class StorageTestSuite {
   }
 
   private static void prepareTenant(String tenantId, String moduleFrom, String moduleTo,
-      boolean loadSample) {
+                                    boolean loadSample) {
 
     JsonArray ar = new JsonArray();
     ar.add(new JsonObject().put("key", "loadReference").put("value", "true"));
