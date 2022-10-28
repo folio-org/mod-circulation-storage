@@ -48,12 +48,12 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 
 public class RequestExpirationService {
-  private Map<String, String> okapiHeaders;
-  private Vertx vertx;
-  private String idFieldName;
-  private Function<Request, String> idExtractor;
-  private String tenant;
-  private PostgresClient pgClient;
+  private final Map<String, String> okapiHeaders;
+  private final Vertx vertx;
+  private final String idFieldName;
+  private final Function<Request, String> idExtractor;
+  private final String tenant;
+  private final PostgresClient pgClient;
   private static final Logger log = LogManager.getLogger();
   private static final String JSONB_COLUMN = "jsonb";
 
