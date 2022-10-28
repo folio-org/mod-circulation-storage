@@ -35,7 +35,6 @@ import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.rest.client.ConfigurationClient;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.SQLConnection;
@@ -51,7 +50,6 @@ import io.vertx.sqlclient.RowSet;
 public class RequestExpirationService {
   private Map<String, String> okapiHeaders;
   private Vertx vertx;
-  private ConfigurationClient configurationClient;
   private String idFieldName;
   private Function<Request, String> idExtractor;
   private String tenant;
@@ -64,7 +62,6 @@ public class RequestExpirationService {
 
     this.okapiHeaders = okapiHeaders;
     this.vertx = vertx;
-    this.configurationClient = new ConfigurationClient(vertx, okapiHeaders);
     this.idFieldName = idFieldName;
     this.idExtractor = idExtractor;
     tenant = okapiHeaders.get(TENANT_HEADER);
@@ -148,13 +145,14 @@ public class RequestExpirationService {
         "jsonb->>'status' = '%2$s' OR " +
         "jsonb->>'status' = '%3$s' OR " +
         "jsonb->>'status' = '%4$s') AND " +
-        "jsonb->>'" + idFieldName + "' IN (%5$s) " +
+        "jsonb->>'%5$s' IN (%6$s) " +
         "ORDER BY jsonb->>'position' ASC",
 
       OPEN_NOT_YET_FILLED.value(),
       OPEN_AWAITING_PICKUP.value(),
       OPEN_AWAITING_DELIVERY.value(),
       OPEN_IN_TRANSIT.value(),
+      idFieldName,
       String.join(",", quotedInstanceIds));
 
     Promise<RowSet<Row>> promise = Promise.promise();
@@ -261,12 +259,13 @@ public class RequestExpirationService {
         "jsonb->>'status' = '%3$s' OR " +
         "jsonb->>'status' = '%4$s' OR " +
         "jsonb->>'status' = '%5$s') AND " +
-        "jsonb->>'" + idFieldName + "' IN (%6$s)",
+        "jsonb->>'%6$s' IN (%7$s)",
       fullTableName,
       OPEN_NOT_YET_FILLED.value(),
       OPEN_AWAITING_PICKUP.value(),
       OPEN_AWAITING_DELIVERY.value(),
       OPEN_IN_TRANSIT.value(),
+      idFieldName,
       String.join(",", quotedInstanceIds));
 
     Promise<RowSet<Row>> promise = Promise.promise();
