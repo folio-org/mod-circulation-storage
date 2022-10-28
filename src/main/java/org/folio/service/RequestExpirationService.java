@@ -48,24 +48,20 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 
 public class RequestExpirationService {
-  private final Map<String, String> okapiHeaders;
-  private final Vertx vertx;
-  private final String idFieldName;
-  private final Function<Request, String> idExtractor;
-  private final String tenant;
-  private final PostgresClient pgClient;
   private static final Logger log = LogManager.getLogger();
   private static final String JSONB_COLUMN = "jsonb";
+  private final String idFieldName;
+  private final Function<Request, String> idExtractor;
+  private final PostgresClient pgClient;
+  private final EventPublisherService eventPublisherService;
 
   public RequestExpirationService(Map<String, String> okapiHeaders, Vertx vertx,
     String idFieldName, Function<Request, String> idExtractor) {
 
-    this.okapiHeaders = okapiHeaders;
-    this.vertx = vertx;
     this.idFieldName = idFieldName;
     this.idExtractor = idExtractor;
-    tenant = okapiHeaders.get(TENANT_HEADER);
-    pgClient = PostgresClient.getInstance(vertx, tenant);
+    pgClient = PostgresClient.getInstance(vertx, okapiHeaders.get(TENANT_HEADER));
+    eventPublisherService = new EventPublisherService(vertx, okapiHeaders);
   }
 
   public Future<Void> doRequestExpiration() {
@@ -81,7 +77,6 @@ public class RequestExpirationService {
             promise.fail(v.cause());
           });
         } else {
-          EventPublisherService eventPublisherService = new EventPublisherService(vertx, okapiHeaders);
           context.forEach(p -> eventPublisherService
             .publishLogRecord(new JsonObject().put(REQUESTS.value(), p), REQUEST_EXPIRED));
           pgClient.endTx(conn, done -> promise.complete());
@@ -118,8 +113,8 @@ public class RequestExpirationService {
       OPEN_AWAITING_PICKUP.value(),
       df.format(new Date()));
 
-
-    String fullTableName = format("%s.%s", PostgresClient.convertToPsqlStandard(tenant), REQUEST_TABLE);
+    String fullTableName = format("%s.%s", PostgresClient.convertToPsqlStandard(
+      pgClient.getTenantId()), REQUEST_TABLE);
     String query = format("SELECT jsonb FROM %s %s", fullTableName, where);
     pgClient.select(conn, query, promise);
 
@@ -137,7 +132,7 @@ public class RequestExpirationService {
       return succeededFuture(emptyList());
     }
 
-    Set<String> quotedInstanceIds = idFields.stream()
+    Set<String> quotedFieldIds = idFields.stream()
       .map(id -> format("'%s'", id))
       .collect(toSet());
     String where = format("WHERE " +
@@ -153,11 +148,11 @@ public class RequestExpirationService {
       OPEN_AWAITING_DELIVERY.value(),
       OPEN_IN_TRANSIT.value(),
       idFieldName,
-      String.join(",", quotedInstanceIds));
+      String.join(",", quotedFieldIds));
 
     Promise<RowSet<Row>> promise = Promise.promise();
-    String fullTableName = format("%s.%s", PostgresClient.convertToPsqlStandard(tenant),
-      REQUEST_TABLE);
+    String fullTableName = format("%s.%s", PostgresClient.convertToPsqlStandard(
+      pgClient.getTenantId()), REQUEST_TABLE);
     String sql = format("SELECT jsonb FROM %s %s", fullTableName, where);
     pgClient.select(conn, sql, promise);
 
@@ -247,12 +242,12 @@ public class RequestExpirationService {
       return succeededFuture();
     }
 
-    Set<String> quotedInstanceIds = associatedIds.stream()
+    Set<String> quotedFieldIds = associatedIds.stream()
       .map(id -> format("'%s'", id))
       .collect(toSet());
 
-    String fullTableName = format("%s.%s", PostgresClient.convertToPsqlStandard(tenant),
-      REQUEST_TABLE);
+    String fullTableName = format("%s.%s", PostgresClient.convertToPsqlStandard(
+      pgClient.getTenantId()), REQUEST_TABLE);
 
     String sql = format("UPDATE %1$s SET jsonb = jsonb - 'position' WHERE " +
         "(jsonb->>'status' = '%2$s' OR " +
@@ -266,7 +261,7 @@ public class RequestExpirationService {
       OPEN_AWAITING_DELIVERY.value(),
       OPEN_IN_TRANSIT.value(),
       idFieldName,
-      String.join(",", quotedInstanceIds));
+      String.join(",", quotedFieldIds));
 
     Promise<RowSet<Row>> promise = Promise.promise();
     pgClient.execute(conn, sql, promise);
