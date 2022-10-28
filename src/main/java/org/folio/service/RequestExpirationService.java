@@ -1,4 +1,4 @@
-package org.folio.support;
+package org.folio.service;
 
 import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
@@ -6,8 +6,6 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
-import static org.folio.rest.jaxrs.model.Request.RequestLevel.ITEM;
-import static org.folio.rest.jaxrs.model.Request.RequestLevel.TITLE;
 import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_PICKUP_EXPIRED;
 import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_UNFILLED;
 import static org.folio.rest.jaxrs.model.Request.Status.OPEN_AWAITING_DELIVERY;
@@ -41,7 +39,6 @@ import org.folio.rest.client.ConfigurationClient;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.SQLConnection;
-import org.folio.service.EventPublisherService;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -55,23 +52,31 @@ public class RequestExpirationService {
   private Map<String, String> okapiHeaders;
   private Vertx vertx;
   private ConfigurationClient configurationClient;
+  private String idFieldName;
+  private Function<Request, String> idExtractor;
+  private String tenant;
+  private PostgresClient pgClient;
   private static final Logger log = LogManager.getLogger();
   private static final String JSONB_COLUMN = "jsonb";
 
-  public RequestExpirationService(Map<String, String> okapiHeaders, Vertx vertx) {
+  public RequestExpirationService(Map<String, String> okapiHeaders, Vertx vertx,
+    String idFieldName, Function<Request, String> idExtractor) {
+
     this.okapiHeaders = okapiHeaders;
     this.vertx = vertx;
     this.configurationClient = new ConfigurationClient(vertx, okapiHeaders);
+    this.idFieldName = idFieldName;
+    this.idExtractor = idExtractor;
+    tenant = okapiHeaders.get(TENANT_HEADER);
+    pgClient = PostgresClient.getInstance(vertx, tenant);
   }
 
-  public Future<Void> doRequestExpirationForTenant() {
+  public Future<Void> doRequestExpiration() {
     Promise<Void> promise = Promise.promise();
-    String tenant = okapiHeaders.get(TENANT_HEADER);
-    PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
     List<JsonObject> context = new ArrayList<>();
 
-    pgClient.startTx(conn -> getExpiredRequests(conn, tenant)
-      .compose(expiredRequests -> processExpiredRequests(conn, tenant, expiredRequests, context))
+    pgClient.startTx(conn -> getExpiredRequests(conn)
+      .compose(expiredRequests -> processExpiredRequests(conn, expiredRequests, context))
       .onComplete(v -> {
         if (v.failed()) {
           pgClient.rollbackTx(conn, done -> {
@@ -90,37 +95,17 @@ public class RequestExpirationService {
   }
 
   private Future<Void> processExpiredRequests(AsyncResult<SQLConnection> conn,
-    String tenant, List<Request> expiredRequests, List<JsonObject> context) {
+    List<Request> expiredRequests, List<JsonObject> context) {
 
-   return configurationClient.getTlrSettings()
-      .compose(settings -> settings.isTitleLevelRequestsFeatureEnabled()
-        ? processExpiredTitleLevelRequests(conn, tenant, expiredRequests, context)
-        : processExpiredItemLevelRequests(conn, tenant, expiredRequests, context));
+    return closeRequests(conn, expiredRequests, context, idExtractor)
+      .compose(associatedIds -> getOpenRequestsByIdFields(conn, associatedIds))
+      .compose(openRequests -> reorderRequests(conn, openRequests));
   }
 
-  private Future<Void> processExpiredItemLevelRequests(AsyncResult<SQLConnection> conn,
-    String tenant, List<Request> requests, List<JsonObject> context) {
-
-    return closeItemLevelRequests(conn, tenant, requests, context)
-      .compose(itemIds -> getOpenRequestsByItemIds(conn, tenant, itemIds))
-      .compose(requestList -> reorderItemLevelRequests(conn, tenant, requestList));
-  }
-
-  private Future<Void> processExpiredTitleLevelRequests(AsyncResult<SQLConnection> conn,
-    String tenant, List<Request> requests, List<JsonObject> context) {
-
-    return closeTitleLevelRequests(conn, tenant, requests, context)
-      .compose(instanceIds -> getOpenRequestsByInstanceIds(conn, tenant, instanceIds))
-      .compose(requestList -> reorderTitleLevelRequests(conn, tenant, requestList));
-  }
-
-  private Future<List<Request>> getExpiredRequests(AsyncResult<SQLConnection> conn,
-    String tenant) {
-
+  private Future<List<Request>> getExpiredRequests(AsyncResult<SQLConnection> conn) {
     SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
     df.setTimeZone(TimeZone.getTimeZone(ZoneOffset.UTC));
 
-    PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
     Promise<RowSet<Row>> promise = Promise.promise();
 
     String where = format("WHERE " +
@@ -148,42 +133,14 @@ public class RequestExpirationService {
         .collect(toList()));
   }
 
-  private Future<List<Request>> getOpenRequestsByItemIds(
-    AsyncResult<SQLConnection> conn, String tenant, Set<String> itemIds) {
+  private Future<List<Request>> getOpenRequestsByIdFields(AsyncResult<SQLConnection> conn,
+    Set<String> idFields) {
 
-    if (itemIds.isEmpty()) {
+    if (idFields.isEmpty()) {
       return succeededFuture(emptyList());
     }
 
-    Set<String> quotedItemIds = itemIds.stream()
-      .map(id -> format("'%s'", id))
-      .collect(toSet());
-
-    String where = format("WHERE " +
-        "(jsonb->>'status' = '%1$s' OR " +
-        "jsonb->>'status' = '%2$s' OR " +
-        "jsonb->>'status' = '%3$s' OR " +
-        "jsonb->>'status' = '%4$s') AND " +
-        "jsonb->>'itemId' IN (%5$s) " +
-        "ORDER BY jsonb->>'position' ASC",
-
-      OPEN_NOT_YET_FILLED.value(),
-      OPEN_AWAITING_PICKUP.value(),
-      OPEN_AWAITING_DELIVERY.value(),
-      OPEN_IN_TRANSIT.value(),
-      String.join(",", quotedItemIds));
-
-    return getOpenRequestsByAssociatedIds(conn, tenant, where);
-  }
-
-  private Future<List<Request>> getOpenRequestsByInstanceIds(
-    AsyncResult<SQLConnection> conn, String tenant, Set<String> instanceIds) {
-
-    if (instanceIds.isEmpty()) {
-      return succeededFuture(emptyList());
-    }
-
-    Set<String> quotedInstanceIds = instanceIds.stream()
+    Set<String> quotedInstanceIds = idFields.stream()
       .map(id -> format("'%s'", id))
       .collect(toSet());
     String where = format("WHERE " +
@@ -191,7 +148,7 @@ public class RequestExpirationService {
         "jsonb->>'status' = '%2$s' OR " +
         "jsonb->>'status' = '%3$s' OR " +
         "jsonb->>'status' = '%4$s') AND " +
-        "jsonb->>'instanceId' IN (%5$s) " +
+        "jsonb->>'" + idFieldName + "' IN (%5$s) " +
         "ORDER BY jsonb->>'position' ASC",
 
       OPEN_NOT_YET_FILLED.value(),
@@ -200,18 +157,10 @@ public class RequestExpirationService {
       OPEN_IN_TRANSIT.value(),
       String.join(",", quotedInstanceIds));
 
-    return getOpenRequestsByAssociatedIds(conn, tenant, where);
-  }
-
-  private Future<List<Request>> getOpenRequestsByAssociatedIds(
-    AsyncResult<SQLConnection> conn, String tenant, String query) {
-
-    PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
     Promise<RowSet<Row>> promise = Promise.promise();
-
     String fullTableName = format("%s.%s", PostgresClient.convertToPsqlStandard(tenant),
       REQUEST_TABLE);
-    String sql = format("SELECT jsonb FROM %s %s", fullTableName, query);
+    String sql = format("SELECT jsonb FROM %s %s", fullTableName, where);
     pgClient.select(conn, sql, promise);
 
     return promise.future()
@@ -232,81 +181,48 @@ public class RequestExpirationService {
     return request;
   }
 
-  private Future<Void> reorderItemLevelRequests(AsyncResult<SQLConnection> conn,
-    String tenant, List<Request> requests) {
+  private Future<Void> reorderRequests(AsyncResult<SQLConnection> conn,
+    List<Request> requests) {
 
     if (requests.isEmpty()) {
       return succeededFuture();
     }
 
     Map<String, List<Request>> groupedRequests = requests.stream()
-      .collect(Collectors.groupingBy(Request::getItemId));
+      .collect(Collectors.groupingBy(idExtractor));
 
-    return resetPositionsForOpenRequestsByIdemIds(conn, tenant, groupedRequests.keySet())
-      .compose(v -> reorderGroupedRequests(conn, tenant, groupedRequests));
-  }
-
-  private Future<Void> reorderTitleLevelRequests(AsyncResult<SQLConnection> conn,
-    String tenant, List<Request> requests) {
-
-    if (requests.isEmpty()) {
-      return succeededFuture();
-    }
-
-    Map<String, List<Request>> groupedRequests = requests.stream()
-      .collect(Collectors.groupingBy(Request::getInstanceId));
-
-    return resetPositionsForOpenRequestsByInstanceIds(conn, tenant, groupedRequests.keySet())
-      .compose(v -> reorderGroupedRequests(conn, tenant, groupedRequests));
+    return resetPositionsForOpenRequests(conn, groupedRequests.keySet())
+      .compose(v -> reorderGroupedRequests(conn, groupedRequests));
   }
 
   private Future<Void> reorderGroupedRequests(AsyncResult<SQLConnection> conn,
-    String tenant, Map<String, List<Request>> groupedRequests) {
+    Map<String, List<Request>> groupedRequests) {
 
     Future<Void> future = succeededFuture();
     for (Map.Entry<String, List<Request>> entry : groupedRequests.entrySet()) {
-      future = future.compose(v -> updateRequestsPositions(conn, tenant, entry.getValue()));
+      future = future.compose(v -> updateRequestsPositions(conn, entry.getValue()));
     }
 
     return future;
   }
 
   private Future<Void> updateRequestsPositions(AsyncResult<SQLConnection> conn,
-    String tenant, List<Request> requests) {
+    List<Request> requests) {
 
     requests.sort(Comparator.comparingInt(Request::getPosition));
     AtomicInteger pos = new AtomicInteger(1);
     Future<Void> future = succeededFuture();
 
     for (Request request : requests) {
-      future = future.compose(v -> updateRequest(conn, tenant, request.withPosition(pos.getAndIncrement())));
+      future = future.compose(v -> updateRequest(conn, request.withPosition(
+        pos.getAndIncrement())));
     }
 
     return future;
   }
 
-  private Future<Set<String>> closeItemLevelRequests(AsyncResult<SQLConnection> conn,
-    String tenant, List<Request> requests, List<JsonObject> context) {
-
-    List<Request> itemLevelRequests = requests.stream()
-      .filter(request -> request.getRequestLevel() == ITEM)
-      .collect(toList());
-
-    return closeRequests(conn, tenant, itemLevelRequests, context, Request::getItemId);
-  }
-
-  private Future<Set<String>> closeTitleLevelRequests(AsyncResult<SQLConnection> conn,
-    String tenant, List<Request> requests, List<JsonObject> context) {
-
-    List<Request> titleLevelRequests = requests.stream()
-      .filter(request -> request.getRequestLevel() == TITLE)
-      .collect(toList());
-
-    return closeRequests(conn, tenant, titleLevelRequests, context, Request::getInstanceId);
-  }
-
   private Future<Set<String>> closeRequests(AsyncResult<SQLConnection> conn,
-    String tenant, List<Request> requests, List<JsonObject> context,
+    List<Request> requests, List<JsonObject> context,
     Function<Request, String> applyAssociatedId) {
 
     Future<Void> future = succeededFuture();
@@ -320,49 +236,20 @@ public class RequestExpirationService {
       updatedRequest.getMetadata().withUpdatedDate(new Date());
       pair.put(UPDATED.value(), JsonObject.mapFrom(updatedRequest));
       context.add(pair);
-      future = future.compose(v -> updateRequest(conn, tenant, updatedRequest));
+      future = future.compose(v -> updateRequest(conn, updatedRequest));
     }
 
     return future.map(v -> closedRequestsAssociatedIds);
   }
 
-  private Future<RowSet<Row>> resetPositionsForOpenRequestsByIdemIds(
-    AsyncResult<SQLConnection> conn, String tenant, Set<String> itemIds) {
+  private Future<RowSet<Row>> resetPositionsForOpenRequests(AsyncResult<SQLConnection> conn,
+    Set<String> associatedIds) {
 
-    if (itemIds.isEmpty()) {
-     return succeededFuture();
-    }
-
-    Set<String> quotedItemIds = itemIds.stream()
-      .map(id -> format("'%s'", id))
-      .collect(toSet());
-
-    String fullTableName = format("%s.%s", PostgresClient.convertToPsqlStandard(tenant), REQUEST_TABLE);
-
-    String sql = format("UPDATE %1$s SET jsonb = jsonb - 'position' WHERE " +
-        "(jsonb->>'status' = '%2$s' OR " +
-        "jsonb->>'status' = '%3$s' OR " +
-        "jsonb->>'status' = '%4$s' OR " +
-        "jsonb->>'status' = '%5$s') AND " +
-        "jsonb->>'itemId' IN (%6$s)",
-      fullTableName,
-      OPEN_NOT_YET_FILLED.value(),
-      OPEN_AWAITING_PICKUP.value(),
-      OPEN_AWAITING_DELIVERY.value(),
-      OPEN_IN_TRANSIT.value(),
-      String.join(",", quotedItemIds));
-
-    return resetPositions(conn, tenant, sql);
-  }
-
-  private Future<RowSet<Row>> resetPositionsForOpenRequestsByInstanceIds(
-    AsyncResult<SQLConnection> conn, String tenant, Set<String> instanceIds) {
-
-    if (instanceIds.isEmpty()) {
+    if (associatedIds.isEmpty()) {
       return succeededFuture();
     }
 
-    Set<String> quotedInstanceIds = instanceIds.stream()
+    Set<String> quotedInstanceIds = associatedIds.stream()
       .map(id -> format("'%s'", id))
       .collect(toSet());
 
@@ -374,7 +261,7 @@ public class RequestExpirationService {
         "jsonb->>'status' = '%3$s' OR " +
         "jsonb->>'status' = '%4$s' OR " +
         "jsonb->>'status' = '%5$s') AND " +
-        "jsonb->>'instanceId' IN (%6$s)",
+        "jsonb->>'" + idFieldName + "' IN (%6$s)",
       fullTableName,
       OPEN_NOT_YET_FILLED.value(),
       OPEN_AWAITING_PICKUP.value(),
@@ -382,23 +269,13 @@ public class RequestExpirationService {
       OPEN_IN_TRANSIT.value(),
       String.join(",", quotedInstanceIds));
 
-    return resetPositions(conn, tenant, sql);
-  }
-
-  private Future<RowSet<Row>> resetPositions(AsyncResult<SQLConnection> conn,
-    String tenant, String sql) {
-
     Promise<RowSet<Row>> promise = Promise.promise();
-    PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
     pgClient.execute(conn, sql, promise);
 
     return promise.future().map(ur -> null);
   }
 
-  private Future<Void> updateRequest(AsyncResult<SQLConnection> conn,
-    String tenant, Request request) {
-
-    PostgresClient pgClient = PostgresClient.getInstance(vertx, tenant);
+  private Future<Void> updateRequest(AsyncResult<SQLConnection> conn, Request request) {
     Promise<RowSet<Row>> promise = Promise.promise();
 
     String where = format("WHERE jsonb->>'id' = '%s'", request.getId());
