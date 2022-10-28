@@ -150,8 +150,8 @@ public class StorageTestSuite {
     var host = kafkaContainer.getHost();
     var port = String.valueOf(kafkaContainer.getFirstMappedPort());
     log.info("Starting Kafka host={} port={}", host, port);
-    System.setProperty("KAFKA_PORT", port);
-    System.setProperty("KAFKA_HOST", host);
+    System.setProperty("kafka-port", port);
+    System.setProperty("kafka-host", host);
 
     DeploymentOptions options = new DeploymentOptions();
     options.setConfig(new JsonObject().put("http.port", VERTICLE_PORT));
