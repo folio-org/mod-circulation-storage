@@ -69,7 +69,9 @@ public class RequestExpirationService {
     List<JsonObject> context = new ArrayList<>();
 
     pgClient.startTx(conn -> getExpiredRequests(conn)
-      .compose(expiredRequests -> processExpiredRequests(conn, expiredRequests, context))
+      .compose(expiredRequests -> closeRequests(conn, expiredRequests, context, idExtractor)
+      .compose(associatedIds -> getOpenRequestsByIdFields(conn, associatedIds))
+      .compose(openRequests -> reorderRequests(conn, openRequests))
       .onComplete(v -> {
         if (v.failed()) {
           pgClient.rollbackTx(conn, done -> {
@@ -81,17 +83,9 @@ public class RequestExpirationService {
             .publishLogRecord(new JsonObject().put(REQUESTS.value(), p), REQUEST_EXPIRED));
           pgClient.endTx(conn, done -> promise.complete());
         }
-      }));
+      })));
 
     return promise.future();
-  }
-
-  private Future<Void> processExpiredRequests(AsyncResult<SQLConnection> conn,
-    List<Request> expiredRequests, List<JsonObject> context) {
-
-    return closeRequests(conn, expiredRequests, context, idExtractor)
-      .compose(associatedIds -> getOpenRequestsByIdFields(conn, associatedIds))
-      .compose(openRequests -> reorderRequests(conn, openRequests));
   }
 
   private Future<List<Request>> getExpiredRequests(AsyncResult<SQLConnection> conn) {
