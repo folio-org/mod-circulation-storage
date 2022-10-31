@@ -19,6 +19,7 @@ import org.folio.service.RequestExpirationService;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 
 public class RequestExpiryImpl implements ScheduledRequestExpiration {
 
@@ -27,8 +28,9 @@ public class RequestExpiryImpl implements ScheduledRequestExpiration {
   public void expireRequests(Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context context) {
 
-    context.runOnContext(v -> new ConfigurationClient(context.owner(), okapiHeaders).getTlrSettings()
-      .compose(tlrSettings -> createRequestExpirationService(okapiHeaders, context, tlrSettings)
+    Vertx vertx = context.owner();
+    context.runOnContext(v -> new ConfigurationClient(vertx, okapiHeaders).getTlrSettings()
+      .compose(tlrSettings -> createRequestExpirationService(okapiHeaders, vertx, tlrSettings)
         .doRequestExpiration()
       .onComplete(result -> {
         if (result.succeeded()) {
@@ -42,12 +44,12 @@ public class RequestExpiryImpl implements ScheduledRequestExpiration {
   }
 
   private RequestExpirationService createRequestExpirationService(Map<String, String> okapiHeaders,
-    Context context, TlrSettingsConfiguration tlrSettings) {
+    Vertx vertx, TlrSettingsConfiguration tlrSettings) {
 
     return tlrSettings.isTitleLevelRequestsFeatureEnabled()
-      ? new RequestExpirationService(okapiHeaders, context.owner(), "instanceId",
+      ? new RequestExpirationService(okapiHeaders, vertx, "instanceId",
         Request::getInstanceId)
-      : new RequestExpirationService(okapiHeaders, context.owner(), "itemId",
+      : new RequestExpirationService(okapiHeaders, vertx, "itemId",
         Request::getItemId);
   }
 }

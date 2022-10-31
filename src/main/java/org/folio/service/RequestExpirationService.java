@@ -4,7 +4,6 @@ import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
 import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_PICKUP_EXPIRED;
 import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_UNFILLED;
@@ -50,16 +49,16 @@ import io.vertx.sqlclient.RowSet;
 public class RequestExpirationService {
   private static final Logger log = LogManager.getLogger();
   private static final String JSONB_COLUMN = "jsonb";
-  private final String idFieldName;
-  private final Function<Request, String> idExtractor;
+  private final String requestClassifierProperty;
+  private final Function<Request, String> requestClassifier;
   private final PostgresClient pgClient;
   private final EventPublisherService eventPublisherService;
 
   public RequestExpirationService(Map<String, String> okapiHeaders, Vertx vertx,
-    String idFieldName, Function<Request, String> idExtractor) {
+    String requestClassifierProperty, Function<Request, String> requestClassifier) {
 
-    this.idFieldName = idFieldName;
-    this.idExtractor = idExtractor;
+    this.requestClassifierProperty = requestClassifierProperty;
+    this.requestClassifier = requestClassifier;
     pgClient = PostgresClient.getInstance(vertx, okapiHeaders.get(TENANT_HEADER));
     eventPublisherService = new EventPublisherService(vertx, okapiHeaders);
   }
@@ -69,7 +68,7 @@ public class RequestExpirationService {
     List<JsonObject> context = new ArrayList<>();
 
     pgClient.startTx(conn -> getExpiredRequests(conn)
-      .compose(expiredRequests -> closeRequests(conn, expiredRequests, context, idExtractor)
+      .compose(expiredRequests -> closeRequests(conn, expiredRequests, context)
       .compose(associatedIds -> getOpenRequestsByIdFields(conn, associatedIds))
       .compose(openRequests -> reorderRequests(conn, openRequests))
       .onComplete(v -> {
@@ -126,9 +125,9 @@ public class RequestExpirationService {
       return succeededFuture(emptyList());
     }
 
-    Set<String> quotedFieldIds = idFields.stream()
+    String quotedFieldIds = idFields.stream()
       .map(id -> format("'%s'", id))
-      .collect(toSet());
+      .collect(Collectors.joining(","));
     String where = format("WHERE " +
         "(jsonb->>'status' = '%1$s' OR " +
         "jsonb->>'status' = '%2$s' OR " +
@@ -141,8 +140,8 @@ public class RequestExpirationService {
       OPEN_AWAITING_PICKUP.value(),
       OPEN_AWAITING_DELIVERY.value(),
       OPEN_IN_TRANSIT.value(),
-      idFieldName,
-      String.join(",", quotedFieldIds));
+      requestClassifierProperty,
+      quotedFieldIds);
 
     Promise<RowSet<Row>> promise = Promise.promise();
     String fullTableName = format("%s.%s", PostgresClient.convertToPsqlStandard(
@@ -176,7 +175,7 @@ public class RequestExpirationService {
     }
 
     Map<String, List<Request>> groupedRequests = requests.stream()
-      .collect(Collectors.groupingBy(idExtractor));
+      .collect(Collectors.groupingBy(requestClassifier));
 
     return resetPositionsForOpenRequests(conn, groupedRequests.keySet())
       .compose(v -> reorderGroupedRequests(conn, groupedRequests));
@@ -209,8 +208,7 @@ public class RequestExpirationService {
   }
 
   private Future<Set<String>> closeRequests(AsyncResult<SQLConnection> conn,
-    List<Request> requests, List<JsonObject> context,
-    Function<Request, String> applyAssociatedId) {
+    List<Request> requests, List<JsonObject> context) {
 
     Future<Void> future = succeededFuture();
     Set<String> closedRequestsAssociatedIds = new HashSet<>();
@@ -218,7 +216,7 @@ public class RequestExpirationService {
     for (Request request : requests) {
       JsonObject pair = new JsonObject();
       pair.put(ORIGINAL.value(), JsonObject.mapFrom(request));
-      closedRequestsAssociatedIds.add(applyAssociatedId.apply(request));
+      closedRequestsAssociatedIds.add(requestClassifier.apply(request));
       Request updatedRequest = changeRequestStatus(request).withPosition(null);
       updatedRequest.getMetadata().withUpdatedDate(new Date());
       pair.put(UPDATED.value(), JsonObject.mapFrom(updatedRequest));
@@ -236,9 +234,9 @@ public class RequestExpirationService {
       return succeededFuture();
     }
 
-    Set<String> quotedFieldIds = associatedIds.stream()
+    String quotedFieldIds = associatedIds.stream()
       .map(id -> format("'%s'", id))
-      .collect(toSet());
+      .collect(Collectors.joining(","));
 
     String fullTableName = format("%s.%s", PostgresClient.convertToPsqlStandard(
       pgClient.getTenantId()), REQUEST_TABLE);
@@ -254,8 +252,8 @@ public class RequestExpirationService {
       OPEN_AWAITING_PICKUP.value(),
       OPEN_AWAITING_DELIVERY.value(),
       OPEN_IN_TRANSIT.value(),
-      idFieldName,
-      String.join(",", quotedFieldIds));
+      requestClassifierProperty,
+      quotedFieldIds);
 
     Promise<RowSet<Row>> promise = Promise.promise();
     pgClient.execute(conn, sql, promise);

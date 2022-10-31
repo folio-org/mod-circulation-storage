@@ -57,6 +57,7 @@ public class RequestExpirationApiTest extends ApiTests {
     throws MalformedURLException {
 
     StorageTestSuite.deleteAll(requestStorageUrl());
+    stubTlrSettings(false);
   }
 
   @After
@@ -69,7 +70,6 @@ public class RequestExpirationApiTest extends ApiTests {
   public void canExpireASingleOpenUnfilledRequest() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
-    stubTlrSettings(false);
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
 
@@ -102,7 +102,6 @@ public class RequestExpirationApiTest extends ApiTests {
   public void canExpireASingleOpenAwaitingPickupRequest() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
-    stubTlrSettings(false);
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
 
@@ -168,7 +167,7 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void closedPickupExpiredTlrRequestShouldBeRemovedFromQueue()
+  public void closedPickupExpiredTitleLevelRequestShouldBeRemovedFromQueue()
     throws InterruptedException, MalformedURLException, TimeoutException, ExecutionException {
 
     stubTlrSettings(true);
@@ -241,10 +240,9 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void closedPickupExpiredIlrRequestShouldBeRemovedFromQueue() throws InterruptedException,
-    MalformedURLException, TimeoutException, ExecutionException {
+  public void closedPickupExpiredItemLevelRequestShouldBeRemovedFromQueue()
+    throws InterruptedException, MalformedURLException, TimeoutException, ExecutionException {
 
-    stubTlrSettings(false);
     UUID firstRequestId = UUID.randomUUID();
     UUID secondRequestId = UUID.randomUUID();
     UUID thirdRequestId = UUID.randomUUID();
@@ -311,10 +309,9 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void canExpireASingleOpenAwaitingDeliveryRequest() throws InterruptedException,
+  public void canExpireSingleOpenAwaitingDeliveryRequest() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
-    stubTlrSettings(false);
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
 
@@ -347,7 +344,6 @@ public class RequestExpirationApiTest extends ApiTests {
   public void canExpireAnFirstAwaitingPickupRequest() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
-    stubTlrSettings(false);
     UUID id1 = UUID.randomUUID();
     UUID id2 = UUID.randomUUID();
     UUID id3 = UUID.randomUUID();
@@ -415,7 +411,6 @@ public class RequestExpirationApiTest extends ApiTests {
   public void canExpireFirstAwaitingDeliveryRequest() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
-    stubTlrSettings(false);
     UUID id1 = UUID.randomUUID();
     UUID id2 = UUID.randomUUID();
     UUID id3 = UUID.randomUUID();
@@ -483,7 +478,6 @@ public class RequestExpirationApiTest extends ApiTests {
   public void canExpireAnFirstOpenUnfilledRequest() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
-    stubTlrSettings(false);
     UUID id1_1 = UUID.randomUUID();
     UUID id1_2 = UUID.randomUUID();
     UUID id1_3 = UUID.randomUUID();
@@ -592,7 +586,6 @@ public class RequestExpirationApiTest extends ApiTests {
   public void canExpireOpenUnfilledRequestsInTheMiddleOfAQueue() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
-    stubTlrSettings(false);
     UUID id1_1 = UUID.fromString("b272d1d0-cf06-45c4-9b6d-0c42a45e5084");
     UUID id1_2 = UUID.fromString("1f4ddc2a-f247-40d6-811b-cadecf0021e2");
     UUID id1_3 = UUID.fromString("d4b1458a-8b30-4122-bdf8-58b30364b407");
@@ -904,7 +897,6 @@ public class RequestExpirationApiTest extends ApiTests {
   public void canExpireOpenUnfilledWithNoExpirationDate() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
-    stubTlrSettings(false);
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
 
@@ -931,7 +923,6 @@ public class RequestExpirationApiTest extends ApiTests {
   public void canExpireOpenAwaitingWithNoHoldShelfExpirationDate() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
-    stubTlrSettings(false);
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
 
@@ -957,7 +948,6 @@ public class RequestExpirationApiTest extends ApiTests {
   @Test
   @SneakyThrows
   public void updatedDateIsUpdatedOnRequestExpiration() {
-    stubTlrSettings(false);
     UUID requestId = UUID.randomUUID();
 
     RequestRequestBuilder requestBuilder = new RequestRequestBuilder()
@@ -985,7 +975,6 @@ public class RequestExpirationApiTest extends ApiTests {
   @Test
   @SneakyThrows
   public void shouldOnlyExpireRequestsForSpecifiedTenant() {
-    stubTlrSettings(false);
     UUID firstRequestId = UUID.randomUUID();
     UUID firstItemId = UUID.randomUUID();
     UUID secondRequestId = UUID.randomUUID();
