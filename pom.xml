@@ -28,7 +28,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
-    <vertx-version>4.3.1</vertx-version>
+    <vertx-version>4.3.4</vertx-version>
     <raml-module-builder-version>35.0.0</raml-module-builder-version>
     <spring.version>5.2.18.RELEASE</spring.version>
     <argLine />
@@ -80,7 +80,7 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>folio-kafka-wrapper</artifactId>
-      <version>2.6.0</version>
+      <version>2.7.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -105,6 +105,11 @@
       <artifactId>junit-jupiter-params</artifactId>
       <version>5.7.0</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-kafka-client</artifactId>
+      <version>${vertx-version}</version>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
@@ -180,6 +185,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.12.0</version>
+    </dependency>
+    <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-slf4j-impl</artifactId>
     </dependency>
@@ -190,8 +200,8 @@
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-      <version>3.5.13</version>
+      <artifactId>mockito-inline</artifactId>
+      <version>4.8.0</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

@@ -1,19 +1,18 @@
 package org.folio.rest.impl;
 
-import static org.folio.support.Environment.environmentName;
-
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.CirculationStorageKafkaTopic;
+import org.folio.kafka.services.KafkaAdminClientService;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.tools.utils.TenantLoading;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.service.PubSubRegistrationService;
-import org.folio.service.kafka.topic.KafkaAdminClientService;
 import org.folio.service.tlr.TlrDataMigrationService;
 
 import io.vertx.core.AsyncResult;
@@ -37,7 +36,8 @@ public class TenantRefAPI extends TenantAPI {
       Map<String, String> headers, Context vertxContext) {
 
     return (new TlrDataMigrationService(attributes, vertxContext, headers).migrate())
-      .compose(r -> new KafkaAdminClientService(vertxContext.owner()).createKafkaTopics(tenantId, environmentName()))
+      .compose(r -> new KafkaAdminClientService(vertxContext.owner())
+        .createKafkaTopics(CirculationStorageKafkaTopic.values(), tenantId))
       .compose(r -> super.loadData(attributes, tenantId, headers, vertxContext))
       .compose(superRecordsLoaded -> {
         log.info("Initializing of tenant's data");
@@ -75,8 +75,9 @@ public class TenantRefAPI extends TenantAPI {
   public void postTenant(TenantAttributes tenantAttributes, Map<String, String> headers,
                          Handler<AsyncResult<Response>> handler, Context context) {
     // delete Kafka topics if tenant purged
+    var tenantId = TenantTool.tenantId(headers);
     Future<Void> result = tenantAttributes.getPurge() != null && tenantAttributes.getPurge()
-      ? new KafkaAdminClientService(context.owner()).deleteKafkaTopics(TenantTool.tenantId(headers), environmentName())
+      ? new KafkaAdminClientService(context.owner()).deleteKafkaTopics(CirculationStorageKafkaTopic.values(), tenantId)
       : Future.succeededFuture();
     result.onComplete(x -> super.postTenant(tenantAttributes, headers, handler, context));
   }

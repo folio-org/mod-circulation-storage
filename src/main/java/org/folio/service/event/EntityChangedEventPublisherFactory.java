@@ -1,7 +1,9 @@
 package org.folio.service.event;
 
+import static org.folio.CirculationStorageKafkaTopic.CHECK_IN;
+import static org.folio.CirculationStorageKafkaTopic.LOAN;
+import static org.folio.CirculationStorageKafkaTopic.REQUEST;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
-import static org.folio.support.Environment.environmentName;
 
 import java.util.Map;
 
@@ -11,7 +13,6 @@ import org.folio.persist.RequestRepository;
 import org.folio.rest.jaxrs.model.CheckIn;
 import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.Request;
-import org.folio.service.kafka.topic.KafkaTopic;
 
 import io.vertx.core.Context;
 
@@ -28,7 +29,7 @@ public class EntityChangedEventPublisherFactory {
     return new EntityChangedEventPublisher<>(okapiHeaders, Loan::getId, NULL_ID,
         new EntityChangedEventFactory<>(),
         new DomainEventPublisher<>(vertxContext,
-            KafkaTopic.loan(tenantId(okapiHeaders), environmentName()),
+            LOAN.fullTopicName(tenantId(okapiHeaders)),
             FailureHandler.noOperation()),
         new LoanRepository(vertxContext, okapiHeaders));
   }
@@ -39,7 +40,7 @@ public class EntityChangedEventPublisherFactory {
     return new EntityChangedEventPublisher<>(okapiHeaders, Request::getId, NULL_ID,
         new EntityChangedEventFactory<>(),
         new DomainEventPublisher<>(vertxContext,
-            KafkaTopic.request(tenantId(okapiHeaders), environmentName()),
+            REQUEST.fullTopicName(tenantId(okapiHeaders)),
             FailureHandler.noOperation()),
         new RequestRepository(vertxContext, okapiHeaders));
   }
@@ -50,7 +51,7 @@ public class EntityChangedEventPublisherFactory {
     return new EntityChangedEventPublisher<>(okapiHeaders, CheckIn::getId, NULL_ID,
         new EntityChangedEventFactory<>(),
         new DomainEventPublisher<>(vertxContext,
-            KafkaTopic.checkIn(tenantId(okapiHeaders), environmentName()),
+            CHECK_IN.fullTopicName(tenantId(okapiHeaders)),
             FailureHandler.noOperation()),
         new CheckInRepository(vertxContext, okapiHeaders));
   }
