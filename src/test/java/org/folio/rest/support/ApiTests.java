@@ -39,7 +39,7 @@ public class ApiTests {
 
   protected final OkapiHttpClient client = new OkapiHttpClient(StorageTestSuite.getVertx());
   protected static FakeKafkaConsumer kafkaConsumer;
-  private static final String CONFIGURATIONS_ENTRIES = "/configurations/entries.*";
+  private static final String CONFIGURATIONS_ENTRIES_URL_PATTERN = "/configurations/entries.*";
 
   @BeforeClass
   public static void before() throws Exception {
@@ -140,7 +140,7 @@ public class ApiTests {
     final var tlrSettingsConfiguration = new TlrSettingsConfiguration(
       isTlrEnabled, false, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
     StorageTestSuite.getWireMockServer().stubFor(WireMock.get(urlPathMatching(
-        CONFIGURATIONS_ENTRIES))
+        CONFIGURATIONS_ENTRIES_URL_PATTERN))
       .willReturn(ok().withBody(mapFrom(
         new KvConfigurations()
           .withConfigs(List.of(new Config()
@@ -150,13 +150,13 @@ public class ApiTests {
 
   protected void stub404ForTlrSettings() {
     StorageTestSuite.getWireMockServer().stubFor(WireMock.get(urlPathMatching(
-        CONFIGURATIONS_ENTRIES))
+        CONFIGURATIONS_ENTRIES_URL_PATTERN))
       .willReturn(notFound().withBody("Resource not found")));
   }
 
   protected void stubWithInvalidTlrSettings() {
     StorageTestSuite.getWireMockServer().stubFor(WireMock.get(urlPathMatching(
-        CONFIGURATIONS_ENTRIES))
+        CONFIGURATIONS_ENTRIES_URL_PATTERN))
       .willReturn(ok().withBody("Invalid configurations response")));
   }
 }
