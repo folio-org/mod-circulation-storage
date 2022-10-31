@@ -34,7 +34,6 @@ import org.folio.rest.support.OkapiHttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.tools.utils.NetworkUtils;
-import org.folio.service.kafka.KafkaProperties;
 import org.folio.support.MockServer;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -105,7 +104,7 @@ public class StorageTestSuite {
    * <p>Example: storageUrl("/foo", "year", "2019", "name", "A & Co") may return an URL for
    * http://localhost:46131/foo?year=2019&name=A%20%26%20Co
    */
-  public static URL storageUrl(String path, String ... parameterKeyValue) throws MalformedURLException {
+  public static URL storageUrl(String path, String... parameterKeyValue) throws MalformedURLException {
     if (parameterKeyValue.length == 0) {
       return new URL("http", "localhost", PROXY_PORT, path);
     }
@@ -148,10 +147,11 @@ public class StorageTestSuite {
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
 
     kafkaContainer.start();
-    log.info("starting Kafka host={} port={}",
-      kafkaContainer.getHost(), kafkaContainer.getFirstMappedPort());
-    KafkaProperties.setHost(kafkaContainer.getHost());
-    KafkaProperties.setPort(kafkaContainer.getFirstMappedPort());
+    var host = kafkaContainer.getHost();
+    var port = String.valueOf(kafkaContainer.getFirstMappedPort());
+    log.info("Starting Kafka host={} port={}", host, port);
+    System.setProperty("kafka-port", port);
+    System.setProperty("kafka-host", host);
 
     DeploymentOptions options = new DeploymentOptions();
     options.setConfig(new JsonObject().put("http.port", VERTICLE_PORT));
@@ -306,7 +306,7 @@ public class StorageTestSuite {
   }
 
   private static void prepareTenant(String tenantId, String moduleFrom, String moduleTo,
-      boolean loadSample) {
+                                    boolean loadSample) {
 
     JsonArray ar = new JsonArray();
     ar.add(new JsonObject().put("key", "loadReference").put("value", "true"));
