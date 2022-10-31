@@ -1,9 +1,5 @@
 package org.folio.rest.api;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
-import static com.github.tomakehurst.wiremock.client.WireMock.ok;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
-import static io.vertx.core.json.JsonObject.mapFrom;
 import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
 import static java.net.HttpURLConnection.HTTP_OK;
@@ -34,9 +30,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import org.folio.rest.configuration.TlrSettingsConfiguration;
-import org.folio.rest.jaxrs.model.Config;
-import org.folio.rest.jaxrs.model.KvConfigurations;
 import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.jaxrs.model.Tags;
 import org.folio.rest.jaxrs.model.TlrFeatureToggleJob;
@@ -61,8 +54,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 
-import com.github.tomakehurst.wiremock.client.WireMock;
-
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
@@ -74,7 +65,6 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
   private static final String TLR_TOGGLE_JOB_START_URL = "/tlr-feature-toggle-job/start";
   private static final String TLR_FEATURE_TOGGLE_JOB_TABLE = "tlr_feature_toggle_job";
   private static final String REQUEST_STORAGE_URL = "/request-storage/requests";
-  private static final String CONFIGURATIONS_ENTRIES = "/configurations/entries.*";
 
   @ClassRule
   public static final SpringClassRule classRule = new SpringClassRule();
@@ -431,29 +421,5 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
       TENANT_ID, json(deleteCompleted));
 
     return deleteCompleted.get(5, SECONDS);
-  }
-
-  private void stubTlrSettings(boolean isTlrEnabled) {
-    final var tlrSettingsConfiguration = new TlrSettingsConfiguration(
-      isTlrEnabled, false, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
-    StorageTestSuite.getWireMockServer().stubFor(WireMock.get(urlPathMatching(
-        CONFIGURATIONS_ENTRIES))
-      .willReturn(ok().withBody(mapFrom(
-        new KvConfigurations()
-          .withConfigs(List.of(new Config()
-            .withValue(mapFrom(tlrSettingsConfiguration).encodePrettily()))))
-        .encodePrettily())));
-  }
-
-  private void stub404ForTlrSettings() {
-    StorageTestSuite.getWireMockServer().stubFor(WireMock.get(urlPathMatching(
-        CONFIGURATIONS_ENTRIES))
-      .willReturn(notFound().withBody("Resource not found")));
-  }
-
-  private void stubWithInvalidTlrSettings() {
-    StorageTestSuite.getWireMockServer().stubFor(WireMock.get(urlPathMatching(
-        CONFIGURATIONS_ENTRIES))
-      .willReturn(ok().withBody("Invalid configurations response")));
   }
 }

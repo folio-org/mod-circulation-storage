@@ -572,7 +572,8 @@
           ],
           "pathPattern": "/scheduled-request-expiration",
           "modulePermissions": [
-            "pubsub.publish.post"
+            "pubsub.publish.post",
+            "configuration.entries.collection.get"
           ],
           "unit": "minute",
           "delay": "2"

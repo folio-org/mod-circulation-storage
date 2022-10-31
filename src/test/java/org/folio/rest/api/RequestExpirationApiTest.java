@@ -23,6 +23,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.nullValue;
 
 import java.net.MalformedURLException;
 import java.util.List;
@@ -46,7 +47,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import io.vertx.core.json.JsonObject;
-import static org.hamcrest.core.IsNull.*;
 
 public class RequestExpirationApiTest extends ApiTests {
 
@@ -57,6 +57,7 @@ public class RequestExpirationApiTest extends ApiTests {
     throws MalformedURLException {
 
     StorageTestSuite.deleteAll(requestStorageUrl());
+    stubTlrSettings(false);
   }
 
   @After
@@ -66,11 +67,9 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void canExpireASingleOpenUnfilledRequest()
-    throws InterruptedException,
-    MalformedURLException,
-    TimeoutException,
-    ExecutionException {
+  public void canExpireASingleOpenUnfilledRequest() throws InterruptedException,
+    MalformedURLException, TimeoutException, ExecutionException {
+
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
 
@@ -100,11 +99,8 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void canExpireASingleOpenAwaitingPickupRequest()
-    throws InterruptedException,
-    MalformedURLException,
-    TimeoutException,
-    ExecutionException {
+  public void canExpireASingleOpenAwaitingPickupRequest() throws InterruptedException,
+    MalformedURLException, TimeoutException, ExecutionException {
 
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
@@ -135,11 +131,186 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void canExpireASingleOpenAwaitingDeliveryRequest()
-    throws InterruptedException,
-    MalformedURLException,
-    TimeoutException,
-    ExecutionException {
+  public void canExpireSingleOpenAwaitingPickupTlrRequest() throws InterruptedException,
+    MalformedURLException, TimeoutException, ExecutionException {
+
+    stubTlrSettings(true);
+    UUID id = UUID.randomUUID();
+    UUID instanceId = UUID.randomUUID();
+
+    createEntity(
+      new RequestRequestBuilder()
+        .page()
+        .withRequestLevel("Title")
+        .withId(id)
+        .withHoldShelfExpirationDate(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+        .withInstanceId(instanceId)
+        .withItemId(null)
+        .withHoldingsRecordId(null)
+        .withPosition(1)
+        .withStatus(OPEN_AWAITING_PICKUP)
+        .create(),
+      requestStorageUrl());
+
+    expireRequests();
+
+    List<JsonObject> events = Awaitility.await()
+      .atMost(10, TimeUnit.SECONDS)
+      .until(MockServer::getPublishedEvents, hasSize(1));
+
+    assertPublishedEvents(events);
+
+    JsonObject response = getById(requestStorageUrl(String.format("/%s", id)));
+
+    assertThat(response.getString("status"), is(CLOSED_PICKUP_EXPIRED));
+    assertThat(response.containsKey("position"), is(false));
+  }
+
+  @Test
+  public void closedPickupExpiredTitleLevelRequestShouldBeRemovedFromQueue()
+    throws InterruptedException, MalformedURLException, TimeoutException, ExecutionException {
+
+    stubTlrSettings(true);
+    UUID firstRequestId = UUID.randomUUID();
+    UUID secondRequestId = UUID.randomUUID();
+    UUID thirdRequestId = UUID.randomUUID();
+    UUID instanceId = UUID.randomUUID();
+
+    createEntity(
+      new RequestRequestBuilder()
+        .page()
+        .withRequestLevel("Title")
+        .withId(firstRequestId)
+        .withHoldShelfExpirationDate(new DateTime().plusDays(1))
+        .withInstanceId(instanceId)
+        .withItemId(null)
+        .withHoldingsRecordId(null)
+        .withPosition(1)
+        .withStatus(OPEN_AWAITING_PICKUP)
+        .create(),
+      requestStorageUrl());
+
+    createEntity(
+      new RequestRequestBuilder()
+        .page()
+        .withRequestLevel("Title")
+        .withId(secondRequestId)
+        .withHoldShelfExpirationDate(new DateTime(2022, 1, 30, 10, 22, 54, DateTimeZone.UTC))
+        .withInstanceId(instanceId)
+        .withItemId(null)
+        .withHoldingsRecordId(null)
+        .withPosition(2)
+        .withStatus(OPEN_AWAITING_PICKUP)
+        .create(),
+      requestStorageUrl());
+
+    createEntity(
+      new RequestRequestBuilder()
+        .page()
+        .withRequestLevel("Title")
+        .withId(thirdRequestId)
+        .withHoldShelfExpirationDate(new DateTime().plusDays(2))
+        .withInstanceId(instanceId)
+        .withItemId(null)
+        .withHoldingsRecordId(null)
+        .withPosition(3)
+        .withStatus(OPEN_AWAITING_PICKUP)
+        .create(),
+      requestStorageUrl());
+
+    expireRequests();
+
+    List<JsonObject> events = Awaitility.await()
+      .atMost(10, TimeUnit.SECONDS)
+      .until(MockServer::getPublishedEvents, hasSize(1));
+
+    assertPublishedEvents(events);
+
+    JsonObject firstRequestById = getById(requestStorageUrl(String.format("/%s", firstRequestId)));
+    assertThat(firstRequestById.getString("status"), is(OPEN_AWAITING_PICKUP));
+    assertThat(firstRequestById.getString("position"), is("1"));
+
+    JsonObject secondRequestById = getById(requestStorageUrl(String.format("/%s", secondRequestId)));
+    assertThat(secondRequestById.getString("status"), is(CLOSED_PICKUP_EXPIRED));
+    assertThat(secondRequestById.containsKey("position"), is(false));
+
+    JsonObject thirdRequestById = getById(requestStorageUrl(String.format("/%s", thirdRequestId)));
+    assertThat(thirdRequestById.getString("status"), is(OPEN_AWAITING_PICKUP));
+    assertThat(thirdRequestById.getString("position"), is("2"));
+  }
+
+  @Test
+  public void closedPickupExpiredItemLevelRequestShouldBeRemovedFromQueue()
+    throws InterruptedException, MalformedURLException, TimeoutException, ExecutionException {
+
+    UUID firstRequestId = UUID.randomUUID();
+    UUID secondRequestId = UUID.randomUUID();
+    UUID thirdRequestId = UUID.randomUUID();
+    UUID itemId = UUID.randomUUID();
+    UUID instanceId = UUID.randomUUID();
+
+    createEntity(
+      new RequestRequestBuilder()
+        .page()
+        .withRequestLevel("Item")
+        .withId(secondRequestId)
+        .withHoldShelfExpirationDate(new DateTime(2022, 1, 30, 10, 22, 54, DateTimeZone.UTC))
+        .withInstanceId(instanceId)
+        .withItemId(itemId)
+        .withPosition(1)
+        .withStatus(OPEN_AWAITING_PICKUP)
+        .create(),
+      requestStorageUrl());
+
+    createEntity(
+      new RequestRequestBuilder()
+        .page()
+        .withRequestLevel("Item")
+        .withId(firstRequestId)
+        .withHoldShelfExpirationDate(new DateTime().plusDays(1))
+        .withInstanceId(instanceId)
+        .withItemId(itemId)
+        .withPosition(2)
+        .withStatus(OPEN_AWAITING_PICKUP)
+        .create(),
+      requestStorageUrl());
+
+    createEntity(
+      new RequestRequestBuilder()
+        .page()
+        .withRequestLevel("Item")
+        .withId(thirdRequestId)
+        .withHoldShelfExpirationDate(new DateTime().plusDays(2))
+        .withInstanceId(instanceId)
+        .withItemId(UUID.randomUUID())
+        .withPosition(1)
+        .withStatus(OPEN_AWAITING_PICKUP)
+        .create(),
+      requestStorageUrl());
+
+    expireRequests();
+
+    List<JsonObject> events = Awaitility.await()
+      .atMost(10, TimeUnit.SECONDS)
+      .until(MockServer::getPublishedEvents, hasSize(1));
+
+    assertPublishedEvents(events);
+    JsonObject firstRequestById = getById(requestStorageUrl(String.format("/%s", secondRequestId)));
+    assertThat(firstRequestById.getString("status"), is(CLOSED_PICKUP_EXPIRED));
+    assertThat(firstRequestById.containsKey("position"), is(false));
+
+    JsonObject secondRequestById = getById(requestStorageUrl(String.format("/%s", firstRequestId)));
+    assertThat(secondRequestById.getString("status"), is(OPEN_AWAITING_PICKUP));
+    assertThat(secondRequestById.getString("position"), is("1"));
+
+    JsonObject thirdRequestById = getById(requestStorageUrl(String.format("/%s", thirdRequestId)));
+    assertThat(thirdRequestById.getString("status"), is(OPEN_AWAITING_PICKUP));
+    assertThat(thirdRequestById.getString("position"), is("1"));
+  }
+
+  @Test
+  public void canExpireSingleOpenAwaitingDeliveryRequest() throws InterruptedException,
+    MalformedURLException, TimeoutException, ExecutionException {
 
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
@@ -170,11 +341,8 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void canExpireAnFirstAwaitingPickupRequest()
-    throws InterruptedException,
-    MalformedURLException,
-    TimeoutException,
-    ExecutionException {
+  public void canExpireAnFirstAwaitingPickupRequest() throws InterruptedException,
+    MalformedURLException, TimeoutException, ExecutionException {
 
     UUID id1 = UUID.randomUUID();
     UUID id2 = UUID.randomUUID();
@@ -240,11 +408,8 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void canExpireFirstAwaitingDeliveryRequest()
-    throws InterruptedException,
-    MalformedURLException,
-    TimeoutException,
-    ExecutionException {
+  public void canExpireFirstAwaitingDeliveryRequest() throws InterruptedException,
+    MalformedURLException, TimeoutException, ExecutionException {
 
     UUID id1 = UUID.randomUUID();
     UUID id2 = UUID.randomUUID();
@@ -310,11 +475,8 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void canExpireAnFirstOpenUnfilledRequest()
-    throws InterruptedException,
-    MalformedURLException,
-    TimeoutException,
-    ExecutionException {
+  public void canExpireAnFirstOpenUnfilledRequest() throws InterruptedException,
+    MalformedURLException, TimeoutException, ExecutionException {
 
     UUID id1_1 = UUID.randomUUID();
     UUID id1_2 = UUID.randomUUID();
@@ -421,11 +583,8 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void canExpireOpenUnfilledRequestsInTheMiddleOfAQueue()
-    throws InterruptedException,
-    MalformedURLException,
-    TimeoutException,
-    ExecutionException {
+  public void canExpireOpenUnfilledRequestsInTheMiddleOfAQueue() throws InterruptedException,
+    MalformedURLException, TimeoutException, ExecutionException {
 
     UUID id1_1 = UUID.fromString("b272d1d0-cf06-45c4-9b6d-0c42a45e5084");
     UUID id1_2 = UUID.fromString("1f4ddc2a-f247-40d6-811b-cadecf0021e2");
@@ -735,11 +894,8 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void canExpireOpenUnfilledWithNoExpirationDate()
-    throws InterruptedException,
-    MalformedURLException,
-    TimeoutException,
-    ExecutionException {
+  public void canExpireOpenUnfilledWithNoExpirationDate() throws InterruptedException,
+    MalformedURLException, TimeoutException, ExecutionException {
 
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
@@ -764,11 +920,8 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void canExpireOpenAwaitingWithNoHoldShelfExpirationDate()
-    throws InterruptedException,
-    MalformedURLException,
-    TimeoutException,
-    ExecutionException {
+  public void canExpireOpenAwaitingWithNoHoldShelfExpirationDate() throws InterruptedException,
+    MalformedURLException, TimeoutException, ExecutionException {
 
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
@@ -822,7 +975,6 @@ public class RequestExpirationApiTest extends ApiTests {
   @Test
   @SneakyThrows
   public void shouldOnlyExpireRequestsForSpecifiedTenant() {
-
     UUID firstRequestId = UUID.randomUUID();
     UUID firstItemId = UUID.randomUUID();
     UUID secondRequestId = UUID.randomUUID();
