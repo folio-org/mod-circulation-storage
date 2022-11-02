@@ -152,7 +152,10 @@ public class ActualCostRecordAPITest extends ApiTests {
         .withOwnerId(randomId())
         .withOwner("fee/fine owner")
         .withTypeId(randomId())
-        .withType("Lost Item fee (actual cost)"));
+        .withType("Lost Item fee (actual cost)"))
+      .withStatus(ActualCostRecord.Status.OPEN)
+      .withAdditionalInfoForStaff("Test information for staff")
+      .withAdditionalInfoForPatron("Test information for patron");
   }
 
   private static String randomId() {
