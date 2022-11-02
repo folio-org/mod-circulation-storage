@@ -264,6 +264,24 @@
         "type"
       ]
     },
+    "status": {
+      "description": "Status of the actual cost record",
+      "type": "string",
+      "enum": [
+        "Open",
+        "Billed",
+        "Cancelled",
+        "Expired"
+      ]
+    },
+    "additionalInfoForStaff": {
+      "description": "Additional information for staff",
+      "type": "string"
+    },
+    "additionalInfoForPatron": {
+      "description": "Additional information for a patron",
+      "type": "string"
+    },
     "metadata": {
       "description": "Metadata about creation and changes, provided by the server (client should not provide)",
       "type": "object",
@@ -279,6 +297,7 @@
     "loan",
     "item",
     "instance",
-    "feeFine"
+    "feeFine",
+    "status"
   ]
 }
