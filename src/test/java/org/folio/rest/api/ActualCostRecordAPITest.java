@@ -99,6 +99,14 @@ public class ActualCostRecordAPITest extends ApiTests {
     updateActualCostRecordAndCheckTheResult(updatedJson);
   }
 
+  @Test
+  @SneakyThrows
+  public void canCreateActualCostRecordWithDefaultStatus() {
+    JsonObject recordWithoutStatus = toJsonObject(createActualCostRecord().withStatus(null));
+    JsonObject postResponse = actualCostRecordClient.create(recordWithoutStatus).getJson();
+    assertThat(postResponse.getString("status"), is("Open"));
+  }
+
   @SneakyThrows
   private void updateActualCostRecordAndCheckTheResult(JsonObject updatedJson) {
     actualCostRecordClient.attemptPutById(updatedJson);
@@ -152,7 +160,10 @@ public class ActualCostRecordAPITest extends ApiTests {
         .withOwnerId(randomId())
         .withOwner("fee/fine owner")
         .withTypeId(randomId())
-        .withType("Lost Item fee (actual cost)"));
+        .withType("Lost Item fee (actual cost)"))
+      .withStatus(ActualCostRecord.Status.OPEN)
+      .withAdditionalInfoForStaff("Test information for staff")
+      .withAdditionalInfoForPatron("Test information for patron");
   }
 
   private static String randomId() {
