@@ -272,7 +272,8 @@
         "Billed",
         "Cancelled",
         "Expired"
-      ]
+      ],
+      "default": "Open"
     },
     "additionalInfoForStaff": {
       "description": "Additional information for staff",
