@@ -99,6 +99,14 @@ public class ActualCostRecordAPITest extends ApiTests {
     updateActualCostRecordAndCheckTheResult(updatedJson);
   }
 
+  @Test
+  @SneakyThrows
+  public void canCreateActualCostRecordWithDefaultStatus() {
+    JsonObject recordWithoutStatus = toJsonObject(createActualCostRecord().withStatus(null));
+    JsonObject postResponse = actualCostRecordClient.create(recordWithoutStatus).getJson();
+    assertThat(postResponse.getString("status"), is("Open"));
+  }
+
   @SneakyThrows
   private void updateActualCostRecordAndCheckTheResult(JsonObject updatedJson) {
     actualCostRecordClient.attemptPutById(updatedJson);
