@@ -1,3 +1,7 @@
+## 15.0.1 2022-11-07
+
+* mod-pubsub-client 2.7.0, Spring 5.3.23 fixing vulnerabilities (CIRCSTORE-371)
+
 ## 15.0.0 2022-10-18
 
 * Extend actual cost record schema (CIRCSTORE-349, CIRCSTORE-358, CIRCSTORE-362)
