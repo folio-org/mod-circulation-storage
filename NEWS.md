@@ -1,3 +1,7 @@
+## 14.1.1 2022-11-07
+
+* Spring Framework from 5.2.22.RELEASE fixing Spring4Shell (CIRCSTORE-373)
+
 ## 14.1.0 2022-06-27
 
 * Replace slf4j-log4j12/slf4j-api by log4j-slf4j-impl (CVE-2019-17571) (CIRCSTORE-325)
