@@ -376,7 +376,57 @@
           "fieldName": "loan.id",
           "tOps": "ADD",
           "caseSensitive": false,
-          "removeAccents": false
+          "removeAccents": true
+        },
+        {
+          "fieldName": "lossType",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "lossDate",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "instance.title",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "item.permanentLocation",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "feeFine.type",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "feeFine.owner",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        }
+      ],
+      "fullTextIndex" : [
+        {
+          "fieldName": "instance.title",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "user.firstName",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "user.lastName",
+          "tOps": "ADD"
         }
       ]
     }
