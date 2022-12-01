@@ -1,4 +1,4 @@
-## 15.0.2 2022-12.01
+## 15.0.2 2022-12-01
 
 * Nolana bugfest missing index that is present in clean Nolana deployment (CIRCSTORE-375)
 
