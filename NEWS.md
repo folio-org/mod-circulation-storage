@@ -1,3 +1,7 @@
+## 15.0.2 2022-12-01
+
+* Nolana bugfest missing index that is present in clean Nolana deployment (CIRCSTORE-375)
+
 ## 15.0.1 2022-11-07
 
 * mod-pubsub-client 2.7.0, Spring 5.3.23 fixing vulnerabilities (CIRCSTORE-371)
