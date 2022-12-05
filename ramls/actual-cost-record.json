@@ -234,6 +234,7 @@
           "description": "List of contributors",
           "minItems": 0,
           "items": {
+            "type": "object",
             "properties": {
               "name": {
                 "type": "string",
