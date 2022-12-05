@@ -333,7 +333,7 @@
     },
     {
       "id": "actual-cost-record-storage",
-      "version": "0.5",
+      "version": "0.6",
       "handlers": [
         {
           "methods": ["GET"],

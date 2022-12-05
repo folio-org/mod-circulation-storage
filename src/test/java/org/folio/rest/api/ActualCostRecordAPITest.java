@@ -16,6 +16,7 @@ import org.folio.rest.jaxrs.model.ActualCostRecordInstance;
 import org.folio.rest.jaxrs.model.ActualCostRecordItem;
 import org.folio.rest.jaxrs.model.ActualCostRecordLoan;
 import org.folio.rest.jaxrs.model.ActualCostRecordUser;
+import org.folio.rest.jaxrs.model.Contributor;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.http.AssertingRecordClient;
@@ -137,6 +138,8 @@ public class ActualCostRecordAPITest extends ApiTests {
         .withMaterialType("material type")
         .withPermanentLocationId(randomId())
         .withPermanentLocation("permanent location")
+        .withEffectiveLocationId(randomId())
+        .withEffectiveLocation("effective location")
         .withLoanTypeId(randomId())
         .withLoanType("loan type")
         .withHoldingsRecordId(randomId())
@@ -154,7 +157,9 @@ public class ActualCostRecordAPITest extends ApiTests {
         .withIdentifiers(List.of(new ActualCostRecordIdentifier()
           .withIdentifierTypeId(randomId())
           .withIdentifierType("identifier type")
-          .withValue("identifier value"))))
+          .withValue("identifier value")))
+        .withContributors(List.of(new Contributor()
+          .withName("Last name, First name"))))
       .withFeeFine(new ActualCostRecordFeeFine()
         .withAccountId(randomId())
         .withOwnerId(randomId())
