@@ -426,7 +426,13 @@
           "methods": ["DELETE"],
           "pathPattern": "/scheduled-notice-storage/scheduled-notices/{id}",
           "permissionsRequired": ["scheduled-notice-storage.scheduled-notices.item.delete"]
-        },
+        }
+      ]
+    },
+    {
+      "id": "tlr-feature-toggle-job-storage",
+      "version": "0.1",
+      "handlers": [
         {
           "methods":[
             "POST"
@@ -728,7 +734,7 @@
       "displayName": "Circulation storage - delete individual request",
       "description": "Delete individual request from storage"
     },
-     {
+    {
       "permissionName": "circulation-storage.fixed-due-date-schedules.collection.get",
       "displayName": "Circulation storage - get fixed due date collection",
       "description": "Get fixed due date collection from storage"
