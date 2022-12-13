@@ -162,11 +162,12 @@ public class ActualCostRecordAPITest extends ApiTests {
           .withName("Last name, First name"))))
       .withFeeFine(new ActualCostRecordFeeFine()
         .withAccountId(randomId())
+        .withBilledAmount("9.99")
         .withOwnerId(randomId())
         .withOwner("fee/fine owner")
         .withTypeId(randomId())
         .withType("Lost Item fee (actual cost)"))
-      .withStatus(ActualCostRecord.Status.OPEN)
+      .withStatus(ActualCostRecord.Status.BILLED)
       .withAdditionalInfoForStaff("Test information for staff")
       .withAdditionalInfoForPatron("Test information for patron");
   }
