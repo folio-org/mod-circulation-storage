@@ -60,6 +60,7 @@ public class RequestExpirationService {
     eventPublisherService = new EventPublisherService(vertx, okapiHeaders);
   }
 
+  @SuppressWarnings("java:S1905")  // suppress false positive "Remove this unnecessary cast to Void"
   public Future<Void> doRequestExpiration() {
     List<JsonObject> context = new ArrayList<>();
 
