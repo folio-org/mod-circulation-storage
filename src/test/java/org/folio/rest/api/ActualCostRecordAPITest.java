@@ -1,7 +1,12 @@
 package org.folio.rest.api;
 
+import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.support.matchers.JsonMatchers.hasSameProperties;
+import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasErrorWith;
+import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessageContaining;
+import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasParameter;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.AllOf.allOf;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsIterableContaining.hasItems;
 
@@ -19,6 +24,7 @@ import org.folio.rest.jaxrs.model.ActualCostRecordUser;
 import org.folio.rest.jaxrs.model.Contributor;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.support.ApiTests;
+import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.http.AssertingRecordClient;
 import org.folio.rest.support.http.InterfaceUrls;
 import org.folio.rest.support.spring.TestContextConfiguration;
@@ -116,6 +122,19 @@ public class ActualCostRecordAPITest extends ApiTests {
     assertThat(updatedJson, hasSameProperties(fetchedJson));
   }
 
+  @Test
+  @SneakyThrows
+  public void canNotCreateActualCostRecordWithNegativeBilledAmount() {
+    ActualCostRecord actualCostRecord = createActualCostRecord();
+    actualCostRecord.getFeeFine().setBilledAmount(-9.99);
+    JsonResponse postResponse = actualCostRecordClient.attemptCreate(toJsonObject(actualCostRecord));
+    assertThat(postResponse.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
+    assertThat(postResponse.getJson(), hasErrorWith(allOf(
+      hasParameter("feeFine.billedAmount", "-9.99"),
+      hasMessageContaining("must be greater than or equal to 0")
+    )));
+  }
+
   private ActualCostRecord createActualCostRecord() {
     return new ActualCostRecord()
       .withLossType(ActualCostRecord.LossType.AGED_TO_LOST)
@@ -162,11 +181,12 @@ public class ActualCostRecordAPITest extends ApiTests {
           .withName("Last name, First name"))))
       .withFeeFine(new ActualCostRecordFeeFine()
         .withAccountId(randomId())
+        .withBilledAmount(9.99)
         .withOwnerId(randomId())
         .withOwner("fee/fine owner")
         .withTypeId(randomId())
         .withType("Lost Item fee (actual cost)"))
-      .withStatus(ActualCostRecord.Status.OPEN)
+      .withStatus(ActualCostRecord.Status.BILLED)
       .withAdditionalInfoForStaff("Test information for staff")
       .withAdditionalInfoForPatron("Test information for patron");
   }
