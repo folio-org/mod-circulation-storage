@@ -266,7 +266,8 @@
         },
         "billedAmount": {
           "description": "Initial amount of a fee/fine created upon billing",
-          "type": "string"
+          "type": "number",
+          "minimum": 0.0
         },
         "ownerId": {
           "description": "Fee/fine owner ID",
