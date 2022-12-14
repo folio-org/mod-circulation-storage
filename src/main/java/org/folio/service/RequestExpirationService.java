@@ -35,12 +35,9 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.Request;
+import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.SQLConnection;
-
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
@@ -63,35 +60,25 @@ public class RequestExpirationService {
     eventPublisherService = new EventPublisherService(vertx, okapiHeaders);
   }
 
+  @SuppressWarnings("java:S1905")  // suppress false positive "Remove this unnecessary cast to Void"
   public Future<Void> doRequestExpiration() {
-    Promise<Void> promise = Promise.promise();
     List<JsonObject> context = new ArrayList<>();
 
-    pgClient.startTx(conn -> getExpiredRequests(conn)
-      .compose(expiredRequests -> closeRequests(conn, expiredRequests, context)
-      .compose(associatedIds -> getOpenRequestsByIdFields(conn, associatedIds))
-      .compose(openRequests -> reorderRequests(conn, openRequests))
-      .onComplete(v -> {
-        if (v.failed()) {
-          pgClient.rollbackTx(conn, done -> {
-            log.error("Error in request processing", v.cause());
-            promise.fail(v.cause());
-          });
-        } else {
+    return pgClient.withTrans(conn -> getExpiredRequests(conn)
+        .compose(expiredRequests -> closeRequests(conn, expiredRequests, context))
+        .compose(associatedIds -> getOpenRequestsByIdFields(conn, associatedIds))
+        .compose(openRequests -> reorderRequests(conn, openRequests))
+        .map(x -> {
           context.forEach(p -> eventPublisherService
-            .publishLogRecord(new JsonObject().put(REQUESTS.value(), p), REQUEST_EXPIRED));
-          pgClient.endTx(conn, done -> promise.complete());
-        }
-      })));
-
-    return promise.future();
+              .publishLogRecord(new JsonObject().put(REQUESTS.value(), p), REQUEST_EXPIRED));
+          return (Void)null;
+        }))
+        .onFailure(e -> log.error("Error in request processing", e));
   }
 
-  private Future<List<Request>> getExpiredRequests(AsyncResult<SQLConnection> conn) {
+  private Future<List<Request>> getExpiredRequests(Conn conn) {
     SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
     df.setTimeZone(TimeZone.getTimeZone(ZoneOffset.UTC));
-
-    Promise<RowSet<Row>> promise = Promise.promise();
 
     String where = format("WHERE " +
         "(jsonb->>'status' = '%1$s' AND jsonb->>'requestExpirationDate' < '%5$s') OR " +
@@ -109,16 +96,15 @@ public class RequestExpirationService {
     String fullTableName = format("%s.%s", PostgresClient.convertToPsqlStandard(
       pgClient.getTenantId()), REQUEST_TABLE);
     String query = format("SELECT jsonb FROM %s %s", fullTableName, where);
-    pgClient.select(conn, query, promise);
 
-    return promise.future()
+    return conn.execute(query)
       .map(rs -> rowSetToStream(rs)
         .map(row -> row.get(JsonObject.class, row.getColumnIndex(JSONB_COLUMN)))
         .map(json -> json.mapTo(Request.class))
         .collect(toList()));
   }
 
-  private Future<List<Request>> getOpenRequestsByIdFields(AsyncResult<SQLConnection> conn,
+  private Future<List<Request>> getOpenRequestsByIdFields(Conn conn,
     Set<String> idFields) {
 
     if (idFields.isEmpty()) {
@@ -143,13 +129,11 @@ public class RequestExpirationService {
       requestClassifierProperty,
       quotedFieldIds);
 
-    Promise<RowSet<Row>> promise = Promise.promise();
     String fullTableName = format("%s.%s", PostgresClient.convertToPsqlStandard(
       pgClient.getTenantId()), REQUEST_TABLE);
     String sql = format("SELECT jsonb FROM %s %s", fullTableName, where);
-    pgClient.select(conn, sql, promise);
 
-    return promise.future()
+    return conn.execute(sql)
       .map(rs -> rowSetToStream(rs)
         .map(row -> row.get(JsonObject.class, row.getColumnIndex(JSONB_COLUMN)))
         .map(json -> json.mapTo(Request.class))
@@ -167,7 +151,7 @@ public class RequestExpirationService {
     return request;
   }
 
-  private Future<Void> reorderRequests(AsyncResult<SQLConnection> conn,
+  private Future<Void> reorderRequests(Conn conn,
     List<Request> requests) {
 
     if (requests.isEmpty()) {
@@ -181,7 +165,7 @@ public class RequestExpirationService {
       .compose(v -> reorderGroupedRequests(conn, groupedRequests));
   }
 
-  private Future<Void> reorderGroupedRequests(AsyncResult<SQLConnection> conn,
+  private Future<Void> reorderGroupedRequests(Conn conn,
     Map<String, List<Request>> groupedRequests) {
 
     Future<Void> future = succeededFuture();
@@ -192,7 +176,7 @@ public class RequestExpirationService {
     return future;
   }
 
-  private Future<Void> updateRequestsPositions(AsyncResult<SQLConnection> conn,
+  private Future<Void> updateRequestsPositions(Conn conn,
     List<Request> requests) {
 
     requests.sort(Comparator.comparingInt(Request::getPosition));
@@ -207,7 +191,7 @@ public class RequestExpirationService {
     return future;
   }
 
-  private Future<Set<String>> closeRequests(AsyncResult<SQLConnection> conn,
+  private Future<Set<String>> closeRequests(Conn conn,
     List<Request> requests, List<JsonObject> context) {
 
     Future<Void> future = succeededFuture();
@@ -227,7 +211,7 @@ public class RequestExpirationService {
     return future.map(v -> closedRequestsAssociatedIds);
   }
 
-  private Future<RowSet<Row>> resetPositionsForOpenRequests(AsyncResult<SQLConnection> conn,
+  private Future<RowSet<Row>> resetPositionsForOpenRequests(Conn conn,
     Set<String> associatedIds) {
 
     if (associatedIds.isEmpty()) {
@@ -255,18 +239,10 @@ public class RequestExpirationService {
       requestClassifierProperty,
       quotedFieldIds);
 
-    Promise<RowSet<Row>> promise = Promise.promise();
-    pgClient.execute(conn, sql, promise);
-
-    return promise.future().map(ur -> null);
+    return conn.execute(sql).mapEmpty();
   }
 
-  private Future<Void> updateRequest(AsyncResult<SQLConnection> conn, Request request) {
-    Promise<RowSet<Row>> promise = Promise.promise();
-
-    String where = format("WHERE jsonb->>'id' = '%s'", request.getId());
-    pgClient.update(conn, REQUEST_TABLE, request, JSONB_COLUMN, where, false, promise);
-
-    return promise.future().map(ur -> null);
+  private Future<Void> updateRequest(Conn conn, Request request) {
+    return conn.update(REQUEST_TABLE, request, request.getId()).mapEmpty();
   }
 }
