@@ -23,9 +23,11 @@ import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsA
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasErrorWith;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessageContaining;
+import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasParameter;
 import static org.folio.rest.support.matchers.ValidationResponseMatchers.isValidationResponseWhich;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
@@ -1934,6 +1936,26 @@ public class RequestsApiTest extends ApiTests {
 
     assertThat(allOpenRequests, hasSize(2));
     assertThat(allOpenRequests, hasItems(awaitingPickupRequest, notYetFilledRequest));
+  }
+
+  @Test
+  public void cannotCreateRequestWithoutStatus()
+    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
+
+    JsonObject request = new RequestRequestBuilder()
+      .page()
+      .toHoldShelf()
+      .withStatus(null)
+      .create();
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+    client.post(requestStorageUrl(), request, TENANT_ID, ResponseHandler.json(createCompleted));
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response, isValidationResponseWhich(allOf(
+      hasMessageContaining("must not be null"),
+      hasParameter("status", "null")
+    )));
   }
 
   private RequestDto.RequestDtoBuilder holdShelfOpenRequest() {
