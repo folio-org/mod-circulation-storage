@@ -33,8 +33,7 @@ public class ConfigurationClient extends OkapiClient {
   public Future<TlrSettingsConfiguration> getTlrSettings() {
     String url = format(CONFIGURATIONS_URL, StringUtil.urlEncode(TLR_SETTINGS_QUERY));
 
-    return okapiGetAbs(url)
-      .send()
+    return okapiGet(url)
       .compose(response -> {
         int responseStatus = response.statusCode();
         if (responseStatus != 200) {

@@ -26,21 +26,14 @@ public class RequestExpiryImpl implements ScheduledRequestExpiration {
   @Validate
   @Override
   public void expireRequests(Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler, Context context) {
+      Handler<AsyncResult<Response>> handler, Context context) {
 
     Vertx vertx = context.owner();
-    context.runOnContext(v -> new ConfigurationClient(vertx, okapiHeaders).getTlrSettings()
-      .compose(tlrSettings -> createRequestExpirationService(okapiHeaders, vertx, tlrSettings)
-        .doRequestExpiration()
-      .onComplete(result -> {
-        if (result.succeeded()) {
-          asyncResultHandler.handle(succeededFuture(respond204()));
-        } else {
-          asyncResultHandler.handle(succeededFuture(respond500WithTextPlain(
-            result.cause().getMessage())));
-        }
-      })
-    ));
+    new ConfigurationClient(vertx, okapiHeaders).getTlrSettings()
+    .compose(tlrSettings -> createRequestExpirationService(okapiHeaders, vertx, tlrSettings)
+        .doRequestExpiration())
+    .onSuccess(x -> handler.handle(succeededFuture(respond204())))
+    .onFailure(e -> handler.handle(succeededFuture(respond500WithTextPlain(e.getMessage()))));
   }
 
   private RequestExpirationService createRequestExpirationService(Map<String, String> okapiHeaders,
