@@ -23,7 +23,6 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 
@@ -44,20 +43,18 @@ public class OkapiClient {
     token = okapiHeaders.get(OKAPI_HEADER_TOKEN);
   }
 
-  HttpRequest<Buffer> okapiGetAbs(String path) {
-    return webClient.getAbs(okapiUrl + path)
-      .putHeader(OKAPI_HEADER_TENANT, tenant)
-      .putHeader(OKAPI_URL_HEADER, okapiUrl)
-      .putHeader(OKAPI_HEADER_TOKEN, token)
-      .putHeader(ACCEPT, APPLICATION_JSON);
-  }
-
-  HttpRequest<Buffer> okapiPostAbs(String path) {
-    return webClient.postAbs(okapiUrl + path)
-      .putHeader(ACCEPT, APPLICATION_JSON)
-      .putHeader(OKAPI_HEADER_TENANT, tenant)
-      .putHeader(OKAPI_URL_HEADER, okapiUrl)
-      .putHeader(OKAPI_HEADER_TOKEN, token);
+  Future<HttpResponse<Buffer>> okapiGet(String path) {
+    try {
+      return webClient.getAbs(okapiUrl + path)
+        .putHeader(OKAPI_HEADER_TENANT, tenant)
+        .putHeader(OKAPI_URL_HEADER, okapiUrl)
+        .putHeader(OKAPI_HEADER_TOKEN, token)
+        .putHeader(ACCEPT, APPLICATION_JSON)
+        .send();
+    } catch (Exception e) {
+      log.error("GET {}{}: {}", okapiUrl, path, e.getMessage());
+      return Future.failedFuture(e);
+    }
   }
 
   public <T> Future<Collection<T>> get(String resourcePath, Collection<String> ids,
@@ -89,7 +86,7 @@ public class OkapiClient {
   private Future<HttpResponse<Buffer>> get(String url) {
     log.debug("Calling GET {}", url);
 
-    return okapiGetAbs(url).send()
+    return okapiGet(url)
       .compose(response -> {
         if (response.statusCode() == 200) {
           return succeededFuture(response);
