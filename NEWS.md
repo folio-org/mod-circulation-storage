@@ -1,3 +1,20 @@
+## 15.1.0 2023-02-15
+* Use folio-kafka-wrapper service to work with KafkaAdminClient (CIRCSTORE-369)
+* Add TLR requests expiration logic and queue recalculation (CIRCSTORE-368)
+* Upgrade to mod-pubsub-client 2.7.0 and Spring 5.3.23 (CIRCSTORE-371)
+* Add fields to actual cost record: status, additional info (CIRCSTORE-370)
+* Add indexes for actual cost record (CIRCSTORE-374)
+* Nolana bugfest missing index that is present in clean Nolana deployment (CIRCSTORE-375)
+* Add contributors and effective location to Actual Cost Record (CIRCSTORE-380)
+* Upgrade to RMB 35.0.4 and Vertx 4.3.5 (CIRCSTORE-382)
+* Add TLR feature toggle job interface to Module Descriptor (CIRCSTORE-347)
+* Add billed amount to Actual Cost Record schema (CIRCSTORE-385)
+* RequestExpirationService hangs on publish exception (CIRCSTORE-387)
+* Make request status required (CIRCSTORE-353)
+* /scheduled-request-expiration hangs on invalid URL or unknown host (CIRCSTORE-391)
+* Remove userId full text index in loan table (CIRCSTORE-378)
+* Upgrade to folio-kafka-wrapper 2.7.0 (CIRCSTORE-396)
+
 ## 15.0.0 2022-10-18
 
 * Extend actual cost record schema (CIRCSTORE-349, CIRCSTORE-358, CIRCSTORE-362)
