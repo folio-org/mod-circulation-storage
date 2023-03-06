@@ -413,6 +413,12 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
+        },
+        {
+          "fieldName": "status",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
         }
       ],
       "fullTextIndex" : [
