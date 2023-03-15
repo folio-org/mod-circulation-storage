@@ -180,6 +180,13 @@
           "tOps": "DELETE",
           "caseSensitive": false,
           "removeAccents": true
+        },
+        {
+          "fieldName": "fullCallNumber",
+          "multiFieldNames": "searchIndex.effectiveCallNumberComponents.prefix, searchIndex.effectiveCallNumberComponents.callNumber, searchIndex.effectiveCallNumberComponents.suffix",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
         }
       ],
       "fullTextIndex": [
@@ -228,6 +235,12 @@
         },
         {
           "fieldName": "instanceId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
+          "fieldName": "searchIndex.pickupServicePointName",
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": false
