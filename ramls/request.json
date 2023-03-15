@@ -230,7 +230,7 @@
     "searchIndex": {
       "description": "Request fields used for search",
       "type": "object",
-      "$ref": "searchIndex.schema"
+      "$ref": "searchIndex.json"
     }
   },
   "additionalProperties": false,
