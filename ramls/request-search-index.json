@@ -5,7 +5,7 @@
   "properties": {
     "callNumberComponents": {
       "type": "object",
-      "description": "Elements of a full call number",
+      "description": "Effective call number components",
       "properties": {
         "callNumber": {
           "type": "string",
