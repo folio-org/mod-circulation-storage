@@ -226,6 +226,11 @@
       "type": "string",
       "format": "date-time",
       "readonly" : true
+    },
+    "searchIndex": {
+      "description": "Request fields used for search",
+      "type": "object",
+      "$ref": "request-search-index.json"
     }
   },
   "additionalProperties": false,
