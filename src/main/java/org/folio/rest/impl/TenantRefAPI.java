@@ -14,6 +14,7 @@ import org.folio.rest.tools.utils.TenantLoading;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.service.PubSubRegistrationService;
 import org.folio.service.tlr.TlrDataMigrationService;
+import org.folio.service.tlr.TlrIndexFieldsMigrationService;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -36,6 +37,7 @@ public class TenantRefAPI extends TenantAPI {
       Map<String, String> headers, Context vertxContext) {
 
     return (new TlrDataMigrationService(attributes, vertxContext, headers).migrate())
+      .compose(r -> new TlrIndexFieldsMigrationService(attributes, vertxContext, headers).migrate())
       .compose(r -> new KafkaAdminClientService(vertxContext.owner())
         .createKafkaTopics(CirculationStorageKafkaTopic.values(), tenantId))
       .compose(r -> super.loadData(attributes, tenantId, headers, vertxContext))
