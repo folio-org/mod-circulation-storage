@@ -1,8 +1,10 @@
 package org.folio.service.tlr;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -16,6 +18,7 @@ import org.folio.okapi.common.SemVer;
 import org.folio.rest.client.OkapiClient;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PgUtil;
 
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
@@ -23,8 +26,10 @@ import static org.folio.rest.persist.PostgresClient.convertToPsqlStandard;
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
+import static java.util.stream.IntStream.range;
+import static java.util.stream.Collectors.toList;
 
-public class AbstractRequestMigrationService {
+abstract class AbstractRequestMigrationService {
   public static final Logger log = LogManager.getLogger(AbstractRequestMigrationService.class);
 
   // safe number of UUIDs which fits into Okapi's URL length limit (4096 characters)
@@ -77,6 +82,28 @@ public class AbstractRequestMigrationService {
   public Future<Integer> getBatchCount() {
     return postgresClient.select(format("SELECT COUNT(*) FROM %s.%s", schemaName, REQUEST_TABLE))
       .compose(this::getBatchCount);
+  }
+
+  public Future<Void> migrateRequests(int batchCount) {
+    return postgresClient.withTrans(conn ->
+      chainFutures(buildBatches(batchCount, conn), this::processBatch)
+        .compose(r -> failIfErrorsOccurred())
+    );
+  }
+
+  abstract Future<Void> processBatch(Batch batch);
+
+  public static <T> Future<Void> chainFutures(Collection<T> list, Function<T, Future<Void>> method) {
+    return list.stream().reduce(succeededFuture(),
+      (acc, item) -> acc.compose(v -> method.apply(item)),
+      (a, b) -> succeededFuture());
+  }
+
+  private static Collection<Batch> buildBatches(int numberOfBatches, Conn connection) {
+    return range(0, numberOfBatches)
+      .boxed()
+      .map(num -> new Batch(num, connection))
+      .collect(toList());
   }
 
   private Future<Integer> getBatchCount(RowSet<Row> result) {
