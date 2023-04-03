@@ -43,7 +43,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 /**
@@ -64,7 +63,6 @@ public class TlrDataMigrationService {
 
   private static final String ITEM_REQUEST_LEVEL = "Item";
   private static final String REQUEST_LEVEL_KEY = "requestLevel";
-  private static final String ID_KEY = "id";
   private static final String INSTANCE_ID_KEY = "instanceId";
   private static final String HOLDINGS_RECORD_ID_KEY = "holdingsRecordId";
   private static final String INSTANCE_KEY = "instance";
@@ -378,46 +376,4 @@ public class TlrDataMigrationService {
     private String id;
     private String instanceId;
   }
-
-  @Getter
-  @Setter
-  @RequiredArgsConstructor
-  public static class RequestMigrationContext {
-    private final JsonObject oldRequest;
-    private JsonObject newRequest;
-    private final String requestId;
-    private final String itemId;
-    private String holdingsRecordId;
-    private String instanceId;
-
-    public static RequestMigrationContext from(JsonObject request) {
-      return new RequestMigrationContext(request,
-        request.getString(ID_KEY), request.getString(ITEM_ID_KEY));
-    }
-
-    @Override
-    public String toString() {
-      return "RequestMigrationContext{" +
-        "requestId='" + requestId + '\'' +
-        ", itemId='" + itemId + '\'' +
-        ", holdingsRecordId='" + holdingsRecordId + '\'' +
-        ", instanceId='" + instanceId + '\'' +
-        '}';
-    }
-  }
-
-  @Getter
-  @Setter
-  @RequiredArgsConstructor
-  private static class Batch {
-    private final int batchNumber;
-    private final Conn connection;
-    private List<RequestMigrationContext> requestMigrationContexts = new ArrayList<>();
-
-    @Override
-    public String toString() {
-      return String.format("[batch #%d - %d requests]", batchNumber, requestMigrationContexts.size());
-    }
-  }
-
 }
