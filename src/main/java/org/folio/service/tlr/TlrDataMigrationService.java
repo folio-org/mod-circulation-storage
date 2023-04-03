@@ -48,13 +48,10 @@ import lombok.Setter;
 /**
  * Data migration from item-level requests (ILR) to title-level requests (TLR)
  */
-public class TlrDataMigrationService {
+public class TlrDataMigrationService extends AbstractRequestMigrationService{
   private static final Logger log = LogManager.getLogger(TlrDataMigrationService.class);
   // valid UUID version 4 variant 1
   private static final String DEFAULT_UUID = "00000000-0000-4000-8000-000000000000";
-
-  // safe number of UUIDs which fits into Okapi's URL length limit (4096 characters)
-  private static final int BATCH_SIZE = 80;
 
   private static final String TLR_MIGRATION_MODULE_VERSION = "mod-circulation-storage-14.0.0";
   private static final String REQUEST_TABLE = "request";
@@ -71,44 +68,15 @@ public class TlrDataMigrationService {
   private static final String TITLE_KEY = "title";
   private static final String IDENTIFIERS_KEY = "identifiers";
 
-  private final TenantAttributes attributes;
-  private final OkapiClient okapiClient;
-  private final PostgresClient postgresClient;
-  private final String schemaName;
-  private final List<String> errorMessages;
-
   public TlrDataMigrationService(TenantAttributes attributes, Context context,
     Map<String, String> okapiHeaders) {
-
-    this.attributes = attributes;
-    okapiClient = new OkapiClient(context.owner(), okapiHeaders);
-    postgresClient = PgUtil.postgresClient(context, okapiHeaders);
-    schemaName = convertToPsqlStandard(tenantId(okapiHeaders));
-    errorMessages = new ArrayList<>();
-  }
+      super(attributes, context, okapiHeaders);
+    }
 
   public Future<Void> migrate() {
     final long startTime = currentTimeMillis();
 
-    if (attributes.getModuleFrom() != null && attributes.getModuleTo() != null) {
-      SemVer migrationModuleVersion = moduleVersionToSemVer(TLR_MIGRATION_MODULE_VERSION);
-      SemVer moduleFromVersion = moduleVersionToSemVer(attributes.getModuleFrom());
-      SemVer moduleToVersion = moduleVersionToSemVer(attributes.getModuleTo());
-
-      if (moduleToVersion.compareTo(migrationModuleVersion) < 0) {
-        log.info("skipping migration for module version {}: should be {} or higher",
-          moduleToVersion, migrationModuleVersion);
-        return succeededFuture();
-      }
-
-      if (moduleFromVersion.compareTo(migrationModuleVersion) >= 0) {
-        log.info("skipping migration for module version {}: previous version {} is already migrated",
-          moduleToVersion, moduleFromVersion);
-        return succeededFuture();
-      }
-    }
-    else {
-      log.info("skipping migration - can not determine current moduleFrom or moduleTo version");
+    if (!shouldMigrate(TLR_MIGRATION_MODULE_VERSION)) {
       return succeededFuture();
     }
 
@@ -119,23 +87,6 @@ public class TlrDataMigrationService {
       .onSuccess(r -> log.info("Migration finished successfully"))
       .onFailure(r -> log.error("Migration failed, rolling back the changes: {}", errorMessages))
       .onComplete(r -> logDuration(startTime));
-  }
-
-  private Future<Integer> getBatchCount() {
-    return postgresClient.select(format("SELECT COUNT(*) FROM %s.%s", schemaName, REQUEST_TABLE))
-      .compose(this::getBatchCount);
-  }
-
-  private Future<Integer> getBatchCount(RowSet<Row> result) {
-    if (!result.iterator().hasNext()) {
-      return failedFuture("failed to get total number of requests");
-    }
-
-    Integer requestsCount = result.iterator().next().get(Integer.class, 0);
-    int batchesCount = requestsCount / BATCH_SIZE + (requestsCount % BATCH_SIZE == 0 ? 0 : 1);
-    log.info("found {} requests ({} batches)", requestsCount, batchesCount);
-
-    return succeededFuture(batchesCount);
   }
 
   private Future<Void> migrateRequests(int batchCount) {
