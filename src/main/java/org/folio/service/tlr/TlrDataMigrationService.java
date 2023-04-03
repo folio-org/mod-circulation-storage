@@ -1,7 +1,6 @@
 package org.folio.service.tlr;
 
 import static io.vertx.core.Future.succeededFuture;
-import static java.lang.System.currentTimeMillis;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static org.folio.support.JsonPropertyWriter.write;

@@ -15,6 +15,9 @@ public class RequestMigrationContext {
   private final String itemId;
   private String holdingsRecordId;
   private String instanceId;
+  private String pickupServicePointId;
+  private String servicePointName;
+  private String callNumber;
 
   private static final String ID_KEY = "id";
   private static final String ITEM_ID_KEY = "itemId";
@@ -22,15 +25,5 @@ public class RequestMigrationContext {
   public static RequestMigrationContext from(JsonObject request) {
     return new RequestMigrationContext(request,
       request.getString(ID_KEY), request.getString(ITEM_ID_KEY));
-  }
-
-  @Override
-  public String toString() {
-    return "RequestMigrationContext{" +
-      "requestId='" + requestId + '\'' +
-      ", itemId='" + itemId + '\'' +
-      ", holdingsRecordId='" + holdingsRecordId + '\'' +
-      ", instanceId='" + instanceId + '\'' +
-      '}';
   }
 }
