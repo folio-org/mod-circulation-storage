@@ -1,4 +1,4 @@
-package org.folio.service.tlr;
+package org.folio.service.migration;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,7 +36,7 @@ import static java.lang.System.currentTimeMillis;
 import static java.util.stream.IntStream.range;
 import static java.util.stream.Collectors.toList;
 
-abstract class AbstractRequestMigrationService {
+abstract class AbstractRequestMigrationService<T extends RequestMigrationContext> {
   public static final Logger log = LogManager.getLogger(AbstractRequestMigrationService.class);
 
   // safe number of UUIDs which fits into Okapi's URL length limit (4096 characters)
@@ -116,7 +116,7 @@ abstract class AbstractRequestMigrationService {
     );
   }
 
-  public Future<Void> updateRequests(Batch batch) {
+  public Future<Void> updateRequests(Batch<T> batch) {
     if (!errorMessages.isEmpty()) {
       log.info("{} batch update aborted - errors in previous batch(es) occurred", batch);
       return succeededFuture();
@@ -124,7 +124,7 @@ abstract class AbstractRequestMigrationService {
 
     List<JsonObject> migratedRequests = batch.getRequestMigrationContexts()
       .stream()
-      .map(RequestMigrationContext::getNewRequest)
+      .map(T::getNewRequest)
       .collect(toList());
 
     return batch.getConnection()
@@ -133,14 +133,14 @@ abstract class AbstractRequestMigrationService {
       .mapEmpty();
   }
 
-  public void buildNewRequests(Batch batch) {
+  public void buildNewRequests(Batch<T> batch) {
     batch.getRequestMigrationContexts()
       .forEach(this::buildNewRequest);
   }
 
-  abstract void buildNewRequest(RequestMigrationContext context);
+  abstract void buildNewRequest(T context);
 
-  public Future<Batch> fetchRequests(Batch batch) {
+  public Future<Batch<T>> fetchRequests(Batch<T> batch) {
     return postgresClient.select(format("SELECT jsonb FROM %s.%s ORDER BY id LIMIT %d OFFSET %d",
         schemaName, tableName, BATCH_SIZE, batch.getBatchNumber() * BATCH_SIZE))
       .onSuccess(r -> log.info("{} {} requests fetched", batch, r.size()))
@@ -149,14 +149,16 @@ abstract class AbstractRequestMigrationService {
       .map(batch);
   }
 
-  private List<RequestMigrationContext> rowSetToRequestContexts(RowSet<Row> rowSet) {
+  private List<T> rowSetToRequestContexts(RowSet<Row> rowSet) {
     return StreamSupport.stream(rowSet.spliterator(), false)
       .map(row -> row.getJsonObject("jsonb"))
-      .map(RequestMigrationContext::from)
+      .map(this::buildContext)
       .collect(toList());
   }
 
-  public Future<Batch> validateRequests(Batch batch) {
+  abstract T buildContext(JsonObject request);
+
+  public Future<Batch<T>> validateRequests(Batch<T> batch) {
     List<String> errors = batch.getRequestMigrationContexts()
       .stream()
       .map(this::validateRequest)
@@ -168,9 +170,11 @@ abstract class AbstractRequestMigrationService {
       : failedFuture(join(lineSeparator(), errors));
   }
 
-  abstract Future<Void> processBatch(Batch batch);
+  abstract Future<Void> processBatch(Batch<T> batch);
 
-  abstract Collection<String> validateRequest(RequestMigrationContext context);
+  Collection<String> validateRequest(T context) {
+    return null;
+  }
 
   public static void logDuration(long startTime) {
     String duration = formatDurationHMS(currentTimeMillis() - startTime);
@@ -183,7 +187,7 @@ abstract class AbstractRequestMigrationService {
       (a, b) -> succeededFuture());
   }
 
-  public Future<Void> handleError(Batch batch, Throwable throwable) {
+  public Future<Void> handleError(Batch<T> batch, Throwable throwable) {
     log.error("{} processing failed: {}", batch, throwable.getMessage());
     errorMessages.add(throwable.getMessage());
 
@@ -196,10 +200,10 @@ abstract class AbstractRequestMigrationService {
       : failedFuture(join(", ", errorMessages));
   }
 
-  private static Collection<Batch> buildBatches(int numberOfBatches, Conn connection) {
+  private Collection<Batch<T>> buildBatches(int numberOfBatches, Conn connection) {
     return range(0, numberOfBatches)
       .boxed()
-      .map(num -> new Batch(num, connection))
+      .map(num -> new Batch<T>(num, connection))
       .collect(toList());
   }
 
