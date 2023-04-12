@@ -110,7 +110,7 @@ public class TlrDataMigrationService extends AbstractRequestMigrationService<Tlr
     Collection<Item> items) {
 
     Map<String, String> itemIdToHoldingsRecordId = items.stream()
-      .collect(toMap(Item::getId, Item::getHoldingsRecordId));
+      .collect(toMap(Item::getId, Item::getHoldingsRecordId, (a, b) -> a));
 
     batch.getRequestMigrationContexts().forEach(ctx ->
       ctx.setHoldingsRecordId(itemIdToHoldingsRecordId.get(ctx.getItemId())));
@@ -136,7 +136,7 @@ public class TlrDataMigrationService extends AbstractRequestMigrationService<Tlr
     Collection<HoldingsRecord> holdingsRecords) {
 
     Map<String, String> holdingsRecordIdInstanceId = holdingsRecords.stream()
-      .collect(toMap(HoldingsRecord::getId, HoldingsRecord::getInstanceId));
+      .collect(toMap(HoldingsRecord::getId, HoldingsRecord::getInstanceId, (a, b) -> a));
 
     batch.getRequestMigrationContexts().forEach(ctx ->
       ctx.setInstanceId(holdingsRecordIdInstanceId.get(ctx.getHoldingsRecordId())));

@@ -10,7 +10,7 @@ public class RequestSearchMigrationContext extends RequestMigrationContext {
   private final String pickupServicePointId;
   private String pickupServicePointName;
   private final String itemId;
-  private JsonObject callNumberComponents;
+  private RequestSearchFieldsMigrationService.CallNumberComponents callNumberComponents;
   private String shelvingOrder;
 
   public RequestSearchMigrationContext(JsonObject request) {

@@ -15,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -27,7 +28,7 @@ public class RequestSearchFieldsMigrationService
 
   private static final Logger log = LogManager.getLogger(RequestSearchFieldsMigrationService.class);
 
-  private static final String TLR_MIGRATION_MODULE_VERSION = "mod-circulation-storage-16.1.0";
+  private static final String MIGRATION_MODULE_VERSION = "mod-circulation-storage-16.1.0";
   private static final String ITEMS_STORAGE_URL = "/item-storage/items";
   private static final String SERVICE_POINT_URL = "/service-points";
   private static final String REQUEST_TABLE = "request";
@@ -35,7 +36,7 @@ public class RequestSearchFieldsMigrationService
   public RequestSearchFieldsMigrationService(TenantAttributes attributes, Context context,
     Map<String, String> okapiHeaders) {
 
-    super(attributes, context, okapiHeaders, REQUEST_TABLE, TLR_MIGRATION_MODULE_VERSION);
+    super(attributes, context, okapiHeaders, REQUEST_TABLE, MIGRATION_MODULE_VERSION);
   }
 
   public Future<Void> processBatch(Batch<RequestSearchMigrationContext> batch) {
@@ -78,7 +79,7 @@ public class RequestSearchFieldsMigrationService
     Collection<ServicePoint> servicePoints) {
 
     Map<String, String> servicePointIdToName = servicePoints.stream()
-      .collect(toMap(ServicePoint::getId, ServicePoint::getName));
+      .collect(toMap(ServicePoint::getId, ServicePoint::getName, (a, b) -> a));
 
     batch.getRequestMigrationContexts().forEach(ctx ->
       ctx.setPickupServicePointName(servicePointIdToName.get(ctx.getPickupServicePointId())));
@@ -105,11 +106,11 @@ public class RequestSearchFieldsMigrationService
   private static void saveCallNumbers(Batch<RequestSearchMigrationContext> batch,
     Collection<Item> items) {
 
-    Map<String, JsonObject> itemIdToCallNumberComponents = items.stream()
-      .collect(toMap(Item::getId, Item::getEffectiveCallNumberComponents));
+    Map<String, CallNumberComponents> itemIdToCallNumberComponents = items.stream()
+      .collect(toMap(Item::getId, Item::getEffectiveCallNumberComponents, (a, b) -> a));
 
     Map<String, String> itemIdToShelvingOrder = items.stream()
-      .collect(toMap(Item::getId, Item::getEffectiveShelvingOrder));
+      .collect(toMap(Item::getId, Item::getEffectiveShelvingOrder, (a, b) -> a));
 
     batch.getRequestMigrationContexts().forEach(ctx -> {
       ctx.setCallNumberComponents(itemIdToCallNumberComponents.get(ctx.getItemId()));
@@ -119,10 +120,18 @@ public class RequestSearchFieldsMigrationService
 
   public void buildNewRequest(RequestSearchMigrationContext context) {
     final JsonObject migratedRequest = context.getOldRequest().copy();
-
-    write(migratedRequest, "pickupServicePointName", context.getPickupServicePointName());
-    write(migratedRequest, "callNumberComponents", context.getCallNumberComponents());
-    write(migratedRequest, "shelvingOrder", context.getShelvingOrder());
+    JsonObject searchIndex = new JsonObject();
+    CallNumberComponents callNumberComponents = context.getCallNumberComponents();
+    if (callNumberComponents != null) {
+      JsonObject callNumberComponentsJsonObject = new JsonObject();
+      write(callNumberComponentsJsonObject, "callNumber", callNumberComponents.callNumber);
+      write(callNumberComponentsJsonObject, "prefix", callNumberComponents.prefix);
+      write(callNumberComponentsJsonObject, "suffix", callNumberComponents.suffix);
+      write(searchIndex, "callNumberComponents", callNumberComponentsJsonObject);
+    }
+    write(searchIndex, "shelvingOrder", context.getShelvingOrder());
+    write(searchIndex, "pickupServicePointName", context.getPickupServicePointName());
+    write(migratedRequest, "searchIndex",searchIndex);
 
     context.setNewRequest(migratedRequest);
   }
@@ -140,8 +149,17 @@ public class RequestSearchFieldsMigrationService
   @JsonIgnoreProperties(ignoreUnknown = true)
   public static class Item {
     private String id;
-    private JsonObject effectiveCallNumberComponents;
+    private CallNumberComponents effectiveCallNumberComponents;
+    @JsonProperty(required = false)
     private String effectiveShelvingOrder;
   }
 
+  @Getter
+  @Setter
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  public static class CallNumberComponents {
+    private String callNumber;
+    private String prefix;
+    private String suffix;
+  }
 }
