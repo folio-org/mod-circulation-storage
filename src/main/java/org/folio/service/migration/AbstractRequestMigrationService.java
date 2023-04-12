@@ -50,7 +50,7 @@ abstract class AbstractRequestMigrationService<T extends RequestMigrationContext
   public final String tableName;
   public final String moduleVersion;
 
-  public AbstractRequestMigrationService(TenantAttributes attributes, Context context,
+  protected AbstractRequestMigrationService(TenantAttributes attributes, Context context,
     Map<String, String> okapiHeaders, String tableName, String moduleVersion) {
 
     this.attributes = attributes;
@@ -78,7 +78,7 @@ abstract class AbstractRequestMigrationService<T extends RequestMigrationContext
       .onComplete(r -> logDuration(startTime));
   }
 
-  public Boolean shouldMigrate(String moduleVersion) {
+  public boolean shouldMigrate(String moduleVersion) {
     if (attributes.getModuleFrom() != null && attributes.getModuleTo() != null) {
       SemVer migrationModuleVersion = moduleVersionToSemVer(moduleVersion);
       SemVer moduleFromVersion = moduleVersionToSemVer(attributes.getModuleFrom());
@@ -173,7 +173,7 @@ abstract class AbstractRequestMigrationService<T extends RequestMigrationContext
   abstract Future<Void> processBatch(Batch<T> batch);
 
   Collection<String> validateRequest(T context) {
-    return null;
+    return List.of();
   }
 
   public static void logDuration(long startTime) {
