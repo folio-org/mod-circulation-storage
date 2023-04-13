@@ -1,4 +1,4 @@
-package org.folio;
+package org.folio.rest.api;
 
 import static io.vertx.core.json.JsonObject.mapFrom;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -17,7 +17,6 @@ import java.net.URL;
 import java.util.Properties;
 import java.util.UUID;
 
-import org.folio.rest.api.StorageTestSuite;
 import org.folio.rest.jaxrs.model.CallNumberComponents;
 import org.folio.rest.jaxrs.model.SearchIndex;
 import org.folio.rest.support.ApiTests;
