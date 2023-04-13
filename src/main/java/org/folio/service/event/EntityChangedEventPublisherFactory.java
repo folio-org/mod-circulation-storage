@@ -1,8 +1,8 @@
 package org.folio.service.event;
 
-import static org.folio.FolioKafkaTopic.CHECK_IN;
-import static org.folio.FolioKafkaTopic.LOAN;
-import static org.folio.FolioKafkaTopic.REQUEST;
+import static org.folio.support.kafka.topic.CirculationStorageKafkaTopic.CHECK_IN;
+import static org.folio.support.kafka.topic.CirculationStorageKafkaTopic.LOAN;
+import static org.folio.support.kafka.topic.CirculationStorageKafkaTopic.REQUEST;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 import java.util.Map;

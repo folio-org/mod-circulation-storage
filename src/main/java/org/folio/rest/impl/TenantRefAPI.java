@@ -6,7 +6,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.FolioKafkaTopic;
+import org.folio.support.kafka.topic.CirculationStorageKafkaTopic;
 import org.folio.kafka.services.KafkaAdminClientService;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.TenantAttributes;
@@ -39,7 +39,7 @@ public class TenantRefAPI extends TenantAPI {
     return (new TlrDataMigrationService(attributes, vertxContext, headers).migrate())
       .compose(f -> new TlrIndexFieldsMigrationService(attributes, vertxContext, headers).migrate())
       .compose(r -> new KafkaAdminClientService(vertxContext.owner())
-        .createKafkaTopics(FolioKafkaTopic.values(), tenantId))
+        .createKafkaTopics(CirculationStorageKafkaTopic.values(), tenantId))
       .compose(r -> super.loadData(attributes, tenantId, headers, vertxContext))
       .compose(superRecordsLoaded -> {
         log.info("Initializing of tenant's data");
@@ -79,7 +79,7 @@ public class TenantRefAPI extends TenantAPI {
     // delete Kafka topics if tenant purged
     var tenantId = TenantTool.tenantId(headers);
     Future<Void> result = tenantAttributes.getPurge() != null && tenantAttributes.getPurge()
-      ? new KafkaAdminClientService(context.owner()).deleteKafkaTopics(FolioKafkaTopic.values(), tenantId)
+      ? new KafkaAdminClientService(context.owner()).deleteKafkaTopics(CirculationStorageKafkaTopic.values(), tenantId)
       : Future.succeededFuture();
     result.onComplete(x -> super.postTenant(tenantAttributes, headers, handler, context));
   }

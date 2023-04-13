@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 import io.vertx.core.Vertx;
 import org.apache.kafka.common.errors.TopicExistsException;
-import org.folio.FolioKafkaTopic;
+import org.folio.support.kafka.topic.CirculationStorageKafkaTopic;
 import org.folio.kafka.services.KafkaAdminClientService;
 import org.junit.Before;
 import org.junit.Test;
@@ -147,7 +147,7 @@ public class KafkaAdminClientServiceTest {
       mocked.when(() -> KafkaAdminClient.create(eq(vertx), anyMap())).thenReturn(client);
 
       return new KafkaAdminClientService(vertx)
-        .createKafkaTopics(FolioKafkaTopic.values(), STUB_TENANT);
+        .createKafkaTopics(CirculationStorageKafkaTopic.values(), STUB_TENANT);
     }
   }
 
@@ -156,7 +156,7 @@ public class KafkaAdminClientServiceTest {
       mocked.when(() -> KafkaAdminClient.create(eq(vertx), anyMap())).thenReturn(client);
 
       return new KafkaAdminClientService(vertx)
-        .deleteKafkaTopics(FolioKafkaTopic.values(), STUB_TENANT);
+        .deleteKafkaTopics(CirculationStorageKafkaTopic.values(), STUB_TENANT);
     }
   }
 }
