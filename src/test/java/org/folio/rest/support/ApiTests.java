@@ -6,6 +6,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static io.vertx.core.json.JsonObject.mapFrom;
 import static java.net.HttpURLConnection.HTTP_CREATED;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.api.StorageTestSuite.getVertx;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.removeAllEvents;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -34,16 +35,14 @@ import org.junit.BeforeClass;
 import com.github.tomakehurst.wiremock.client.WireMock;
 
 import io.vertx.core.Future;
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import lombok.SneakyThrows;
 
 public class ApiTests {
   private static boolean runningOnOwn;
 
-  protected static Vertx vertx;
   protected static PostgresClient pgClient;
-  protected final OkapiHttpClient client = new OkapiHttpClient(StorageTestSuite.getVertx());
+  protected final OkapiHttpClient client = new OkapiHttpClient(getVertx());
   protected static FakeKafkaConsumer kafkaConsumer;
   private static final String CONFIGURATIONS_ENTRIES_URL_PATTERN = "/configurations/entries.*";
 
@@ -55,9 +54,8 @@ public class ApiTests {
       StorageTestSuite.before();
     }
 
-    vertx = StorageTestSuite.getVertx();
-    pgClient = PostgresClient.getInstance(vertx, TENANT_ID);
-    kafkaConsumer = new FakeKafkaConsumer().consume(vertx);
+    pgClient = PostgresClient.getInstance(getVertx(), TENANT_ID);
+    kafkaConsumer = new FakeKafkaConsumer().consume(getVertx());
     removeAllEvents();
   }
 

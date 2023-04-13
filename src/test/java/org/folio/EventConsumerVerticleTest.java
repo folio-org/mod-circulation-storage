@@ -9,6 +9,7 @@ import static org.folio.kafka.services.KafkaEnvironmentProperties.environment;
 import static org.folio.kafka.services.KafkaEnvironmentProperties.host;
 import static org.folio.kafka.services.KafkaEnvironmentProperties.port;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.api.StorageTestSuite.getVertx;
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET_FILLED;
 import static org.hamcrest.CoreMatchers.equalTo;
 
@@ -157,7 +158,7 @@ public class EventConsumerVerticleTest extends ApiTests {
     config.put(BOOTSTRAP_SERVERS_CONFIG, KAFKA_SERVER_URL);
     config.put(ACKS_CONFIG, "1");
 
-    return KafkaProducer.create(vertx, config, String.class, JsonObject.class);
+    return KafkaProducer.create(getVertx(), config, String.class, JsonObject.class);
   }
 
   private void publishItemUpdateEvent(JsonObject oldItem, JsonObject newItem) {
