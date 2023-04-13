@@ -22,6 +22,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.EventConsumerVerticleTest;
 import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.api.loans.LoansAnonymizationApiTest;
@@ -79,7 +80,8 @@ import lombok.SneakyThrows;
   JsonPropertyWriterTest.class,
   IsbnNormalizationTest.class,
   TlrFeatureToggleJobAPITest.class,
-  ActualCostRecordAPITest.class
+  ActualCostRecordAPITest.class,
+  EventConsumerVerticleTest.class
 })
 public class StorageTestSuite {
 
