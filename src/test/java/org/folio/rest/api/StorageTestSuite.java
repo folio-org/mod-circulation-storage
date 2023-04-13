@@ -89,7 +89,6 @@ public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";
 
   private static Vertx vertx;
-  public static final int VERTICLE_PORT = NetworkUtils.nextFreePort();
   public static final int PROXY_PORT = NetworkUtils.nextFreePort();
   public static final int OKAPI_MOCK_PORT = NetworkUtils.nextFreePort();
   private static boolean initialised = false;
@@ -154,8 +153,10 @@ public class StorageTestSuite {
     System.setProperty("kafka-port", port);
     System.setProperty("kafka-host", host);
 
+    final int verticlePort = NetworkUtils.nextFreePort();
+
     DeploymentOptions options = new DeploymentOptions();
-    options.setConfig(new JsonObject().put("http.port", VERTICLE_PORT));
+    options.setConfig(new JsonObject().put("http.port", verticlePort));
     startVerticle(options);
 
     mockServer = new MockServer(OKAPI_MOCK_PORT, vertx);
@@ -169,7 +170,7 @@ public class StorageTestSuite {
 
     wireMockServer.stubFor(any(anyUrl())
       .atPriority(10)
-      .willReturn(aResponse().proxiedFrom("http://localhost:" + VERTICLE_PORT)));
+      .willReturn(aResponse().proxiedFrom("http://localhost:" + verticlePort)));
 
     prepareTenant(TENANT_ID, true);
 
@@ -292,9 +293,13 @@ public class StorageTestSuite {
     CompletableFuture<String> deploymentComplete = new CompletableFuture<>();
 
     vertx.deployVerticle(RestVerticle.class.getName(), options, res -> {
+      String config = options.getConfig().encodePrettily();
       if (res.succeeded()) {
+        System.out.println("XYZ deployment succeeded: " +  config);
         deploymentComplete.complete(res.result());
       } else {
+        System.out.println("XYZ deployment failed: " +  config);
+        System.err.println(res.cause().getMessage());
         deploymentComplete.completeExceptionally(res.cause());
       }
     });
