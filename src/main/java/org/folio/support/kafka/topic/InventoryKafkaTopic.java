@@ -14,13 +14,13 @@ public enum InventoryKafkaTopic implements KafkaTopic {
   }
 
   @Override
-  public String moduleName() {
-    return "inventory";
+  public String topicName() {
+    return topic;
   }
 
   @Override
-  public String topicName() {
-    return topic;
+  public String moduleName() {
+    return "inventory";
   }
 
   @Override
