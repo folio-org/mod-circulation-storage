@@ -60,6 +60,8 @@ public class RequestSearchFieldsMigrationService
   private Future<Batch<RequestSearchMigrationContext>> findServicePointNames(
     Batch<RequestSearchMigrationContext> batch) {
 
+    log.info("findServicePointNames:: batch={}", batch);
+
     Set<String> servicePointIds = batch.getRequestMigrationContexts()
       .stream()
       .map(RequestSearchMigrationContext::getPickupServicePointId)
@@ -67,6 +69,7 @@ public class RequestSearchFieldsMigrationService
       .collect(toSet());
 
     if (servicePointIds.isEmpty()) {
+      log.info("findServicePointNames:: 0 service points found for batch {}", batch);
       return succeededFuture(batch);
     }
 
@@ -78,6 +81,9 @@ public class RequestSearchFieldsMigrationService
   private static void saveServicePointNames(Batch<RequestSearchMigrationContext> batch,
     Collection<ServicePoint> servicePoints) {
 
+    log.info("saveServicePointNames:: batch={}, servicePoints=Collection({} elements)", batch,
+      servicePoints.size());
+
     Map<String, String> servicePointIdToName = servicePoints.stream()
       .collect(toMap(ServicePoint::getId, ServicePoint::getName, (a, b) -> a));
 
@@ -87,6 +93,8 @@ public class RequestSearchFieldsMigrationService
 
   private Future<Batch<RequestSearchMigrationContext>> findCallNumbers(
     Batch<RequestSearchMigrationContext> batch) {
+
+    log.info("findCallNumbers:: batch={}", batch);
 
     Set<String> itemIds = batch.getRequestMigrationContexts()
       .stream()
@@ -106,6 +114,8 @@ public class RequestSearchFieldsMigrationService
   private static void saveCallNumbers(Batch<RequestSearchMigrationContext> batch,
     Collection<Item> items) {
 
+    log.info("saveCallNumbers:: batch={}, items=Collection({} elements)", batch, items.size());
+
     Map<String, CallNumberComponents> itemIdToCallNumberComponents = items.stream()
       .collect(toMap(Item::getId, Item::getEffectiveCallNumberComponents, (a, b) -> a));
 
@@ -119,6 +129,8 @@ public class RequestSearchFieldsMigrationService
   }
 
   public void buildNewRequest(RequestSearchMigrationContext context) {
+    log.info("buildNewRequest:: context={}", context);
+
     final JsonObject migratedRequest = context.getOldRequest().copy();
     JsonObject searchIndex = new JsonObject();
     CallNumberComponents callNumberComponents = context.getCallNumberComponents();
@@ -131,7 +143,7 @@ public class RequestSearchFieldsMigrationService
     }
     write(searchIndex, "shelvingOrder", context.getShelvingOrder());
     write(searchIndex, "pickupServicePointName", context.getPickupServicePointName());
-    write(migratedRequest, "searchIndex",searchIndex);
+    write(migratedRequest, "searchIndex", searchIndex);
 
     context.setNewRequest(migratedRequest);
   }
