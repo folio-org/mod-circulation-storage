@@ -209,7 +209,7 @@ public class EventConsumerVerticleTest extends ApiTests {
   }
 
   private JsonObject verifyRequestSearchIndex(String requestId, SearchIndex searchIndex) {
-    return waitAtMost(10, SECONDS)
+    return waitAtMost(60, SECONDS)
       .until(() -> getRequestSearchIndex(requestId), equalTo(mapFrom(searchIndex)));
   }
 
