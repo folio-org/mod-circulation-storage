@@ -6,7 +6,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.CirculationStorageKafkaTopic;
+import org.folio.support.kafka.topic.CirculationStorageKafkaTopic;
 import org.folio.kafka.services.KafkaAdminClientService;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.TenantAttributes;

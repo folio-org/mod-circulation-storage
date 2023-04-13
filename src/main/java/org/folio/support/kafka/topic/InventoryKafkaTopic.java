@@ -1,23 +1,21 @@
-package org.folio;
+package org.folio.support.kafka.topic;
 
 import org.folio.kafka.services.KafkaTopic;
 
-public enum CirculationStorageKafkaTopic implements KafkaTopic {
-  REQUEST("request", 10),
-  LOAN("loan", 10),
-  CHECK_IN("check-in", 10);
+public enum InventoryKafkaTopic implements KafkaTopic {
+  ITEM("item", 10);
 
   private final String topic;
   private final int partitions;
 
-  CirculationStorageKafkaTopic(String topic, int partitions) {
+  InventoryKafkaTopic(String topic, int partitions) {
     this.topic = topic;
     this.partitions = partitions;
   }
 
   @Override
   public String moduleName() {
-    return "circulation";
+    return "inventory";
   }
 
   @Override
