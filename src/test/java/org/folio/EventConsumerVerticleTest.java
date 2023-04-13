@@ -2,9 +2,6 @@ package org.folio;
 
 import static io.vertx.core.json.JsonObject.mapFrom;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.apache.kafka.clients.consumer.ConsumerConfig.AUTO_OFFSET_RESET_CONFIG;
-import static org.apache.kafka.clients.consumer.ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG;
-import static org.apache.kafka.clients.consumer.ConsumerConfig.GROUP_ID_CONFIG;
 import static org.apache.kafka.clients.producer.ProducerConfig.ACKS_CONFIG;
 import static org.apache.kafka.clients.producer.ProducerConfig.BOOTSTRAP_SERVERS_CONFIG;
 import static org.awaitility.Awaitility.waitAtMost;
@@ -13,8 +10,6 @@ import static org.folio.kafka.services.KafkaEnvironmentProperties.host;
 import static org.folio.kafka.services.KafkaEnvironmentProperties.port;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET_FILLED;
-import static org.folio.rest.tools.utils.ModuleName.getModuleName;
-import static org.folio.rest.tools.utils.ModuleName.getModuleVersion;
 import static org.hamcrest.CoreMatchers.equalTo;
 
 import java.net.URL;
@@ -38,8 +33,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import io.vertx.core.json.JsonObject;
-import io.vertx.kafka.client.consumer.KafkaConsumer;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
 import junitparams.JUnitParamsRunner;
@@ -54,24 +47,19 @@ public class EventConsumerVerticleTest extends ApiTests {
   private static final String REQUEST_STORAGE_URL = "/request-storage/requests";
   private static final String KAFKA_SERVER_URL = String.format("%s:%s", host(), port());
   private final static String DEFAULT_PICKUP_SERVICE_POINT_NAME = "Circ Desk 1";
-  private static final String INVENTORY_ITEM_UPDATED_EVENT_TYPE = "INVENTORY_ITEM_UPDATED";
   private static final String INVENTORY_ITEM_TOPIC = String.format(
     "%s.%s.inventory.item", environment(), TENANT_ID);
 
   private static KafkaProducer<String, JsonObject> producer;
-  private static KafkaConsumer<String, String> dummyConsumer;
 
   @BeforeClass
   public static void setUpClass() {
     producer = createProducer();
-    // not required, but makes tests run much faster
-    dummyConsumer = createDummyConsumer(INVENTORY_ITEM_TOPIC, INVENTORY_ITEM_UPDATED_EVENT_TYPE);
   }
 
   @AfterClass
   public static void tearDownClass() {
-    waitFor(dummyConsumer.close()
-      .compose(v -> producer.close()));
+    waitFor(producer.close());
   }
 
   @After
@@ -188,24 +176,6 @@ public class EventConsumerVerticleTest extends ApiTests {
       .put("type", "UPDATE")
       .put("old", oldVersion)
       .put("new", newVersion);
-  }
-
-  private static KafkaConsumer<String, String> createDummyConsumer(String topic, String eventType) {
-    Properties config = new Properties();
-    config.put(BOOTSTRAP_SERVERS_CONFIG, KAFKA_SERVER_URL);
-    config.put(GROUP_ID_CONFIG, buildConsumerGroupId(eventType));
-    config.put(AUTO_OFFSET_RESET_CONFIG, "earliest");
-    config.put(ENABLE_AUTO_COMMIT_CONFIG, "false");
-
-    var consumer = KafkaConsumer.create(vertx, config, String.class, String.class)
-      .handler(KafkaConsumerRecord::key);
-    waitFor(consumer.subscribe(topic));
-
-    return consumer;
-  }
-
-  private static String buildConsumerGroupId(String eventType) {
-    return String.format("%s.%s-%s", eventType, getModuleName().replace("_", "-"), getModuleVersion());
   }
 
   private JsonObject verifyRequestSearchIndex(String requestId, SearchIndex searchIndex) {
