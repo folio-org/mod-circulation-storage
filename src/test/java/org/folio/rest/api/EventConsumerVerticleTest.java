@@ -290,7 +290,7 @@ public class EventConsumerVerticleTest extends ApiTests {
 
   private static int waitUntilValueIsIncreased(int previousValue, Callable<Integer> valueSupplier) {
     return waitAtMost(60, SECONDS)
-      .until(valueSupplier, offset -> offset > previousValue);
+      .until(valueSupplier, newValue -> newValue > previousValue);
   }
 
   private static int getOffset(String topic, String consumerGroupId) {

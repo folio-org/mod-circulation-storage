@@ -293,13 +293,9 @@ public class StorageTestSuite {
     CompletableFuture<String> deploymentComplete = new CompletableFuture<>();
 
     vertx.deployVerticle(RestVerticle.class.getName(), options, res -> {
-      String config = options.getConfig().encodePrettily();
       if (res.succeeded()) {
-        System.out.println("XYZ deployment succeeded: " +  config);
         deploymentComplete.complete(res.result());
       } else {
-        System.out.println("XYZ deployment failed: " +  config);
-        System.err.println(res.cause().getMessage());
         deploymentComplete.completeExceptionally(res.cause());
       }
     });
