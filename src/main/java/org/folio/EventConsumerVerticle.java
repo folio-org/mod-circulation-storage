@@ -73,7 +73,7 @@ public class EventConsumerVerticle extends AbstractVerticle {
   private Future<Void> createConsumers() {
     final KafkaConfig config = getKafkaConfig();
 
-    return createInventoryEventConsumer(INVENTORY_ITEM_UPDATED, config,  new ItemUpdateEventHandler(context))
+    return createInventoryEventConsumer(INVENTORY_ITEM_UPDATED, config, new ItemUpdateEventHandler(context))
       .mapEmpty();
   }
 
