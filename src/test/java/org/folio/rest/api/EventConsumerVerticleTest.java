@@ -11,11 +11,17 @@ import static org.folio.kafka.services.KafkaEnvironmentProperties.port;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.getVertx;
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET_FILLED;
+import static org.folio.rest.tools.utils.ModuleName.getModuleName;
+import static org.folio.rest.tools.utils.ModuleName.getModuleVersion;
+import static org.folio.service.event.InventoryEventType.INVENTORY_ITEM_UPDATED;
 import static org.hamcrest.CoreMatchers.equalTo;
 
 import java.net.URL;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 
 import org.folio.rest.jaxrs.model.CallNumberComponents;
 import org.folio.rest.jaxrs.model.SearchIndex;
@@ -33,6 +39,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import io.vertx.core.json.JsonObject;
+import io.vertx.kafka.admin.KafkaAdminClient;
+import io.vertx.kafka.client.common.TopicPartition;
+import io.vertx.kafka.client.consumer.OffsetAndMetadata;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
 import junitparams.JUnitParamsRunner;
@@ -51,15 +60,20 @@ public class EventConsumerVerticleTest extends ApiTests {
     "%s.%s.inventory.item", environment(), TENANT_ID);
 
   private static KafkaProducer<String, JsonObject> producer;
+  private static KafkaAdminClient adminClient;
 
   @BeforeClass
   public static void setUpClass() {
     producer = createProducer();
+    adminClient = createAdminClient();
   }
 
   @AfterClass
   public static void tearDownClass() {
-    waitFor(producer.close());
+    waitFor(
+      producer.close()
+        .compose(v -> adminClient.close())
+    );
   }
 
   @After
@@ -95,6 +109,7 @@ public class EventConsumerVerticleTest extends ApiTests {
     @Nullable String oldSuffix, @Nullable String newSuffix,
     @Nullable String oldShelvingOrder, @Nullable String newShelvingOrder) {
 
+
     JsonObject oldItem = buildItem(oldPrefix, oldCallNumber, oldSuffix, oldShelvingOrder);
     JsonObject newItem = buildItem(newPrefix, newCallNumber, newSuffix, newShelvingOrder);
     SearchIndex oldIndex = buildSearchIndex(oldPrefix, oldCallNumber, oldSuffix, oldShelvingOrder);
@@ -105,6 +120,47 @@ public class EventConsumerVerticleTest extends ApiTests {
 
     publishItemUpdateEvent(oldItem, newItem);
     verifyRequestSearchIndex(REQUEST_ID, newIndex);
+  }
+
+  @Test
+  public void requestSearchIndexIsNotUpdatedWhenEventContainsNoRelevantChanges() {
+    String prefix = "prefix";
+    String callNumber = "callNumber";
+    String suffix = "suffix";
+    String shelvingOrder = "shelvingOrder";
+
+    JsonObject oldItem = buildItem(prefix, callNumber, suffix, shelvingOrder);
+    JsonObject newItem = oldItem.copy().put("barcode", "new-barcode"); // irrelevant change
+    SearchIndex searchIndex = buildSearchIndex(prefix, callNumber, suffix, shelvingOrder);
+
+    createRequest(buildRequest(REQUEST_ID, oldItem));
+    verifyRequestSearchIndex(REQUEST_ID, searchIndex);
+
+    int initialOffset = getOffsetForItemUpdateEvents();
+    publishItemUpdateEvent(oldItem, newItem);
+    waitUntilValueIsIncreased(initialOffset, EventConsumerVerticleTest::getOffsetForItemUpdateEvents);
+    verifyRequestSearchIndex(REQUEST_ID, searchIndex);
+  }
+
+  @Test
+  public void requestSearchIndexIsNotUpdatedWhenRequestAndEventAreForDifferentItems() {
+    String prefix = "prefix";
+    String callNumber = "callNumber";
+    String suffix = "suffix";
+    String shelvingOrder = "shelvingOrder";
+
+    JsonObject oldItem = buildItem(prefix, callNumber, suffix, shelvingOrder);
+    JsonObject newItem = oldItem.copy().put("effectiveShelvingOrder", "new-order"); // relevant change
+    SearchIndex searchIndex = buildSearchIndex(prefix, callNumber, suffix, shelvingOrder);
+
+    JsonObject request = buildRequest(REQUEST_ID, oldItem).put("itemId", randomId());
+    createRequest(request);
+    verifyRequestSearchIndex(REQUEST_ID, searchIndex);
+
+    int initialOffset = getOffsetForItemUpdateEvents();
+    publishItemUpdateEvent(oldItem, newItem);
+    waitUntilValueIsIncreased(initialOffset, EventConsumerVerticleTest::getOffsetForItemUpdateEvents);
+    verifyRequestSearchIndex(REQUEST_ID, searchIndex);
   }
 
   private static JsonObject buildItem(String prefix, String callNumber, String suffix,
@@ -219,4 +275,31 @@ public class EventConsumerVerticleTest extends ApiTests {
       .create();
   }
 
+  private static Integer getOffsetForItemUpdateEvents() {
+    return getOffset(INVENTORY_ITEM_TOPIC, buildConsumerGroupId(INVENTORY_ITEM_UPDATED.name()));
+  }
+
+  private static String buildConsumerGroupId(String eventType) {
+    return String.format("%s.%s-%s", eventType, getModuleName().replace("_", "-"), getModuleVersion());
+  }
+
+  private static KafkaAdminClient createAdminClient() {
+    Map<String, String> config = Map.of(BOOTSTRAP_SERVERS_CONFIG, KAFKA_SERVER_URL);
+    return KafkaAdminClient.create(getVertx(), config);
+  }
+
+  private static int waitUntilValueIsIncreased(int previousValue, Callable<Integer> valueSupplier) {
+    return waitAtMost(60, SECONDS)
+      .until(valueSupplier, offset -> offset > previousValue);
+  }
+
+  private static int getOffset(String topic, String consumerGroupId) {
+    return waitFor(
+      adminClient.listConsumerGroupOffsets(consumerGroupId)
+        .map(partitions -> Optional.ofNullable(partitions.get(new TopicPartition(topic, 0)))
+          .map(OffsetAndMetadata::getOffset)
+          .map(Long::intValue)
+          .orElse(0)) // if topic does not exist yet
+    );
+  }
 }
