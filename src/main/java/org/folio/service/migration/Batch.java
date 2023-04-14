@@ -1,4 +1,6 @@
-package org.folio.service.tlr;
+package org.folio.service.migration;
+
+import static java.lang.String.format;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,13 +14,14 @@ import lombok.Setter;
 @Getter
 @Setter
 @RequiredArgsConstructor
-public class Batch {
+public class Batch<T extends RequestMigrationContext> {
   private final int batchNumber;
   private final Conn connection;
-  private List<RequestMigrationContext> requestMigrationContexts = new ArrayList<>();
+  private List<T> requestMigrationContexts = new ArrayList<>();
 
   @Override
   public String toString() {
-    return String.format("[batch #%d - %d requests]", batchNumber, requestMigrationContexts.size());
+    return format("Batch(batchNumber=%d, numberOfRequests=%d)", batchNumber,
+      requestMigrationContexts.size());
   }
 }

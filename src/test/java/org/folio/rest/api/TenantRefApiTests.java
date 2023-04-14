@@ -69,10 +69,14 @@ import io.vertx.sqlclient.RowSet;
 
 @RunWith(VertxUnitRunner.class)
 public class TenantRefApiTests {
-  protected static final String OLD_MODULE_VERSION = "13.0.0";
-  protected static final String PREVIOUS_MODULE_VERSION = "13.1.0";
+  protected static final String TLR_MIGRATION_OLD_MODULE_VERSION = "13.0.0";
+  protected static final String TLR_MIGRATION_PREV_MODULE_VERSION = "13.1.0";
   protected static final String TLR_MIGRATION_MODULE_VERSION = "14.0.0";
-  protected static final String NEXT_MODULE_VERSION = "14.1.0";
+  protected static final String TLR_MIGRATION_NEXT_MODULE_VERSION = "14.1.0";
+  protected static final String REQ_SEARCH_MIGRATION_OLD_MOD_VER = "15.0.0";
+  protected static final String REQ_SEARCH_MIGRATION_PREV_MOD_VER = "16.0.0";
+  protected static final String REQ_SEARCH_MIGRATION_MOD_VER = "16.1.0";
+  protected static final String REQ_SEARCH_MIGRATION_NEXT_MOD_VER = "16.2.0";
   protected static final String MODULE_NAME = "mod_circulation_storage";
   protected static final int PORT = NetworkUtils.nextFreePort();
   protected static final String URL = "http://localhost:" + PORT;
@@ -84,6 +88,7 @@ public class TenantRefApiTests {
   private static final int GET_TENANT_TIMEOUT_MS = 10000;
   private static final String ITEM_STORAGE_URL = "/item-storage/items";
   private static final String HOLDINGS_STORAGE_URL = "/holdings-storage/holdings";
+  private static final String SERVICE_PINTS_STORAGE_URL = "/service-points";
   private static final String ANY_URL_PARAMS_REGEX_TEMPLATE = "\\?.*";
   private static final String FAIL_SECOND_CALL_SCENARIO = "Test scenario";
   private static final String FIRST_CALL_MADE_SCENARIO_STATE = "First call made";
@@ -91,9 +96,11 @@ public class TenantRefApiTests {
 
   private static StubMapping itemStorageStub;
   private static StubMapping holdingsStorageStub;
+  private static StubMapping servicePointsStorageStub;
 
   private static List<JsonObject> items;
   private static List<JsonObject> holdingRecords;
+  private static List<JsonObject> servicePoints;
 
   protected static Vertx vertx;
   protected static TenantClient tenantClient;
@@ -124,7 +131,7 @@ public class TenantRefApiTests {
     mockEndpoints();
 
     vertx.deployVerticle(RestVerticle.class.getName(), deploymentOptions)
-      .compose(r -> postTenant(context, OLD_MODULE_VERSION, PREVIOUS_MODULE_VERSION))
+      .compose(r -> postTenant(context, TLR_MIGRATION_OLD_MODULE_VERSION, TLR_MIGRATION_PREV_MODULE_VERSION))
       .onFailure(context::fail)
       .onSuccess(r -> {
         postgresClient = PostgresClient.getInstance(vertx, TENANT);
@@ -161,68 +168,132 @@ public class TenantRefApiTests {
   }
 
   @Test
-  public void migrationShouldBeSkippedWhenUpgradingToLowerVersion(final TestContext context) {
+  public void tlrMigrationShouldBeSkippedWhenUpgradingToLowerVersion(final TestContext context) {
     Async async = context.async();
 
-    postTenant(context, OLD_MODULE_VERSION, PREVIOUS_MODULE_VERSION)
+    postTenant(context, TLR_MIGRATION_OLD_MODULE_VERSION, TLR_MIGRATION_PREV_MODULE_VERSION)
       .onSuccess(job -> {
-        assertThatNoRequestsWereUpdated(context);
+        assertThatNoRequestsWereUpdatedByTlrMigration(context);
         async.complete();
       });
   }
 
   @Test
-  public void migrationShouldBeSkippedWhenUpgradingFromAlreadyMigratedVersion(final TestContext context) {
+  public void tlrMigrationShouldBeSkippedWhenUpgradingFromAlreadyMigratedVersion(
+    final TestContext context) {
+
     Async async = context.async();
 
-    postTenant(context, TLR_MIGRATION_MODULE_VERSION, NEXT_MODULE_VERSION)
+    postTenant(context, TLR_MIGRATION_MODULE_VERSION, TLR_MIGRATION_NEXT_MODULE_VERSION)
       .onSuccess(job -> {
-        assertThatNoRequestsWereUpdated(context);
+        assertThatNoRequestsWereUpdatedByTlrMigration(context);
         async.complete();
       });
   }
 
   @Test
-  public void jobCompletedWhenMigrationIsSuccessful(TestContext context) {
+  public void jobCompletedWhenTlrMigrationIsSuccessful(TestContext context) {
     Async async = context.async();
 
-    postTenant(context, PREVIOUS_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION)
+    postTenant(context, TLR_MIGRATION_PREV_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION)
       .onSuccess(job -> {
         context.assertNull(job.getError());
-        validateMigrationResult(context, async);
+        validateTlrMigrationResult(context, async);
+      });
+  }
+
+
+  @Test
+  public void requestSearchMigrationShouldBeSkippedWhenUpgradingToLowerVersion(final TestContext context) {
+    Async async = context.async();
+
+    postTenant(context, REQ_SEARCH_MIGRATION_OLD_MOD_VER, REQ_SEARCH_MIGRATION_PREV_MOD_VER)
+      .onSuccess(job -> {
+        assertThatNoRequestsWereUpdatedByRequestSearchMigration(context);
+        async.complete();
       });
   }
 
   @Test
-  public void jobFailsWhenItemStorageCallFails(TestContext context) {
+  public void requestSearchMigrationShouldBeSkippedWhenUpgradingFromAlreadyMigratedVersion(
+    final TestContext context) {
+
     Async async = context.async();
-    wireMock.removeStub(itemStorageStub);
-    jobFailsWhenRemoteCallFails(context, async);
+
+    postTenant(context, REQ_SEARCH_MIGRATION_MOD_VER, REQ_SEARCH_MIGRATION_NEXT_MOD_VER)
+      .onSuccess(job -> {
+        assertThatNoRequestsWereUpdatedByRequestSearchMigration(context);
+        async.complete();
+      });
   }
 
   @Test
-  public void jobFailsWhenHoldingsStorageCallFails(TestContext context) {
+  public void jobCompletedWhenRequestSearchMigrationIsSuccessful(TestContext context) {
+    Async async = context.async();
+
+    postTenant(context, REQ_SEARCH_MIGRATION_PREV_MOD_VER, REQ_SEARCH_MIGRATION_MOD_VER)
+      .onSuccess(job -> {
+        context.assertNull(job.getError());
+        validateRequestSearchMigrationResult(context, async);
+      });
+  }
+
+  @Test
+  public void tlrMigrationFailsWhenItemStorageCallFails(TestContext context) {
+    Async async = context.async();
+    wireMock.removeStub(itemStorageStub);
+    tlrMigrationFailsWhenRemoteCallFails(context, async);
+  }
+
+  @Test
+  public void tlrMigrationFailsWhenHoldingsStorageCallFails(TestContext context) {
     Async async = context.async();
     wireMock.removeStub(holdingsStorageStub);
-    jobFailsWhenRemoteCallFails(context, async);
+    tlrMigrationFailsWhenRemoteCallFails(context, async);
   }
 
   @Test
-  public void jobFailsWhenItemWasNotFound(final TestContext context) {
+  public void tlrMigrationFailsWhenItemWasNotFound(final TestContext context) {
     Async async = context.async();
     wireMock.removeStub(itemStorageStub);
-    jobFailsWhenRemoteCallFails(context, async);
+    tlrMigrationFailsWhenRemoteCallFails(context, async);
   }
 
-  private void jobFailsWhenRemoteCallFails(TestContext context, Async async) {
-    postTenant(context, PREVIOUS_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION)
+  private void tlrMigrationFailsWhenRemoteCallFails(TestContext context, Async async) {
+    postTenant(context, TLR_MIGRATION_PREV_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION)
       .onSuccess(job -> {
         context.assertTrue(job.getError().contains("Request failed: GET"));
         context.assertTrue(job.getError().contains("Response: [404]"));
-        assertThatNoRequestsWereUpdated(context);
+        assertThatNoRequestsWereUpdatedByTlrMigration(context);
         async.complete();
       });
   }
+
+  ////
+  @Test
+  public void requestSearchMigrationFailsWhenItemStorageCallFails(TestContext context) {
+    Async async = context.async();
+    wireMock.removeStub(itemStorageStub);
+    requestSearchMigrationFailsWhenRemoteCallFails(context, async);
+  }
+
+  @Test
+  public void requestSearchMigrationFailsWhenServicePointsStorageCallFails(TestContext context) {
+    Async async = context.async();
+    wireMock.removeStub(servicePointsStorageStub);
+    requestSearchMigrationFailsWhenRemoteCallFails(context, async);
+  }
+
+  private void requestSearchMigrationFailsWhenRemoteCallFails(TestContext context, Async async) {
+    postTenant(context, REQ_SEARCH_MIGRATION_PREV_MOD_VER, REQ_SEARCH_MIGRATION_MOD_VER)
+      .onSuccess(job -> {
+        context.assertTrue(job.getError().contains("Request failed: GET"));
+        context.assertTrue(job.getError().contains("Response: [404]"));
+        assertThatNoRequestsWereUpdatedByRequestSearchMigration(context);
+        async.complete();
+      });
+  }
+  ///
 
   @Test
   public void useDefaultValuesForInstanceIdAndHoldingsRecordIdWhenItemWasNotFound(TestContext context) {
@@ -237,13 +308,13 @@ public class TenantRefApiTests {
     String requestId = getId(randomRequest);
 
     postgresClient.update(REQUEST_TABLE_NAME, randomRequest, requestId)
-      .compose(r -> postTenant(context, PREVIOUS_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION))
+      .compose(r -> postTenant(context, TLR_MIGRATION_PREV_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION))
       .compose(job -> getRequestAsJson(requestId))
       .onFailure(context::fail)
       .onSuccess(updatedRequest -> {
         context.assertEquals(DEFAULT_UUID, updatedRequest.getString("instanceId"));
         context.assertEquals(DEFAULT_UUID, updatedRequest.getString("holdingsRecordId"));
-        validateMigrationResult(context, async);
+        validateTlrMigrationResult(context, async);
       });
 
   }
@@ -267,10 +338,10 @@ public class TenantRefApiTests {
       .whenScenarioStateIs(FIRST_CALL_MADE_SCENARIO_STATE)
       .willReturn(serverError()));
 
-    postTenant(context, PREVIOUS_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION)
+    postTenant(context, TLR_MIGRATION_PREV_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION)
       .onSuccess(job -> {
         context.assertFalse(job.getError().isEmpty());
-        assertThatNoRequestsWereUpdated(context);
+        assertThatNoRequestsWereUpdatedByTlrMigration(context);
         async.complete();
       });
   }
@@ -314,7 +385,7 @@ public class TenantRefApiTests {
       .map(Request.Status::value)
       .collect(toList());
 
-    postTenant(context, PREVIOUS_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION)
+    postTenant(context, TLR_MIGRATION_PREV_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION)
       .compose(job -> getAllRequestsAsJson())
       .onFailure(context::fail)
       .onSuccess(requestsAfterMigration -> {
@@ -334,11 +405,11 @@ public class TenantRefApiTests {
     JsonObject request, String expectedErrorMessage) {
 
     postgresClient.update(REQUEST_TABLE_NAME, request, getId(request))
-      .compose(r -> postTenant(context, PREVIOUS_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION))
+      .compose(r -> postTenant(context, TLR_MIGRATION_PREV_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION))
       .onFailure(context::fail)
       .onSuccess(job -> {
         context.assertTrue(job.getError().contains(expectedErrorMessage));
-        assertThatNoRequestsWereUpdated(context);
+        assertThatNoRequestsWereUpdatedByTlrMigration(context);
         async.complete();
       });
   }
@@ -355,10 +426,18 @@ public class TenantRefApiTests {
       .onFailure(context::fail);
   }
 
-  private static void assertThatNoRequestsWereUpdated(TestContext context) {
+  private static void assertThatNoRequestsWereUpdatedByTlrMigration(TestContext context) {
     postgresClient.select("SELECT COUNT(*) " +
         "FROM " + REQUEST_TABLE + " " +
         "WHERE jsonb->>'requestLevel' IS NOT null")
+      .onFailure(context::fail)
+      .onSuccess(rowSet -> context.assertEquals(0, getCount(rowSet)));
+  }
+
+  private static void assertThatNoRequestsWereUpdatedByRequestSearchMigration(TestContext context) {
+    postgresClient.select("SELECT COUNT(*) " +
+        "FROM " + REQUEST_TABLE + " " +
+        "WHERE jsonb->>'searchIndex' IS NOT null")
       .onFailure(context::fail)
       .onSuccess(rowSet -> context.assertEquals(0, getCount(rowSet)));
   }
@@ -374,17 +453,17 @@ public class TenantRefApiTests {
     return postgresClient.getById(REQUEST_TABLE_NAME, requestId);
   }
 
-  private void validateMigrationResult(TestContext context, Async async) {
+  private void validateTlrMigrationResult(TestContext context, Async async) {
     getAllRequestsAsJson()
       .onFailure(context::fail)
       .onSuccess(requestsAfterMigration -> {
         context.assertEquals(requestsBeforeMigration.size(), requestsAfterMigration.size());
-        requestsAfterMigration.forEach(request -> validateMigrationResult(context, request));
+        requestsAfterMigration.forEach(request -> validateTlrMigrationResult(context, request));
         async.complete();
       });
   }
 
-  private void validateMigrationResult(TestContext context, JsonObject requestAfter) {
+  private void validateTlrMigrationResult(TestContext context, JsonObject requestAfter) {
     JsonObject requestBefore = requestsBeforeMigration.get(getId(requestAfter));
 
     context.assertNotNull(requestBefore);
@@ -412,6 +491,37 @@ public class TenantRefApiTests {
     }
   }
 
+  private void validateRequestSearchMigrationResult(TestContext context, Async async) {
+    getAllRequestsAsJson()
+      .onFailure(context::fail)
+      .onSuccess(requestsAfterMigration -> {
+        context.assertEquals(requestsBeforeMigration.size(), requestsAfterMigration.size());
+        requestsAfterMigration.forEach(request -> validateRequestSearchMigrationResult(context, request));
+        async.complete();
+      });
+  }
+
+  private void validateRequestSearchMigrationResult(TestContext context, JsonObject requestAfter) {
+    JsonObject requestBefore = requestsBeforeMigration.get(getId(requestAfter));
+
+    context.assertNotNull(requestBefore);
+    context.assertNotNull(requestAfter);
+
+    if (requestBefore.containsKey("pickupServicePointId")) {
+      context.assertEquals("testSpName", requestAfter.getJsonObject("searchIndex")
+        .getString("pickupServicePointName"));
+    }
+
+    context.assertEquals("testShelvingOrder", requestAfter.getJsonObject("searchIndex")
+      .getString("shelvingOrder"));
+    context.assertEquals("testCallNumber", requestAfter.getJsonObject("searchIndex")
+      .getJsonObject("callNumberComponents").getString("callNumber"));
+    context.assertEquals("testPrefix", requestAfter.getJsonObject("searchIndex")
+      .getJsonObject("callNumberComponents").getString("prefix"));
+    context.assertEquals("testSuffix", requestAfter.getJsonObject("searchIndex")
+      .getJsonObject("callNumberComponents").getString("suffix"));
+  }
+
   static void deleteTenant(TenantClient tenantClient) {
     CompletableFuture<Void> future = new CompletableFuture<>();
     tenantClient.deleteTenantByOperationId(jobId, deleted -> {
@@ -426,18 +536,36 @@ public class TenantRefApiTests {
   private static void mockEndpoints() {
     items = new ArrayList<>();
     holdingRecords = new ArrayList<>();
+    servicePoints = new ArrayList<>();
 
     requestsBeforeMigration.values()
       .forEach(request -> {
         final String holdingsRecordId = randomId();
+        final String servicePointId = request.getString("pickupServicePointId");
 
         items.add(new JsonObject()
           .put("id", request.getString("itemId"))
-          .put("holdingsRecordId", holdingsRecordId));
+          .put("holdingsRecordId", holdingsRecordId)
+          .put("effectiveShelvingOrder", "testShelvingOrder")
+          .put("effectiveCallNumberComponents", new JsonObject()
+            .put("callNumber", "testCallNumber")
+            .put("prefix", "testPrefix")
+            .put("suffix", "testSuffix")
+          ));
 
         holdingRecords.add(new JsonObject()
           .put("id", holdingsRecordId)
           .put("instanceId", randomId()));
+
+        if (servicePointId != null) {
+          boolean servicePointDoesNotExists = servicePoints.stream()
+            .noneMatch(sp -> sp.getString("id").equals(servicePointId));
+          if (servicePointDoesNotExists) {
+            servicePoints.add(new JsonObject()
+              .put("id", servicePointId)
+              .put("name", "testSpName"));
+          }
+        }
       });
 
     String itemsResponse = new JsonObject()
@@ -446,6 +574,10 @@ public class TenantRefApiTests {
 
     String holdingRecordsResponse = new JsonObject()
       .put("holdingsRecords", new JsonArray(holdingRecords))
+      .encodePrettily();
+
+    String servicePointsResponse = new JsonObject()
+      .put("servicepoints", new JsonArray(servicePoints))
       .encodePrettily();
 
     wireMock.resetAll();
@@ -466,6 +598,10 @@ public class TenantRefApiTests {
     holdingsStorageStub = wireMock.stubFor(
       get(urlMatching(HOLDINGS_STORAGE_URL + ANY_URL_PARAMS_REGEX_TEMPLATE))
         .willReturn(ok().withBody(holdingRecordsResponse)));
+
+    servicePointsStorageStub = wireMock.stubFor(
+      get(urlMatching(SERVICE_PINTS_STORAGE_URL + ANY_URL_PARAMS_REGEX_TEMPLATE))
+        .willReturn(ok().withBody(servicePointsResponse)));
 
     wireMock.stubFor(any(anyUrl())
       .atPriority(Integer.MAX_VALUE)

@@ -1,4 +1,4 @@
-package org.folio.service.tlr;
+package org.folio.service.migration;
 
 import static io.vertx.core.Future.succeededFuture;
 import static java.util.stream.Collectors.toMap;
@@ -27,7 +27,7 @@ import lombok.Setter;
 /**
  * Data migration from item-level requests (ILR) to title-level requests (TLR)
  */
-public class TlrDataMigrationService extends AbstractRequestMigrationService{
+public class TlrDataMigrationService extends AbstractRequestMigrationService<TlrMigrationContext> {
   private static final Logger log = LogManager.getLogger(TlrDataMigrationService.class);
   // valid UUID version 4 variant 1
   private static final String DEFAULT_UUID = "00000000-0000-4000-8000-000000000000";
@@ -52,7 +52,7 @@ public class TlrDataMigrationService extends AbstractRequestMigrationService{
       super(attributes, context, okapiHeaders, REQUEST_TABLE, TLR_MIGRATION_MODULE_VERSION);
     }
 
-  public Future<Void> processBatch(Batch batch) {
+  public Future<Void> processBatch(Batch<TlrMigrationContext> batch) {
     log.info("{} processing started", batch);
 
     return succeededFuture(batch)
@@ -66,7 +66,13 @@ public class TlrDataMigrationService extends AbstractRequestMigrationService{
       .recover(t -> handleError(batch, t));
   }
 
-  public Collection<String> validateRequest(RequestMigrationContext context) {
+  @Override
+  TlrMigrationContext buildContext(JsonObject request) {
+    return new TlrMigrationContext(request);
+  }
+
+  @Override
+  public Collection<String> validateRequest(TlrMigrationContext context) {
     final JsonObject request = context.getOldRequest();
     final String requestId = context.getRequestId();
     final List<String> errors = new ArrayList<>();
@@ -82,10 +88,12 @@ public class TlrDataMigrationService extends AbstractRequestMigrationService{
     return errors;
   }
 
-  private Future<Batch> findHoldingsRecordIds(Batch batch) {
+  private Future<Batch<TlrMigrationContext>> findHoldingsRecordIds(
+    Batch<TlrMigrationContext> batch) {
+
     Set<String> itemIds = batch.getRequestMigrationContexts()
       .stream()
-      .map(RequestMigrationContext::getItemId)
+      .map(TlrMigrationContext::getItemId)
       .filter(Objects::nonNull)
       .collect(toSet());
 
@@ -98,18 +106,20 @@ public class TlrDataMigrationService extends AbstractRequestMigrationService{
       .map(batch);
   }
 
-  private static void saveHoldingsRecordIds(Batch batch, Collection<Item> items) {
+  private static void saveHoldingsRecordIds(Batch<TlrMigrationContext> batch,
+    Collection<Item> items) {
+
     Map<String, String> itemIdToHoldingsRecordId = items.stream()
-      .collect(toMap(Item::getId, Item::getHoldingsRecordId));
+      .collect(toMap(Item::getId, Item::getHoldingsRecordId, (a, b) -> a));
 
     batch.getRequestMigrationContexts().forEach(ctx ->
       ctx.setHoldingsRecordId(itemIdToHoldingsRecordId.get(ctx.getItemId())));
   }
 
-  private Future<Batch> findInstanceIds(Batch batch) {
+  private Future<Batch<TlrMigrationContext>> findInstanceIds(Batch<TlrMigrationContext> batch) {
     Set<String> holdingsRecordIds = batch.getRequestMigrationContexts()
       .stream()
-      .map(RequestMigrationContext::getHoldingsRecordId)
+      .map(TlrMigrationContext::getHoldingsRecordId)
       .filter(Objects::nonNull)
       .collect(toSet());
 
@@ -122,15 +132,17 @@ public class TlrDataMigrationService extends AbstractRequestMigrationService{
       .map(batch);
   }
 
-  private static void saveInstanceIds(Batch batch, Collection<HoldingsRecord> holdingsRecords) {
+  private static void saveInstanceIds(Batch<TlrMigrationContext> batch,
+    Collection<HoldingsRecord> holdingsRecords) {
+
     Map<String, String> holdingsRecordIdInstanceId = holdingsRecords.stream()
-      .collect(toMap(HoldingsRecord::getId, HoldingsRecord::getInstanceId));
+      .collect(toMap(HoldingsRecord::getId, HoldingsRecord::getInstanceId, (a, b) -> a));
 
     batch.getRequestMigrationContexts().forEach(ctx ->
       ctx.setInstanceId(holdingsRecordIdInstanceId.get(ctx.getHoldingsRecordId())));
   }
 
-  public void buildNewRequest(RequestMigrationContext context) {
+  public void buildNewRequest(TlrMigrationContext context) {
     String holdingsRecordId = context.getHoldingsRecordId();
     if (holdingsRecordId == null) {
       holdingsRecordId = DEFAULT_UUID;
