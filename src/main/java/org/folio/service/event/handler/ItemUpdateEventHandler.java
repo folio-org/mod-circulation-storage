@@ -3,7 +3,7 @@ package org.folio.service.event.handler;
 import static io.vertx.core.Future.succeededFuture;
 import static org.apache.commons.lang3.ObjectUtils.notEqual;
 import static org.folio.kafka.KafkaHeaderUtils.kafkaHeadersToMap;
-import static org.folio.service.event.InventoryEventType.ITEM_UPDATED;
+import static org.folio.service.event.InventoryEventType.INVENTORY_ITEM_UPDATED;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -53,7 +53,7 @@ public class ItemUpdateEventHandler implements AsyncRecordHandler<String, String
     JsonObject payload = new JsonObject(event.value());
 
     String eventType = payload.getString("type");
-    if (!ITEM_UPDATED.getPayloadType().name().equals(eventType)) {
+    if (!INVENTORY_ITEM_UPDATED.getPayloadType().name().equals(eventType)) {
       log.info("updateRequestSearchIndex:: unsupported event type: {}", eventType);
       return succeededFuture();
     }

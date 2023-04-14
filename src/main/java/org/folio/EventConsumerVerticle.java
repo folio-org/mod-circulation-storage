@@ -3,7 +3,7 @@ package org.folio;
 import static java.util.stream.Collectors.toList;
 import static org.folio.rest.tools.utils.ModuleName.getModuleName;
 import static org.folio.rest.tools.utils.ModuleName.getModuleVersion;
-import static org.folio.service.event.InventoryEventType.ITEM_UPDATED;
+import static org.folio.service.event.InventoryEventType.INVENTORY_ITEM_UPDATED;
 import static org.folio.support.kafka.KafkaConfigConstants.KAFKA_ENV;
 import static org.folio.support.kafka.KafkaConfigConstants.KAFKA_HOST;
 import static org.folio.support.kafka.KafkaConfigConstants.KAFKA_MAX_REQUEST_SIZE;
@@ -73,7 +73,7 @@ public class EventConsumerVerticle extends AbstractVerticle {
   private Future<Void> createConsumers() {
     final KafkaConfig config = getKafkaConfig();
 
-    return createInventoryEventConsumer(ITEM_UPDATED, config,  new ItemUpdateEventHandler(context))
+    return createInventoryEventConsumer(INVENTORY_ITEM_UPDATED, config,  new ItemUpdateEventHandler(context))
       .mapEmpty();
   }
 

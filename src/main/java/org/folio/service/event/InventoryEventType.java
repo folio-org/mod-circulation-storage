@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum InventoryEventType {
-  ITEM_UPDATED(ITEM, UPDATE);
+  INVENTORY_ITEM_UPDATED(ITEM, UPDATE);
 
   private final KafkaTopic kafkaTopic;
   private final PayloadType payloadType;
