@@ -1,13 +1,15 @@
 package org.folio.rest.support;
 
-import static java.net.HttpURLConnection.HTTP_CREATED;
 import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
 import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
+import static io.vertx.core.json.JsonObject.mapFrom;
+import static java.net.HttpURLConnection.HTTP_CREATED;
+import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.api.StorageTestSuite.getVertx;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.removeAllEvents;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static io.vertx.core.json.JsonObject.mapFrom;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -18,26 +20,29 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import com.github.tomakehurst.wiremock.client.WireMock;
 import org.folio.rest.api.StorageTestSuite;
 import org.folio.rest.configuration.TlrSettingsConfiguration;
 import org.folio.rest.jaxrs.model.Config;
 import org.folio.rest.jaxrs.model.KvConfigurations;
+import org.folio.rest.persist.Criteria.Criterion;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.core.Is;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
-import io.vertx.core.Vertx;
+import com.github.tomakehurst.wiremock.client.WireMock;
+
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import lombok.SneakyThrows;
 
 public class ApiTests {
   private static boolean runningOnOwn;
 
-
-  protected final OkapiHttpClient client = new OkapiHttpClient(StorageTestSuite.getVertx());
+  protected static PostgresClient pgClient;
+  protected final OkapiHttpClient client = new OkapiHttpClient(getVertx());
   protected static FakeKafkaConsumer kafkaConsumer;
   private static final String CONFIGURATIONS_ENTRIES_URL_PATTERN = "/configurations/entries.*";
 
@@ -49,8 +54,8 @@ public class ApiTests {
       StorageTestSuite.before();
     }
 
-    Vertx vertx = StorageTestSuite.getVertx();
-    kafkaConsumer = new FakeKafkaConsumer().consume(vertx);
+    pgClient = PostgresClient.getInstance(getVertx(), TENANT_ID);
+    kafkaConsumer = new FakeKafkaConsumer().consume(getVertx());
     removeAllEvents();
   }
 
@@ -158,5 +163,24 @@ public class ApiTests {
     StorageTestSuite.getWireMockServer().stubFor(WireMock.get(urlPathMatching(
         CONFIGURATIONS_ENTRIES_URL_PATTERN))
       .willReturn(ok().withBody("Invalid configurations response")));
+  }
+
+  public static <T> T waitFor(Future<T> future) {
+    return waitFor(future, 10);
+  }
+
+  @SneakyThrows
+  public static <T> T waitFor(Future<T> future, int timeoutSeconds) {
+    return future.toCompletionStage()
+      .toCompletableFuture()
+      .get(timeoutSeconds, TimeUnit.SECONDS);
+  }
+
+  protected static void truncateTable(String tableName) {
+    waitFor(pgClient.delete(tableName, new Criterion()));
+  }
+
+  protected static String randomId() {
+    return UUID.randomUUID().toString();
   }
 }

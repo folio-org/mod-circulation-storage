@@ -8,6 +8,7 @@ import io.vertx.core.json.JsonObject;
 import lombok.AllArgsConstructor;
 import lombok.With;
 
+import org.folio.rest.jaxrs.model.SearchIndex;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -50,6 +51,7 @@ public class RequestRequestBuilder extends JsonBuilder {
   private final Tags tags;
   private final String patronComments;
   private final UUID holdingsRecordId;
+  private final SearchIndex searchIndex;
 
   public RequestRequestBuilder() {
     this(UUID.randomUUID(),
@@ -76,7 +78,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       null,
       null,
       null,
-       UUID.randomUUID());
+      UUID.randomUUID(),
+      null);
   }
 
   public JsonObject create() {
@@ -154,6 +157,11 @@ public class RequestRequestBuilder extends JsonBuilder {
 
       put(request, "tags", tags);
     }
+
+    if (searchIndex != null) {
+      put(request, "searchIndex", JsonObject.mapFrom(searchIndex));
+    }
+
     return request;
   }
 
@@ -195,7 +203,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.pickupServicePointId,
       this.tags,
       this.patronComments,
-      this.holdingsRecordId);
+      this.holdingsRecordId,
+      this.searchIndex);
   }
 
   public RequestRequestBuilder toHoldShelf() {
@@ -237,7 +246,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.pickupServicePointId,
       this.tags,
       this.patronComments,
-      this.holdingsRecordId);
+      this.holdingsRecordId,
+      this.searchIndex);
   }
 
   public RequestRequestBuilder withRequester(
@@ -271,7 +281,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.pickupServicePointId,
       this.tags,
       this.patronComments,
-      this.holdingsRecordId);
+      this.holdingsRecordId,
+      this.searchIndex);
   }
 
   public RequestRequestBuilder withRequester(
@@ -304,7 +315,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.pickupServicePointId,
       this.tags,
       this.patronComments,
-      this.holdingsRecordId);
+      this.holdingsRecordId,
+      this.searchIndex);
   }
 
   public RequestRequestBuilder withProxy(
@@ -337,11 +349,13 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.pickupServicePointId,
       this.tags,
       this.patronComments,
-      this.holdingsRecordId);
+      this.holdingsRecordId,
+      this.searchIndex);
   }
   public RequestRequestBuilder withNoPosition() {
     return withPosition(null);
   }
+
   private class PatronSummary {
     final String lastName;
     final String firstName;
@@ -360,4 +374,5 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.barcode = barcode;
     }
   }
+
 }

@@ -191,10 +191,6 @@ public class ActualCostRecordAPITest extends ApiTests {
       .withAdditionalInfoForPatron("Test information for patron");
   }
 
-  private static String randomId() {
-    return UUID.randomUUID().toString();
-  }
-
   private JsonObject toJsonObject(ActualCostRecord actualCostRecord1)
     throws JsonProcessingException {
     return new JsonObject(objectMapper.writeValueAsString(actualCostRecord1));

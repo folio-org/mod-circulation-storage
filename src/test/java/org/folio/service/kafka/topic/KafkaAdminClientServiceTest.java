@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 import io.vertx.core.Vertx;
 import org.apache.kafka.common.errors.TopicExistsException;
-import org.folio.CirculationStorageKafkaTopic;
+import org.folio.support.kafka.topic.CirculationStorageKafkaTopic;
 import org.folio.kafka.services.KafkaAdminClientService;
 import org.junit.Before;
 import org.junit.Test;
