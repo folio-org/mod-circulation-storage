@@ -148,6 +148,11 @@ public class RequestSearchFieldsMigrationService
     context.setNewRequest(migratedRequest);
   }
 
+  @Override
+  String migrationName() {
+    return "Request search fields";
+  }
+
   @Getter
   @Setter
   @JsonIgnoreProperties(ignoreUnknown = true)

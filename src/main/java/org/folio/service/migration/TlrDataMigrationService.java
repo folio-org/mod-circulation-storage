@@ -191,6 +191,11 @@ public class TlrDataMigrationService extends AbstractRequestMigrationService<Tlr
       .anyMatch(request::containsKey);
   }
 
+  @Override
+  String migrationName() {
+    return "TLR";
+  }
+
   @Getter
   @Setter
   @JsonIgnoreProperties(ignoreUnknown = true)
