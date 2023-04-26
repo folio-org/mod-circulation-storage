@@ -192,8 +192,8 @@ public class TlrDataMigrationService extends AbstractRequestMigrationService<Tlr
   }
 
   @Override
-  String migrationName() {
-    return "TLR";
+  public String toString() {
+    return "TLR migration";
   }
 
   @Getter

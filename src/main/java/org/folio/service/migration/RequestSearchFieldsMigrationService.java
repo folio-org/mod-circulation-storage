@@ -149,8 +149,8 @@ public class RequestSearchFieldsMigrationService
   }
 
   @Override
-  String migrationName() {
-    return "Request search fields";
+  public String toString() {
+    return "Request search fields migration";
   }
 
   @Getter
