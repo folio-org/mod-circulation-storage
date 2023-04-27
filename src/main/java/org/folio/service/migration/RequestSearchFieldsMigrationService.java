@@ -32,11 +32,13 @@ public class RequestSearchFieldsMigrationService
   private static final String ITEMS_STORAGE_URL = "/item-storage/items";
   private static final String SERVICE_POINT_URL = "/service-points";
   private static final String REQUEST_TABLE = "request";
+  private static final String MIGRATION_NAME = "Request search fields migration";
 
   public RequestSearchFieldsMigrationService(TenantAttributes attributes, Context context,
     Map<String, String> okapiHeaders) {
 
-    super(attributes, context, okapiHeaders, REQUEST_TABLE, MIGRATION_MODULE_VERSION);
+    super(attributes, context, okapiHeaders, REQUEST_TABLE, MIGRATION_MODULE_VERSION,
+      MIGRATION_NAME);
   }
 
   public Future<Void> processBatch(Batch<RequestSearchMigrationContext> batch) {
@@ -146,11 +148,6 @@ public class RequestSearchFieldsMigrationService
     write(migratedRequest, "searchIndex", searchIndex);
 
     context.setNewRequest(migratedRequest);
-  }
-
-  @Override
-  public String toString() {
-    return "Request search fields migration";
   }
 
   @Getter

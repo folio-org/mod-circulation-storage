@@ -49,9 +49,11 @@ abstract class AbstractRequestMigrationService<T extends RequestMigrationContext
   public final List<String> errorMessages;
   public final String tableName;
   public final String moduleVersion;
+  private final String migrationName;
 
   protected AbstractRequestMigrationService(TenantAttributes attributes, Context context,
-    Map<String, String> okapiHeaders, String tableName, String moduleVersion) {
+    Map<String, String> okapiHeaders, String tableName, String moduleVersion,
+    String migrationName) {
 
     this.attributes = attributes;
     okapiClient = new OkapiClient(context.owner(), okapiHeaders);
@@ -60,33 +62,34 @@ abstract class AbstractRequestMigrationService<T extends RequestMigrationContext
     errorMessages = new ArrayList<>();
     this.tableName = tableName;
     this.moduleVersion = moduleVersion;
+    this.migrationName = migrationName;
   }
 
   public Future<Void> migrate() {
-    log.debug("migrate:: {}", this);
+    log.debug("migrate:: {}", migrationName);
     final long startTime = currentTimeMillis();
 
     if (!shouldMigrate(moduleVersion)) {
-      log.info("migrate:: skipping {}. Migration version is {}", this, moduleVersion);
+      log.info("migrate:: skipping {}. Migration version is {}", migrationName, moduleVersion);
       return succeededFuture();
     }
 
-    log.info("migrate:: {} started, batch size is {}", this, BATCH_SIZE);
+    log.info("migrate:: {} started, batch size is {}", migrationName, BATCH_SIZE);
 
     return getBatchCount()
       .compose(this::migrateRequests)
-      .onSuccess(r -> log.info("migrate:: {} finished successfully", this))
-      .onFailure(r -> log.error("migrate:: {} failed, rolling back the changes: {}", this,
+      .onSuccess(r -> log.info("migrate:: {} finished successfully", migrationName))
+      .onFailure(r -> log.error("migrate:: {} failed, rolling back the changes: {}", migrationName,
         errorMessages))
       .onComplete(r -> logDuration(startTime));
   }
 
   public boolean shouldMigrate(String moduleVersion) {
-    log.debug("shouldMigrate:: {}, moduleVersion: {}", this, moduleVersion);
+    log.debug("shouldMigrate:: {}, moduleVersion: {}", migrationName, moduleVersion);
 
     if (attributes.getModuleFrom() != null && attributes.getModuleTo() != null) {
       log.info("shouldMigrate:: all attributes for {} are present: moduleFrom={}, moduleTo={}",
-        this, attributes.getModuleFrom(), attributes.getModuleTo());
+        migrationName, attributes.getModuleFrom(), attributes.getModuleTo());
 
       SemVer migrationModuleVersion = moduleVersionToSemVer(moduleVersion);
       SemVer moduleFromVersion = moduleVersionToSemVer(attributes.getModuleFrom());
@@ -94,23 +97,24 @@ abstract class AbstractRequestMigrationService<T extends RequestMigrationContext
 
       if (moduleToVersion.compareTo(migrationModuleVersion) < 0) {
         log.info("shouldMigrate:: skipping {} for module version {}: should be {} or higher",
-          this, moduleToVersion, migrationModuleVersion);
+          migrationName, moduleToVersion, migrationModuleVersion);
         return false;
       }
 
       if (moduleFromVersion.compareTo(migrationModuleVersion) >= 0) {
         log.info("shouldMigrate:: skipping {} for module version {}: previous version {} " +
-          "is already migrated", this, moduleToVersion, moduleFromVersion);
+          "is already migrated", migrationName, moduleToVersion, moduleFromVersion);
         return false;
       }
     }
     else {
       log.info("shouldMigrate:: skipping {} - can not determine current moduleFrom or " +
-        "moduleTo version", this);
+        "moduleTo version", migrationName);
       return false;
     }
 
-    log.debug("shouldMigrate:: {} for version {} will not be skipped", this, moduleVersion);
+    log.debug("shouldMigrate:: {} for version {} will not be skipped", migrationName,
+      moduleVersion);
     return true;
   }
 
@@ -127,11 +131,11 @@ abstract class AbstractRequestMigrationService<T extends RequestMigrationContext
   }
 
   public Future<Void> updateRequests(Batch<T> batch) {
-    log.debug("updateRequests:: {}, batch: {}", this, batch);
+    log.debug("updateRequests:: {}, batch: {}", migrationName, batch);
 
     if (!errorMessages.isEmpty()) {
       log.info("updateRequests:: {}, {} update aborted - errors in previous batch(es) occurred",
-        this, batch);
+        migrationName, batch);
       return succeededFuture();
     }
 
@@ -143,7 +147,7 @@ abstract class AbstractRequestMigrationService<T extends RequestMigrationContext
     return batch.getConnection()
       .updateBatch(tableName, new JsonArray(migratedRequests))
       .onSuccess(r -> log.info("updateRequests:: {}, all requests from {} were successfully " +
-        "updated", this, batch))
+        "updated", migrationName, batch))
       .mapEmpty();
   }
 
@@ -155,11 +159,12 @@ abstract class AbstractRequestMigrationService<T extends RequestMigrationContext
   abstract void buildNewRequest(T context);
 
   public Future<Batch<T>> fetchRequests(Batch<T> batch) {
-    log.debug("fetchRequests:: {}, batch: {}", this, batch);
+    log.debug("fetchRequests:: {}, batch: {}", migrationName, batch);
 
     return postgresClient.select(format("SELECT jsonb FROM %s.%s ORDER BY id LIMIT %d OFFSET %d",
         schemaName, tableName, BATCH_SIZE, batch.getBatchNumber() * BATCH_SIZE))
-      .onSuccess(r -> log.info("fetchRequests:: {}, {} {} requests fetched", this, batch, r.size()))
+      .onSuccess(r -> log.info("fetchRequests:: {}, {} {} requests fetched", migrationName, batch,
+        r.size()))
       .map(this::rowSetToRequestContexts)
       .onSuccess(batch::setRequestMigrationContexts)
       .map(batch);
@@ -175,7 +180,7 @@ abstract class AbstractRequestMigrationService<T extends RequestMigrationContext
   abstract T buildContext(JsonObject request);
 
   public Future<Batch<T>> validateRequests(Batch<T> batch) {
-    log.debug("validateRequests:: {}, batch: {}", this, batch);
+    log.debug("validateRequests:: {}, batch: {}", migrationName, batch);
 
     List<String> errors = batch.getRequestMigrationContexts()
       .stream()
@@ -196,7 +201,7 @@ abstract class AbstractRequestMigrationService<T extends RequestMigrationContext
 
   public void logDuration(long startTime) {
     String duration = formatDurationHMS(currentTimeMillis() - startTime);
-    log.info("logDuration:: {} finished in {}", this, duration);
+    log.info("logDuration:: {} finished in {}", migrationName, duration);
   }
 
   public static <T> Future<Void> chainFutures(Collection<T> list, Function<T, Future<Void>> method) {
@@ -206,7 +211,7 @@ abstract class AbstractRequestMigrationService<T extends RequestMigrationContext
   }
 
   public Future<Void> handleError(Batch<T> batch, Throwable throwable) {
-    log.error("handleError:: {}, {} processing failed", this, batch, throwable);
+    log.error("handleError:: {}, {} processing failed", migrationName, batch, throwable);
     errorMessages.add(throwable.getMessage());
 
     return succeededFuture();
@@ -219,7 +224,7 @@ abstract class AbstractRequestMigrationService<T extends RequestMigrationContext
   }
 
   private Collection<Batch<T>> buildBatches(int numberOfBatches, Conn connection) {
-    log.debug("buildBatches:: {}, numberOfBatches: {}", this, numberOfBatches);
+    log.debug("buildBatches:: {}, numberOfBatches: {}", migrationName, numberOfBatches);
 
     return range(0, numberOfBatches)
       .boxed()
@@ -228,7 +233,7 @@ abstract class AbstractRequestMigrationService<T extends RequestMigrationContext
   }
 
   private Future<Integer> getBatchCount(RowSet<Row> result) {
-    log.debug("getBatchCount:: {}, result.size: {}", this, result.size());
+    log.debug("getBatchCount:: {}, result.size: {}", migrationName, result.size());
 
     if (!result.iterator().hasNext()) {
       return failedFuture("failed to get total number of requests");
