@@ -46,10 +46,12 @@ public class TlrDataMigrationService extends AbstractRequestMigrationService<Tlr
   private static final String ITEM_ID_KEY = "itemId";
   private static final String TITLE_KEY = "title";
   private static final String IDENTIFIERS_KEY = "identifiers";
+  private static final String MIGRATION_NAME = "TLR migration";
 
   public TlrDataMigrationService(TenantAttributes attributes, Context context,
     Map<String, String> okapiHeaders) {
-      super(attributes, context, okapiHeaders, REQUEST_TABLE, TLR_MIGRATION_MODULE_VERSION);
+      super(attributes, context, okapiHeaders, REQUEST_TABLE, TLR_MIGRATION_MODULE_VERSION,
+        MIGRATION_NAME);
     }
 
   public Future<Void> processBatch(Batch<TlrMigrationContext> batch) {
