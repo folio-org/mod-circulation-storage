@@ -1,0 +1,73 @@
+#%RAML 1.0
+title: Checkout lock Storage
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost:9130
+
+documentation:
+  - title: Checkout lock API
+    content: <b>Storage for checkout lock</b>
+
+types:
+  checkout-lock: !include checkout-lock.json
+  checkout-locks: !include checkout-locks.json
+  errors: !include raml-util/schemas/errors.schema
+  parameters: !include raml-util/schemas/parameters.schema
+  schemaItem: checkout-lock
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  item-collection-get: !include raml-util/rtypes/item-collection-get.raml
+
+traits:
+  language: !include raml-util/traits/language.raml
+  validate: !include raml-util/traits/validation.raml
+  pageable: !include raml-util/traits/pageable.raml
+
+/check-out-lock-storage:
+  post:
+    is: [validate]
+    description: creating a lock for the userid.
+    body:
+      application/json:
+        type: checkout-lock
+        example: !include examples/checkout-lock.json
+    responses:
+      200:
+        body:
+          application/json:
+            type: checkout-lock
+            example: !include examples/checkout-lock.json
+      503:
+        description: " Failed to create lock for patron {userId}"
+        body:
+          application/json:
+            type: errors
+  get:
+    is: [pageable]
+    description: Get the checkout locks
+    responses:
+      200:
+        body:
+          application/json:
+            type: checkout-locks
+            example: !include examples/checkout-locks.json
+      422:
+        description: "Invalid parameters"
+  /{lockId}:
+    type:
+      item-collection-get:
+        exampleItem: !include examples/checkout-lock.json
+        schema: checkout-lock
+    get:
+      responses:
+        200:
+          description: "Checkout lock retrieved"
+        404:
+          description: "Lock not found for patron"
+    delete:
+      responses:
+        204:
+          description: "Lock is deleted"
+        404:
+          description: "Lock is not found"
