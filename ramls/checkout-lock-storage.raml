@@ -13,18 +13,19 @@ types:
   checkout-locks: !include checkout-locks.json
   errors: !include raml-util/schemas/errors.schema
   parameters: !include raml-util/schemas/parameters.schema
-  schemaItem: checkout-lock
-
-resourceTypes:
-  collection: !include raml-util/rtypes/collection.raml
-  item-collection-get: !include raml-util/rtypes/item-collection-get.raml
 
 traits:
   language: !include raml-util/traits/language.raml
   validate: !include raml-util/traits/validation.raml
   pageable: !include raml-util/traits/pageable.raml
 
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+  item-collection-get: !include raml-util/rtypes/item-collection-get.raml
+
 /check-out-lock-storage:
+  displayName: check out lock storage
   post:
     is: [validate]
     description: creating a lock for the userid.
@@ -33,7 +34,10 @@ traits:
         type: checkout-lock
         example: !include examples/checkout-lock.json
     responses:
-      200:
+      201:
+        headers:
+          Location:
+            description: URI to the created <<resourcePathName|!singularize>> item
         body:
           application/json:
             type: checkout-lock
