@@ -570,6 +570,22 @@
       ]
     },
     {
+      "id": "checkout-lock-storage",
+      "version": "0.1",
+      "handlers": [
+        {
+          "methods": ["POST"],
+          "pathPattern": "/check-out-lock-storage",
+          "permissionsRequired": ["anonymize-storage-loans.post"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/check-out-lock-storage",
+          "permissionsRequired": ["anonymize-storage-loans.post"]
+        }
+      ]
+    },
+    {
       "id": "_timer",
       "version": "1.0",
       "interfaceType": "system",

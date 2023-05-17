@@ -47,7 +47,7 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
 
   @Override
   public void getCheckOutLockStorage(int offset, int limit, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-
+    log.info("Inside getCheckOutLockStorage");
   }
 
   @Override
