@@ -45,8 +45,13 @@ resourceTypes:
       503:
         description: " Failed to create lock for patron {userId}"
         body:
-          application/json:
+          text/plain:
             type: errors
+      400:
+        description: "Bad Request"
+        body:
+          text/plain:
+            example: "Bad Request"
       500:
         description: "Internal server error"
         body:
