@@ -5,8 +5,9 @@ import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
-import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.CheckoutLock;
 import org.folio.rest.jaxrs.resource.CheckOutLockStorage;
@@ -21,10 +22,11 @@ import java.util.stream.Collectors;
 
 import static org.folio.support.DbUtil.rowSetToStream;
 
-@Log4j2
 public class CheckOutLockAPI implements CheckOutLockStorage {
 
   private static final String CHECK_OUT_LOCK_TABLE = "check_out_lock";
+
+  private static final Logger log  = LogManager.getLogger();
   @Override
   public void postCheckOutLockStorage(CheckoutLock entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     log.info("postCheckOutLockStorage:: entity {}", entity);
