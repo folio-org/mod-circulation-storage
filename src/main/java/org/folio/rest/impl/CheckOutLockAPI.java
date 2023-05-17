@@ -63,7 +63,7 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
   private String selectCheckOutLocks(String tenant, String tableName, String userId) {
     String sql = String.format("select * from %s ", tableName);
     if(!StringUtils.isBlank(userId)){
-      sql = sql + String.format("where userId = %s", userId);
+      sql = sql + String.format("where userId = '%s'", userId);
     }
     return sql;
   }
