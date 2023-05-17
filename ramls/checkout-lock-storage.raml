@@ -46,8 +46,8 @@ traits:
       500:
         description: "Internal server error"
         body:
-          application/json:
-            type: errors
+          text/plain:
+            example: "Internal server error"
   get:
     is: [pageable]
     description: Get the checkout locks
