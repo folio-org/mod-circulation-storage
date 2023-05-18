@@ -108,14 +108,14 @@ public class RequestBatchAPITest extends ApiTests {
   }
 
   @Test
-  public void canUpdateRequestFulfilmentPreferenceInBatch() throws Exception {
+  public void canUpdateRequestFulfillmentPreferenceInBatch() throws Exception {
     UUID itemId = UUID.randomUUID();
 
     JsonObject firstRequest = createRequestForItemAtPosition(itemId, 1);
     JsonObject secondRequest = createRequestForItemAtPosition(itemId, 2);
 
-    firstRequest.put("fulfilmentPreference", "Delivery");
-    secondRequest.put("fulfilmentPreference", "Delivery");
+    firstRequest.put("fulfillmentPreference", "Delivery");
+    secondRequest.put("fulfillmentPreference", "Delivery");
 
     CompletableFuture<Response> postCompleted = new CompletableFuture<>();
     client.post(batchRequestStorageUrl(),
