@@ -35,9 +35,6 @@ resourceTypes:
         example: !include examples/checkout-lock.json
     responses:
       201:
-        headers:
-          Location:
-            description: URI to the created <<resourcePathName|!singularize>> item
         body:
           application/json:
             type: checkout-lock
