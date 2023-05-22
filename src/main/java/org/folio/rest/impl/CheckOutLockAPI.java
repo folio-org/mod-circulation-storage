@@ -94,9 +94,9 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
         return null;
     var row = rowSet.iterator().next();
     CheckoutLock  checkoutLock = new CheckoutLock()
-      .withId(row.getUUID(1).toString())
-      .withUserId(row.getUUID(2).toString())
-      .withCreationDate(Date.valueOf(row.getLocalDate(3)));
+      .withId(row.getUUID("id").toString())
+      .withUserId(row.getUUID("userid").toString())
+      .withCreationDate(Date.valueOf(row.getLocalDate("creation_date")));
     log.info("mapToCheckOutLock:: checkoutLocks {}", checkoutLock);
     return checkoutLock;
   }
