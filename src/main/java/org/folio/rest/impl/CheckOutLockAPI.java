@@ -53,12 +53,10 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
         asyncResultHandler.handle(succeededFuture(response));
       })
       .onFailure(err -> {
-        log.info("Inside on error");
-        PostCheckOutLockStorageResponse.respond500WithTextPlain(err);
+        log.info("Inside on error {} ",err);
+        this.mapExceptionToResponse(err);
       })
-      .onComplete(res -> {
-        log.info("Inside on complete");
-      });
+      .onComplete(asyncResultHandler);
   }
 
   @Override
