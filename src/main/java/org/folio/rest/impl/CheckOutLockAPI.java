@@ -2,8 +2,8 @@ package org.folio.rest.impl;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.impl.future.SucceededFuture;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import org.apache.commons.lang.StringUtils;
@@ -36,23 +36,18 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
     String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
     PgClientFutureAdapter pgClient = PgClientFutureAdapter.create(vertxContext, okapiHeaders);
     pgClient.select(selectCheckOutLocks(tenantId, CHECK_OUT_LOCK_TABLE, entity.getUserId()))
-      .map(this::mapToCheckOutLock)
-      .map(checkoutLock -> {
-        log.info("postCheckOutLockStorage:: checkoutLock value {}", checkoutLock);
-        if(checkoutLock == null){
-          log.info("Inside if ");
-          pgClient.execute(insertSql(entity))
-            .map(this::mapToCheckOutLock)
-            .map(PostCheckOutLockStorageResponse::respond201WithApplicationJson)
-            .map(Response.class::cast)
-            .otherwise(this::mapExceptionToResponse)
-            .onComplete(asyncResultHandler);
+      .compose(rows -> {
+        log.info("rows {} ", rows);
+        if(rows.size()==0){
+          log.info("No checkout locks present");
+          return pgClient.execute(insertSql(entity))
+            .compose(x -> Future.succeededFuture(PostCheckOutLockStorageResponse.respond201WithApplicationJson(this.mapToCheckOutLock(x).get(0))));
         }else{
-          log.info("Inside else");
-          asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond400WithTextPlain(entity)));
+          log.info("Unable to acquire lock");
+          return Future.failedFuture("Unable to acquire lock");
         }
-        return SucceededFuture.EMPTY;
-      });
+      }).onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+      .onFailure(PostCheckOutLockStorageResponse::respond500WithTextPlain);
   }
 
   @Override
@@ -82,14 +77,15 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
     return String.format("Insert into %s (userid) values('%s')", CHECK_OUT_LOCK_TABLE, checkoutLock.getUserId());
   }
 
-  private CheckoutLock mapToCheckOutLock(RowSet<Row> rowSet) {
+  private List<CheckoutLock> mapToCheckOutLock(RowSet<Row> rowSet) {
     List<CheckoutLock>  checkoutLocks = rowSetToStream(rowSet)
       .map(row -> new CheckoutLock()
       .withId(row.getString("id"))
       .withUserId(row.getString("userId"))
       .withCreationDate(Date.valueOf(row.getLocalDate("creationDate"))))
       .collect(Collectors.toList());
-    return checkoutLocks.size()>0 ? checkoutLocks.get(0) : null;
+    log.info("mapToCheckOutLock:: checkoutLock userId{}", checkoutLocks.get(0).getUserId());
+    return checkoutLocks;
   }
 
   private Response mapExceptionToResponse(Throwable t) {
