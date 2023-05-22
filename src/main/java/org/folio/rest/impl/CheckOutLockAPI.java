@@ -105,9 +105,9 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
 
     log.error(t.getMessage(), t);
 
-    return Response.status(500)
+    return Response.status(522)
       .header(CONTENT_TYPE, TEXT_PLAIN)
-      .entity("Internal Server Error")
+      .entity(t.getMessage())
       .build();
   }
 }
