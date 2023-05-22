@@ -41,7 +41,11 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
         if(rows.size()==0){
           log.info("No checkout locks present");
           return pgClient.execute(insertSql(entity))
-            .compose(x -> Future.succeededFuture(PostCheckOutLockStorageResponse.respond201WithApplicationJson(this.mapToCheckOutLock(x).get(0))))
+            .compose(x -> {
+              log.info(" x value {} ",x);
+              List<CheckoutLock> checkoutLocks = this.mapToCheckOutLock(x);
+              return Future.succeededFuture(PostCheckOutLockStorageResponse.respond201WithApplicationJson(checkoutLocks.isEmpty()?new CheckoutLock():checkoutLocks.get(0)));
+            })
             .map(Response.class::cast);
         }else{
           log.info("Unable to acquire lock");
@@ -87,13 +91,14 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
   }
 
   private List<CheckoutLock> mapToCheckOutLock(RowSet<Row> rowSet) {
+    log.info("Inside rowSet {} ",rowSet);
     List<CheckoutLock>  checkoutLocks = rowSetToStream(rowSet)
       .map(row -> new CheckoutLock()
       .withId(row.getString("id"))
       .withUserId(row.getString("userId"))
       .withCreationDate(Date.valueOf(row.getLocalDate("creationDate"))))
       .collect(Collectors.toList());
-    log.info("mapToCheckOutLock:: checkoutLock userId{}", checkoutLocks.get(0).getUserId());
+    log.info("mapToCheckOutLock:: checkoutLocks {}", checkoutLocks);
     return checkoutLocks;
   }
 
