@@ -41,21 +41,22 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
         if(rows.size()==0){
           log.info("No checkout locks present");
           return pgClient.execute(insertSql(entity))
-            .compose(x -> {
+            .map(x -> {
               log.info(" x value {} ",x);
               List<CheckoutLock> checkoutLocks = this.mapToCheckOutLock(x);
-              return Future.succeededFuture(PostCheckOutLockStorageResponse.respond201WithApplicationJson(checkoutLocks.isEmpty()?new CheckoutLock():checkoutLocks.get(0)));
+              return checkoutLocks.isEmpty()?new CheckoutLock():checkoutLocks.get(0);
             })
+            .map(PostCheckOutLockStorageResponse::respond201WithApplicationJson)
             .map(Response.class::cast);
         }else{
           log.info("Unable to acquire lock");
           return Future.failedFuture("Unable to acquire lock");
         }
       })
-      .onSuccess(response -> {
-        log.info("Inside on success");
-        asyncResultHandler.handle(succeededFuture(response));
-      })
+//      .onSuccess(response -> {
+//        log.info("Inside on success");
+//        asyncResultHandler.handle(succeededFuture(response));
+//      })
       .onFailure(err -> {
         log.info("Inside on error {} ",err);
         this.mapExceptionToResponse(err);
