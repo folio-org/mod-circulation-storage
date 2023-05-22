@@ -4,6 +4,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.impl.future.SucceededFuture;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import org.apache.commons.lang.StringUtils;
@@ -40,31 +41,51 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
     String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
     PgClientFutureAdapter pgClient = PgClientFutureAdapter.create(vertxContext, okapiHeaders);
     pgClient.select(selectCheckOutLocks(tenantId, CHECK_OUT_LOCK_TABLE, entity.getUserId()))
-      .compose(rows -> {
-        log.info("rows {} ", rows);
-        if(rows.size()==0){
-          log.info("No checkout locks present");
-          return pgClient.execute(insertSql(entity))
-            .map(x -> {
-              log.info(" x value {} ",x);
-              return this.mapToCheckOutLock(x);
-            })
+      .map(this::mapToCheckOutLock)
+      .map(checkoutLock -> {
+        log.info("postCheckOutLockStorage:: checkoutLock value {}", checkoutLock);
+        if(checkoutLock == null){
+          log.info("Inside if ");
+          pgClient.execute(insertSql(entity))
+            .map(this::mapToCheckOutLock)
             .map(PostCheckOutLockStorageResponse::respond201WithApplicationJson)
-            .map(Response.class::cast);
+            .map(Response.class::cast)
+            .otherwise(this::mapExceptionToResponse)
+            .onComplete(asyncResultHandler);
         }else{
-          log.info("Unable to acquire lock");
-          return Future.failedFuture("Unable to acquire lock");
+          log.info("Inside else");
+          asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond400WithTextPlain(entity)));
         }
-      })
-//      .onSuccess(response -> {
-//        log.info("Inside on success");
-//        asyncResultHandler.handle(succeededFuture(response));
+        return SucceededFuture.EMPTY;
+      });
+//
+//
+//    pgClient.select(selectCheckOutLocks(tenantId, CHECK_OUT_LOCK_TABLE, entity.getUserId()))
+//      .compose(rows -> {
+//        log.info("rows {} ", rows);
+//        if(rows.size()==0){
+//          log.info("No checkout locks present");
+//          return pgClient.execute(insertSql(entity))
+//            .map(x -> {
+//              log.info(" x value {} ",x);
+//              return this.mapToCheckOutLock(x);
+//            })
+//            .map(PostCheckOutLockStorageResponse::respond201WithApplicationJson)
+//            .map(Response.class::cast);
+//        }else{
+//          log.info("Unable to acquire lock");
+//          return Future.failedFuture("Unable to acquire lock");
+//        }
 //      })
-      .onFailure(err -> {
-        log.info("Inside on error {} ",err);
-        this.mapExceptionToResponse(err);
-      })
-      .onComplete(asyncResultHandler);
+////      .onSuccess(response -> {
+////        log.info("Inside on success");
+////        asyncResultHandler.handle(succeededFuture(response));
+////      })
+//      .onFailure(err -> {
+//        log.info("Inside on error {} ",err);
+//        this.mapExceptionToResponse(err);
+//      })
+//      .onComplete(asyncResultHandler);
   }
 
 //  private Future<CheckoutLock> getCheckOutLockByUserId(String userId, PostgresClient postgresClient) {
@@ -99,7 +120,8 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
   }
 
   private CheckoutLock  mapToCheckOutLock(RowSet<Row> rowSet) {
-    log.info("Inside rowSet {} ",rowSet.iterator().next());
+    if(rowSet.size()==0)
+        return null;
     var row = rowSet.iterator().next();
     CheckoutLock  checkoutLock = new CheckoutLock()
       .withId(row.getString("id"))
