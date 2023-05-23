@@ -40,9 +40,12 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
     log.info("postCheckOutLockStorage:: entity {}", entity);
     String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
     PgClientFutureAdapter pgClient = PgClientFutureAdapter.create(vertxContext, okapiHeaders);
-    Response response = pgClient.execute(insertSql(entity))
-      .map(x -> PostCheckOutLockStorageResponse.respond201WithApplicationJson(entity))
-      .map(Response.class::cast)
+    CheckoutLock response = pgClient.execute(insertSql(entity))
+      .map(x -> this.mapToCheckOutLock(x))
+      .result();
+    log.info("response {} ", response);
+    CheckoutLock response1 = pgClient.execute(updateSql(entity))
+      .map(x -> this.mapToCheckOutLock(x))
       .result();
     log.info("response {} ", response);
     pgClient.select(selectCheckOutLocks(tenantId, CHECK_OUT_LOCK_TABLE, entity.getUserId()))
@@ -92,6 +95,10 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
 
   private String insertSql(CheckoutLock checkoutLock) {
     return String.format("Insert into %s (userid) values('%s')", CHECK_OUT_LOCK_TABLE, checkoutLock.getUserId());
+  }
+
+  private String updateSql(CheckoutLock checkoutLock) {
+    return String.format("update %s set userid = '%s' ", CHECK_OUT_LOCK_TABLE, checkoutLock.getUserId());
   }
 
   private CheckoutLock  mapToCheckOutLock(RowSet<Row> rowSet) {
