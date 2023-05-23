@@ -44,7 +44,7 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
     CheckoutLock response = postgresClient(vertxContext, okapiHeaders).execute(insertSql(entity))
       .map(x -> this.mapToCheckOutLock(x))
       .otherwise(err -> {
-        log.info("Inside otherwise");
+        log.info("Inside otherwise {} ",err);
         return null;
       })
       .result();
@@ -107,6 +107,7 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
   }
 
   private CheckoutLock  mapToCheckOutLock(RowSet<Row> rowSet) {
+    log.info("Inside mapToCheckOutLock");
     if(rowSet.size()==0)
         return null;
     var row = rowSet.iterator().next();
