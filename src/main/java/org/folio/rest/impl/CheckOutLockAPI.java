@@ -46,7 +46,7 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
         CheckoutLock checkoutLock = this.mapToCheckOutLock(rowSetAsyncResult.result());
         if(checkoutLock==null){
           log.info("No checkout locks present");
-          postgresClient(vertxContext, okapiHeaders).save(CHECK_OUT_LOCK_TABLE,insertSql(entity),handler -> {
+          postgresClient(vertxContext, okapiHeaders).save(CHECK_OUT_LOCK_TABLE,entity,handler -> {
             if(handler.succeeded()){
               log.info("result id"+handler.result());
               //log.info("Checkout lock val {} ",this.mapToCheckOutLock(handler.result()));
