@@ -40,14 +40,19 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
     log.info("postCheckOutLockStorage:: entity {}", entity);
     String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
     PgClientFutureAdapter pgClient = PgClientFutureAdapter.create(vertxContext, okapiHeaders);
-    CheckoutLock response = pgClient.execute(insertSql(entity))
+    postgresClient(vertxContext, okapiHeaders);
+    CheckoutLock response = postgresClient(vertxContext, okapiHeaders).execute(insertSql(entity))
       .map(x -> this.mapToCheckOutLock(x))
+      .otherwise(err -> {
+        log.info("Inside otherwise");
+        return null;
+      })
       .result();
     log.info("response {} ", response);
     CheckoutLock response1 = pgClient.execute(updateSql(entity))
       .map(x -> this.mapToCheckOutLock(x))
       .result();
-    log.info("response {} ", response);
+    log.info("response1 {} ", response1);
     pgClient.select(selectCheckOutLocks(tenantId, CHECK_OUT_LOCK_TABLE, entity.getUserId()))
       .compose(rows -> {
         log.info("rows {} ", rows);
