@@ -40,16 +40,39 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
     log.info("postCheckOutLockStorage:: entity {}", entity);
     String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
     PgClientFutureAdapter pgClient = PgClientFutureAdapter.create(vertxContext, okapiHeaders);
-    postgresClient(vertxContext, okapiHeaders).execute(insertSql(entity),handler -> {
-      if(handler.succeeded()){
-        log.info("result size"+handler.result().size());
-        log.info("Checkout lock val {} ",this.mapToCheckOutLock(handler.result()));
-        asyncResultHandler.handle(new SucceededFuture(PostCheckOutLockStorageResponse.respond201WithApplicationJson(entity)));
-      }else{
-        log.info(handler.cause().getMessage(), handler.cause());
-        asyncResultHandler.handle(new SucceededFuture<>(PostCheckOutLockStorageResponse.respond500WithTextPlain("Unable to acquire the lock")));
+    postgresClient(vertxContext, okapiHeaders).execute(selectCheckOutLocks(tenantId, CHECK_OUT_LOCK_TABLE, entity.getUserId()), rowSetAsyncResult -> {
+      if(rowSetAsyncResult.succeeded()){
+        CheckoutLock checkoutLock = this.mapToCheckOutLock(rowSetAsyncResult.result());
+        if(checkoutLock==null){
+          log.info("No checkout locks present");
+          postgresClient(vertxContext, okapiHeaders).execute(insertSql(entity),handler -> {
+            if(handler.succeeded()){
+              log.info("result size"+handler.result().size());
+              log.info("Checkout lock val {} ",this.mapToCheckOutLock(handler.result()));
+              asyncResultHandler.handle(new SucceededFuture(PostCheckOutLockStorageResponse.respond201WithApplicationJson(entity)));
+            }else{
+              log.info("Creating lock is failed because");
+              log.info(handler.cause().getMessage(), handler.cause());
+              asyncResultHandler.handle(new SucceededFuture<>(PostCheckOutLockStorageResponse.respond500WithTextPlain("Unable to acquire the lock")));
+            }
+          });
+        }else{
+          log.info("Already the lock is present");
+          asyncResultHandler.handle(new SucceededFuture<>(PostCheckOutLockStorageResponse.respond500WithTextPlain("Unable to acquire the lock")));
+        }
       }
     });
+
+//    postgresClient(vertxContext, okapiHeaders).execute(insertSql(entity),handler -> {
+//      if(handler.succeeded()){
+//        log.info("result size"+handler.result().size());
+//        log.info("Checkout lock val {} ",this.mapToCheckOutLock(handler.result()));
+//        asyncResultHandler.handle(new SucceededFuture(PostCheckOutLockStorageResponse.respond201WithApplicationJson(entity)));
+//      }else{
+//        log.info(handler.cause().getMessage(), handler.cause());
+//        asyncResultHandler.handle(new SucceededFuture<>(PostCheckOutLockStorageResponse.respond500WithTextPlain("Unable to acquire the lock")));
+//      }
+//    });
 //    pgClient.select(selectCheckOutLocks(tenantId, CHECK_OUT_LOCK_TABLE, entity.getUserId()))
 //      .compose(rows -> {
 //        log.info("rows {} ", rows);
