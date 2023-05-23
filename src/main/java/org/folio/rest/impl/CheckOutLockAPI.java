@@ -46,6 +46,7 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
         log.info("Checkout lock val {} ",this.mapToCheckOutLock(handler.result()));
         asyncResultHandler.handle(new SucceededFuture(PostCheckOutLockStorageResponse.respond201WithApplicationJson(entity)));
       }else{
+        log.info(handler.cause().getMessage(), handler.cause());
         asyncResultHandler.handle(new SucceededFuture<>(PostCheckOutLockStorageResponse.respond500WithTextPlain("Unable to acquire the lock")));
       }
     });
