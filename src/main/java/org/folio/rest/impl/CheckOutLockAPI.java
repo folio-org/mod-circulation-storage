@@ -19,6 +19,7 @@ import org.folio.support.PgClientFutureAdapter;
 
 import javax.ws.rs.core.Response;
 import java.sql.Date;
+import java.time.Clock;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -39,63 +40,39 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
   public void postCheckOutLockStorage(CheckoutLock entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     log.info("postCheckOutLockStorage:: entity {}", entity);
     String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
-    PgClientFutureAdapter pgClient = PgClientFutureAdapter.create(vertxContext, okapiHeaders);
     postgresClient(vertxContext, okapiHeaders)
       .execute(selectCheckOutLocks(tenantId, CHECK_OUT_LOCK_TABLE, entity.getUserId()), rowSetAsyncResult -> {
       if(rowSetAsyncResult.succeeded()){
         CheckoutLock checkoutLock = this.mapToCheckOutLock(rowSetAsyncResult.result());
         if(checkoutLock==null){
           log.info("No checkout locks present");
-          postgresClient(vertxContext, okapiHeaders).save(CHECK_OUT_LOCK_TABLE,entity,handler -> {
-            if(handler.succeeded()){
-              log.info("result id"+handler.result());
-              //log.info("Checkout lock val {} ",this.mapToCheckOutLock(handler.result()));
-              asyncResultHandler.handle(new SucceededFuture(PostCheckOutLockStorageResponse.respond201WithApplicationJson(entity)));
-            }else{
-              log.info("Creating lock is failed because");
-              log.info(handler.cause().getMessage(), handler.cause());
-              asyncResultHandler.handle(new SucceededFuture<>(PostCheckOutLockStorageResponse.respond500WithTextPlain("Unable to acquire the lock")));
-            }
-          });
-        }else{
+          createOrUpdateLock(insertSql(entity), okapiHeaders, asyncResultHandler, vertxContext, entity);
+        }
+//        else if (checkoutLock.getCreationDate().compareTo(new java.util.Date())>1) {
+//          log.info("Lock is outdated so updating the date");
+//          createOrUpdateLock(updateSql(entity), okapiHeaders, asyncResultHandler, vertxContext, entity);
+//        }
+        else{
           log.info("Already the lock is present");
           asyncResultHandler.handle(new SucceededFuture<>(PostCheckOutLockStorageResponse.respond500WithTextPlain("Unable to acquire the lock")));
         }
       }
     });
 
-//    postgresClient(vertxContext, okapiHeaders).execute(insertSql(entity),handler -> {
-//      if(handler.succeeded()){
-//        log.info("result size"+handler.result().size());
-//        log.info("Checkout lock val {} ",this.mapToCheckOutLock(handler.result()));
-//        asyncResultHandler.handle(new SucceededFuture(PostCheckOutLockStorageResponse.respond201WithApplicationJson(entity)));
-//      }else{
-//        log.info(handler.cause().getMessage(), handler.cause());
-//        asyncResultHandler.handle(new SucceededFuture<>(PostCheckOutLockStorageResponse.respond500WithTextPlain("Unable to acquire the lock")));
-//      }
-//    });
-//    pgClient.select(selectCheckOutLocks(tenantId, CHECK_OUT_LOCK_TABLE, entity.getUserId()))
-//      .compose(rows -> {
-//        log.info("rows {} ", rows);
-//        CheckoutLock lock = this.mapToCheckOutLock(rows);
-//        if(true){
-//          log.info("No checkout locks present");
-//          return pgClient.execute(insertSql(entity))
-//            .map(x -> PostCheckOutLockStorageResponse.respond201WithApplicationJson(entity))
-//            .map(Response.class::cast)
-//            .otherwise(throwable -> {
-//              return this.mapExceptionToResponse(throwable);
-//            });
-//        }else{
-//          log.info("Unable to acquire lock");
-//          return Future.failedFuture("Unable to acquire lock");
-//        }
-//      })
-//      .onFailure(err -> {
-//        log.info("Inside on error {} ",err);
-//        this.mapExceptionToResponse(err);
-//      })
-//      .onComplete(asyncResultHandler);
+  }
+
+  private void createOrUpdateLock(String sql, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext, CheckoutLock entity) {
+    postgresClient(vertxContext, okapiHeaders).execute(sql,handler -> {
+      if(handler.succeeded()){
+        log.info("result size"+handler.result().size());
+        log.info("Checkout lock val {} ",this.mapToCheckOutLock(handler.result()));
+        asyncResultHandler.handle(new SucceededFuture(PostCheckOutLockStorageResponse.respond201WithApplicationJson(entity)));
+      }else{
+        log.info("Creating lock is failed because");
+        log.info(handler.cause().getMessage(), handler.cause());
+        asyncResultHandler.handle(new SucceededFuture<>(PostCheckOutLockStorageResponse.respond500WithTextPlain("Unable to acquire the lock")));
+      }
+    });
   }
 
 
@@ -127,7 +104,9 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
   }
 
   private String updateSql(CheckoutLock checkoutLock) {
-    return String.format("update %s set userid = '%s' ", CHECK_OUT_LOCK_TABLE, checkoutLock.getUserId());
+    String str = String.format("update %s set creation_date = '%s' where userid = '%s' ", CHECK_OUT_LOCK_TABLE, checkoutLock.getCreationDate(), checkoutLock.getUserId());
+    log.info("update query {}",str);
+    return str;
   }
 
   private CheckoutLock  mapToCheckOutLock(RowSet<Row> rowSet) {
