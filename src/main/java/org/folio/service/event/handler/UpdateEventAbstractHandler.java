@@ -38,7 +38,7 @@ public abstract class UpdateEventAbstractHandler<T> implements AsyncRecordHandle
     JsonObject payload = new JsonObject(event.value());
 
     String eventType = payload.getString("type");
-    if (!INVENTORY_ITEM_UPDATED.getPayloadType().name().equals(eventType)) {
+    if (!supportedEventType().equals(eventType)) {
       log.info("processEvent:: unsupported event type: {}", eventType);
       return succeededFuture();
     }
@@ -61,6 +61,8 @@ public abstract class UpdateEventAbstractHandler<T> implements AsyncRecordHandle
     log.info("processEvent:: {} relevant changes detected, applying", relevantChanges::size);
     return applyChanges(relevantChanges, event, oldObject, newObject);
   }
+
+  protected abstract String supportedEventType();
 
   protected abstract List<Change<T>> collectRelevantChanges(JsonObject oldObject,
     JsonObject newObject);

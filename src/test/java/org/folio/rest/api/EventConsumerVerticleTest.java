@@ -14,6 +14,7 @@ import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET
 import static org.folio.rest.tools.utils.ModuleName.getModuleName;
 import static org.folio.rest.tools.utils.ModuleName.getModuleVersion;
 import static org.folio.service.event.InventoryEventType.INVENTORY_ITEM_UPDATED;
+import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_UPDATED;
 import static org.hamcrest.CoreMatchers.equalTo;
 
 import java.net.URL;
@@ -30,6 +31,7 @@ import org.folio.rest.support.builders.ItemBuilder;
 import org.folio.rest.support.builders.ItemBuilder.ItemCallNumberComponents;
 import org.folio.rest.support.builders.RequestItemSummary;
 import org.folio.rest.support.builders.RequestRequestBuilder;
+import org.folio.rest.support.builders.ServicePointBuilder;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
@@ -56,8 +58,15 @@ public class EventConsumerVerticleTest extends ApiTests {
   private static final String REQUEST_STORAGE_URL = "/request-storage/requests";
   private static final String KAFKA_SERVER_URL = String.format("%s:%s", host(), port());
   private final static String DEFAULT_PICKUP_SERVICE_POINT_NAME = "Circ Desk 1";
+  private final static String DEFAULT_CALL_NUMBER_PREFIX = "prefix";
+  private final static String DEFAULT_CALL_NUMBER = "callNumber";
+  private final static String DEFAULT_CALL_NUMBER_SUFFIX = "suffix";
+  private final static String DEFAULT_SHELVING_ORDER = "shelvingOrder";
+
   private static final String INVENTORY_ITEM_TOPIC = String.format(
     "%s.%s.inventory.item", environment(), TENANT_ID);
+  private static final String INVENTORY_SERVICE_POINT_TOPIC = String.format(
+    "%s.%s.inventory.service-point", environment(), TENANT_ID);
 
   private static KafkaProducer<String, JsonObject> producer;
   private static KafkaAdminClient adminClient;
@@ -163,6 +172,92 @@ public class EventConsumerVerticleTest extends ApiTests {
     verifyRequestSearchIndex(REQUEST_ID, searchIndex);
   }
 
+  @Parameters({
+    "OLD_SP_NAME | NEW_SP_NAME", // service point name changed
+    "OLD_SP_NAME | null       ", // service point name removed
+    "null        | NEW_SP_NAME", // service point name added
+  })
+  @Test
+  public void requestPickupServicePointNameIsUpdatedWhenServicePointIsUpdated(
+    @Nullable String oldServicePointName, @Nullable String newServicePointName) {
+
+    JsonObject item = buildItem();
+    String servicePointId = randomId();
+
+    JsonObject oldServicePoint = buildServicePoint(servicePointId, oldServicePointName);
+    JsonObject newServicePoint = buildServicePoint(servicePointId, newServicePointName);
+    SearchIndex oldIndex = buildSearchIndex(oldServicePointName);
+    SearchIndex newIndex = buildSearchIndex(newServicePointName);
+
+    JsonObject request = buildRequest(REQUEST_ID, item, servicePointId, oldServicePointName);
+    createRequest(request);
+    verifyRequestSearchIndex(REQUEST_ID, oldIndex);
+
+    int initialOffset = getOffsetForServicePointUpdateEvents();
+    publishServicePointUpdateEvent(oldServicePoint, newServicePoint);
+    waitUntilValueIsIncreased(initialOffset,
+      EventConsumerVerticleTest::getOffsetForServicePointUpdateEvents);
+    verifyRequestSearchIndex(REQUEST_ID, newIndex);
+  }
+
+  @Test
+  public void requestPickupServicePointNameIsNotUpdatedWhenEventContainsNoRelevantChanges() {
+    JsonObject item = buildItem();
+    String servicePointId = randomId();
+
+    JsonObject oldServicePoint = buildServicePoint(servicePointId,
+      DEFAULT_PICKUP_SERVICE_POINT_NAME, "code1");
+    JsonObject newServicePoint = buildServicePoint(servicePointId,
+      DEFAULT_PICKUP_SERVICE_POINT_NAME, "code2");
+    SearchIndex searchIndex = buildSearchIndex(DEFAULT_PICKUP_SERVICE_POINT_NAME);
+
+    JsonObject request = buildRequest(REQUEST_ID, item, servicePointId,
+      DEFAULT_PICKUP_SERVICE_POINT_NAME);
+    createRequest(request);
+    verifyRequestSearchIndex(REQUEST_ID, searchIndex);
+
+    int initialOffset = getOffsetForServicePointUpdateEvents();
+    publishServicePointUpdateEvent(oldServicePoint, newServicePoint);
+    waitUntilValueIsIncreased(initialOffset,
+      EventConsumerVerticleTest::getOffsetForServicePointUpdateEvents);
+    verifyRequestSearchIndex(REQUEST_ID, searchIndex);
+  }
+
+  @Test
+  public void requestPickupServicePointNameIsNotUpdatedWhenRequestAndEventAreForDifferentSPs() {
+    JsonObject item = buildItem();
+    String servicePointId = randomId();
+    String oldServicePointName = "oldName";
+    String newServicePointName = "newName";
+
+    JsonObject oldServicePoint = buildServicePoint(servicePointId, oldServicePointName);
+    JsonObject newServicePoint = buildServicePoint(servicePointId, newServicePointName);
+    SearchIndex searchIndex = buildSearchIndex(oldServicePointName);
+
+    JsonObject request = buildRequest(REQUEST_ID, item, randomId(), oldServicePointName);
+    createRequest(request);
+    verifyRequestSearchIndex(REQUEST_ID, searchIndex);
+
+    int initialOffset = getOffsetForServicePointUpdateEvents();
+    publishServicePointUpdateEvent(oldServicePoint, newServicePoint);
+    waitUntilValueIsIncreased(initialOffset,
+      EventConsumerVerticleTest::getOffsetForServicePointUpdateEvents);
+    verifyRequestSearchIndex(REQUEST_ID, searchIndex);
+  }
+
+  private static JsonObject buildItem() {
+    return new ItemBuilder()
+      .withId(randomId())
+      .withHoldingsRecordId(randomId())
+      .withStatus("Paged")
+      .withEffectiveShelvingOrder(DEFAULT_SHELVING_ORDER)
+      .withCallNumberComponents(new ItemCallNumberComponents()
+        .withPrefix(DEFAULT_CALL_NUMBER_PREFIX)
+        .withCallNumber(DEFAULT_CALL_NUMBER)
+        .withSuffix(DEFAULT_CALL_NUMBER_SUFFIX))
+      .create();
+  }
+
   private static JsonObject buildItem(String prefix, String callNumber, String suffix,
     String shelvingOrder) {
 
@@ -178,6 +273,17 @@ public class EventConsumerVerticleTest extends ApiTests {
       .create();
   }
 
+  private static JsonObject buildServicePoint(String id, String name) {
+    return buildServicePoint(id, name, "code");
+  }
+
+  private static JsonObject buildServicePoint(String id, String name, String code) {
+    return new ServicePointBuilder(name)
+      .withId(id)
+      .withCode(code)
+      .create();
+  }
+
   private static SearchIndex buildSearchIndex(String callNumberPrefix, String callNumber,
     String callNumberSuffix, String shelvingOrder) {
 
@@ -188,6 +294,16 @@ public class EventConsumerVerticleTest extends ApiTests {
         .withPrefix(callNumberPrefix)
         .withCallNumber(callNumber)
         .withSuffix(callNumberSuffix));
+  }
+
+  private static SearchIndex buildSearchIndex(String pickupServicePointName) {
+    return new SearchIndex()
+      .withPickupServicePointName(pickupServicePointName)
+      .withShelvingOrder(DEFAULT_SHELVING_ORDER)
+      .withCallNumberComponents(new CallNumberComponents()
+        .withPrefix(DEFAULT_CALL_NUMBER_PREFIX)
+        .withCallNumber(DEFAULT_CALL_NUMBER)
+        .withSuffix(DEFAULT_CALL_NUMBER_SUFFIX));
   }
 
   @SneakyThrows
@@ -220,6 +336,12 @@ public class EventConsumerVerticleTest extends ApiTests {
     publishEvent(INVENTORY_ITEM_TOPIC, buildUpdateEvent(oldItem, newItem));
   }
 
+  private void publishServicePointUpdateEvent(JsonObject oldServicePoint,
+    JsonObject newServicePoint) {
+
+    publishEvent(INVENTORY_SERVICE_POINT_TOPIC, buildUpdateEvent(oldServicePoint, newServicePoint));
+  }
+
   private void publishEvent(String topic, JsonObject eventPayload) {
     var record = KafkaProducerRecord.create(topic, "test-key", eventPayload);
     record.addHeader("X-Okapi-Tenant", TENANT_ID);
@@ -239,13 +361,24 @@ public class EventConsumerVerticleTest extends ApiTests {
       .until(() -> getRequestSearchIndex(requestId), equalTo(mapFrom(searchIndex)));
   }
 
+  private JsonObject verifyPickupServicePointName(String requestId, SearchIndex searchIndex) {
+    return waitAtMost(60, SECONDS)
+      .until(() -> getRequestSearchIndex(requestId), equalTo(mapFrom(searchIndex)));
+  }
+
   private JsonObject getRequestSearchIndex(String requestId) {
     return getRequest(requestId).getJsonObject("searchIndex");
   }
 
   private static JsonObject buildRequest(String requestId, JsonObject item) {
+    return buildRequest(requestId, item, randomId(), DEFAULT_PICKUP_SERVICE_POINT_NAME);
+  }
+
+  private static JsonObject buildRequest(String requestId, JsonObject item,
+    String pickupServicePointId, String pickupServicePointName) {
+
     SearchIndex searchIndex = new SearchIndex()
-      .withPickupServicePointName(DEFAULT_PICKUP_SERVICE_POINT_NAME)
+      .withPickupServicePointName(pickupServicePointName)
       .withShelvingOrder(item.getString("effectiveShelvingOrder"));
 
     JsonObject callNumberComponents = item.getJsonObject("effectiveCallNumberComponents");
@@ -270,13 +403,18 @@ public class EventConsumerVerticleTest extends ApiTests {
       .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
       .withStatus(OPEN_NOT_YET_FILLED)
       .withPosition(1)
-      .withPickupServicePointId(UUID.randomUUID())
+      .withPickupServicePointId(UUID.fromString(pickupServicePointId))
       .withSearchIndex(searchIndex)
       .create();
   }
 
   private static Integer getOffsetForItemUpdateEvents() {
     return getOffset(INVENTORY_ITEM_TOPIC, buildConsumerGroupId(INVENTORY_ITEM_UPDATED.name()));
+  }
+
+  private static Integer getOffsetForServicePointUpdateEvents() {
+    return getOffset(INVENTORY_SERVICE_POINT_TOPIC,
+      buildConsumerGroupId(INVENTORY_SERVICE_POINT_UPDATED.name()));
   }
 
   private static String buildConsumerGroupId(String eventType) {

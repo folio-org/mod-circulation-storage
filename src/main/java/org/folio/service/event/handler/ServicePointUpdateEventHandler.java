@@ -1,6 +1,7 @@
 package org.folio.service.event.handler;
 
 import static org.apache.commons.lang3.ObjectUtils.notEqual;
+import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_UPDATED;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +25,11 @@ public class ServicePointUpdateEventHandler extends UpdateEventAbstractHandler<R
   private static final String SERVICE_POINT_NAME_KEY = "name";
 
   private final Context context;
+
+  @Override
+  protected String supportedEventType() {
+    return INVENTORY_SERVICE_POINT_UPDATED.getPayloadType().name();
+  }
 
   @Override
   protected List<Change<Request>> collectRelevantChanges(JsonObject oldObject, JsonObject newObject) {

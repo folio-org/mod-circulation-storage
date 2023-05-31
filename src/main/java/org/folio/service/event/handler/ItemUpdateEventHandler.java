@@ -1,19 +1,13 @@
 package org.folio.service.event.handler;
 
-import static io.vertx.core.Future.succeededFuture;
 import static org.apache.commons.lang3.ObjectUtils.notEqual;
-import static org.folio.kafka.KafkaHeaderUtils.kafkaHeadersToMap;
 import static org.folio.service.event.InventoryEventType.INVENTORY_ITEM_UPDATED;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.function.Consumer;
 
-import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.kafka.AsyncRecordHandler;
 import org.folio.persist.RequestRepository;
 import org.folio.rest.jaxrs.model.CallNumberComponents;
 import org.folio.rest.jaxrs.model.Request;
@@ -37,6 +31,11 @@ public class ItemUpdateEventHandler extends UpdateEventAbstractHandler<Request> 
   private static final String CALL_NUMBER_SUFFIX_KEY = "suffix";
 
   private final Context context;
+
+  @Override
+  protected String supportedEventType() {
+    return INVENTORY_ITEM_UPDATED.getPayloadType().name();
+  }
 
   protected List<Change<Request>> collectRelevantChanges(JsonObject oldObject, JsonObject newObject) {
     List<Change<Request>> changes = new ArrayList<>();
