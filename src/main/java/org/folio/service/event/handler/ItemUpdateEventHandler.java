@@ -27,7 +27,7 @@ import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class ItemUpdateEventHandler implements AsyncRecordHandler<String, String> {
+public class ItemUpdateEventHandler extends UpdateEventAbstractHandler<Request> {
 
   private static final Logger log = LogManager.getLogger(ItemUpdateEventHandler.class);
   private static final String EFFECTIVE_SHELVING_ORDER_KEY = "effectiveShelvingOrder";
@@ -38,67 +38,37 @@ public class ItemUpdateEventHandler implements AsyncRecordHandler<String, String
 
   private final Context context;
 
-  @Override
-  public Future<String> handle(KafkaConsumerRecord<String, String> event) {
-    final String eventKey = event.key();
-    log.info("handle:: received event {}", eventKey);
-
-    return processEvent(event)
-      .onSuccess(r -> log.info("handle:: event {} processed successfully", eventKey))
-      .onFailure(t -> log.error("handle:: failed to process event", t))
-      .map(eventKey);
-  }
-
-  private Future<List<Request>> processEvent(KafkaConsumerRecord<String, String> event) {
-    JsonObject payload = new JsonObject(event.value());
-
-    String eventType = payload.getString("type");
-    if (!INVENTORY_ITEM_UPDATED.getPayloadType().name().equals(eventType)) {
-      log.info("updateRequestSearchIndex:: unsupported event type: {}", eventType);
-      return succeededFuture();
-    }
-
-    JsonObject oldItem = payload.getJsonObject("old");
-    JsonObject newItem = payload.getJsonObject("new");
-
-    if (oldItem == null || newItem == null) {
-      log.warn("updateRequestSearchIndex:: failed to find old and/or new item version");
-      return succeededFuture();
-    }
-
-    List<Change<Request>> relevantChanges = collectRelevantChanges(oldItem, newItem);
-
-    if (relevantChanges.isEmpty()) {
-      log.info("updateRequestSearchIndex:: no relevant changes detected");
-      return succeededFuture();
-    }
-
-    log.info("updateRequestSearchIndex:: relevant changes detected");
-    RequestRepository requestRepository = createRequestRepository(event);
-
-    return findRequestsForItem(requestRepository, oldItem.getString("id"))
-      .compose(requests -> updateRequests(requests, relevantChanges, requestRepository));
-  }
-
-  private static List<Change<Request>> collectRelevantChanges(JsonObject oldItem, JsonObject newItem) {
+  protected List<Change<Request>> collectRelevantChanges(JsonObject oldObject, JsonObject newObject) {
     List<Change<Request>> changes = new ArrayList<>();
 
     // compare call number components
-    JsonObject oldCallNumberComponents = extractCallNumberComponents(oldItem);
-    JsonObject newCallNumberComponents = extractCallNumberComponents(newItem);
+    JsonObject oldCallNumberComponents = extractCallNumberComponents(oldObject);
+    JsonObject newCallNumberComponents = extractCallNumberComponents(newObject);
     if (notEqual(oldCallNumberComponents, newCallNumberComponents)) {
       changes.add(new Change<>(request -> request.getSearchIndex()
         .setCallNumberComponents(newCallNumberComponents.mapTo(CallNumberComponents.class))));
     }
 
     // compare shelving order
-    String oldShelvingOrder = oldItem.getString(EFFECTIVE_SHELVING_ORDER_KEY);
-    String newShelvingOrder = newItem.getString(EFFECTIVE_SHELVING_ORDER_KEY);
+    String oldShelvingOrder = oldObject.getString(EFFECTIVE_SHELVING_ORDER_KEY);
+    String newShelvingOrder = newObject.getString(EFFECTIVE_SHELVING_ORDER_KEY);
     if (notEqual(oldShelvingOrder, newShelvingOrder)) {
       changes.add(new Change<>(request -> request.getSearchIndex().setShelvingOrder(newShelvingOrder)));
     }
 
     return changes;
+  }
+
+  @Override
+  protected Future<List<Request>> applyChanges(List<Change<Request>> changes,
+    KafkaConsumerRecord<String, String> event, JsonObject oldObject, JsonObject newObject) {
+
+    log.debug("applyChanges:: applying item-related changes");
+
+    RequestRepository requestRepository = new RequestRepository(context, getKafkaHeaders(event));
+
+    return findRequestsForItem(requestRepository, oldObject.getString("id"))
+      .compose(requests -> applyDbUpdates(requests, changes, requestRepository));
   }
 
   private Future<List<Request>> findRequestsForItem(RequestRepository requestRepository, String itemId) {
@@ -109,26 +79,6 @@ public class ItemUpdateEventHandler implements AsyncRecordHandler<String, String
         .addField("'itemId'")
         .setOperation("=")
         .setVal(itemId)));
-  }
-
-  private Future<List<Request>> updateRequests(List<Request> requests,
-    Collection<Change<Request>> changes, RequestRepository requestRepository) {
-
-    if (requests.isEmpty()) {
-      log.info("updateRequests:: no requests found, nothing to update");
-      return succeededFuture(requests);
-    }
-
-    log.info("updateRequests:: {} requests found, applying changes", requests.size());
-    requests.forEach(request -> changes.forEach(change -> change.apply(request)));
-
-    log.info("updateRequests:: persisting changes");
-    return requestRepository.update(requests).map(requests);
-  }
-
-  private RequestRepository createRequestRepository(KafkaConsumerRecord<String, String> event) {
-    var headers = new CaseInsensitiveMap<>(kafkaHeadersToMap(event.headers()));
-    return new RequestRepository(context, headers);
   }
 
   private static JsonObject extractCallNumberComponents(JsonObject itemJson) {
@@ -144,15 +94,6 @@ public class ItemUpdateEventHandler implements AsyncRecordHandler<String, String
     }
 
     return callNumberComponents;
-  }
-
-  @RequiredArgsConstructor
-  private static class Change<T> {
-    private final Consumer<T> changeConsumer;
-
-    public void apply(T target) {
-      changeConsumer.accept(target);
-    }
   }
 
 }
