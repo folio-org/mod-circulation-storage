@@ -25,7 +25,7 @@ public class ServicePointUpdateEventHandler extends UpdateEventAbstractHandler<R
   private final Context context;
 
   public ServicePointUpdateEventHandler(Context context) {
-    super(INVENTORY_SERVICE_POINT_UPDATED.getPayloadType().name());
+    super(INVENTORY_SERVICE_POINT_UPDATED);
     this.context = context;
   }
 

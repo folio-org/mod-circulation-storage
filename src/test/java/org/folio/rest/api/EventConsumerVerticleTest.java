@@ -133,14 +133,11 @@ public class EventConsumerVerticleTest extends ApiTests {
 
   @Test
   public void requestSearchIndexIsNotUpdatedWhenEventContainsNoRelevantChanges() {
-    String prefix = DEFAULT_CALL_NUMBER_PREFIX;
-    String callNumber = DEFAULT_CALL_NUMBER;
-    String suffix = DEFAULT_CALL_NUMBER_SUFFIX;
-    String shelvingOrder = DEFAULT_SHELVING_ORDER;
-
-    JsonObject oldItem = buildItem(prefix, callNumber, suffix, shelvingOrder);
+    JsonObject oldItem = buildItem(DEFAULT_CALL_NUMBER_PREFIX, DEFAULT_CALL_NUMBER,
+      DEFAULT_CALL_NUMBER_SUFFIX, DEFAULT_SHELVING_ORDER);
     JsonObject newItem = oldItem.copy().put("barcode", "new-barcode"); // irrelevant change
-    SearchIndex searchIndex = buildSearchIndex(prefix, callNumber, suffix, shelvingOrder);
+    SearchIndex searchIndex = buildSearchIndex(DEFAULT_CALL_NUMBER_PREFIX, DEFAULT_CALL_NUMBER,
+      DEFAULT_CALL_NUMBER_SUFFIX, DEFAULT_SHELVING_ORDER);
 
     createRequest(buildRequest(REQUEST_ID, oldItem));
     verifyRequestSearchIndex(REQUEST_ID, searchIndex);
@@ -153,14 +150,11 @@ public class EventConsumerVerticleTest extends ApiTests {
 
   @Test
   public void requestSearchIndexIsNotUpdatedWhenRequestAndEventAreForDifferentItems() {
-    String prefix = DEFAULT_CALL_NUMBER_PREFIX;
-    String callNumber = DEFAULT_CALL_NUMBER;
-    String suffix = DEFAULT_CALL_NUMBER_SUFFIX;
-    String shelvingOrder = DEFAULT_SHELVING_ORDER;
-
-    JsonObject oldItem = buildItem(prefix, callNumber, suffix, shelvingOrder);
+    JsonObject oldItem = buildItem(DEFAULT_CALL_NUMBER_PREFIX, DEFAULT_CALL_NUMBER,
+      DEFAULT_CALL_NUMBER_SUFFIX, DEFAULT_SHELVING_ORDER);
     JsonObject newItem = oldItem.copy().put("effectiveShelvingOrder", "new-order"); // relevant change
-    SearchIndex searchIndex = buildSearchIndex(prefix, callNumber, suffix, shelvingOrder);
+    SearchIndex searchIndex = buildSearchIndex(DEFAULT_CALL_NUMBER_PREFIX, DEFAULT_CALL_NUMBER,
+      DEFAULT_CALL_NUMBER_SUFFIX, DEFAULT_SHELVING_ORDER);
 
     JsonObject request = buildRequest(REQUEST_ID, oldItem).put("itemId", randomId());
     createRequest(request);

@@ -31,7 +31,7 @@ public class ItemUpdateEventHandler extends UpdateEventAbstractHandler<Request> 
   private final Context context;
 
   public ItemUpdateEventHandler(Context context) {
-    super(INVENTORY_ITEM_UPDATED.getPayloadType().name());
+    super(INVENTORY_ITEM_UPDATED);
     this.context = context;
   }
 

@@ -13,6 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.kafka.AsyncRecordHandler;
 import org.folio.persist.AbstractRepository;
+import org.folio.service.event.InventoryEventType;
 
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
@@ -22,9 +23,9 @@ import lombok.RequiredArgsConstructor;
 public abstract class UpdateEventAbstractHandler<T> implements AsyncRecordHandler<String, String> {
   private static final Logger log = LogManager.getLogger(MethodHandles.lookup().lookupClass());
 
-  private final String supportedEventType;
+  private final InventoryEventType supportedEventType;
 
-  protected UpdateEventAbstractHandler(String supportedEventType) {
+  protected UpdateEventAbstractHandler(InventoryEventType supportedEventType) {
     this.supportedEventType = supportedEventType;
   }
 
@@ -43,7 +44,7 @@ public abstract class UpdateEventAbstractHandler<T> implements AsyncRecordHandle
     JsonObject payload = new JsonObject(event.value());
 
     String eventType = payload.getString("type");
-    if (!supportedEventType.equals(eventType)) {
+    if (!supportedEventType.getPayloadType().name().equals(eventType)) {
       log.info("processEvent:: unsupported event type: {}", eventType);
       return succeededFuture();
     }
