@@ -1,11 +1,10 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isOk;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
-
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
-import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isOk;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -17,18 +16,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
-
-import org.joda.time.DateTime;
-import org.joda.time.format.ISODateTimeFormat;
-import org.junit.Before;
-import org.junit.Test;
-
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criterion;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonResponse;
@@ -38,7 +27,20 @@ import org.folio.rest.support.TextResponse;
 import org.folio.rest.support.builders.LoanRequestBuilder;
 import org.folio.rest.support.http.AssertingRecordClient;
 import org.folio.rest.support.http.InterfaceUrls;
+import org.joda.time.DateTime;
+import org.joda.time.format.ISODateTimeFormat;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+
+@RunWith(JUnitParamsRunner.class)
 public class PatronActionSessionAPITest extends ApiTests {
 
   private static final String PATRON_ACTION_SESSION = "patron_action_session";
@@ -260,11 +262,12 @@ public class PatronActionSessionAPITest extends ApiTests {
   }
 
   @Test
-  public void canSaveAndRetrieveSessionWithSessionId() throws InterruptedException,
-    MalformedURLException,TimeoutException, ExecutionException {
+  @Parameters({"Check-in", "Check-out"})
+  public void canSaveAndRetrieveSessionWithSessionId(String actionType)
+    throws InterruptedException, MalformedURLException,TimeoutException, ExecutionException {
 
     String sessionId = UUID.randomUUID().toString();
-    JsonObject session = createPatronActionSession("Check-out")
+    JsonObject session = createPatronActionSession(actionType)
       .put("sessionId", sessionId);
 
     assertRecordClient.create(session);
@@ -279,6 +282,7 @@ public class PatronActionSessionAPITest extends ApiTests {
       .orElseThrow();
 
     assertThat(retrievedSession.getString("sessionId"), is(sessionId));
+    assertThat(retrievedSession.getString("actionType"), is(actionType));
   }
 
   private JsonObject createPatronActionSession(String actionType) {
