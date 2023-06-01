@@ -133,10 +133,10 @@ public class EventConsumerVerticleTest extends ApiTests {
 
   @Test
   public void requestSearchIndexIsNotUpdatedWhenEventContainsNoRelevantChanges() {
-    String prefix = "prefix";
-    String callNumber = "callNumber";
-    String suffix = "suffix";
-    String shelvingOrder = "shelvingOrder";
+    String prefix = DEFAULT_CALL_NUMBER_PREFIX;
+    String callNumber = DEFAULT_CALL_NUMBER;
+    String suffix = DEFAULT_CALL_NUMBER_SUFFIX;
+    String shelvingOrder = DEFAULT_SHELVING_ORDER;
 
     JsonObject oldItem = buildItem(prefix, callNumber, suffix, shelvingOrder);
     JsonObject newItem = oldItem.copy().put("barcode", "new-barcode"); // irrelevant change
@@ -153,10 +153,10 @@ public class EventConsumerVerticleTest extends ApiTests {
 
   @Test
   public void requestSearchIndexIsNotUpdatedWhenRequestAndEventAreForDifferentItems() {
-    String prefix = "prefix";
-    String callNumber = "callNumber";
-    String suffix = "suffix";
-    String shelvingOrder = "shelvingOrder";
+    String prefix = DEFAULT_CALL_NUMBER_PREFIX;
+    String callNumber = DEFAULT_CALL_NUMBER;
+    String suffix = DEFAULT_CALL_NUMBER_SUFFIX;
+    String shelvingOrder = DEFAULT_SHELVING_ORDER;
 
     JsonObject oldItem = buildItem(prefix, callNumber, suffix, shelvingOrder);
     JsonObject newItem = oldItem.copy().put("effectiveShelvingOrder", "new-order"); // relevant change
@@ -224,7 +224,9 @@ public class EventConsumerVerticleTest extends ApiTests {
   }
 
   @Test
-  public void requestPickupServicePointNameIsNotUpdatedWhenRequestAndEventAreForDifferentSPs() {
+  public void
+  requestPickupServicePointNameIsNotUpdatedWhenRequestAndEventAreForDifferentServicePoints() {
+
     JsonObject item = buildItem();
     String servicePointId = randomId();
     String oldServicePointName = "oldName";
@@ -384,9 +386,9 @@ public class EventConsumerVerticleTest extends ApiTests {
     JsonObject callNumberComponents = item.getJsonObject("effectiveCallNumberComponents");
     if (callNumberComponents != null) {
       searchIndex = searchIndex.withCallNumberComponents(new CallNumberComponents()
-        .withCallNumber(callNumberComponents.getString("callNumber"))
-        .withPrefix(callNumberComponents.getString("prefix"))
-        .withSuffix(callNumberComponents.getString("suffix")));
+        .withCallNumber(callNumberComponents.getString(DEFAULT_CALL_NUMBER))
+        .withPrefix(callNumberComponents.getString(DEFAULT_CALL_NUMBER_PREFIX))
+        .withSuffix(callNumberComponents.getString(DEFAULT_CALL_NUMBER_SUFFIX)));
     }
 
     return new RequestRequestBuilder()

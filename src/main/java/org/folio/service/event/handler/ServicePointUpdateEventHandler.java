@@ -17,18 +17,16 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
-import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor
 public class ServicePointUpdateEventHandler extends UpdateEventAbstractHandler<Request> {
-  private static final Logger log = LogManager.getLogger(ItemUpdateEventHandler.class);
+  private static final Logger log = LogManager.getLogger(ServicePointUpdateEventHandler.class);
   private static final String SERVICE_POINT_NAME_KEY = "name";
 
   private final Context context;
 
-  @Override
-  protected String supportedEventType() {
-    return INVENTORY_SERVICE_POINT_UPDATED.getPayloadType().name();
+  public ServicePointUpdateEventHandler(Context context) {
+    super(INVENTORY_SERVICE_POINT_UPDATED.getPayloadType().name());
+    this.context = context;
   }
 
   @Override

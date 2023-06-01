@@ -2,7 +2,6 @@ package org.folio.service.event.handler;
 
 import static io.vertx.core.Future.succeededFuture;
 import static org.folio.kafka.KafkaHeaderUtils.kafkaHeadersToMap;
-import static org.folio.service.event.InventoryEventType.INVENTORY_ITEM_UPDATED;
 
 import java.lang.invoke.MethodHandles;
 import java.util.Collection;
@@ -23,6 +22,12 @@ import lombok.RequiredArgsConstructor;
 public abstract class UpdateEventAbstractHandler<T> implements AsyncRecordHandler<String, String> {
   private static final Logger log = LogManager.getLogger(MethodHandles.lookup().lookupClass());
 
+  private final String supportedEventType;
+
+  public UpdateEventAbstractHandler(String supportedEventType) {
+    this.supportedEventType = supportedEventType;
+  }
+
   @Override
   public Future<String> handle(KafkaConsumerRecord<String, String> event) {
     final String eventKey = event.key();
@@ -38,7 +43,7 @@ public abstract class UpdateEventAbstractHandler<T> implements AsyncRecordHandle
     JsonObject payload = new JsonObject(event.value());
 
     String eventType = payload.getString("type");
-    if (!supportedEventType().equals(eventType)) {
+    if (!supportedEventType.equals(eventType)) {
       log.info("processEvent:: unsupported event type: {}", eventType);
       return succeededFuture();
     }
@@ -61,8 +66,6 @@ public abstract class UpdateEventAbstractHandler<T> implements AsyncRecordHandle
     log.info("processEvent:: {} relevant changes detected, applying", relevantChanges::size);
     return applyChanges(relevantChanges, event, oldObject, newObject);
   }
-
-  protected abstract String supportedEventType();
 
   protected abstract List<Change<T>> collectRelevantChanges(JsonObject oldObject,
     JsonObject newObject);

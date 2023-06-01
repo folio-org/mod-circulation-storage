@@ -18,9 +18,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
-import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor
 public class ItemUpdateEventHandler extends UpdateEventAbstractHandler<Request> {
 
   private static final Logger log = LogManager.getLogger(ItemUpdateEventHandler.class);
@@ -32,9 +30,9 @@ public class ItemUpdateEventHandler extends UpdateEventAbstractHandler<Request> 
 
   private final Context context;
 
-  @Override
-  protected String supportedEventType() {
-    return INVENTORY_ITEM_UPDATED.getPayloadType().name();
+  public ItemUpdateEventHandler(Context context) {
+    super(INVENTORY_ITEM_UPDATED.getPayloadType().name());
+    this.context = context;
   }
 
   protected List<Change<Request>> collectRelevantChanges(JsonObject oldObject, JsonObject newObject) {
