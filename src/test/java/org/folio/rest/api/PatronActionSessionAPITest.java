@@ -259,6 +259,28 @@ public class PatronActionSessionAPITest extends ApiTests {
       is("Date cannot be parsed"));
   }
 
+  @Test
+  public void canSaveAndRetrieveSessionWithSessionId() throws InterruptedException,
+    MalformedURLException,TimeoutException, ExecutionException {
+
+    String sessionId = UUID.randomUUID().toString();
+    JsonObject session = createPatronActionSession("Check-out")
+      .put("sessionId", sessionId);
+
+    assertRecordClient.create(session);
+    MultipleRecords<JsonObject> sessions = assertRecordClient.getAll();
+
+    assertThat(sessions.getTotalRecords(), is(1));
+    assertThat(sessions.getRecords().size(), is(1));
+
+    JsonObject retrievedSession = sessions.getRecords()
+      .stream()
+      .findFirst()
+      .orElseThrow();
+
+    assertThat(retrievedSession.getString("sessionId"), is(sessionId));
+  }
+
   private JsonObject createPatronActionSession(String actionType) {
     JsonObject jsonObject = new JsonObject()
       .put("id", UUID.randomUUID().toString())

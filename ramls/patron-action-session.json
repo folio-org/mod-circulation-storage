@@ -7,17 +7,22 @@
     "id": {
       "type": "string",
       "description": "Patron action session id, UUID",
-      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+      "$ref": "raml-util/schemas/uuid.schema"
+    },
+    "sessionId": {
+      "type": "string",
+      "description": "UUID which is the same for all patron action sessions generated in scope of the same check-in/check-out session",
+      "$ref": "raml-util/schemas/uuid.schema"
     },
     "patronId": {
       "type": "string",
       "description": "Patron id",
-      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+      "$ref": "raml-util/schemas/uuid.schema"
     },
     "loanId": {
       "type": "string",
       "description": "Loan id",
-      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+      "$ref": "raml-util/schemas/uuid.schema"
     },
     "actionType": {
       "type": "string",
