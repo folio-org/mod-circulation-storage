@@ -24,7 +24,7 @@ public abstract class UpdateEventAbstractHandler<T> implements AsyncRecordHandle
 
   private final String supportedEventType;
 
-  public UpdateEventAbstractHandler(String supportedEventType) {
+  protected UpdateEventAbstractHandler(String supportedEventType) {
     this.supportedEventType = supportedEventType;
   }
 
