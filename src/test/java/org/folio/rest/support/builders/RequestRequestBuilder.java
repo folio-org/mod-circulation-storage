@@ -34,7 +34,7 @@ public class RequestRequestBuilder extends JsonBuilder {
   private final UUID instanceId;
   private final UUID requesterId;
   private final UUID proxyId;
-  private final String fulfilmentPreference;
+  private final String fulfillmentPreference;
   private final UUID deliveryAddressTypeId;
   private final DateTime requestExpirationDate;
   private final DateTime holdShelfExpirationDate;
@@ -93,7 +93,7 @@ public class RequestRequestBuilder extends JsonBuilder {
     put(request, "itemId", this.itemId);
     put(request, "instanceId", this.instanceId);
     put(request, "requesterId", this.requesterId);
-    put(request, "fulfilmentPreference", this.fulfilmentPreference);
+    put(request, "fulfillmentPreference", this.fulfillmentPreference);
     put(request, "position", this.position);
     put(request, "status", status);
     put(request, "proxyUserId", proxyId);
@@ -187,7 +187,7 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.instanceId,
       this.requesterId,
       this.proxyId,
-      this.fulfilmentPreference,
+      this.fulfillmentPreference,
       this.deliveryAddressTypeId,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
@@ -208,11 +208,11 @@ public class RequestRequestBuilder extends JsonBuilder {
   }
 
   public RequestRequestBuilder toHoldShelf() {
-    return withFulfilmentPreference("Hold Shelf");
+    return withFulfillmentPreference("Hold Shelf");
   }
 
   public RequestRequestBuilder deliverToAddress(UUID addressTypeId) {
-    return withFulfilmentPreference("Delivery")
+    return withFulfillmentPreference("Delivery")
       .withDeliveryAddressTypeId(addressTypeId);
   }
 
@@ -230,7 +230,7 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.instanceId,
       this.requesterId,
       this.proxyId,
-      this.fulfilmentPreference,
+      this.fulfillmentPreference,
       this.deliveryAddressTypeId,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
@@ -265,7 +265,7 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.instanceId,
       this.requesterId,
       this.proxyId,
-      this.fulfilmentPreference,
+      this.fulfillmentPreference,
       this.deliveryAddressTypeId,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
@@ -299,7 +299,7 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.instanceId,
       this.requesterId,
       this.proxyId,
-      this.fulfilmentPreference,
+      this.fulfillmentPreference,
       this.deliveryAddressTypeId,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,
@@ -333,7 +333,7 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.instanceId,
       this.requesterId,
       this.proxyId,
-      this.fulfilmentPreference,
+      this.fulfillmentPreference,
       this.deliveryAddressTypeId,
       this.requestExpirationDate,
       this.holdShelfExpirationDate,

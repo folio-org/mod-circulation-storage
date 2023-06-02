@@ -88,9 +88,11 @@ public class ScheduledNoticesAPITest extends ApiTests {
       .put("format", "Email");
 
     DateTime nextRunTime = new DateTime(UTC);
+    String sessionId = randomId();
     JsonObject scheduledNotice = new JsonObject()
       .put("nextRunTime", nextRunTime.toString())
       .put("noticeConfig", noticeConfig)
+      .put("sessionId", sessionId)
       .put("triggeringEvent", "Request expiration");
 
     String createdNoticeId = postScheduledNotice(scheduledNotice).getJson().getString("id");
@@ -99,6 +101,7 @@ public class ScheduledNoticesAPITest extends ApiTests {
     JsonObject createdConfig = createdNotice.getJsonObject("noticeConfig");
 
     assertThat(createdNotice.getString("triggeringEvent"), is("Request expiration"));
+    assertThat(createdNotice.getString("sessionId"), is(sessionId));
     assertThat(DateTime.parse(createdNotice.getString("nextRunTime")), is(nextRunTime));
     assertThat(createdConfig.getString("timing"), is("Upon At"));
     assertThat(createdConfig.getString("templateId"), is(templateId));
