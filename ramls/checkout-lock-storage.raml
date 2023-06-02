@@ -11,74 +11,48 @@ documentation:
 types:
   checkout-lock: !include checkout-lock.json
   checkout-locks: !include checkout-locks.json
+  checkout-lock-request: !include checkout-lock-request.json
   errors: !include raml-util/schemas/errors.schema
-  parameters: !include raml-util/schemas/parameters.schema
 
 traits:
-  language: !include raml-util/traits/language.raml
   validate: !include raml-util/traits/validation.raml
-  pageable: !include raml-util/traits/pageable.raml
-
-resourceTypes:
-  collection: !include raml-util/rtypes/collection.raml
-  collection-item: !include raml-util/rtypes/item-collection.raml
-  item-collection-get: !include raml-util/rtypes/item-collection-get.raml
 
 /check-out-lock-storage:
   displayName: check out lock storage
   post:
     is: [validate]
-    description: creating a lock for the userid.
+    description: "creating a lock for the given userid"
     body:
       application/json:
-        type: checkout-lock
-        example: !include examples/checkout-lock.json
+        type: checkout-lock-request
+        example: !include examples/checkout-lock-request.json
     responses:
       201:
         body:
           application/json:
             type: checkout-lock
             example: !include examples/checkout-lock.json
-      503:
-        description: " Failed to create lock for patron {userId}"
-        body:
-          text/plain:
-            type: errors
       400:
         description: "Bad Request"
         body:
           text/plain:
-            example: "Bad Request"
       500:
         description: "Internal server error"
         body:
           text/plain:
             example: "Internal server error"
-  get:
-    is: [pageable]
-    description: Get the checkout locks
-    responses:
-      200:
+      503:
+        description: "Failed to create lock for patron {userId}"
         body:
-          application/json:
-            type: checkout-locks
-            example: !include examples/checkout-locks.json
-      422:
-        description: "Invalid parameters"
+          text/plain:
+            example: "Failed to create lock for patron "
   /{lockId}:
-    type:
-      item-collection-get:
-        exampleItem: !include examples/checkout-lock.json
-        schema: checkout-lock
-    get:
-      responses:
-        200:
-          description: "Checkout lock retrieved"
-        404:
-          description: "Lock not found for patron"
     delete:
       responses:
         204:
           description: "Lock is deleted"
-        404:
-          description: "Lock is not found"
+        500:
+          description: "Internal Server error"
+          body:
+            text/plain:
+              example: "Internal server error"
