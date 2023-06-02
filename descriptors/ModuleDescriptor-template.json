@@ -576,12 +576,12 @@
         {
           "methods": ["POST"],
           "pathPattern": "/check-out-lock-storage",
-          "permissionsRequired": ["anonymize-storage-loans.post"]
+          "permissionsRequired": ["checkout-lock-storage.item.post"]
         },
         {
-          "methods": ["GET"],
-          "pathPattern": "/check-out-lock-storage",
-          "permissionsRequired": ["anonymize-storage-loans.post"]
+          "methods": ["DELETE"],
+          "pathPattern": "/check-out-lock-storage/{lockId}",
+          "permissionsRequired": ["checkout-lock-storage.item.delete"]
         }
       ]
     },
@@ -1121,6 +1121,16 @@
       "permissionName": "actual-cost-record-storage.actual-cost-records.item.delete",
       "displayName": "Circulation storage - delete actual cost record",
       "description": "Delete actual cost record"
+    },
+    {
+      "permissionName": "checkout-lock-storage.item.post",
+      "displayName": "Circulation storage - create lock",
+      "description": "create lock for the userId"
+    },
+    {
+      "permissionName": "checkout-lock-storage.item.delete",
+      "displayName": "Circulation storage - delete lock",
+      "description": "Delete lock for the userId"
     }
   ],
   "launchDescriptor": {
