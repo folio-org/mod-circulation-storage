@@ -46,19 +46,21 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
 //        log.info("Inside on failure ",err);
 //        asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond503WithTextPlain("Unable to acquire lock")));
 //      });
-    try {
+
       postgresClient(vertxContext, okapiHeaders)
         .execute(deleteAndInsertSql(entity.getUserId(), tenantId, entity.getTtlMs()), rowSetAsyncResult -> {
-          log.info("rowsetAsync {} ", rowSetAsyncResult.result());
-          if (rowSetAsyncResult.succeeded()) {
-            asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond201WithApplicationJson(this.mapToCheckOutLock(rowSetAsyncResult.result()))));
-          } else {
-            asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond503WithTextPlain("Unable to acquire lock")));
+          try {
+            log.info("rowsetAsync {} ", rowSetAsyncResult.result());
+            if (rowSetAsyncResult.succeeded()) {
+              asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond201WithApplicationJson(this.mapToCheckOutLock(rowSetAsyncResult.result()))));
+            } else {
+              asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond503WithTextPlain("Unable to acquire lock")));
+            }
+          }catch (Exception ex){
+            log.info("Inside exception {} ",ex.getMessage());
+            asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond500WithTextPlain(ex.getMessage())));
           }
         });
-    }catch (Exception ex){
-      asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond500WithTextPlain(ex.getMessage())));
-    }
   }
 
   @Override
