@@ -90,7 +90,7 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
       return null;
     return rowSetToStream(rowSet).map(row -> new CheckoutLock()
         .withId(row.getUUID("id").toString())
-        .withUserId(row.getUUID("userid").toString())
+        .withUserId(row.getUUID("user_id").toString())
         .withCreationDate(Date.valueOf(row.getLocalDate("creation_date"))))
       .collect(Collectors.toList()).get(0);
   }
