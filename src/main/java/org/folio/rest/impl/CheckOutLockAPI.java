@@ -39,8 +39,14 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
     PgClientFutureAdapter pgClient = PgClientFutureAdapter.create(vertxContext, okapiHeaders);
     pgClient.execute(deleteAndInsertSql(entity.getUserId(), tenantId, entity.getTtlMs()))
       .onSuccess(rows -> PostCheckOutLockStorageResponse.respond201WithApplicationJson(this.mapToCheckOutLock(rows)))
-      .onFailure(err -> PostCheckOutLockStorageResponse.respond503WithTextPlain("Unable to acquire lock"))
-      .map(Response.class::cast)
+      .onFailure(err -> {
+        log.info("Inside on failure ",err);
+        PostCheckOutLockStorageResponse.respond503WithTextPlain("Unable to acquire lock");
+      })
+      .map(x -> {
+        log.info("Inside map {} ",x);
+        return (Response) x;
+      })
       .onComplete(asyncResultHandler);
   }
 
