@@ -46,15 +46,19 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
 //        log.info("Inside on failure ",err);
 //        asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond503WithTextPlain("Unable to acquire lock")));
 //      });
-    postgresClient(vertxContext, okapiHeaders)
-      .execute(deleteAndInsertSql(entity.getUserId(), tenantId, entity.getTtlMs()), rowSetAsyncResult -> {
-        log.info("rowsetAsync {} ",rowSetAsyncResult.result());
-        if(rowSetAsyncResult.succeeded()){
-          asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond201WithApplicationJson(this.mapToCheckOutLock(rowSetAsyncResult.result()))));
-        }else{
-          asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond503WithTextPlain("Unable to acquire lock")));
-        }
-      });
+    try {
+      postgresClient(vertxContext, okapiHeaders)
+        .execute(deleteAndInsertSql(entity.getUserId(), tenantId, entity.getTtlMs()), rowSetAsyncResult -> {
+          log.info("rowsetAsync {} ", rowSetAsyncResult.result());
+          if (rowSetAsyncResult.succeeded()) {
+            asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond201WithApplicationJson(this.mapToCheckOutLock(rowSetAsyncResult.result()))));
+          } else {
+            asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond503WithTextPlain("Unable to acquire lock")));
+          }
+        });
+    }catch (Exception ex){
+      asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond500WithTextPlain(ex.getMessage())));
+    }
   }
 
   @Override
@@ -90,6 +94,7 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
       return null;
     return rowSetToStream(rowSet).map(row -> new CheckoutLock()
         .withId(row.getUUID("id").toString())
+        .withUserId(row.getUUID("user_id").toString())
         .withCreationDate(Date.valueOf(row.getLocalDate("creation_date"))))
       .collect(Collectors.toList()).get(0);
   }
