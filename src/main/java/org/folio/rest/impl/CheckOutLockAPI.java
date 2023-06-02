@@ -30,7 +30,7 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
 
   @Override
   public void postCheckOutLockStorage(CheckoutLockRequest entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    log.info("postCheckOutLockStorage:: entity {}", entity);
+    log.info("postCheckOutLockStorage:: entity {} {} ", entity.getUserId(), entity.getTtlMs());
     String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
     if (!UuidUtil.isUuid(entity.getUserId())) {
       asyncResultHandler.handle(new SucceededFuture<>(PostCheckOutLockStorageResponse.respond400WithTextPlain("Invalid UserId")));
@@ -66,12 +66,14 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
 
   private String deleteAndInsertSql(String userId, String tenantId, int ttlMs) {
     String tableName = String.format("%s.%s", convertToPsqlStandard(tenantId), CHECK_OUT_LOCK_TABLE);
-    return "delete from " + tableName + " where user_id = '" + userId + "' and creation_date + interval '" + ttlMs +
+    String sql = "delete from " + tableName + " where user_id = '" + userId + "' and creation_date + interval '" + ttlMs +
       "milliseconds < current_timestamp;Insert into " + tableName + "(user_id) values ( " + userId + ")returning id, creation_date";
+    log.info("sql {} ",sql);
+    return sql;
   }
 
   private CheckoutLock mapToCheckOutLock(RowSet<Row> rowSet) {
-    log.info("Inside mapToCheckOutLock");
+    log.info("Inside mapToCheckOutLock {} ",rowSet.size());
     if (rowSet.size() == 0)
       return null;
     return rowSetToStream(rowSet).map(row -> new CheckoutLock()
