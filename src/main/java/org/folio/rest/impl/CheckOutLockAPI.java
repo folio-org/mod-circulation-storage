@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static io.vertx.core.Future.succeededFuture;
+import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.persist.PostgresClient.convertToPsqlStandard;
 import static org.folio.support.DbUtil.rowSetToStream;
 
@@ -39,11 +40,20 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
       return;
     }
     PgClientFutureAdapter pgClient = PgClientFutureAdapter.create(vertxContext, okapiHeaders);
-    pgClient.execute(deleteAndInsertSql(entity.getUserId(), tenantId, entity.getTtlMs()))
-      .onSuccess(rows -> asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond201WithApplicationJson(this.mapToCheckOutLock(rows)))))
-      .onFailure(err -> {
-        log.info("Inside on failure ",err);
-        asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond503WithTextPlain("Unable to acquire lock")));
+//    pgClient.execute(deleteAndInsertSql(entity.getUserId(), tenantId, entity.getTtlMs()))
+//      .onSuccess(rows -> asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond201WithApplicationJson(this.mapToCheckOutLock(rows)))))
+//      .onFailure(err -> {
+//        log.info("Inside on failure ",err);
+//        asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond503WithTextPlain("Unable to acquire lock")));
+//      });
+    postgresClient(vertxContext, okapiHeaders)
+      .execute(deleteAndInsertSql(entity.getUserId(), tenantId, entity.getTtlMs()), rowSetAsyncResult -> {
+        log.info("rowsetAsync {} ",rowSetAsyncResult.result());
+        if(rowSetAsyncResult.succeeded()){
+          asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond201WithApplicationJson(this.mapToCheckOutLock(rowSetAsyncResult.result()))));
+        }else{
+          asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond503WithTextPlain("Unable to acquire lock")));
+        }
       });
   }
 
