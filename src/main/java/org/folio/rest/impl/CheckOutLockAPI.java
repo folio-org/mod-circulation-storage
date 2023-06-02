@@ -19,6 +19,8 @@ import javax.ws.rs.core.Response;
 import java.sql.Date;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.persist.PostgresClient.convertToPsqlStandard;
 import static org.folio.support.DbUtil.rowSetToStream;
 
@@ -38,16 +40,11 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
     }
     PgClientFutureAdapter pgClient = PgClientFutureAdapter.create(vertxContext, okapiHeaders);
     pgClient.execute(deleteAndInsertSql(entity.getUserId(), tenantId, entity.getTtlMs()))
-      .onSuccess(rows -> PostCheckOutLockStorageResponse.respond201WithApplicationJson(this.mapToCheckOutLock(rows)))
+      .onSuccess(rows -> asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond201WithApplicationJson(this.mapToCheckOutLock(rows)))))
       .onFailure(err -> {
         log.info("Inside on failure ",err);
-        PostCheckOutLockStorageResponse.respond503WithTextPlain("Unable to acquire lock");
-      })
-      .map(x -> {
-        log.info("Inside map {} ",x);
-        return (Response) x;
-      })
-      .onComplete(asyncResultHandler);
+        asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond503WithTextPlain("Unable to acquire lock")));
+      });
   }
 
   @Override
