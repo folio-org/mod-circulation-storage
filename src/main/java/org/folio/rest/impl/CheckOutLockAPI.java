@@ -70,7 +70,7 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
   private String deleteAndInsertSql(String userId, String tenantId, int ttlMs) {
     String tableName = String.format("%s.%s", convertToPsqlStandard(tenantId), CHECK_OUT_LOCK_TABLE);
     String sql = "delete from " + tableName + " where user_id = '" + userId + "' and creation_date + interval '" + ttlMs +
-      "' milliseconds < current_timestamp;Insert into " + tableName + "(user_id) values ('" + userId + "')returning id, creation_date";
+      " milliseconds' < current_timestamp;Insert into " + tableName + "(user_id) values ('" + userId + "')returning id, creation_date";
     log.info("sql {} ",sql);
     return sql;
   }
