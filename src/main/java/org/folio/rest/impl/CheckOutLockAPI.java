@@ -12,6 +12,7 @@ import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.CheckoutLock;
 import org.folio.rest.jaxrs.model.CheckoutLockRequest;
 import org.folio.rest.jaxrs.resource.CheckOutLockStorage;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.support.PgClientFutureAdapter;
 import org.folio.util.UuidUtil;
 
@@ -34,64 +35,80 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
   @Override
   public void postCheckOutLockStorage(CheckoutLockRequest entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     log.info("postCheckOutLockStorage:: entity {} {} ", entity.getUserId(), entity.getTtlMs());
+    PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
     String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
     if (!UuidUtil.isUuid(entity.getUserId())) {
       asyncResultHandler.handle(new SucceededFuture<>(PostCheckOutLockStorageResponse.respond400WithTextPlain("Invalid UserId")));
       return;
     }
-    PgClientFutureAdapter pgClient = PgClientFutureAdapter.create(vertxContext, okapiHeaders);
-//    pgClient.execute(deleteAndInsertSql(entity.getUserId(), tenantId, entity.getTtlMs()))
-//      .onSuccess(rows -> asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond201WithApplicationJson(this.mapToCheckOutLock(rows)))))
-//      .onFailure(err -> {
-//        log.info("Inside on failure ",err);
-//        asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond503WithTextPlain("Unable to acquire lock")));
-//      });
-
-      postgresClient(vertxContext, okapiHeaders)
-        .execute(deleteAndInsertSql(entity.getUserId(), tenantId, entity.getTtlMs()), rowSetAsyncResult -> {
-          try {
-            log.info("rowsetAsync {} ", rowSetAsyncResult.result());
-            if (rowSetAsyncResult.succeeded()) {
-              asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond201WithApplicationJson(this.mapToCheckOutLock(rowSetAsyncResult.result()))));
+    postgresClient.execute(deleteOutdatedLockSql(entity.getUserId(), tenantId, entity.getTtlMs()), handler1 -> {
+      try {
+        log.info("rowSetAsync {} ", handler1.result());
+        if (handler1.succeeded()) {
+          postgresClient.execute(insertSql(entity.getUserId(), tenantId), handler2 -> {
+            if (handler2.succeeded()) {
+              asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond201WithApplicationJson(this.mapToCheckOutLock(handler1.result()))));
             } else {
-              asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond503WithTextPlain("Unable to acquire lock")));
+              respondWith503Error(asyncResultHandler);
             }
-          }catch (Exception ex){
-            log.info("Inside exception {} ",ex.getMessage());
-            asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond500WithTextPlain(ex.getMessage())));
-          }
-        });
+          });
+        } else {
+          respondWith503Error(asyncResultHandler);
+        }
+      } catch (Exception ex) {
+        log.warn("Inside exception {} ", ex.getMessage());
+        asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond500WithTextPlain(ex.getMessage())));
+      }
+    });
+  }
+
+  private void respondWith503Error(Handler<AsyncResult<Response>> asyncResultHandler) {
+    asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond503WithTextPlain("Unable to acquire lock")));
   }
 
   @Override
   public void deleteCheckOutLockStorageByLockId(String lockId, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
+    PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
     if (!UuidUtil.isUuid(lockId)) {
       asyncResultHandler.handle(new SucceededFuture<>(PostCheckOutLockStorageResponse.respond400WithTextPlain("Invalid UserId")));
       return;
     }
-    PgClientFutureAdapter pgClient = PgClientFutureAdapter.create(vertxContext, okapiHeaders);
-    pgClient.execute(deleteLockByIdSql(lockId, tenantId))
-      .onSuccess(rows -> DeleteCheckOutLockStorageByLockIdResponse.respond204())
-      .onFailure(err -> DeleteCheckOutLockStorageByLockIdResponse.respond500WithTextPlain("Internal server error"))
-      .map(Response.class::cast)
-      .onComplete(asyncResultHandler);
+    postgresClient.execute(deleteLockByIdSql(lockId, tenantId), handler -> {
+      if(handler.succeeded()){
+        asyncResultHandler.handle(succeededFuture(DeleteCheckOutLockStorageByLockIdResponse.respond204()));
+      }else{
+        asyncResultHandler.handle(succeededFuture(DeleteCheckOutLockStorageByLockIdResponse.respond500WithTextPlain(handler.cause())));
+      }
+      });
+//      .onSuccess(rows -> DeleteCheckOutLockStorageByLockIdResponse.respond204())
+//      .onFailure(err -> DeleteCheckOutLockStorageByLockIdResponse.respond500WithTextPlain("Internal server error"))
+//      .map(Response.class::cast)
+//      .onComplete(asyncResultHandler);
   }
 
   private String deleteLockByIdSql(String lockId, String tenantId) {
     String tableName = String.format("%s.%s", convertToPsqlStandard(tenantId), CHECK_OUT_LOCK_TABLE);
-    return "delete from " + tableName + "where id = '" + lockId + "'";
+    String sql = "delete from " + tableName + "where id1 = '" + lockId + "'";
+    return sql;
   }
 
-  private String deleteAndInsertSql(String userId, String tenantId, int ttlMs) {
+  private String insertSql(String userId, String tenantId) {
     String tableName = String.format("%s.%s", convertToPsqlStandard(tenantId), CHECK_OUT_LOCK_TABLE);
     String sql = "Insert into " + tableName + "(user_id) values ('" + userId + "')returning id, creation_date";
-    log.info("sql {} ",sql);
+    log.info("sql {} ", sql);
+    return sql;
+  }
+
+  private String deleteOutdatedLockSql(String userId, String tenantId, int ttlMs) {
+    String tableName = String.format("%s.%s", convertToPsqlStandard(tenantId), CHECK_OUT_LOCK_TABLE);
+    String sql = "delete from " + tableName + " where userid = '" + userId + "' and creation_date + interval '" + ttlMs + " milliseconds' < current_timestamp";
+    log.info("sql {} ", sql);
     return sql;
   }
 
   private CheckoutLock mapToCheckOutLock(RowSet<Row> rowSet) {
-    log.info("Inside mapToCheckOutLock {} ",rowSet.size());
+    log.info("Inside mapToCheckOutLock {} ", rowSet.size());
     if (rowSet.size() == 0)
       return null;
     return rowSetToStream(rowSet).map(row -> new CheckoutLock()
