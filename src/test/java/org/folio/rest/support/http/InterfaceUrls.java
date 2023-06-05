@@ -43,4 +43,9 @@ public class InterfaceUrls {
   public static URL requestExpirationUrl() throws MalformedURLException {
     return storageUrl("/scheduled-request-expiration");
   }
+
+  public static URL checkOutStorageUrl(String subPath) throws MalformedURLException {
+    return storageUrl("/check-out-lock-storage");
+  }
+
 }

@@ -37,13 +37,9 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
     log.info("postCheckOutLockStorage:: entity {} {} ", entity.getUserId(), entity.getTtlMs());
     PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
     String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
-    if (!UuidUtil.isUuid(entity.getUserId())) {
-      asyncResultHandler.handle(new SucceededFuture<>(PostCheckOutLockStorageResponse.respond400WithTextPlain("Invalid UserId")));
-      return;
-    }
     postgresClient.execute(deleteOutdatedLockSql(entity.getUserId(), tenantId, entity.getTtlMs()), handler1 -> {
       try {
-        log.info("rowSetAsync {} ", handler1.result());
+        log.info("rowSetAsync {} ", handler1.failed() ? handler1.cause() : handler1.succeeded());
         if (handler1.succeeded()) {
           postgresClient.execute(insertSql(entity.getUserId(), tenantId), handler2 -> {
             if (handler2.succeeded()) {
@@ -95,14 +91,14 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
 
   private String insertSql(String userId, String tenantId) {
     String tableName = String.format("%s.%s", convertToPsqlStandard(tenantId), CHECK_OUT_LOCK_TABLE);
-    String sql = "Insert into " + tableName + "(user_id) values ('" + userId + "')returning id, creation_date";
+    String sql = "Insert into " + tableName + "(user_id) values ('" + userId + "') returning id";
     log.info("sql {} ", sql);
     return sql;
   }
 
   private String deleteOutdatedLockSql(String userId, String tenantId, int ttlMs) {
     String tableName = String.format("%s.%s", convertToPsqlStandard(tenantId), CHECK_OUT_LOCK_TABLE);
-    String sql = "delete from " + tableName + " where userid = '" + userId + "' and creation_date + interval '" + ttlMs + " milliseconds' < current_timestamp";
+    String sql = "delete from " + tableName + " where user_id = '" + userId + "' and creation_date + interval '" + ttlMs + " milliseconds' < current_timestamp";
     log.info("sql {} ", sql);
     return sql;
   }
