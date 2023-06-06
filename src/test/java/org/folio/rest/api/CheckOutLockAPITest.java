@@ -22,7 +22,7 @@ public class CheckOutLockAPITest extends ApiTests {
 
   private final AssertingRecordClient checkOutLockClient =
     new AssertingRecordClient(client, StorageTestSuite.TENANT_ID,
-      InterfaceUrls::checkOutStorageUrl, "actualCostRecords");
+      InterfaceUrls::checkOutStorageUrl, "checkoutLock");
 
   private final ObjectMapper objectMapper = new ObjectMapper();
 

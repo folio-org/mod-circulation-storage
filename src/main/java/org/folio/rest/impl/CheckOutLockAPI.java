@@ -69,7 +69,7 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
 
   @Override
   public void deleteCheckOutLockStorageByLockId(String lockId, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    log.debug("deleteCheckOutLockStorageByLockId:: deleting lock with lockId {} ",lockId);
+    log.debug("deleteCheckOutLockStorageByLockId:: deleting lock with lockId {} ", lockId);
     String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
     PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
     if (!UuidUtil.isUuid(lockId)) {
@@ -77,12 +77,12 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
       return;
     }
     postgresClient.execute(deleteLockByIdSql(lockId, tenantId), handler -> {
-      if(handler.succeeded()){
+      if (handler.succeeded()) {
         asyncResultHandler.handle(succeededFuture(DeleteCheckOutLockStorageByLockIdResponse.respond204()));
-      }else{
+      } else {
         asyncResultHandler.handle(succeededFuture(DeleteCheckOutLockStorageByLockIdResponse.respond500WithTextPlain(handler.cause())));
       }
-      });
+    });
   }
 
   private String deleteLockByIdSql(String lockId, String tenantId) {
@@ -102,12 +102,12 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
 
   private CheckoutLock mapToCheckOutLock(RowSet<Row> rowSet) {
     log.debug("mapToCheckOutLock:: rowSet {} ", rowSet.size());
-    if (rowSet.size() == 0){
+    if (rowSet.size() == 0) {
       return null;
     }
     return rowSetToStream(rowSet).map(row -> {
-      log.info(row.getLocalDateTime("creation_date"));
-      return new CheckoutLock()
+        log.info(row.getLocalDateTime("creation_date"));
+        return new CheckoutLock()
           .withId(row.getUUID("id").toString())
           .withUserId(row.getUUID("user_id").toString())
           .withCreationDate(Date.from(row.getLocalDateTime("creation_date").atZone(ZoneId.systemDefault()).toInstant()));
