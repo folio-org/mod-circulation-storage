@@ -19,6 +19,7 @@ import javax.ws.rs.core.Response;
 import java.sql.Date;
 import java.time.ZoneId;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static io.vertx.core.Future.succeededFuture;
@@ -92,7 +93,7 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
 
   private String insertSql(String userId, String tenantId) {
     String tableName = String.format("%s.%s", convertToPsqlStandard(tenantId), CHECK_OUT_LOCK_TABLE);
-    return "Insert into " + tableName + "(user_id) values ('" + userId + "') returning id,user_id,creation_date";
+    return "Insert into " + tableName + "(id, user_id) values ('"+ UUID.randomUUID() + "','" + userId + "') returning id,user_id,creation_date";
   }
 
   private String deleteOutdatedLockSql(String userId, String tenantId, int ttlMs) {
