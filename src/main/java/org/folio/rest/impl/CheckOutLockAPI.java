@@ -13,11 +13,11 @@ import org.folio.rest.jaxrs.model.CheckoutLock;
 import org.folio.rest.jaxrs.model.CheckoutLockRequest;
 import org.folio.rest.jaxrs.resource.CheckOutLockStorage;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.support.PgClientFutureAdapter;
 import org.folio.util.UuidUtil;
 
 import javax.ws.rs.core.Response;
 import java.sql.Date;
+import java.time.ZoneId;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -34,25 +34,30 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
 
   @Override
   public void postCheckOutLockStorage(CheckoutLockRequest entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    log.info("postCheckOutLockStorage:: entity {} {} ", entity.getUserId(), entity.getTtlMs());
+    log.debug("postCheckOutLockStorage:: entity {} {} ", entity.getUserId(), entity.getTtlMs());
     PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
     String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
     postgresClient.execute(deleteOutdatedLockSql(entity.getUserId(), tenantId, entity.getTtlMs()), handler1 -> {
       try {
-        log.info("rowSetAsync {} ", handler1.failed() ? handler1.cause() : handler1.succeeded());
         if (handler1.succeeded()) {
+          log.info("postCheckOutLockStorage:: creating lock for the userId {} ", entity.getUserId());
           postgresClient.execute(insertSql(entity.getUserId(), tenantId), handler2 -> {
-            if (handler2.succeeded()) {
-              asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond201WithApplicationJson(this.mapToCheckOutLock(handler1.result()))));
-            } else {
-              respondWith503Error(asyncResultHandler);
+            try {
+              if (handler2.succeeded()) {
+                asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond201WithApplicationJson(this.mapToCheckOutLock(handler2.result()))));
+              } else {
+                respondWith503Error(asyncResultHandler);
+              }
+            } catch (Exception ex) {
+              log.warn("postCheckOutLockStorage:: Exception caught while creating lock {}", ex.getMessage());
+              asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond500WithTextPlain(ex.getMessage())));
             }
           });
         } else {
           respondWith503Error(asyncResultHandler);
         }
       } catch (Exception ex) {
-        log.warn("Inside exception {} ", ex.getMessage());
+        log.warn("postCheckOutLockStorage:: Exception caught while deleting lock {}", ex.getMessage());
         asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond500WithTextPlain(ex.getMessage())));
       }
     });
@@ -64,10 +69,11 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
 
   @Override
   public void deleteCheckOutLockStorageByLockId(String lockId, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+    log.debug("deleteCheckOutLockStorageByLockId:: deleting lock with lockId {} ",lockId);
     String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
     PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
     if (!UuidUtil.isUuid(lockId)) {
-      asyncResultHandler.handle(new SucceededFuture<>(PostCheckOutLockStorageResponse.respond400WithTextPlain("Invalid UserId")));
+      asyncResultHandler.handle(new SucceededFuture<>(PostCheckOutLockStorageResponse.respond400WithTextPlain("Invalid lock id")));
       return;
     }
     postgresClient.execute(deleteLockByIdSql(lockId, tenantId), handler -> {
@@ -77,40 +83,35 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
         asyncResultHandler.handle(succeededFuture(DeleteCheckOutLockStorageByLockIdResponse.respond500WithTextPlain(handler.cause())));
       }
       });
-//      .onSuccess(rows -> DeleteCheckOutLockStorageByLockIdResponse.respond204())
-//      .onFailure(err -> DeleteCheckOutLockStorageByLockIdResponse.respond500WithTextPlain("Internal server error"))
-//      .map(Response.class::cast)
-//      .onComplete(asyncResultHandler);
   }
 
   private String deleteLockByIdSql(String lockId, String tenantId) {
     String tableName = String.format("%s.%s", convertToPsqlStandard(tenantId), CHECK_OUT_LOCK_TABLE);
-    String sql = "delete from " + tableName + "where id1 = '" + lockId + "'";
-    return sql;
+    return "delete from " + tableName + " where id = '" + lockId + "'";
   }
 
   private String insertSql(String userId, String tenantId) {
     String tableName = String.format("%s.%s", convertToPsqlStandard(tenantId), CHECK_OUT_LOCK_TABLE);
-    String sql = "Insert into " + tableName + "(user_id) values ('" + userId + "') returning id";
-    log.info("sql {} ", sql);
-    return sql;
+    return "Insert into " + tableName + "(user_id) values ('" + userId + "') returning id,user_id,creation_date";
   }
 
   private String deleteOutdatedLockSql(String userId, String tenantId, int ttlMs) {
     String tableName = String.format("%s.%s", convertToPsqlStandard(tenantId), CHECK_OUT_LOCK_TABLE);
-    String sql = "delete from " + tableName + " where user_id = '" + userId + "' and creation_date + interval '" + ttlMs + " milliseconds' < current_timestamp";
-    log.info("sql {} ", sql);
-    return sql;
+    return "delete from " + tableName + " where user_id = '" + userId + "' and creation_date + interval '" + ttlMs + " milliseconds' < current_timestamp";
   }
 
   private CheckoutLock mapToCheckOutLock(RowSet<Row> rowSet) {
-    log.info("Inside mapToCheckOutLock {} ", rowSet.size());
-    if (rowSet.size() == 0)
+    log.debug("mapToCheckOutLock:: rowSet {} ", rowSet.size());
+    if (rowSet.size() == 0){
       return null;
-    return rowSetToStream(rowSet).map(row -> new CheckoutLock()
-        .withId(row.getUUID("id").toString())
-        .withUserId(row.getUUID("user_id").toString())
-        .withCreationDate(Date.valueOf(row.getLocalDate("creation_date"))))
+    }
+    return rowSetToStream(rowSet).map(row -> {
+      log.info(row.getLocalDateTime("creation_date"));
+      return new CheckoutLock()
+          .withId(row.getUUID("id").toString())
+          .withUserId(row.getUUID("user_id").toString())
+          .withCreationDate(Date.from(row.getLocalDateTime("creation_date").atZone(ZoneId.systemDefault()).toInstant()));
+      })
       .collect(Collectors.toList()).get(0);
   }
 

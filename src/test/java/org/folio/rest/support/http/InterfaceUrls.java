@@ -45,7 +45,7 @@ public class InterfaceUrls {
   }
 
   public static URL checkOutStorageUrl(String subPath) throws MalformedURLException {
-    return storageUrl("/check-out-lock-storage");
+    return storageUrl("/check-out-lock-storage" + subPath);
   }
 
 }
