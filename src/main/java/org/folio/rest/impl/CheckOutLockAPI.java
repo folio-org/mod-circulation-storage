@@ -16,8 +16,8 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.util.UuidUtil;
 
 import javax.ws.rs.core.Response;
-import java.sql.Date;
 import java.time.ZoneId;
+import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -87,18 +87,19 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
   }
 
   private String deleteLockByIdSql(String lockId, String tenantId) {
-    String tableName = String.format("%s.%s", convertToPsqlStandard(tenantId), CHECK_OUT_LOCK_TABLE);
-    return "delete from " + tableName + " where id = '" + lockId + "'";
+    return "delete from " + getTableName(tenantId) + " where id = '" + lockId + "'";
   }
 
   private String insertSql(String userId, String tenantId) {
-    String tableName = String.format("%s.%s", convertToPsqlStandard(tenantId), CHECK_OUT_LOCK_TABLE);
-    return "Insert into " + tableName + "(id, user_id) values ('"+ UUID.randomUUID() + "','" + userId + "') returning id,user_id,creation_date";
+    return "Insert into " + getTableName(tenantId) + "(id, user_id) values ('"+ UUID.randomUUID() + "','" + userId + "') returning id,user_id,creation_date";
   }
 
   private String deleteOutdatedLockSql(String userId, String tenantId, int ttlMs) {
-    String tableName = String.format("%s.%s", convertToPsqlStandard(tenantId), CHECK_OUT_LOCK_TABLE);
-    return "delete from " + tableName + " where user_id = '" + userId + "' and creation_date + interval '" + ttlMs + " milliseconds' < current_timestamp";
+    return "delete from " + getTableName(tenantId) + " where user_id = '" + userId + "' and creation_date + interval '" + ttlMs + " milliseconds' < current_timestamp";
+  }
+
+  private String getTableName(String tenantId) {
+    return String.format("%s.%s", convertToPsqlStandard(tenantId), CHECK_OUT_LOCK_TABLE);
   }
 
   private CheckoutLock mapToCheckOutLock(RowSet<Row> rowSet) {
