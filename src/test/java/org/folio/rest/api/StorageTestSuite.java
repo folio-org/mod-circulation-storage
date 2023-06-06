@@ -80,7 +80,8 @@ import lombok.SneakyThrows;
   IsbnNormalizationTest.class,
   TlrFeatureToggleJobAPITest.class,
   ActualCostRecordAPITest.class,
-  EventConsumerVerticleTest.class
+  EventConsumerVerticleTest.class,
+  CheckOutLockAPITest.class
 })
 public class StorageTestSuite {
 
