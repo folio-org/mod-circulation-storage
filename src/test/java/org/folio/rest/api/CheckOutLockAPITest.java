@@ -8,6 +8,7 @@ import org.apache.http.HttpStatus;
 import org.folio.rest.jaxrs.model.CheckoutLockRequest;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
+import org.folio.rest.support.TextResponse;
 import org.folio.rest.support.http.AssertingRecordClient;
 import org.folio.rest.support.http.InterfaceUrls;
 import org.junit.Test;
@@ -65,6 +66,10 @@ public class CheckOutLockAPITest extends ApiTests {
     JsonObject checkOutLock2 = toJsonObject(createCheckoutLockRequest(userId1, 100000));
     JsonResponse response2 = checkOutLockClient.attemptCreate(checkOutLock2);
     assertThat(response2.getStatusCode(), is(HttpStatus.SC_CREATED));
+
+    TextResponse response3 = checkOutLockClient.attemptDeleteById("1234");
+    assertThat(response3.getStatusCode(), is(HttpStatus.SC_BAD_REQUEST));
+    assertThat(response3.getBody(), is("Invalid lock id"));
   }
 
   private CheckoutLockRequest createCheckoutLockRequest(String userId, int ttlMs) {

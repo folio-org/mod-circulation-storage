@@ -264,6 +264,18 @@ public class AssertingRecordClient {
     return deleteCompleted.get(5, TimeUnit.SECONDS);
   }
 
+  public TextResponse attemptDeleteById(String id)
+    throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+
+    CompletableFuture<TextResponse> deleteCompleted = new CompletableFuture<>();
+
+    client.delete(urlMaker.combine(String.format("/%s", id)),
+      StorageTestSuite.TENANT_ID, ResponseHandler.text(deleteCompleted));
+
+    return deleteCompleted.get(5, TimeUnit.SECONDS);
+  }
+
+
   public JsonResponse attemptPutById(JsonObject updateObject)
     throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 
