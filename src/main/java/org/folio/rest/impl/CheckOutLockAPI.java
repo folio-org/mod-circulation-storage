@@ -45,8 +45,10 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
           postgresClient.execute(insertSql(entity.getUserId(), tenantId), handler2 -> {
             try {
               if (handler2.succeeded()) {
+                log.info("postCheckOutLockStorage:: New lock is created for the userId {} ", entity.getUserId());
                 asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond201WithApplicationJson(this.mapToCheckOutLock(handler2.result()))));
               } else {
+                log.info("postCheckOutLockStorage:: Unable to create a lock ", handler2.cause());
                 respondWith503Error(asyncResultHandler);
               }
             } catch (Exception ex) {
@@ -55,6 +57,7 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
             }
           });
         } else {
+          log.warn("postCheckOutLockStorage:: Deleting outdated lock is failed ",handler1.cause());
           respondWith503Error(asyncResultHandler);
         }
       } catch (Exception ex) {
