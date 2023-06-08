@@ -52,7 +52,7 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
                 respondWith503Error(asyncResultHandler);
               }
             } catch (Exception ex) {
-              log.warn("postCheckOutLockStorage:: Exception caught while creating lock {}", ex.getMessage());
+              log.warn("postCheckOutLockStorage:: Exception caught while creating lock ", ex);
               asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond500WithTextPlain(ex.getMessage())));
             }
           });
@@ -61,7 +61,7 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
           respondWith503Error(asyncResultHandler);
         }
       } catch (Exception ex) {
-        log.warn("postCheckOutLockStorage:: Exception caught while deleting lock {}", ex.getMessage());
+        log.warn("postCheckOutLockStorage:: Exception caught while deleting lock ", ex);
         asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond500WithTextPlain(ex.getMessage())));
       }
     });
