@@ -1,6 +1,7 @@
 package org.folio.rest.client;
 
 import static io.vertx.core.Future.failedFuture;
+import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.http.HttpMethod.GET;
 import static java.lang.String.format;
 
@@ -12,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 import org.folio.rest.configuration.TlrSettingsConfiguration;
 import org.folio.rest.jaxrs.model.Config;
 import org.folio.rest.jaxrs.model.KvConfigurations;
+import org.folio.rest.jaxrs.model.TenantJob;
 import org.folio.support.exception.HttpException;
 import org.folio.util.StringUtil;
 
@@ -32,7 +34,6 @@ public class ConfigurationClient extends OkapiClient {
 
   public Future<TlrSettingsConfiguration> getTlrSettings() {
     String url = format(CONFIGURATIONS_URL, StringUtil.urlEncode(TLR_SETTINGS_QUERY));
-
     return okapiGet(url)
       .compose(response -> {
         int responseStatus = response.statusCode();
@@ -42,7 +43,13 @@ public class ConfigurationClient extends OkapiClient {
           log.error(errorMessage);
           return failedFuture(new HttpException(GET, url, response));
         } else {
+          JsonObject json = response.bodyAsJsonObject();
+          if (json.getInteger("totalRecords")  == 0) {
+            TlrSettingsConfiguration config = new TlrSettingsConfiguration(false, false, null, null, null);
+            return succeededFuture(config);
+          }
           try {
+            log.info("response: " + response.bodyAsString());
             return objectMapper.readValue(response.bodyAsString(), KvConfigurations.class)
               .getConfigs().stream()
               .findFirst()
