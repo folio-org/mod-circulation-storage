@@ -6,6 +6,7 @@ import static org.folio.rest.jaxrs.resource.ScheduledRequestExpiration.Scheduled
 import static org.folio.rest.jaxrs.resource.ScheduledRequestExpiration.ScheduledRequestExpirationResponse.respond500WithTextPlain;
 
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import javax.ws.rs.core.Response;
 
@@ -30,8 +31,18 @@ public class RequestExpiryImpl implements ScheduledRequestExpiration {
 
     Vertx vertx = context.owner();
     new ConfigurationClient(vertx, okapiHeaders).getTlrSettings()
-    .compose(tlrSettings -> createRequestExpirationService(okapiHeaders, vertx, tlrSettings)
-        .doRequestExpiration())
+      .onSuccess(tlrSettings -> {
+        doExpiration(tlrSettings, handler, okapiHeaders, vertx);
+      })
+      .onFailure(r -> {
+        TlrSettingsConfiguration emptyConfig = new TlrSettingsConfiguration(false, false, null, null, null);
+        doExpiration(emptyConfig, handler, okapiHeaders, vertx);
+      });
+  }
+
+  private void doExpiration(TlrSettingsConfiguration tlrSettings, Handler<AsyncResult<Response>> handler, Map<String, String> okapiHeaders, Vertx vertx) {
+    createRequestExpirationService(okapiHeaders, vertx, tlrSettings)
+        .doRequestExpiration()
     .onSuccess(x -> handler.handle(succeededFuture(respond204())))
     .onFailure(e -> handler.handle(succeededFuture(respond500WithTextPlain(e.getMessage()))));
   }
