@@ -575,11 +575,6 @@
       "handlers": [
         {
           "methods": ["GET"],
-          "pathPattern": "/check-out-lock-storage",
-          "permissionsRequired": ["checkout-lock-storage.collection.get"]
-        },
-        {
-          "methods": ["GET"],
           "pathPattern": "/check-out-lock-storage/{lockId}",
           "permissionsRequired": ["checkout-lock-storage.item.get"]
         },
