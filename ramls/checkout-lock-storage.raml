@@ -46,6 +46,16 @@ traits:
           text/plain:
             example: "Failed to create lock for patron "
   /{lockId}:
+    get:
+      responses:
+        200:
+          description: "Lock found for patron"
+        400:
+          description: "Bad Request"
+          body:
+            text/plain:
+        404:
+          description: "Failed to get lock for patron"
     delete:
       responses:
         204:

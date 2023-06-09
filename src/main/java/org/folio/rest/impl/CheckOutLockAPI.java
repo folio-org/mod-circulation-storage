@@ -34,6 +34,24 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
   private static final Logger log = LogManager.getLogger();
 
   @Override
+  public void getCheckOutLockStorageByLockId(String lockId, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext){
+    log.debug("getCheckOutLockStorageByLockId:: getting lock with lockId {} ", lockId);
+    String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
+    PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
+    if (!UuidUtil.isUuid(lockId)) {
+      asyncResultHandler.handle(new SucceededFuture<>(GetCheckOutLockStorageByLockIdResponse.respond400WithTextPlain("Invalid lock id")));
+      return;
+    }
+    postgresClient.execute(getLockByIdSql(lockId, tenantId), handler -> {
+      if (handler.succeeded()) {
+        asyncResultHandler.handle(succeededFuture(GetCheckOutLockStorageByLockIdResponse.respond200()));
+      } else {
+        asyncResultHandler.handle(succeededFuture(GetCheckOutLockStorageByLockIdResponse.respond404()));
+      }
+    });
+  }
+
+  @Override
   public void postCheckOutLockStorage(CheckoutLockRequest entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     log.debug("postCheckOutLockStorage:: entity {} {} ", entity.getUserId(), entity.getTtlMs());
     PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
@@ -91,6 +109,10 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
 
   private String deleteLockByIdSql(String lockId, String tenantId) {
     return "delete from " + getTableName(tenantId) + " where id = '" + lockId + "'";
+  }
+
+  private String getLockByIdSql(String lockId, String tenantId) {
+    return "select * from " + getTableName(tenantId) + " where id = '" + lockId + "'";
   }
 
   private String insertSql(String userId, String tenantId) {
