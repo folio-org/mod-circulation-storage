@@ -44,7 +44,7 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
     }
     postgresClient.execute(getLockByIdSql(lockId, tenantId), handler -> {
       if (handler.succeeded()) {
-        asyncResultHandler.handle(succeededFuture(GetCheckOutLockStorageByLockIdResponse.respond200()));
+        asyncResultHandler.handle(succeededFuture(GetCheckOutLockStorageByLockIdResponse.respond200WithApplicationJson(this.mapToCheckOutLock(handler.result()))));
       } else {
         asyncResultHandler.handle(succeededFuture(GetCheckOutLockStorageByLockIdResponse.respond404()));
       }
