@@ -55,6 +55,24 @@ public class CheckOutLockAPITest extends ApiTests {
 
   @SneakyThrows
   @Test
+  public void canGetCheckOutLock() {
+    String userId1 = UUID.randomUUID().toString();
+    JsonObject checkOutLock1 = toJsonObject(createCheckoutLockRequest(userId1, 1000));
+    JsonResponse response = checkOutLockClient.attemptCreate(checkOutLock1);
+    assertThat(response.getStatusCode(),is(HttpStatus.SC_CREATED));
+
+    String id = response.getJson().getString("id");
+    JsonResponse response1 = checkOutLockClient.attemptGetById(UUID.fromString(id));
+    assertThat(response1.getStatusCode(),is(HttpStatus.SC_OK));
+    assertThat(response1.getJson(),is(response.getJson()));
+
+    JsonResponse response2 = checkOutLockClient.attemptGetById("abcd");
+    assertThat(response2.getStatusCode(),is(HttpStatus.SC_BAD_REQUEST));
+    assertThat(response2.getBody(), is("Invalid lock id"));
+
+  }
+  @SneakyThrows
+  @Test
   public void canDeleteCheckOutLock() {
     String userId1 = UUID.randomUUID().toString();
     JsonObject checkOutLock1 = toJsonObject(createCheckoutLockRequest(userId1, 1000));
