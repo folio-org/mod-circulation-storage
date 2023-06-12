@@ -6,11 +6,14 @@ import io.vertx.core.Handler;
 import io.vertx.core.impl.future.SucceededFuture;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.CheckoutLock;
 import org.folio.rest.jaxrs.model.CheckoutLockRequest;
+import org.folio.rest.jaxrs.model.CheckoutLocks;
 import org.folio.rest.jaxrs.resource.CheckOutLockStorage;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.util.UuidUtil;
@@ -49,6 +52,24 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
         asyncResultHandler.handle(succeededFuture(GetCheckOutLockStorageByLockIdResponse.respond404()));
       }
     });
+  }
+
+  @Override
+  public void getCheckOutLockStorage(Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext){
+    log.debug("getCheckOutLockStorage:: getting locks ");
+    String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
+    PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
+    postgresClient.execute(getLocksSql(tenantId), handler -> {
+      if (handler.succeeded()) {
+        asyncResultHandler.handle(succeededFuture(GetCheckOutLockStorageResponse.respond200WithApplicationJson(this.mapToCheckOutLocks(handler.result()))));
+      } else {
+        asyncResultHandler.handle(succeededFuture(GetCheckOutLockStorageResponse.respond422WithTextPlain("Invalid Parameters")));
+      }
+    });
+  }
+
+  private String getLocksSql(String tenantId) {
+    return "select * from " + getTableName(tenantId);
   }
 
   @Override
@@ -140,6 +161,26 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
           .withCreationDate(Date.from(row.getLocalDateTime("creation_date").atZone(ZoneId.systemDefault()).toInstant()));
       })
       .collect(Collectors.toList()).get(0);
+  }
+
+  private CheckoutLocks mapToCheckOutLocks(RowSet<Row> rowSet) {
+    log.debug("mapToCheckOutLocks:: rowSet {} ", rowSet.size());
+    if (rowSet.size() == 0) {
+      return null;
+    }
+
+    List<CheckoutLock> checkoutLocks = rowSetToStream(rowSet)
+      .map(row -> new CheckoutLock()
+        .withId(row.getUUID("id").toString())
+        .withUserId(row.getUUID("user_id").toString())
+        .withCreationDate(Date.from(row.getLocalDateTime("creation_date").atZone(ZoneId.systemDefault()).toInstant())))
+      .collect(Collectors.toList());
+
+    CheckoutLocks response = new CheckoutLocks();
+    response.setCheckoutLocks(checkoutLocks);
+    response.setTotalRecords(checkoutLocks.size());
+
+    return response;
   }
 
 }
