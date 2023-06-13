@@ -23,6 +23,8 @@ import static org.hamcrest.core.Is.is;
 
 public class CheckOutLockAPITest extends ApiTests {
 
+  private static final String CHECK_OUT_LOCK_TABLE = "check_out_lock";
+
   private final AssertingRecordClient checkOutLockClient =
     new AssertingRecordClient(client, StorageTestSuite.TENANT_ID,
       InterfaceUrls::checkOutStorageUrl, "checkoutLock");
@@ -31,7 +33,7 @@ public class CheckOutLockAPITest extends ApiTests {
 
   @Before
   public void beforeEach() throws Exception {
-    StorageTestSuite.cleanUpTable("check_out_lock");
+    StorageTestSuite.cleanUpTable(CHECK_OUT_LOCK_TABLE);
   }
 
   @SneakyThrows
