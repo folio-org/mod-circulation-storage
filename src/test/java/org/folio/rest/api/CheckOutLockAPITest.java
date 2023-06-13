@@ -12,6 +12,7 @@ import org.folio.rest.support.MultipleRecords;
 import org.folio.rest.support.TextResponse;
 import org.folio.rest.support.http.AssertingRecordClient;
 import org.folio.rest.support.http.InterfaceUrls;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.UUID;
@@ -27,6 +28,11 @@ public class CheckOutLockAPITest extends ApiTests {
       InterfaceUrls::checkOutStorageUrl, "checkoutLock");
 
   private final ObjectMapper objectMapper = new ObjectMapper();
+
+  @Before
+  public void beforeEach() throws Exception {
+    StorageTestSuite.cleanUpTable("check_out_lock");
+  }
 
   @SneakyThrows
   @Test
@@ -94,6 +100,8 @@ public class CheckOutLockAPITest extends ApiTests {
     MultipleRecords<JsonObject> records = checkOutLockClient.getMany("");
     assertThat(records.getTotalRecords(),is(3));
 
+    JsonResponse response = checkOutLockClient.attemptGetMany("",null,null);
+    assertThat(response.getStatusCode(), is(HttpStatus.SC_OK));
   }
   @SneakyThrows
   @Test
