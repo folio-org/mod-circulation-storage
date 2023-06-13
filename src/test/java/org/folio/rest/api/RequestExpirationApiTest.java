@@ -131,9 +131,9 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void canExpireRequestWhenTlrSettingsNotSet() throws InterruptedException,
+  public void canExpireRequestWhenTlrSettingsNotReadable() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
-    StorageTestSuite.deleteAll(requestStorageUrl());
+    stubWithInvalidTlrSettings();
     
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
