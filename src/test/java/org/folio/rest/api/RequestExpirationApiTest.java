@@ -133,6 +133,7 @@ public class RequestExpirationApiTest extends ApiTests {
   @Test
   public void canExpireRequestWhenTlrSettingsNotReadable() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
+    
     stubWithInvalidTlrSettings();
     
     UUID id = UUID.randomUUID();

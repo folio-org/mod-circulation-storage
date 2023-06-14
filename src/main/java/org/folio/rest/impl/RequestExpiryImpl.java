@@ -31,20 +31,18 @@ public class RequestExpiryImpl implements ScheduledRequestExpiration {
 
     Vertx vertx = context.owner();
     new ConfigurationClient(vertx, okapiHeaders).getTlrSettings()
-      .onSuccess(tlrSettings -> {
-        doExpiration(tlrSettings, handler, okapiHeaders, vertx);
-      })
-      .onFailure(r -> {
-        TlrSettingsConfiguration emptyConfig = new TlrSettingsConfiguration(false, false, null, null, null);
-        doExpiration(emptyConfig, handler, okapiHeaders, vertx);
-      });
+      .onSuccess(tlrSettings -> doExpiration(tlrSettings, handler, okapiHeaders, vertx))
+      .onFailure(t -> doExpiration(new TlrSettingsConfiguration(false, false, null, null, null), 
+        handler, okapiHeaders, vertx));
   }
 
-  private void doExpiration(TlrSettingsConfiguration tlrSettings, Handler<AsyncResult<Response>> handler, Map<String, String> okapiHeaders, Vertx vertx) {
+  private void doExpiration(TlrSettingsConfiguration tlrSettings,
+    Handler<AsyncResult<Response>> handler, Map<String, String> okapiHeaders, Vertx vertx) {
+    
     createRequestExpirationService(okapiHeaders, vertx, tlrSettings)
-        .doRequestExpiration()
-    .onSuccess(x -> handler.handle(succeededFuture(respond204())))
-    .onFailure(e -> handler.handle(succeededFuture(respond500WithTextPlain(e.getMessage()))));
+      .doRequestExpiration()
+        .onSuccess(x -> handler.handle(succeededFuture(respond204())))
+        .onFailure(e -> handler.handle(succeededFuture(respond500WithTextPlain(e.getMessage()))));
   }
 
   private RequestExpirationService createRequestExpirationService(Map<String, String> okapiHeaders,
