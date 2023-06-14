@@ -6,7 +6,6 @@ import static org.folio.rest.jaxrs.resource.ScheduledRequestExpiration.Scheduled
 import static org.folio.rest.jaxrs.resource.ScheduledRequestExpiration.ScheduledRequestExpirationResponse.respond500WithTextPlain;
 
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 import javax.ws.rs.core.Response;
 
