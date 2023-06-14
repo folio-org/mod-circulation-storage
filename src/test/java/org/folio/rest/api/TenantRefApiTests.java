@@ -618,11 +618,11 @@ public class TenantRefApiTests {
       .withParameters(Collections.singletonList(loadReferenceParameter));
   }
 
-  protected static Future<List<String>> loadRequests() throws Exception {
+  protected static Future<RowSet<Row>> loadRequests() throws Exception {
     InputStream tableInput = TenantRefApiTests.class.getClassLoader().getResourceAsStream(
       "mocks/TlrDataMigrationTestData.sql");
     String sqlFile = IOUtils.toString(Objects.requireNonNull(tableInput), StandardCharsets.UTF_8);
-    return postgresClient.runSQLFile(sqlFile, true);
+    return postgresClient.execute(sqlFile);
   }
 
   private static String generateToken() {
