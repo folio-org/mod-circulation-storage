@@ -10,6 +10,7 @@ documentation:
 
 types:
   checkout-lock: !include checkout-lock.json
+  checkout-locks: !include checkout-locks.json
   checkout-lock-request: !include checkout-lock-request.json
   errors: !include raml-util/schemas/errors.schema
 
@@ -18,6 +19,18 @@ traits:
 
 /check-out-lock-storage:
   displayName: check out lock storage
+  get:
+    description: "Get Checkout Lock list"
+    responses:
+      200:
+        description: "Return Checkout Lock List list"
+        body:
+          application/json:
+            type: checkout-locks
+      422:
+        description: "Internal server error"
+        body:
+          text/plain:
   post:
     is: [validate]
     description: "creating a lock for the given userid"
@@ -46,6 +59,20 @@ traits:
           text/plain:
             example: "Failed to create lock for patron "
   /{lockId}:
+    get:
+      responses:
+        200:
+          body:
+            application/json:
+              type: checkout-lock
+              example: !include examples/checkout-lock.json
+          description: "Lock found for patron"
+        400:
+          description: "Bad Request"
+          body:
+            text/plain:
+        404:
+          description: "Failed to get lock for patron"
     delete:
       responses:
         204:

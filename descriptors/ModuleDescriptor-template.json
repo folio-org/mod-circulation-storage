@@ -574,6 +574,16 @@
       "version": "0.1",
       "handlers": [
         {
+          "methods": ["GET"],
+          "pathPattern": "/check-out-lock-storage",
+          "permissionsRequired": ["checkout-lock-storage.collection.get"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/check-out-lock-storage/{lockId}",
+          "permissionsRequired": ["checkout-lock-storage.item.get"]
+        },
+        {
           "methods": ["POST"],
           "pathPattern": "/check-out-lock-storage",
           "permissionsRequired": ["checkout-lock-storage.item.post"]
@@ -1041,7 +1051,9 @@
         "actual-cost-record-storage.actual-cost-records.item.put",
         "actual-cost-record-storage.actual-cost-records.item.delete",
         "checkout-lock-storage.item.post",
-        "checkout-lock-storage.item.delete"
+        "checkout-lock-storage.item.delete",
+        "checkout-lock-storage.item.get",
+        "checkout-lock-storage.collection.get"
       ]
     },
     {
@@ -1133,6 +1145,16 @@
       "permissionName": "checkout-lock-storage.item.delete",
       "displayName": "Circulation storage - delete lock",
       "description": "Delete lock for the userId"
+    },
+    {
+      "permissionName": "checkout-lock-storage.item.get",
+      "displayName": "Circulation storage - get lock",
+      "description": "get lock for the userId"
+    },
+    {
+      "permissionName": "checkout-lock-storage.collection.get",
+      "displayName": "Circulation storage - get locks",
+      "description": "get locks"
     }
   ],
   "launchDescriptor": {

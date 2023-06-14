@@ -8,9 +8,11 @@ import org.apache.http.HttpStatus;
 import org.folio.rest.jaxrs.model.CheckoutLockRequest;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
+import org.folio.rest.support.MultipleRecords;
 import org.folio.rest.support.TextResponse;
 import org.folio.rest.support.http.AssertingRecordClient;
 import org.folio.rest.support.http.InterfaceUrls;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.UUID;
@@ -21,11 +23,18 @@ import static org.hamcrest.core.Is.is;
 
 public class CheckOutLockAPITest extends ApiTests {
 
+  private static final String CHECK_OUT_LOCK_TABLE = "check_out_lock";
+
   private final AssertingRecordClient checkOutLockClient =
     new AssertingRecordClient(client, StorageTestSuite.TENANT_ID,
       InterfaceUrls::checkOutStorageUrl, "checkoutLock");
 
   private final ObjectMapper objectMapper = new ObjectMapper();
+
+  @Before
+  public void beforeEach() throws Exception {
+    StorageTestSuite.cleanUpTable(CHECK_OUT_LOCK_TABLE);
+  }
 
   @SneakyThrows
   @Test
@@ -51,6 +60,50 @@ public class CheckOutLockAPITest extends ApiTests {
     JsonObject checkOutLock5 = toJsonObject(createCheckoutLockRequest(userId2, 0));
     checkOutLockClient.create(checkOutLock5);
 
+  }
+
+  @SneakyThrows
+  @Test
+  public void canGetCheckOutLock() {
+    String userId1 = UUID.randomUUID().toString();
+    JsonObject checkOutLock1 = toJsonObject(createCheckoutLockRequest(userId1, 1000));
+    JsonResponse response = checkOutLockClient.attemptCreate(checkOutLock1);
+    assertThat(response.getStatusCode(),is(HttpStatus.SC_CREATED));
+
+    String id = response.getJson().getString("id");
+    JsonResponse response1 = checkOutLockClient.attemptGetById(UUID.fromString(id));
+    assertThat(response1.getStatusCode(),is(HttpStatus.SC_OK));
+    assertThat(response1.getJson(),is(response.getJson()));
+
+    JsonResponse response2 = checkOutLockClient.attemptGetById("abcd");
+    assertThat(response2.getStatusCode(),is(HttpStatus.SC_BAD_REQUEST));
+    assertThat(response2.getBody(), is("Invalid lock id"));
+
+  }
+
+  @SneakyThrows
+  @Test
+  public void canGetCheckOutLocks() {
+    String userId1 = UUID.randomUUID().toString();
+    JsonObject checkOutLock1 = toJsonObject(createCheckoutLockRequest(userId1, 1000));
+    JsonResponse response1 = checkOutLockClient.attemptCreate(checkOutLock1);
+    assertThat(response1.getStatusCode(),is(HttpStatus.SC_CREATED));
+
+    String userId2 = UUID.randomUUID().toString();
+    JsonObject checkOutLock2 = toJsonObject(createCheckoutLockRequest(userId2, 1000));
+    JsonResponse response2 = checkOutLockClient.attemptCreate(checkOutLock2);
+    assertThat(response2.getStatusCode(),is(HttpStatus.SC_CREATED));
+
+    String userId3 = UUID.randomUUID().toString();
+    JsonObject checkOutLock3 = toJsonObject(createCheckoutLockRequest(userId3, 1000));
+    JsonResponse response3 = checkOutLockClient.attemptCreate(checkOutLock3);
+    assertThat(response3.getStatusCode(),is(HttpStatus.SC_CREATED));
+
+    MultipleRecords<JsonObject> records = checkOutLockClient.getMany("");
+    assertThat(records.getTotalRecords(),is(3));
+
+    JsonResponse response = checkOutLockClient.attemptGetMany("",null,null);
+    assertThat(response.getStatusCode(), is(HttpStatus.SC_OK));
   }
 
   @SneakyThrows

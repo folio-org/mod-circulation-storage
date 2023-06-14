@@ -124,7 +124,21 @@ public class AssertingRecordClient {
 
     return getCompleted.get(5, TimeUnit.SECONDS);
   }
+  public JsonResponse attemptGetById(String id)
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
+    URL getInstanceUrl = urlMaker.combine(String.format("/%s", id));
+
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
+
+    client.get(getInstanceUrl, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(getCompleted));
+
+    return getCompleted.get(5, TimeUnit.SECONDS);
+  }
   public void createAtSpecificLocation(
     UUID id,
     JsonObject representation)
