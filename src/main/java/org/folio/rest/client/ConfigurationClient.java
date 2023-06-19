@@ -79,8 +79,7 @@ public class ConfigurationClient extends OkapiClient {
           log.error(errorMessage);
           return failedFuture(new HttpException(GET, url, response));
         } else {
-          String body = response.bodyAsString();
-          return succeededFuture(body);
+          return succeededFuture(response.bodyAsString());
         }
     });
   }
