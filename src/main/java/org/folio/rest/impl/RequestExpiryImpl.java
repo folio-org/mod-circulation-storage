@@ -29,7 +29,7 @@ public class RequestExpiryImpl implements ScheduledRequestExpiration {
       Handler<AsyncResult<Response>> handler, Context context) {
 
     Vertx vertx = context.owner();
-    new ConfigurationClient(vertx, okapiHeaders).getTlrSettings()
+    new ConfigurationClient(vertx, okapiHeaders).getTlrSettingsOrDefault()
     .compose(tlrSettings -> createRequestExpirationService(okapiHeaders, vertx, tlrSettings)
         .doRequestExpiration())
     .onSuccess(x -> handler.handle(succeededFuture(respond204())))
