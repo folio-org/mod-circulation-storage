@@ -128,7 +128,7 @@ abstract class AbstractRequestMigrationService<T extends RequestMigrationContext
   }
 
   public Future<Void> migrateRequests(int batchCount) {
-    return postgresClient.withReadTrans(conn ->
+    return postgresClient.withTrans(conn ->
       chainFutures(buildBatches(batchCount, conn), this::processBatch)
         .compose(r -> failIfErrorsOccurred())
     );
