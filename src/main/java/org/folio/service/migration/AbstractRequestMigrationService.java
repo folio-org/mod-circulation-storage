@@ -123,7 +123,7 @@ abstract class AbstractRequestMigrationService<T extends RequestMigrationContext
       .compose(this::getBatchCount);
   }
 
-  public Future<RowSet<Row>> selectRead(String sql) {
+  private Future<RowSet<Row>> selectRead(String sql) {
     return Future.future(promise -> postgresClient.selectRead(sql, 0, promise));
   }
 
