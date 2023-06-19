@@ -11,6 +11,7 @@ import static io.vertx.core.json.JsonObject.mapFrom;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -158,5 +159,33 @@ public class ApiTests {
     StorageTestSuite.getWireMockServer().stubFor(WireMock.get(urlPathMatching(
         CONFIGURATIONS_ENTRIES_URL_PATTERN))
       .willReturn(ok().withBody("Invalid configurations response")));
+  }
+
+  protected void stubWithEmptyTlrSettings() {
+    StorageTestSuite.getWireMockServer().stubFor(WireMock.get(urlPathMatching(
+        CONFIGURATIONS_ENTRIES_URL_PATTERN))
+      .willReturn(ok().withBody(mapFrom(
+        new KvConfigurations()
+          .withConfigs(Collections.<Config>emptyList()))
+        .encodePrettily())));
+  }
+
+  public static <T> T waitFor(Future<T> future) {
+    return waitFor(future, 10);
+  }
+
+  @SneakyThrows
+  public static <T> T waitFor(Future<T> future, int timeoutSeconds) {
+    return future.toCompletionStage()
+      .toCompletableFuture()
+      .get(timeoutSeconds, TimeUnit.SECONDS);
+  }
+
+  protected static void truncateTable(String tableName) {
+    waitFor(pgClient.delete(tableName, new Criterion()));
+  }
+
+  protected static String randomId() {
+    return UUID.randomUUID().toString();
   }
 }
