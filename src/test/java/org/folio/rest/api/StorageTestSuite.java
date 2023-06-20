@@ -274,7 +274,7 @@ public class StorageTestSuite {
       "SELECT null FROM %s_%s.%s" + " WHERE CAST(id AS VARCHAR(50)) != jsonb->>'id'",
       tenantId, "mod_circulation_storage", tableName);
 
-    postgresClient.select(sql, result -> {
+    postgresClient.selectRead(sql, 0, result -> {
       if (result.succeeded()) {
         selectCompleted.complete(result.result());
       } else {
