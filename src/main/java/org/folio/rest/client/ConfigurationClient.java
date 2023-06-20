@@ -54,6 +54,7 @@ public class ConfigurationClient extends OkapiClient {
   }
 
   private Future<KvConfigurations> tryParseResponseToJson(String settings) {
+    log.info("setting string: " + settings);
     try{ 
       return succeededFuture(objectMapper.readValue(settings, KvConfigurations.class));
     } catch (JsonProcessingException e) {
