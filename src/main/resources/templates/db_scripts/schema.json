@@ -315,7 +315,6 @@
     },
     {
       "tableName": "circulation_rules",
-      "fromModuleVersion": "16.1.0",
       "withMetadata": true,
       "withAuditing": false,
       "customSnippetPath": "insertEmptyCirculationRulesRecord.sql"
