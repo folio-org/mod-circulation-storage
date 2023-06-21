@@ -3,6 +3,7 @@
   "name": "Not available",
   "description": "The item is no longer available",
   "publicDescription": "The item status is unknown",
-  "requiresAdditionalInformation": false
+  "requiresAdditionalInformation": false,
+  "source": "System"
 }
 

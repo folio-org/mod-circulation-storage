@@ -183,7 +183,8 @@ public class CancellationReasonsApiTest extends ApiTests {
     JsonObject request = new JsonObject()
         .put("name", "cosmicrays")
         .put("description", "Excess solar radiation has destroyed the item")
-        .put("publicDescription", "The item has been destroyed");
+        .put("publicDescription", "The item has been destroyed")
+        .put("source", "System");
     assertCreateCancellationReason(request);
   }
 
@@ -198,10 +199,12 @@ public class CancellationReasonsApiTest extends ApiTests {
         .put("name", "slime")
         .put("id", id)
         .put("description", "Item slimed")
-        .put("requiresAdditionalInformation", true);
+        .put("requiresAdditionalInformation", true)
+        .put("source", "System");
     assertCreateCancellationReason(request);
     IndividualResource reason = assertGetCancellationReason(id);
     assertEquals("slime", reason.getJson().getString("name"));
+    assertEquals("System", reason.getJson().getString("source"));
   }
 
   @Test
