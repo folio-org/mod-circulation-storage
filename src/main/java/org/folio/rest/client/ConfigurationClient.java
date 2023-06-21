@@ -7,6 +7,7 @@ import static java.lang.String.format;
 
 import java.lang.invoke.MethodHandles;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,48 +34,17 @@ public class ConfigurationClient extends OkapiClient {
   }
 
   public Future<TlrSettingsConfiguration> getTlrSettingsOrDefault() {
-    return getSettingsFromStorage(url)
-    .compose(this::tryParseResponseToJson)
-    .compose(res -> {
-      log.debug("getTlrSettingsOrDefault:: Checking for existence of TLR settings");
-      if (res.getConfigs().isEmpty()) {
-        log.debug("getTlrSettingsOrDefault:: TLR settings empty, using default settings");
-        return succeededFuture(new TlrSettingsConfiguration(false, false, null, null, null));
-      } else {
-        log.debug("getTlrSettingsOrDefault:: TLR settings found");
-        return parseSettings(res);
-      }
-    });
+    return getTlrSettings(
+      () -> succeededFuture(new TlrSettingsConfiguration(false, false, null, null, null)));
   }
 
   public Future<TlrSettingsConfiguration> getTlrSettings() {
-    return getSettingsFromStorage(url)
-      .compose(this::tryParseResponseToJson)
-      .compose(this::parseSettings);
+    return getTlrSettings(() -> failedFuture("Failed to find TLR configuration"));
   }
 
-  private Future<KvConfigurations> tryParseResponseToJson(String settings) {
-    log.info("setting string: " + settings);
-    try{ 
-      return succeededFuture(objectMapper.readValue(settings, KvConfigurations.class));
-    } catch (JsonProcessingException e) {
-      log.error("Failed to parse response: {}", settings);
-      return failedFuture(e);
-    }
-  }
+  private Future<TlrSettingsConfiguration> getTlrSettings(
+    Supplier<Future<TlrSettingsConfiguration>> otherwise) {
 
-  private Future<TlrSettingsConfiguration> parseSettings(KvConfigurations settings) {
-      return settings
-        .getConfigs().stream()
-        .findFirst()
-        .map(Config::getValue)
-        .map(JsonObject::new)
-        .map(TlrSettingsConfiguration::from)
-        .map(Future::succeededFuture)
-        .orElseGet(() -> failedFuture("Failed to find TLR configuration"));
-  }
-
-  private Future<String> getSettingsFromStorage(String url) {
     return okapiGet(url)
       .compose(response -> {
         int responseStatus = response.statusCode();
@@ -84,8 +54,20 @@ public class ConfigurationClient extends OkapiClient {
           log.error(errorMessage);
           return failedFuture(new HttpException(GET, url, response));
         } else {
-          return succeededFuture(response.bodyAsString());
+          try {
+            return objectMapper.readValue(response.bodyAsString(), KvConfigurations.class)
+              .getConfigs().stream()
+              .findFirst()
+              .map(Config::getValue)
+              .map(JsonObject::new)
+              .map(TlrSettingsConfiguration::from)
+              .map(Future::succeededFuture)
+              .orElseGet(otherwise);
+          } catch (JsonProcessingException e) {
+            log.error("Failed to parse response: {}", response.bodyAsString());
+            return failedFuture(e);
+          }
         }
-    });
+      });
+    }
   }
-}
