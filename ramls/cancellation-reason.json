@@ -18,7 +18,7 @@
       "type": "boolean"
     },
     "source": {
-      "description": "Origin of the cancellation reason record, i.e. 'System' or 'User'",
+      "description": "Origin of the cancellation reason record, i.e. 'System', 'User', 'Consortium' etc.",
       "type": "string"
     },
     "metadata": {
