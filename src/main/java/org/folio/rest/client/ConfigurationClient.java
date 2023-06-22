@@ -68,6 +68,7 @@ public class ConfigurationClient extends OkapiClient {
             return failedFuture(e);
           }
         }
-      });
-    }
+      }
+    );
   }
+}
