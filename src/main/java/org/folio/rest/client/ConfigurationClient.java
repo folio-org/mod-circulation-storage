@@ -27,7 +27,7 @@ public class ConfigurationClient extends OkapiClient {
   private static final Logger log = LogManager.getLogger(MethodHandles.lookup().lookupClass());
   private static final String CONFIGURATIONS_URL = "/configurations/entries?query=%s";
   private static final String TLR_SETTINGS_QUERY = "module==\"SETTINGS\" and configName==\"TLR\"";
-  private static final String url = format(CONFIGURATIONS_URL, StringUtil.urlEncode(TLR_SETTINGS_QUERY));
+  private static final String URL = format(CONFIGURATIONS_URL, StringUtil.urlEncode(TLR_SETTINGS_QUERY));
 
   public ConfigurationClient(Vertx vertx, Map<String, String> okapiHeaders) {
     super(vertx, okapiHeaders);
@@ -45,7 +45,7 @@ public class ConfigurationClient extends OkapiClient {
   private Future<TlrSettingsConfiguration> getTlrSettings(
     Supplier<Future<TlrSettingsConfiguration>> otherwise) {
 
-    return okapiGet(url)
+    return okapiGet(URL)
       .compose(response -> {
         int responseStatus = response.statusCode();
         if (responseStatus != 200) {
