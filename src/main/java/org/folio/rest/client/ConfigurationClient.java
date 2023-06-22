@@ -52,7 +52,7 @@ public class ConfigurationClient extends OkapiClient {
           String errorMessage = format("Failed to find TLR configuration. Response: %d %s",
             responseStatus, response.bodyAsString());
           log.error(errorMessage);
-          return failedFuture(new HttpException(GET, url, response));
+          return failedFuture(new HttpException(GET, URL, response));
         } else {
           try {
             return objectMapper.readValue(response.bodyAsString(), KvConfigurations.class)
