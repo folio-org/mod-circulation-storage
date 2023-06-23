@@ -119,8 +119,12 @@ abstract class AbstractRequestMigrationService<T extends RequestMigrationContext
   }
 
   public Future<Integer> getBatchCount() {
-    return postgresClient.select(format("SELECT COUNT(*) FROM %s.%s", schemaName, tableName))
+    return selectRead(format("SELECT COUNT(*) FROM %s.%s", schemaName, tableName))
       .compose(this::getBatchCount);
+  }
+
+  private Future<RowSet<Row>> selectRead(String sql) {
+    return Future.future(promise -> postgresClient.selectRead(sql, 0, promise));
   }
 
   public Future<Void> migrateRequests(int batchCount) {
@@ -161,7 +165,7 @@ abstract class AbstractRequestMigrationService<T extends RequestMigrationContext
   public Future<Batch<T>> fetchRequests(Batch<T> batch) {
     log.debug("fetchRequests:: {}, batch: {}", migrationName, batch);
 
-    return postgresClient.select(format("SELECT jsonb FROM %s.%s ORDER BY id LIMIT %d OFFSET %d",
+    return selectRead(format("SELECT jsonb FROM %s.%s ORDER BY id LIMIT %d OFFSET %d",
         schemaName, tableName, BATCH_SIZE, batch.getBatchNumber() * BATCH_SIZE))
       .onSuccess(r -> log.info("fetchRequests:: {}, {} {} requests fetched", migrationName, batch,
         r.size()))

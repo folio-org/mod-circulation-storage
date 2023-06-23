@@ -427,7 +427,7 @@ public class TenantRefApiTests {
   }
 
   private static void assertThatNoRequestsWereUpdatedByTlrMigration(TestContext context) {
-    postgresClient.select("SELECT COUNT(*) " +
+    selectRead("SELECT COUNT(*) " +
         "FROM " + REQUEST_TABLE + " " +
         "WHERE jsonb->>'requestLevel' IS NOT null")
       .onFailure(context::fail)
@@ -435,7 +435,7 @@ public class TenantRefApiTests {
   }
 
   private static void assertThatNoRequestsWereUpdatedByRequestSearchMigration(TestContext context) {
-    postgresClient.select("SELECT COUNT(*) " +
+    selectRead("SELECT COUNT(*) " +
         "FROM " + REQUEST_TABLE + " " +
         "WHERE jsonb->>'searchIndex' IS NOT null")
       .onFailure(context::fail)
@@ -443,10 +443,14 @@ public class TenantRefApiTests {
   }
 
   private static Future<List<JsonObject>> getAllRequestsAsJson() {
-    return postgresClient.select("SELECT * FROM " + REQUEST_TABLE)
+    return selectRead("SELECT * FROM " + REQUEST_TABLE)
       .map(rowSet -> StreamSupport.stream(rowSet.spliterator(), false)
         .map(row -> row.getJsonObject("jsonb"))
         .collect(toList()));
+  }
+
+  private static Future<RowSet<Row>> selectRead(String sql) {
+    return Future.future(promise -> postgresClient.selectRead(sql, 0, promise));
   }
 
   private static Future<JsonObject> getRequestAsJson(String requestId) {
