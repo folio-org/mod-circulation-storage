@@ -6,7 +6,6 @@ import io.vertx.core.Handler;
 import io.vertx.core.impl.future.SucceededFuture;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
-import java.util.ArrayList;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -55,21 +54,19 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
   }
 
   @Override
-  public void getCheckOutLockStorage(Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext){
+  public void getCheckOutLockStorage(String userId, int offset, int limit,
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     log.debug("getCheckOutLockStorage:: getting locks ");
     String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
     PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
-    postgresClient.execute(getLocksSql(tenantId), handler -> {
+    postgresClient.execute(getLocksSqlwithQueryParams(tenantId,userId,offset,limit), handler -> {
       if (handler.succeeded()) {
         asyncResultHandler.handle(succeededFuture(GetCheckOutLockStorageResponse.respond200WithApplicationJson(this.mapToCheckOutLocks(handler.result()))));
       } else {
         asyncResultHandler.handle(succeededFuture(GetCheckOutLockStorageResponse.respond422WithTextPlain("Invalid Parameters")));
       }
     });
-  }
-
-  private String getLocksSql(String tenantId) {
-    return "select * from " + getTableName(tenantId);
   }
 
   @Override
@@ -134,6 +131,10 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
 
   private String getLockByIdSql(String lockId, String tenantId) {
     return "select * from " + getTableName(tenantId) + " where id = '" + lockId + "'";
+  }
+
+  private String getLocksSqlwithQueryParams(String tenantId,String userId,int offset,int limit) {
+    return "select * from " + getTableName(tenantId) + " where user_id = '" + userId + "' OFFSET '"+offset+"' LIMIT '"+limit+"'";
   }
 
   private String insertSql(String userId, String tenantId) {

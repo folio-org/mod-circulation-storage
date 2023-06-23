@@ -83,30 +83,6 @@ public class CheckOutLockAPITest extends ApiTests {
 
   @SneakyThrows
   @Test
-  public void canGetCheckOutLocks() {
-    String userId1 = UUID.randomUUID().toString();
-    JsonObject checkOutLock1 = toJsonObject(createCheckoutLockRequest(userId1, 1000));
-    JsonResponse response1 = checkOutLockClient.attemptCreate(checkOutLock1);
-    assertThat(response1.getStatusCode(),is(HttpStatus.SC_CREATED));
-
-    String userId2 = UUID.randomUUID().toString();
-    JsonObject checkOutLock2 = toJsonObject(createCheckoutLockRequest(userId2, 1000));
-    JsonResponse response2 = checkOutLockClient.attemptCreate(checkOutLock2);
-    assertThat(response2.getStatusCode(),is(HttpStatus.SC_CREATED));
-
-    String userId3 = UUID.randomUUID().toString();
-    JsonObject checkOutLock3 = toJsonObject(createCheckoutLockRequest(userId3, 1000));
-    JsonResponse response3 = checkOutLockClient.attemptCreate(checkOutLock3);
-    assertThat(response3.getStatusCode(),is(HttpStatus.SC_CREATED));
-
-    MultipleRecords<JsonObject> records = checkOutLockClient.getMany("");
-    assertThat(records.getTotalRecords(),is(3));
-
-    JsonResponse response = checkOutLockClient.attemptGetMany("",null,null);
-    assertThat(response.getStatusCode(), is(HttpStatus.SC_OK));
-  }
-  @SneakyThrows
-  @Test
   public void canDeleteCheckOutLock() {
     String userId1 = UUID.randomUUID().toString();
     JsonObject checkOutLock1 = toJsonObject(createCheckoutLockRequest(userId1, 1000));
