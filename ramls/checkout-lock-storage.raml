@@ -21,6 +21,16 @@ traits:
   displayName: check out lock storage
   get:
     description: "Get Checkout Lock list"
+    queryParameters:
+      userId:
+        description: Filter locks by user ID.
+        type: string
+      offset:
+        description: The number of items to skip in the result set.
+        type: integer
+      limit:
+        description: The maximum number of locks to return.
+        type: integer
     responses:
       200:
         description: "Return Checkout Lock List list"
@@ -28,9 +38,10 @@ traits:
           application/json:
             type: checkout-locks
       422:
-        description: "Internal server error"
+        description: "Invalid Parameters"
         body:
           text/plain:
+            example: "Invalid Parameters"
   post:
     is: [validate]
     description: "creating a lock for the given userid"

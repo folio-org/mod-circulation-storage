@@ -83,7 +83,7 @@ public class CheckOutLockAPITest extends ApiTests {
 
   @SneakyThrows
   @Test
-  public void canGetCheckOutLocks() {
+  public void canGetCheckoutLocksByQueryParams() {
     String userId1 = UUID.randomUUID().toString();
     JsonObject checkOutLock1 = toJsonObject(createCheckoutLockRequest(userId1, 1000));
     JsonResponse response1 = checkOutLockClient.attemptCreate(checkOutLock1);
@@ -94,16 +94,9 @@ public class CheckOutLockAPITest extends ApiTests {
     JsonResponse response2 = checkOutLockClient.attemptCreate(checkOutLock2);
     assertThat(response2.getStatusCode(),is(HttpStatus.SC_CREATED));
 
-    String userId3 = UUID.randomUUID().toString();
-    JsonObject checkOutLock3 = toJsonObject(createCheckoutLockRequest(userId3, 1000));
-    JsonResponse response3 = checkOutLockClient.attemptCreate(checkOutLock3);
-    assertThat(response3.getStatusCode(),is(HttpStatus.SC_CREATED));
+    MultipleRecords<JsonObject> response = checkOutLockClient.getManyWithQueryParams(userId1,0,10);
+    assertThat(response.getTotalRecords(), is(1));
 
-    MultipleRecords<JsonObject> records = checkOutLockClient.getMany("");
-    assertThat(records.getTotalRecords(),is(3));
-
-    JsonResponse response = checkOutLockClient.attemptGetMany("",null,null);
-    assertThat(response.getStatusCode(), is(HttpStatus.SC_OK));
   }
 
   @SneakyThrows

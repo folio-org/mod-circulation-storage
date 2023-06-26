@@ -86,7 +86,34 @@ public class AssertingRecordClient {
 
     return createCompleted.get(5, TimeUnit.SECONDS);
   }
+  public MultipleRecords<JsonObject> getManyWithQueryParams(String cqlQuery, Integer offset, Integer limit) throws MalformedURLException,
+    InterruptedException, ExecutionException, TimeoutException {
 
+    final JsonResponse fetchedLoansResponse = attemptGetManyWithQueryParams(cqlQuery, offset, limit);
+
+    assertThat(fetchedLoansResponse, isOk());
+    return MultipleRecords.fromJson(fetchedLoansResponse.getJson(), collectionPropertyName);
+  }
+
+  private JsonResponse attemptGetManyWithQueryParams(String cqlQuery, Integer offset, Integer limit)  throws MalformedURLException, InterruptedException, ExecutionException,
+    TimeoutException {
+
+    final CompletableFuture<JsonResponse> fetchManyCompleted = new CompletableFuture<>();
+    final StringBuilder queryParams = new StringBuilder()
+      .append("userId=").append(StringUtil.urlEncode(cqlQuery));
+
+    if (offset != null) {
+      queryParams.append("&offset=").append(offset);
+    }
+    if (limit != null) {
+      queryParams.append("&limit=").append(limit);
+    }
+
+    client.get(urlMaker.combine("?" + queryParams), StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(fetchManyCompleted));
+
+    return fetchManyCompleted.get(5, TimeUnit.SECONDS);
+  }
   public IndividualResource getById(String id)
     throws InterruptedException,
     ExecutionException,
