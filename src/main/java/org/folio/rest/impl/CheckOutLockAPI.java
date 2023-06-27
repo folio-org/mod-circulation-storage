@@ -60,13 +60,28 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
     log.debug("getCheckOutLockStorage:: getting locks ");
     String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
     PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
-    postgresClient.execute(getLocksSqlwithQueryParams(tenantId,userId,offset,limit), handler -> {
-      if (handler.succeeded()) {
-        asyncResultHandler.handle(succeededFuture(GetCheckOutLockStorageResponse.respond200WithApplicationJson(this.mapToCheckOutLocks(handler.result()))));
-      } else {
-        asyncResultHandler.handle(succeededFuture(GetCheckOutLockStorageResponse.respond422WithTextPlain("Invalid Parameters")));
-      }
-    });
+    if(userId!=null){
+      postgresClient.execute(getLocksSqlwithQueryParams(tenantId,userId,offset,limit), handler -> {
+        if (handler.succeeded()) {
+          asyncResultHandler.handle(succeededFuture(GetCheckOutLockStorageResponse.respond200WithApplicationJson(this.mapToCheckOutLocks(handler.result()))));
+        } else {
+          asyncResultHandler.handle(succeededFuture(GetCheckOutLockStorageResponse.respond422WithTextPlain("Invalid Parameters")));
+        }
+      });
+    } else {
+      postgresClient.execute(getLocksSql(tenantId), handler -> {
+        if (handler.succeeded()) {
+          asyncResultHandler.handle(succeededFuture(GetCheckOutLockStorageResponse.respond200WithApplicationJson(this.mapToCheckOutLocks(handler.result()))));
+        } else {
+          asyncResultHandler.handle(succeededFuture(GetCheckOutLockStorageResponse.respond422WithTextPlain("Invalid Parameters")));
+        }
+      });
+    }
+
+  }
+
+  private String getLocksSql(String tenantId) {
+    return "select from " + getTableName(tenantId);
   }
 
   @Override
