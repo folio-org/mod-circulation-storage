@@ -60,7 +60,6 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
     log.debug("getCheckOutLockStorage:: getting locks ");
     String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
     PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
-    if(userId!=null){
       postgresClient.execute(getLocksSqlwithQueryParams(tenantId,userId,offset,limit), handler -> {
         if (handler.succeeded()) {
           asyncResultHandler.handle(succeededFuture(GetCheckOutLockStorageResponse.respond200WithApplicationJson(this.mapToCheckOutLocks(handler.result()))));
@@ -68,20 +67,6 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
           asyncResultHandler.handle(succeededFuture(GetCheckOutLockStorageResponse.respond422WithTextPlain("Invalid Parameters")));
         }
       });
-    } else {
-      postgresClient.execute(getLocksSql(tenantId), handler -> {
-        if (handler.succeeded()) {
-          asyncResultHandler.handle(succeededFuture(GetCheckOutLockStorageResponse.respond200WithApplicationJson(this.mapToCheckOutLocks(handler.result()))));
-        } else {
-          asyncResultHandler.handle(succeededFuture(GetCheckOutLockStorageResponse.respond422WithTextPlain("Invalid Parameters")));
-        }
-      });
-    }
-
-  }
-
-  private String getLocksSql(String tenantId) {
-    return "select from " + getTableName(tenantId);
   }
 
   @Override
@@ -149,7 +134,9 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
   }
 
   private String getLocksSqlwithQueryParams(String tenantId,String userId,int offset,int limit) {
-    return "select * from " + getTableName(tenantId) + " where user_id = '" + userId + "' OFFSET '"+offset+"' LIMIT '"+limit+"'";
+    String whereClause = userId!=null ? "where user_id = "+userId : "";
+
+    return "select * from " + getTableName(tenantId) + whereClause + " OFFSET '"+offset+"' LIMIT '"+limit+"'";
   }
 
   private String insertSql(String userId, String tenantId) {
