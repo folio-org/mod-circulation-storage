@@ -22,15 +22,18 @@ traits:
   get:
     description: "Get Checkout Lock list"
     queryParameters:
-      userId:
+      userId?:
         description: Filter locks by user ID.
         type: string
-      offset:
+        required: false
+      offset?:
         description: The number of items to skip in the result set.
         type: integer
-      limit:
+        required: false
+      limit?:
         description: The maximum number of locks to return.
         type: integer
+        required: false
     responses:
       200:
         description: "Return Checkout Lock List list"
