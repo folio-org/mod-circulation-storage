@@ -11,6 +11,11 @@
     "rulesAsText": {
       "description": "Circulation rules represented in text using the bespoke format",
       "type": "string"
+    },
+    "metadata": {
+      "description": "Metadata about creation and changes to loan, provided by the server (client should not provide)",
+      "type": "object",
+      "$ref": "raml-util/schemas/metadata.schema"
     }
   },
   "additionalProperties": false,
