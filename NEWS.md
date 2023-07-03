@@ -1,3 +1,6 @@
+## 16.0.1 2023-07-03
+* Add default configuration handling for not initialized TLR settings (CIRCSTORE-412)
+
 ## 16.0.0 2023-02-15
 * Use folio-kafka-wrapper service to work with KafkaAdminClient (CIRCSTORE-369)
 * Add TLR requests expiration logic and queue recalculation (CIRCSTORE-368)
