@@ -99,6 +99,38 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
+  public void canExpireRequestWhenTlrSettingsNotSet() throws InterruptedException,
+    MalformedURLException, TimeoutException, ExecutionException {
+    stubWithEmptyTlrSettings();
+    UUID id = UUID.randomUUID();
+    UUID itemId = UUID.randomUUID();
+
+    createEntity(
+      new RequestRequestBuilder()
+      .hold()
+      .withId(id)
+      .withRequestExpirationDate(new DateTime(2017, 7, 30, 10, 22, 54, DateTimeZone.UTC))
+      .withItemId(itemId)
+      .withPosition(1)
+      .withStatus(OPEN_NOT_YET_FILLED)
+      .create(),
+      requestStorageUrl());
+
+    expireRequests();
+
+    List<JsonObject> events = Awaitility.await()
+      .atMost(10, TimeUnit.SECONDS)
+      .until(MockServer::getPublishedEvents, hasSize(1));
+
+    assertPublishedEvents(events);
+
+    JsonObject response = getById(requestStorageUrl(String.format("/%s", id)));
+
+    assertThat(response.getString("status"), is(CLOSED_UNFILLED));
+    assertThat(response.containsKey("position"), is(false));
+  }
+
+  @Test
   public void canExpireASingleOpenAwaitingPickupRequest() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
