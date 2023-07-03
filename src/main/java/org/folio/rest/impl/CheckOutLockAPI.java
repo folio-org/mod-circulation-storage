@@ -60,7 +60,7 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
     log.debug("getCheckOutLockStorage:: getting locks ");
     String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
     PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
-    postgresClient.execute(getLocksSqlwithQueryParams(tenantId,userId,offset,limit), handler -> {
+    postgresClient.execute(getLocksSqlwithQueryParams(tenantId, userId, offset, limit), handler -> {
       if (handler.succeeded()) {
         asyncResultHandler.handle(succeededFuture(GetCheckOutLockStorageResponse.respond200WithApplicationJson(this.mapToCheckOutLocks(handler.result()))));
       } else {
@@ -93,7 +93,7 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
             }
           });
         } else {
-          log.warn("postCheckOutLockStorage:: Deleting outdated lock is failed ",handler1.cause());
+          log.warn("postCheckOutLockStorage:: Deleting outdated lock is failed ", handler1.cause());
           respondWith503Error(asyncResultHandler);
         }
       } catch (Exception ex) {
