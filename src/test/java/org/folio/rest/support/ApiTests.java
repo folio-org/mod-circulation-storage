@@ -169,23 +169,4 @@ public class ApiTests {
           .withConfigs(Collections.<Config>emptyList()))
         .encodePrettily())));
   }
-
-  public static <T> T waitFor(Future<T> future) {
-    return waitFor(future, 10);
-  }
-
-  @SneakyThrows
-  public static <T> T waitFor(Future<T> future, int timeoutSeconds) {
-    return future.toCompletionStage()
-      .toCompletableFuture()
-      .get(timeoutSeconds, TimeUnit.SECONDS);
-  }
-
-  protected static void truncateTable(String tableName) {
-    waitFor(pgClient.delete(tableName, new Criterion()));
-  }
-
-  protected static String randomId() {
-    return UUID.randomUUID().toString();
-  }
 }
