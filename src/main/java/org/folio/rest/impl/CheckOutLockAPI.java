@@ -6,7 +6,9 @@ import io.vertx.core.Handler;
 import io.vertx.core.impl.future.SucceededFuture;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+
 import java.util.List;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.RestVerticle;
@@ -36,7 +38,7 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
   private static final Logger log = LogManager.getLogger();
 
   @Override
-  public void getCheckOutLockStorageByLockId(String lockId, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext){
+  public void getCheckOutLockStorageByLockId(String lockId, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     log.debug("getCheckOutLockStorageByLockId:: getting lock with lockId {} ", lockId);
     String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
     PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
@@ -55,8 +57,8 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
 
   @Override
   public void getCheckOutLockStorage(String userId, int offset, int limit,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+                                     Map<String, String> okapiHeaders,
+                                     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     log.debug("getCheckOutLockStorage:: getting locks ");
     String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
     PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
@@ -126,7 +128,7 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
   }
 
   private String getLocksSqlwithQueryParams(String tenantId, String userId, int offset, int limit) {
-    return "select * from " + getTableName(tenantId) + " where user_id = '" + userId + "' OFFSET '"+offset+"' LIMIT '"+limit+"'";
+    return "select * from " + getTableName(tenantId) + " where user_id = '" + userId + "' OFFSET '" + offset + "' LIMIT '" + limit + "'";
   }
 
   private String getLockByIdSql(String lockId, String tenantId) {
@@ -138,7 +140,7 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
   }
 
   private String insertSql(String userId, String tenantId) {
-    return "Insert into " + getTableName(tenantId) + "(id, user_id) values ('"+ UUID.randomUUID() + "','" + userId + "') returning id,user_id,creation_date";
+    return "Insert into " + getTableName(tenantId) + "(id, user_id) values ('" + UUID.randomUUID() + "','" + userId + "') returning id,user_id,creation_date";
   }
 
   private String deleteOutdatedLockSql(String userId, String tenantId, int ttlMs) {
@@ -154,13 +156,10 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
     if (rowSet.size() == 0) {
       return null;
     }
-    return rowSetToStream(rowSet).map(row -> {
-        log.info(row.getLocalDateTime("creation_date"));
-        return new CheckoutLock()
-          .withId(row.getUUID("id").toString())
-          .withUserId(row.getUUID("user_id").toString())
-          .withCreationDate(Date.from(row.getLocalDateTime("creation_date").atZone(ZoneId.systemDefault()).toInstant()));
-      })
+    return rowSetToStream(rowSet).map(row -> new CheckoutLock()
+      .withId(row.getUUID("id").toString())
+      .withUserId(row.getUUID("user_id").toString())
+      .withCreationDate(Date.from(row.getLocalDateTime("creation_date").atZone(ZoneId.systemDefault()).toInstant())))
       .collect(Collectors.toList()).get(0);
   }
 
