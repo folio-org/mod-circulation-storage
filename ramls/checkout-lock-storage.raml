@@ -18,7 +18,7 @@ traits:
   validate: !include raml-util/traits/validation.raml
 
 /check-out-lock-storage:
-  displayName: check out lock storage
+  displayName: Check out lock storage
   get:
     description: "Get Checkout Lock list"
     queryParameters:
@@ -33,7 +33,7 @@ traits:
         type: integer
     responses:
       200:
-        description: "Return Checkout Lock List list"
+        description: "Return Checkout Lock list"
         body:
           application/json:
             type: checkout-locks
@@ -44,7 +44,7 @@ traits:
             example: "Invalid Parameters"
   post:
     is: [validate]
-    description: "creating a lock for the given userid"
+    description: "Creating a lock for the given userid"
     body:
       application/json:
         type: checkout-lock-request

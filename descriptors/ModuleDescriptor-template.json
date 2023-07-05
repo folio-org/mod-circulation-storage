@@ -576,22 +576,22 @@
         {
           "methods": ["GET"],
           "pathPattern": "/check-out-lock-storage",
-          "permissionsRequired": ["checkout-lock-storage.collection.get"]
+          "permissionsRequired": ["checkout-lock-storage.checkout-locks.collection.get"]
         },
         {
           "methods": ["GET"],
           "pathPattern": "/check-out-lock-storage/{lockId}",
-          "permissionsRequired": ["checkout-lock-storage.item.get"]
+          "permissionsRequired": ["checkout-lock-storage.checkout-locks.item.get"]
         },
         {
           "methods": ["POST"],
           "pathPattern": "/check-out-lock-storage",
-          "permissionsRequired": ["checkout-lock-storage.item.post"]
+          "permissionsRequired": ["checkout-lock-storage.checkout-locks.item.post"]
         },
         {
           "methods": ["DELETE"],
           "pathPattern": "/check-out-lock-storage/{lockId}",
-          "permissionsRequired": ["checkout-lock-storage.item.delete"]
+          "permissionsRequired": ["checkout-lock-storage.checkout-locks.item.delete"]
         }
       ]
     },

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "description": "Collection of checkout locks",
+  "description": "Collection of checkoutLocks",
   "type": "object",
   "properties": {
     "checkoutLocks": {

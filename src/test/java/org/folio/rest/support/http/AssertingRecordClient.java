@@ -86,6 +86,7 @@ public class AssertingRecordClient {
 
     return createCompleted.get(5, TimeUnit.SECONDS);
   }
+
   public MultipleRecords<JsonObject> getManyWithQueryParams(String cqlQuery, Integer offset, Integer limit) throws MalformedURLException,
     InterruptedException, ExecutionException, TimeoutException {
 
@@ -151,11 +152,8 @@ public class AssertingRecordClient {
 
     return getCompleted.get(5, TimeUnit.SECONDS);
   }
-  public JsonResponse attemptGetById(String id)
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  public JsonResponse attemptGetById(String id) throws MalformedURLException,
+    InterruptedException, ExecutionException, TimeoutException {
 
     URL getInstanceUrl = urlMaker.combine(String.format("/%s", id));
 

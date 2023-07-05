@@ -3,7 +3,6 @@ package org.folio.rest.impl;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
-import io.vertx.core.impl.future.SucceededFuture;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 
@@ -38,117 +37,152 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
   private static final Logger log = LogManager.getLogger();
 
   @Override
-  public void getCheckOutLockStorageByLockId(String lockId, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void getCheckOutLockStorageByLockId(String lockId, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     log.debug("getCheckOutLockStorageByLockId:: getting lock with lockId {} ", lockId);
     String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
     PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
     if (!UuidUtil.isUuid(lockId)) {
-      asyncResultHandler.handle(new SucceededFuture<>(GetCheckOutLockStorageByLockIdResponse.respond400WithTextPlain("Invalid lock id")));
+      asyncResultHandler.handle(succeededFuture(
+        GetCheckOutLockStorageByLockIdResponse.respond400WithTextPlain("Invalid lock id")));
       return;
     }
     postgresClient.execute(getLockByIdSql(lockId, tenantId), handler -> {
       if (handler.succeeded()) {
-        asyncResultHandler.handle(succeededFuture(GetCheckOutLockStorageByLockIdResponse.respond200WithApplicationJson(this.mapToCheckOutLock(handler.result()))));
+        asyncResultHandler.handle(succeededFuture(
+          GetCheckOutLockStorageByLockIdResponse.respond200WithApplicationJson(
+            this.mapToCheckOutLock(handler.result()))));
       } else {
-        asyncResultHandler.handle(succeededFuture(GetCheckOutLockStorageByLockIdResponse.respond404()));
+        asyncResultHandler.handle(succeededFuture(
+          GetCheckOutLockStorageByLockIdResponse.respond404()));
       }
     });
   }
 
   @Override
   public void getCheckOutLockStorage(String userId, int offset, int limit,
-                                     Map<String, String> okapiHeaders,
-                                     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    log.debug("getCheckOutLockStorage:: getting locks ");
+    Map<String, String> okapiHeaders,Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+    log.debug("getCheckOutLockStorage:: getting locks");
     String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
     PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
-    postgresClient.execute(getLocksSqlwithQueryParams(tenantId, userId, offset, limit), handler -> {
+    postgresClient.execute(getLocksSqlWithQueryParams(tenantId, userId, offset, limit),
+      handler -> {
       if (handler.succeeded()) {
-        asyncResultHandler.handle(succeededFuture(GetCheckOutLockStorageResponse.respond200WithApplicationJson(this.mapToCheckOutLocks(handler.result()))));
+        asyncResultHandler.handle(succeededFuture(
+          GetCheckOutLockStorageResponse.respond200WithApplicationJson(
+            this.mapToCheckOutLocks(handler.result()))));
       } else {
-        asyncResultHandler.handle(succeededFuture(GetCheckOutLockStorageResponse.respond422WithTextPlain("Invalid Parameters")));
+        asyncResultHandler.handle(succeededFuture(
+          GetCheckOutLockStorageResponse.respond422WithTextPlain("Invalid Parameters")));
       }
     });
   }
 
   @Override
-  public void postCheckOutLockStorage(CheckoutLockRequest entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void postCheckOutLockStorage(CheckoutLockRequest entity, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     log.debug("postCheckOutLockStorage:: entity {} {} ", entity.getUserId(), entity.getTtlMs());
     PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
     String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
-    postgresClient.execute(deleteOutdatedLockSql(entity.getUserId(), tenantId, entity.getTtlMs()), handler1 -> {
+    postgresClient.execute(deleteOutdatedLockSql(entity.getUserId(), tenantId, entity.getTtlMs()),
+      deleteLockHandler -> {
       try {
-        if (handler1.succeeded()) {
-          log.info("postCheckOutLockStorage:: creating lock for the userId {} ", entity.getUserId());
-          postgresClient.execute(insertSql(entity.getUserId(), tenantId), handler2 -> {
+        if (deleteLockHandler.succeeded()) {
+          log.info("postCheckOutLockStorage:: creating lock for the userId {} ",
+            entity.getUserId());
+          postgresClient.execute(insertSql(entity.getUserId(), tenantId),
+            createLockHandler -> {
             try {
-              if (handler2.succeeded()) {
-                log.info("postCheckOutLockStorage:: New lock is created for the userId {} ", entity.getUserId());
-                asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond201WithApplicationJson(this.mapToCheckOutLock(handler2.result()))));
+              if (createLockHandler.succeeded()) {
+                log.info("postCheckOutLockStorage:: New lock is created for the userId {} ",
+                  entity.getUserId());
+                asyncResultHandler.handle(succeededFuture(
+                  PostCheckOutLockStorageResponse.respond201WithApplicationJson(
+                    this.mapToCheckOutLock(createLockHandler.result()))));
               } else {
-                log.info("postCheckOutLockStorage:: Unable to create a lock ", handler2.cause());
+                log.info("postCheckOutLockStorage:: Unable to create a lock ",
+                  createLockHandler.cause());
                 respondWith503Error(asyncResultHandler);
               }
             } catch (Exception ex) {
               log.warn("postCheckOutLockStorage:: Exception caught while creating lock ", ex);
-              asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond500WithTextPlain(ex.getMessage())));
+              asyncResultHandler.handle(succeededFuture(
+                PostCheckOutLockStorageResponse.respond500WithTextPlain(ex.getMessage())));
             }
           });
         } else {
-          log.warn("postCheckOutLockStorage:: Deleting outdated lock is failed ", handler1.cause());
+          log.warn("postCheckOutLockStorage:: Deleting outdated lock is failed ",
+            deleteLockHandler.cause());
           respondWith503Error(asyncResultHandler);
         }
       } catch (Exception ex) {
         log.warn("postCheckOutLockStorage:: Exception caught while deleting lock ", ex);
-        asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond500WithTextPlain(ex.getMessage())));
+        asyncResultHandler.handle(succeededFuture(
+          PostCheckOutLockStorageResponse.respond500WithTextPlain(ex.getMessage())));
       }
     });
   }
 
   private void respondWith503Error(Handler<AsyncResult<Response>> asyncResultHandler) {
-    asyncResultHandler.handle(succeededFuture(PostCheckOutLockStorageResponse.respond503WithTextPlain("Unable to acquire lock")));
+    asyncResultHandler.handle(succeededFuture(
+      PostCheckOutLockStorageResponse.respond503WithTextPlain("Unable to acquire lock")));
   }
 
   @Override
-  public void deleteCheckOutLockStorageByLockId(String lockId, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void deleteCheckOutLockStorageByLockId(String lockId, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     log.debug("deleteCheckOutLockStorageByLockId:: deleting lock with lockId {} ", lockId);
     String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
     PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
     if (!UuidUtil.isUuid(lockId)) {
-      asyncResultHandler.handle(new SucceededFuture<>(PostCheckOutLockStorageResponse.respond400WithTextPlain("Invalid lock id")));
+      asyncResultHandler.handle(succeededFuture(
+        PostCheckOutLockStorageResponse.respond400WithTextPlain("Invalid lock id")));
       return;
     }
     postgresClient.execute(deleteLockByIdSql(lockId, tenantId), handler -> {
       if (handler.succeeded()) {
-        asyncResultHandler.handle(succeededFuture(DeleteCheckOutLockStorageByLockIdResponse.respond204()));
+        asyncResultHandler.handle(
+          succeededFuture(DeleteCheckOutLockStorageByLockIdResponse.respond204()));
       } else {
-        asyncResultHandler.handle(succeededFuture(DeleteCheckOutLockStorageByLockIdResponse.respond500WithTextPlain(handler.cause())));
+        asyncResultHandler.handle(
+          succeededFuture(DeleteCheckOutLockStorageByLockIdResponse.respond500WithTextPlain(
+            handler.cause())));
       }
     });
   }
 
-  private String getLocksSqlwithQueryParams(String tenantId, String userId, int offset, int limit) {
-    return "select * from " + getTableName(tenantId) + " where user_id = '" + userId + "' OFFSET '" + offset + "' LIMIT '" + limit + "'";
+  private String getLocksSqlWithQueryParams(String tenantId, String userId, int offset,
+    int limit) {
+
+    return String.format("select * from %s.%s where user_id = '%s' OFFSET '%s' LIMIT '%s'",
+      convertToPsqlStandard(tenantId), CHECK_OUT_LOCK_TABLE, userId, offset, limit);
   }
 
   private String getLockByIdSql(String lockId, String tenantId) {
-    return "select * from " + getTableName(tenantId) + " where id = '" + lockId + "'";
+    return String.format("select * from %s.%s where id = '%s'", convertToPsqlStandard(tenantId),
+      CHECK_OUT_LOCK_TABLE, lockId);
   }
 
   private String deleteLockByIdSql(String lockId, String tenantId) {
-    return "delete from " + getTableName(tenantId) + " where id = '" + lockId + "'";
+    return String.format("delete from %s.%s where id = '%s'", convertToPsqlStandard(tenantId),
+      CHECK_OUT_LOCK_TABLE, lockId);
   }
 
   private String insertSql(String userId, String tenantId) {
-    return "Insert into " + getTableName(tenantId) + "(id, user_id) values ('" + UUID.randomUUID() + "','" + userId + "') returning id,user_id,creation_date";
+    return String.format("Insert into %s.%s (id, user_id) values ('%s','%s') " +
+      "returning id,user_id,creation_date",
+      convertToPsqlStandard(tenantId), CHECK_OUT_LOCK_TABLE, UUID.randomUUID(), userId);
   }
 
   private String deleteOutdatedLockSql(String userId, String tenantId, int ttlMs) {
-    return "delete from " + getTableName(tenantId) + " where user_id = '" + userId + "' and creation_date + interval '" + ttlMs + " milliseconds' < current_timestamp";
-  }
-
-  private String getTableName(String tenantId) {
-    return String.format("%s.%s", convertToPsqlStandard(tenantId), CHECK_OUT_LOCK_TABLE);
+    return String.format("delete from %s.%s where user_id = '%s' and " +
+      "creation_date + interval '%s milliseconds' < current_timestamp",
+      convertToPsqlStandard(tenantId), CHECK_OUT_LOCK_TABLE, userId, ttlMs);
   }
 
   private CheckoutLock mapToCheckOutLock(RowSet<Row> rowSet) {
@@ -159,7 +193,8 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
     return rowSetToStream(rowSet).map(row -> new CheckoutLock()
       .withId(row.getUUID("id").toString())
       .withUserId(row.getUUID("user_id").toString())
-      .withCreationDate(Date.from(row.getLocalDateTime("creation_date").atZone(ZoneId.systemDefault()).toInstant())))
+      .withCreationDate(Date.from(
+        row.getLocalDateTime("creation_date").atZone(ZoneId.systemDefault()).toInstant())))
       .collect(Collectors.toList()).get(0);
   }
 
@@ -168,12 +203,12 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
     if (rowSet.size() == 0) {
       return null;
     }
-
     List<CheckoutLock> checkoutLocks = rowSetToStream(rowSet)
       .map(row -> new CheckoutLock()
         .withId(row.getUUID("id").toString())
         .withUserId(row.getUUID("user_id").toString())
-        .withCreationDate(Date.from(row.getLocalDateTime("creation_date").atZone(ZoneId.systemDefault()).toInstant())))
+        .withCreationDate(Date.from(
+          row.getLocalDateTime("creation_date").atZone(ZoneId.systemDefault()).toInstant())))
       .collect(Collectors.toList());
 
     CheckoutLocks response = new CheckoutLocks();

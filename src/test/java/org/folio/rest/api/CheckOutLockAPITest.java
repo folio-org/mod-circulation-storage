@@ -20,7 +20,6 @@ import java.util.UUID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
-
 public class CheckOutLockAPITest extends ApiTests {
 
   private static final String CHECK_OUT_LOCK_TABLE = "check_out_lock";
