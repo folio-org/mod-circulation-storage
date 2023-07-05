@@ -1050,10 +1050,10 @@
         "actual-cost-record-storage.actual-cost-records.item.post",
         "actual-cost-record-storage.actual-cost-records.item.put",
         "actual-cost-record-storage.actual-cost-records.item.delete",
-        "checkout-lock-storage.item.post",
-        "checkout-lock-storage.item.delete",
-        "checkout-lock-storage.item.get",
-        "checkout-lock-storage.collection.get"
+        "checkout-lock-storage.checkout-locks.item.post",
+        "checkout-lock-storage.checkout-locks.item.delete",
+        "checkout-lock-storage.checkout-locks.item.get",
+        "checkout-lock-storage.checkout-locks.collection.get"
       ]
     },
     {
@@ -1137,22 +1137,22 @@
       "description": "Delete actual cost record"
     },
     {
-      "permissionName": "checkout-lock-storage.item.post",
+      "permissionName": "checkout-lock-storage.checkout-locks.item.post",
       "displayName": "Circulation storage - create lock",
       "description": "create lock for the userId"
     },
     {
-      "permissionName": "checkout-lock-storage.item.delete",
+      "permissionName": "checkout-lock-storage.checkout-locks.item.delete",
       "displayName": "Circulation storage - delete lock",
       "description": "Delete lock for the userId"
     },
     {
-      "permissionName": "checkout-lock-storage.item.get",
+      "permissionName": "checkout-lock-storage.checkout-locks.item.get",
       "displayName": "Circulation storage - get lock",
       "description": "get lock for the userId"
     },
     {
-      "permissionName": "checkout-lock-storage.collection.get",
+      "permissionName": "checkout-lock-storage.checkout-locks.collection.get",
       "displayName": "Circulation storage - get locks",
       "description": "get locks"
     }
