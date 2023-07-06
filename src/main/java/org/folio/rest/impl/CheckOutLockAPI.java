@@ -23,7 +23,6 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.persist.PgUtil.postgresClient;
@@ -195,7 +194,7 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
       .withUserId(row.getUUID("user_id").toString())
       .withCreationDate(Date.from(
         row.getLocalDateTime("creation_date").atZone(ZoneId.systemDefault()).toInstant())))
-      .collect(Collectors.toList()).get(0);
+      .toList().get(0);
   }
 
   private CheckoutLocks mapToCheckOutLocks(RowSet<Row> rowSet) {
@@ -209,7 +208,7 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
         .withUserId(row.getUUID("user_id").toString())
         .withCreationDate(Date.from(
           row.getLocalDateTime("creation_date").atZone(ZoneId.systemDefault()).toInstant())))
-      .collect(Collectors.toList());
+      .toList();
 
     CheckoutLocks response = new CheckoutLocks();
     response.setCheckoutLocks(checkoutLocks);

@@ -1,5 +1,5 @@
 #%RAML 1.0
-title: Checkout lock Storage
+title: Checkout Lock Storage
 version: v1.0
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost:9130
@@ -18,9 +18,9 @@ traits:
   validate: !include raml-util/traits/validation.raml
 
 /check-out-lock-storage:
-  displayName: Check out lock storage
+  displayName: Checkout lock storage
   get:
-    description: "Get Checkout Lock list"
+    description: "Retrieve a list of checkout lock items"
     queryParameters:
       userId:
         description: Filter locks by user ID.
@@ -33,7 +33,7 @@ traits:
         type: integer
     responses:
       200:
-        description: "Return Checkout Lock list"
+        description: "Returns a list of checkout lock items"
         body:
           application/json:
             type: checkout-locks
@@ -44,13 +44,14 @@ traits:
             example: "Invalid Parameters"
   post:
     is: [validate]
-    description: "Creating a lock for the given userid"
+    description: "Create a lock for the given userid"
     body:
       application/json:
         type: checkout-lock-request
         example: !include examples/checkout-lock-request.json
     responses:
       201:
+        description: "Checkout lock is created"
         body:
           application/json:
             type: checkout-lock
@@ -71,8 +72,10 @@ traits:
             example: "Failed to create lock for patron "
   /{lockId}:
     get:
+      description: "Get checkout lock"
       responses:
         200:
+          description: "Returns item with a given ID"
           body:
             application/json:
               type: checkout-lock
@@ -83,11 +86,12 @@ traits:
           body:
             text/plain:
         404:
-          description: "Failed to get lock for patron"
+          description: "Item with a given ID not found"
     delete:
+      description: "Delete checkout lock"
       responses:
         204:
-          description: "Lock is deleted"
+          description: "Item deleted successfully"
         500:
           description: "Internal Server error"
           body:
