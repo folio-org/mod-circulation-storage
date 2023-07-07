@@ -164,6 +164,30 @@
       ],
       "ginIndex": [
         {
+          "fieldName": "item.barcode",
+          "tOps": "DELETE",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "instanceId",
+          "tOps": "DELETE",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "instance.title",
+          "tOps": "DELETE",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "requester.barcode",
+          "tOps": "DELETE",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
           "fieldName": "itemId",
           "tOps": "DELETE",
           "caseSensitive": false,
