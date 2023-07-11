@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Collection of checkoutLocks",
+  "type": "object",
+  "properties": {
+    "checkoutLocks": {
+      "description": "List of checkoutLocks",
+      "id": "checkoutLocks",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "checkout-lock.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "checkoutLocks",
+    "totalRecords"
+  ]
+}

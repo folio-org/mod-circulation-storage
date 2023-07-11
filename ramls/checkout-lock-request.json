@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "description": "Checkout Lock",
+  "properties": {
+    "userId": {
+      "description": "ID of the patron the lock is created for",
+      "$ref": "raml-util/schemas/uuid.schema"
+    },
+    "ttlMs": {
+      "description": "Time to live for lock object",
+      "type": "integer"
+    }
+  }
+}

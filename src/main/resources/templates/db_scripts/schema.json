@@ -522,6 +522,10 @@
       "run": "after",
       "snippetPath": "removePositionFromClosedRequests.sql",
       "fromModuleVersion": "14.0.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "create_checkout_lock_table.sql"
     }
   ]
 }
