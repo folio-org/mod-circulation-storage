@@ -30,16 +30,19 @@
         "Page": {
           "description": "Allowed pickup service point IDs for Page requests",
           "type": "array",
+          "default": null,
           "$ref": "allowed-service-point-ids.json"
         },
         "Hold": {
           "description": "Allowed pickup service point IDs for Hold requests",
           "type": "array",
+          "default": null,
           "$ref": "allowed-service-point-ids.json"
         },
         "Recall": {
           "description": "Allowed pickup service point IDs for Recall requests",
           "type": "array",
+          "default": null,
           "$ref": "allowed-service-point-ids.json"
         }
       },
