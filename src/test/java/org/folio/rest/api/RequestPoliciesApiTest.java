@@ -1,14 +1,19 @@
 package org.folio.rest.api;
 
+import static java.util.Collections.emptyList;
+import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isBadRequest;
+import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isCreated;
+import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNotFound;
+import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isUnprocessableEntity;
+import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.emptyIterable;
+import static org.hamcrest.Matchers.iterableWithSize;
 import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.hamcrest.core.StringContains.containsString;
-
-import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.*;
-import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -22,18 +27,23 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import org.joda.time.DateTime;
-import org.joda.time.Seconds;
-import org.junit.Test;
-
+import org.folio.rest.jaxrs.model.AllowedServicePoints;
 import org.folio.rest.jaxrs.model.RequestPolicy;
 import org.folio.rest.jaxrs.model.RequestType;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
+import org.joda.time.DateTime;
+import org.joda.time.Seconds;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+
+@RunWith(JUnitParamsRunner.class)
 public class RequestPoliciesApiTest extends ApiTests {
 
   private static final int CONNECTION_TIMEOUT = 5;
@@ -653,6 +663,94 @@ public class RequestPoliciesApiTest extends ApiTests {
     assertThat("Request should have update date close to when request was made",
       metadata.getString("updatedDate"),
       is(withinSecondsAfter(Seconds.seconds(2), requestMade)));
+  }
+
+  @Test
+  public void canCreateRequestPolicyWithNoAllowedServicePoints()
+    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
+
+    RequestPolicy policy = new RequestPolicy()
+      .withName("Request policy with no allowed service points")
+      .withAllowedServicePoints(new AllowedServicePoints());
+
+    JsonResponse response = createRequestPolicy(policy);
+    assertThat(response, isCreated());
+    assertThat(response.getJson().getJsonObject("allowedServicePoints"), emptyIterable());
+  }
+
+  @Test
+  @Parameters(source = RequestType.class)
+  public void canCreateRequestPolicyWithAllowedServicePoints(RequestType requestType)
+    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
+
+    JsonResponse response = createRequestPolicy(buildRequestPolicy(requestType, List.of(randomId())));
+    assertThat(response, isCreated());
+  }
+
+  @Test
+  @Parameters(source = RequestType.class)
+  public void canNotCreateRequestPolicyWithEmptyListOfAllowedServicePoints(RequestType requestType)
+    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
+
+    JsonResponse response = createRequestPolicy(buildRequestPolicy(requestType, emptyList()));
+    assertThat(response, isUnprocessableEntity());
+    assertThat(extractErrorObject(response).getString("message"),
+      containsString("size must be between 1 and 2147483647"));
+  }
+
+  @Test
+  @Parameters(source = RequestType.class)
+  public void canNotCreateRequestPolicyWithNullAllowedServicePointId(RequestType requestType)
+    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
+
+    JsonResponse response = createRequestPolicy(buildRequestPolicy(requestType, Arrays.asList(randomId(), null)));
+    assertThat(response, isUnprocessableEntity());
+    assertThat(extractErrorObject(response).getString("message"),
+      containsString("list can not contain null"));
+  }
+
+  @Test
+  @Parameters(source = RequestType.class)
+  public void duplicateAllowedServicePointIdsAreRemoved(RequestType requestType)
+    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
+
+    String servicePointId = randomId();
+    JsonObject requestPolicy = buildRequestPolicy(requestType, List.of(servicePointId, servicePointId));
+    JsonResponse response = createRequestPolicy(requestPolicy);
+
+    assertThat(response, isCreated());
+    JsonArray allowedServicePoints = response.getJson()
+      .getJsonObject("allowedServicePoints")
+      .getJsonArray(requestType.value());
+
+    assertThat(allowedServicePoints, iterableWithSize(1));
+    assertThat(allowedServicePoints.getString(0), is(servicePointId));
+  }
+
+  private static JsonObject buildRequestPolicy(RequestType requestType,
+    List<String> allowedServicePointIds) {
+
+    return new JsonObject()
+      .put("id", randomId())
+      .put("name", "Request policy for " + requestType.value())
+      .put("allowedServicePoints", new JsonObject()
+        .put(requestType.value(), new JsonArray(allowedServicePointIds)));
+  }
+
+  private JsonResponse createRequestPolicy(RequestPolicy requestPolicy)
+    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+
+    return createRequestPolicy(JsonObject.mapFrom(requestPolicy));
+  }
+
+  private JsonResponse createRequestPolicy(JsonObject requestPolicy)
+    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+
+    CompletableFuture<JsonResponse> postFuture = new CompletableFuture<>();
+    client.post(requestPolicyStorageUrl(""), requestPolicy, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(postFuture));
+
+    return postFuture.get(5, TimeUnit.SECONDS);
   }
 
   private URL requestPolicyStorageUrl(String path, String... parameterKeyValue) throws MalformedURLException {
