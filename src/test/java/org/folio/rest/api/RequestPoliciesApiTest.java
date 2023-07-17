@@ -733,6 +733,7 @@ public class RequestPoliciesApiTest extends ApiTests {
     return new JsonObject()
       .put("id", randomId())
       .put("name", "Request policy for " + requestType.value())
+      .put("requestTypes", new JsonArray().add(requestType.value()))
       .put("allowedServicePoints", new JsonObject()
         .put(requestType.value(), new JsonArray(allowedServicePointIds)));
   }
