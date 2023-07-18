@@ -706,17 +706,6 @@ public class RequestPoliciesApiTest extends ApiTests {
 
   @Test
   @Parameters(source = RequestType.class)
-  public void canNotCreateRequestPolicyWithNullAllowedServicePointId(RequestType requestType)
-    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
-
-    JsonResponse response = createRequestPolicy(buildRequestPolicy(requestType, Arrays.asList(randomId(), null)));
-    assertThat(response, isUnprocessableEntity());
-    assertThat(extractErrorObject(response).getString("message"),
-      containsString("list can not contain null"));
-  }
-
-  @Test
-  @Parameters(source = RequestType.class)
   public void duplicateAllowedServicePointIdsAreRemoved(RequestType requestType)
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
