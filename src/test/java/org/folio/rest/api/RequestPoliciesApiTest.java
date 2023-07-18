@@ -686,6 +686,22 @@ public class RequestPoliciesApiTest extends ApiTests {
 
   @Test
   @Parameters(source = RequestType.class)
+  public void canCreateRequestPolicyWithNullListOfAllowedServicePoints(RequestType requestType)
+    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
+
+    RequestPolicy policy = new RequestPolicy()
+      .withName("Request policy with no allowed service points")
+      .withAllowedServicePoints(new AllowedServicePoints());
+    JsonObject requestPolicyJson = JsonObject.mapFrom(policy);
+    requestPolicyJson.getJsonObject("allowedServicePoints").putNull(requestType.value());
+    JsonResponse response = createRequestPolicy(requestPolicyJson);
+
+    assertThat(response, isCreated());
+    assertThat(response.getJson().getJsonObject("allowedServicePoints"), emptyIterable());
+  }
+
+  @Test
+  @Parameters(source = RequestType.class)
   public void canCreateRequestPolicyWithAllowedServicePoints(RequestType requestType)
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
