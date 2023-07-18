@@ -35,6 +35,7 @@ import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
 import org.joda.time.DateTime;
 import org.joda.time.Seconds;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -49,6 +50,11 @@ public class RequestPoliciesApiTest extends ApiTests {
   private static final int CONNECTION_TIMEOUT = 5;
   private static final String DEFAULT_REQUEST_POLICY_NAME = "default_request_policy";
   private static int REQ_POLICY_NAME_INCR = 0;  //This number is appended to the name of the default request policy to ensure uniqueness
+
+  @Before
+  public void beforeEach() {
+    truncateTable("request_policy");
+  }
 
   @Test
   public void canCreateARequestPolicy()
