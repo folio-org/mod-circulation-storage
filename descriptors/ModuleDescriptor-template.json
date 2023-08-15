@@ -315,10 +315,18 @@
         }, {
           "methods": ["POST"],
           "pathPattern": "/request-policy-storage/request-policies",
+          "modulePermissions": [
+            "inventory-storage.service-points.item.get",
+            "inventory-storage.service-points.collection.get"
+          ],
           "permissionsRequired": ["circulation-storage.request-policies.item.post"]
         }, {
           "methods": ["PUT"],
           "pathPattern": "/request-policy-storage/request-policies/{id}",
+          "modulePermissions": [
+            "inventory-storage.service-points.item.get",
+            "inventory-storage.service-points.collection.get"
+          ],
           "permissionsRequired": ["circulation-storage.request-policies.item.put"]
         }, {
           "methods": ["DELETE"],

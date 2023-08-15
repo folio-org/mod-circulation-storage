@@ -1,13 +1,21 @@
 package org.folio.rest.api;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.ok;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
+import static io.vertx.core.json.JsonObject.mapFrom;
+import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isBadRequest;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isCreated;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNotFound;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isUnprocessableEntity;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
+import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasErrorWith;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
+import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasParameter;
+import static org.folio.rest.support.matchers.ValidationResponseMatchers.isValidationResponseWhich;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.emptyIterable;
 import static org.hamcrest.Matchers.iterableWithSize;
 import static org.hamcrest.core.AnyOf.anyOf;
@@ -21,6 +29,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -30,6 +39,8 @@ import java.util.concurrent.TimeoutException;
 import org.folio.rest.jaxrs.model.AllowedServicePoints;
 import org.folio.rest.jaxrs.model.RequestPolicy;
 import org.folio.rest.jaxrs.model.RequestType;
+import org.folio.rest.jaxrs.model.Servicepoint;
+import org.folio.rest.jaxrs.model.Servicepoints;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
@@ -38,6 +49,8 @@ import org.joda.time.Seconds;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import com.github.tomakehurst.wiremock.client.WireMock;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -49,6 +62,7 @@ public class RequestPoliciesApiTest extends ApiTests {
 
   private static final int CONNECTION_TIMEOUT = 5;
   private static final String DEFAULT_REQUEST_POLICY_NAME = "default_request_policy";
+  private static final String SERVICE_POINTS_URL = "/service-points";
   private static int REQ_POLICY_NAME_INCR = 0;  //This number is appended to the name of the default request policy to ensure uniqueness
 
   @Before
@@ -137,7 +151,7 @@ public class RequestPoliciesApiTest extends ApiTests {
 
       JsonResponse response2 = failedCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
 
-      assertThat(String.format("Failed to create request policy: %s", response2.getBody()),
+      assertThat(format("Failed to create request policy: %s", response2.getBody()),
         response2.getStatusCode(), is(HttpURLConnection.HTTP_INTERNAL_ERROR));
 
       assertThat("unexpected error message" , response2.getBody().contains("duplicate key value"));
@@ -167,7 +181,7 @@ public class RequestPoliciesApiTest extends ApiTests {
       ResponseHandler.json(createCompleted));
 
     JsonResponse response = createCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
-    assertThat(String.format("Failed to create request policy: %s", response.getBody()),
+    assertThat(format("Failed to create request policy: %s", response.getBody()),
       response.getStatusCode(), is(HttpURLConnection.HTTP_INTERNAL_ERROR));
     assertThat(response.getBody(), containsString("Invalid UUID string"));
   }
@@ -705,7 +719,12 @@ public class RequestPoliciesApiTest extends ApiTests {
   public void canCreateRequestPolicyWithAllowedServicePoints(RequestType requestType)
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
-    JsonResponse response = createRequestPolicy(buildRequestPolicy(requestType, List.of(randomId())));
+    String servicePointId = randomId();
+    createStubForServicePoints(new Servicepoint()
+      .withId(servicePointId)
+      .withPickupLocation(true));
+
+    JsonResponse response = createRequestPolicy(buildRequestPolicy(requestType, List.of(servicePointId)));
     assertThat(response, isCreated());
   }
 
@@ -726,6 +745,10 @@ public class RequestPoliciesApiTest extends ApiTests {
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
     String servicePointId = randomId();
+    createStubForServicePoints(new Servicepoint()
+      .withId(servicePointId)
+      .withPickupLocation(true));
+
     JsonObject requestPolicy = buildRequestPolicy(requestType, List.of(servicePointId, servicePointId));
     JsonResponse response = createRequestPolicy(requestPolicy);
 
@@ -736,6 +759,164 @@ public class RequestPoliciesApiTest extends ApiTests {
 
     assertThat(allowedServicePoints, iterableWithSize(1));
     assertThat(allowedServicePoints.getString(0), is(servicePointId));
+  }
+
+  @Test
+  @Parameters(source = RequestType.class)
+  public void canNotCreateRequestPolicyWithNonExistentAllowedServicePoint(RequestType requestType)
+    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
+
+    createStubForServicePoints(emptyList());
+    final String servicePointId = randomId();
+    JsonObject requestPolicy = buildRequestPolicy(requestType, List.of(servicePointId));
+    JsonResponse response = createRequestPolicy(requestPolicy);
+
+    assertThat(response, isValidationResponseWhich(allOf(
+      hasMessage(format("Service point %s does not exist", servicePointId)),
+      hasParameter("servicePointId", servicePointId)
+    )));
+  }
+
+  @Test
+  @Parameters(source = RequestType.class)
+  public void canNotUpdateRequestPolicyWithNonExistentAllowedServicePoint(RequestType requestType)
+    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
+
+    createStubForServicePoints(emptyList());
+    final String servicePointId = randomId();
+    JsonObject requestPolicy = buildRequestPolicy(requestType, List.of(servicePointId));
+    JsonResponse response = updateRequestPolicy(requestPolicy);
+
+    assertThat(response, isValidationResponseWhich(allOf(
+      hasMessage(format("Service point %s does not exist", servicePointId)),
+      hasParameter("servicePointId", servicePointId)
+    )));
+  }
+
+  @Test
+  @Parameters(source = RequestType.class)
+  public void canNotCreateRequestPolicyWithNonPickupLocationServicePoint(RequestType requestType)
+    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
+
+    final String servicePointId = randomId();
+    Servicepoint servicePoint = new Servicepoint()
+      .withId(servicePointId)
+      .withPickupLocation(false);
+
+    createStubForServicePoints(servicePoint);
+    JsonObject requestPolicy = buildRequestPolicy(requestType, List.of(servicePointId));
+    JsonResponse response = createRequestPolicy(requestPolicy);
+
+    assertThat(response, isValidationResponseWhich(allOf(
+      hasMessage(format("Service point %s is not a pickup location", servicePointId)),
+      hasParameter("servicePointId", servicePointId)
+    )));
+  }
+
+  @Test
+  @Parameters(source = RequestType.class)
+  public void canNotUpdateRequestPolicyWithNonPickupLocationServicePoint(RequestType requestType)
+    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
+
+    final String servicePointId = randomId();
+    Servicepoint servicePoint = new Servicepoint()
+      .withId(servicePointId)
+      .withPickupLocation(false);
+
+    createStubForServicePoints(servicePoint);
+    JsonObject requestPolicy = buildRequestPolicy(requestType, List.of(servicePointId));
+    JsonResponse response = updateRequestPolicy(requestPolicy);
+
+    assertThat(response, isValidationResponseWhich(allOf(
+      hasMessage(format("Service point %s is not a pickup location", servicePointId)),
+      hasParameter("servicePointId", servicePointId)
+    )));
+  }
+
+  @Test
+  @Parameters(source = RequestType.class)
+  public void canNotCreateRequestPolicyWhenAllowedServicePointHasNullPickupLocation(
+    RequestType requestType) throws MalformedURLException, ExecutionException, InterruptedException,
+    TimeoutException {
+
+    final String servicePointId = randomId();
+    Servicepoint servicePoint = new Servicepoint()
+      .withId(servicePointId)
+      .withPickupLocation(null);
+
+    createStubForServicePoints(servicePoint);
+    JsonObject requestPolicy = buildRequestPolicy(requestType, List.of(servicePointId));
+    JsonResponse response = createRequestPolicy(requestPolicy);
+
+    assertThat(response, isValidationResponseWhich(allOf(
+      hasMessage(format("Service point %s is not a pickup location", servicePointId)),
+      hasParameter("servicePointId", servicePointId)
+    )));
+  }
+
+  @Test
+  @Parameters(source = RequestType.class)
+  public void canNotUpdateRequestPolicyWhenAllowedServicePointHasNullPickupLocation(
+    RequestType requestType) throws MalformedURLException, ExecutionException, InterruptedException,
+    TimeoutException {
+
+    final String servicePointId = randomId();
+    Servicepoint servicePoint = new Servicepoint()
+      .withId(servicePointId)
+      .withPickupLocation(null);
+
+    createStubForServicePoints(servicePoint);
+    JsonObject requestPolicy = buildRequestPolicy(requestType, List.of(servicePointId));
+    JsonResponse response = updateRequestPolicy(requestPolicy);
+
+    assertThat(response, isValidationResponseWhich(allOf(
+      hasMessage(format("Service point %s is not a pickup location", servicePointId)),
+      hasParameter("servicePointId", servicePointId)
+    )));
+  }
+
+  @Test
+  public void multipleErrorsWithoutDuplicatesAreReturnedsWhenUsingInvalidServicePointIds()
+    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
+
+    String nonExistentServicePointId = randomId();
+    String nonPickupLocationServicePointId = randomId();
+    String nullPickupLocationServicePointId = randomId();
+    Set<String> servicePointIds = Set.of(nonExistentServicePointId, nonPickupLocationServicePointId,
+      nullPickupLocationServicePointId);
+
+    Servicepoint nonPickupLocationServicePoint = new Servicepoint()
+      .withId(nonPickupLocationServicePointId)
+      .withPickupLocation(false);
+
+    Servicepoint nullPickupLocationServicePoint = new Servicepoint()
+      .withId(nullPickupLocationServicePointId)
+      .withPickupLocation(null);
+
+    createStubForServicePoints(List.of(nonPickupLocationServicePoint, nullPickupLocationServicePoint));
+
+    JsonResponse response = createRequestPolicy(new RequestPolicy()
+      .withName("Test request policy")
+      .withRequestTypes(List.of(RequestType.PAGE, RequestType.HOLD, RequestType.RECALL))
+      .withAllowedServicePoints(new AllowedServicePoints()
+        .withPage(servicePointIds)
+        .withHold(servicePointIds)
+        .withRecall(servicePointIds)));
+
+    assertThat(response, isUnprocessableEntity());
+    assertThat(response.getJson().getJsonArray("errors"), iterableWithSize(3));
+
+    assertThat(response.getJson(), allOf(
+      hasErrorWith(allOf(
+          hasMessage(format("Service point %s does not exist", nonExistentServicePointId)),
+          hasParameter("servicePointId", nonExistentServicePointId))),
+      hasErrorWith(allOf(
+        hasMessage(format("Service point %s is not a pickup location", nonPickupLocationServicePointId)),
+        hasParameter("servicePointId", nonPickupLocationServicePointId))),
+      hasErrorWith(allOf(
+        hasMessage(format("Service point %s is not a pickup location", nullPickupLocationServicePointId)),
+        hasParameter("servicePointId", nullPickupLocationServicePointId)))
+    ));
   }
 
   private static JsonObject buildRequestPolicy(RequestType requestType,
@@ -763,6 +944,26 @@ public class RequestPoliciesApiTest extends ApiTests {
       ResponseHandler.json(postFuture));
 
     return postFuture.get(5, TimeUnit.SECONDS);
+  }
+
+  private JsonResponse updateRequestPolicy(RequestPolicy requestPolicy)
+    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+
+    CompletableFuture<JsonResponse> putFuture = new CompletableFuture<>();
+    client.put(requestPolicyStorageUrl("/" + requestPolicy.getId()), requestPolicy,
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(putFuture));
+
+    return updateRequestPolicy(mapFrom(requestPolicy));
+  }
+
+  private JsonResponse updateRequestPolicy(JsonObject requestPolicy)
+    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+
+    CompletableFuture<JsonResponse> putFuture = new CompletableFuture<>();
+    client.put(requestPolicyStorageUrl("/" + requestPolicy.getString("id")), requestPolicy,
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(putFuture));
+
+    return putFuture.get(5, TimeUnit.SECONDS);
   }
 
   private URL requestPolicyStorageUrl(String path, String... parameterKeyValue) throws MalformedURLException {
@@ -851,5 +1052,16 @@ public class RequestPoliciesApiTest extends ApiTests {
 
     JsonResponse response = deleteCompleted.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
     assertThat("response is null", response != null);
+  }
+
+  private void createStubForServicePoints(Servicepoint servicePoint) {
+    createStubForServicePoints(List.of(servicePoint));
+  }
+
+  private void createStubForServicePoints(List<Servicepoint> servicePoints) {
+    StorageTestSuite.getWireMockServer()
+      .stubFor(WireMock.get(urlPathMatching(SERVICE_POINTS_URL + ".*"))
+      .willReturn(ok().withBody(mapFrom(new Servicepoints().withServicepoints(servicePoints))
+        .encodePrettily())));
   }
 }

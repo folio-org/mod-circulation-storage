@@ -11,6 +11,8 @@ documentation:
 types:
   request-policy: !include request-policy.json
   request-policies: !include request-policies.json
+  servicepoint: !include service-point.json
+  servicepoints: !include service-points.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -49,6 +51,11 @@ resourceTypes:
           body:
             application/json:
               type: request-policy
+        422:
+          description: "Request policy validation failure"
+          body:
+            application/json:
+              type: errors
         500:
            description: "General errors"
            body:
@@ -94,6 +101,11 @@ resourceTypes:
         responses:
           204:
             description: "Request policy successfully updated"
+          422:
+            description: "Request policy validation failure"
+            body:
+              application/json:
+                type: errors
           501:
             description: "Not implemented yet"
           500:
