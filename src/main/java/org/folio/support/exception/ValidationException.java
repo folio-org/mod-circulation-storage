@@ -10,5 +10,5 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public class ValidationException extends RuntimeException {
-  private transient final List<Error> errors;
+  private final transient List<Error> errors;
 }
