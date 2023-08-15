@@ -79,11 +79,11 @@ public class RequestPoliciesAPI implements RequestPolicyStorage {
                   .respond500WithTextPlain(throwable.getMessage())));
               }
             })
-            .onSuccess(ignored -> {
+            .onSuccess(ignored ->
               postgresClient.save(REQUEST_POLICY_TABLE, entity.getId(), entity,
                 reply -> {
                   try {
-                    if(reply.succeeded()) {
+                    if (reply.succeeded()) {
                       OutStream stream = new OutStream();
                       stream.setData(entity);
 
@@ -91,9 +91,9 @@ public class RequestPoliciesAPI implements RequestPolicyStorage {
                         succeededFuture(
                           RequestPolicyStorage.PostRequestPolicyStorageRequestPoliciesResponse
                             .respond201WithApplicationJson(entity,
-                              RequestPolicyStorage.PostRequestPolicyStorageRequestPoliciesResponse.headersFor201().withLocation(reply.result()))));
-                    }
-                    else {
+                              RequestPolicyStorage.PostRequestPolicyStorageRequestPoliciesResponse.headersFor201()
+                                .withLocation(reply.result()))));
+                    } else {
                       asyncResultHandler.handle(
                         succeededFuture(
                           RequestPolicyStorage.PostRequestPolicyStorageRequestPoliciesResponse
@@ -106,8 +106,8 @@ public class RequestPoliciesAPI implements RequestPolicyStorage {
                         RequestPolicyStorage.PostRequestPolicyStorageRequestPoliciesResponse
                           .respond500WithTextPlain(e.getMessage())));
                   }
-                });
-            });
+                })
+            );
         } catch (Exception e) {
           log.error(e);
           asyncResultHandler.handle(succeededFuture(

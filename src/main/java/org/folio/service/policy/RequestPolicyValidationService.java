@@ -5,7 +5,6 @@ import static io.vertx.core.Future.succeededFuture;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
 import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.toList;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
@@ -92,7 +91,7 @@ public class RequestPolicyValidationService {
     }
 
     log.error("validateServicePoints:: request policy validation failed: {}",
-      () -> errors.stream().map(Error::getMessage).collect(toList()));
+      () -> errors.stream().map(Error::getMessage).toList());
 
     return failedFuture(new ValidationException(errors));
   }
