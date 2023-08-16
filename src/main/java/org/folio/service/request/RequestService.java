@@ -67,6 +67,7 @@ public class RequestService {
   }
 
   public Future<Response> create(Request request) {
+    log.info("create:: request {} ", request);
     Errors errors = RequestsApiUtil.validateRequest(request);
 
     if (!errors.getErrors().isEmpty()) {
