@@ -4,7 +4,8 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
-import lombok.extern.log4j.Log4j2;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.jaxrs.resource.RequestStorage;
@@ -14,9 +15,9 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
 
-@Log4j2
 public class RequestsAPI implements RequestStorage {
 
+  private static final Logger log = LogManager.getLogger(RequestsAPI.class);
   @Validate
   @Override
   public void deleteRequestStorageRequests(
