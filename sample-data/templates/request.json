@@ -4,7 +4,7 @@
   "requestDate": "",
   "requesterId": "",
   "itemId": "",
-  "fulfilmentPreference": "",
+  "fulfillmentPreference": "",
   "requestExpirationDate": "",
   "holdShelfExpirationDate": "",
   "item": {

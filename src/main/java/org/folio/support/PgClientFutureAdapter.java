@@ -25,7 +25,7 @@ public class PgClientFutureAdapter {
 
   public Future<RowSet<Row>> select(String sql) {
     final Promise<RowSet<Row>> promise = Promise.promise();
-    client.select(sql, promise);
+    client.selectRead(sql, 0, promise);
     return promise.future();
   }
 

@@ -13,6 +13,7 @@ import static org.hamcrest.core.Is.is;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -163,6 +164,15 @@ public class ApiTests {
     StorageTestSuite.getWireMockServer().stubFor(WireMock.get(urlPathMatching(
         CONFIGURATIONS_ENTRIES_URL_PATTERN))
       .willReturn(ok().withBody("Invalid configurations response")));
+  }
+
+  protected void stubWithEmptyTlrSettings() {
+    StorageTestSuite.getWireMockServer().stubFor(WireMock.get(urlPathMatching(
+        CONFIGURATIONS_ENTRIES_URL_PATTERN))
+      .willReturn(ok().withBody(mapFrom(
+        new KvConfigurations()
+          .withConfigs(Collections.<Config>emptyList()))
+        .encodePrettily())));
   }
 
   public static <T> T waitFor(Future<T> future) {

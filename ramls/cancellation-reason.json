@@ -17,6 +17,10 @@
     "requiresAdditionalInformation": {
       "type": "boolean"
     },
+    "source": {
+      "description": "Origin of the cancellation reason record, e.g. 'System', 'User', 'Consortium' etc.",
+      "type": "string"
+    },
     "metadata": {
       "$ref": "raml-util/schemas/metadata.schema",
       "readonly": true

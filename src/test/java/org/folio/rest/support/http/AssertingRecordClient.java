@@ -87,6 +87,34 @@ public class AssertingRecordClient {
     return createCompleted.get(5, TimeUnit.SECONDS);
   }
 
+  public MultipleRecords<JsonObject> getManyWithQueryParams(String cqlQuery, Integer offset, Integer limit) throws MalformedURLException,
+    InterruptedException, ExecutionException, TimeoutException {
+
+    final JsonResponse fetchedLoansResponse = attemptGetManyWithQueryParams(cqlQuery, offset, limit);
+
+    assertThat(fetchedLoansResponse, isOk());
+    return MultipleRecords.fromJson(fetchedLoansResponse.getJson(), collectionPropertyName);
+  }
+
+  private JsonResponse attemptGetManyWithQueryParams(String cqlQuery, Integer offset, Integer limit)  throws MalformedURLException, InterruptedException, ExecutionException,
+    TimeoutException {
+
+    final CompletableFuture<JsonResponse> fetchManyCompleted = new CompletableFuture<>();
+    final StringBuilder queryParams = new StringBuilder()
+      .append("userId=").append(StringUtil.urlEncode(cqlQuery));
+
+    if (offset != null) {
+      queryParams.append("&offset=").append(offset);
+    }
+    if (limit != null) {
+      queryParams.append("&limit=").append(limit);
+    }
+
+    client.get(urlMaker.combine("?" + queryParams), StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(fetchManyCompleted));
+
+    return fetchManyCompleted.get(5, TimeUnit.SECONDS);
+  }
   public IndividualResource getById(String id)
     throws InterruptedException,
     ExecutionException,
@@ -124,7 +152,18 @@ public class AssertingRecordClient {
 
     return getCompleted.get(5, TimeUnit.SECONDS);
   }
+  public JsonResponse attemptGetById(String id) throws MalformedURLException,
+    InterruptedException, ExecutionException, TimeoutException {
 
+    URL getInstanceUrl = urlMaker.combine(String.format("/%s", id));
+
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
+
+    client.get(getInstanceUrl, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(getCompleted));
+
+    return getCompleted.get(5, TimeUnit.SECONDS);
+  }
   public void createAtSpecificLocation(
     UUID id,
     JsonObject representation)
@@ -263,6 +302,18 @@ public class AssertingRecordClient {
 
     return deleteCompleted.get(5, TimeUnit.SECONDS);
   }
+
+  public TextResponse attemptDeleteById(String id)
+    throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+
+    CompletableFuture<TextResponse> deleteCompleted = new CompletableFuture<>();
+
+    client.delete(urlMaker.combine(String.format("/%s", id)),
+      StorageTestSuite.TENANT_ID, ResponseHandler.text(deleteCompleted));
+
+    return deleteCompleted.get(5, TimeUnit.SECONDS);
+  }
+
 
   public JsonResponse attemptPutById(JsonObject updateObject)
     throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {

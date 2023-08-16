@@ -27,6 +27,11 @@
       "description": "Id of the user to whom this notice should be sent to",
       "$ref": "raml-util/schemas/uuid.schema"
     },
+    "sessionId": {
+      "type": "string",
+      "description": "UUID which is the same for all notices generated in scope of the same check-in/check-out session",
+      "$ref": "raml-util/schemas/uuid.schema"
+    },
     "nextRunTime": {
       "type": "string",
       "format": "date-time",

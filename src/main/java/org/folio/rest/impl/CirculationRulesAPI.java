@@ -10,7 +10,6 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.CirculationRules;
 import org.folio.rest.jaxrs.resource.CirculationRulesStorage;
 import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.Criteria.UpdateSection;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.TenantTool;
 
@@ -88,10 +87,7 @@ public class CirculationRulesAPI implements CirculationRulesStorage {
         try {
           PostgresClient postgresClient = PostgresClient.getInstance(
               vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
-          UpdateSection updateSection = new UpdateSection().addField("rulesAsText");
-          updateSection.setValue(entity.getRulesAsText());
-
-          postgresClient.update(CIRCULATION_RULES_TABLE, updateSection, (Criterion)null, true, update -> {
+          postgresClient.update(CIRCULATION_RULES_TABLE, entity, new Criterion(), true, update -> {
               try {
                 if (update.failed()) {
                   internalErrorPut(asyncResultHandler, update.cause());

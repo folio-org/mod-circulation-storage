@@ -1,73 +1,98 @@
 #%RAML 1.0
-title: Checkout lock Storage
+title: Checkout Lock Storage
 version: v1.0
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost:9130
 
 documentation:
-  - title: Checkout lock API
+  - title: Checkout Lock API
     content: <b>Storage for checkout lock</b>
 
 types:
   checkout-lock: !include checkout-lock.json
   checkout-locks: !include checkout-locks.json
+  checkout-lock-request: !include checkout-lock-request.json
   errors: !include raml-util/schemas/errors.schema
-  parameters: !include raml-util/schemas/parameters.schema
-  schemaItem: checkout-lock
-
-resourceTypes:
-  collection: !include raml-util/rtypes/collection.raml
-  item-collection-get: !include raml-util/rtypes/item-collection-get.raml
 
 traits:
-  language: !include raml-util/traits/language.raml
   validate: !include raml-util/traits/validation.raml
-  pageable: !include raml-util/traits/pageable.raml
 
 /check-out-lock-storage:
-  post:
-    is: [validate]
-    description: creating a lock for the userid.
-    body:
-      application/json:
-        type: checkout-lock
-        example: !include examples/checkout-lock.json
+  displayName: Checkout lock storage
+  get:
+    description: "Retrieve a list of checkout lock items"
+    queryParameters:
+      userId:
+        description: Filter locks by user ID.
+        type: string
+      offset:
+        description: The number of items to skip in the result set.
+        type: integer
+      limit:
+        description: The maximum number of locks to return.
+        type: integer
     responses:
       200:
+        description: "Returns a list of checkout lock items"
+        body:
+          application/json:
+            type: checkout-locks
+      422:
+        description: "Invalid Parameters"
+        body:
+          text/plain:
+            example: "Invalid Parameters"
+  post:
+    is: [validate]
+    description: "Create a lock for the given userid"
+    body:
+      application/json:
+        type: checkout-lock-request
+        example: !include examples/checkout-lock-request.json
+    responses:
+      201:
+        description: "Checkout lock is created"
         body:
           application/json:
             type: checkout-lock
             example: !include examples/checkout-lock.json
+      400:
+        description: "Bad Request"
+        body:
+          text/plain:
+      500:
+        description: "Internal server error"
+        body:
+          text/plain:
+            example: "Internal server error"
       503:
-        description: " Failed to create lock for patron {userId}"
+        description: "Failed to create lock for patron {userId}"
         body:
-          application/json:
-            type: errors
-  get:
-    is: [pageable]
-    description: Get the checkout locks
-    responses:
-      200:
-        body:
-          application/json:
-            type: checkout-locks
-            example: !include examples/checkout-locks.json
-      422:
-        description: "Invalid parameters"
+          text/plain:
+            example: "Failed to create lock for patron "
   /{lockId}:
-    type:
-      item-collection-get:
-        exampleItem: !include examples/checkout-lock.json
-        schema: checkout-lock
     get:
+      description: "Get checkout lock"
       responses:
         200:
-          description: "Checkout lock retrieved"
+          description: "Returns item with a given ID"
+          body:
+            application/json:
+              type: checkout-lock
+              example: !include examples/checkout-lock.json
+        400:
+          description: "Bad Request"
+          body:
+            text/plain:
         404:
-          description: "Lock not found for patron"
+          description: "Item with a given ID not found"
     delete:
+      description: "Delete checkout lock"
       responses:
         204:
-          description: "Lock is deleted"
-        404:
-          description: "Lock is not found"
+          description: "Item deleted successfully"
+        500:
+          description: "Internal Server error"
+          body:
+            text/plain:
+              example: "Internal server error"

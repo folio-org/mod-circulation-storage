@@ -170,7 +170,7 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
     assertThat(representation.getString("requesterId"), is(requesterId.toString()));
     assertThat(representation.getString("proxyUserId"), is(proxyId.toString()));
-    assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
+    assertThat(representation.getString("fulfillmentPreference"), is("Hold Shelf"));
     assertThat(representation.getString("requestExpirationDate"), is(equivalentTo(requestExpirationDate)));
     assertThat(representation.getString("holdShelfExpirationDate"), is(equivalentTo(holdShelfExpirationDate)));
     assertThat(representation.getString("status"), is(OPEN_NOT_YET_FILLED));
@@ -307,7 +307,7 @@ public class RequestsApiTest extends ApiTests {
 
     assertThat(representation.getString("id"), is(id.toString()));
     assertThat(representation.getString("requestType"), is("Recall"));
-    assertThat(representation.getString("fulfilmentPreference"), is("Delivery"));
+    assertThat(representation.getString("fulfillmentPreference"), is("Delivery"));
     assertThat(representation.getString("deliveryAddressTypeId"),
       is(deliveryAddressTypeId.toString()));
 
@@ -325,7 +325,7 @@ public class RequestsApiTest extends ApiTests {
 
     assertThat(fetchedRepresentation.getString("id"), is(id.toString()));
     assertThat(fetchedRepresentation.getString("requestType"), is("Recall"));
-    assertThat(fetchedRepresentation.getString("fulfilmentPreference"), is("Delivery"));
+    assertThat(fetchedRepresentation.getString("fulfillmentPreference"), is("Delivery"));
     assertThat(fetchedRepresentation.getString("deliveryAddressTypeId"),
       is(deliveryAddressTypeId.toString()));
 
@@ -360,7 +360,7 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getString("requestDate"), is(equivalentTo(requestDate)));
     assertThat(representation.getString("itemId"), is(itemId.toString()));
     assertThat(representation.getString("requesterId"), is(requesterId.toString()));
-    assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
+    assertThat(representation.getString("fulfillmentPreference"), is("Hold Shelf"));
     assertThat(representation.containsKey("requestExpirationDate"), is(false));
     assertThat(representation.containsKey("holdShelfExpirationDate"), is(false));
     assertThat(representation.containsKey("item"), is(false));
@@ -657,7 +657,7 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getString("requestDate"), is(equivalentTo(requestDate)));
     assertThat(representation.getString("itemId"), is(itemId.toString()));
     assertThat(representation.getString("requesterId"), is(requesterId.toString()));
-    assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
+    assertThat(representation.getString("fulfillmentPreference"), is("Hold Shelf"));
     assertThat(representation.getString("requestExpirationDate"), is(equivalentTo(requestExpirationDate)));
     assertThat(representation.getString("holdShelfExpirationDate"), is(equivalentTo(holdShelfExpirationDate)));
 
@@ -781,7 +781,7 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getString("itemId"), is(itemId.toString()));
     assertThat(representation.getString("requesterId"), is(newRequesterId.toString()));
     assertThat(representation.getString("proxyUserId"), is(proxyId.toString()));
-    assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
+    assertThat(representation.getString("fulfillmentPreference"), is("Hold Shelf"));
     assertThat(representation.getString("requestExpirationDate"), is(equivalentTo(requestExpirationDate)));
     assertThat(representation.getString("holdShelfExpirationDate"), is(equivalentTo(holdShelfExpirationDate)));
     assertThat(representation.getInteger("position"), is(2));
@@ -1134,7 +1134,7 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getString("requestDate"), is(equivalentTo(requestDate)));
     assertThat(representation.getString("itemId"), is(itemId.toString()));
     assertThat(representation.getString("requesterId"), is(requesterId.toString()));
-    assertThat(representation.getString("fulfilmentPreference"), is("Hold Shelf"));
+    assertThat(representation.getString("fulfillmentPreference"), is("Hold Shelf"));
     assertThat(representation.getString("requestExpirationDate"), is(equivalentTo(requestExpirationDate)));
     assertThat(representation.getString("holdShelfExpirationDate"), is(equivalentTo(holdShelfExpirationDate)));
     assertThat(representation.getInteger("position"), is(3));

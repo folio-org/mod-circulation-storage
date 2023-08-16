@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.toList;
 import static org.folio.rest.tools.utils.ModuleName.getModuleName;
 import static org.folio.rest.tools.utils.ModuleName.getModuleVersion;
 import static org.folio.service.event.InventoryEventType.INVENTORY_ITEM_UPDATED;
+import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_UPDATED;
 import static org.folio.support.kafka.KafkaConfigConstants.KAFKA_ENV;
 import static org.folio.support.kafka.KafkaConfigConstants.KAFKA_HOST;
 import static org.folio.support.kafka.KafkaConfigConstants.KAFKA_MAX_REQUEST_SIZE;
@@ -24,6 +25,7 @@ import org.folio.kafka.SubscriptionDefinition;
 import org.folio.kafka.services.KafkaTopic;
 import org.folio.service.event.InventoryEventType;
 import org.folio.service.event.handler.ItemUpdateEventHandler;
+import org.folio.service.event.handler.ServicePointUpdateEventHandler;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.CompositeFuture;
@@ -74,6 +76,8 @@ public class EventConsumerVerticle extends AbstractVerticle {
     final KafkaConfig config = getKafkaConfig();
 
     return createInventoryEventConsumer(INVENTORY_ITEM_UPDATED, config, new ItemUpdateEventHandler(context))
+      .compose(r -> createInventoryEventConsumer(INVENTORY_SERVICE_POINT_UPDATED, config,
+        new ServicePointUpdateEventHandler(context)))
       .mapEmpty();
   }
 
@@ -107,6 +111,8 @@ public class EventConsumerVerticle extends AbstractVerticle {
   }
 
   private KafkaConfig getKafkaConfig() {
+    log.info("getKafkaConfig:: getting Kafka config");
+
     JsonObject vertxConfig = vertx.getOrCreateContext().config();
 
     KafkaConfig config = KafkaConfig.builder()

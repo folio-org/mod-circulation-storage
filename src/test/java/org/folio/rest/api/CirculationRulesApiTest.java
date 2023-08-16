@@ -1,7 +1,6 @@
 package org.folio.rest.api;
 
 import io.vertx.core.json.JsonObject;
-
 import org.folio.rest.jaxrs.model.CirculationRules;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
@@ -19,7 +18,9 @@ import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.ma
 import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.matchesOk;
 import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.matchesUnprocessableEntity;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class CirculationRulesApiTest extends ApiTests {
@@ -77,9 +78,13 @@ public class CirculationRulesApiTest extends ApiTests {
   }
 
   public void putAndGet(CirculationRules circulationRules) throws Exception {
+    var oldUpdatedDate = get().getJsonObject("metadata").getString("updatedDate");
     put204(circulationRules);
     JsonObject json = get();
     assertThat(json.getString("rulesAsText"), is(circulationRules.getRulesAsText()));
+    var metadata = json.getJsonObject("metadata");
+    assertThat(metadata.getString("updatedByUserId"), is(not(nullValue())));
+    assertThat(metadata.getString("updatedDate"), is(not(oldUpdatedDate)));
   }
 
   @Test

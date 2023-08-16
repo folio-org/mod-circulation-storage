@@ -19,7 +19,7 @@ public class RequestDto {
   @Builder.Default
   String status = "Open - Not yet filled";
   @Builder.Default
-  String fulfilmentPreference = "Hold Shelf";
+  String fulfillmentPreference = "Hold Shelf";
   String requesterId;
   String itemId;
   String holdingsRecordId;
