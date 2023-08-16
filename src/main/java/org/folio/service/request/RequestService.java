@@ -67,7 +67,7 @@ public class RequestService {
   }
 
   public Future<Response> create(Request request) {
-    log.info("create:: request {} ", request);
+    log.info("create:: request {} , {} , {} , {}", request.getRequesterId(), request.getPosition(), request.getItemId(), request.getRequestType().value());
     Errors errors = RequestsApiUtil.validateRequest(request);
 
     if (!errors.getErrors().isEmpty()) {
@@ -79,6 +79,7 @@ public class RequestService {
 
     PgUtil.post(REQUEST_TABLE, request, okapiHeaders, vertxContext,
         RequestStorage.PostRequestStorageRequestsResponse.class, reply -> {
+      log.info("Response {} ", reply.cause());
           if (isSamePositionInQueueError(reply)) {
             createResult.complete(RequestStorage.PostRequestStorageRequestsResponse
                 .respond422WithApplicationJson(samePositionInQueueError(request)));
@@ -149,6 +150,7 @@ public class RequestService {
 
   private boolean isSamePositionInQueueError(AsyncResult<Response> reply) {
     String message = OkapiResponseUtil.getErrorMessage(reply);
+    log.info("isSamePositionInQueueError:: {} ", message);
     return RequestsApiUtil.hasSamePositionConstraintViolated(message);
   }
 
