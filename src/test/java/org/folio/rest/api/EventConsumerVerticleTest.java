@@ -16,8 +16,13 @@ import static org.folio.rest.tools.utils.ModuleName.getModuleVersion;
 import static org.folio.service.event.InventoryEventType.INVENTORY_ITEM_UPDATED;
 import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_UPDATED;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.hasItems;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
@@ -25,6 +30,7 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 
 import org.folio.rest.jaxrs.model.CallNumberComponents;
+import org.folio.rest.jaxrs.model.RequestType;
 import org.folio.rest.jaxrs.model.SearchIndex;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.builders.ItemBuilder;
@@ -40,6 +46,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.admin.KafkaAdminClient;
 import io.vertx.kafka.client.common.TopicPartition;
@@ -56,6 +63,7 @@ public class EventConsumerVerticleTest extends ApiTests {
 
   private static final String REQUEST_ID = "5d2bc53d-db13-4a51-a5a6-160a703706f1";
   private static final String REQUEST_STORAGE_URL = "/request-storage/requests";
+  private static final String REQUEST_POLICY_STORAGE_URL = "/request-policy-storage/request-policies";
   private static final String KAFKA_SERVER_URL = String.format("%s:%s", host(), port());
   private final static String DEFAULT_PICKUP_SERVICE_POINT_NAME = "Circ Desk 1";
   private final static String DEFAULT_CALL_NUMBER_PREFIX = "prefix";
@@ -241,6 +249,62 @@ public class EventConsumerVerticleTest extends ApiTests {
     verifyRequestSearchIndex(REQUEST_ID, searchIndex);
   }
 
+  @Test
+  public void shouldUpdateRequestPolicyWhenServicePointNoLongerPickupLocation() {
+    String updatedServicePointId = randomId();
+    String anotherServicePointId = randomId();
+    JsonObject oldServicePoint = buildServicePoint(updatedServicePointId, "oldSp", true);
+    JsonObject newServicePoint = buildServicePoint(updatedServicePointId, "newSp", false);
+
+    JsonObject requestPolicy = buildRequestPolicy(List.of(
+      updatedServicePointId, anotherServicePointId), RequestType.HOLD, RequestType.PAGE);
+    createRequestPolicy(requestPolicy);
+
+    publishServicePointUpdateEvent(oldServicePoint, newServicePoint);
+    int initialOffset = getOffsetForServicePointUpdateEvents();
+    publishServicePointUpdateEvent(oldServicePoint, newServicePoint);
+    waitUntilValueIsIncreased(initialOffset,
+      EventConsumerVerticleTest::getOffsetForServicePointUpdateEvents);
+
+    JsonObject requestPolicyById = getRequestPolicy(requestPolicy.getString("id"));
+    JsonObject allowedServicePoints = requestPolicyById.getJsonObject("allowedServicePoints");
+    JsonArray holdAllowedServicePoints = allowedServicePoints.getJsonArray("Hold");
+    JsonArray pageAllowedServicePoints = allowedServicePoints.getJsonArray("Page");
+
+    assertThat(holdAllowedServicePoints.size(), is(1));
+    assertThat(holdAllowedServicePoints, hasItem(anotherServicePointId));
+    assertThat(pageAllowedServicePoints.size(), is(1));
+    assertThat(holdAllowedServicePoints, hasItem(anotherServicePointId));
+  }
+
+  @Test
+  public void shouldNotUpdateRequestPolicyWhenServicePointPickupLocationWasNotChanged() {
+    String updatedServicePointId = randomId();
+    String anotherServicePointId = randomId();
+    JsonObject oldServicePoint = buildServicePoint(updatedServicePointId, "oldSp", true);
+    JsonObject newServicePoint = buildServicePoint(updatedServicePointId, "newSp", true);
+
+    JsonObject requestPolicy = buildRequestPolicy(List.of(
+      updatedServicePointId, anotherServicePointId), RequestType.PAGE, RequestType.RECALL);
+    createRequestPolicy(requestPolicy);
+
+    publishServicePointUpdateEvent(oldServicePoint, newServicePoint);
+    int initialOffset = getOffsetForServicePointUpdateEvents();
+    publishServicePointUpdateEvent(oldServicePoint, newServicePoint);
+    waitUntilValueIsIncreased(initialOffset,
+      EventConsumerVerticleTest::getOffsetForServicePointUpdateEvents);
+
+    JsonObject requestPolicyById = getRequestPolicy(requestPolicy.getString("id"));
+    JsonObject allowedServicePoints = requestPolicyById.getJsonObject("allowedServicePoints");
+    JsonArray pageAllowedServicePoints = allowedServicePoints.getJsonArray("Page");
+    JsonArray recallAllowedServicePoints = allowedServicePoints.getJsonArray("Recall");
+
+    assertThat(pageAllowedServicePoints.size(), is(2));
+    assertThat(pageAllowedServicePoints, hasItems(updatedServicePointId, anotherServicePointId));
+    assertThat(recallAllowedServicePoints.size(), is(2));
+    assertThat(recallAllowedServicePoints, hasItems(updatedServicePointId, anotherServicePointId));
+  }
+
   private static JsonObject buildItem() {
     return new ItemBuilder()
       .withId(randomId())
@@ -280,6 +344,14 @@ public class EventConsumerVerticleTest extends ApiTests {
       .create();
   }
 
+  private static JsonObject buildServicePoint(String id, String name, boolean isPickupLocation) {
+    return new ServicePointBuilder(name)
+      .withId(id)
+      .withCode("code")
+      .withPickupLocation(isPickupLocation)
+      .create();
+  }
+
   private static SearchIndex buildSearchIndex(String callNumberPrefix, String callNumber,
     String callNumberSuffix, String shelvingOrder) {
 
@@ -307,8 +379,17 @@ public class EventConsumerVerticleTest extends ApiTests {
     return createEntity(request, requestStorageUrl()).getJson();
   }
 
+  @SneakyThrows
+  private JsonObject createRequestPolicy(JsonObject requestPolicy) {
+    return createEntity(requestPolicy, requestPolicyStorageUrl()).getJson();
+  }
+
   private static URL requestStorageUrl() {
     return requestStorageUrl("");
+  }
+
+  private static URL requestPolicyStorageUrl() {
+    return requestPolicyStorageUrl("");
   }
 
   @SneakyThrows
@@ -316,8 +397,17 @@ public class EventConsumerVerticleTest extends ApiTests {
     return StorageTestSuite.storageUrl(REQUEST_STORAGE_URL + subPath);
   }
 
+  @SneakyThrows
+  private static URL requestPolicyStorageUrl(String subPath) {
+    return StorageTestSuite.storageUrl(REQUEST_POLICY_STORAGE_URL + subPath);
+  }
+
   private JsonObject getRequest(String requestId) {
     return getById(requestStorageUrl("/" + requestId));
+  }
+
+  private JsonObject getRequestPolicy(String requestPolicyId) {
+    return getById(requestPolicyStorageUrl("/" + requestPolicyId));
   }
 
   private static KafkaProducer<String, JsonObject> createProducer() {
@@ -435,5 +525,22 @@ public class EventConsumerVerticleTest extends ApiTests {
           .map(Long::intValue)
           .orElse(0)) // if topic does not exist yet
     );
+  }
+
+  private JsonObject buildRequestPolicy(List<String> allowedServicePointIds,
+    RequestType... requestTypes) {
+
+    JsonArray requestTypesArray = new JsonArray();
+    JsonObject allowedServicePoints = new JsonObject();
+    for (RequestType requestType : requestTypes) {
+      requestTypesArray.add(requestType);
+      allowedServicePoints.put(requestType.value(), new JsonArray(allowedServicePointIds));
+    }
+
+    return new JsonObject()
+      .put("id", randomId())
+      .put("name", "Request policy")
+      .put("requestTypes", requestTypesArray)
+      .put("allowedServicePoints", allowedServicePoints);
   }
 }

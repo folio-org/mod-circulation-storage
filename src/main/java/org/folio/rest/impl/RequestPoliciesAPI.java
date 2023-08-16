@@ -24,12 +24,11 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
+import static org.folio.support.ModuleConstants.REQUEST_POLICY_CLASS;
+import static org.folio.support.ModuleConstants.REQUEST_POLICY_TABLE;
 
 public class RequestPoliciesAPI implements RequestPolicyStorage {
   private static final Logger log = LogManager.getLogger();
-
-  private static final String REQUEST_POLICY_TABLE = "request_policy";
-  private static final Class<RequestPolicy> REQUEST_POLICY_CLASS = RequestPolicy.class;
 
   @Validate
   @Override
