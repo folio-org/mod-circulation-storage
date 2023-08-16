@@ -908,8 +908,8 @@ public class RequestPoliciesApiTest extends ApiTests {
 
     assertThat(response.getJson(), allOf(
       hasErrorWith(allOf(
-          hasMessage(format("Service point %s does not exist", nonExistentServicePointId)),
-          hasParameter("servicePointId", nonExistentServicePointId))),
+        hasMessage(format("Service point %s does not exist", nonExistentServicePointId)),
+        hasParameter("servicePointId", nonExistentServicePointId))),
       hasErrorWith(allOf(
         hasMessage(format("Service point %s is not a pickup location", nonPickupLocationServicePointId)),
         hasParameter("servicePointId", nonPickupLocationServicePointId))),
