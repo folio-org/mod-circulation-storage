@@ -96,6 +96,7 @@ public class EventConsumerVerticleTest extends ApiTests {
   @After
   public void afterEach() {
     truncateTable("request");
+    truncateTable("request_policy");
   }
 
   @Parameters({
