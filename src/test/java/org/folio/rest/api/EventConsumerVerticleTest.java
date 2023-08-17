@@ -14,22 +14,29 @@ import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET
 import static org.folio.rest.tools.utils.ModuleName.getModuleName;
 import static org.folio.rest.tools.utils.ModuleName.getModuleVersion;
 import static org.folio.service.event.InventoryEventType.INVENTORY_ITEM_UPDATED;
+import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_DELETED;
 import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_UPDATED;
 import static org.hamcrest.CoreMatchers.equalTo;
 
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
+import org.folio.rest.jaxrs.model.AllowedServicePoints;
 import org.folio.rest.jaxrs.model.CallNumberComponents;
+import org.folio.rest.jaxrs.model.RequestType;
 import org.folio.rest.jaxrs.model.SearchIndex;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.builders.ItemBuilder;
 import org.folio.rest.support.builders.ItemBuilder.ItemCallNumberComponents;
 import org.folio.rest.support.builders.RequestItemSummary;
+import org.folio.rest.support.builders.RequestPolicyBuilder;
 import org.folio.rest.support.builders.RequestRequestBuilder;
 import org.folio.rest.support.builders.ServicePointBuilder;
 import org.joda.time.DateTime;
@@ -55,6 +62,8 @@ import lombok.SneakyThrows;
 public class EventConsumerVerticleTest extends ApiTests {
 
   private static final String REQUEST_ID = "5d2bc53d-db13-4a51-a5a6-160a703706f1";
+  private static final String REQUEST_POLICY_STORAGE_URL =
+    "/request-policy-storage/request-policies";
   private static final String REQUEST_STORAGE_URL = "/request-storage/requests";
   private static final String KAFKA_SERVER_URL = String.format("%s:%s", host(), port());
   private final static String DEFAULT_PICKUP_SERVICE_POINT_NAME = "Circ Desk 1";
@@ -220,7 +229,6 @@ public class EventConsumerVerticleTest extends ApiTests {
   @Test
   public void
   requestPickupServicePointNameIsNotUpdatedWhenRequestAndEventAreForDifferentServicePoints() {
-
     JsonObject item = buildItem();
     String servicePointId = randomId();
     String oldServicePointName = "oldName";
@@ -239,6 +247,38 @@ public class EventConsumerVerticleTest extends ApiTests {
     waitUntilValueIsIncreased(initialOffset,
       EventConsumerVerticleTest::getOffsetForServicePointUpdateEvents);
     verifyRequestSearchIndex(REQUEST_ID, searchIndex);
+  }
+
+  @Test
+  public void requestPolicyIsUpdatedWhenServicePointIsDeleted() {
+    String requestPolicyId = randomId();
+
+    String servicePoint1Id = randomId();
+    String servicePoint2Id = randomId();
+    String servicePoint3Id = randomId();
+    JsonObject servicePoint1 = buildServicePoint(servicePoint1Id, "sp-1");
+    JsonObject servicePoint2 = buildServicePoint(servicePoint2Id, "sp-2");
+    JsonObject servicePoint3 = buildServicePoint(servicePoint3Id, "sp-3");
+
+    var requestTypes = List.of(RequestType.HOLD, RequestType.PAGE, RequestType.RECALL);
+    var allowedServicePoints = new AllowedServicePoints()
+      .withHold(Set.of(servicePoint1Id, servicePoint2Id))
+      .withPage(Set.of(servicePoint3Id));
+    JsonObject requestPolicy = buildRequestPolicy(requestPolicyId, requestTypes,
+      allowedServicePoints);
+    createRequestPolicy(requestPolicy);
+
+    int initialOffset = getOffsetForServicePointDeleteEvents();
+
+    // Delete service point 2 and check that allowed service points for Hold type changed from
+    // (sp-1, sp-2) to (sp-1)
+    publishServicePointDeleteEvent(servicePoint2);
+    waitUntilValueIsIncreased(initialOffset,
+      EventConsumerVerticleTest::getOffsetForServicePointDeleteEvents);
+    verifyRequestPolicyAllowedServicePoints(requestPolicyId, RequestType.HOLD,
+      List.of(servicePoint1Id));
+    verifyRequestPolicyAllowedServicePoints(requestPolicyId, RequestType.PAGE,
+      List.of(servicePoint3Id));
   }
 
   private static JsonObject buildItem() {
@@ -303,6 +343,20 @@ public class EventConsumerVerticleTest extends ApiTests {
   }
 
   @SneakyThrows
+  private JsonObject createRequestPolicy(JsonObject requestPolicy) {
+    return createEntity(requestPolicy, requestPolicyStorageUrl()).getJson();
+  }
+
+  private static URL requestPolicyStorageUrl() {
+    return requestPolicyStorageUrl("");
+  }
+
+  @SneakyThrows
+  private static URL requestPolicyStorageUrl(String path) {
+    return StorageTestSuite.storageUrl(REQUEST_POLICY_STORAGE_URL + path);
+  }
+
+  @SneakyThrows
   private JsonObject createRequest(JsonObject request) {
     return createEntity(request, requestStorageUrl()).getJson();
   }
@@ -314,6 +368,10 @@ public class EventConsumerVerticleTest extends ApiTests {
   @SneakyThrows
   private static URL requestStorageUrl(String subPath) {
     return StorageTestSuite.storageUrl(REQUEST_STORAGE_URL + subPath);
+  }
+
+  private JsonObject getRequestPolicy(String requestPolicyId) {
+    return getById(requestPolicyStorageUrl("/" + requestPolicyId));
   }
 
   private JsonObject getRequest(String requestId) {
@@ -338,6 +396,10 @@ public class EventConsumerVerticleTest extends ApiTests {
     publishEvent(INVENTORY_SERVICE_POINT_TOPIC, buildUpdateEvent(oldServicePoint, newServicePoint));
   }
 
+  private void publishServicePointDeleteEvent(JsonObject servicePoint) {
+    publishEvent(INVENTORY_SERVICE_POINT_TOPIC, buildDeleteEvent(servicePoint));
+  }
+
   private void publishEvent(String topic, JsonObject eventPayload) {
     var record = KafkaProducerRecord.create(topic, "test-key", eventPayload);
     record.addHeader("X-Okapi-Tenant", TENANT_ID);
@@ -352,6 +414,21 @@ public class EventConsumerVerticleTest extends ApiTests {
       .put("new", newVersion);
   }
 
+  private static JsonObject buildDeleteEvent(JsonObject object) {
+    return new JsonObject()
+      .put("tenant", TENANT_ID)
+      .put("type", "DELETE")
+      .put("old", object);
+  }
+
+  private List<String> verifyRequestPolicyAllowedServicePoints(String requestPolicyId,
+    RequestType requestType, List<String> allowedServicePoints) {
+
+    return waitAtMost(60, SECONDS)
+      .until(() -> getRequestPolicyAllowedServicePoints(requestPolicyId, requestType),
+        equalTo(allowedServicePoints));
+  }
+
   private JsonObject verifyRequestSearchIndex(String requestId, SearchIndex searchIndex) {
     return waitAtMost(60, SECONDS)
       .until(() -> getRequestSearchIndex(requestId), equalTo(mapFrom(searchIndex)));
@@ -362,8 +439,30 @@ public class EventConsumerVerticleTest extends ApiTests {
       .until(() -> getRequestSearchIndex(requestId), equalTo(mapFrom(searchIndex)));
   }
 
+  private List<String> getRequestPolicyAllowedServicePoints(String requestPolicyId,
+    RequestType requestType) {
+
+    return getRequestPolicy(requestPolicyId)
+      .getJsonObject("allowedServicePoints")
+      .getJsonArray(requestType.toString())
+      .stream()
+      .map(Object::toString)
+      .collect(Collectors.toList());
+  }
+
   private JsonObject getRequestSearchIndex(String requestId) {
     return getRequest(requestId).getJsonObject("searchIndex");
+  }
+
+  private static JsonObject buildRequestPolicy(String requestPolicyId,
+    List<RequestType> requestTypes, AllowedServicePoints allowedServicePoints) {
+
+    return new RequestPolicyBuilder()
+      .withId(requestPolicyId)
+      .withDescription("test description")
+      .withRequestTypes(requestTypes)
+      .withAllowedServicePoints(allowedServicePoints)
+      .create();
   }
 
   private static JsonObject buildRequest(String requestId, JsonObject item) {
@@ -411,6 +510,11 @@ public class EventConsumerVerticleTest extends ApiTests {
   private static Integer getOffsetForServicePointUpdateEvents() {
     return getOffset(INVENTORY_SERVICE_POINT_TOPIC,
       buildConsumerGroupId(INVENTORY_SERVICE_POINT_UPDATED.name()));
+  }
+
+  private static Integer getOffsetForServicePointDeleteEvents() {
+    return getOffset(INVENTORY_SERVICE_POINT_TOPIC,
+      buildConsumerGroupId(INVENTORY_SERVICE_POINT_DELETED.name()));
   }
 
   private static String buildConsumerGroupId(String eventType) {

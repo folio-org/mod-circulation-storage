@@ -4,6 +4,7 @@ import org.folio.rest.jaxrs.model.ActualCostRecord;
 import org.folio.rest.jaxrs.model.CheckIn;
 import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.Request;
+import org.folio.rest.jaxrs.model.RequestPolicy;
 import org.folio.rest.jaxrs.model.TlrFeatureToggleJob;
 
 public class ModuleConstants {
@@ -24,6 +25,8 @@ public class ModuleConstants {
   public static final String REQUEST_STATUS_FIELD = "'status'";
   public static final Class<TlrFeatureToggleJob> TLR_FEATURE_TOGGLE_JOB_CLASS =
     TlrFeatureToggleJob.class;
+  public static final String REQUEST_POLICY_TABLE = "request_policy";
+  public static final Class<RequestPolicy> REQUEST_POLICY_CLASS = RequestPolicy.class;
 
   private ModuleConstants(){
   }

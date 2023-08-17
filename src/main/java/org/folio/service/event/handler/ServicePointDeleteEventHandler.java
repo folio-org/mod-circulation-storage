@@ -10,10 +10,10 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 
-public class ItemUpdateEventHandler implements AsyncRecordHandler<String, String> {
+public class ServicePointDeleteEventHandler implements AsyncRecordHandler<String, String> {
   private final Context context;
 
-  public ItemUpdateEventHandler(Context context) {
+  public ServicePointDeleteEventHandler(Context context) {
     this.context = context;
   }
 
@@ -22,10 +22,10 @@ public class ItemUpdateEventHandler implements AsyncRecordHandler<String, String
 
     JsonObject payload = new JsonObject(kafkaConsumerRecord.value());
 
-    ItemUpdateProcessorForRequest itemUpdateProcessorForRequest =
-      new ItemUpdateProcessorForRequest(context);
+    ServicePointDeleteProcessorForRequestPolicy servicePointDeleteProcessorForRequestPolicy =
+      new ServicePointDeleteProcessorForRequestPolicy(context);
 
-    return itemUpdateProcessorForRequest.run(kafkaConsumerRecord.key(),
+    return servicePointDeleteProcessorForRequestPolicy.run(kafkaConsumerRecord.key(),
       new CaseInsensitiveMap<>(kafkaHeadersToMap(kafkaConsumerRecord.headers())), payload);
   }
 }
