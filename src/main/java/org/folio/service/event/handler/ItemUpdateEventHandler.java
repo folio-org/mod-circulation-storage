@@ -4,6 +4,7 @@ import static org.folio.kafka.KafkaHeaderUtils.kafkaHeadersToMap;
 
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.kafka.AsyncRecordHandler;
+import org.folio.service.event.handler.processor.ItemUpdateProcessorForRequest;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;

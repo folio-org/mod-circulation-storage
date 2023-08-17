@@ -1,4 +1,4 @@
-package org.folio.service.event.handler;
+package org.folio.service.event.handler.processor;
 
 import static org.apache.commons.lang3.ObjectUtils.notEqual;
 import static org.folio.service.event.InventoryEventType.INVENTORY_ITEM_UPDATED;
@@ -19,7 +19,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 
-public class ItemUpdateProcessorForRequest extends UpdateEventAbstractProcessor<Request> {
+public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request> {
 
   private static final Logger log = LogManager.getLogger(ItemUpdateProcessorForRequest.class);
   private static final String EFFECTIVE_SHELVING_ORDER_KEY = "effectiveShelvingOrder";

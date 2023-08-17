@@ -1,4 +1,4 @@
-package org.folio.service.event.handler;
+package org.folio.service.event.handler.processor;
 
 import static org.apache.commons.lang3.ObjectUtils.notEqual;
 import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_UPDATED;
@@ -18,7 +18,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 
-public class ServicePointUpdateProcessorForRequest extends UpdateEventAbstractProcessor<Request> {
+public class ServicePointUpdateProcessorForRequest extends UpdateEventProcessor<Request> {
   private static final Logger log = LogManager.getLogger(ServicePointUpdateProcessorForRequest.class);
   private static final String SERVICE_POINT_NAME_KEY = "name";
 

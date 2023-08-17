@@ -1,4 +1,4 @@
-package org.folio.service.event.handler;
+package org.folio.service.event.handler.processor;
 
 import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_DELETED;
 
@@ -21,7 +21,7 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 
 public class ServicePointDeleteProcessorForRequestPolicy
-  extends DeleteEventAbstractHandler<RequestPolicy> {
+  extends DeleteEventProcessor<RequestPolicy> {
 
   private static final Logger log = LogManager.getLogger(ServicePointDeleteProcessorForRequestPolicy.class);
 

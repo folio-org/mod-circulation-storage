@@ -1,4 +1,4 @@
-package org.folio.service.event.handler;
+package org.folio.service.event.handler.processor;
 
 import java.lang.invoke.MethodHandles;
 
@@ -8,10 +8,10 @@ import org.folio.service.event.InventoryEventType;
 
 import io.vertx.core.json.JsonObject;
 
-public abstract class DeleteEventAbstractHandler<T> extends EventProcessor<T> {
+public abstract class DeleteEventProcessor<T> extends EventProcessor<T> {
   private static final Logger log = LogManager.getLogger(MethodHandles.lookup().lookupClass());
 
-  protected DeleteEventAbstractHandler(InventoryEventType supportedEventType) {
+  protected DeleteEventProcessor(InventoryEventType supportedEventType) {
     super(supportedEventType);
   }
 

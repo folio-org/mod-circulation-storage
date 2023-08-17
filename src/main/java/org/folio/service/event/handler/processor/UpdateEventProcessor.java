@@ -1,17 +1,18 @@
-package org.folio.service.event.handler;
+package org.folio.service.event.handler.processor;
 
 import java.lang.invoke.MethodHandles;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.service.event.InventoryEventType;
+import org.folio.service.event.handler.processor.EventProcessor;
 
 import io.vertx.core.json.JsonObject;
 
-public abstract class UpdateEventAbstractProcessor<T> extends EventProcessor<T> {
+public abstract class UpdateEventProcessor<T> extends EventProcessor<T> {
   private static final Logger log = LogManager.getLogger(MethodHandles.lookup().lookupClass());
 
-  protected UpdateEventAbstractProcessor(InventoryEventType supportedEventType) {
+  protected UpdateEventProcessor(InventoryEventType supportedEventType) {
     super(supportedEventType);
   }
 

@@ -1,4 +1,4 @@
-package org.folio.service.event.handler;
+package org.folio.service.event.handler.processor;
 
 import static io.vertx.core.Future.succeededFuture;
 
