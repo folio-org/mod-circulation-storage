@@ -14,6 +14,7 @@ import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET
 import static org.folio.rest.tools.utils.ModuleName.getModuleName;
 import static org.folio.rest.tools.utils.ModuleName.getModuleVersion;
 import static org.folio.service.event.InventoryEventType.INVENTORY_ITEM_UPDATED;
+import static org.folio.service.event.InventoryEventType.INVENTORY_PICKUP_LOCATION_UPDATED;
 import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_UPDATED;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
@@ -261,11 +262,10 @@ public class EventConsumerVerticleTest extends ApiTests {
       updatedServicePointId, anotherServicePointId), RequestType.HOLD, RequestType.PAGE);
     createRequestPolicy(requestPolicy);
 
-    publishServicePointUpdateEvent(oldServicePoint, newServicePoint);
-    int initialOffset = getOffsetForServicePointUpdateEvents();
+    int initialOffset = getOffsetForPickupLocationUpdateEvents();
     publishServicePointUpdateEvent(oldServicePoint, newServicePoint);
     waitUntilValueIsIncreased(initialOffset,
-      EventConsumerVerticleTest::getOffsetForServicePointUpdateEvents);
+      EventConsumerVerticleTest::getOffsetForPickupLocationUpdateEvents);
 
     JsonObject requestPolicyById = getRequestPolicy(requestPolicy.getString("id"));
     JsonObject allowedServicePoints = requestPolicyById.getJsonObject("allowedServicePoints");
@@ -289,11 +289,10 @@ public class EventConsumerVerticleTest extends ApiTests {
       updatedServicePointId, anotherServicePointId), RequestType.PAGE, RequestType.RECALL);
     createRequestPolicy(requestPolicy);
 
-    publishServicePointUpdateEvent(oldServicePoint, newServicePoint);
-    int initialOffset = getOffsetForServicePointUpdateEvents();
+    int initialOffset = getOffsetForPickupLocationUpdateEvents();
     publishServicePointUpdateEvent(oldServicePoint, newServicePoint);
     waitUntilValueIsIncreased(initialOffset,
-      EventConsumerVerticleTest::getOffsetForServicePointUpdateEvents);
+      EventConsumerVerticleTest::getOffsetForPickupLocationUpdateEvents);
 
     JsonObject requestPolicyById = getRequestPolicy(requestPolicy.getString("id"));
     JsonObject allowedServicePoints = requestPolicyById.getJsonObject("allowedServicePoints");
@@ -502,6 +501,11 @@ public class EventConsumerVerticleTest extends ApiTests {
   private static Integer getOffsetForServicePointUpdateEvents() {
     return getOffset(INVENTORY_SERVICE_POINT_TOPIC,
       buildConsumerGroupId(INVENTORY_SERVICE_POINT_UPDATED.name()));
+  }
+
+  private static Integer getOffsetForPickupLocationUpdateEvents() {
+    return getOffset(INVENTORY_SERVICE_POINT_TOPIC,
+      buildConsumerGroupId(INVENTORY_PICKUP_LOCATION_UPDATED.name()));
   }
 
   private static String buildConsumerGroupId(String eventType) {

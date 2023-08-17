@@ -13,7 +13,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum InventoryEventType {
   INVENTORY_ITEM_UPDATED(ITEM, UPDATE),
-  INVENTORY_SERVICE_POINT_UPDATED(SERVICE_POINT, UPDATE);
+  INVENTORY_SERVICE_POINT_UPDATED(SERVICE_POINT, UPDATE),
+  INVENTORY_PICKUP_LOCATION_UPDATED(SERVICE_POINT, UPDATE);
 
   private final KafkaTopic kafkaTopic;
   private final PayloadType payloadType;
