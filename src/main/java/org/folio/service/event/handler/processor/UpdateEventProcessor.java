@@ -5,7 +5,6 @@ import java.lang.invoke.MethodHandles;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.service.event.InventoryEventType;
-import org.folio.service.event.handler.processor.EventProcessor;
 
 import io.vertx.core.json.JsonObject;
 

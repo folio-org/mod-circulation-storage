@@ -22,7 +22,7 @@ public abstract class EventProcessor<T> {
 
   protected final InventoryEventType supportedEventType;
 
-  public EventProcessor(InventoryEventType supportedEventType) {
+  protected EventProcessor(InventoryEventType supportedEventType) {
     this.supportedEventType = supportedEventType;
   }
 
