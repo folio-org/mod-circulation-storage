@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.toList;
 import static org.folio.rest.tools.utils.ModuleName.getModuleName;
 import static org.folio.rest.tools.utils.ModuleName.getModuleVersion;
 import static org.folio.service.event.InventoryEventType.INVENTORY_ITEM_UPDATED;
+import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_DELETED;
 import static org.folio.service.event.InventoryEventType.INVENTORY_PICKUP_LOCATION_UPDATED;
 import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_UPDATED;
 import static org.folio.support.kafka.KafkaConfigConstants.KAFKA_ENV;
@@ -26,6 +27,7 @@ import org.folio.kafka.SubscriptionDefinition;
 import org.folio.kafka.services.KafkaTopic;
 import org.folio.service.event.InventoryEventType;
 import org.folio.service.event.handler.ItemUpdateEventHandler;
+import org.folio.service.event.handler.ServicePointDeleteEventHandler;
 import org.folio.service.event.handler.ServicePointUpdateEventHandler;
 import org.folio.service.event.handler.UpdatePickupLocationEventHandler;
 
@@ -77,11 +79,12 @@ public class EventConsumerVerticle extends AbstractVerticle {
   private Future<Void> createConsumers() {
     final KafkaConfig config = getKafkaConfig();
 
-    return createInventoryEventConsumer(INVENTORY_ITEM_UPDATED, config, new ItemUpdateEventHandler(context))
+    return createInventoryEventConsumer(INVENTORY_ITEM_UPDATED, config,
+      new ItemUpdateEventHandler(context))
       .compose(r -> createInventoryEventConsumer(INVENTORY_SERVICE_POINT_UPDATED, config,
         new ServicePointUpdateEventHandler(context)))
-      .compose(r -> createInventoryEventConsumer(INVENTORY_PICKUP_LOCATION_UPDATED, config,
-        new UpdatePickupLocationEventHandler(context)))
+      .compose(r -> createInventoryEventConsumer(INVENTORY_SERVICE_POINT_DELETED, config,
+        new ServicePointDeleteEventHandler(context)))
       .mapEmpty();
   }
 
