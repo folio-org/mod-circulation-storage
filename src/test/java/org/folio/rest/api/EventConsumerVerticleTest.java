@@ -17,6 +17,7 @@ import static org.folio.service.event.InventoryEventType.INVENTORY_ITEM_UPDATED;
 import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_DELETED;
 import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_UPDATED;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
 
 import java.net.URL;
 import java.util.List;
@@ -279,6 +280,21 @@ public class EventConsumerVerticleTest extends ApiTests {
       List.of(servicePoint1Id));
     verifyRequestPolicyAllowedServicePoints(requestPolicyId, RequestType.PAGE,
       List.of(servicePoint3Id));
+
+    // Delete service point 3 and check that Page is not allowed
+    publishServicePointDeleteEvent(servicePoint3);
+    waitUntilValueIsIncreased(initialOffset,
+      EventConsumerVerticleTest::getOffsetForServicePointDeleteEvents);
+    verifyRequestPolicyAllowedServicePoints(requestPolicyId, RequestType.HOLD,
+      List.of(servicePoint1Id));
+    verifyRequestTypeIsNotAllowedByRequestPolicy(requestPolicyId, RequestType.PAGE);
+
+    // Delete service point 1 and check that Hold is not allowed
+    publishServicePointDeleteEvent(servicePoint1);
+    waitUntilValueIsIncreased(initialOffset,
+      EventConsumerVerticleTest::getOffsetForServicePointDeleteEvents);
+    verifyRequestTypeIsNotAllowedByRequestPolicy(requestPolicyId, RequestType.PAGE);
+    verifyRequestTypeIsNotAllowedByRequestPolicy(requestPolicyId, RequestType.HOLD);
   }
 
   private static JsonObject buildItem() {
@@ -429,6 +445,14 @@ public class EventConsumerVerticleTest extends ApiTests {
         equalTo(allowedServicePoints));
   }
 
+  private boolean verifyRequestTypeIsNotAllowedByRequestPolicy(String requestPolicyId,
+    RequestType requestType) {
+
+    return waitAtMost(60, SECONDS)
+      .until(() -> isRequestTypeAllowedByRequestPolicy(requestPolicyId, requestType),
+        is(true));
+  }
+
   private JsonObject verifyRequestSearchIndex(String requestId, SearchIndex searchIndex) {
     return waitAtMost(60, SECONDS)
       .until(() -> getRequestSearchIndex(requestId), equalTo(mapFrom(searchIndex)));
@@ -448,6 +472,15 @@ public class EventConsumerVerticleTest extends ApiTests {
       .stream()
       .map(Object::toString)
       .collect(Collectors.toList());
+  }
+
+  private boolean isRequestTypeAllowedByRequestPolicy(String requestPolicyId,
+    RequestType requestType) {
+
+    return getRequestPolicy(requestPolicyId)
+      .getJsonArray("requestTypes")
+      .stream()
+      .noneMatch(requestType.toString()::equals);
   }
 
   private JsonObject getRequestSearchIndex(String requestId) {

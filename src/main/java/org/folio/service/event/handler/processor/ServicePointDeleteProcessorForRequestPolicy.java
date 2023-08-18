@@ -50,6 +50,12 @@ public class ServicePointDeleteProcessorForRequestPolicy
         allowedServicePoints::getPage, allowedServicePoints::setPage);
       removeAllowedServicePoint(deletedServicePointId, requestPolicy, RequestType.RECALL,
         allowedServicePoints::getRecall, allowedServicePoints::setRecall);
+
+      if ((allowedServicePoints.getHold() == null || allowedServicePoints.getHold().isEmpty())
+      && (allowedServicePoints.getPage() == null || allowedServicePoints.getPage().isEmpty())
+      && (allowedServicePoints.getRecall() == null || allowedServicePoints.getRecall().isEmpty())) {
+        requestPolicy.setAllowedServicePoints(null);
+      }
     }));
 
     return changes;
