@@ -15,7 +15,6 @@ import static org.folio.rest.tools.utils.ModuleName.getModuleName;
 import static org.folio.rest.tools.utils.ModuleName.getModuleVersion;
 import static org.folio.service.event.InventoryEventType.INVENTORY_ITEM_UPDATED;
 import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_DELETED;
-import static org.folio.service.event.InventoryEventType.INVENTORY_PICKUP_LOCATION_UPDATED;
 import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_UPDATED;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
@@ -68,10 +67,9 @@ import lombok.SneakyThrows;
 public class EventConsumerVerticleTest extends ApiTests {
 
   private static final String REQUEST_ID = "5d2bc53d-db13-4a51-a5a6-160a703706f1";
+  private static final String REQUEST_STORAGE_URL = "/request-storage/requests";
   private static final String REQUEST_POLICY_STORAGE_URL =
     "/request-policy-storage/request-policies";
-  private static final String REQUEST_STORAGE_URL = "/request-storage/requests";
-  private static final String REQUEST_POLICY_STORAGE_URL = "/request-policy-storage/request-policies";
   private static final String KAFKA_SERVER_URL = String.format("%s:%s", host(), port());
   private final static String DEFAULT_PICKUP_SERVICE_POINT_NAME = "Circ Desk 1";
   private final static String DEFAULT_CALL_NUMBER_PREFIX = "prefix";
@@ -301,10 +299,10 @@ public class EventConsumerVerticleTest extends ApiTests {
       updatedServicePointId, anotherServicePointId), RequestType.HOLD, RequestType.PAGE);
     createRequestPolicy(requestPolicy);
 
-    int initialOffset = getOffsetForPickupLocationUpdateEvents();
+    int initialOffset = getOffsetForServicePointUpdateEvents();
     publishServicePointUpdateEvent(oldServicePoint, newServicePoint);
     waitUntilValueIsIncreased(initialOffset,
-      EventConsumerVerticleTest::getOffsetForPickupLocationUpdateEvents);
+      EventConsumerVerticleTest::getOffsetForServicePointUpdateEvents);
 
     JsonObject requestPolicyById = getRequestPolicy(requestPolicy.getString("id"));
     JsonObject allowedServicePoints = requestPolicyById.getJsonObject("allowedServicePoints");
@@ -328,10 +326,10 @@ public class EventConsumerVerticleTest extends ApiTests {
       updatedServicePointId, anotherServicePointId), RequestType.PAGE, RequestType.RECALL);
     createRequestPolicy(requestPolicy);
 
-    int initialOffset = getOffsetForPickupLocationUpdateEvents();
+    int initialOffset = getOffsetForServicePointUpdateEvents();
     publishServicePointUpdateEvent(oldServicePoint, newServicePoint);
     waitUntilValueIsIncreased(initialOffset,
-      EventConsumerVerticleTest::getOffsetForPickupLocationUpdateEvents);
+      EventConsumerVerticleTest::getOffsetForServicePointUpdateEvents);
 
     JsonObject requestPolicyById = getRequestPolicy(requestPolicy.getString("id"));
     JsonObject allowedServicePoints = requestPolicyById.getJsonObject("allowedServicePoints");
@@ -414,20 +412,6 @@ public class EventConsumerVerticleTest extends ApiTests {
   }
 
   @SneakyThrows
-  private JsonObject createRequestPolicy(JsonObject requestPolicy) {
-    return createEntity(requestPolicy, requestPolicyStorageUrl()).getJson();
-  }
-
-  private static URL requestPolicyStorageUrl() {
-    return requestPolicyStorageUrl("");
-  }
-
-  @SneakyThrows
-  private static URL requestPolicyStorageUrl(String path) {
-    return StorageTestSuite.storageUrl(REQUEST_POLICY_STORAGE_URL + path);
-  }
-
-  @SneakyThrows
   private JsonObject createRequest(JsonObject request) {
     return createEntity(request, requestStorageUrl()).getJson();
   }
@@ -448,10 +432,6 @@ public class EventConsumerVerticleTest extends ApiTests {
   @SneakyThrows
   private static URL requestStorageUrl(String subPath) {
     return StorageTestSuite.storageUrl(REQUEST_STORAGE_URL + subPath);
-  }
-
-  private JsonObject getRequestPolicy(String requestPolicyId) {
-    return getById(requestPolicyStorageUrl("/" + requestPolicyId));
   }
 
   @SneakyThrows

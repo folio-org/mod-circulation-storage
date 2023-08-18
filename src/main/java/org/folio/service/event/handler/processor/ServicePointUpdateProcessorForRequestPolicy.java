@@ -1,4 +1,4 @@
-package org.folio.service.event.handler;
+package org.folio.service.event.handler.processor;
 
 import static java.lang.String.format;
 import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_UPDATED;
@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.RequestPolicyRepository;
@@ -21,23 +22,22 @@ import org.folio.rest.persist.Criteria.GroupedCriterias;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 
-public class UpdatePickupLocationEventHandler extends UpdateEventAbstractHandler<RequestPolicy> {
-  private static final Logger log = LogManager.getLogger(UpdatePickupLocationEventHandler.class);
+public class ServicePointUpdateProcessorForRequestPolicy extends UpdateEventProcessor<RequestPolicy> {
+  private static final Logger log = LogManager.getLogger(ServicePointUpdateProcessorForRequestPolicy.class);
   private static final String SERVICE_POINT_PICKUP_LOCATION = "pickupLocation";
 
   private final Context context;
 
-  public UpdatePickupLocationEventHandler(Context context) {
+  public ServicePointUpdateProcessorForRequestPolicy(Context context) {
     super(INVENTORY_SERVICE_POINT_UPDATED);
     this.context = context;
   }
 
   @Override
-  protected List<Change<RequestPolicy>> collectRelevantChanges(
-    JsonObject oldObject, JsonObject newObject) {
-
+  protected List<Change<RequestPolicy>> collectRelevantChanges(JsonObject payload) {
+    JsonObject oldObject = payload.getJsonObject("old");
+    JsonObject newObject = payload.getJsonObject("new");
     List<Change<RequestPolicy>> changes = new ArrayList<>();
 
     boolean isOldServicePointPickupLocation = oldObject.getBoolean(SERVICE_POINT_PICKUP_LOCATION);
@@ -52,18 +52,19 @@ public class UpdatePickupLocationEventHandler extends UpdateEventAbstractHandler
 
   @Override
   protected Future<List<RequestPolicy>> applyChanges(List<Change<RequestPolicy>> changes,
-    KafkaConsumerRecord<String, String> event, JsonObject oldObject, JsonObject newObject) {
+    CaseInsensitiveMap<String, String> headers, JsonObject payload) {
 
     log.debug("applyChanges:: applying searchIndex.pickupServicePointName changes");
 
-    return removeAllowedServicePointFromRelativeRequestPolicies(newObject.getString("id"), event);
+    return removeAllowedServicePointFromRelativeRequestPolicies(payload.getJsonObject("old")
+      .getString("id"), headers);
   }
 
   private Future<List<RequestPolicy>> removeAllowedServicePointFromRelativeRequestPolicies(
-    String servicePointId, KafkaConsumerRecord<String, String> event) {
+    String servicePointId, CaseInsensitiveMap<String, String> headers) {
 
     RequestPolicyRepository requestPolicyRepository = new RequestPolicyRepository(
-      context, getKafkaHeaders(event));
+      context, headers);
 
     return findRequestPoliciesByServicePointId(requestPolicyRepository, servicePointId)
       .compose(requestPolicies -> removeAllowedServicePoints(requestPolicyRepository,
@@ -74,7 +75,7 @@ public class UpdatePickupLocationEventHandler extends UpdateEventAbstractHandler
     RequestPolicyRepository policyRepository, String servicePointId) {
 
     log.debug("findRequestPoliciesByServicePointId:: fetching requestPolicies for " +
-        "servicePointId {}", servicePointId);
+      "servicePointId {}", servicePointId);
 
     final List<Criteria> criteriaList = Arrays.stream(RequestType.values())
       .map(requestType -> new Criteria()
@@ -91,7 +92,7 @@ public class UpdatePickupLocationEventHandler extends UpdateEventAbstractHandler
   }
 
   private Future<List<RequestPolicy>> removeAllowedServicePoints(RequestPolicyRepository policyRepository,
-    List<RequestPolicy> requestPolicies, String servicePointId) {
+                                                                 List<RequestPolicy> requestPolicies, String servicePointId) {
 
     log.debug("removeAllowedServicePoints:: parameters requestPolicies: {}, servicePointId: {}",
       requestPolicies::size, () -> servicePointId);
