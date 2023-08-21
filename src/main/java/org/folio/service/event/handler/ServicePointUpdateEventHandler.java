@@ -29,14 +29,10 @@ public class ServicePointUpdateEventHandler implements AsyncRecordHandler<String
     var headers = kafkaHeadersToMap(kafkaConsumerRecord.headers());
     var requestRepository = new RequestRepository(context, headers);
     var requestPolicyRepository = new RequestPolicyRepository(context, headers);
-    ServicePointUpdateProcessorForRequest servicePointUpdateProcessorForRequest =
-      new ServicePointUpdateProcessorForRequest(requestRepository);
-    ServicePointUpdateProcessorForRequestPolicy servicePointUpdateProcessorForRequestPolicy =
-      new ServicePointUpdateProcessorForRequestPolicy(requestPolicyRepository);
 
-    return servicePointUpdateProcessorForRequest.run(kafkaConsumerRecord.key(),
-        new CaseInsensitiveMap<>(headers), payload)
-      .compose(notUsed -> servicePointUpdateProcessorForRequestPolicy.run(
-        kafkaConsumerRecord.key(), new CaseInsensitiveMap<>(headers), payload));
+    return new ServicePointUpdateProcessorForRequest(requestRepository)
+        .run(kafkaConsumerRecord.key(), new CaseInsensitiveMap<>(headers), payload)
+      .compose(notUsed -> new ServicePointUpdateProcessorForRequestPolicy(requestPolicyRepository)
+        .run(kafkaConsumerRecord.key(), new CaseInsensitiveMap<>(headers), payload));
   }
 }
