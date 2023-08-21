@@ -23,6 +23,7 @@ import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.RequestPolicy;
 import org.folio.rest.jaxrs.model.Servicepoint;
+import org.folio.support.ErrorCode;
 import org.folio.support.exception.ValidationException;
 
 import io.vertx.core.Future;
@@ -77,11 +78,13 @@ public class RequestPolicyValidationService {
       if (servicePoint == null) {
         errors.add(new Error()
           .withMessage(String.format("Service point %s does not exist", id))
-          .withParameters(singletonList(new Parameter().withKey("servicePointId").withValue(id))));
+          .withParameters(singletonList(new Parameter().withKey("servicePointId").withValue(id)))
+          .withCode(ErrorCode.INVALID_ALLOWED_SERVICE_POINT.name()));
       } else if (servicePoint.getPickupLocation() == null || !servicePoint.getPickupLocation()) {
         errors.add(new Error()
           .withMessage(String.format("Service point %s is not a pickup location", id))
-          .withParameters(singletonList(new Parameter().withKey("servicePointId").withValue(id))));
+          .withParameters(singletonList(new Parameter().withKey("servicePointId").withValue(id)))
+          .withCode(ErrorCode.INVALID_ALLOWED_SERVICE_POINT.name()));
       }
     }
 
