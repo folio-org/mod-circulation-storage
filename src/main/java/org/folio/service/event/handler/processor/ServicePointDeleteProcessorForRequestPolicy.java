@@ -39,9 +39,8 @@ public class ServicePointDeleteProcessorForRequestPolicy
     List<Change<RequestPolicy>> changes = new ArrayList<>();
     String deletedServicePointId = oldObject.getString("id");
 
-    changes.add(new Change<>(requestPolicy -> {
-      removeServicePointFromRequestPolicy(requestPolicy, deletedServicePointId);
-    }));
+    changes.add(new Change<>(requestPolicy -> removeServicePointFromRequestPolicy(requestPolicy,
+      deletedServicePointId)));
 
     return changes;
   }
