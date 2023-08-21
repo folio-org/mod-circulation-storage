@@ -20,7 +20,6 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
 
 import java.net.URL;
 import java.util.List;
@@ -286,6 +285,52 @@ public class EventConsumerVerticleTest extends ApiTests {
       List.of(servicePoint1Id));
     verifyRequestPolicyAllowedServicePoints(requestPolicyId, RequestType.PAGE,
       List.of(servicePoint3Id));
+
+    // Delete service point 3 and check that Page is not allowed
+    publishServicePointDeleteEvent(servicePoint3);
+    waitUntilValueIsIncreased(initialOffset,
+      EventConsumerVerticleTest::getOffsetForServicePointDeleteEvents);
+    verifyRequestPolicyAllowedServicePoints(requestPolicyId, RequestType.HOLD,
+      List.of(servicePoint1Id));
+    verifyRequestTypeIsNotAllowedByRequestPolicy(requestPolicyId, RequestType.PAGE);
+
+    // Delete service point 1 and check that Hold is not allowed
+    publishServicePointDeleteEvent(servicePoint1);
+    waitUntilValueIsIncreased(initialOffset,
+      EventConsumerVerticleTest::getOffsetForServicePointDeleteEvents);
+    verifyRequestTypeIsNotAllowedByRequestPolicy(requestPolicyId, RequestType.PAGE);
+    verifyRequestTypeIsNotAllowedByRequestPolicy(requestPolicyId, RequestType.HOLD);
+  }
+
+  @Test
+  public void requestPolicyIsNotUpdatedWhenServicePointIsDeletedWithInvalidKafkaMessagePayload() {
+    String requestPolicyId = randomId();
+
+    String servicePoint1Id = randomId();
+    String servicePoint2Id = randomId();
+    String servicePoint3Id = randomId();
+    buildServicePoint(servicePoint1Id, "sp-1");
+    JsonObject servicePoint2 = buildServicePoint(servicePoint2Id, "sp-2");
+    buildServicePoint(servicePoint3Id, "sp-3");
+
+    var requestTypes = List.of(RequestType.HOLD, RequestType.PAGE, RequestType.RECALL);
+    var allowedServicePoints = new AllowedServicePoints()
+      .withHold(Set.of(servicePoint1Id, servicePoint2Id))
+      .withPage(Set.of(servicePoint3Id));
+    JsonObject requestPolicy = buildRequestPolicy(requestPolicyId, requestTypes,
+      allowedServicePoints);
+    createRequestPolicy(requestPolicy);
+
+    int initialOffset = getOffsetForServicePointDeleteEvents();
+
+    // Invalid delete event, nothing should change
+    publishInvalidServicePointDeleteEvent(servicePoint2);
+    waitUntilValueIsIncreased(initialOffset,
+      EventConsumerVerticleTest::getOffsetForServicePointDeleteEvents);
+    verifyRequestPolicyAllowedServicePoints(requestPolicyId, RequestType.HOLD,
+      List.of(servicePoint1Id, servicePoint2Id));
+    verifyRequestPolicyAllowedServicePoints(requestPolicyId, RequestType.PAGE,
+      List.of(servicePoint3Id));
   }
 
   @Test
@@ -469,6 +514,10 @@ public class EventConsumerVerticleTest extends ApiTests {
     publishEvent(INVENTORY_SERVICE_POINT_TOPIC, buildDeleteEvent(servicePoint));
   }
 
+  private void publishInvalidServicePointDeleteEvent(JsonObject servicePoint) {
+    publishEvent(INVENTORY_SERVICE_POINT_TOPIC, buildInvalidDeleteEvent(servicePoint));
+  }
+
   private void publishEvent(String topic, JsonObject eventPayload) {
     var record = KafkaProducerRecord.create(topic, "test-key", eventPayload);
     record.addHeader("X-Okapi-Tenant", TENANT_ID);
@@ -490,12 +539,26 @@ public class EventConsumerVerticleTest extends ApiTests {
       .put("old", object);
   }
 
+  private static JsonObject buildInvalidDeleteEvent(JsonObject object) {
+    return new JsonObject()
+      .put("tenant", TENANT_ID)
+      .put("type", "DELETE");
+  }
+
   private List<String> verifyRequestPolicyAllowedServicePoints(String requestPolicyId,
     RequestType requestType, List<String> allowedServicePoints) {
 
     return waitAtMost(60, SECONDS)
       .until(() -> getRequestPolicyAllowedServicePoints(requestPolicyId, requestType),
         equalTo(allowedServicePoints));
+  }
+
+  private boolean verifyRequestTypeIsNotAllowedByRequestPolicy(String requestPolicyId,
+    RequestType requestType) {
+
+    return waitAtMost(60, SECONDS)
+      .until(() -> isRequestTypeNotAllowedByRequestPolicy(requestPolicyId, requestType),
+        is(true));
   }
 
   private JsonObject verifyRequestSearchIndex(String requestId, SearchIndex searchIndex) {
@@ -517,6 +580,15 @@ public class EventConsumerVerticleTest extends ApiTests {
       .stream()
       .map(Object::toString)
       .collect(Collectors.toList());
+  }
+
+  private boolean isRequestTypeNotAllowedByRequestPolicy(String requestPolicyId,
+    RequestType requestType) {
+
+    return getRequestPolicy(requestPolicyId)
+      .getJsonArray("requestTypes")
+      .stream()
+      .noneMatch(requestType.toString()::equals);
   }
 
   private JsonObject getRequestSearchIndex(String requestId) {

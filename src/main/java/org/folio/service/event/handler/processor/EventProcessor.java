@@ -7,10 +7,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.AbstractRepository;
+import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.service.event.InventoryEventType;
 
 import io.vertx.core.Future;
@@ -21,25 +21,23 @@ public abstract class EventProcessor<T> {
   private static final Logger log = LogManager.getLogger(MethodHandles.lookup().lookupClass());
 
   protected final InventoryEventType supportedEventType;
+  private final AbstractRepository<T> repository;
 
-  protected EventProcessor(InventoryEventType supportedEventType) {
+  protected EventProcessor(InventoryEventType supportedEventType, AbstractRepository<T> repository) {
     this.supportedEventType = supportedEventType;
+    this.repository = repository;
   }
 
-  public Future<String> run(String eventKey, CaseInsensitiveMap<String, String> headers,
-    JsonObject payload) {
-
+  public Future<String> run(String eventKey, JsonObject payload) {
     log.info("run:: received event {}", eventKey);
 
-    return processEvent(headers, payload)
+    return processEvent(payload)
       .onSuccess(r -> log.info("handle:: event {} processed successfully", eventKey))
       .onFailure(t -> log.error("handle:: failed to process event", t))
       .map(eventKey);
   }
 
-  private Future<List<T>> processEvent(CaseInsensitiveMap<String, String> headers,
-    JsonObject payload) {
-
+  private Future<List<T>> processEvent(JsonObject payload) {
     String eventType = payload.getString("type");
     if (!supportedEventType.getPayloadType().name().equals(eventType)) {
       log.info("processEvent:: unsupported event type: {}", eventType);
@@ -59,19 +57,25 @@ public abstract class EventProcessor<T> {
     }
 
     log.info("processEvent:: {} relevant changes detected, applying", relevantChanges::size);
-    return applyChanges(relevantChanges, headers, payload);
+    return applyChanges(relevantChanges, payload);
   }
 
   protected abstract boolean validatePayload(JsonObject payload);
 
   protected abstract List<Change<T>> collectRelevantChanges(JsonObject payload);
 
-  protected abstract Future<List<T>> applyChanges(List<Change<T>> changes,
-    CaseInsensitiveMap<String, String> headers, JsonObject payload);
+  private Future<List<T>> applyChanges(List<Change<T>> changes, JsonObject payload) {
+    log.debug("applyChanges:: payload: {}", payload);
 
-  protected <R> Future<List<R>> applyDbUpdates(List<R> objects, Collection<Change<R>> changes,
-    AbstractRepository<R> repository) {
+    JsonObject oldObject = payload.getJsonObject("old");
 
+    return repository.get(criterionForObjectsToBeUpdated(oldObject.getString("id")))
+      .compose(objects -> applyDbUpdates(objects, changes));
+  }
+
+  protected abstract Criterion criterionForObjectsToBeUpdated(String oldObjectId);
+
+  protected Future<List<T>> applyDbUpdates(List<T> objects, Collection<Change<T>> changes) {
     if (objects.isEmpty()) {
       log.info("applyDbUpdates:: no objects to update found, nothing to update");
       return succeededFuture(objects);

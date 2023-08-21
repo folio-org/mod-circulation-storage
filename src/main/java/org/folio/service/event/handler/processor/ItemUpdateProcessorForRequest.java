@@ -6,7 +6,6 @@ import static org.folio.service.event.InventoryEventType.INVENTORY_ITEM_UPDATED;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.RequestRepository;
@@ -15,8 +14,6 @@ import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 
-import io.vertx.core.Context;
-import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 
 public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request> {
@@ -28,11 +25,8 @@ public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request>
   private static final String CALL_NUMBER_PREFIX_KEY = "prefix";
   private static final String CALL_NUMBER_SUFFIX_KEY = "suffix";
 
-  private final Context context;
-
-  public ItemUpdateProcessorForRequest(Context context) {
-    super(INVENTORY_ITEM_UPDATED);
-    this.context = context;
+  public ItemUpdateProcessorForRequest(RequestRepository repository) {
+    super(INVENTORY_ITEM_UPDATED, repository);
   }
 
   protected List<Change<Request>> collectRelevantChanges(JsonObject payload) {
@@ -60,26 +54,14 @@ public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request>
   }
 
   @Override
-  protected Future<List<Request>> applyChanges(List<Change<Request>> changes,
-    CaseInsensitiveMap<String, String> headers, JsonObject payload) {
+  protected Criterion criterionForObjectsToBeUpdated(String oldObjectId) {
+    log.info("criteriaForObjectsToBeUpdated:: oldObjectId: {}", oldObjectId);
 
-    log.debug("applyChanges:: applying item-related changes");
-
-    JsonObject oldObject = payload.getJsonObject("old");
-    RequestRepository requestRepository = new RequestRepository(context, headers);
-
-    return findRequestsForItem(requestRepository, oldObject.getString("id"))
-      .compose(requests -> applyDbUpdates(requests, changes, requestRepository));
-  }
-
-  private Future<List<Request>> findRequestsForItem(RequestRepository requestRepository, String itemId) {
-    log.info("findRequestsByItemId:: fetching requests for item {}", itemId);
-
-    return requestRepository.get(new Criterion(
+    return new Criterion(
       new Criteria()
         .addField("'itemId'")
         .setOperation("=")
-        .setVal(itemId)));
+        .setVal(oldObjectId));
   }
 
   private static JsonObject extractCallNumberComponents(JsonObject itemJson) {

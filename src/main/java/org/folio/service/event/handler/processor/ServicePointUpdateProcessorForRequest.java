@@ -6,7 +6,6 @@ import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.RequestRepository;
@@ -14,7 +13,6 @@ import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 
-import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 
 public class ServicePointUpdateProcessorForRequest extends UpdateEventProcessor<Request> {
@@ -23,8 +21,7 @@ public class ServicePointUpdateProcessorForRequest extends UpdateEventProcessor<
   private final RequestRepository requestRepository;
 
   public ServicePointUpdateProcessorForRequest(RequestRepository requestRepository) {
-    super(INVENTORY_SERVICE_POINT_UPDATED);
-    this.requestRepository = requestRepository;
+    super(INVENTORY_SERVICE_POINT_UPDATED, requestRepository);
   }
 
   @Override
@@ -48,27 +45,13 @@ public class ServicePointUpdateProcessorForRequest extends UpdateEventProcessor<
   }
 
   @Override
-  protected Future<List<Request>> applyChanges(List<Change<Request>> changes,
-    CaseInsensitiveMap<String, String> headers, JsonObject payload) {
+  protected Criterion criterionForObjectsToBeUpdated(String oldObjectId) {
+    log.info("criterionForObjectsToBeUpdated:: oldObjectId: {}", oldObjectId);
 
-    log.debug("applyChanges:: applying searchIndex.pickupServicePointName changes");
-
-    JsonObject oldObject = payload.getJsonObject("old");
-
-    return findRequestsByPickupServicePointId(requestRepository, oldObject.getString("id"))
-      .compose(requests -> applyDbUpdates(requests, changes, requestRepository));
-  }
-
-  private Future<List<Request>> findRequestsByPickupServicePointId(
-    RequestRepository requestRepository, String pickupServicePointId) {
-
-    log.info("findRequestsByServicePointId:: fetching requests for pickupServicePointId {}",
-      pickupServicePointId);
-
-    return requestRepository.get(new Criterion(
+    return new Criterion(
       new Criteria()
         .addField("'pickupServicePointId'")
         .setOperation("=")
-        .setVal(pickupServicePointId)));
+        .setVal(oldObjectId));
   }
 }
