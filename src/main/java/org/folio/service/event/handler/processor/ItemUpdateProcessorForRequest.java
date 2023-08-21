@@ -55,14 +55,14 @@ public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request>
   }
 
   @Override
-  protected Future<List<Request>> findObjectsToBeUpdated(String oldObjectId) {
-    log.info("findObjectsToBeUpdated:: fetching requests for item {}", oldObjectId);
+  protected Criterion criterionForObjectsToBeUpdated(String oldObjectId) {
+    log.info("criteriaForObjectsToBeUpdated:: oldObjectId: {}", oldObjectId);
 
-    return repository.get(new Criterion(
+    return new Criterion(
       new Criteria()
         .addField("'itemId'")
         .setOperation("=")
-        .setVal(oldObjectId)));
+        .setVal(oldObjectId));
   }
 
   private static JsonObject extractCallNumberComponents(JsonObject itemJson) {

@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.AbstractRepository;
+import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.service.event.InventoryEventType;
 
 import io.vertx.core.Future;
@@ -20,7 +21,7 @@ public abstract class EventProcessor<T> {
   private static final Logger log = LogManager.getLogger(MethodHandles.lookup().lookupClass());
 
   protected final InventoryEventType supportedEventType;
-  protected AbstractRepository<T> repository;
+  private AbstractRepository<T> repository;
 
   protected EventProcessor(InventoryEventType supportedEventType, AbstractRepository<T> repository) {
     this.supportedEventType = supportedEventType;
@@ -68,11 +69,11 @@ public abstract class EventProcessor<T> {
 
     JsonObject oldObject = payload.getJsonObject("old");
 
-    return findObjectsToBeUpdated(oldObject.getString("id"))
+    return repository.get(criterionForObjectsToBeUpdated(oldObject.getString("id")))
       .compose(objects -> applyDbUpdates(objects, changes));
   }
 
-  protected abstract Future<List<T>> findObjectsToBeUpdated(String oldObjectId);
+  protected abstract Criterion criterionForObjectsToBeUpdated(String oldObjectId);
 
   protected Future<List<T>> applyDbUpdates(List<T> objects, Collection<Change<T>> changes) {
     if (objects.isEmpty()) {

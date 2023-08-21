@@ -48,9 +48,8 @@ public class ServicePointDeleteProcessorForRequestPolicy
   }
 
   @Override
-  protected Future<List<RequestPolicy>> findObjectsToBeUpdated(String oldObjectId) {
-    log.debug("findObjectsToBeUpdated:: fetching requestPolicies for " +
-      "servicePointId {}", oldObjectId);
+  protected Criterion criterionForObjectsToBeUpdated(String oldObjectId) {
+    log.debug("criterionForObjectsToBeUpdated:: oldObjectId: {}", oldObjectId);
 
     final List<Criteria> criteriaList = Arrays.stream(RequestType.values())
       .map(requestType -> new Criteria()
@@ -63,6 +62,6 @@ public class ServicePointDeleteProcessorForRequestPolicy
     GroupedCriterias groupedCriterias = new GroupedCriterias();
     criteriaList.forEach(criteria -> groupedCriterias.addCriteria(criteria, "OR"));
 
-    return repository.get(new Criterion().addGroupOfCriterias(groupedCriterias));
+    return new Criterion().addGroupOfCriterias(groupedCriterias);
   }
 }

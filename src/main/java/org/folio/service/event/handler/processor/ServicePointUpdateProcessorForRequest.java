@@ -45,14 +45,13 @@ public class ServicePointUpdateProcessorForRequest extends UpdateEventProcessor<
   }
 
   @Override
-  protected Future<List<Request>> findObjectsToBeUpdated(String oldObjectId) {
-    log.info("findObjectsToBeUpdated:: fetching requests for pickupServicePointId {}",
-      oldObjectId);
+  protected Criterion criterionForObjectsToBeUpdated(String oldObjectId) {
+    log.info("criterionForObjectsToBeUpdated:: oldObjectId: {}", oldObjectId);
 
-    return repository.get(new Criterion(
+    return new Criterion(
       new Criteria()
         .addField("'pickupServicePointId'")
         .setOperation("=")
-        .setVal(oldObjectId)));
+        .setVal(oldObjectId));
   }
 }
