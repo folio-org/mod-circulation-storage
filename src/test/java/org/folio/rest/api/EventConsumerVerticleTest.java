@@ -449,7 +449,7 @@ public class EventConsumerVerticleTest extends ApiTests {
     RequestType requestType) {
 
     return waitAtMost(60, SECONDS)
-      .until(() -> isRequestTypeAllowedByRequestPolicy(requestPolicyId, requestType),
+      .until(() -> isRequestTypeNotAllowedByRequestPolicy(requestPolicyId, requestType),
         is(true));
   }
 
@@ -474,7 +474,7 @@ public class EventConsumerVerticleTest extends ApiTests {
       .collect(Collectors.toList());
   }
 
-  private boolean isRequestTypeAllowedByRequestPolicy(String requestPolicyId,
+  private boolean isRequestTypeNotAllowedByRequestPolicy(String requestPolicyId,
     RequestType requestType) {
 
     return getRequestPolicy(requestPolicyId)
