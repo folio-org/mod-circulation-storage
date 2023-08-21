@@ -6,7 +6,6 @@ import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.RequestRepository;
@@ -14,7 +13,6 @@ import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 
@@ -22,11 +20,8 @@ public class ServicePointUpdateProcessorForRequest extends UpdateEventProcessor<
   private static final Logger log = LogManager.getLogger(ServicePointUpdateProcessorForRequest.class);
   private static final String SERVICE_POINT_NAME_KEY = "name";
 
-  private final Context context;
-
-  public ServicePointUpdateProcessorForRequest(Context context) {
-    super(INVENTORY_SERVICE_POINT_UPDATED);
-    this.context = context;
+  public ServicePointUpdateProcessorForRequest(RequestRepository requestRepository) {
+    super(INVENTORY_SERVICE_POINT_UPDATED, requestRepository);
   }
 
   @Override
@@ -50,13 +45,11 @@ public class ServicePointUpdateProcessorForRequest extends UpdateEventProcessor<
   }
 
   @Override
-  protected Future<List<Request>> applyChanges(List<Change<Request>> changes,
-    CaseInsensitiveMap<String, String> headers, JsonObject payload) {
-
+  protected Future<List<Request>> applyChanges(List<Change<Request>> changes, JsonObject payload) {
     log.debug("applyChanges:: applying searchIndex.pickupServicePointName changes");
 
     JsonObject oldObject = payload.getJsonObject("old");
-    RequestRepository requestRepository = new RequestRepository(context, headers);
+    RequestRepository requestRepository = (RequestRepository) repository;
 
     return findRequestsByPickupServicePointId(requestRepository, oldObject.getString("id"))
       .compose(requests -> applyDbUpdates(requests, changes, requestRepository));

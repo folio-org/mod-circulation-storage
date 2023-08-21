@@ -4,6 +4,7 @@ import static org.folio.kafka.KafkaHeaderUtils.kafkaHeadersToMap;
 
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.kafka.AsyncRecordHandler;
+import org.folio.persist.RequestRepository;
 import org.folio.service.event.handler.processor.ServicePointUpdateProcessorForRequest;
 
 import io.vertx.core.Context;
@@ -20,13 +21,13 @@ public class ServicePointUpdateEventHandler implements AsyncRecordHandler<String
 
   @Override
   public Future<String> handle(KafkaConsumerRecord<String, String> kafkaConsumerRecord) {
-
     JsonObject payload = new JsonObject(kafkaConsumerRecord.value());
+    CaseInsensitiveMap<String, String> headers =
+      new CaseInsensitiveMap<>(kafkaHeadersToMap(kafkaConsumerRecord.headers()));
 
     ServicePointUpdateProcessorForRequest servicePointUpdateProcessorForRequest =
-      new ServicePointUpdateProcessorForRequest(context);
+      new ServicePointUpdateProcessorForRequest(new RequestRepository(context, headers));
 
-    return servicePointUpdateProcessorForRequest.run(kafkaConsumerRecord.key(),
-      new CaseInsensitiveMap<>(kafkaHeadersToMap(kafkaConsumerRecord.headers())), payload);
+    return servicePointUpdateProcessorForRequest.run(kafkaConsumerRecord.key(), payload);
   }
 }

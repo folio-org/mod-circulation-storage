@@ -4,6 +4,7 @@ import static org.folio.kafka.KafkaHeaderUtils.kafkaHeadersToMap;
 
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.kafka.AsyncRecordHandler;
+import org.folio.persist.RequestPolicyRepository;
 import org.folio.service.event.handler.processor.ServicePointDeleteProcessorForRequestPolicy;
 
 import io.vertx.core.Context;
@@ -20,13 +21,14 @@ public class ServicePointDeleteEventHandler implements AsyncRecordHandler<String
 
   @Override
   public Future<String> handle(KafkaConsumerRecord<String, String> kafkaConsumerRecord) {
-
     JsonObject payload = new JsonObject(kafkaConsumerRecord.value());
+    CaseInsensitiveMap<String, String> headers =
+      new CaseInsensitiveMap<>(kafkaHeadersToMap(kafkaConsumerRecord.headers()));
 
     ServicePointDeleteProcessorForRequestPolicy servicePointDeleteProcessorForRequestPolicy =
-      new ServicePointDeleteProcessorForRequestPolicy(context);
+      new ServicePointDeleteProcessorForRequestPolicy(
+        new RequestPolicyRepository(context, headers));
 
-    return servicePointDeleteProcessorForRequestPolicy.run(kafkaConsumerRecord.key(),
-      new CaseInsensitiveMap<>(kafkaHeadersToMap(kafkaConsumerRecord.headers())), payload);
+    return servicePointDeleteProcessorForRequestPolicy.run(kafkaConsumerRecord.key(), payload);
   }
 }
