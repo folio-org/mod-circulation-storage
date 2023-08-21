@@ -10,6 +10,9 @@ import org.folio.rest.jaxrs.model.AllowedServicePoints;
 import org.folio.rest.jaxrs.model.RequestPolicy;
 import org.folio.rest.jaxrs.model.RequestType;
 
+import lombok.NoArgsConstructor;
+
+@NoArgsConstructor
 public class AllowedServicePointsUtil {
   private static final Logger log = LogManager.getLogger();
 
