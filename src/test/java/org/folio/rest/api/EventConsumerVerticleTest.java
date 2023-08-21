@@ -297,6 +297,37 @@ public class EventConsumerVerticleTest extends ApiTests {
     verifyRequestTypeIsNotAllowedByRequestPolicy(requestPolicyId, RequestType.HOLD);
   }
 
+  @Test
+  public void requestPolicyIsNotUpdatedWhenServicePointIsDeletedWithInvalidKafkaMessagePayload() {
+    String requestPolicyId = randomId();
+
+    String servicePoint1Id = randomId();
+    String servicePoint2Id = randomId();
+    String servicePoint3Id = randomId();
+    buildServicePoint(servicePoint1Id, "sp-1");
+    JsonObject servicePoint2 = buildServicePoint(servicePoint2Id, "sp-2");
+    buildServicePoint(servicePoint3Id, "sp-3");
+
+    var requestTypes = List.of(RequestType.HOLD, RequestType.PAGE, RequestType.RECALL);
+    var allowedServicePoints = new AllowedServicePoints()
+      .withHold(Set.of(servicePoint1Id, servicePoint2Id))
+      .withPage(Set.of(servicePoint3Id));
+    JsonObject requestPolicy = buildRequestPolicy(requestPolicyId, requestTypes,
+      allowedServicePoints);
+    createRequestPolicy(requestPolicy);
+
+    int initialOffset = getOffsetForServicePointDeleteEvents();
+
+    // Invalid delete event, nothing should change
+    publishInvalidServicePointDeleteEvent(servicePoint2);
+    waitUntilValueIsIncreased(initialOffset,
+      EventConsumerVerticleTest::getOffsetForServicePointDeleteEvents);
+    verifyRequestPolicyAllowedServicePoints(requestPolicyId, RequestType.HOLD,
+      List.of(servicePoint1Id, servicePoint2Id));
+    verifyRequestPolicyAllowedServicePoints(requestPolicyId, RequestType.PAGE,
+      List.of(servicePoint3Id));
+  }
+
   private static JsonObject buildItem() {
     return new ItemBuilder()
       .withId(randomId())
@@ -416,6 +447,10 @@ public class EventConsumerVerticleTest extends ApiTests {
     publishEvent(INVENTORY_SERVICE_POINT_TOPIC, buildDeleteEvent(servicePoint));
   }
 
+  private void publishInvalidServicePointDeleteEvent(JsonObject servicePoint) {
+    publishEvent(INVENTORY_SERVICE_POINT_TOPIC, buildInvalidDeleteEvent(servicePoint));
+  }
+
   private void publishEvent(String topic, JsonObject eventPayload) {
     var record = KafkaProducerRecord.create(topic, "test-key", eventPayload);
     record.addHeader("X-Okapi-Tenant", TENANT_ID);
@@ -435,6 +470,12 @@ public class EventConsumerVerticleTest extends ApiTests {
       .put("tenant", TENANT_ID)
       .put("type", "DELETE")
       .put("old", object);
+  }
+
+  private static JsonObject buildInvalidDeleteEvent(JsonObject object) {
+    return new JsonObject()
+      .put("tenant", TENANT_ID)
+      .put("type", "DELETE");
   }
 
   private List<String> verifyRequestPolicyAllowedServicePoints(String requestPolicyId,
