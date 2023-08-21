@@ -48,9 +48,8 @@ public class ServicePointDeleteProcessorForRequestPolicy
     log.debug("applyChanges:: applying searchIndex.pickupServicePointName changes");
 
     JsonObject oldObject = payload.getJsonObject("old");
-    RequestPolicyRepository requestPolicyRepository = (RequestPolicyRepository) repository;
 
-    return requestPolicyRepository.findByServicePointId(oldObject.getString("id"))
-      .compose(policies -> applyDbUpdates(policies, changes, requestPolicyRepository));
+    return ((RequestPolicyRepository) repository).findByServicePointId(oldObject.getString("id"))
+      .compose(policies -> applyDbUpdates(policies, changes));
   }
 }

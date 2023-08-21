@@ -49,19 +49,16 @@ public class ServicePointUpdateProcessorForRequest extends UpdateEventProcessor<
     log.debug("applyChanges:: applying searchIndex.pickupServicePointName changes");
 
     JsonObject oldObject = payload.getJsonObject("old");
-    RequestRepository requestRepository = (RequestRepository) repository;
 
-    return findRequestsByPickupServicePointId(requestRepository, oldObject.getString("id"))
-      .compose(requests -> applyDbUpdates(requests, changes, requestRepository));
+    return findRequestsByPickupServicePointId(oldObject.getString("id"))
+      .compose(requests -> applyDbUpdates(requests, changes));
   }
 
-  private Future<List<Request>> findRequestsByPickupServicePointId(
-    RequestRepository requestRepository, String pickupServicePointId) {
-
+  private Future<List<Request>> findRequestsByPickupServicePointId(String pickupServicePointId) {
     log.info("findRequestsByServicePointId:: fetching requests for pickupServicePointId {}",
       pickupServicePointId);
 
-    return requestRepository.get(new Criterion(
+    return repository.get(new Criterion(
       new Criteria()
         .addField("'pickupServicePointId'")
         .setOperation("=")

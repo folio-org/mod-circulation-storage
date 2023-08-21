@@ -65,9 +65,7 @@ public abstract class EventProcessor<T> {
 
   protected abstract Future<List<T>> applyChanges(List<Change<T>> changes, JsonObject payload);
 
-  protected <R> Future<List<R>> applyDbUpdates(List<R> objects, Collection<Change<R>> changes,
-    AbstractRepository<R> repository) {
-
+  protected Future<List<T>> applyDbUpdates(List<T> objects, Collection<Change<T>> changes) {
     if (objects.isEmpty()) {
       log.info("applyDbUpdates:: no objects to update found, nothing to update");
       return succeededFuture(objects);
