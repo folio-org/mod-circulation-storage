@@ -14,19 +14,17 @@ import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 
 public class ServicePointUpdateProcessorForRequest extends UpdateEventProcessor<Request> {
   private static final Logger log = LogManager.getLogger(ServicePointUpdateProcessorForRequest.class);
   private static final String SERVICE_POINT_NAME_KEY = "name";
+  private final RequestRepository requestRepository;
 
-  private final Context context;
-
-  public ServicePointUpdateProcessorForRequest(Context context) {
+  public ServicePointUpdateProcessorForRequest(RequestRepository requestRepository) {
     super(INVENTORY_SERVICE_POINT_UPDATED);
-    this.context = context;
+    this.requestRepository = requestRepository;
   }
 
   @Override
@@ -56,7 +54,6 @@ public class ServicePointUpdateProcessorForRequest extends UpdateEventProcessor<
     log.debug("applyChanges:: applying searchIndex.pickupServicePointName changes");
 
     JsonObject oldObject = payload.getJsonObject("old");
-    RequestRepository requestRepository = new RequestRepository(context, headers);
 
     return findRequestsByPickupServicePointId(requestRepository, oldObject.getString("id"))
       .compose(requests -> applyDbUpdates(requests, changes, requestRepository));

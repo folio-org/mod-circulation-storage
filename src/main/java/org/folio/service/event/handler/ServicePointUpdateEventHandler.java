@@ -4,6 +4,8 @@ import static org.folio.kafka.KafkaHeaderUtils.kafkaHeadersToMap;
 
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.kafka.AsyncRecordHandler;
+import org.folio.persist.RequestPolicyRepository;
+import org.folio.persist.RequestRepository;
 import org.folio.service.event.handler.processor.ServicePointUpdateProcessorForRequest;
 import org.folio.service.event.handler.processor.ServicePointUpdateProcessorForRequestPolicy;
 
@@ -24,15 +26,17 @@ public class ServicePointUpdateEventHandler implements AsyncRecordHandler<String
 
     JsonObject payload = new JsonObject(kafkaConsumerRecord.value());
 
+    var headers = kafkaHeadersToMap(kafkaConsumerRecord.headers());
+    var requestRepository = new RequestRepository(context, headers);
+    var requestPolicyRepository = new RequestPolicyRepository(context, headers);
     ServicePointUpdateProcessorForRequest servicePointUpdateProcessorForRequest =
-      new ServicePointUpdateProcessorForRequest(context);
+      new ServicePointUpdateProcessorForRequest(requestRepository);
     ServicePointUpdateProcessorForRequestPolicy servicePointUpdateProcessorForRequestPolicy =
-      new ServicePointUpdateProcessorForRequestPolicy(context);
+      new ServicePointUpdateProcessorForRequestPolicy(requestPolicyRepository);
 
     return servicePointUpdateProcessorForRequest.run(kafkaConsumerRecord.key(),
-        new CaseInsensitiveMap<>(kafkaHeadersToMap(kafkaConsumerRecord.headers())), payload)
+        new CaseInsensitiveMap<>(headers), payload)
       .compose(notUsed -> servicePointUpdateProcessorForRequestPolicy.run(
-        kafkaConsumerRecord.key(), new CaseInsensitiveMap<>(kafkaHeadersToMap(
-          kafkaConsumerRecord.headers())), payload));
+        kafkaConsumerRecord.key(), new CaseInsensitiveMap<>(headers), payload));
   }
 }
