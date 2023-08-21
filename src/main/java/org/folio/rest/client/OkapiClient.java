@@ -10,6 +10,7 @@ import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
+import static org.folio.support.AsyncUtils.mapSequentially;
 import static org.folio.util.StringUtil.urlEncode;
 
 import java.util.ArrayList;
@@ -77,24 +78,20 @@ public class OkapiClient {
         path, ids.size(), collectionName, objectType.getSimpleName());
     }
 
-    final Collection<T> results = new ArrayList<>();
-
     Set<String> filteredIds = ids.stream()
       .filter(StringUtils::isNotBlank)
       .collect(toSet());
 
     if (filteredIds.isEmpty()) {
       log.info("get:: no IDs to fetch");
-      return succeededFuture(results);
+      return succeededFuture(new ArrayList<>());
     }
 
     log.info("get:: fetching {} {} by IDs", ids.size(), objectType.getSimpleName());
+    List<List<String>> batches = ListUtils.partition(new ArrayList<>(filteredIds), ID_BATCH_SIZE);
 
-    return ListUtils.partition(new ArrayList<>(filteredIds), ID_BATCH_SIZE)
-      .stream()
-      .map(batch -> fetchBatch(path, batch, objectType, collectionName).onSuccess(results::addAll))
-      .reduce(succeededFuture(), (f1, f2) -> f1.compose(r -> f2))
-      .map(results);
+    return mapSequentially(batches, batch -> fetchBatch(path, batch, objectType, collectionName))
+      .map(results -> results.stream().flatMap(Collection::stream).toList());
   }
 
   private <T> Future<Collection<T>> fetchBatch(String resourcePath, List<String> batch,
