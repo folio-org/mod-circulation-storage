@@ -21,7 +21,7 @@ public abstract class EventProcessor<T> {
   private static final Logger log = LogManager.getLogger(MethodHandles.lookup().lookupClass());
 
   protected final InventoryEventType supportedEventType;
-  private AbstractRepository<T> repository;
+  private final AbstractRepository<T> repository;
 
   protected EventProcessor(InventoryEventType supportedEventType, AbstractRepository<T> repository) {
     this.supportedEventType = supportedEventType;

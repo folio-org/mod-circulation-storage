@@ -17,7 +17,6 @@ import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.GroupedCriterias;
 
-import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 
 public class ServicePointDeleteProcessorForRequestPolicy
