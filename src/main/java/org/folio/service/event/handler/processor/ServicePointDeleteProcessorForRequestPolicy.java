@@ -42,14 +42,7 @@ public class ServicePointDeleteProcessorForRequestPolicy
   }
 
   @Override
-  protected Future<List<RequestPolicy>> applyChanges(List<Change<RequestPolicy>> changes,
-    JsonObject payload) {
-
-    log.debug("applyChanges:: applying searchIndex.pickupServicePointName changes");
-
-    JsonObject oldObject = payload.getJsonObject("old");
-
-    return ((RequestPolicyRepository) repository).findByServicePointId(oldObject.getString("id"))
-      .compose(policies -> applyDbUpdates(policies, changes));
+  protected Future<List<RequestPolicy>> findObjectsToBeUpdated(String oldObjectId) {
+    return ((RequestPolicyRepository) repository).findByServicePointId(oldObjectId);
   }
 }

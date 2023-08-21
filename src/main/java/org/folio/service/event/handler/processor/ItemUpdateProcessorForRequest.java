@@ -55,23 +55,14 @@ public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request>
   }
 
   @Override
-  protected Future<List<Request>> applyChanges(List<Change<Request>> changes, JsonObject payload) {
-    log.debug("applyChanges:: applying item-related changes");
-
-    JsonObject oldObject = payload.getJsonObject("old");
-
-    return findRequestsForItem(oldObject.getString("id"))
-      .compose(requests -> applyDbUpdates(requests, changes));
-  }
-
-  private Future<List<Request>> findRequestsForItem(String itemId) {
-    log.info("findRequestsByItemId:: fetching requests for item {}", itemId);
+  protected Future<List<Request>> findObjectsToBeUpdated(String oldObjectId) {
+    log.info("findObjectsToBeUpdated:: fetching requests for item {}", oldObjectId);
 
     return repository.get(new Criterion(
       new Criteria()
         .addField("'itemId'")
         .setOperation("=")
-        .setVal(itemId)));
+        .setVal(oldObjectId)));
   }
 
   private static JsonObject extractCallNumberComponents(JsonObject itemJson) {

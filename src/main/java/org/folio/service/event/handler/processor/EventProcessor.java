@@ -63,7 +63,16 @@ public abstract class EventProcessor<T> {
 
   protected abstract List<Change<T>> collectRelevantChanges(JsonObject payload);
 
-  protected abstract Future<List<T>> applyChanges(List<Change<T>> changes, JsonObject payload);
+  private Future<List<T>> applyChanges(List<Change<T>> changes, JsonObject payload) {
+    log.debug("applyChanges:: applying item-related changes");
+
+    JsonObject oldObject = payload.getJsonObject("old");
+
+    return findObjectsToBeUpdated(oldObject.getString("id"))
+      .compose(requests -> applyDbUpdates(requests, changes));
+  }
+
+  protected abstract Future<List<T>> findObjectsToBeUpdated(String oldObjectId);
 
   protected Future<List<T>> applyDbUpdates(List<T> objects, Collection<Change<T>> changes) {
     if (objects.isEmpty()) {
