@@ -774,7 +774,7 @@ public class RequestPoliciesApiTest extends ApiTests {
     JsonResponse response = createRequestPolicy(requestPolicy);
 
     assertThat(response, isValidationResponseWhich(allOf(
-      hasMessage(format("Service point %s does not exist", servicePointId)),
+      hasMessage("Service point does not exist"),
       hasParameter("servicePointId", servicePointId),
       hasCode(INVALID_ALLOWED_SERVICE_POINT_ERROR_CODE)
     )));
@@ -791,7 +791,7 @@ public class RequestPoliciesApiTest extends ApiTests {
     JsonResponse response = updateRequestPolicy(requestPolicy);
 
     assertThat(response, isValidationResponseWhich(allOf(
-      hasMessage(format("Service point %s does not exist", servicePointId)),
+      hasMessage("Service point does not exist"),
       hasParameter("servicePointId", servicePointId),
       hasCode(INVALID_ALLOWED_SERVICE_POINT_ERROR_CODE)
     )));
@@ -812,7 +812,7 @@ public class RequestPoliciesApiTest extends ApiTests {
     JsonResponse response = createRequestPolicy(requestPolicy);
 
     assertThat(response, isValidationResponseWhich(allOf(
-      hasMessage(format("Service point %s is not a pickup location", servicePointId)),
+      hasMessage("Service point is not a pickup location"),
       hasParameter("servicePointId", servicePointId),
       hasCode(INVALID_ALLOWED_SERVICE_POINT_ERROR_CODE)
     )));
@@ -833,7 +833,7 @@ public class RequestPoliciesApiTest extends ApiTests {
     JsonResponse response = updateRequestPolicy(requestPolicy);
 
     assertThat(response, isValidationResponseWhich(allOf(
-      hasMessage(format("Service point %s is not a pickup location", servicePointId)),
+      hasMessage("Service point is not a pickup location"),
       hasParameter("servicePointId", servicePointId),
       hasCode(INVALID_ALLOWED_SERVICE_POINT_ERROR_CODE)
     )));
@@ -855,7 +855,7 @@ public class RequestPoliciesApiTest extends ApiTests {
     JsonResponse response = createRequestPolicy(requestPolicy);
 
     assertThat(response, isValidationResponseWhich(allOf(
-      hasMessage(format("Service point %s is not a pickup location", servicePointId)),
+      hasMessage("Service point is not a pickup location"),
       hasParameter("servicePointId", servicePointId),
       hasCode(INVALID_ALLOWED_SERVICE_POINT_ERROR_CODE)
     )));
@@ -877,7 +877,7 @@ public class RequestPoliciesApiTest extends ApiTests {
     JsonResponse response = updateRequestPolicy(requestPolicy);
 
     assertThat(response, isValidationResponseWhich(allOf(
-      hasMessage(format("Service point %s is not a pickup location", servicePointId)),
+      hasMessage("Service point is not a pickup location"),
       hasParameter("servicePointId", servicePointId),
       hasCode(INVALID_ALLOWED_SERVICE_POINT_ERROR_CODE)
     )));
@@ -916,15 +916,15 @@ public class RequestPoliciesApiTest extends ApiTests {
 
     assertThat(response.getJson(), allOf(
       hasErrorWith(allOf(
-        hasMessage(format("Service point %s does not exist", nonExistentServicePointId)),
+        hasMessage("Service point does not exist"),
         hasParameter("servicePointId", nonExistentServicePointId),
         hasCode(INVALID_ALLOWED_SERVICE_POINT_ERROR_CODE))),
       hasErrorWith(allOf(
-        hasMessage(format("Service point %s is not a pickup location", nonPickupLocationServicePointId)),
+        hasMessage("Service point is not a pickup location"),
         hasParameter("servicePointId", nonPickupLocationServicePointId),
         hasCode(INVALID_ALLOWED_SERVICE_POINT_ERROR_CODE))),
       hasErrorWith(allOf(
-        hasMessage(format("Service point %s is not a pickup location", nullPickupLocationServicePointId)),
+        hasMessage("Service point is not a pickup location"),
         hasParameter("servicePointId", nullPickupLocationServicePointId),
         hasCode(INVALID_ALLOWED_SERVICE_POINT_ERROR_CODE)))
     ));

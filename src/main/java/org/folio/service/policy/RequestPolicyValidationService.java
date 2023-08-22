@@ -2,6 +2,7 @@ package org.folio.service.policy;
 
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
+import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
 import static java.util.function.Function.identity;
@@ -76,15 +77,9 @@ public class RequestPolicyValidationService {
     for (String id : allowedServicePointIds) {
       Servicepoint servicePoint = servicePointsById.get(id);
       if (servicePoint == null) {
-        errors.add(new Error()
-          .withMessage(String.format("Service point %s does not exist", id))
-          .withParameters(singletonList(new Parameter().withKey("servicePointId").withValue(id)))
-          .withCode(ErrorCode.INVALID_ALLOWED_SERVICE_POINT.name()));
-      } else if (servicePoint.getPickupLocation() == null || !servicePoint.getPickupLocation()) {
-        errors.add(new Error()
-          .withMessage(String.format("Service point %s is not a pickup location", id))
-          .withParameters(singletonList(new Parameter().withKey("servicePointId").withValue(id)))
-          .withCode(ErrorCode.INVALID_ALLOWED_SERVICE_POINT.name()));
+        errors.add(buildError("Service point does not exist", id));
+      } else if (servicePoint.getPickupLocation() != TRUE) {
+        errors.add(buildError("Service point is not a pickup location", id));
       }
     }
 
@@ -97,6 +92,13 @@ public class RequestPolicyValidationService {
       () -> errors.stream().map(Error::getMessage).toList());
 
     return failedFuture(new ValidationException(errors));
+  }
+
+  private static Error buildError(String errorMessage, String servicePointId) {
+    return new Error()
+      .withMessage(errorMessage)
+      .withParameters(singletonList(new Parameter().withKey("servicePointId").withValue(servicePointId)))
+      .withCode(ErrorCode.INVALID_ALLOWED_SERVICE_POINT.name());
   }
 
 }
