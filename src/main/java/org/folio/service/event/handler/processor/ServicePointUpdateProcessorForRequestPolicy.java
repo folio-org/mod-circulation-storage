@@ -1,5 +1,7 @@
 package org.folio.service.event.handler.processor;
 
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
 import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_UPDATED;
 import static org.folio.service.event.handler.processor.util.AllowedServicePointsUtil.buildContainsServicePointCriterion;
 import static org.folio.service.event.handler.processor.util.AllowedServicePointsUtil.removeServicePointFromRequestPolicy;
@@ -34,9 +36,7 @@ public class ServicePointUpdateProcessorForRequestPolicy extends UpdateEventProc
 
     Boolean isOldServicePointPickupLocation = oldObject.getBoolean(SERVICE_POINT_PICKUP_LOCATION);
     Boolean isNewServicePointPickupLocation = newObject.getBoolean(SERVICE_POINT_PICKUP_LOCATION);
-    if (isOldServicePointPickupLocation != null && isNewServicePointPickupLocation != null &&
-      !isNewServicePointPickupLocation && isOldServicePointPickupLocation) {
-
+    if (isOldServicePointPickupLocation == TRUE && isNewServicePointPickupLocation == FALSE) {
       log.info("collectRelevantChanges:: pickupLocation was changed from true to false");
       changes.add(new Change<>(requestPolicy -> removeServicePointFromRequestPolicy(requestPolicy,
         updatedServicePointId)));
