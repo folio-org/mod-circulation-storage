@@ -1,6 +1,7 @@
 package org.folio.rest.api;
 
 import static io.vertx.core.json.JsonObject.mapFrom;
+import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.kafka.clients.producer.ProducerConfig.ACKS_CONFIG;
 import static org.apache.kafka.clients.producer.ProducerConfig.BOOTSTRAP_SERVERS_CONFIG;
@@ -66,16 +67,16 @@ public class EventConsumerVerticleTest extends ApiTests {
   private static final String REQUEST_POLICY_STORAGE_URL =
     "/request-policy-storage/request-policies";
   private static final String REQUEST_STORAGE_URL = "/request-storage/requests";
-  private static final String KAFKA_SERVER_URL = String.format("%s:%s", host(), port());
+  private static final String KAFKA_SERVER_URL = format("%s:%s", host(), port());
   private final static String DEFAULT_PICKUP_SERVICE_POINT_NAME = "Circ Desk 1";
   private final static String DEFAULT_CALL_NUMBER_PREFIX = "prefix";
   private final static String DEFAULT_CALL_NUMBER = "callNumber";
   private final static String DEFAULT_CALL_NUMBER_SUFFIX = "suffix";
   private final static String DEFAULT_SHELVING_ORDER = "shelvingOrder";
 
-  private static final String INVENTORY_ITEM_TOPIC = String.format(
+  private static final String INVENTORY_ITEM_TOPIC = format(
     "%s.%s.inventory.item", environment(), TENANT_ID);
-  private static final String INVENTORY_SERVICE_POINT_TOPIC = String.format(
+  private static final String INVENTORY_SERVICE_POINT_TOPIC = format(
     "%s.%s.inventory.service-point", environment(), TENANT_ID);
 
   private static KafkaProducer<String, JsonObject> producer;
@@ -534,7 +535,7 @@ public class EventConsumerVerticleTest extends ApiTests {
 
     return new RequestPolicyBuilder()
       .withId(requestPolicyId)
-      .withName(randomId())
+      .withName(format("request-policy-%s", requestPolicyId))
       .withDescription("test description")
       .withRequestTypes(requestTypes)
       .withAllowedServicePoints(allowedServicePoints)
@@ -594,7 +595,7 @@ public class EventConsumerVerticleTest extends ApiTests {
   }
 
   private static String buildConsumerGroupId(String eventType) {
-    return String.format("%s.%s-%s", eventType, getModuleName().replace("_", "-"), getModuleVersion());
+    return format("%s.%s-%s", eventType, getModuleName().replace("_", "-"), getModuleVersion());
   }
 
   private static KafkaAdminClient createAdminClient() {
