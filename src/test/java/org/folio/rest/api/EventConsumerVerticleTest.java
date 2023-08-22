@@ -335,12 +335,15 @@ public class EventConsumerVerticleTest extends ApiTests {
       List.of(servicePoint3Id));
   }
 
+  @Parameters({ "false", "null"})
   @Test
-  public void shouldUpdateRequestPolicyWhenServicePointIsNoLongerPickupLocation() {
+  public void shouldUpdateRequestPolicyWhenServicePointIsNoLongerPickupLocation(
+    Boolean isPickupLocation) {
+
     String updatedServicePointId = randomId();
     String anotherServicePointId = randomId();
     JsonObject oldServicePoint = buildServicePoint(updatedServicePointId, "oldSp", true);
-    JsonObject newServicePoint = buildServicePoint(updatedServicePointId, "newSp", false);
+    JsonObject newServicePoint = buildServicePoint(updatedServicePointId, "newSp", isPickupLocation);
 
     JsonObject requestPolicy = buildRequestPolicy(List.of(
       updatedServicePointId, anotherServicePointId), RequestType.HOLD, RequestType.PAGE);
@@ -389,11 +392,14 @@ public class EventConsumerVerticleTest extends ApiTests {
     assertThat(recallAllowedServicePoints, hasItems(updatedServicePointId, anotherServicePointId));
   }
 
+  @Parameters({ "false", "null"})
   @Test
-  public void shouldRemoveAllowedServicePointsWhenSingleServicePointBecomesNotPickupLocation() {
+  public void shouldRemoveAllowedServicePointsWhenSingleServicePointBecomesNotPickupLocation(
+    Boolean isPickupLocation) {
+
     String updatedServicePointId = randomId();
     JsonObject oldServicePoint = buildServicePoint(updatedServicePointId, "oldSp", true);
-    JsonObject newServicePoint = buildServicePoint(updatedServicePointId, "newSp", false);
+    JsonObject newServicePoint = buildServicePoint(updatedServicePointId, "newSp", isPickupLocation);
 
     JsonObject requestPolicy = buildRequestPolicy(List.of(updatedServicePointId),
       RequestType.HOLD, RequestType.PAGE);
