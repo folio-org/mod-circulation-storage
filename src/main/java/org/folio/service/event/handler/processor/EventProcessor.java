@@ -1,63 +1,55 @@
-package org.folio.service.event.handler;
+package org.folio.service.event.handler.processor;
 
 import static io.vertx.core.Future.succeededFuture;
-import static org.folio.kafka.KafkaHeaderUtils.kafkaHeadersToMap;
 
 import java.lang.invoke.MethodHandles;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.kafka.AsyncRecordHandler;
 import org.folio.persist.AbstractRepository;
+import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.service.event.InventoryEventType;
 
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import lombok.RequiredArgsConstructor;
 
-public abstract class UpdateEventAbstractHandler<T> implements AsyncRecordHandler<String, String> {
+public abstract class EventProcessor<T> {
   private static final Logger log = LogManager.getLogger(MethodHandles.lookup().lookupClass());
 
-  private final InventoryEventType supportedEventType;
+  protected final InventoryEventType supportedEventType;
+  private final AbstractRepository<T> repository;
 
-  protected UpdateEventAbstractHandler(InventoryEventType supportedEventType) {
+  protected EventProcessor(InventoryEventType supportedEventType, AbstractRepository<T> repository) {
     this.supportedEventType = supportedEventType;
+    this.repository = repository;
   }
 
-  @Override
-  public Future<String> handle(KafkaConsumerRecord<String, String> event) {
-    final String eventKey = event.key();
-    log.info("handle:: received event {}", eventKey);
+  public Future<String> run(String eventKey, JsonObject payload) {
+    log.info("run:: received event {}", eventKey);
 
-    return processEvent(event)
+    return processEvent(payload)
       .onSuccess(r -> log.info("handle:: event {} processed successfully", eventKey))
       .onFailure(t -> log.error("handle:: failed to process event", t))
       .map(eventKey);
   }
 
-  protected Future<List<T>> processEvent(KafkaConsumerRecord<String, String> event) {
-    JsonObject payload = new JsonObject(event.value());
-
+  private Future<List<T>> processEvent(JsonObject payload) {
     String eventType = payload.getString("type");
     if (!supportedEventType.getPayloadType().name().equals(eventType)) {
       log.info("processEvent:: unsupported event type: {}", eventType);
       return succeededFuture();
     }
 
-    JsonObject oldObject = payload.getJsonObject("old");
-    JsonObject newObject = payload.getJsonObject("new");
-
-    if (oldObject == null || newObject == null) {
-      log.warn("processEvent:: failed to find old and/or new item version");
+    if (!validatePayload(payload)) {
+      log.warn("processEvent:: payload validation failed");
       return succeededFuture();
     }
 
-    List<Change<T>> relevantChanges = collectRelevantChanges(oldObject, newObject);
+    List<Change<T>> relevantChanges = collectRelevantChanges(payload);
 
     if (relevantChanges.isEmpty()) {
       log.info("processEvent:: no relevant changes detected");
@@ -65,24 +57,25 @@ public abstract class UpdateEventAbstractHandler<T> implements AsyncRecordHandle
     }
 
     log.info("processEvent:: {} relevant changes detected, applying", relevantChanges::size);
-    return applyChanges(relevantChanges, event, oldObject, newObject);
+    return applyChanges(relevantChanges, payload);
   }
 
-  protected abstract List<Change<T>> collectRelevantChanges(JsonObject oldObject,
-    JsonObject newObject);
+  protected abstract boolean validatePayload(JsonObject payload);
 
-  protected abstract Future<List<T>> applyChanges(List<Change<T>> changes,
-    KafkaConsumerRecord<String, String> event, JsonObject oldObject, JsonObject newObject);
+  protected abstract List<Change<T>> collectRelevantChanges(JsonObject payload);
 
-  protected CaseInsensitiveMap<String, String> getKafkaHeaders(
-    KafkaConsumerRecord<String, String> event) {
+  private Future<List<T>> applyChanges(List<Change<T>> changes, JsonObject payload) {
+    log.debug("applyChanges:: payload: {}", payload);
 
-    return new CaseInsensitiveMap<>(kafkaHeadersToMap(event.headers()));
+    JsonObject oldObject = payload.getJsonObject("old");
+
+    return repository.get(criterionForObjectsToBeUpdated(oldObject.getString("id")))
+      .compose(objects -> applyDbUpdates(objects, changes));
   }
 
-  protected <R> Future<List<R>> applyDbUpdates(List<R> objects, Collection<Change<R>> changes,
-    AbstractRepository<R> repository) {
+  protected abstract Criterion criterionForObjectsToBeUpdated(String oldObjectId);
 
+  protected Future<List<T>> applyDbUpdates(List<T> objects, Collection<Change<T>> changes) {
     if (objects.isEmpty()) {
       log.info("applyDbUpdates:: no objects to update found, nothing to update");
       return succeededFuture(objects);
