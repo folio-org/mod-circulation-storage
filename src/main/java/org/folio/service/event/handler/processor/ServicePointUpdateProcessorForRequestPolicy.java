@@ -36,7 +36,9 @@ public class ServicePointUpdateProcessorForRequestPolicy extends UpdateEventProc
 
     Boolean isOldServicePointPickupLocation = oldObject.getBoolean(SERVICE_POINT_PICKUP_LOCATION);
     Boolean isNewServicePointPickupLocation = newObject.getBoolean(SERVICE_POINT_PICKUP_LOCATION);
-    if (isOldServicePointPickupLocation == TRUE && isNewServicePointPickupLocation == FALSE) {
+    if (TRUE.equals(isOldServicePointPickupLocation) &&
+      (isNewServicePointPickupLocation == null || FALSE.equals(isNewServicePointPickupLocation))) {
+
       log.info("collectRelevantChanges:: pickupLocation was changed from true to false");
       changes.add(new Change<>(requestPolicy -> removeServicePointFromRequestPolicy(requestPolicy,
         updatedServicePointId)));
