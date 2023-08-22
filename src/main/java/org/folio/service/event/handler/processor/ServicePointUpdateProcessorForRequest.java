@@ -18,7 +18,6 @@ import io.vertx.core.json.JsonObject;
 public class ServicePointUpdateProcessorForRequest extends UpdateEventProcessor<Request> {
   private static final Logger log = LogManager.getLogger(ServicePointUpdateProcessorForRequest.class);
   private static final String SERVICE_POINT_NAME_KEY = "name";
-  private final RequestRepository requestRepository;
 
   public ServicePointUpdateProcessorForRequest(RequestRepository requestRepository) {
     super(INVENTORY_SERVICE_POINT_UPDATED, requestRepository);
