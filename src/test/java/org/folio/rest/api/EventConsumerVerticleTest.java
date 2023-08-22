@@ -483,7 +483,7 @@ public class EventConsumerVerticleTest extends ApiTests {
 
     return waitAtMost(60, SECONDS)
       .until(() -> getRequestPolicyAllowedServicePoints(requestPolicyId, requestType),
-        equalTo(allowedServicePoints));
+        equalTo(allowedServicePoints.stream().sorted().toList()));
   }
 
   private boolean verifyRequestTypeIsNotAllowedByRequestPolicy(String requestPolicyId,
@@ -512,6 +512,7 @@ public class EventConsumerVerticleTest extends ApiTests {
       .getJsonArray(requestType.toString())
       .stream()
       .map(Object::toString)
+      .sorted()
       .collect(Collectors.toList());
   }
 
@@ -533,6 +534,7 @@ public class EventConsumerVerticleTest extends ApiTests {
 
     return new RequestPolicyBuilder()
       .withId(requestPolicyId)
+      .withName(randomId())
       .withDescription("test description")
       .withRequestTypes(requestTypes)
       .withAllowedServicePoints(allowedServicePoints)
