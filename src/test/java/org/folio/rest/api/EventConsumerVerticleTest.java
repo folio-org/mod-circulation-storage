@@ -18,7 +18,10 @@ import static org.folio.service.event.InventoryEventType.INVENTORY_ITEM_UPDATED;
 import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_DELETED;
 import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_UPDATED;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.URL;
 import java.util.List;
@@ -331,6 +334,60 @@ public class EventConsumerVerticleTest extends ApiTests {
       List.of(servicePoint3Id));
   }
 
+  @Test
+  public void shouldUpdateRequestPolicyWhenServicePointNoLongerPickupLocation() {
+    String updatedServicePointId = randomId();
+    String anotherServicePointId = randomId();
+    JsonObject oldServicePoint = buildServicePoint(updatedServicePointId, "oldSp", true);
+    JsonObject newServicePoint = buildServicePoint(updatedServicePointId, "newSp", false);
+
+    JsonObject requestPolicy = buildRequestPolicy(List.of(
+      updatedServicePointId, anotherServicePointId), RequestType.HOLD, RequestType.PAGE);
+    createRequestPolicy(requestPolicy);
+
+    int initialOffset = getOffsetForServicePointUpdateEvents();
+    publishServicePointUpdateEvent(oldServicePoint, newServicePoint);
+    waitUntilValueIsIncreased(initialOffset,
+      EventConsumerVerticleTest::getOffsetForServicePointUpdateEvents);
+
+    JsonObject requestPolicyById = getRequestPolicy(requestPolicy.getString("id"));
+    JsonObject allowedServicePoints = requestPolicyById.getJsonObject("allowedServicePoints");
+    JsonArray holdAllowedServicePoints = allowedServicePoints.getJsonArray("Hold");
+    JsonArray pageAllowedServicePoints = allowedServicePoints.getJsonArray("Page");
+
+    assertThat(holdAllowedServicePoints.size(), is(1));
+    assertThat(holdAllowedServicePoints, hasItem(anotherServicePointId));
+    assertThat(pageAllowedServicePoints.size(), is(1));
+    assertThat(holdAllowedServicePoints, hasItem(anotherServicePointId));
+  }
+
+  @Test
+  public void shouldNotUpdateRequestPolicyWhenServicePointPickupLocationWasNotChanged() {
+    String updatedServicePointId = randomId();
+    String anotherServicePointId = randomId();
+    JsonObject oldServicePoint = buildServicePoint(updatedServicePointId, "oldSp", true);
+    JsonObject newServicePoint = buildServicePoint(updatedServicePointId, "newSp", true);
+
+    JsonObject requestPolicy = buildRequestPolicy(List.of(
+      updatedServicePointId, anotherServicePointId), RequestType.PAGE, RequestType.RECALL);
+    createRequestPolicy(requestPolicy);
+
+    int initialOffset = getOffsetForServicePointUpdateEvents();
+    publishServicePointUpdateEvent(oldServicePoint, newServicePoint);
+    waitUntilValueIsIncreased(initialOffset,
+      EventConsumerVerticleTest::getOffsetForServicePointUpdateEvents);
+
+    JsonObject requestPolicyById = getRequestPolicy(requestPolicy.getString("id"));
+    JsonObject allowedServicePoints = requestPolicyById.getJsonObject("allowedServicePoints");
+    JsonArray pageAllowedServicePoints = allowedServicePoints.getJsonArray("Page");
+    JsonArray recallAllowedServicePoints = allowedServicePoints.getJsonArray("Recall");
+
+    assertThat(pageAllowedServicePoints.size(), is(2));
+    assertThat(pageAllowedServicePoints, hasItems(updatedServicePointId, anotherServicePointId));
+    assertThat(recallAllowedServicePoints.size(), is(2));
+    assertThat(recallAllowedServicePoints, hasItems(updatedServicePointId, anotherServicePointId));
+  }
+
   private static JsonObject buildItem() {
     return new ItemBuilder()
       .withId(randomId())
@@ -367,6 +424,14 @@ public class EventConsumerVerticleTest extends ApiTests {
     return new ServicePointBuilder(name)
       .withId(id)
       .withCode(code)
+      .create();
+  }
+
+  private static JsonObject buildServicePoint(String id, String name, boolean isPickupLocation) {
+    return new ServicePointBuilder(name)
+      .withId(id)
+      .withCode("code")
+      .withPickupLocation(isPickupLocation)
       .create();
   }
 
