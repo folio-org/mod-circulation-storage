@@ -18,10 +18,7 @@ import static org.folio.service.event.InventoryEventType.INVENTORY_ITEM_UPDATED;
 import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_DELETED;
 import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_UPDATED;
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.URL;
 import java.util.List;
@@ -404,15 +401,6 @@ public class EventConsumerVerticleTest extends ApiTests {
   }
 
   @SneakyThrows
-  private JsonObject createRequestPolicy(JsonObject requestPolicy) {
-    return createEntity(requestPolicy, requestPolicyStorageUrl()).getJson();
-  }
-
-  private static URL requestPolicyStorageUrl() {
-    return requestPolicyStorageUrl("");
-  }
-
-  @SneakyThrows
   private static URL requestPolicyStorageUrl(String path) {
     return StorageTestSuite.storageUrl(REQUEST_POLICY_STORAGE_URL + path);
   }
@@ -438,10 +426,6 @@ public class EventConsumerVerticleTest extends ApiTests {
   @SneakyThrows
   private static URL requestStorageUrl(String subPath) {
     return StorageTestSuite.storageUrl(REQUEST_STORAGE_URL + subPath);
-  }
-
-  private JsonObject getRequestPolicy(String requestPolicyId) {
-    return getById(requestPolicyStorageUrl("/" + requestPolicyId));
   }
 
   private JsonObject getRequest(String requestId) {
