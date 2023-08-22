@@ -21,6 +21,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.URL;
@@ -386,6 +387,25 @@ public class EventConsumerVerticleTest extends ApiTests {
     assertThat(pageAllowedServicePoints, hasItems(updatedServicePointId, anotherServicePointId));
     assertThat(recallAllowedServicePoints.size(), is(2));
     assertThat(recallAllowedServicePoints, hasItems(updatedServicePointId, anotherServicePointId));
+  }
+
+  @Test
+  public void shouldRemoveAllowedServicePointsWhenSingleServicePointBecomesNotPickupLocation() {
+    String updatedServicePointId = randomId();
+    JsonObject oldServicePoint = buildServicePoint(updatedServicePointId, "oldSp", true);
+    JsonObject newServicePoint = buildServicePoint(updatedServicePointId, "newSp", false);
+
+    JsonObject requestPolicy = buildRequestPolicy(List.of(updatedServicePointId),
+      RequestType.HOLD, RequestType.PAGE);
+    createRequestPolicy(requestPolicy);
+
+    int initialOffset = getOffsetForServicePointUpdateEvents();
+    publishServicePointUpdateEvent(oldServicePoint, newServicePoint);
+    waitUntilValueIsIncreased(initialOffset,
+      EventConsumerVerticleTest::getOffsetForServicePointUpdateEvents);
+
+    JsonObject requestPolicyById = getRequestPolicy(requestPolicy.getString("id"));
+    assertThat(requestPolicyById.getJsonObject("allowedServicePoints"), is(nullValue()));
   }
 
   private static JsonObject buildItem() {

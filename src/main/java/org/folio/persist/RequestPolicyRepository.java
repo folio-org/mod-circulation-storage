@@ -15,4 +15,5 @@ public class RequestPolicyRepository extends AbstractRepository<RequestPolicy> {
   public RequestPolicyRepository(Context context, Map<String, String> okapiHeaders) {
     super(postgresClient(context, okapiHeaders), REQUEST_POLICY_TABLE, REQUEST_POLICY_CLASS);
   }
+
 }

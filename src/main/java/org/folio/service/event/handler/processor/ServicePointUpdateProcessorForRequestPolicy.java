@@ -1,7 +1,7 @@
 package org.folio.service.event.handler.processor;
 
 import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_UPDATED;
-import static org.folio.service.event.handler.processor.util.AllowedServicePointsUtil.buildContainsCriteria;
+import static org.folio.service.event.handler.processor.util.AllowedServicePointsUtil.buildContainsServicePointCriteria;
 import static org.folio.service.event.handler.processor.util.AllowedServicePointsUtil.removeServicePointFromRequestPolicy;
 
 import java.util.ArrayList;
@@ -47,6 +47,6 @@ public class ServicePointUpdateProcessorForRequestPolicy extends UpdateEventProc
   protected Criterion criterionForObjectsToBeUpdated(String oldObjectId) {
     log.info("criterionForObjectsToBeUpdated:: oldObjectId: {}", oldObjectId);
 
-    return buildContainsCriteria(oldObjectId);
+    return buildContainsServicePointCriteria(oldObjectId);
   }
 }

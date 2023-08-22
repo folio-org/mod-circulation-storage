@@ -50,21 +50,6 @@ public class AllowedServicePointsUtil {
     }
   }
 
-  public static Criterion buildContainsCriteria(String oldObjectId) {
-    final List<Criteria> criteriaList = Arrays.stream(RequestType.values())
-      .map(requestType -> new Criteria()
-        .addField("'allowedServicePoints'")
-        .addField(format("'%s'", requestType.value()))
-        .setOperation("@>")
-        .setJSONB(true)
-        .setVal(format("[\"%s\"]", oldObjectId)))
-      .toList();
-    GroupedCriterias groupedCriterias = new GroupedCriterias();
-    criteriaList.forEach(criteria -> groupedCriterias.addCriteria(criteria, "OR"));
-
-    return new Criterion().addGroupOfCriterias(groupedCriterias);
-  }
-
   private static void removeAllowedServicePoint(String servicePointId, RequestPolicy requestPolicy,
     RequestType requestType, Supplier<Set<String>> getAllowedServicePointsSupplier,
     Consumer<Set<String>> setAllowedServicePointsConsumer) {
@@ -88,5 +73,20 @@ public class AllowedServicePointsUtil {
       setAllowedServicePointsConsumer.accept(null);
       requestPolicy.getRequestTypes().remove(requestType);
     }
+  }
+
+  public static Criterion buildContainsServicePointCriteria(String oldObjectId) {
+    final List<Criteria> criteriaList = Arrays.stream(RequestType.values())
+      .map(requestType -> new Criteria()
+        .addField("'allowedServicePoints'")
+        .addField(format("'%s'", requestType.value()))
+        .setOperation("@>")
+        .setJSONB(true)
+        .setVal(format("[\"%s\"]", oldObjectId)))
+      .toList();
+    GroupedCriterias groupedCriterias = new GroupedCriterias();
+    criteriaList.forEach(criteria -> groupedCriterias.addCriteria(criteria, "OR"));
+
+    return new Criterion().addGroupOfCriterias(groupedCriterias);
   }
 }

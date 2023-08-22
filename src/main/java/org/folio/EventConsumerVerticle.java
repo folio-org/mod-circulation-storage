@@ -141,4 +141,5 @@ public class EventConsumerVerticle extends AbstractVerticle {
   private static String buildSubscriptionPattern(KafkaTopic kafkaTopic, KafkaConfig kafkaConfig) {
     return kafkaTopic.fullTopicName(kafkaConfig, TENANT_ID_PATTERN);
   }
+
 }
