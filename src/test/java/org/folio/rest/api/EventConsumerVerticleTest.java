@@ -348,8 +348,10 @@ public class EventConsumerVerticleTest extends ApiTests {
 
     String updatedServicePointId = randomId();
     String anotherServicePointId = randomId();
+    JsonObject anotherServicePoint = buildServicePoint(anotherServicePointId, "anotherSp", true);
     JsonObject oldServicePoint = buildServicePoint(updatedServicePointId, "oldSp", true);
     JsonObject newServicePoint = buildServicePoint(updatedServicePointId, "newSp", isPickupLocation);
+    createStubForServicePoints(List.of(anotherServicePoint, oldServicePoint));
 
     JsonObject requestPolicy = buildRequestPolicy(List.of(
       updatedServicePointId, anotherServicePointId), RequestType.HOLD, RequestType.PAGE);
@@ -376,7 +378,9 @@ public class EventConsumerVerticleTest extends ApiTests {
     String updatedServicePointId = randomId();
     String anotherServicePointId = randomId();
     JsonObject oldServicePoint = buildServicePoint(updatedServicePointId, "oldSp", true);
+    JsonObject anotherServicePoint = buildServicePoint(anotherServicePointId, "anotherSp", true);
     JsonObject newServicePoint = buildServicePoint(updatedServicePointId, "newSp", true);
+    createStubForServicePoints(List.of(anotherServicePoint, oldServicePoint));
 
     JsonObject requestPolicy = buildRequestPolicy(List.of(
       updatedServicePointId, anotherServicePointId), RequestType.PAGE, RequestType.RECALL);
@@ -406,6 +410,7 @@ public class EventConsumerVerticleTest extends ApiTests {
     String updatedServicePointId = randomId();
     JsonObject oldServicePoint = buildServicePoint(updatedServicePointId, "oldSp", true);
     JsonObject newServicePoint = buildServicePoint(updatedServicePointId, "newSp", isPickupLocation);
+    createStubForServicePoints(List.of(oldServicePoint));
 
     JsonObject requestPolicy = buildRequestPolicy(List.of(updatedServicePointId),
       RequestType.HOLD, RequestType.PAGE);
@@ -430,7 +435,10 @@ public class EventConsumerVerticleTest extends ApiTests {
     String servicePoint2Id = randomId();
     String servicePoint3Id = randomId();
     String servicePoint3Name = "sp-3";
+    JsonObject servicePoint1 = buildServicePoint(servicePoint1Id, "sp-1", true);
+    JsonObject servicePoint2 = buildServicePoint(servicePoint2Id, "sp-2", true);
     JsonObject servicePoint3 = buildServicePoint(servicePoint3Id, servicePoint3Name, true);
+    createStubForServicePoints(List.of(servicePoint1, servicePoint2, servicePoint3));
 
     var requestTypes = List.of(RequestType.HOLD, RequestType.PAGE);
     var allowedServicePoints = new AllowedServicePoints()
