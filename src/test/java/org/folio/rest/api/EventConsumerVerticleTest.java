@@ -1,5 +1,7 @@
 package org.folio.rest.api;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.ok;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static io.vertx.core.json.JsonObject.mapFrom;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -52,6 +54,8 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import com.github.tomakehurst.wiremock.client.WireMock;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -267,6 +271,7 @@ public class EventConsumerVerticleTest extends ApiTests {
     JsonObject servicePoint1 = buildServicePoint(servicePoint1Id, "sp-1");
     JsonObject servicePoint2 = buildServicePoint(servicePoint2Id, "sp-2");
     JsonObject servicePoint3 = buildServicePoint(servicePoint3Id, "sp-3");
+    createStubForServicePoints(List.of(servicePoint1, servicePoint2, servicePoint3));
 
     var requestTypes = List.of(RequestType.HOLD, RequestType.PAGE, RequestType.RECALL);
     var allowedServicePoints = new AllowedServicePoints()
@@ -311,9 +316,10 @@ public class EventConsumerVerticleTest extends ApiTests {
     String servicePoint1Id = randomId();
     String servicePoint2Id = randomId();
     String servicePoint3Id = randomId();
-    buildServicePoint(servicePoint1Id, "sp-1");
+    JsonObject servicePoint1 = buildServicePoint(servicePoint1Id, "sp-1");
     JsonObject servicePoint2 = buildServicePoint(servicePoint2Id, "sp-2");
-    buildServicePoint(servicePoint3Id, "sp-3");
+    JsonObject servicePoint3 = buildServicePoint(servicePoint3Id, "sp-3");
+    createStubForServicePoints(List.of(servicePoint1, servicePoint2, servicePoint3));
 
     var requestTypes = List.of(RequestType.HOLD, RequestType.PAGE, RequestType.RECALL);
     var allowedServicePoints = new AllowedServicePoints()
@@ -480,6 +486,7 @@ public class EventConsumerVerticleTest extends ApiTests {
     return new ServicePointBuilder(name)
       .withId(id)
       .withCode(code)
+      .withPickupLocation(true)
       .create();
   }
 
@@ -739,6 +746,13 @@ public class EventConsumerVerticleTest extends ApiTests {
           .map(Long::intValue)
           .orElse(0)) // if topic does not exist yet
     );
+  }
+
+  private void createStubForServicePoints(List<JsonObject> servicePoints) {
+    StorageTestSuite.getWireMockServer()
+      .stubFor(WireMock.get(urlPathMatching("/service-points.*"))
+        .willReturn(ok().withBody(new JsonObject().put("servicepoints", new JsonArray(servicePoints))
+          .encodePrettily())));
   }
 
   private JsonObject buildRequestPolicy(List<String> allowedServicePointIds,

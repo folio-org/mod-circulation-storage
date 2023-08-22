@@ -20,7 +20,7 @@ public class OkapiClientTest {
   @Test
   public void noOkapiUrl(TestContext context) {
     new OkapiClient(Vertx.vertx(), Map.of())
-    .get("/foo", "cql.allRecords=1", 10)
+    .get("/foo", "cql.allRecords=1", Object.class, "collectionName", 10)
     .onComplete(context.asyncAssertFailure(e -> {
       assertThat(e.getCause(), is(instanceOf(MalformedURLException.class)));
     }));
