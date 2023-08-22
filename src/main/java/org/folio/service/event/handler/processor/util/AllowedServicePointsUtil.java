@@ -1,5 +1,9 @@
 package org.folio.service.event.handler.processor.util;
 
+import static java.lang.String.format;
+
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -9,6 +13,9 @@ import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.AllowedServicePoints;
 import org.folio.rest.jaxrs.model.RequestPolicy;
 import org.folio.rest.jaxrs.model.RequestType;
+import org.folio.rest.persist.Criteria.Criteria;
+import org.folio.rest.persist.Criteria.Criterion;
+import org.folio.rest.persist.Criteria.GroupedCriterias;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -66,5 +73,20 @@ public class AllowedServicePointsUtil {
       setAllowedServicePointsConsumer.accept(null);
       requestPolicy.getRequestTypes().remove(requestType);
     }
+  }
+
+  public static Criterion buildContainsServicePointCriterion(String oldObjectId) {
+    final List<Criteria> criteriaList = Arrays.stream(RequestType.values())
+      .map(requestType -> new Criteria()
+        .addField("'allowedServicePoints'")
+        .addField(format("'%s'", requestType.value()))
+        .setOperation("@>")
+        .setJSONB(true)
+        .setVal(format("[\"%s\"]", oldObjectId)))
+      .toList();
+    GroupedCriterias groupedCriterias = new GroupedCriterias();
+    criteriaList.forEach(criteria -> groupedCriterias.addCriteria(criteria, "OR"));
+
+    return new Criterion().addGroupOfCriterias(groupedCriterias);
   }
 }
