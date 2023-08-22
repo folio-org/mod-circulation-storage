@@ -130,4 +130,22 @@ public class ValidationErrorMatchers {
       }
     };
   }
+
+  public static TypeSafeDiagnosingMatcher<JsonObject> hasCode(String errorCode) {
+    return new TypeSafeDiagnosingMatcher<>() {
+      @Override
+      public void describeTo(Description description) {
+        description.appendText("has code ").appendValue(errorCode);
+      }
+
+      @Override
+      protected boolean matchesSafely(JsonObject error, Description description) {
+        final Matcher<String> matcher = is(errorCode);
+
+        matcher.describeMismatch(error, description);
+
+        return matcher.matches(error.getString("code"));
+      }
+    };
+  }
 }
