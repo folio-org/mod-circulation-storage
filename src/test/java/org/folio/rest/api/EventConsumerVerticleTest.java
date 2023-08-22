@@ -370,14 +370,6 @@ public class EventConsumerVerticleTest extends ApiTests {
       .create();
   }
 
-  private static JsonObject buildServicePoint(String id, String name, boolean isPickupLocation) {
-    return new ServicePointBuilder(name)
-      .withId(id)
-      .withCode("code")
-      .withPickupLocation(isPickupLocation)
-      .create();
-  }
-
   private static SearchIndex buildSearchIndex(String callNumberPrefix, String callNumber,
     String callNumberSuffix, String shelvingOrder) {
 
