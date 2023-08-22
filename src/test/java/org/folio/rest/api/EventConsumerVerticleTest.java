@@ -408,8 +408,11 @@ public class EventConsumerVerticleTest extends ApiTests {
     assertThat(requestPolicyById.getJsonObject("allowedServicePoints"), is(nullValue()));
   }
 
+  @Parameters({ "false", "null"})
   @Test
-  public void requestPolicyShouldNotContainPageWhenSingleServicePointBecomesNotPickupLocation() {
+  public void requestPolicyShouldNotContainPageWhenSingleServicePointBecomesNotPickupLocation(
+    Boolean isPickupLocation) {
+
     String requestPolicyId = randomId();
     String servicePoint1Id = randomId();
     String servicePoint2Id = randomId();
@@ -424,7 +427,7 @@ public class EventConsumerVerticleTest extends ApiTests {
     createRequestPolicy(buildRequestPolicy(requestPolicyId, requestTypes, allowedServicePoints));
 
     int initialOffset = getOffsetForServicePointUpdateEvents();
-    var updatedServicePoint3 = buildServicePoint(servicePoint3Id, servicePoint3Name, false);
+    var updatedServicePoint3 = buildServicePoint(servicePoint3Id, servicePoint3Name, isPickupLocation);
     publishServicePointUpdateEvent(servicePoint3, updatedServicePoint3);
     waitUntilValueIsIncreased(initialOffset,
       EventConsumerVerticleTest::getOffsetForServicePointUpdateEvents);
@@ -474,7 +477,7 @@ public class EventConsumerVerticleTest extends ApiTests {
       .create();
   }
 
-  private static JsonObject buildServicePoint(String id, String name, boolean isPickupLocation) {
+  private static JsonObject buildServicePoint(String id, String name, Boolean isPickupLocation) {
     return new ServicePointBuilder(name)
       .withId(id)
       .withCode("code")
