@@ -11,6 +11,10 @@ import io.vertx.core.Future;
 
 public class AsyncUtils {
 
+  private AsyncUtils() {
+    throw new UnsupportedOperationException("Utility class, do not instantiate");
+  }
+
   public static <E, R> Future<Collection<R>> mapSequentially(
     Collection<E> collection, Function<E, Future<R>> mapper) {
 
