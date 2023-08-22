@@ -75,7 +75,7 @@ public class AllowedServicePointsUtil {
     }
   }
 
-  public static Criterion buildContainsServicePointCriteria(String oldObjectId) {
+  public static Criterion buildContainsServicePointCriterion(String oldObjectId) {
     final List<Criteria> criteriaList = Arrays.stream(RequestType.values())
       .map(requestType -> new Criteria()
         .addField("'allowedServicePoints'")

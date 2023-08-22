@@ -1,7 +1,7 @@
 package org.folio.service.event.handler.processor;
 
 import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_UPDATED;
-import static org.folio.service.event.handler.processor.util.AllowedServicePointsUtil.buildContainsServicePointCriteria;
+import static org.folio.service.event.handler.processor.util.AllowedServicePointsUtil.buildContainsServicePointCriterion;
 import static org.folio.service.event.handler.processor.util.AllowedServicePointsUtil.removeServicePointFromRequestPolicy;
 
 import java.util.ArrayList;
@@ -32,9 +32,11 @@ public class ServicePointUpdateProcessorForRequestPolicy extends UpdateEventProc
     List<Change<RequestPolicy>> changes = new ArrayList<>();
     String updatedServicePointId = oldObject.getString("id");
 
-    boolean isOldServicePointPickupLocation = oldObject.getBoolean(SERVICE_POINT_PICKUP_LOCATION);
-    boolean isNewServicePointPickupLocation = newObject.getBoolean(SERVICE_POINT_PICKUP_LOCATION);
-    if (!isNewServicePointPickupLocation && isOldServicePointPickupLocation) {
+    Boolean isOldServicePointPickupLocation = oldObject.getBoolean(SERVICE_POINT_PICKUP_LOCATION);
+    Boolean isNewServicePointPickupLocation = newObject.getBoolean(SERVICE_POINT_PICKUP_LOCATION);
+    if (isOldServicePointPickupLocation != null && isNewServicePointPickupLocation != null &&
+      !isNewServicePointPickupLocation && isOldServicePointPickupLocation) {
+
       log.info("collectRelevantChanges:: pickupLocation was changed from true to false");
       changes.add(new Change<>(requestPolicy -> removeServicePointFromRequestPolicy(requestPolicy,
         updatedServicePointId)));
@@ -47,6 +49,6 @@ public class ServicePointUpdateProcessorForRequestPolicy extends UpdateEventProc
   protected Criterion criterionForObjectsToBeUpdated(String oldObjectId) {
     log.info("criterionForObjectsToBeUpdated:: oldObjectId: {}", oldObjectId);
 
-    return buildContainsServicePointCriteria(oldObjectId);
+    return buildContainsServicePointCriterion(oldObjectId);
   }
 }

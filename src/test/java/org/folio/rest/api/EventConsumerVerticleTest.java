@@ -336,7 +336,7 @@ public class EventConsumerVerticleTest extends ApiTests {
   }
 
   @Test
-  public void shouldUpdateRequestPolicyWhenServicePointNoLongerPickupLocation() {
+  public void shouldUpdateRequestPolicyWhenServicePointIsNoLongerPickupLocation() {
     String updatedServicePointId = randomId();
     String anotherServicePointId = randomId();
     JsonObject oldServicePoint = buildServicePoint(updatedServicePointId, "oldSp", true);
@@ -407,6 +407,33 @@ public class EventConsumerVerticleTest extends ApiTests {
     JsonObject requestPolicyById = getRequestPolicy(requestPolicy.getString("id"));
     assertThat(requestPolicyById.getJsonObject("allowedServicePoints"), is(nullValue()));
   }
+
+  @Test
+  public void requestPolicyShouldNotContainPageWhenSingleServicePointBecomesNotPickupLocation() {
+    String requestPolicyId = randomId();
+    String servicePoint1Id = randomId();
+    String servicePoint2Id = randomId();
+    String servicePoint3Id = randomId();
+    String servicePoint3Name = "sp-3";
+    JsonObject servicePoint3 = buildServicePoint(servicePoint3Id, servicePoint3Name, true);
+
+    var requestTypes = List.of(RequestType.HOLD, RequestType.PAGE);
+    var allowedServicePoints = new AllowedServicePoints()
+      .withHold(Set.of(servicePoint1Id, servicePoint2Id))
+      .withPage(Set.of(servicePoint3Id));
+    createRequestPolicy(buildRequestPolicy(requestPolicyId, requestTypes, allowedServicePoints));
+
+    int initialOffset = getOffsetForServicePointUpdateEvents();
+    var updatedServicePoint3 = buildServicePoint(servicePoint3Id, servicePoint3Name, false);
+    publishServicePointUpdateEvent(servicePoint3, updatedServicePoint3);
+    waitUntilValueIsIncreased(initialOffset,
+      EventConsumerVerticleTest::getOffsetForServicePointUpdateEvents);
+
+    verifyRequestPolicyAllowedServicePoints(requestPolicyId, RequestType.HOLD,
+      List.of(servicePoint1Id, servicePoint2Id));
+    verifyRequestTypeIsNotAllowedByRequestPolicy(requestPolicyId, RequestType.PAGE);
+  }
+
 
   private static JsonObject buildItem() {
     return new ItemBuilder()
