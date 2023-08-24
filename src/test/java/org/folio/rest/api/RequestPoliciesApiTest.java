@@ -7,6 +7,7 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isBadRequest;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isCreated;
+import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNoContent;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNotFound;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isUnprocessableEntity;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
@@ -930,6 +931,30 @@ public class RequestPoliciesApiTest extends ApiTests {
     ));
   }
 
+  @Test
+  @Parameters(source = RequestType.class)
+  public void requestPolicyIsCreatedAndUpdatedWhenAllowedServicePointContainsStaffSlipsConfiguration(
+    RequestType requestType) throws MalformedURLException, ExecutionException, InterruptedException,
+    TimeoutException {
+
+    String servicePointId = randomId();
+    JsonObject servicePoint = new JsonObject()
+      .put("id", servicePointId)
+      .put("pickupLocation", true)
+      .put("staffSlips", new JsonArray()
+        .add(new JsonObject()
+          .put("id", randomId())
+          .put("printByDefault", true)
+        ));
+
+    createStubForServicePoints(new JsonObject().put("servicepoints", new JsonArray().add(servicePoint)));
+    JsonObject requestPolicy = buildRequestPolicy(requestType, List.of(servicePointId));
+    JsonResponse postResponse = createRequestPolicy(requestPolicy);
+    assertThat(postResponse, isCreated());
+    JsonResponse putResponse = updateRequestPolicy(requestPolicy);
+    assertThat(putResponse, isNoContent());
+  }
+
   private static JsonObject buildRequestPolicy(RequestType requestType,
     List<String> allowedServicePointIds) {
 
@@ -1070,9 +1095,12 @@ public class RequestPoliciesApiTest extends ApiTests {
   }
 
   private void createStubForServicePoints(List<Servicepoint> servicePoints) {
+   createStubForServicePoints(mapFrom(new Servicepoints().withServicepoints(servicePoints)));
+  }
+
+  private void createStubForServicePoints(JsonObject servicePoints) {
     StorageTestSuite.getWireMockServer()
       .stubFor(WireMock.get(urlPathMatching(SERVICE_POINTS_URL + ".*"))
-      .willReturn(ok().withBody(mapFrom(new Servicepoints().withServicepoints(servicePoints))
-        .encodePrettily())));
+        .willReturn(ok().withBody(servicePoints.encodePrettily())));
   }
 }
