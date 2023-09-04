@@ -71,7 +71,7 @@ public class RequestPolicyValidationService {
 
     for (String id : allowedServicePointIds) {
       Servicepoint servicePoint = servicePointsById.get(id);
-      if (servicePoint == null || servicePoint.getPickupLocation() != TRUE) {
+      if (servicePoint == null || !TRUE.equals(servicePoint.getPickupLocation())) {
         log.warn("validateServicePoints:: validation failed, invalid allowed service point: {}", id);
         return failedFuture(new ValidationException(new Error()
           .withMessage("One or more Pickup locations are no longer available")
