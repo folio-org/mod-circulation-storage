@@ -4,13 +4,10 @@ import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptySet;
-import static java.util.Collections.singletonList;
 import static java.util.function.Function.identity;
 
 import java.lang.invoke.MethodHandles;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -21,7 +18,6 @@ import org.apache.logging.log4j.Logger;
 import org.folio.rest.client.InventoryStorageClient;
 import org.folio.rest.jaxrs.model.AllowedServicePoints;
 import org.folio.rest.jaxrs.model.Error;
-import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.RequestPolicy;
 import org.folio.rest.jaxrs.model.Servicepoint;
 import org.folio.support.ErrorCode;
@@ -45,7 +41,7 @@ public class RequestPolicyValidationService {
     Collection<String> allowedServicePointIds = extractServicePointIds(requestPolicy);
 
     if (allowedServicePointIds.isEmpty()) {
-      log.info("validate:: request policy {} has no allowed service points", requestPolicyId);
+      log.info("validate:: request policy {} has no explicitly allowed service points", requestPolicyId);
       return succeededFuture();
     }
 
@@ -67,38 +63,24 @@ public class RequestPolicyValidationService {
       .collect(Collectors.toSet());
   }
 
-  private static Future<Void> validateServicePoints(
-    Collection<String> allowedServicePointIds, Collection<Servicepoint> servicePoints) {
+  private static Future<Void> validateServicePoints(Collection<String> allowedServicePointIds,
+    Collection<Servicepoint> servicePoints) {
 
-    List<Error> errors = new ArrayList<>();
     Map<String, Servicepoint> servicePointsById = servicePoints.stream()
       .collect(Collectors.toMap(Servicepoint::getId, identity()));
 
     for (String id : allowedServicePointIds) {
       Servicepoint servicePoint = servicePointsById.get(id);
-      if (servicePoint == null) {
-        errors.add(buildError("Service point does not exist", id));
-      } else if (servicePoint.getPickupLocation() != TRUE) {
-        errors.add(buildError("Service point is not a pickup location", id));
+      if (servicePoint == null || servicePoint.getPickupLocation() != TRUE) {
+        log.warn("validateServicePoints:: validation failed, invalid allowed service point: {}", id);
+        return failedFuture(new ValidationException(new Error()
+          .withMessage("One or more Pickup locations are no longer available")
+          .withCode(ErrorCode.INVALID_ALLOWED_SERVICE_POINT.name())));
       }
     }
 
-    if (errors.isEmpty()) {
-      log.info("validateServicePoints:: request policy is valid");
-      return succeededFuture();
-    }
-
-    log.error("validateServicePoints:: request policy validation failed: {}",
-      () -> errors.stream().map(Error::getMessage).toList());
-
-    return failedFuture(new ValidationException(errors));
-  }
-
-  private static Error buildError(String errorMessage, String servicePointId) {
-    return new Error()
-      .withMessage(errorMessage)
-      .withParameters(singletonList(new Parameter().withKey("servicePointId").withValue(servicePointId)))
-      .withCode(ErrorCode.INVALID_ALLOWED_SERVICE_POINT.name());
+    log.info("validateServicePoints:: request policy is valid");
+    return succeededFuture();
   }
 
 }

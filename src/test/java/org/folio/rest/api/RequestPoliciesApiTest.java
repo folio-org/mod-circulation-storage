@@ -12,9 +12,7 @@ import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isN
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isUnprocessableEntity;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasCode;
-import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasErrorWith;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
-import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasParameter;
 import static org.folio.rest.support.matchers.ValidationResponseMatchers.isValidationResponseWhich;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
@@ -775,8 +773,7 @@ public class RequestPoliciesApiTest extends ApiTests {
     JsonResponse response = createRequestPolicy(requestPolicy);
 
     assertThat(response, isValidationResponseWhich(allOf(
-      hasMessage("Service point does not exist"),
-      hasParameter("servicePointId", servicePointId),
+      hasMessage("One or more Pickup locations are no longer available"),
       hasCode(INVALID_ALLOWED_SERVICE_POINT_ERROR_CODE)
     )));
   }
@@ -792,8 +789,7 @@ public class RequestPoliciesApiTest extends ApiTests {
     JsonResponse response = updateRequestPolicy(requestPolicy);
 
     assertThat(response, isValidationResponseWhich(allOf(
-      hasMessage("Service point does not exist"),
-      hasParameter("servicePointId", servicePointId),
+      hasMessage("One or more Pickup locations are no longer available"),
       hasCode(INVALID_ALLOWED_SERVICE_POINT_ERROR_CODE)
     )));
   }
@@ -813,8 +809,7 @@ public class RequestPoliciesApiTest extends ApiTests {
     JsonResponse response = createRequestPolicy(requestPolicy);
 
     assertThat(response, isValidationResponseWhich(allOf(
-      hasMessage("Service point is not a pickup location"),
-      hasParameter("servicePointId", servicePointId),
+      hasMessage("One or more Pickup locations are no longer available"),
       hasCode(INVALID_ALLOWED_SERVICE_POINT_ERROR_CODE)
     )));
   }
@@ -834,8 +829,7 @@ public class RequestPoliciesApiTest extends ApiTests {
     JsonResponse response = updateRequestPolicy(requestPolicy);
 
     assertThat(response, isValidationResponseWhich(allOf(
-      hasMessage("Service point is not a pickup location"),
-      hasParameter("servicePointId", servicePointId),
+      hasMessage("One or more Pickup locations are no longer available"),
       hasCode(INVALID_ALLOWED_SERVICE_POINT_ERROR_CODE)
     )));
   }
@@ -856,8 +850,7 @@ public class RequestPoliciesApiTest extends ApiTests {
     JsonResponse response = createRequestPolicy(requestPolicy);
 
     assertThat(response, isValidationResponseWhich(allOf(
-      hasMessage("Service point is not a pickup location"),
-      hasParameter("servicePointId", servicePointId),
+      hasMessage("One or more Pickup locations are no longer available"),
       hasCode(INVALID_ALLOWED_SERVICE_POINT_ERROR_CODE)
     )));
   }
@@ -878,14 +871,13 @@ public class RequestPoliciesApiTest extends ApiTests {
     JsonResponse response = updateRequestPolicy(requestPolicy);
 
     assertThat(response, isValidationResponseWhich(allOf(
-      hasMessage("Service point is not a pickup location"),
-      hasParameter("servicePointId", servicePointId),
+      hasMessage("One or more Pickup locations are no longer available"),
       hasCode(INVALID_ALLOWED_SERVICE_POINT_ERROR_CODE)
     )));
   }
 
   @Test
-  public void multipleErrorsWithoutDuplicatesAreReturnedWhenUsingInvalidServicePointIds()
+  public void singleErrorIsReturnedWhenUsingMultipleInvalidServicePointIds()
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
     String nonExistentServicePointId = randomId();
@@ -913,22 +905,12 @@ public class RequestPoliciesApiTest extends ApiTests {
         .withRecall(servicePointIds)));
 
     assertThat(response, isUnprocessableEntity());
-    assertThat(response.getJson().getJsonArray("errors"), iterableWithSize(3));
+    assertThat(response.getJson().getJsonArray("errors"), iterableWithSize(1));
 
-    assertThat(response.getJson(), allOf(
-      hasErrorWith(allOf(
-        hasMessage("Service point does not exist"),
-        hasParameter("servicePointId", nonExistentServicePointId),
-        hasCode(INVALID_ALLOWED_SERVICE_POINT_ERROR_CODE))),
-      hasErrorWith(allOf(
-        hasMessage("Service point is not a pickup location"),
-        hasParameter("servicePointId", nonPickupLocationServicePointId),
-        hasCode(INVALID_ALLOWED_SERVICE_POINT_ERROR_CODE))),
-      hasErrorWith(allOf(
-        hasMessage("Service point is not a pickup location"),
-        hasParameter("servicePointId", nullPickupLocationServicePointId),
-        hasCode(INVALID_ALLOWED_SERVICE_POINT_ERROR_CODE)))
-    ));
+    assertThat(response, isValidationResponseWhich(allOf(
+      hasMessage("One or more Pickup locations are no longer available"),
+      hasCode(INVALID_ALLOWED_SERVICE_POINT_ERROR_CODE)
+    )));
   }
 
   @Test
