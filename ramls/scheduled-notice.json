@@ -46,6 +46,7 @@
         "Due date",
         "Overdue fine returned",
         "Overdue fine renewed",
+        "Due date - with reminder fee",
         "Aged to lost",
         "Aged to lost - fine charged",
         "Aged to lost & item returned - fine adjusted",
