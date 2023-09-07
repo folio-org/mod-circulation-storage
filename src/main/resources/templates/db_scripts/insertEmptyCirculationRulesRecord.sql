@@ -11,7 +11,8 @@ BEGIN
     AND constraint_name LIKE '${table.tableName}_lock_%'
   ) THEN
     ALTER TABLE ${myuniversity}_${mymodule}.${table.tableName}
-    ADD COLUMN lock boolean DEFAULT true UNIQUE CHECK(lock=true);
+    -- this will create constraints even when column already exists
+    ADD COLUMN IF NOT EXISTS lock boolean DEFAULT true UNIQUE CHECK(lock=true);
   END IF;
 END $$;
 INSERT INTO ${myuniversity}_${mymodule}.${table.tableName}
