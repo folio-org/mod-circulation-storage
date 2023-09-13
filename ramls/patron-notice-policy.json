@@ -67,6 +67,7 @@
           },
           "sendOptions": {
             "type": "object",
+            "description": "Notice sending options",
             "additionalProperties": false,
             "properties": {
               "sendHow": {
@@ -93,10 +94,12 @@
               },
               "sendBy": {
                 "type": "object",
+                "description": "Delay before the first attempt to send a notice",
                 "$ref": "interval.json"
               },
               "sendEvery": {
                 "type": "object",
+                "description": "Interval between attempts to send a recurring notice",
                 "$ref": "interval.json"
               }
             },
@@ -154,6 +157,7 @@
           },
           "sendOptions": {
             "type": "object",
+            "description": "Notice sending options",
             "additionalProperties": false,
             "properties": {
               "sendHow": {
@@ -177,10 +181,12 @@
               },
               "sendBy": {
                 "type": "object",
+                "description": "Delay before the first attempt to send a notice",
                 "$ref": "interval.json"
               },
               "sendEvery": {
                 "type": "object",
+                "description": "Interval between attempts to send a recurring notice",
                 "$ref": "interval.json"
               }
             },
@@ -238,6 +244,7 @@
           },
           "sendOptions": {
             "type": "object",
+            "description": "Notice sending options",
             "additionalProperties": false,
             "properties": {
               "sendHow": {
@@ -264,10 +271,12 @@
               },
               "sendBy": {
                 "type": "object",
+                "description": "Delay before the first attempt to send a notice",
                 "$ref": "interval.json"
               },
               "sendEvery": {
                 "type": "object",
+                "description": "Interval between attempts to send a recurring notice",
                 "$ref": "interval.json"
               }
             },
