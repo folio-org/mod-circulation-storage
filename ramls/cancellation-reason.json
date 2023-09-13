@@ -7,7 +7,7 @@
       "type": "string"
     },
     "name": {
-      "description": "Reason description",
+      "description": "Reason name",
       "type": "string"
     },
     "description" : {
@@ -19,7 +19,7 @@
       "type": "string"
     },
     "requiresAdditionalInformation": {
-      "description": "Flag that indicates if reason requires additional information",
+      "description": "Flag that indicates whether reason requires additional information",
       "type": "boolean"
     },
     "source": {

@@ -15,7 +15,7 @@
       "type": "string"
     },
     "loanable": {
-      "description": "Flag that indicates if this policy allows loans",
+      "description": "Flag that indicates whether this policy allows loans",
       "type": "boolean"
     },
     "loansPolicy": {
@@ -95,7 +95,7 @@
     },
     "requestManagement": {
       "type": "object",
-      "description": "Settings for different request types",
+      "description": "Settings for various request types",
       "additionalProperties": false,
       "properties": {
         "recalls": {

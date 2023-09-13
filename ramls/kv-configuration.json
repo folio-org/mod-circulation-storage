@@ -8,7 +8,7 @@
       "$ref": "raml-util/schemas/uuid.schema"
     },
     "module": {
-      "description": "Name of FOLIO modules",
+      "description": "Name of a FOLIO module",
       "type": "string"
     },
     "configName": {
@@ -28,7 +28,7 @@
       "type": "boolean"
     },
     "enabled": {
-      "description": "lag that indicates whether this configuration is enabled",
+      "description": "Flag that indicates whether this configuration is enabled",
       "type": "boolean"
     },
     "value": {
