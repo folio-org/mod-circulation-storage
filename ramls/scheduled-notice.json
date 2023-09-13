@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
+  "description": "Scheduled patron notice",
   "properties": {
     "id": {
       "type": "string",
@@ -55,6 +56,7 @@
     },
     "noticeConfig": {
       "type": "object",
+      "description": "Scheduled notice configuration",
       "properties": {
         "timing": {
           "type": "string",
