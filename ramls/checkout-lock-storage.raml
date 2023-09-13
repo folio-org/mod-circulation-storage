@@ -1,0 +1,98 @@
+#%RAML 1.0
+title: Checkout Lock Storage
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost:9130
+
+documentation:
+  - title: Checkout Lock API
+    content: <b>Storage for checkout lock</b>
+
+types:
+  checkout-lock: !include checkout-lock.json
+  checkout-locks: !include checkout-locks.json
+  checkout-lock-request: !include checkout-lock-request.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  validate: !include raml-util/traits/validation.raml
+
+/check-out-lock-storage:
+  displayName: Checkout lock storage
+  get:
+    description: "Retrieve a list of checkout lock items"
+    queryParameters:
+      userId:
+        description: Filter locks by user ID.
+        type: string
+      offset:
+        description: The number of items to skip in the result set.
+        type: integer
+      limit:
+        description: The maximum number of locks to return.
+        type: integer
+    responses:
+      200:
+        description: "Returns a list of checkout lock items"
+        body:
+          application/json:
+            type: checkout-locks
+      422:
+        description: "Invalid Parameters"
+        body:
+          text/plain:
+            example: "Invalid Parameters"
+  post:
+    is: [validate]
+    description: "Create a lock for the given userid"
+    body:
+      application/json:
+        type: checkout-lock-request
+        example: !include examples/checkout-lock-request.json
+    responses:
+      201:
+        description: "Checkout lock is created"
+        body:
+          application/json:
+            type: checkout-lock
+            example: !include examples/checkout-lock.json
+      400:
+        description: "Bad Request"
+        body:
+          text/plain:
+      500:
+        description: "Internal server error"
+        body:
+          text/plain:
+            example: "Internal server error"
+      503:
+        description: "Failed to create lock for patron {userId}"
+        body:
+          text/plain:
+            example: "Failed to create lock for patron "
+  /{lockId}:
+    get:
+      description: "Get checkout lock"
+      responses:
+        200:
+          description: "Returns item with a given ID"
+          body:
+            application/json:
+              type: checkout-lock
+              example: !include examples/checkout-lock.json
+        400:
+          description: "Bad Request"
+          body:
+            text/plain:
+        404:
+          description: "Item with a given ID not found"
+    delete:
+      description: "Delete checkout lock"
+      responses:
+        204:
+          description: "Item deleted successfully"
+        500:
+          description: "Internal Server error"
+          body:
+            text/plain:
+              example: "Internal server error"

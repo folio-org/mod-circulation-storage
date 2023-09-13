@@ -325,7 +325,6 @@
   "required": [
     "lossType",
     "lossDate",
-    "expirationDate",
     "user",
     "loan",
     "item",

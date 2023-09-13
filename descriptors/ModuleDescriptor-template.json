@@ -315,10 +315,18 @@
         }, {
           "methods": ["POST"],
           "pathPattern": "/request-policy-storage/request-policies",
+          "modulePermissions": [
+            "inventory-storage.service-points.item.get",
+            "inventory-storage.service-points.collection.get"
+          ],
           "permissionsRequired": ["circulation-storage.request-policies.item.post"]
         }, {
           "methods": ["PUT"],
           "pathPattern": "/request-policy-storage/request-policies/{id}",
+          "modulePermissions": [
+            "inventory-storage.service-points.item.get",
+            "inventory-storage.service-points.collection.get"
+          ],
           "permissionsRequired": ["circulation-storage.request-policies.item.put"]
         }, {
           "methods": ["DELETE"],
@@ -333,7 +341,7 @@
     },
     {
       "id": "actual-cost-record-storage",
-      "version": "0.7",
+      "version": "0.8",
       "handlers": [
         {
           "methods": ["GET"],
@@ -566,6 +574,32 @@
           "permissionsRequired": [
             "check-in-storage.check-ins.item.get"
           ]
+        }
+      ]
+    },
+    {
+      "id": "checkout-lock-storage",
+      "version": "0.1",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/check-out-lock-storage",
+          "permissionsRequired": ["checkout-lock-storage.checkout-locks.collection.get"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/check-out-lock-storage/{lockId}",
+          "permissionsRequired": ["checkout-lock-storage.checkout-locks.item.get"]
+        },
+        {
+          "methods": ["POST"],
+          "pathPattern": "/check-out-lock-storage",
+          "permissionsRequired": ["checkout-lock-storage.checkout-locks.item.post"]
+        },
+        {
+          "methods": ["DELETE"],
+          "pathPattern": "/check-out-lock-storage/{lockId}",
+          "permissionsRequired": ["checkout-lock-storage.checkout-locks.item.delete"]
         }
       ]
     },
@@ -1023,7 +1057,11 @@
         "actual-cost-record-storage.actual-cost-records.item.get",
         "actual-cost-record-storage.actual-cost-records.item.post",
         "actual-cost-record-storage.actual-cost-records.item.put",
-        "actual-cost-record-storage.actual-cost-records.item.delete"
+        "actual-cost-record-storage.actual-cost-records.item.delete",
+        "checkout-lock-storage.checkout-locks.item.post",
+        "checkout-lock-storage.checkout-locks.item.delete",
+        "checkout-lock-storage.checkout-locks.item.get",
+        "checkout-lock-storage.checkout-locks.collection.get"
       ]
     },
     {
@@ -1105,6 +1143,26 @@
       "permissionName": "actual-cost-record-storage.actual-cost-records.item.delete",
       "displayName": "Circulation storage - delete actual cost record",
       "description": "Delete actual cost record"
+    },
+    {
+      "permissionName": "checkout-lock-storage.checkout-locks.item.post",
+      "displayName": "Circulation storage - create lock",
+      "description": "create lock for the userId"
+    },
+    {
+      "permissionName": "checkout-lock-storage.checkout-locks.item.delete",
+      "displayName": "Circulation storage - delete lock",
+      "description": "Delete lock for the userId"
+    },
+    {
+      "permissionName": "checkout-lock-storage.checkout-locks.item.get",
+      "displayName": "Circulation storage - get lock",
+      "description": "get lock for the userId"
+    },
+    {
+      "permissionName": "checkout-lock-storage.checkout-locks.collection.get",
+      "displayName": "Circulation storage - get locks",
+      "description": "get locks"
     }
   ],
   "launchDescriptor": {

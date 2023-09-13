@@ -1,20 +1,25 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
+  "description": "Staff slip",
   "properties": {
     "id": {
       "type": "string"
     },
     "name": {
+      "description": "Staff slip name",
       "type": "string"
     },
     "description": {
+      "description": "Staff slip description",
       "type": "string"
     },
     "active": {
+      "description": "Flag that indicates whether staff slip is active",
       "type": "boolean"
     },
     "template": {
+      "description": "Staff slip template",
       "type": "string"
     },
     "metadata": {

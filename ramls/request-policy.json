@@ -23,6 +23,28 @@
         "$ref": "request-type.json"
       }
     },
+    "allowedServicePoints": {
+      "description": "Allowed pickup service point IDs by request type",
+      "type": "object",
+      "properties": {
+        "Page": {
+          "description": "Allowed pickup service point IDs for Page requests",
+          "type": "array",
+          "$ref": "allowed-service-point-ids.json"
+        },
+        "Hold": {
+          "description": "Allowed pickup service point IDs for Hold requests",
+          "type": "array",
+          "$ref": "allowed-service-point-ids.json"
+        },
+        "Recall": {
+          "description": "Allowed pickup service point IDs for Recall requests",
+          "type": "array",
+          "$ref": "allowed-service-point-ids.json"
+        }
+      },
+      "additionalProperties": false
+    },
     "metadata": {
       "description": "Metadata about creation and changes to request policy, provided by the server (client should not provide)",
       "$ref": "raml-util/schemas/metadata.schema",
