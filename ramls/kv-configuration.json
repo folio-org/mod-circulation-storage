@@ -1,33 +1,42 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
+  "description": "Configuration entry",
   "properties": {
     "id": {
       "type": "string",
       "$ref": "raml-util/schemas/uuid.schema"
     },
     "module": {
+      "description": "Name of a FOLIO module",
       "type": "string"
     },
     "configName": {
+      "description": "Configuration name",
       "type": "string"
     },
     "code": {
+      "description": "Configuration code",
       "type": "string"
     },
     "description": {
+      "description": "Configuration description",
       "type": "string"
     },
     "default": {
+      "description": "Flag that indicates whether this is the default configuration",
       "type": "boolean"
     },
     "enabled": {
+      "description": "Flag that indicates whether this configuration is enabled",
       "type": "boolean"
     },
     "value": {
+      "description": "Configuration value",
       "type": "string"
     },
     "userId": {
+      "description": "User ID",
       "type": "string"
     },
     "metadata": {
