@@ -1,20 +1,25 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Request cancellation reason",
   "type": "object",
   "properties": {
     "id": {
       "type": "string"
     },
     "name": {
+      "description": "Reason name",
       "type": "string"
     },
     "description" : {
+      "description": "Internal reason description",
       "type": "string"
     },
     "publicDescription": {
+      "description": "Public reason description",
       "type": "string"
     },
     "requiresAdditionalInformation": {
+      "description": "Flag that indicates whether reason requires additional information",
       "type": "boolean"
     },
     "source": {

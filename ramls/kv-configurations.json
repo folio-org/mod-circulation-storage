@@ -1,9 +1,11 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
+  "description": "Collection of configuration entries",
   "properties": {
     "configs": {
       "id": "configurationData",
+      "description": "An array of configuration entries",
       "type": "array",
       "items": {
         "type": "object",

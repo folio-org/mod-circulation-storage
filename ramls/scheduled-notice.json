@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
+  "description": "Scheduled patron notice",
   "properties": {
     "id": {
       "type": "string",
@@ -46,6 +47,7 @@
         "Due date",
         "Overdue fine returned",
         "Overdue fine renewed",
+        "Due date - with reminder fee",
         "Aged to lost",
         "Aged to lost - fine charged",
         "Aged to lost & item returned - fine adjusted",
@@ -55,6 +57,7 @@
     },
     "noticeConfig": {
       "type": "object",
+      "description": "Scheduled notice configuration",
       "properties": {
         "timing": {
           "type": "string",
