@@ -273,7 +273,7 @@
           "fieldName": "instanceId",
           "tOps": "ADD",
           "caseSensitive": false,
-          "removeAccents": false
+          "removeAccents": true
         },
         {
           "fieldName": "searchIndex.pickupServicePointName",
