@@ -7,6 +7,7 @@ import static org.folio.support.JsonPropertyWriter.write;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -112,7 +113,8 @@ public class TlrDataMigrationService extends AbstractRequestMigrationService<Tlr
     Collection<Item> items) {
 
     Map<String, String> itemIdToHoldingsRecordId = items.stream()
-      .collect(toMap(Item::getId, Item::getHoldingsRecordId, (a, b) -> a));
+      .collect(HashMap::new, (m, v) -> m.put(v.getId(), v.getHoldingsRecordId()),
+        HashMap::putAll);
 
     batch.getRequestMigrationContexts().forEach(ctx ->
       ctx.setHoldingsRecordId(itemIdToHoldingsRecordId.get(ctx.getItemId())));

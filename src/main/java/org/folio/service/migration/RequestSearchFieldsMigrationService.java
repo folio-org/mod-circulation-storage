@@ -1,11 +1,11 @@
 package org.folio.service.migration;
 
 import static io.vertx.core.Future.succeededFuture;
-import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static org.folio.support.JsonPropertyWriter.write;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -87,7 +87,7 @@ public class RequestSearchFieldsMigrationService
       servicePoints.size());
 
     Map<String, String> servicePointIdToName = servicePoints.stream()
-      .collect(toMap(ServicePoint::getId, ServicePoint::getName, (a, b) -> a));
+      .collect(HashMap::new, (m, v) -> m.put(v.getId(), v.getName()), HashMap::putAll);
 
     batch.getRequestMigrationContexts().forEach(ctx ->
       ctx.setPickupServicePointName(servicePointIdToName.get(ctx.getPickupServicePointId())));
@@ -119,10 +119,12 @@ public class RequestSearchFieldsMigrationService
     log.info("saveCallNumbers:: batch={}, items=Collection({} elements)", batch, items.size());
 
     Map<String, CallNumberComponents> itemIdToCallNumberComponents = items.stream()
-      .collect(toMap(Item::getId, Item::getEffectiveCallNumberComponents, (a, b) -> a));
+      .collect(HashMap::new, (m, v) -> m.put(v.getId(), v.getEffectiveCallNumberComponents()),
+        HashMap::putAll);
 
     Map<String, String> itemIdToShelvingOrder = items.stream()
-      .collect(toMap(Item::getId, Item::getEffectiveShelvingOrder, (a, b) -> a));
+      .collect(HashMap::new, (m, v) -> m.put(v.getId(), v.getEffectiveShelvingOrder()),
+        HashMap::putAll);
 
     batch.getRequestMigrationContexts().forEach(ctx -> {
       ctx.setCallNumberComponents(itemIdToCallNumberComponents.get(ctx.getItemId()));
