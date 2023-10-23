@@ -1,3 +1,6 @@
+## 17.1.1 2023-10-23
+* Fix NPE in request search fields migration (CIRCSTORE-457)
+
 ## 17.1.0 2023-10-12
 * Add notice triggering event `Due date - with reminder fee` (CIRCSTORE-452)
 * Add missing descriptions to JSON-schemas (CIRCSTORE-409)
