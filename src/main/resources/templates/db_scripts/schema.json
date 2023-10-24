@@ -534,7 +534,7 @@
       "snippetPath": "create_checkout_lock_table.sql"
     },
     {
-      "run": "before",
+      "run": "after",
       "snippetPath": "fixSpellingOfFulfillmentPreference.sql",
       "fromModuleVersion": "17.1.1"
     }
