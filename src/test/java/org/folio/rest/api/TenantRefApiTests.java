@@ -77,6 +77,8 @@ public class TenantRefApiTests {
   protected static final String REQ_SEARCH_MIGRATION_PREV_MOD_VER = "16.0.0";
   protected static final String REQ_SEARCH_MIGRATION_MOD_VER = "16.1.0";
   protected static final String REQ_SEARCH_MIGRATION_NEXT_MOD_VER = "16.2.0";
+  protected static final String REQ_FULFILLMENT_PREFERENCE_SPELLING_OLD_VER = "17.1.0";
+  protected static final String REQ_FULFILLMENT_PREFERENCE_SPELLING_NEW_VER = "17.1.1";
   protected static final String MODULE_NAME = "mod_circulation_storage";
   protected static final int PORT = NetworkUtils.nextFreePort();
   protected static final String URL = "http://localhost:" + PORT;
@@ -406,6 +408,23 @@ public class TenantRefApiTests {
           } else {
             context.assertNotNull(position);
           }
+          async.complete();
+        });
+      });
+  }
+
+  @Test
+  public void migrationCorrectsFulfillmentPreferenceSpelling(TestContext context) {
+    Async async = context.async();
+
+    postTenant(context, REQ_FULFILLMENT_PREFERENCE_SPELLING_OLD_VER,
+      REQ_FULFILLMENT_PREFERENCE_SPELLING_NEW_VER)
+      .compose(job -> getAllRequestsAsJson())
+      .onFailure(context::fail)
+      .onSuccess(requestsAfterMigration -> {
+        requestsAfterMigration.forEach(request -> {
+          context.assertNull(request.getString("fulfilmentPreference"));
+          context.assertNotNull(request.getString("fulfillmentPreference"));
           async.complete();
         });
       });
