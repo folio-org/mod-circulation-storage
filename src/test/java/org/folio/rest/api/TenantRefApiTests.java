@@ -77,8 +77,8 @@ public class TenantRefApiTests {
   protected static final String REQ_SEARCH_MIGRATION_PREV_MOD_VER = "16.0.0";
   protected static final String REQ_SEARCH_MIGRATION_MOD_VER = "16.1.0";
   protected static final String REQ_SEARCH_MIGRATION_NEXT_MOD_VER = "16.2.0";
-  protected static final String REQ_FULFILLMENT_PREFERENCE_SPELLING_OLD_VER = "17.1.0";
-  protected static final String REQ_FULFILLMENT_PREFERENCE_SPELLING_NEW_VER = "17.1.1";
+  protected static final String REQ_FULFILLMENT_PREFERENCE_SPELLING_OLD_VER = "17.1.1";
+  protected static final String REQ_FULFILLMENT_PREFERENCE_SPELLING_NEW_VER = "17.1.2";
   protected static final String MODULE_NAME = "mod_circulation_storage";
   protected static final int PORT = NetworkUtils.nextFreePort();
   protected static final String URL = "http://localhost:" + PORT;

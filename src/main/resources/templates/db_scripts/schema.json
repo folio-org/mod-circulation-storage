@@ -536,7 +536,7 @@
     {
       "run": "after",
       "snippetPath": "fixSpellingOfFulfillmentPreference.sql",
-      "fromModuleVersion": "17.1.1"
+      "fromModuleVersion": "17.1.2"
     }
   ]
 }
