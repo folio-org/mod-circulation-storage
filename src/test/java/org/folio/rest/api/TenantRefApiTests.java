@@ -77,8 +77,9 @@ public class TenantRefApiTests {
   protected static final String REQ_SEARCH_MIGRATION_PREV_MOD_VER = "16.0.0";
   protected static final String REQ_SEARCH_MIGRATION_MOD_VER = "16.1.0";
   protected static final String REQ_SEARCH_MIGRATION_NEXT_MOD_VER = "16.2.0";
-  protected static final String REQ_FULFILLMENT_PREFERENCE_SPELLING_OLD_VER = "17.1.1";
-  protected static final String REQ_FULFILLMENT_PREFERENCE_SPELLING_NEW_VER = "17.1.2";
+  protected static final String REQ_FULFILLMENT_PREFERENCE_SPELLING_PREV_VER = "17.1.1";
+  protected static final String REQ_FULFILLMENT_PREFERENCE_SPELLING_VER = "17.1.2";
+  protected static final String REQ_FULFILLMENT_PREFERENCE_SPELLING_NEXT_VER = "17.2.0";
   protected static final String MODULE_NAME = "mod_circulation_storage";
   protected static final int PORT = NetworkUtils.nextFreePort();
   protected static final String URL = "http://localhost:" + PORT;
@@ -187,7 +188,7 @@ public class TenantRefApiTests {
 
     postTenant(context, TLR_MIGRATION_OLD_MODULE_VERSION, TLR_MIGRATION_PREV_MODULE_VERSION)
       .onSuccess(job -> {
-        assertThatNoRequestsWereUpdatedByTlrMigration(context);
+        assertThatNoRequestsWereUpdatedByMigration(context, "requestLevel");
         async.complete();
       });
   }
@@ -200,7 +201,7 @@ public class TenantRefApiTests {
 
     postTenant(context, TLR_MIGRATION_MODULE_VERSION, TLR_MIGRATION_NEXT_MODULE_VERSION)
       .onSuccess(job -> {
-        assertThatNoRequestsWereUpdatedByTlrMigration(context);
+        assertThatNoRequestsWereUpdatedByMigration(context, "requestLevel");
         async.complete();
       });
   }
@@ -223,7 +224,7 @@ public class TenantRefApiTests {
 
     postTenant(context, REQ_SEARCH_MIGRATION_OLD_MOD_VER, REQ_SEARCH_MIGRATION_PREV_MOD_VER)
       .onSuccess(job -> {
-        assertThatNoRequestsWereUpdatedByRequestSearchMigration(context);
+        assertThatNoRequestsWereUpdatedByMigration(context, "searchIndex");
         async.complete();
       });
   }
@@ -236,7 +237,7 @@ public class TenantRefApiTests {
 
     postTenant(context, REQ_SEARCH_MIGRATION_MOD_VER, REQ_SEARCH_MIGRATION_NEXT_MOD_VER)
       .onSuccess(job -> {
-        assertThatNoRequestsWereUpdatedByRequestSearchMigration(context);
+        assertThatNoRequestsWereUpdatedByMigration(context, "searchIndex");
         async.complete();
       });
   }
@@ -278,7 +279,7 @@ public class TenantRefApiTests {
       .onSuccess(job -> {
         context.assertTrue(job.getError().contains("Request failed: GET"));
         context.assertTrue(job.getError().contains("Response: [404]"));
-        assertThatNoRequestsWereUpdatedByTlrMigration(context);
+        assertThatNoRequestsWereUpdatedByMigration(context, "requestLevel");
         async.complete();
       });
   }
@@ -302,7 +303,7 @@ public class TenantRefApiTests {
       .onSuccess(job -> {
         context.assertTrue(job.getError().contains("Request failed: GET"));
         context.assertTrue(job.getError().contains("Response: [404]"));
-        assertThatNoRequestsWereUpdatedByRequestSearchMigration(context);
+        assertThatNoRequestsWereUpdatedByMigration(context, "searchIndex");
         async.complete();
       });
   }
@@ -353,7 +354,7 @@ public class TenantRefApiTests {
     postTenant(context, TLR_MIGRATION_PREV_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION)
       .onSuccess(job -> {
         context.assertFalse(job.getError().isEmpty());
-        assertThatNoRequestsWereUpdatedByTlrMigration(context);
+        assertThatNoRequestsWereUpdatedByMigration(context, "requestLevel");
         async.complete();
       });
   }
@@ -414,11 +415,10 @@ public class TenantRefApiTests {
   }
 
   @Test
-  public void migrationCorrectsFulfillmentPreferenceSpelling(TestContext context) {
+  public void migrationShouldCorrectFulfillmentPreferenceSpelling(TestContext context) {
     Async async = context.async();
-
-    postTenant(context, REQ_FULFILLMENT_PREFERENCE_SPELLING_OLD_VER,
-      REQ_FULFILLMENT_PREFERENCE_SPELLING_NEW_VER)
+    postTenant(context, REQ_FULFILLMENT_PREFERENCE_SPELLING_PREV_VER,
+      REQ_FULFILLMENT_PREFERENCE_SPELLING_VER)
       .compose(job -> getAllRequestsAsJson())
       .onFailure(context::fail)
       .onSuccess(requestsAfterMigration -> {
@@ -430,6 +430,32 @@ public class TenantRefApiTests {
       });
   }
 
+  @Test
+  public void migrationShouldNotCorrectFulfillmentPreferenceSpellingFromAlreadyMigratedVersion(
+    TestContext context) {
+
+    Async async = context.async();
+    postTenant(context, REQ_FULFILLMENT_PREFERENCE_SPELLING_VER,
+      REQ_FULFILLMENT_PREFERENCE_SPELLING_NEXT_VER)
+      .onSuccess(job -> {
+        assertThatNoRequestsWereUpdatedByMigration(context, "fulfillmentPreference");
+        async.complete();
+      });
+  }
+
+  @Test
+  public void migrationShouldNotCorrectFulfillmentPreferenceSpellingFromMigratedVersionToOlder(
+    TestContext context) {
+
+    Async async = context.async();
+    postTenant(context, REQ_FULFILLMENT_PREFERENCE_SPELLING_VER,
+      REQ_FULFILLMENT_PREFERENCE_SPELLING_PREV_VER)
+      .onSuccess(job -> {
+        assertThatNoRequestsWereUpdatedByMigration(context, "fulfillmentPreference");
+        async.complete();
+      });
+  }
+
   private void jobFailsWhenRequestValidationFails(TestContext context, Async async,
     JsonObject request, String expectedErrorMessage) {
 
@@ -438,7 +464,7 @@ public class TenantRefApiTests {
       .onFailure(context::fail)
       .onSuccess(job -> {
         context.assertTrue(job.getError().contains(expectedErrorMessage));
-        assertThatNoRequestsWereUpdatedByTlrMigration(context);
+        assertThatNoRequestsWereUpdatedByMigration(context, "requestLevel");
         async.complete();
       });
   }
@@ -455,18 +481,12 @@ public class TenantRefApiTests {
       .onFailure(context::fail);
   }
 
-  private static void assertThatNoRequestsWereUpdatedByTlrMigration(TestContext context) {
-    selectRead("SELECT COUNT(*) " +
-        "FROM " + REQUEST_TABLE + " " +
-        "WHERE jsonb->>'requestLevel' IS NOT null")
-      .onFailure(context::fail)
-      .onSuccess(rowSet -> context.assertEquals(0, getCount(rowSet)));
-  }
+  private static void assertThatNoRequestsWereUpdatedByMigration(TestContext context,
+    String field) {
 
-  private static void assertThatNoRequestsWereUpdatedByRequestSearchMigration(TestContext context) {
-    selectRead("SELECT COUNT(*) " +
-        "FROM " + REQUEST_TABLE + " " +
-        "WHERE jsonb->>'searchIndex' IS NOT null")
+    selectRead(format("SELECT COUNT(*) " +
+      "FROM " + REQUEST_TABLE + " " +
+      "WHERE jsonb->>'%s' IS NOT null", field))
       .onFailure(context::fail)
       .onSuccess(rowSet -> context.assertEquals(0, getCount(rowSet)));
   }
