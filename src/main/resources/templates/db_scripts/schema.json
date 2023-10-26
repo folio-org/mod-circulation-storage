@@ -122,6 +122,12 @@
           "caseSensitive": false,
           "removeAccents": false,
           "sqlExpression": "(jsonb->'agedToLostDelayedBilling'->>'dateLostItemShouldBeBilled')"
+        },
+        {
+          "fieldName": "action",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
         }
       ],
       "fullTextIndex": [
@@ -267,7 +273,7 @@
           "fieldName": "instanceId",
           "tOps": "ADD",
           "caseSensitive": false,
-          "removeAccents": false
+          "removeAccents": true
         },
         {
           "fieldName": "searchIndex.pickupServicePointName",
