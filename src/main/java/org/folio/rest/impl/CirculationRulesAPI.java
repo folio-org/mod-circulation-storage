@@ -1,21 +1,25 @@
 package org.folio.rest.impl;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import org.apache.logging.log4j.Logger;
+import static io.vertx.core.Future.succeededFuture;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.ws.rs.core.Response;
+
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.CirculationRules;
 import org.folio.rest.jaxrs.resource.CirculationRulesStorage;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.TenantTool;
+import org.folio.service.CirculationRulesService;
 
-import javax.ws.rs.core.Response;
-import java.util.List;
-import java.util.Map;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Handler;
 
 public class CirculationRulesAPI implements CirculationRulesStorage {
   private static final Logger log = LogManager.getLogger();
@@ -23,7 +27,7 @@ public class CirculationRulesAPI implements CirculationRulesStorage {
 
   private void internalErrorGet(Handler<AsyncResult<Response>> asyncResultHandler, Throwable e) {
     log.error(e);
-    asyncResultHandler.handle(Future.succeededFuture(
+    asyncResultHandler.handle(succeededFuture(
       CirculationRulesStorage.GetCirculationRulesStorageResponse.
         respond500WithTextPlain(e.getMessage())));
   }
@@ -56,7 +60,7 @@ public class CirculationRulesAPI implements CirculationRulesStorage {
                 }
 
                 CirculationRules circulationRules = circulationRulesList.get(0);
-                asyncResultHandler.handle(Future.succeededFuture(
+                asyncResultHandler.handle(succeededFuture(
                   CirculationRulesStorage.GetCirculationRulesStorageResponse.respond200WithApplicationJson(circulationRules)));
               } catch (Exception e) {
                 internalErrorGet(asyncResultHandler, e);
@@ -73,8 +77,8 @@ public class CirculationRulesAPI implements CirculationRulesStorage {
 
   private void internalErrorPut(Handler<AsyncResult<Response>> asyncResultHandler, Throwable e) {
     log.error(e);
-    asyncResultHandler.handle(Future.succeededFuture(
-      CirculationRulesStorage.PutCirculationRulesStorageResponse.
+    asyncResultHandler.handle(succeededFuture(
+      PutCirculationRulesStorageResponse.
         respond500WithTextPlain(e.getMessage())));
   }
 
@@ -82,29 +86,12 @@ public class CirculationRulesAPI implements CirculationRulesStorage {
   @Validate
   public void putCirculationRulesStorage(CirculationRules entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    try {
-      vertxContext.runOnContext(v -> {
-        try {
-          PostgresClient postgresClient = PostgresClient.getInstance(
-              vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
-          postgresClient.update(CIRCULATION_RULES_TABLE, entity, new Criterion(), true, update -> {
-              try {
-                if (update.failed()) {
-                  internalErrorPut(asyncResultHandler, update.cause());
-                  return;
-                }
-                asyncResultHandler.handle(Future.succeededFuture(
-                    PutCirculationRulesStorageResponse.respond204()));
-              } catch (Exception e) {
-                internalErrorPut(asyncResultHandler, e);
-              }
-            });
-        } catch (Exception e) {
-          internalErrorPut(asyncResultHandler, e);
-        }
-      });
-    } catch (Exception e) {
-      internalErrorPut(asyncResultHandler, e);
-    }
+
+    new CirculationRulesService(vertxContext, okapiHeaders)
+      .update(entity)
+      .onSuccess(v -> asyncResultHandler.handle(succeededFuture(
+        PutCirculationRulesStorageResponse.respond204())))
+      .onFailure(t -> asyncResultHandler.handle(succeededFuture(
+        PutCirculationRulesStorageResponse.respond500WithTextPlain(t.getMessage()))));
   }
 }
