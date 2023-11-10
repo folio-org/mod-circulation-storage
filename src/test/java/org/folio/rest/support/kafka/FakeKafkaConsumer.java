@@ -88,7 +88,6 @@ public final class FakeKafkaConsumer {
   }
 
   public static Collection<KafkaConsumerRecord<String, JsonObject> > getCirculationRulesEvents() {
-
     return circulationRulesEvents.values()
       .stream()
       .findFirst()
