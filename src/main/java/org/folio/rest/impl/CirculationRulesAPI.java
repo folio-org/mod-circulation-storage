@@ -75,13 +75,6 @@ public class CirculationRulesAPI implements CirculationRulesStorage {
     }
   }
 
-  private void internalErrorPut(Handler<AsyncResult<Response>> asyncResultHandler, Throwable e) {
-    log.error(e);
-    asyncResultHandler.handle(succeededFuture(
-      PutCirculationRulesStorageResponse.
-        respond500WithTextPlain(e.getMessage())));
-  }
-
   @Override
   @Validate
   public void putCirculationRulesStorage(CirculationRules entity, Map<String, String> okapiHeaders,
