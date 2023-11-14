@@ -18,7 +18,9 @@ import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.Request;
 
 import io.vertx.core.Context;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2
 public class EntityChangedEventPublisherFactory {
 
   private static final String NULL_ID = "00000000-0000-0000-0000-000000000000";
@@ -61,6 +63,8 @@ public class EntityChangedEventPublisherFactory {
 
   public static EntityChangedEventPublisher<String, CirculationRules> circulationRulesEventPublisher(
     Context vertxContext, Map<String, String> okapiHeaders) {
+
+    log.info("circulationRulesEventPublisher:: creating circulation rules event publisher");
 
     return new EntityChangedEventPublisher<>(okapiHeaders, CirculationRules::getId, NULL_ID,
       new EntityChangedEventFactory<>(),
