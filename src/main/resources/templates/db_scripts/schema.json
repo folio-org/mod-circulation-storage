@@ -526,7 +526,7 @@
     },
     {
       "run": "after",
-      "snippetPath": "add_staff_slips_hold_requests.sql",
+      "snippetPath": "add_search_slips.sql",
       "fromModuleVersion": "17.2.0"
     },
     {
