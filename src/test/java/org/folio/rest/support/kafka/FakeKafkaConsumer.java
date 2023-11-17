@@ -87,7 +87,7 @@ public final class FakeKafkaConsumer {
     return checkInEvents.getOrDefault(checkInId, emptyList());
   }
 
-  public static Collection<KafkaConsumerRecord<String, JsonObject> > getCirculationRulesEvents() {
+  public static Collection<KafkaConsumerRecord<String, JsonObject>> getCirculationRulesEvents() {
     return circulationRulesEvents.values()
       .stream()
       .findFirst()
