@@ -37,8 +37,8 @@ public class SearchSlipsMigrationScriptTest extends StaffSlipsMigrationTestBase 
     assertThat(getResponse.getStatusCode(), Is.is(HttpURLConnection.HTTP_OK));
 
     JsonArray slipsJsonArray = getResponse.getJson().getJsonArray("staffSlips");
-    JsonObject hold = getRecordById(slipsJsonArray, SEARCH_SLIP_ID);
+    JsonObject staffSlips = getRecordById(slipsJsonArray, SEARCH_SLIP_ID);
 
-    assertStaffSlip(hold, SEARCH_SLIP_ID, "Search slip (Hold requests)");
+    assertStaffSlip(staffSlips, SEARCH_SLIP_ID, "Search slip (Hold requests)");
   }
 }
