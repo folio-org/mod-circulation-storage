@@ -526,6 +526,11 @@
     },
     {
       "run": "after",
+      "snippetPath": "add_search_slips.sql",
+      "fromModuleVersion": "17.2.0"
+    },
+    {
+      "run": "after",
       "snippetPath": "removePositionFromClosedRequests.sql",
       "fromModuleVersion": "14.0.0"
     },
