@@ -1,6 +1,19 @@
 package org.folio.rest.api;
 
-import io.vertx.core.json.JsonObject;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForCirculationRules;
+import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.matchesNoContent;
+import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.matchesOk;
+import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.matchesUnprocessableEntity;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+
 import org.folio.rest.jaxrs.model.CirculationRules;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
@@ -9,18 +22,7 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-
-import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.matchesNoContent;
-import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.matchesOk;
-import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.matchesUnprocessableEntity;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
+import io.vertx.core.json.JsonObject;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class CirculationRulesApiTest extends ApiTests {
@@ -78,13 +80,15 @@ public class CirculationRulesApiTest extends ApiTests {
   }
 
   public void putAndGet(CirculationRules circulationRules) throws Exception {
-    var oldUpdatedDate = get().getJsonObject("metadata").getString("updatedDate");
+    JsonObject originalRules = get();
+    var oldUpdatedDate = originalRules.getJsonObject("metadata").getString("updatedDate");
     put204(circulationRules);
-    JsonObject json = get();
-    assertThat(json.getString("rulesAsText"), is(circulationRules.getRulesAsText()));
-    var metadata = json.getJsonObject("metadata");
+    JsonObject updatedRules = get();
+    assertThat(updatedRules.getString("rulesAsText"), is(circulationRules.getRulesAsText()));
+    var metadata = updatedRules.getJsonObject("metadata");
     assertThat(metadata.getString("updatedByUserId"), is(not(nullValue())));
     assertThat(metadata.getString("updatedDate"), is(not(oldUpdatedDate)));
+    assertUpdateEventForCirculationRules(originalRules, updatedRules);
   }
 
   @Test
