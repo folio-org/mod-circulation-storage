@@ -1,3 +1,6 @@
+## 17.1.2 2023-10-27
+* Fix spelling of `fulfillmentPreference` in existing requests (CIRCSTORE-460)
+
 ## 17.1.1 2023-10-23
 * Fix NPE in request search fields migration (CIRCSTORE-457)
 
