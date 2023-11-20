@@ -1,3 +1,6 @@
+## 17.1.3 2023-11-20
+* Publish circulation rules update events (CIRCSTORE-470)
+
 ## 17.1.2 2023-10-27
 * Fix spelling of `fulfillmentPreference` in existing requests (CIRCSTORE-460)
 

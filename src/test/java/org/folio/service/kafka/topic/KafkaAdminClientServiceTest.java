@@ -41,7 +41,8 @@ public class KafkaAdminClientServiceTest {
   private final Set<String> allExpectedTopics = Set.of(
       "folio.foo-tenant.circulation.request",
       "folio.foo-tenant.circulation.loan",
-      "folio.foo-tenant.circulation.check-in"
+      "folio.foo-tenant.circulation.check-in",
+      "folio.foo-tenant.circulation.rules"
   );
 
   private KafkaAdminClient mockClient;
