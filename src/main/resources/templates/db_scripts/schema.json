@@ -507,7 +507,7 @@
       "tableName": "audit_loan",
       "withMetadata": false,
       "withAuditing": false,
-      "likeIndex": [
+      "index": [
         {
           "fieldName": "loan.id",
           "tOps": "ADD",
