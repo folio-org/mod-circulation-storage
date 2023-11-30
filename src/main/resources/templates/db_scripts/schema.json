@@ -506,11 +506,15 @@
     {
       "tableName": "audit_loan",
       "withMetadata": false,
-      "withAuditing": false,
       "likeIndex": [
         {
-          "fieldName": "loanIdAndAction",
-          "multiFieldNames": "loan.id, loan.action",
+          "fieldName": "loan.id",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "loan.action",
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
