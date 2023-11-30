@@ -502,6 +502,32 @@
           "tOps": "ADD"
         }
       ]
+    },
+    {
+      "tableName": "audit_loan",
+      "withMetadata": true,
+      "withAuditing": false,
+      "ginIndex": [
+        {
+          "fieldName": "loanIdAndPatronInfoAdded",
+          "multiFieldNames": "loan.id, loan.action",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        }
+      ]
+    },
+    {
+      "tableName": "staff_slips",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD",
+          "caseSensitive": false
+        }
+      ]
     }
   ],
   "scripts": [
