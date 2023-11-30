@@ -507,13 +507,18 @@
       "tableName": "audit_loan",
       "withMetadata": true,
       "withAuditing": false,
-      "ginIndex": [
+      "index": [
         {
-          "fieldName": "loanIdAndPatronInfoAdded",
-          "multiFieldNames": "loan.id, loan.action",
+          "fieldName": "loan.id",
           "tOps": "ADD",
           "caseSensitive": false,
-          "removeAccents": false
+          "removeAccents": true
+        },
+        {
+          "fieldName": "loan.action",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
         }
       ]
     },
