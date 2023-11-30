@@ -505,7 +505,7 @@
     },
     {
       "tableName": "audit_loan",
-      "withMetadata": true,
+      "withMetadata": false,
       "withAuditing": false,
       "index": [
         {
