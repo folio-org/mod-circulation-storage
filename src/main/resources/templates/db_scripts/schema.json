@@ -512,13 +512,13 @@
           "fieldName": "loan.id",
           "tOps": "ADD",
           "caseSensitive": false,
-          "removeAccents": true
+          "removeAccents": false
         },
         {
           "fieldName": "loan.action",
           "tOps": "ADD",
           "caseSensitive": false,
-          "removeAccents": true
+          "removeAccents": false
         }
       ]
     },
