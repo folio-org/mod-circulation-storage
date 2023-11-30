@@ -509,16 +509,11 @@
       "withAuditing": false,
       "index": [
         {
-          "fieldName": "loan.id",
+          "fieldName": "loanIdAndAction",
+          "multiFieldNames": "loan.id, loan.action",
           "tOps": "ADD",
           "caseSensitive": false,
-          "removeAccents": false
-        },
-        {
-          "fieldName": "loan.action",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": false
+          "removeAccents": true
         }
       ]
     },
