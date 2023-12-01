@@ -1,3 +1,6 @@
+## 17.1.4 2023-12-01
+* Add missing indexes to table audit_loan (CIRCSTORE-474)
+
 ## 17.1.3 2023-11-20
 * Publish circulation rules update events (CIRCSTORE-470)
 
