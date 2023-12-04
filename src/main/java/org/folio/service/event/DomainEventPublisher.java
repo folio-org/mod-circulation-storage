@@ -49,17 +49,14 @@ public class DomainEventPublisher<K, T> {
     log.debug("Sending event to Kafka: kafkaRecord = [{}]", producerRecord);
 
     return producer.send(producerRecord)
-        .<Void>map(notUsed -> null)
-        .onComplete(result -> {
-          producer.end(par -> producer.close());
-
-          if (result.failed()) {
-            log.error("Unable to send domain event with key [{}], kafka record [{}]",
-                key, producerRecord, result.cause());
-
-            failureHandler.handle(result.cause(), producerRecord);
-          }
-        });
+      .<Void>mapEmpty()
+      .eventually(x -> producer.flush())
+      .eventually(x -> producer.close())
+      .onFailure(cause -> {
+        log.error("Unable to send domain event with key [{}], kafka record [{}]",
+          key, producerRecord, cause);
+        failureHandler.handle(cause, producerRecord);
+      });
   }
 
   private KafkaProducer<K, String> getOrCreateProducer() {
