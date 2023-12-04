@@ -96,19 +96,19 @@ public class EntityChangedEventPublisher<K, T> {
     };
   }
 
-  private Future<Void> publishCreated(K key, T newEntity) {
+  public Future<Void> publishCreated(K key, T newEntity) {
     return eventPublisher.publish(key, eventFactory.created(newEntity, tenantId(okapiHeaders)), okapiHeaders);
   }
 
-  private Future<Void> publishUpdated(K key, T oldEntity, T newEntity) {
+  public Future<Void> publishUpdated(K key, T oldEntity, T newEntity) {
     return eventPublisher.publish(key, eventFactory.updated(oldEntity, newEntity, tenantId(okapiHeaders)), okapiHeaders);
   }
 
-  private Future<Void> publishRemoved(K key, T oldEntity) {
+  public Future<Void> publishRemoved(K key, T oldEntity) {
     return eventPublisher.publish(key, eventFactory.deleted(oldEntity, tenantId(okapiHeaders)), okapiHeaders);
   }
 
-  private Future<Void> publishAllRemoved(K key) {
+  public Future<Void> publishAllRemoved(K key) {
     return eventPublisher.publish(key, eventFactory.allDeleted(tenantId(okapiHeaders)), okapiHeaders);
   }
 
