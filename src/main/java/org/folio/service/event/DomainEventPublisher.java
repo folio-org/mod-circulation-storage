@@ -15,6 +15,7 @@ import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
 import org.folio.kafka.services.KafkaProducerRecordBuilder;
+import org.folio.rest.tools.utils.TenantTool;
 
 public class DomainEventPublisher<K, T> {
 
@@ -39,7 +40,8 @@ public class DomainEventPublisher<K, T> {
     log.info("Publishing event: key = {}, eventId = {}, type = {}, topic = {}",
         key, event.getId(), event.getType(), kafkaTopic);
 
-    KafkaProducerRecordBuilder<K, DomainEvent<T>> builder = new KafkaProducerRecordBuilder<>();
+    KafkaProducerRecordBuilder<K, DomainEvent<T>> builder = new KafkaProducerRecordBuilder<>(
+      TenantTool.tenantId(okapiHeaders));
     KafkaProducerRecord<K, String> producerRecord = builder
         .key(key).value(event).topic(kafkaTopic).propagateOkapiHeaders(okapiHeaders)
         .build();
