@@ -8,14 +8,14 @@ import org.apache.logging.log4j.Logger;
 import org.folio.kafka.KafkaConfig;
 import org.folio.kafka.KafkaProducerManager;
 import org.folio.kafka.SimpleKafkaProducerManager;
+import org.folio.kafka.services.KafkaEnvironmentProperties;
+import org.folio.kafka.services.KafkaProducerRecordBuilder;
+import org.folio.rest.tools.utils.TenantTool;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
-import org.folio.kafka.services.KafkaEnvironmentProperties;
-import org.folio.kafka.services.KafkaProducerRecordBuilder;
-import org.folio.rest.tools.utils.TenantTool;
 
 public class DomainEventPublisher<K, T> {
 
@@ -40,10 +40,12 @@ public class DomainEventPublisher<K, T> {
     log.info("Publishing event: key = {}, eventId = {}, type = {}, topic = {}",
         key, event.getId(), event.getType(), kafkaTopic);
 
-    KafkaProducerRecordBuilder<K, DomainEvent<T>> builder = new KafkaProducerRecordBuilder<>(
-      TenantTool.tenantId(okapiHeaders));
-    KafkaProducerRecord<K, String> producerRecord = builder
-        .key(key).value(event).topic(kafkaTopic).propagateOkapiHeaders(okapiHeaders)
+    KafkaProducerRecord<K, String> producerRecord =
+      new KafkaProducerRecordBuilder<K, DomainEvent<T>>(TenantTool.tenantId(okapiHeaders))
+        .key(key)
+        .value(event)
+        .topic(kafkaTopic)
+        .propagateOkapiHeaders(okapiHeaders)
         .build();
 
     KafkaProducer<K, String> producer = getOrCreateProducer();
