@@ -1,3 +1,6 @@
+## 17.1.5 2023-12-05
+* Update folio-kafka-wrapper to version 3.0.2 (CIRCSTORE-473)
+
 ## 17.1.4 2023-12-01
 * Add missing indexes to table audit_loan (CIRCSTORE-474)
 
