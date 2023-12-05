@@ -77,6 +77,9 @@ public class TenantRefApiTests {
   protected static final String REQ_SEARCH_MIGRATION_PREV_MOD_VER = "16.0.0";
   protected static final String REQ_SEARCH_MIGRATION_MOD_VER = "16.1.0";
   protected static final String REQ_SEARCH_MIGRATION_NEXT_MOD_VER = "16.2.0";
+  protected static final String REQ_FULFILLMENT_PREFERENCE_SPELLING_PREV_VER = "17.1.1";
+  protected static final String REQ_FULFILLMENT_PREFERENCE_SPELLING_VER = "17.1.2";
+  protected static final String REQ_FULFILLMENT_PREFERENCE_SPELLING_NEXT_VER = "17.2.0";
   protected static final String MODULE_NAME = "mod_circulation_storage";
   protected static final int PORT = NetworkUtils.nextFreePort();
   protected static final String URL = "http://localhost:" + PORT;
@@ -93,6 +96,18 @@ public class TenantRefApiTests {
   private static final String FAIL_SECOND_CALL_SCENARIO = "Test scenario";
   private static final String FIRST_CALL_MADE_SCENARIO_STATE = "First call made";
   private static final String DEFAULT_UUID = "00000000-0000-4000-8000-000000000000";
+  private static final String REQUEST_ID_MISSING_HOLDINGS_RECORD_ID =
+    "6110e6ab-1d84-4bc5-a88e-e984acca9744";
+  private static final String REQUEST_ID_MISSING_EFFECTIVE_SHELVING_ORDER =
+    "45496a79-e1f3-412e-9076-fc5c4ee893f9";
+  private static final String REQUEST_ID_MISSING_EFFECTIVE_CALL_NUMBER_COMPONENTS =
+    "ddcee62b-c41f-4036-a1d7-5a039d259e87";
+  private static final String REQUEST_ID_MISSING_CALL_NUMBER =
+    "f999719d-ca7e-44ce-9f75-9071c856e5d7";
+  private static final String REQUEST_ID_MISSING_PREFIX = "6ad37eb7-591b-46f3-9902-c1992ca41158";
+  private static final String REQUEST_ID_MISSING_SUFFIX = "ecd86aab-a0ac-4d3c-bb90-0df390b1c6c4";
+  private static final String REQUEST_ID_MISSING_PICKUP_SERVICE_POINT_NAME =
+    "87a7dfd9-8fdb-4b0d-9529-14912b484860";
 
   private static StubMapping itemStorageStub;
   private static StubMapping holdingsStorageStub;
@@ -173,7 +188,7 @@ public class TenantRefApiTests {
 
     postTenant(context, TLR_MIGRATION_OLD_MODULE_VERSION, TLR_MIGRATION_PREV_MODULE_VERSION)
       .onSuccess(job -> {
-        assertThatNoRequestsWereUpdatedByTlrMigration(context);
+        assertThatNoRequestsWereUpdatedByMigration(context, "requestLevel");
         async.complete();
       });
   }
@@ -186,7 +201,7 @@ public class TenantRefApiTests {
 
     postTenant(context, TLR_MIGRATION_MODULE_VERSION, TLR_MIGRATION_NEXT_MODULE_VERSION)
       .onSuccess(job -> {
-        assertThatNoRequestsWereUpdatedByTlrMigration(context);
+        assertThatNoRequestsWereUpdatedByMigration(context, "requestLevel");
         async.complete();
       });
   }
@@ -209,7 +224,7 @@ public class TenantRefApiTests {
 
     postTenant(context, REQ_SEARCH_MIGRATION_OLD_MOD_VER, REQ_SEARCH_MIGRATION_PREV_MOD_VER)
       .onSuccess(job -> {
-        assertThatNoRequestsWereUpdatedByRequestSearchMigration(context);
+        assertThatNoRequestsWereUpdatedByMigration(context, "searchIndex");
         async.complete();
       });
   }
@@ -222,7 +237,7 @@ public class TenantRefApiTests {
 
     postTenant(context, REQ_SEARCH_MIGRATION_MOD_VER, REQ_SEARCH_MIGRATION_NEXT_MOD_VER)
       .onSuccess(job -> {
-        assertThatNoRequestsWereUpdatedByRequestSearchMigration(context);
+        assertThatNoRequestsWereUpdatedByMigration(context, "searchIndex");
         async.complete();
       });
   }
@@ -264,12 +279,11 @@ public class TenantRefApiTests {
       .onSuccess(job -> {
         context.assertTrue(job.getError().contains("Request failed: GET"));
         context.assertTrue(job.getError().contains("Response: [404]"));
-        assertThatNoRequestsWereUpdatedByTlrMigration(context);
+        assertThatNoRequestsWereUpdatedByMigration(context, "requestLevel");
         async.complete();
       });
   }
 
-  ////
   @Test
   public void requestSearchMigrationFailsWhenItemStorageCallFails(TestContext context) {
     Async async = context.async();
@@ -289,11 +303,10 @@ public class TenantRefApiTests {
       .onSuccess(job -> {
         context.assertTrue(job.getError().contains("Request failed: GET"));
         context.assertTrue(job.getError().contains("Response: [404]"));
-        assertThatNoRequestsWereUpdatedByRequestSearchMigration(context);
+        assertThatNoRequestsWereUpdatedByMigration(context, "searchIndex");
         async.complete();
       });
   }
-  ///
 
   @Test
   public void useDefaultValuesForInstanceIdAndHoldingsRecordIdWhenItemWasNotFound(TestContext context) {
@@ -341,7 +354,7 @@ public class TenantRefApiTests {
     postTenant(context, TLR_MIGRATION_PREV_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION)
       .onSuccess(job -> {
         context.assertFalse(job.getError().isEmpty());
-        assertThatNoRequestsWereUpdatedByTlrMigration(context);
+        assertThatNoRequestsWereUpdatedByMigration(context, "requestLevel");
         async.complete();
       });
   }
@@ -401,6 +414,48 @@ public class TenantRefApiTests {
       });
   }
 
+  @Test
+  public void migrationShouldCorrectFulfillmentPreferenceSpelling(TestContext context) {
+    Async async = context.async();
+    postTenant(context, REQ_FULFILLMENT_PREFERENCE_SPELLING_PREV_VER,
+      REQ_FULFILLMENT_PREFERENCE_SPELLING_VER)
+      .compose(job -> getAllRequestsAsJson())
+      .onFailure(context::fail)
+      .onSuccess(requestsAfterMigration -> {
+        requestsAfterMigration.forEach(request -> {
+          context.assertNull(request.getString("fulfilmentPreference"));
+          context.assertNotNull(request.getString("fulfillmentPreference"));
+          async.complete();
+        });
+      });
+  }
+
+  @Test
+  public void migrationShouldNotCorrectFulfillmentPreferenceSpellingFromAlreadyMigratedVersion(
+    TestContext context) {
+
+    Async async = context.async();
+    postTenant(context, REQ_FULFILLMENT_PREFERENCE_SPELLING_VER,
+      REQ_FULFILLMENT_PREFERENCE_SPELLING_NEXT_VER)
+      .onSuccess(job -> {
+        assertThatNoRequestsWereUpdatedByMigration(context, "fulfillmentPreference");
+        async.complete();
+      });
+  }
+
+  @Test
+  public void migrationShouldNotCorrectFulfillmentPreferenceSpellingFromMigratedVersionToOlder(
+    TestContext context) {
+
+    Async async = context.async();
+    postTenant(context, REQ_FULFILLMENT_PREFERENCE_SPELLING_VER,
+      REQ_FULFILLMENT_PREFERENCE_SPELLING_PREV_VER)
+      .onSuccess(job -> {
+        assertThatNoRequestsWereUpdatedByMigration(context, "fulfillmentPreference");
+        async.complete();
+      });
+  }
+
   private void jobFailsWhenRequestValidationFails(TestContext context, Async async,
     JsonObject request, String expectedErrorMessage) {
 
@@ -409,7 +464,7 @@ public class TenantRefApiTests {
       .onFailure(context::fail)
       .onSuccess(job -> {
         context.assertTrue(job.getError().contains(expectedErrorMessage));
-        assertThatNoRequestsWereUpdatedByTlrMigration(context);
+        assertThatNoRequestsWereUpdatedByMigration(context, "requestLevel");
         async.complete();
       });
   }
@@ -426,18 +481,12 @@ public class TenantRefApiTests {
       .onFailure(context::fail);
   }
 
-  private static void assertThatNoRequestsWereUpdatedByTlrMigration(TestContext context) {
-    selectRead("SELECT COUNT(*) " +
-        "FROM " + REQUEST_TABLE + " " +
-        "WHERE jsonb->>'requestLevel' IS NOT null")
-      .onFailure(context::fail)
-      .onSuccess(rowSet -> context.assertEquals(0, getCount(rowSet)));
-  }
+  private static void assertThatNoRequestsWereUpdatedByMigration(TestContext context,
+    String field) {
 
-  private static void assertThatNoRequestsWereUpdatedByRequestSearchMigration(TestContext context) {
-    selectRead("SELECT COUNT(*) " +
-        "FROM " + REQUEST_TABLE + " " +
-        "WHERE jsonb->>'searchIndex' IS NOT null")
+    selectRead(format("SELECT COUNT(*) " +
+      "FROM " + REQUEST_TABLE + " " +
+      "WHERE jsonb->>'%s' IS NOT null", field))
       .onFailure(context::fail)
       .onSuccess(rowSet -> context.assertEquals(0, getCount(rowSet)));
   }
@@ -507,23 +556,43 @@ public class TenantRefApiTests {
 
   private void validateRequestSearchMigrationResult(TestContext context, JsonObject requestAfter) {
     JsonObject requestBefore = requestsBeforeMigration.get(getId(requestAfter));
+    String requestId = requestBefore.getString("id");
 
     context.assertNotNull(requestBefore);
     context.assertNotNull(requestAfter);
 
     if (requestBefore.containsKey("pickupServicePointId")) {
-      context.assertEquals("testSpName", requestAfter.getJsonObject("searchIndex")
-        .getString("pickupServicePointName"));
+      if (!REQUEST_ID_MISSING_PICKUP_SERVICE_POINT_NAME.equals(requestId)) {
+        context.assertEquals("testSpName", requestAfter.getJsonObject("searchIndex")
+          .getString("pickupServicePointName"));
+      }
     }
 
-    context.assertEquals("testShelvingOrder", requestAfter.getJsonObject("searchIndex")
-      .getString("shelvingOrder"));
-    context.assertEquals("testCallNumber", requestAfter.getJsonObject("searchIndex")
-      .getJsonObject("callNumberComponents").getString("callNumber"));
-    context.assertEquals("testPrefix", requestAfter.getJsonObject("searchIndex")
-      .getJsonObject("callNumberComponents").getString("prefix"));
-    context.assertEquals("testSuffix", requestAfter.getJsonObject("searchIndex")
-      .getJsonObject("callNumberComponents").getString("suffix"));
+    if (!REQUEST_ID_MISSING_EFFECTIVE_SHELVING_ORDER.equals(requestId)) {
+      context.assertEquals("testShelvingOrder", requestAfter.getJsonObject("searchIndex")
+        .getString("shelvingOrder"));
+    }
+
+    if (!REQUEST_ID_MISSING_EFFECTIVE_CALL_NUMBER_COMPONENTS.equals(requestId) &&
+      !REQUEST_ID_MISSING_CALL_NUMBER.equals(requestId)) {
+
+      context.assertEquals("testCallNumber", requestAfter.getJsonObject("searchIndex")
+        .getJsonObject("callNumberComponents").getString("callNumber"));
+    }
+
+    if (!REQUEST_ID_MISSING_EFFECTIVE_CALL_NUMBER_COMPONENTS.equals(requestId) &&
+      !REQUEST_ID_MISSING_PREFIX.equals(requestId)) {
+
+      context.assertEquals("testPrefix", requestAfter.getJsonObject("searchIndex")
+        .getJsonObject("callNumberComponents").getString("prefix"));
+    }
+
+    if (!REQUEST_ID_MISSING_EFFECTIVE_CALL_NUMBER_COMPONENTS.equals(requestId) &&
+      !REQUEST_ID_MISSING_SUFFIX.equals(requestId)) {
+
+      context.assertEquals("testSuffix", requestAfter.getJsonObject("searchIndex")
+        .getJsonObject("callNumberComponents").getString("suffix"));
+    }
   }
 
   static void deleteTenant(TenantClient tenantClient) {
@@ -544,10 +613,11 @@ public class TenantRefApiTests {
 
     requestsBeforeMigration.values()
       .forEach(request -> {
+        final String requestId = request.getString("id");
         final String holdingsRecordId = randomId();
         final String servicePointId = request.getString("pickupServicePointId");
 
-        items.add(new JsonObject()
+        JsonObject item = new JsonObject()
           .put("id", request.getString("itemId"))
           .put("holdingsRecordId", holdingsRecordId)
           .put("effectiveShelvingOrder", "testShelvingOrder")
@@ -555,7 +625,27 @@ public class TenantRefApiTests {
             .put("callNumber", "testCallNumber")
             .put("prefix", "testPrefix")
             .put("suffix", "testSuffix")
-          ));
+          );
+        items.add(item);
+
+        if (REQUEST_ID_MISSING_HOLDINGS_RECORD_ID.equals(requestId)) {
+          item.remove("holdingsRecordId");
+        }
+        if (REQUEST_ID_MISSING_EFFECTIVE_SHELVING_ORDER.equals(requestId)) {
+          item.remove("effectiveShelvingOrder");
+        }
+        if (REQUEST_ID_MISSING_EFFECTIVE_CALL_NUMBER_COMPONENTS.equals(requestId)) {
+          item.remove("effectiveCallNumberComponents");
+        }
+        if (REQUEST_ID_MISSING_CALL_NUMBER.equals(requestId)) {
+          item.getJsonObject("effectiveCallNumberComponents").remove("callNumber");
+        }
+        if (REQUEST_ID_MISSING_PREFIX.equals(requestId)) {
+          item.getJsonObject("effectiveCallNumberComponents").remove("prefix");
+        }
+        if (REQUEST_ID_MISSING_SUFFIX.equals(requestId)) {
+          item.getJsonObject("effectiveCallNumberComponents").remove("suffix");
+        }
 
         holdingRecords.add(new JsonObject()
           .put("id", holdingsRecordId)
@@ -565,9 +655,14 @@ public class TenantRefApiTests {
           boolean servicePointDoesNotExists = servicePoints.stream()
             .noneMatch(sp -> sp.getString("id").equals(servicePointId));
           if (servicePointDoesNotExists) {
-            servicePoints.add(new JsonObject()
+            JsonObject servicePoint = new JsonObject()
               .put("id", servicePointId)
-              .put("name", "testSpName"));
+              .put("name", "testSpName");
+            servicePoints.add(servicePoint);
+            if ("87a7dfd9-8fdb-4b0d-9529-14912b484860".equals(request.getString("id"))) {
+              // request with pickup service point missing a name
+              servicePoint.remove("name");
+            }
           }
         }
       });

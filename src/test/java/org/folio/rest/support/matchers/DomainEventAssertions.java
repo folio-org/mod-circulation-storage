@@ -9,8 +9,10 @@ import static org.folio.okapi.common.XOkapiHeaders.USER_ID;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.storageUrl;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getCheckInEvents;
+import static org.folio.rest.support.kafka.FakeKafkaConsumer.getCirculationRulesEvents;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstLoanEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastCheckInEvent;
+import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastCirculationRulesEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastLoanEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastRequestEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLoanEvents;
@@ -117,6 +119,11 @@ public final class DomainEventAssertions {
     await().until(() -> getRequestEvents(requestId).size(), greaterThan(0));
 
     assertUpdateEvent(getLastRequestEvent(requestId), oldRequest, newRequest);
+  }
+
+  public static void assertUpdateEventForCirculationRules(JsonObject oldRules, JsonObject newRules) {
+    await().until(() -> getCirculationRulesEvents().size(), greaterThan(0));
+    assertUpdateEvent(getLastCirculationRulesEvent(), oldRules, newRules);
   }
 
   public static void assertRemoveEventForRequest(JsonObject request) {

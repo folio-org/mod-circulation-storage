@@ -1,3 +1,15 @@
+## 17.1.4 2023-12-01
+* Add missing indexes to table audit_loan (CIRCSTORE-474)
+
+## 17.1.3 2023-11-20
+* Publish circulation rules update events (CIRCSTORE-470)
+
+## 17.1.2 2023-10-27
+* Fix spelling of `fulfillmentPreference` in existing requests (CIRCSTORE-460)
+
+## 17.1.1 2023-10-23
+* Fix NPE in request search fields migration (CIRCSTORE-457)
+
 ## 17.1.0 2023-10-12
 * Add notice triggering event `Due date - with reminder fee` (CIRCSTORE-452)
 * Add missing descriptions to JSON-schemas (CIRCSTORE-409)
