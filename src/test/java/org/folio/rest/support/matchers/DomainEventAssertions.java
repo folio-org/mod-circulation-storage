@@ -5,6 +5,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.kafka.KafkaHeaderUtils.kafkaHeadersToMap;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.okapi.common.XOkapiHeaders.URL;
+import static org.folio.okapi.common.XOkapiHeaders.USER_ID;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.storageUrl;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getCheckInEvents;
@@ -22,6 +23,7 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.util.List;
 
@@ -38,6 +40,7 @@ import lombok.SneakyThrows;
 public final class DomainEventAssertions {
 
   private static final String NULL_ID = "00000000-0000-0000-0000-000000000000";
+  private static final String FOLIO_TENANT_ID = "folio.tenantId";
 
   private DomainEventAssertions() { }
 
@@ -184,9 +187,11 @@ public final class DomainEventAssertions {
     final MultiMap caseInsensitiveMap = caseInsensitiveMultiMap()
         .addAll(kafkaHeadersToMap(headers));
 
-    assertEquals(2, caseInsensitiveMap.size());
+    assertEquals(4, caseInsensitiveMap.size());
     assertEquals(TENANT_ID, caseInsensitiveMap.get(TENANT));
     assertEquals(storageUrl("").toString(), caseInsensitiveMap.get(URL));
+    assertEquals(TENANT_ID, caseInsensitiveMap.get(FOLIO_TENANT_ID));
+    assertNotNull(USER_ID);
   }
 
   private static JsonObject getOldValue(KafkaConsumerRecord<String, JsonObject> event) {
