@@ -1,3 +1,6 @@
+## 17.1.6 2023-12-06
+* Do not close Kafka producer after publishing (CIRCSTORE-477)
+
 ## 17.1.5 2023-12-05
 * Update folio-kafka-wrapper to version 3.0.2 (CIRCSTORE-473)
 
