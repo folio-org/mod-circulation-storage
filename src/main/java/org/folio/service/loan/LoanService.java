@@ -84,38 +84,47 @@ public class LoanService {
   }
 
   public Future<Response> create(Loan loan) {
+    log.info("create:: creating loan, userId: {}, itemId: {}", loan.getUserId(), loan.getItemId());
     if (loan.getStatus() == null) {
       loan.setStatus(new Status().withName(OPEN_LOAN_STATUS));
     }
-
+    log.info("create:: status is not null");
     if (isOpenAndHasNoUserId(loan)) {
       return respondWithError(
           LoanStorage.PostLoanStorageLoansResponse::respond422WithApplicationJson,
           "Open loan must have a user ID");
     }
-
+    log.info("create:: isOpenAndHasNoUserId() validation passed");
     //TODO: Convert this to use validation responses (422 and error of errors)
     ImmutablePair<Boolean, String> validationResult = validateLoan(loan);
-
+    log.info("create:: validateLoan() validation executed");
     if (!validationResult.getLeft()) {
       return succeededFuture(LoanStorage.PostLoanStorageLoansResponse
           .respond400WithTextPlain(validationResult.getRight()));
     }
-
+    log.info("create:: validateLoan() validation passed");
     Promise<Response> createResult = Promise.promise();
-
+    log.info("create:: executing PgUtil.post");
     PgUtil.post(LOAN_TABLE, loan, okapiHeaders, vertxContext,
-        LoanStorage.PostLoanStorageLoansResponse.class, reply -> {
-          if (isMultipleOpenLoanError(reply)) {
-            createResult.complete(LoanStorage.PostLoanStorageLoansResponse
-                .respond422WithApplicationJson(moreThanOneOpenLoanError(loan)));
-          } else {
-            createResult.handle(reply);
-          }
-        });
+      LoanStorage.PostLoanStorageLoansResponse.class, reply -> {
+        log.info("create:: PgUtil.post returned, succeeded={}", reply.succeeded());
+        if (isMultipleOpenLoanError(reply)) {
+          log.info("create:: isMultipleOpenLoanError is true");
+          createResult.complete(LoanStorage.PostLoanStorageLoansResponse
+            .respond422WithApplicationJson(moreThanOneOpenLoanError(loan)));
+        } else {
+          log.info("create:: isMultipleOpenLoanError is false, handling and returning");
+          createResult.handle(reply);
+        }
+      });
 
+    log.info("create:: returning");
     return createResult.future()
-        .compose(eventPublisher.publishCreated());
+      .map(r -> {
+        log.info("create:: composing eventPublisher.publishCreated() to PgUtil.post result");
+        return r;
+      })
+      .compose(eventPublisher.publishCreated());
   }
 
   public Future<Response> createOrUpdate(String loanId, Loan loan) {
