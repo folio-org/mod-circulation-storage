@@ -125,8 +125,8 @@ public class LoanService {
         log.info("create:: composing eventPublisher.publishCreated() to PgUtil.post result");
         return r;
       })
-      .compose(eventPublisher.publishCreated())
-      .compose(r -> failedFuture("create:: artificial failure"));
+      .compose(eventPublisher.publishCreated());
+//      .compose(r -> failedFuture("create:: artificial failure"));
   }
 
   public Future<Response> createOrUpdate(String loanId, Loan loan) {
