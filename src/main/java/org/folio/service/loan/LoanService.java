@@ -1,5 +1,6 @@
 package org.folio.service.loan;
 
+import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.Promise.promise;
 import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
@@ -124,7 +125,8 @@ public class LoanService {
         log.info("create:: composing eventPublisher.publishCreated() to PgUtil.post result");
         return r;
       })
-      .compose(eventPublisher.publishCreated());
+//      .compose(eventPublisher.publishCreated())
+      .compose(r -> failedFuture("create:: artificial failure"));
   }
 
   public Future<Response> createOrUpdate(String loanId, Loan loan) {
