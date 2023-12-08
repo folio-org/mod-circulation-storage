@@ -3,7 +3,6 @@ package org.folio.service.event;
 import static org.apache.logging.log4j.LogManager.getLogger;
 
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.Logger;
 import org.folio.kafka.KafkaConfig;
@@ -53,13 +52,13 @@ public class DomainEventPublisher<K, T> {
     KafkaProducer<K, String> producer = getOrCreateProducer();
     log.info("publish:: ending event to Kafka: producer created");
 
-    try {
-      log.info("publish:: sleeping start");
-      TimeUnit.SECONDS.sleep(5);
-      log.info("publish:: sleeping end");
-    } catch (Exception e) {
-      log.info("publish:: Failed to sleep");
-    }
+//    try {
+//      log.info("publish:: sleeping start");
+//      TimeUnit.SECONDS.sleep(5);
+//      log.info("publish:: sleeping end");
+//    } catch (Exception e) {
+//      log.info("publish:: Failed to sleep");
+//    }
 
     return producer.send(producerRecord)
       .map(r -> {
