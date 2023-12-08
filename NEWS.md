@@ -1,3 +1,6 @@
+## 17.1.7 2023-12-08
+* Add more logging to loan POST API (CIRCSTORE-480)
+
 ## 17.1.6 2023-12-06
 * Do not close Kafka producer after publishing (CIRCSTORE-477)
 
