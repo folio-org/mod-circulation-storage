@@ -119,14 +119,15 @@ public class LoanService {
         }
       });
 
+    vertxContext.executeBlocking(eventPublisher::publishCreated);
+
     log.info("create:: returning");
     return createResult.future()
       .map(r -> {
         log.info("create:: composing eventPublisher.publishCreated() to PgUtil.post result");
         return r;
-      })
-      .compose(eventPublisher.publishCreated());
-//      .compose(r -> failedFuture("create:: artificial failure"));
+      });
+      //.compose(eventPublisher.publishCreated());
   }
 
   public Future<Response> createOrUpdate(String loanId, Loan loan) {
