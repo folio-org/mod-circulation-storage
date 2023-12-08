@@ -1,6 +1,5 @@
 package org.folio.service.loan;
 
-import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.Promise.promise;
 import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
@@ -85,15 +84,15 @@ public class LoanService {
   }
 
   public Future<Response> create(Loan loan) {
-    log.info("create:: creating loan, userId: {}, itemId: {}", loan.getUserId(), loan.getItemId());
+    log.info("create:: Creating loan: userId: {}, itemId: {}", loan.getUserId(), loan.getItemId());
     if (loan.getStatus() == null) {
       loan.setStatus(new Status().withName(OPEN_LOAN_STATUS));
     }
-    log.info("create:: status is not null");
+    log.info("create:: Status is not null");
     if (isOpenAndHasNoUserId(loan)) {
       return respondWithError(
-          LoanStorage.PostLoanStorageLoansResponse::respond422WithApplicationJson,
-          "Open loan must have a user ID");
+        LoanStorage.PostLoanStorageLoansResponse::respond422WithApplicationJson,
+        "Open loan must have a user ID");
     }
     log.info("create:: isOpenAndHasNoUserId() validation passed");
     //TODO: Convert this to use validation responses (422 and error of errors)
@@ -101,11 +100,11 @@ public class LoanService {
     log.info("create:: validateLoan() validation executed");
     if (!validationResult.getLeft()) {
       return succeededFuture(LoanStorage.PostLoanStorageLoansResponse
-          .respond400WithTextPlain(validationResult.getRight()));
+        .respond400WithTextPlain(validationResult.getRight()));
     }
     log.info("create:: validateLoan() validation passed");
     Promise<Response> createResult = Promise.promise();
-    log.info("create:: executing PgUtil.post");
+    log.info("create:: Executing PgUtil.post...");
     PgUtil.post(LOAN_TABLE, loan, okapiHeaders, vertxContext,
       LoanStorage.PostLoanStorageLoansResponse.class, reply -> {
         log.info("create:: PgUtil.post returned, succeeded={}", reply.succeeded());
@@ -119,15 +118,13 @@ public class LoanService {
         }
       });
 
-    vertxContext.executeBlocking(eventPublisher::publishCreated);
-
-    log.info("create:: returning");
+    log.info("create:: Returning result...");
     return createResult.future()
       .map(r -> {
-        log.info("create:: composing eventPublisher.publishCreated() to PgUtil.post result");
+        log.info("create:: Composing eventPublisher.publishCreated() to PgUtil.post result");
         return r;
-      });
-      //.compose(eventPublisher.publishCreated());
+      })
+      .compose(eventPublisher.publishCreated());
   }
 
   public Future<Response> createOrUpdate(String loanId, Loan loan) {

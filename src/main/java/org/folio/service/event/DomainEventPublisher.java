@@ -37,8 +37,8 @@ public class DomainEventPublisher<K, T> {
   }
 
   public Future<Void> publish(K key, DomainEvent<T> event, Map<String, String> okapiHeaders) {
-    log.info("Publishing event: key = {}, eventId = {}, type = {}, topic = {}",
-        key, event.getId(), event.getType(), kafkaTopic);
+    log.info("publish:: key = {}, eventId = {}, type = {}, topic = {}", key, event.getId(),
+      event.getType(), kafkaTopic);
 
     KafkaProducerRecord<K, String> producerRecord =
       new KafkaProducerRecordBuilder<K, DomainEvent<T>>(TenantTool.tenantId(okapiHeaders))
@@ -47,33 +47,19 @@ public class DomainEventPublisher<K, T> {
         .topic(kafkaTopic)
         .propagateOkapiHeaders(okapiHeaders)
         .build();
+    log.info("publish:: kafkaRecord = [{}]", producerRecord);
 
-    log.info("publish:: Sending event to Kafka: kafkaRecord = [{}]", producerRecord);
     KafkaProducer<K, String> producer = getOrCreateProducer();
-    log.info("publish:: ending event to Kafka: producer created");
-
-//    try {
-//      log.info("publish:: sleeping start");
-//      TimeUnit.SECONDS.sleep(5);
-//      log.info("publish:: sleeping end");
-//    } catch (Exception e) {
-//      log.info("publish:: Failed to sleep");
-//    }
+    log.info("publish:: Producer created, sending the record...");
 
     return producer.send(producerRecord)
-      .map(r -> {
-        log.info("Sending event to Kafka: send() succeeded, record metadata: [{}]", r.toJson());
-        return r;
-      })
+      .onSuccess(r -> log.info("publish:: Succeeded sending domain event with key [{}], " +
+        "kafka record [{}]", key, producerRecord))
       .<Void>mapEmpty()
       .onFailure(cause -> {
-        log.error("Unable to send domain event with key [{}], kafka record [{}]",
+        log.error("publish:: Unable to send domain event with key [{}], kafka record [{}]",
           key, producerRecord, cause);
         failureHandler.handle(cause, producerRecord);
-      })
-      .onSuccess(r -> {
-        log.info("Sending event to Kafka: succeeded sending domain event with key [{}], " +
-          "kafka record [{}], exiting", key, producerRecord);
       });
   }
 
