@@ -208,18 +208,18 @@ public class RequestExpirationApiTest extends ApiTests {
     UUID thirdRequestId = UUID.randomUUID();
     UUID instanceId = UUID.randomUUID();
 
-//    createEntity(
-//      new RequestRequestBuilder()
-//        .page()
-//        .withRequestLevel("Title")
-//        .withId(firstRequestId)
-//        .withHoldShelfExpirationDate(new DateTime().plusDays(1))
-//        .withInstanceId(instanceId)
-//        .withItemId(null)
-//        .withHoldingsRecordId(null)
-//        .withStatus(OPEN_AWAITING_PICKUP)
-//        .create(),
-//      requestStorageUrl());
+    createEntity(
+      new RequestRequestBuilder()
+        .page()
+        .withRequestLevel("Title")
+        .withId(firstRequestId)
+        .withHoldShelfExpirationDate(new DateTime().plusDays(1))
+        .withInstanceId(instanceId)
+        .withItemId(null)
+        .withHoldingsRecordId(null)
+        .withStatus(OPEN_AWAITING_PICKUP)
+        .create(),
+      requestStorageUrl());
 
     createEntity(
       new RequestRequestBuilder()
