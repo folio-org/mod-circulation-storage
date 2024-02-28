@@ -179,7 +179,8 @@ public class RequestExpirationService {
   private Future<Void> updateRequestsPositions(Conn conn,
     List<Request> requests) {
 
-    requests.sort(Comparator.comparingInt(Request::getPosition));
+    requests.sort(Comparator.comparing(Request::getPosition, Comparator.nullsLast(
+      Integer::compareTo)));
     AtomicInteger pos = new AtomicInteger(1);
     Future<Void> future = succeededFuture();
 
