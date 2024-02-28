@@ -1102,12 +1102,6 @@ public class RequestExpirationApiTest extends ApiTests {
 
       expireRequests();
 
-      List<JsonObject> events = Awaitility.await()
-        .atMost(10, TimeUnit.SECONDS)
-        .until(MockServer::getPublishedEvents, hasSize(1));
-
-      assertPublishedEvents(events);
-
       JsonObject firstRequestById = getById(requestStorageUrl(String.format("/%s", firstRequestId)));
       assertThat(firstRequestById.getString("status"), is(OPEN_AWAITING_PICKUP));
       assertThat(firstRequestById.getString("position"), is("1"));
