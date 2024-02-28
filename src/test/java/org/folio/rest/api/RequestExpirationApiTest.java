@@ -217,19 +217,7 @@ public class RequestExpirationApiTest extends ApiTests {
         .withInstanceId(instanceId)
         .withItemId(null)
         .withHoldingsRecordId(null)
-        .withStatus(OPEN_AWAITING_PICKUP)
-        .create(),
-      requestStorageUrl());
-
-    createEntity(
-      new RequestRequestBuilder()
-        .page()
-        .withRequestLevel("Title")
-        .withId(firstRequestId)
-        .withHoldShelfExpirationDate(new DateTime().plusDays(1))
-        .withInstanceId(instanceId)
-        .withItemId(null)
-        .withHoldingsRecordId(null)
+        .withPosition(1)
         .withStatus(OPEN_AWAITING_PICKUP)
         .create(),
       requestStorageUrl());
@@ -243,6 +231,7 @@ public class RequestExpirationApiTest extends ApiTests {
         .withInstanceId(instanceId)
         .withItemId(null)
         .withHoldingsRecordId(null)
+        .withPosition(2)
         .withStatus(OPEN_AWAITING_PICKUP)
         .create(),
       requestStorageUrl());
@@ -256,7 +245,7 @@ public class RequestExpirationApiTest extends ApiTests {
         .withInstanceId(instanceId)
         .withItemId(null)
         .withHoldingsRecordId(null)
-        .withPosition(null)
+        .withPosition(3)
         .withStatus(OPEN_AWAITING_PICKUP)
         .create(),
       requestStorageUrl());
