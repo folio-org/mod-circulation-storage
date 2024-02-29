@@ -1,6 +1,5 @@
 package org.folio.rest.api;
 
-import lombok.SneakyThrows;
 import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.prepareTenant;
@@ -47,6 +46,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import io.vertx.core.json.JsonObject;
+import lombok.SneakyThrows;
 
 public class RequestExpirationApiTest extends ApiTests {
 
@@ -1046,6 +1046,73 @@ public class RequestExpirationApiTest extends ApiTests {
     JsonObject requestFromDummyTenant = getById(requestStorageUrl(String.format("/" + secondRequestId)), dummyTenant);
     assertThat(requestFromDummyTenant.getString("status"), is(CLOSED_PICKUP_EXPIRED));
     assertThat(requestFromDummyTenant.getInteger("position"), nullValue());
+  }
+
+  @Test
+  public void shouldRecalculateQueueAfterRequestExpirationWhenNoPositionRequestExists()
+    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
+
+      stubTlrSettings(true);
+      UUID firstRequestId = UUID.randomUUID();
+      UUID secondRequestId = UUID.randomUUID();
+      UUID thirdRequestId = UUID.randomUUID();
+      UUID instanceId = UUID.randomUUID();
+
+      createEntity(
+        new RequestRequestBuilder()
+          .page()
+          .withRequestLevel("Title")
+          .withId(firstRequestId)
+          .withHoldShelfExpirationDate(new DateTime().plusDays(1))
+          .withInstanceId(instanceId)
+          .withItemId(null)
+          .withHoldingsRecordId(null)
+          .withPosition(1)
+          .withStatus(OPEN_AWAITING_PICKUP)
+          .create(),
+        requestStorageUrl());
+
+      createEntity(
+        new RequestRequestBuilder()
+          .page()
+          .withRequestLevel("Title")
+          .withId(secondRequestId)
+          .withHoldShelfExpirationDate(new DateTime(2022, 1, 30, 10, 22, 54, DateTimeZone.UTC))
+          .withInstanceId(instanceId)
+          .withItemId(null)
+          .withHoldingsRecordId(null)
+          .withPosition(2)
+          .withStatus(OPEN_AWAITING_PICKUP)
+          .create(),
+        requestStorageUrl());
+
+      createEntity(
+        new RequestRequestBuilder()
+          .page()
+          .withRequestLevel("Title")
+          .withId(thirdRequestId)
+          .withHoldShelfExpirationDate(new DateTime().plusDays(2))
+          .withInstanceId(instanceId)
+          .withItemId(null)
+          .withHoldingsRecordId(null)
+          .withPosition(null)
+          .withStatus(OPEN_AWAITING_PICKUP)
+          .create(),
+        requestStorageUrl());
+
+      expireRequests();
+
+      JsonObject firstRequestById = getById(requestStorageUrl(String.format("/%s", firstRequestId)));
+      assertThat(firstRequestById.getString("status"), is(OPEN_AWAITING_PICKUP));
+      assertThat(firstRequestById.getString("position"), is("1"));
+
+      JsonObject secondRequestById = getById(requestStorageUrl(String.format("/%s", secondRequestId)));
+      assertThat(secondRequestById.getString("status"), is(CLOSED_PICKUP_EXPIRED));
+      assertThat(secondRequestById.containsKey("position"), is(false));
+
+      JsonObject thirdRequestById = getById(requestStorageUrl(String.format("/%s", thirdRequestId)));
+      assertThat(thirdRequestById.getString("status"), is(OPEN_AWAITING_PICKUP));
+      assertThat(thirdRequestById.getString("position"), is("2"));
   }
 
   @SneakyThrows
