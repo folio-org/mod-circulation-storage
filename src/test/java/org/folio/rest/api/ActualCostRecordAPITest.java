@@ -169,6 +169,7 @@ public class ActualCostRecordAPITest extends ApiTests {
         .withVolume("volume")
         .withEnumeration("enumeration")
         .withChronology("chronology")
+        .withDisplaySummary("displaySummary")
         .withCopyNumber("copyNumber"))
       .withInstance(new ActualCostRecordInstance()
         .withId(randomId())

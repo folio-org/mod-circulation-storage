@@ -170,6 +170,10 @@
           "type": "string",
           "description": "Chronology is the descriptive information for the dating scheme of a serial."
         },
+        "displaySummary": {
+          "description": "Display summary about the item",
+          "type": "string"
+        },
         "copyNumber": {
           "type": "string",
           "description": "Copy number is the piece identifier. The copy number reflects if the library has a copy of a single-volume monograph; one copy of a multi-volume, (e.g. Copy 1, or C.7.)"
