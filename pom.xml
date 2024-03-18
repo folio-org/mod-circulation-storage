@@ -30,7 +30,7 @@
     <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
     <vertx-version>4.5.5</vertx-version>
     <raml-module-builder-version>35.2.0</raml-module-builder-version>
-    <spring.version>5.3.23</spring.version>
+    <spring.version>6.1.5</spring.version>
     <argLine />
   </properties>
 
