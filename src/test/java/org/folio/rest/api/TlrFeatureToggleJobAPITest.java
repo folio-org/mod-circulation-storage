@@ -234,7 +234,7 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
     stubWithInvalidTlrSettings();
-    checkFailedTlrFeatureToggleJob("Invalid configurations response");
+    checkFailedTlrFeatureToggleJob("Unrecognized token");
   }
 
   @Test

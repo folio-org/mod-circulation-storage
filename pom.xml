@@ -28,9 +28,9 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
-    <vertx-version>4.4.6</vertx-version>
-    <raml-module-builder-version>35.1.0</raml-module-builder-version>
-    <spring.version>5.3.23</spring.version>
+    <vertx-version>4.5.5</vertx-version>
+    <raml-module-builder-version>35.2.0</raml-module-builder-version>
+    <spring.version>6.1.5</spring.version>
     <argLine />
   </properties>
 
