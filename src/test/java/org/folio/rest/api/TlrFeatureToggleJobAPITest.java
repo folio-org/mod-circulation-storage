@@ -257,7 +257,7 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
       .get(), is(expectedPosition));
   }
 
-  private void  checkFailedTlrFeatureToggleJob(String errorMessage)
+  private void checkFailedTlrFeatureToggleJob(String errorMessage)
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
     TlrFeatureToggleJob tlrFeatureToggleJob = createTlrFeatureToggleJob();
