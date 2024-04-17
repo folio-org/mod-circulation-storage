@@ -80,7 +80,7 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>folio-kafka-wrapper</artifactId>
-      <version>3.0.2</version>
+      <version>3.1.1</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -316,12 +316,12 @@
           <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjrt</artifactId>
-            <version>1.9.19</version>
+            <version>1.9.22</version>
           </dependency>
           <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjtools</artifactId>
-            <version>1.9.19</version>
+            <version>1.9.22</version>
           </dependency>
         </dependencies>
       </plugin>
