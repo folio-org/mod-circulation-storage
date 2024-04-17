@@ -1,6 +1,3 @@
-* ## 17.3.1 2024-04-16
-* Upgrade folio-kafka-wrapper to 3.1.1, org.aspectj to 1.9.22  (CIRCSTORE-499)
-
 * ## 17.2.0 2024-03-20
 * Upgrade RMB to 35.2.0, Vert.x to 4.5.5, Spring to 6.1.5 (CIRCSTORE-494)
 * Add `displaySummary` field to `ActualCostRecord` schema (CIRCSTORE-493)
