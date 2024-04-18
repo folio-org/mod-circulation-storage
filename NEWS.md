@@ -1,3 +1,6 @@
+* ## 17.1.8 2024-04-18
+* Upgrade folio-kafka-wrapper to 3.1.1, org.aspectj to 1.9.22  (CIRCSTORE-498)
+
 ## 17.1.7 2023-12-08
 * Add more logging to loan POST API (CIRCSTORE-480)
 
