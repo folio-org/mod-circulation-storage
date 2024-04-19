@@ -35,6 +35,7 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 
 import org.folio.cql2pgjson.CQL2PgJSON;
+import org.folio.persist.Cql2PgJsonHolder;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.CirculationRules;
@@ -87,7 +88,7 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
 
         String[] fieldList = {"*"};
 
-        CQL2PgJSON cql2pgJson = new CQL2PgJSON(PATRON_NOTICE_POLICY_TABLE + ".jsonb");
+        CQL2PgJSON cql2pgJson = Cql2PgJsonHolder.getCql2PgJson(PATRON_NOTICE_POLICY_TABLE + ".jsonb");
         CQLWrapper cql = new CQLWrapper(cql2pgJson, query)
           .setLimit(new Limit(limit))
           .setOffset(new Offset(offset));

@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 import org.folio.cql2pgjson.CQL2PgJSON;
+import org.folio.persist.Cql2PgJsonHolder;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.RequestPolicies;
@@ -133,7 +134,7 @@ public class RequestPoliciesAPI implements RequestPolicyStorage {
         PostgresClient postgresClient = PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-        CQL2PgJSON cql2pgJson = new CQL2PgJSON("request_policy.jsonb");
+        CQL2PgJSON cql2pgJson = Cql2PgJsonHolder.getCql2PgJson("request_policy.jsonb");
         CQLWrapper cql = new CQLWrapper(cql2pgJson, null);
 
         postgresClient.delete(REQUEST_POLICY_TABLE, cql,

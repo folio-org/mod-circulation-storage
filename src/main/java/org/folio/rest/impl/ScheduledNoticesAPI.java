@@ -18,9 +18,8 @@ import io.vertx.core.Handler;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.commons.lang3.StringUtils;
-import org.folio.cql2pgjson.CQL2PgJSON;
-import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.cql2pgjson.exception.QueryValidationException;
+import org.folio.persist.Cql2PgJsonHolder;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.ScheduledNotice;
@@ -133,8 +132,8 @@ public class ScheduledNoticesAPI implements ScheduledNoticeStorage {
   private Future<String> cqlToSqlQuery(String cql) {
 
     try {
-      return succeededFuture(new CQL2PgJSON("jsonb").cql2pgJson(cql));
-    } catch (FieldException | QueryValidationException e) {
+      return succeededFuture(Cql2PgJsonHolder.getCql2PgJson("jsonb").cql2pgJson(cql));
+    } catch (QueryValidationException e) {
       return failedFuture(e);
     }
   }
