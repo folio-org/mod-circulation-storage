@@ -156,7 +156,6 @@ public class RequestsApiTest extends ApiTests {
       .withProxy("Stuart", "Rebecca", "6059539205")
       .withStatus(OPEN_NOT_YET_FILLED)
       .withPosition(1)
-      .primary()
       .withPickupServicePointId(pickupServicePointId)
       .withTags(new Tags().withTagList(asList("new", "important")))
       .create(),
@@ -178,7 +177,6 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getInteger("position"), is(1));
     assertThat(representation.getString("pickupServicePointId"), is(pickupServicePointId.toString()));
     assertThat(representation.containsKey("patronComments"), is(false));
-    assertThat(representation.getString("ecsRequestPhase"), is("Primary"));
 
     assertThat(representation.containsKey("item"), is(true));
     JsonObject item = representation.getJsonObject("item");
@@ -1959,6 +1957,46 @@ public class RequestsApiTest extends ApiTests {
       hasParameter("status", "null")
     )));
   }
+
+  @Test
+  public void canCreateRequestWithEcsRequestPhase() throws MalformedURLException,
+    ExecutionException, InterruptedException, TimeoutException {
+
+    JsonObject representation = createEntity(
+      new RequestRequestBuilder()
+        .page()
+        .primary()
+        .withId(UUID.randomUUID())
+        .create(),
+      requestStorageUrl()).getJson();
+    assertThat(representation.getString("ecsRequestPhase"), is("Primary"));
+
+    representation = createEntity(
+      new RequestRequestBuilder()
+        .page()
+        .secondary()
+        .withId(UUID.randomUUID())
+        .create(),
+      requestStorageUrl()).getJson();
+    assertThat(representation.getString("ecsRequestPhase"), is("Secondary"));
+  }
+
+  @Test
+  public void shouldReturn400IfInvalidEcsRequestPhase() throws MalformedURLException,
+    ExecutionException, InterruptedException, TimeoutException {
+
+    var request = new RequestRequestBuilder()
+        .page()
+        .withEcsRequestPhase("Invalid")
+        .withId(UUID.randomUUID())
+        .create();
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+    client.post(requestStorageUrl(), request, TENANT_ID, ResponseHandler.json(createCompleted));
+
+    assertThat(createCompleted.get(5, TimeUnit.SECONDS).getStatusCode(), is(400));
+  }
+
 
   private RequestDto.RequestDtoBuilder holdShelfOpenRequest() {
     return RequestDto.builder()
