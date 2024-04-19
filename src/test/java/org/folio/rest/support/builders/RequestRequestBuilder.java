@@ -52,6 +52,7 @@ public class RequestRequestBuilder extends JsonBuilder {
   private final String patronComments;
   private final UUID holdingsRecordId;
   private final SearchIndex searchIndex;
+  private final String ecsRequestPhase;
 
   public RequestRequestBuilder() {
     this(UUID.randomUUID(),
@@ -79,6 +80,7 @@ public class RequestRequestBuilder extends JsonBuilder {
       null,
       null,
       UUID.randomUUID(),
+      null,
       null);
   }
 
@@ -101,6 +103,7 @@ public class RequestRequestBuilder extends JsonBuilder {
     put(request, "requestExpirationDate", this.requestExpirationDate);
     put(request, "holdShelfExpirationDate", this.holdShelfExpirationDate);
     put(request, "pickupServicePointId", this.pickupServicePointId);
+    put(request, "ecsRequestPhase", this.ecsRequestPhase);
 
     if (this.itemSummary != null) {
       final JsonObject item = new JsonObject();
@@ -204,7 +207,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.tags,
       this.patronComments,
       this.holdingsRecordId,
-      this.searchIndex);
+      this.searchIndex,
+      this.ecsRequestPhase);
   }
 
   public RequestRequestBuilder toHoldShelf() {
@@ -247,7 +251,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.tags,
       this.patronComments,
       this.holdingsRecordId,
-      this.searchIndex);
+      this.searchIndex,
+      this.ecsRequestPhase);
   }
 
   public RequestRequestBuilder withRequester(
@@ -282,7 +287,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.tags,
       this.patronComments,
       this.holdingsRecordId,
-      this.searchIndex);
+      this.searchIndex,
+      this.ecsRequestPhase);
   }
 
   public RequestRequestBuilder withRequester(
@@ -316,7 +322,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.tags,
       this.patronComments,
       this.holdingsRecordId,
-      this.searchIndex);
+      this.searchIndex,
+      this.ecsRequestPhase);
   }
 
   public RequestRequestBuilder withProxy(
@@ -350,7 +357,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.tags,
       this.patronComments,
       this.holdingsRecordId,
-      this.searchIndex);
+      this.searchIndex,
+      this.ecsRequestPhase);
   }
   public RequestRequestBuilder withNoPosition() {
     return withPosition(null);
@@ -373,6 +381,14 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.middleName = middleName;
       this.barcode = barcode;
     }
+  }
+
+  public RequestRequestBuilder primary() {
+    return withEcsRequestPhase("Primary");
+  }
+
+  public RequestRequestBuilder secondary() {
+    return withEcsRequestPhase("Secondary");
   }
 
 }

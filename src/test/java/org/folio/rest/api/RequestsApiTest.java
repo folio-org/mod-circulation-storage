@@ -156,6 +156,7 @@ public class RequestsApiTest extends ApiTests {
       .withProxy("Stuart", "Rebecca", "6059539205")
       .withStatus(OPEN_NOT_YET_FILLED)
       .withPosition(1)
+      .primary()
       .withPickupServicePointId(pickupServicePointId)
       .withTags(new Tags().withTagList(asList("new", "important")))
       .create(),
@@ -177,6 +178,7 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.getInteger("position"), is(1));
     assertThat(representation.getString("pickupServicePointId"), is(pickupServicePointId.toString()));
     assertThat(representation.containsKey("patronComments"), is(false));
+    assertThat(representation.getString("ecsRequestPhase"), is("Primary"));
 
     assertThat(representation.containsKey("item"), is(true));
     JsonObject item = representation.getJsonObject("item");
