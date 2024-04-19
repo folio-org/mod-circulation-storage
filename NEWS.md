@@ -1,3 +1,18 @@
+* ## 17.2.0 2024-03-20
+* Upgrade RMB to 35.2.0, Vert.x to 4.5.5, Spring to 6.1.5 (CIRCSTORE-494)
+* Add `displaySummary` field to `ActualCostRecord` schema (CIRCSTORE-493)
+* Fix NPE for requests with no position (CIRCSTORE-422) 
+* Upgrade actions for API-related workflows (FOLIO-3944)
+* Add more logging to loan POST API (CIRCSTORE-480)
+* Do not close Kafka producer after publishing (CIRCSTORE-477)
+* Update folio-kafka-wrapper to version 3.0.2 (CIRCSTORE-473)
+* Add missing indexes to table audit_loan (CIRCSTORE-474)
+* Publish circulation rules update events (CIRCSTORE-470)
+* Add migration script to include search slips in the DB (CIRCSTORE-465)
+* Fix spelling of `fulfillmentPreference` in existing requests (CIRCSTORE-460)
+* Update RMB to v35.1, Vert.x to v4.4.5 (CIRCSTORE-459)
+* Fix NPE in request search fields migration (CIRCSTORE-457)
+
 ## 17.1.0 2023-10-12
 * Add notice triggering event `Due date - with reminder fee` (CIRCSTORE-452)
 * Add missing descriptions to JSON-schemas (CIRCSTORE-409)
