@@ -19,6 +19,9 @@ import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_CANCELLED;
 import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_FILLED;
 import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_PICKUP_EXPIRED;
 import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_UNFILLED;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -38,6 +41,7 @@ import org.apache.commons.io.IOUtils;
 import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
+import org.folio.rest.impl.TenantRefAPI;
 import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.jaxrs.model.TenantAttributes;
@@ -180,6 +184,41 @@ public class TenantRefApiTests {
       PostgresClient.stopPostgresTester();
       async.complete();
     }));
+  }
+
+  @Test
+  public void isNew() {
+    assertThat(isNew(null, "1.2.3"), is(true));
+    assertThat(isNew("1.2.3", "1.10.0"), is(true));
+    assertThat(isNew("1.2.3", "1.1.10"), is(false));
+    assertThat(isNew("mod-circulation-storage-1.2.3", "mod-circulation-storage-1.10.0"), is(true));
+    assertThat(isNew("mod-circulation-storage-1.2.3", "mod-circulation-storage-1.2.3"), is(false));
+    assertThat(isNew("mod-circulation-storage-1.3.0", "mod-circulation-storage-1.2.3"), is(false));
+  }
+
+  private boolean isNew(String migratingFromVersion, String featureVersion) {
+    var tenantAttributes = new TenantAttributes().withModuleFrom(migratingFromVersion);
+    return TenantRefAPI.isNew(tenantAttributes, featureVersion);
+  }
+
+  @Test
+  public void circulationRules(TestContext context) {
+    postgresClient.execute("UPDATE circulation_rules SET jsonb='{}'")
+    .compose(x -> assertRulesAsText(context, false))
+    .compose(x -> postTenant(context, "0.0.0", "15.0.0"))
+    .compose(x -> assertRulesAsText(context, true))
+    .compose(x -> postgresClient.execute("UPDATE circulation_rules SET jsonb='{}'"))
+    .compose(x -> assertRulesAsText(context, false))
+    .compose(x -> postTenant(context, "15.0.0", "999999.0.0"))
+    .compose(x -> assertRulesAsText(context, false))
+    .onComplete(context.asyncAssertSuccess());
+  }
+
+  private Future<Row> assertRulesAsText(TestContext context, boolean expected) {
+    return postgresClient.selectSingle("SELECT jsonb FROM circulation_rules")
+        .onComplete(context.asyncAssertSuccess(row -> {
+          assertThat(row.getJsonObject(0).containsKey("rulesAsText"), is(expected));
+        }));
   }
 
   @Test
@@ -477,8 +516,11 @@ public class TenantRefApiTests {
       .map(response -> response.bodyAsJson(TenantJob.class))
       .compose(job -> tenantClient.getTenantByOperationId(job.getId(), GET_TENANT_TIMEOUT_MS))
       .map(response -> response.bodyAsJson(TenantJob.class))
-      .onSuccess(job -> context.assertTrue(job.getComplete()))
-      .onFailure(context::fail);
+      .onComplete(context.asyncAssertSuccess(job -> {
+        assertThat(job.getMessages(), is(List.of()));
+        assertThat(job.getError(), is(nullValue()));
+        assertThat(job.getComplete(), is(true));
+      }));
   }
 
   private static void assertThatNoRequestsWereUpdatedByMigration(TestContext context,
