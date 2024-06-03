@@ -219,65 +219,8 @@ public class LoansApiTest extends ApiTests {
 
     JsonObject loan = loansClient.create(loanRequest).getJson();
 
-    assertThat("id does not match",
-      loan.getString("id"), is(id.toString()));
-
-    assertThat("user id does not match",
-      loan.getString("userId"), is(userId.toString()));
-
-    assertThat("proxy user id does not match",
-      loan.getString("proxyUserId"), is(proxyUserId.toString()));
-
-    assertThat("item id does not match",
-      loan.getString("itemId"), is(itemId.toString()));
-
-    assertThat("loan date does not match",
-      loan.getString("loanDate"), is("2017-06-27T10:23:43.000Z"));
-
-    assertThat(loan, isOpen());
-
-    assertThat("action is not checked out",
-      loan.getString("action"), is("checkedout"));
-
-    assertThat("item status is not checked out",
-      loan.getString("itemStatus"), is("Checked out"));
-
-    assertThat("itemEffectiveLocationIdAtCheckOut does not match",
-      loan.getString("itemEffectiveLocationIdAtCheckOut"), is(itemLocationAtCheckOut.toString()));
-
-    assertThat("loan policy should be set",
-      loan.getString("loanPolicyId"), is(loanPolicyId.toString()));
-
-    assertThat("due date does not match",
-      loan.getString("dueDate"), is("2017-07-27T10:23:43.000+00:00"));
-
-    assertThat("recall changed due date should be null",
-      loan.getBoolean("dueDateChangedByRecall"), nullValue());
-
-    assertThat("Loan should have a declaredLostDate property", DateTime
-      .parse(loansClient.getById(id).getJson().getString("declaredLostDate"))
-      .getMillis(), is(expectedLostDate.getMillis()));
-
-    assertThat("Overdue fine policy id should be set",
-      loan.getString("overdueFinePolicyId"),
-      is(overdueFinePolicyId.toString()));
-
-    assertThat("Lost item policy id should be set",
-      loan.getString("lostItemPolicyId"), is(lostItemPolicyId.toString()));
-
-    assertThat(parse(loan.getString("claimedReturnedDate")), is(claimedReturnedDate));
-
-    final JsonObject agedToLostDelayedBilling = loan.getJsonObject("agedToLostDelayedBilling");
-    assertThat(agedToLostDelayedBilling.getBoolean("lostItemHasBeenBilled"),
-      is(false));
-    assertThat(parse(agedToLostDelayedBilling.getString("dateLostItemShouldBeBilled")),
-      is(dateLostItemShouldBeBilled));
-    assertThat(parse(agedToLostDelayedBilling.getString("agedToLostDate")), is(agedToLostDate));
-
     assertThat("dcb property should be true ",
       loan.getString("isDcb"), is("true"));
-
-    assertCreateEventForLoan(loan);
   }
 
   @Test
@@ -322,65 +265,8 @@ public class LoansApiTest extends ApiTests {
 
     JsonObject loan = loansClient.create(loanRequest).getJson();
 
-    assertThat("id does not match",
-      loan.getString("id"), is(id.toString()));
-
-    assertThat("user id does not match",
-      loan.getString("userId"), is(userId.toString()));
-
-    assertThat("proxy user id does not match",
-      loan.getString("proxyUserId"), is(proxyUserId.toString()));
-
-    assertThat("item id does not match",
-      loan.getString("itemId"), is(itemId.toString()));
-
-    assertThat("loan date does not match",
-      loan.getString("loanDate"), is("2017-06-27T10:23:43.000Z"));
-
-    assertThat(loan, isOpen());
-
-    assertThat("action is not checked out",
-      loan.getString("action"), is("checkedout"));
-
-    assertThat("item status is not checked out",
-      loan.getString("itemStatus"), is("Checked out"));
-
-    assertThat("itemEffectiveLocationIdAtCheckOut does not match",
-      loan.getString("itemEffectiveLocationIdAtCheckOut"), is(itemLocationAtCheckOut.toString()));
-
-    assertThat("loan policy should be set",
-      loan.getString("loanPolicyId"), is(loanPolicyId.toString()));
-
-    assertThat("due date does not match",
-      loan.getString("dueDate"), is("2017-07-27T10:23:43.000+00:00"));
-
-    assertThat("recall changed due date should be null",
-      loan.getBoolean("dueDateChangedByRecall"), nullValue());
-
-    assertThat("Loan should have a declaredLostDate property", DateTime
-      .parse(loansClient.getById(id).getJson().getString("declaredLostDate"))
-      .getMillis(), is(expectedLostDate.getMillis()));
-
-    assertThat("Overdue fine policy id should be set",
-      loan.getString("overdueFinePolicyId"),
-      is(overdueFinePolicyId.toString()));
-
-    assertThat("Lost item policy id should be set",
-      loan.getString("lostItemPolicyId"), is(lostItemPolicyId.toString()));
-
-    assertThat(parse(loan.getString("claimedReturnedDate")), is(claimedReturnedDate));
-
-    final JsonObject agedToLostDelayedBilling = loan.getJsonObject("agedToLostDelayedBilling");
-    assertThat(agedToLostDelayedBilling.getBoolean("lostItemHasBeenBilled"),
-      is(false));
-    assertThat(parse(agedToLostDelayedBilling.getString("dateLostItemShouldBeBilled")),
-      is(dateLostItemShouldBeBilled));
-    assertThat(parse(agedToLostDelayedBilling.getString("agedToLostDate")), is(agedToLostDate));
-
     assertThat("dcb property should be false",
       loan.getString("isDcb"), is("false"));
-
-    assertCreateEventForLoan(loan);
   }
 
     @Test

@@ -45,7 +45,7 @@
     },
     {
       "id": "loan-storage",
-      "version": "7.1",
+      "version": "7.3",
       "handlers": [
         {
           "methods": ["GET"],
