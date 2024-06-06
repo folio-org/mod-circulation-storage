@@ -178,6 +178,98 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
+  public void canCreateALoanForDcb()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    UUID id = UUID.randomUUID();
+    UUID itemId = UUID.randomUUID();
+    UUID itemLocationAtCheckOut = UUID.randomUUID();
+    UUID userId = UUID.randomUUID();
+    UUID proxyUserId = UUID.randomUUID();
+    UUID loanPolicyId = UUID.randomUUID();
+    DateTime expectedLostDate = DateTime.now();
+    UUID overdueFinePolicyId = UUID.randomUUID();
+    UUID lostItemPolicyId = UUID.randomUUID();
+    final DateTime claimedReturnedDate = DateTime.now(DateTimeZone.UTC);
+    final DateTime agedToLostDate = DateTime.now(DateTimeZone.UTC).minusDays(10);
+    DateTime dateLostItemShouldBeBilled = new DateTime(2017, 9, 27, 10, 23, 43, DateTimeZone.UTC);
+
+    JsonObject loanRequest = new LoanRequestBuilder()
+      .withId(id)
+      .withItemId(itemId)
+      .withUserId(userId)
+      .withProxyUserId(proxyUserId)
+      .withLoanDate(new DateTime(2017, 6, 27, 10, 23, 43, DateTimeZone.UTC))
+      .open()
+      .withAction("checkedout")
+      .withItemStatus("Checked out")
+      .withDueDate(new DateTime(2017, 7, 27, 10, 23, 43, DateTimeZone.UTC))
+      .withItemEffectiveLocationIdAtCheckOut(itemLocationAtCheckOut)
+      .withLoanPolicyId(loanPolicyId)
+      .withDeclaredLostDate(expectedLostDate)
+      .withOverdueFinePolicyId(overdueFinePolicyId)
+      .withLostItemPolicyId(lostItemPolicyId)
+      .withClaimedReturnedDate(claimedReturnedDate)
+      .withAgedToLostDelayedBilling(false, dateLostItemShouldBeBilled, agedToLostDate)
+      .withIsDcb(true)
+      .create();
+
+    JsonObject loan = loansClient.create(loanRequest).getJson();
+
+    assertThat("dcb property should be true ",
+      loan.getString("isDcb"), is("true"));
+  }
+
+  @Test
+  public void canCreateALoanForNonDcb()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    UUID id = UUID.randomUUID();
+    UUID itemId = UUID.randomUUID();
+    UUID itemLocationAtCheckOut = UUID.randomUUID();
+    UUID userId = UUID.randomUUID();
+    UUID proxyUserId = UUID.randomUUID();
+    UUID loanPolicyId = UUID.randomUUID();
+    DateTime expectedLostDate = DateTime.now();
+    UUID overdueFinePolicyId = UUID.randomUUID();
+    UUID lostItemPolicyId = UUID.randomUUID();
+    final DateTime claimedReturnedDate = DateTime.now(DateTimeZone.UTC);
+    final DateTime agedToLostDate = DateTime.now(DateTimeZone.UTC).minusDays(10);
+    DateTime dateLostItemShouldBeBilled = new DateTime(2017, 9, 27, 10, 23, 43, DateTimeZone.UTC);
+
+    JsonObject loanRequest = new LoanRequestBuilder()
+      .withId(id)
+      .withItemId(itemId)
+      .withUserId(userId)
+      .withProxyUserId(proxyUserId)
+      .withLoanDate(new DateTime(2017, 6, 27, 10, 23, 43, DateTimeZone.UTC))
+      .open()
+      .withAction("checkedout")
+      .withItemStatus("Checked out")
+      .withDueDate(new DateTime(2017, 7, 27, 10, 23, 43, DateTimeZone.UTC))
+      .withItemEffectiveLocationIdAtCheckOut(itemLocationAtCheckOut)
+      .withLoanPolicyId(loanPolicyId)
+      .withDeclaredLostDate(expectedLostDate)
+      .withOverdueFinePolicyId(overdueFinePolicyId)
+      .withLostItemPolicyId(lostItemPolicyId)
+      .withClaimedReturnedDate(claimedReturnedDate)
+      .withAgedToLostDelayedBilling(false, dateLostItemShouldBeBilled, agedToLostDate)
+      .withIsDcb(false)
+      .create();
+
+    JsonObject loan = loansClient.create(loanRequest).getJson();
+
+    assertThat("dcb property should be false",
+      loan.getString("isDcb"), is("false"));
+  }
+
+    @Test
   public void canCreateALoanWithDueDateChangedByRecallSet()
     throws MalformedURLException,
     InterruptedException,
@@ -1483,7 +1575,7 @@ public class LoansApiTest extends ApiTests {
       .getRecords().stream()
       .map(json -> json.getString("id"))
       .collect(Collectors.toList());
-    
+
     assertThat(filteredLoans, hasSize(1));
     assertThat(filteredLoans, hasItem(loanToBillTomorrow.getId()));
   }
