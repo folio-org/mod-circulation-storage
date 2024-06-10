@@ -1,7 +1,6 @@
 package org.folio.service;
 
 import static org.folio.service.event.EntityChangedEventPublisherFactory.circulationSettingsEventPublisher;
-import static org.folio.service.event.EntityChangedEventPublisherFactory.requestEventPublisher;
 import static org.folio.support.ModuleConstants.CIRCULATION_SETTINGS_TABLE;
 
 import java.util.Map;
@@ -11,11 +10,8 @@ import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.CirculationSettingsRepository;
-import org.folio.rest.jaxrs.model.CancellationReason;
-import org.folio.rest.jaxrs.model.CancellationReasons;
 import org.folio.rest.jaxrs.model.CirculationSetting;
 import org.folio.rest.jaxrs.model.CirculationSettings;
-import org.folio.rest.jaxrs.resource.CancellationReasonStorage;
 import org.folio.rest.jaxrs.resource.CirculationSettingsStorage;
 import org.folio.rest.persist.PgUtil;
 import org.folio.service.event.EntityChangedEventPublisher;
