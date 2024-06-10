@@ -105,6 +105,34 @@
       ]
     },
     {
+      "id": "circulation-settings-storage",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/circulation-settings-storage/circulation-settings",
+          "permissionsRequired": []
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/circulation-settings-storage/circulation-settings/{id}",
+          "permissionsRequired": []
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/circulation-settings-storage/circulation-settings/{id}",
+          "permissionsRequired": []
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/circulation-settings-storage/circulation-settings",
+          "permissionsRequired": []
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/circulation-settings-storage/circulation-settings/{id}",
+          "permissionsRequired": []
+        }
+      ]
+    },
+    {
       "id": "loan-policy-storage",
       "version": "2.3",
       "handlers": [
@@ -1178,7 +1206,7 @@
       { "name": "JAVA_OPTIONS",
         "value": "-XX:MaxRAMPercentage=66.0"
       },
-      { "name": "DB_HOST", "value": "postgres" },
+      { "name": "DB_HOST", "value": "localhost" },
       { "name": "DB_PORT", "value": "5432" },
       { "name": "DB_USERNAME", "value": "folio_admin" },
       { "name": "DB_PASSWORD", "value": "folio_admin" },
@@ -1186,7 +1214,7 @@
       { "name": "DB_QUERYTIMEOUT", "value": "60000" },
       { "name": "DB_CHARSET", "value": "UTF-8" },
       { "name": "DB_MAXPOOLSIZE", "value": "5" },
-      { "name": "KAFKA_HOST", "value": "kafka" },
+      { "name": "KAFKA_HOST", "value": "localhost" },
       { "name": "KAFKA_PORT", "value": "9092" },
       { "name": "REPLICATION_FACTOR", "value": "1" },
       { "name": "ENV", "value": "folio" }

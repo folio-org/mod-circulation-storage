@@ -152,6 +152,18 @@
       ]
     },
     {
+      "tableName": "circulation_settings",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "id",
+          "tOps": "ADD",
+          "caseSensitive": false
+        }
+      ]
+    },
+    {
       "tableName": "request",
       "withMetadata": true,
       "withAuditing": false,
