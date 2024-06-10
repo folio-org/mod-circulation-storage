@@ -7,8 +7,6 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.folio.persist.CirculationSettingsRepository;
 import org.folio.rest.jaxrs.model.CirculationSetting;
 import org.folio.rest.jaxrs.model.CirculationSettings;
@@ -22,7 +20,6 @@ import io.vertx.core.Promise;
 
 public class CirculationSettingsService {
 
-  private static final Logger log = LogManager.getLogger(CirculationSettingsService.class);
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
   private final CirculationSettingsRepository repository;
