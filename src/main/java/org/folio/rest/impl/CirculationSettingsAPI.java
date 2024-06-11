@@ -60,7 +60,8 @@ public class CirculationSettingsAPI implements CirculationSettingsStorage {
     String circulationSettingsId, String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-      new CirculationSettingsService(vertxContext, okapiHeaders).delete(circulationSettingsId)
+      new CirculationSettingsService(vertxContext, okapiHeaders)
+        .delete(circulationSettingsId)
         .onComplete(asyncResultHandler);
   }
 }
