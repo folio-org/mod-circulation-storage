@@ -29,19 +29,53 @@ public class CirculationSettingsAPITest extends ApiTests {
       "circulation-settings");
 
   @Test
-  void canCreateCirculationSettings() throws MalformedURLException,
+  public void canCreateAndRetrieveCirculationSettings() throws MalformedURLException,
     ExecutionException, InterruptedException, TimeoutException {
-    String id = UUID.randomUUID().toString();
-    JsonObject circulationSettingsJson = new JsonObject()
-      .put("id", id)
-      .put("name", "Sample settings")
-      .put("value",
-        new JsonObject().put("org.folio.circulation.settings", "true"));
 
+    String id = UUID.randomUUID().toString();
+    JsonObject circulationSettingsJson = getCirculationSetting(id);
     JsonObject circulationSettingsResponse =
       circulationSettingsClient.create(circulationSettingsJson).getJson();
+    JsonObject circulationSettingsById = circulationSettingsClient.getById(id).getJson();
 
     assertThat(circulationSettingsResponse.getString("id"), is(id));
+    assertThat(circulationSettingsById.getString("id"), is(id));
+    assertThat(circulationSettingsById.getJsonObject("value"), is(
+      circulationSettingsJson.getJsonObject("value")));
+  }
+
+  @Test
+  public void canUpdateCirculationSettings() throws MalformedURLException,
+    ExecutionException, InterruptedException, TimeoutException {
+
+    String id = UUID.randomUUID().toString();
+    JsonObject circulationSettingsJson = getCirculationSetting(id);
+    circulationSettingsClient.create(circulationSettingsJson).getJson();
+    circulationSettingsClient.attemptPutById(
+      circulationSettingsJson.put("value", new JsonObject().put("sample", "DONE")));
+    JsonObject updatedCirculationSettings = circulationSettingsClient.getById(id).getJson();
+
+    assertThat(updatedCirculationSettings.getString("id"), is(id));
+    assertThat(updatedCirculationSettings.getJsonObject("value"), is(
+      circulationSettingsJson.getJsonObject("value")));
+  }
+
+  @Test
+  public void canDeleteCirculationSettings() throws MalformedURLException,
+    ExecutionException, InterruptedException, TimeoutException {
+
+    UUID id = UUID.randomUUID();
+    circulationSettingsClient.create(getCirculationSetting(id.toString())).getJson();
+    circulationSettingsClient.deleteById(id);
+    var deletedCirculationSettings = circulationSettingsClient.attemptGetById(id);
+    assertThat(deletedCirculationSettings.getStatusCode(), is(404));
+  }
+
+  private JsonObject getCirculationSetting(String id) {
+    return new JsonObject()
+      .put("id", id)
+      .put("name", "sample")
+      .put("value", new JsonObject().put("sample", "OK"));
   }
 
 }
