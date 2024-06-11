@@ -42,7 +42,8 @@ public class KafkaAdminClientServiceTest {
       "folio.foo-tenant.circulation.request",
       "folio.foo-tenant.circulation.loan",
       "folio.foo-tenant.circulation.check-in",
-      "folio.foo-tenant.circulation.rules"
+      "folio.foo-tenant.circulation.rules",
+      "folio.foo-tenant.circulation.circulation-settings"
   );
 
   private KafkaAdminClient mockClient;
