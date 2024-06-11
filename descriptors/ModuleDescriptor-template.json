@@ -105,6 +105,44 @@
       ]
     },
     {
+      "id": "circulation-settings-storage",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/circulation-settings-storage/circulation-settings",
+          "permissionsRequired": [
+            "circulation-storage.circulation-settings.collection.get"
+          ]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/circulation-settings-storage/circulation-settings/{id}",
+          "permissionsRequired": [
+            "circulation-storage.circulation-settings.item.get"
+          ]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/circulation-settings-storage/circulation-settings/{id}",
+          "permissionsRequired": [
+            "circulation-storage.circulation-settings.item.put"
+          ]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/circulation-settings-storage/circulation-settings",
+          "permissionsRequired": [
+            "circulation-storage.circulation-settings.item.post"
+          ]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/circulation-settings-storage/circulation-settings/{id}",
+          "permissionsRequired": [
+            "circulation-storage.circulation-settings.item.delete"
+          ]
+        }
+      ]
+    },
+    {
       "id": "loan-policy-storage",
       "version": "2.3",
       "handlers": [
@@ -971,6 +1009,31 @@
       "description": "Get expired session patron ids collection from storage"
     },
     {
+      "permissionName": "circulation-storage.circulation-settings.collection.get",
+      "displayName": "Circulation storage - get circulation settings collection",
+      "description": "Get circulation settings collection from storage"
+    },
+    {
+      "permissionName": "circulation-storage.circulation-settings.item.get",
+      "displayName": "Circulation storage - get circulation setting by id",
+      "description": "Get circulation setting by id from storage"
+    },
+    {
+      "permissionName": "circulation-storage.circulation-settings.item.post",
+      "displayName": "Circulation storage - create circulation setting",
+      "description": "Create circulation setting in storage"
+    },
+    {
+      "permissionName": "circulation-storage.circulation-settings.item.put",
+      "displayName": "Circulation storage - update circulation setting by id",
+      "description": "Update circulation setting by id"
+    },
+    {
+      "permissionName": "circulation-storage.circulation-settings.item.delete",
+      "displayName": "Circulation storage - delete circulation setting by id",
+      "description": "Delete circulation setting by id"
+    },
+    {
       "permissionName": "circulation-storage.all",
       "displayName": "Circulation storage module - all permissions",
       "description": "Entire set of permissions needed to use the circulation storage module",
@@ -1061,7 +1124,12 @@
         "checkout-lock-storage.checkout-locks.item.post",
         "checkout-lock-storage.checkout-locks.item.delete",
         "checkout-lock-storage.checkout-locks.item.get",
-        "checkout-lock-storage.checkout-locks.collection.get"
+        "checkout-lock-storage.checkout-locks.collection.get",
+        "circulation-storage.circulation-settings.collection.get",
+        "circulation-storage.circulation-settings.item.get",
+        "circulation-storage.circulation-settings.item.post",
+        "circulation-storage.circulation-settings.item.put",
+        "circulation-storage.circulation-settings.item.delete"
       ]
     },
     {

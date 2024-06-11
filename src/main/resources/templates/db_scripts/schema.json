@@ -152,6 +152,11 @@
       ]
     },
     {
+      "tableName": "circulation_settings",
+      "withMetadata": true,
+      "withAuditing": false
+    },
+    {
       "tableName": "request",
       "withMetadata": true,
       "withAuditing": false,

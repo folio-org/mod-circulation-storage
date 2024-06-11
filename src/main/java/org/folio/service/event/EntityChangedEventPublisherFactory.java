@@ -2,6 +2,7 @@ package org.folio.service.event;
 
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.folio.support.kafka.topic.CirculationStorageKafkaTopic.CHECK_IN;
+import static org.folio.support.kafka.topic.CirculationStorageKafkaTopic.CIRCULATION_SETTINGS;
 import static org.folio.support.kafka.topic.CirculationStorageKafkaTopic.LOAN;
 import static org.folio.support.kafka.topic.CirculationStorageKafkaTopic.REQUEST;
 import static org.folio.support.kafka.topic.CirculationStorageKafkaTopic.RULES;
@@ -10,10 +11,12 @@ import java.util.Map;
 
 import org.folio.persist.CheckInRepository;
 import org.folio.persist.CirculationRulesRepository;
+import org.folio.persist.CirculationSettingsRepository;
 import org.folio.persist.LoanRepository;
 import org.folio.persist.RequestRepository;
 import org.folio.rest.jaxrs.model.CheckIn;
 import org.folio.rest.jaxrs.model.CirculationRules;
+import org.folio.rest.jaxrs.model.CirculationSetting;
 import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.Request;
 
@@ -72,6 +75,17 @@ public class EntityChangedEventPublisherFactory {
         RULES.fullTopicName(tenantId(okapiHeaders)),
         FailureHandler.noOperation()),
       new CirculationRulesRepository(vertxContext, okapiHeaders));
+  }
+
+  public static EntityChangedEventPublisher<String, CirculationSetting> circulationSettingsEventPublisher(
+    Context vertxContext, Map<String, String> okapiHeaders) {
+
+    return new EntityChangedEventPublisher<>(okapiHeaders, CirculationSetting::getId, NULL_ID,
+      new EntityChangedEventFactory<>(),
+      new DomainEventPublisher<>(vertxContext,
+        CIRCULATION_SETTINGS.fullTopicName(tenantId(okapiHeaders)),
+        FailureHandler.noOperation()),
+      new CirculationSettingsRepository(vertxContext, okapiHeaders));
   }
 
 }
