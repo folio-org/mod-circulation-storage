@@ -75,8 +75,11 @@ resourceTypes:
             body:
               application/json:
                 type: circulation-setting
-          501:
-            description: "Not implemented yet"
+          500:
+            description: "Internal server error"
+            body:
+              text/plain:
+                example: "Internal server error"
       put:
         is: [ validate ]
         body:
@@ -85,13 +88,19 @@ resourceTypes:
         responses:
           204:
             description: "Circulation settings have been saved."
-          501:
-            description: "Not implemented yet"
+          500:
+            description: "Internal server error"
+            body:
+              text/plain:
+                example: "Internal server error"
       delete:
         is: [ validate ]
         responses:
           204:
             description: "Circulation settings deleted"
-          501:
-            description: "Not implemented yet"
+          500:
+            description: "Internal server error"
+            body:
+              text/plain:
+                example: "Internal server error"
 

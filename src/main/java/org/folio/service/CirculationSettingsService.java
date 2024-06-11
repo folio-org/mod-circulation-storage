@@ -10,13 +10,16 @@ import javax.ws.rs.core.Response;
 import org.folio.persist.CirculationSettingsRepository;
 import org.folio.rest.jaxrs.model.CirculationSetting;
 import org.folio.rest.jaxrs.model.CirculationSettings;
-import org.folio.rest.jaxrs.resource.CirculationSettingsStorage;
+import org.folio.rest.jaxrs.resource.CirculationSettingsStorage.DeleteCirculationSettingsStorageCirculationSettingsByCirculationSettingsIdResponse;
+import org.folio.rest.jaxrs.resource.CirculationSettingsStorage.GetCirculationSettingsStorageCirculationSettingsByCirculationSettingsIdResponse;
+import org.folio.rest.jaxrs.resource.CirculationSettingsStorage.GetCirculationSettingsStorageCirculationSettingsResponse;
+import org.folio.rest.jaxrs.resource.CirculationSettingsStorage.PostCirculationSettingsStorageCirculationSettingsResponse;
+import org.folio.rest.jaxrs.resource.CirculationSettingsStorage.PutCirculationSettingsStorageCirculationSettingsByCirculationSettingsIdResponse;
 import org.folio.rest.persist.PgUtil;
 import org.folio.service.event.EntityChangedEventPublisher;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 
 public class CirculationSettingsService {
 
@@ -36,39 +39,32 @@ public class CirculationSettingsService {
     return PgUtil.get(CIRCULATION_SETTINGS_TABLE, CirculationSetting.class,
       CirculationSettings.class,
       query, offset, limit, okapiHeaders, vertxContext,
-      CirculationSettingsStorage.GetCirculationSettingsStorageCirculationSettingsResponse.class);
+      GetCirculationSettingsStorageCirculationSettingsResponse.class);
   }
 
   public Future<Response> create(CirculationSetting circulationSetting) {
-    Promise<Response> createResult = Promise.promise();
-    PgUtil.post(CIRCULATION_SETTINGS_TABLE, circulationSetting, okapiHeaders, vertxContext,
-      CirculationSettingsStorage.PostCirculationSettingsStorageCirculationSettingsResponse.class, createResult);
-    return createResult.future()
+    return PgUtil.post(CIRCULATION_SETTINGS_TABLE, circulationSetting, okapiHeaders, vertxContext,
+      PostCirculationSettingsStorageCirculationSettingsResponse.class)
       .compose(eventPublisher.publishCreated());
   }
 
   public Future<Response> findById(String circulationSettingsId) {
     return PgUtil.getById(CIRCULATION_SETTINGS_TABLE, CirculationSetting.class,
       circulationSettingsId, okapiHeaders, vertxContext,
-      CirculationSettingsStorage.GetCirculationSettingsStorageCirculationSettingsByCirculationSettingsIdResponse.class);
+      GetCirculationSettingsStorageCirculationSettingsByCirculationSettingsIdResponse.class);
   }
 
   public Future<Response> update(String circulationSettingsId, CirculationSetting circulationSetting) {
-    Promise<Response> updateResult = Promise.promise();
-    PgUtil.put(CIRCULATION_SETTINGS_TABLE, circulationSetting, circulationSettingsId, okapiHeaders, vertxContext,
-      CirculationSettingsStorage.PutCirculationSettingsStorageCirculationSettingsByCirculationSettingsIdResponse.class, updateResult);
-    return updateResult.future()
+    return PgUtil.put(CIRCULATION_SETTINGS_TABLE, circulationSetting, circulationSettingsId, okapiHeaders, vertxContext,
+        PutCirculationSettingsStorageCirculationSettingsByCirculationSettingsIdResponse.class)
       .compose(eventPublisher.publishUpdated(circulationSetting));
   }
 
   public Future<Response> delete(String circulationSettingsId) {
-    return repository.getById(circulationSettingsId).compose ( circulationSetting -> {
-      Promise<Response> deleteResult = Promise.promise();
-      PgUtil.deleteById(CIRCULATION_SETTINGS_TABLE, circulationSettingsId, okapiHeaders, vertxContext,
-        CirculationSettingsStorage.DeleteCirculationSettingsStorageCirculationSettingsByCirculationSettingsIdResponse.class, deleteResult);
-      return deleteResult.future()
-        .compose(eventPublisher.publishRemoved(circulationSetting));
-      }
+    return repository.getById(circulationSettingsId).compose (
+      circulationSetting -> PgUtil.deleteById(CIRCULATION_SETTINGS_TABLE, circulationSettingsId, okapiHeaders, vertxContext,
+        DeleteCirculationSettingsStorageCirculationSettingsByCirculationSettingsIdResponse.class)
+      .compose(eventPublisher.publishRemoved(circulationSetting))
     );
   }
 }

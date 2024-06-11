@@ -14,6 +14,7 @@ public class CirculationSettingsRepository
 
   public CirculationSettingsRepository(Context context, Map<String,
     String> okapiHeaders) {
+
     super(postgresClient(context, okapiHeaders), CIRCULATION_SETTINGS_TABLE,
       CirculationSetting.class);
   }

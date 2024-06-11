@@ -6,7 +6,8 @@
   "properties": {
     "id": {
       "description": "ID of the circulation setting",
-      "type": "string"
+      "type": "string",
+      "$ref": "raml-util/schemas/uuid.schema"
     },
     "name": {
       "description": "Circulation setting name",

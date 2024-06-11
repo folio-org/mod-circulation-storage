@@ -4,7 +4,7 @@ import org.folio.kafka.services.KafkaTopic;
 
 public enum CirculationStorageKafkaTopic implements KafkaTopic {
   REQUEST("request", 10),
-  CIRCULATION_SETTINGS("circulation_settings", 10),
+  CIRCULATION_SETTINGS("circulation-settings", 10),
   LOAN("loan", 10),
   CHECK_IN("check-in", 10),
   RULES("rules", 10);

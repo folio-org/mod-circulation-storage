@@ -38,6 +38,7 @@ public class CirculationSettingsAPI implements CirculationSettingsStorage {
   public void getCirculationSettingsStorageCirculationSettingsByCirculationSettingsId(
     String circulationSettingsId, String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
       new CirculationSettingsService(vertxContext, okapiHeaders)
         .findById(circulationSettingsId)
         .onComplete(asyncResultHandler);
@@ -48,6 +49,7 @@ public class CirculationSettingsAPI implements CirculationSettingsStorage {
     String circulationSettingsId, String lang, CirculationSetting entity,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
+
       new CirculationSettingsService(vertxContext, okapiHeaders)
         .update(circulationSettingsId, entity)
         .onComplete(asyncResultHandler);
@@ -57,6 +59,7 @@ public class CirculationSettingsAPI implements CirculationSettingsStorage {
   public void deleteCirculationSettingsStorageCirculationSettingsByCirculationSettingsId(
     String circulationSettingsId, String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
       new CirculationSettingsService(vertxContext, okapiHeaders).delete(circulationSettingsId)
         .onComplete(asyncResultHandler);
   }

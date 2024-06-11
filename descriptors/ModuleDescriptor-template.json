@@ -112,32 +112,32 @@
           "methods": ["GET"],
           "pathPattern": "/circulation-settings-storage/circulation-settings",
           "permissionsRequired": [
-            "circulation-settings-storage.circulation-settings.collection.get"
+            "circulation-storage.circulation-settings.collection.get"
           ]
         },
         {
           "methods": ["GET"],
           "pathPattern": "/circulation-settings-storage/circulation-settings/{id}",
           "permissionsRequired": [
-            "circulation-settings-storage.circulation-settings.item.get"
+            "circulation-storage.circulation-settings.item.get"
           ]
         }, {
           "methods": ["PUT"],
           "pathPattern": "/circulation-settings-storage/circulation-settings/{id}",
           "permissionsRequired": [
-            "circulation-settings-storage.circulation-settings.item.put"
+            "circulation-storage.circulation-settings.item.put"
           ]
         }, {
           "methods": ["POST"],
           "pathPattern": "/circulation-settings-storage/circulation-settings",
           "permissionsRequired": [
-            "circulation-settings-storage.circulation-settings.item.post"
+            "circulation-storage.circulation-settings.item.post"
           ]
         }, {
           "methods": ["DELETE"],
           "pathPattern": "/circulation-settings-storage/circulation-settings/{id}",
           "permissionsRequired": [
-            "circulation-settings-storage.circulation-settings.item.delete"
+            "circulation-storage.circulation-settings.item.delete"
           ]
         }
       ]
@@ -1009,27 +1009,27 @@
       "description": "Get expired session patron ids collection from storage"
     },
     {
-      "permissionName": "circulation-settings-storage.circulation-settings.collection.get",
+      "permissionName": "circulation-storage.circulation-settings.collection.get",
       "displayName": "Circulation storage - get circulation settings collection",
       "description": "Get circulation settings collection from storage"
     },
     {
-      "permissionName": "circulation-settings-storage.circulation-settings.item.get",
+      "permissionName": "circulation-storage.circulation-settings.item.get",
       "displayName": "Circulation storage - get circulation setting by id",
       "description": "Get circulation setting by id from storage"
     },
     {
-      "permissionName": "circulation-settings-storage.circulation-settings.item.post",
+      "permissionName": "circulation-storage.circulation-settings.item.post",
       "displayName": "Circulation storage - create circulation setting",
       "description": "Create circulation setting in storage"
     },
     {
-      "permissionName": "circulation-settings-storage.circulation-settings.item.put",
+      "permissionName": "circulation-storage.circulation-settings.item.put",
       "displayName": "Circulation storage - update circulation setting by id",
       "description": "Update circulation setting by id"
     },
     {
-      "permissionName": "circulation-settings-storage.circulation-settings.item.delete",
+      "permissionName": "circulation-storage.circulation-settings.item.delete",
       "displayName": "Circulation storage - delete circulation setting by id",
       "description": "Delete circulation setting by id"
     },
@@ -1125,11 +1125,11 @@
         "checkout-lock-storage.checkout-locks.item.delete",
         "checkout-lock-storage.checkout-locks.item.get",
         "checkout-lock-storage.checkout-locks.collection.get",
-        "circulation-settings-storage.circulation-settings.collection.get",
-        "circulation-settings-storage.circulation-settings.item.get",
-        "circulation-settings-storage.circulation-settings.item.post",
-        "circulation-settings-storage.circulation-settings.item.put",
-        "circulation-settings-storage.circulation-settings.item.delete"
+        "circulation-storage.circulation-settings.collection.get",
+        "circulation-storage.circulation-settings.item.get",
+        "circulation-storage.circulation-settings.item.post",
+        "circulation-storage.circulation-settings.item.put",
+        "circulation-storage.circulation-settings.item.delete"
       ]
     },
     {
