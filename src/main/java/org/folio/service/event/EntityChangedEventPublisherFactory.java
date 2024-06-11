@@ -2,6 +2,7 @@ package org.folio.service.event;
 
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.folio.support.kafka.topic.CirculationStorageKafkaTopic.CHECK_IN;
+import static org.folio.support.kafka.topic.CirculationStorageKafkaTopic.CIRCULATION_SETTINGS;
 import static org.folio.support.kafka.topic.CirculationStorageKafkaTopic.LOAN;
 import static org.folio.support.kafka.topic.CirculationStorageKafkaTopic.REQUEST;
 import static org.folio.support.kafka.topic.CirculationStorageKafkaTopic.RULES;
@@ -82,7 +83,7 @@ public class EntityChangedEventPublisherFactory {
     return new EntityChangedEventPublisher<>(okapiHeaders, CirculationSetting::getId, NULL_ID,
       new EntityChangedEventFactory<>(),
       new DomainEventPublisher<>(vertxContext,
-        REQUEST.fullTopicName(tenantId(okapiHeaders)),
+        CIRCULATION_SETTINGS.fullTopicName(tenantId(okapiHeaders)),
         FailureHandler.noOperation()),
       new CirculationSettingsRepository(vertxContext, okapiHeaders));
   }
