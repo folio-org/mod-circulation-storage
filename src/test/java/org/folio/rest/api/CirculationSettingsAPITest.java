@@ -17,7 +17,6 @@ import org.junit.runner.RunWith;
 import io.vertx.core.json.JsonObject;
 import junitparams.JUnitParamsRunner;
 
-@RunWith(JUnitParamsRunner.class)
 public class CirculationSettingsAPITest extends ApiTests {
 
   private final AssertingRecordClient circulationSettingsClient =
