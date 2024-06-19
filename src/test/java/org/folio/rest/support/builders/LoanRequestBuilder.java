@@ -36,6 +36,7 @@ public class LoanRequestBuilder implements Builder {
   private final UUID lostItemPolicyId;
   private final DateTime claimedReturnedDate;
   private final JsonObject agedToLostDelayedBilling;
+  private final Boolean isDcb;
 
   public LoanRequestBuilder() {
     this(UUID.randomUUID(),
@@ -47,6 +48,7 @@ public class LoanRequestBuilder implements Builder {
       null,
       "checkedout",
       "test",
+      null,
       null,
       null,
       null,
@@ -154,7 +156,9 @@ public class LoanRequestBuilder implements Builder {
       overdueFinePolicyId,
       lostItemPolicyId,
       claimedReturnedDate,
-      agedToLostDelayedBilling);
+      agedToLostDelayedBilling,
+      example.getBoolean("isDcb")
+      );
   }
 
   @Override
@@ -240,6 +244,10 @@ public class LoanRequestBuilder implements Builder {
 
      if (agedToLostDelayedBilling != null) {
       request.put("agedToLostDelayedBilling", agedToLostDelayedBilling);
+    }
+
+    if (isDcb != null) {
+      request.put("isDcb", isDcb);
     }
 
     return request;
