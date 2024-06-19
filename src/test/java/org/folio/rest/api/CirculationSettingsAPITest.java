@@ -12,10 +12,8 @@ import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.http.AssertingRecordClient;
 import org.folio.rest.support.http.InterfaceUrls;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import io.vertx.core.json.JsonObject;
-import junitparams.JUnitParamsRunner;
 
 public class CirculationSettingsAPITest extends ApiTests {
 

@@ -81,7 +81,8 @@ import lombok.SneakyThrows;
   TlrFeatureToggleJobAPITest.class,
   ActualCostRecordAPITest.class,
   EventConsumerVerticleTest.class,
-  CheckOutLockAPITest.class
+  CheckOutLockAPITest.class,
+  CirculationSettingsAPITest.class
 })
 public class StorageTestSuite {
 
