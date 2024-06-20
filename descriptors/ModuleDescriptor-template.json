@@ -645,7 +645,7 @@
           "methods": [
             "POST"
           ],
-          "pathPattern": "/print-events/{id}",
+          "pathPattern": "print-events-storage/print-events/{id}",
           "permissionsRequired": [
             "circulation-storage.print-events.post"
           ]
