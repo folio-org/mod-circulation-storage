@@ -636,9 +636,29 @@
           "delay": "5"
         }
       ]
+    },
+    {
+      "id": "print-events-storage",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/print-events/{id}",
+          "permissionsRequired": [
+            "circulation-storage.print-events.post"
+          ]
+        }
+      ]
     }
-  ],
+      ],
   "permissionSets": [
+    {
+      "permissionName": "circulation-storage.print-events.post",
+      "displayName": "Circulation storage - save print event log",
+      "description": "save print event log in storage"
+    },
     {
       "permissionName": "check-in-storage.check-ins.collection.get",
       "displayName": "Check-in storage - get check-ins collection",
@@ -1065,7 +1085,8 @@
         "checkout-lock-storage.checkout-locks.item.post",
         "checkout-lock-storage.checkout-locks.item.delete",
         "checkout-lock-storage.checkout-locks.item.get",
-        "checkout-lock-storage.checkout-locks.collection.get"
+        "checkout-lock-storage.checkout-locks.collection.get",
+        "circulation-storage.print-events.post"
       ]
     },
     {

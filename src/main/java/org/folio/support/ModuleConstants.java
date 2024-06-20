@@ -27,6 +27,7 @@ public class ModuleConstants {
     TlrFeatureToggleJob.class;
   public static final String REQUEST_POLICY_TABLE = "request_policy";
   public static final Class<RequestPolicy> REQUEST_POLICY_CLASS = RequestPolicy.class;
+  public static final String PRINT_EVENTS_TABLE = "print_events";
 
   private ModuleConstants(){
   }

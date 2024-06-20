@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Print Event Schema",
+  "description": "Print Event",
+  "type": "object",
+  "properties": {
+    "requestId": {
+      "description": "Id of the request",
+      "type": "string"
+    },
+    "requesterId": {
+      "description": "Id of the requester",
+      "type": "string"
+    },
+    "printEventDate": {
+      "description": "Date And time when the print command is executed",
+      "type": "string",
+      "format": "date-time"
+    },
+
+    "metadata": {
+      "description": "Metadata about creation and changes, provided by the server (client should not provide)",
+      "type": "object",
+      "$ref": "raml-util/schemas/metadata.schema"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "requestId",
+    "requesterId",
+    "printEventDate"
+  ]
+}
