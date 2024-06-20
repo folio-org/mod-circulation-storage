@@ -59,8 +59,8 @@ public class TenantRefAPI extends TenantAPI {
           .withKey(SAMPLE_KEY).withLead(SAMPLE_LEAD)
           .add("loans", "loan-storage/loans")
           .add("requests", "request-storage/requests")
-          .add("circulation-settings-storage/circulation-settings");
-
+          .add("circulation-settings-storage/circulation-settings")
+          .add("print-events-storage/print-events");
 
         tl.perform(attributes, headers, vertx, res -> {
           if (res.failed()) {
