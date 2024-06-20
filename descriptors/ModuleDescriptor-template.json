@@ -674,9 +674,29 @@
           "delay": "5"
         }
       ]
+    },
+    {
+      "id": "print-events-storage",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/print-events/{id}",
+          "permissionsRequired": [
+            "circulation-storage.print-events.post"
+          ]
+        }
+      ]
     }
   ],
   "permissionSets": [
+    {
+      "permissionName": "circulation-storage.print-events.post",
+      "displayName": "Circulation storage - save print event log",
+      "description": "save print event log in storage"
+    },
     {
       "permissionName": "check-in-storage.check-ins.collection.get",
       "displayName": "Check-in storage - get check-ins collection",
@@ -1133,7 +1153,8 @@
         "circulation-storage.circulation-settings.item.get",
         "circulation-storage.circulation-settings.item.post",
         "circulation-storage.circulation-settings.item.put",
-        "circulation-storage.circulation-settings.item.delete"
+        "circulation-storage.circulation-settings.item.delete",
+        "circulation-storage.print-events.post"
       ]
     },
     {

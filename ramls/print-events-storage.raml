@@ -1,0 +1,52 @@
+#%RAML 1.0
+title: Print Events Storage
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost:9130
+
+documentation:
+  - title: Print Events Storage API
+    content: <b>Storage for print events</b>
+
+traits:
+  language: !include raml-util/traits/language.raml
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  validate: !include raml-util/traits/validation.raml
+
+types:
+  print-event: !include print-event.json
+  print-events: !include print-events.json
+  errors: !include raml-util/schemas/errors.schema
+  parameters: !include raml-util/schemas/parameters.schema
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+
+/print-events-storage:
+  /print-events:
+    type:
+      collection:
+        exampleCollection: !include examples/print-events.json
+        exampleItem:       !include examples/print-event.json
+        schemaCollection: print-events
+        schemaItem: print-event
+    post:
+      is: [validate]
+      description: save a print event log
+      body:
+        application/json:
+          type: print-event
+      responses:
+        201:
+          description: "Print event log  has been saved"
+          body:
+            application/json:
+              type: print-event
+        500:
+          description: "Internal server error"
+          body:
+            text/plain:
+              example: "Internal server error"
+
