@@ -34,15 +34,16 @@ public class BatchPrintEventService {
   }
 
   public Future<Response> create(List<PrintEvent> printEvent) {
-    List<PrintEvent> batch = new ArrayList<>();
-    for(int i=0;i<100;i++) {
-      PrintEvent pEvent = new PrintEvent();
-      pEvent.setRequesterId(UUID.randomUUID().toString());
-      pEvent.setRequestId(UUID.randomUUID().toString());
-      pEvent.setPrintEventDate(new Date());
-      batch.add(pEvent);
-    }
-    return saveBatch(batch);
+    LOG.info("inside create batch");
+//    List<PrintEvent> batch = new ArrayList<>();
+//    for(int i=0;i<100;i++) {
+//      PrintEvent pEvent = new PrintEvent();
+//      pEvent.setRequesterId(UUID.randomUUID().toString());
+//      pEvent.setRequestId(UUID.randomUUID().toString());
+//      pEvent.setPrintEventDate(new Date());
+//      batch.add(pEvent);
+//    }
+    return saveBatch(printEvent);
   }
 
   private void processBatch(Long timerId) {
