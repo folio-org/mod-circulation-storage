@@ -4,6 +4,10 @@
   "description": "Print Event",
   "type": "object",
   "properties": {
+    "id": {
+      "description": "Unique id of the print event",
+      "type": "string"
+    },
     "requestId": {
       "description": "Id of the request",
       "type": "string"
