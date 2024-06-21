@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.core.Response;
 import java.util.Map;
 
+import static io.vertx.core.Future.succeededFuture;
+
 public class PrintEventsApi implements PrintEventsStorage {
   private static final Logger LOG = LoggerFactory.getLogger(PrintEventsApi.class);
   @Override
@@ -20,8 +22,8 @@ public class PrintEventsApi implements PrintEventsStorage {
    LOG.info("inside post api {}", printEvent);
     new BatchPrintEventService(vertxContext, okapiHeaders)
       .create(printEvent)
-      .onComplete(response -> asyncResultHandler.handle(Future.succeededFuture(PostPrintEventsStoragePrintEventsResponse.respond201WithApplicationJson(printEvent,
-        PostPrintEventsStoragePrintEventsResponse.headersFor201()))));
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+      .onFailure(throwable -> asyncResultHandler.handle(succeededFuture(PostPrintEventsStoragePrintEventsResponse.respond500WithTextPlain(throwable.getMessage()))));
   }
 
   @Override

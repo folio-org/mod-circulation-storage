@@ -48,6 +48,7 @@ public class BatchPrintEventService {
         pEvent.setRequesterId(UUID.randomUUID().toString());
         pEvent.setRequestId(UUID.randomUUID().toString());
         pEvent.setPrintEventDate(new Date());
+        batch.add(pEvent);
       });
     return saveBatch(batch);
   }
