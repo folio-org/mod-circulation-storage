@@ -18,7 +18,7 @@ import static io.vertx.core.Future.succeededFuture;
 public class PrintEventsApi implements PrintEventsStorage {
   private static final Logger LOG = LoggerFactory.getLogger(PrintEventsApi.class);
   @Override
-  public void postPrintEventsStoragePrintEvents(String lang, PrintEvent printEvent, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void postPrintEventsStoragePrintEvents(PrintEvent printEvent, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
    LOG.info("inside post api {}", printEvent);
     new BatchPrintEventService(vertxContext, okapiHeaders)
       .create(printEvent)
@@ -26,10 +26,6 @@ public class PrintEventsApi implements PrintEventsStorage {
       .onFailure(throwable -> asyncResultHandler.handle(succeededFuture(PostPrintEventsStoragePrintEventsResponse.respond500WithTextPlain(throwable.getMessage()))));
   }
 
-  @Override
-  public void getPrintEventsStoragePrintEvents(String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-
-  }
 }
 
 
