@@ -6,6 +6,8 @@ import org.folio.persist.PrintEventsRepository;
 import org.folio.rest.jaxrs.model.PrintEvent;
 import org.folio.rest.jaxrs.resource.PrintEventsStorage;
 import org.folio.rest.persist.PgUtil;
+import org.folio.rest.tools.utils.MetadataUtil;
+import org.folio.rest.tools.utils.ValidationHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,6 +15,9 @@ import javax.ws.rs.core.Response;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+
+import static org.folio.rest.jaxrs.resource.PrintEventsStorage.PostPrintEventsStoragePrintEventsResponse.respond201WithApplicationJson;
+import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.support.ModuleConstants.PRINT_EVENTS_TABLE;
 
 public class BatchPrintEventService {
@@ -73,10 +78,15 @@ public class BatchPrintEventService {
     LOG.info("process batch execution ");
   }
 
-  private Future<Response> saveBatch(List<PrintEvent> batch) {
+//  private Future<Response> saveBatch(List<PrintEvent> batch) {
+//    LOG.info("inside save batch");
+//    return PgUtil.postSync(PRINT_EVENTS_TABLE,batch,5,true,okapiHeaders, vertxContext,
+//      PrintEventsStorage.PostPrintEventsStoragePrintEventsResponse.class);
+//  }
+  private Future<Response> saveBatch(List<PrintEvent> entities) {
     LOG.info("inside save batch");
-    return PgUtil.postSync(PRINT_EVENTS_TABLE,batch,5,true,okapiHeaders, vertxContext,
-      PrintEventsStorage.PostPrintEventsStoragePrintEventsResponse.class);
+      return postgresClient(vertxContext, okapiHeaders).saveBatch(PRINT_EVENTS_TABLE,entities)
+        .<Response>map(x -> Response.status(201).build());
   }
 
 }
