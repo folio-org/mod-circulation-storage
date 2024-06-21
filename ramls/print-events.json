@@ -11,13 +11,9 @@
         "type": "object",
         "$ref": "print-event.json"
       }
-    },
-    "totalRecords": {
-      "type": "integer"
     }
   },
   "required": [
-    "printEvents",
-    "totalRecords"
+    "printEvents"
   ]
 }

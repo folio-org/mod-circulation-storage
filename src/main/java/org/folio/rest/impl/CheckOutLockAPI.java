@@ -23,6 +23,7 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.IntStream;
 
 import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.persist.PgUtil.postgresClient;
@@ -83,7 +84,6 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
   @Override
   public void postCheckOutLockStorage(CheckoutLockRequest entity, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-
     log.debug("postCheckOutLockStorage:: entity {} {} ", entity.getUserId(), entity.getTtlMs());
     PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
     String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
@@ -134,7 +134,6 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
   @Override
   public void deleteCheckOutLockStorageByLockId(String lockId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-
     log.debug("deleteCheckOutLockStorageByLockId:: deleting lock with lockId {} ", lockId);
     String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
     PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
