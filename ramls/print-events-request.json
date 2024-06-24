@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Print Events Request",
+  "type": "object",
+  "properties": {
+    "requestIds": {
+      "description": "List of request IDs",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "requesterId": {
+      "description": "ID of the requester",
+      "type": "string"
+    },
+    "printEventDate": {
+      "description": "Date and time when the print command is executed",
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "requestIds",
+    "requesterId",
+    "printEventDate"
+  ]
+}
