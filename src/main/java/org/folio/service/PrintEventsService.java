@@ -12,18 +12,18 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static org.folio.support.ModuleConstants.PRINT_EVENTS_TABLE;
 
-public class BatchPrintEventService {
+public class PrintEventsService {
 
-  private static final Logger LOG = LoggerFactory.getLogger(BatchPrintEventService.class);
+  private static final Logger LOG = LoggerFactory.getLogger(PrintEventsService.class);
+  private static final int MAX_ENTITIES = 10000;
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
 
 
-  public BatchPrintEventService(Context vertxContext, Map<String, String> okapiHeaders) {
+  public PrintEventsService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
     this.okapiHeaders = okapiHeaders;
   }
@@ -37,7 +37,7 @@ public class BatchPrintEventService {
       event.setPrintEventDate(printEventRequest.getPrintEventDate());
       return event;
     }).toList();
-    return PgUtil.postSync(PRINT_EVENTS_TABLE,printEvents,10000,true,okapiHeaders, vertxContext,
+    return PgUtil.postSync(PRINT_EVENTS_TABLE, printEvents, MAX_ENTITIES, false, okapiHeaders, vertxContext,
       PrintEventsStorage.PostPrintEventsStoragePrintEventsResponse.class);
   }
 }
