@@ -26,7 +26,3 @@ public class PrintEventsApi implements PrintEventsStorage {
       .onFailure(throwable -> asyncResultHandler.handle(succeededFuture(PostPrintEventsStoragePrintEventsResponse.respond500WithTextPlain(throwable.getMessage()))));
   }
 }
-
-
-
-
