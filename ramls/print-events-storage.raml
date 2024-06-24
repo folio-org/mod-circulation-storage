@@ -11,6 +11,7 @@ documentation:
 types:
   print-event: !include print-event.json
   print-events: !include print-events.json
+  print-events-request: !include print-events-request.json
   errors: !include raml-util/schemas/errors.schema
 
 /print-events-storage:
@@ -19,7 +20,7 @@ types:
       description: save a print event log
       body:
         application/json:
-          type: print-events
+          type: print-events-request
       responses:
         201:
           description: "All items have been successfully created or updated"
