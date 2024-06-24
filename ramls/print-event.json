@@ -16,6 +16,10 @@
       "description": "Id of the requester",
       "type": "string"
     },
+    "requesterName": {
+      "description": "Name of the requester",
+      "type": "string"
+    },
     "printEventDate": {
       "description": "Date And time when the print command is executed",
       "type": "string",
@@ -32,6 +36,7 @@
   "required": [
     "requestId",
     "requesterId",
+    "requesterName",
     "printEventDate"
   ]
 }
