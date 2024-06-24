@@ -34,6 +34,7 @@ public class PrintEventsService {
       PrintEvent event = new PrintEvent();
       event.setRequestId(requestId);
       event.setRequesterId(printEventRequest.getRequesterId());
+      event.setRequesterName(printEventRequest.getRequesterName());
       event.setPrintEventDate(printEventRequest.getPrintEventDate());
       return event;
     }).toList();
