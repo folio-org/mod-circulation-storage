@@ -13,9 +13,13 @@ types:
   print-events-request: !include print-events-request.json
   errors: !include raml-util/schemas/errors.schema
 
+traits:
+  validate: !include raml-util/traits/validation.raml
+
 /print-events-storage:
   /print-events:
     post:
+      is: [validate]
       description: save a print event log
       body:
         application/json:
