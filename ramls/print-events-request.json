@@ -15,13 +15,13 @@
       "description": "ID of the requester",
       "type": "string",
       "minLength": 1,
-      "pattern": "^\\S+$"
+      "pattern": "^(?!\\s*$).+"
     },
     "requesterName": {
       "description": "Name of the requester",
       "type": "string",
       "minLength": 1,
-      "pattern": "^\\S+$"
+      "pattern": "^(?!\\s*$).+"
     },
     "printEventDate": {
       "description": "Date and time when the print command is executed",
