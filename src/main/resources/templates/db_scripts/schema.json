@@ -529,7 +529,13 @@
     {
       "tableName": "print_events",
       "withMetadata": true,
-      "withAuditing": false
+      "withAuditing": false,
+      "index": [
+        {
+          "fieldName": "requestId",
+          "tOps": "ADD"
+        }
+      ]
     }
   ],
   "scripts": [
