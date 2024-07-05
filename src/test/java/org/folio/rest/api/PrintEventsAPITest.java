@@ -62,8 +62,8 @@ public class PrintEventsAPITest extends ApiTests {
     List<String> requestIds = List.of("request1", "request2");
     return new JsonObject()
       .put("requestIds", requestIds)
-      .put("requesterId", "sample")
-      .put("requesterName", "sample requester")
+      .put("requesterId", "5f5751b4-e352-4121-adca-204b0c2aec43")
+      .put("requesterName", "requester")
       .put("printEventDate", "2024-06-25T14:30:00Z");
   }
 }

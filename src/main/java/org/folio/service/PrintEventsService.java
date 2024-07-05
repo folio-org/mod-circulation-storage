@@ -2,7 +2,7 @@ package org.folio.service;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import org.folio.rest.jaxrs.model.PrintEvent;
+import org.folio.rest.model.PrintEvent;
 import org.folio.rest.jaxrs.model.PrintEventsRequest;
 import org.folio.rest.jaxrs.resource.PrintEventsStorage;
 import org.folio.rest.persist.PgUtil;
@@ -39,6 +39,6 @@ public class PrintEventsService {
       return event;
     }).toList();
     return PgUtil.postSync(PRINT_EVENTS_TABLE, printEvents, MAX_ENTITIES, false, okapiHeaders, vertxContext,
-      PrintEventsStorage.PostPrintEventsStoragePrintEventsResponse.class);
+      PrintEventsStorage.PostPrintEventsStoragePrintEventsCreateBatchResponse.class);
   }
 }

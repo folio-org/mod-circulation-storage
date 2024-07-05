@@ -646,6 +646,21 @@
       ]
     },
     {
+      "id": "print-events-storage",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/print-events-storage/print-events/create-batch",
+          "permissionsRequired": [
+            "circulation-storage.print-events.post"
+          ]
+        }
+      ]
+    },
+    {
       "id": "_timer",
       "version": "1.0",
       "interfaceType": "system",
@@ -672,21 +687,6 @@
           ],
           "unit": "minute",
           "delay": "5"
-        }
-      ]
-    },
-    {
-      "id": "print-events-storage",
-      "version": "1.0",
-      "handlers": [
-        {
-          "methods": [
-            "POST"
-          ],
-          "pathPattern": "/print-events-storage/print-events",
-          "permissionsRequired": [
-            "circulation-storage.print-events.post"
-          ]
         }
       ]
     }

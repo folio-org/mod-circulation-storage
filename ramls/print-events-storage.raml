@@ -9,7 +9,6 @@ documentation:
     content: <b>Storage for print events</b>
 
 types:
-  print-event: !include print-event.json
   print-events-request: !include print-events-request.json
   errors: !include raml-util/schemas/errors.schema
 
@@ -18,32 +17,33 @@ traits:
 
 /print-events-storage:
   /print-events:
-    post:
-      is: [validate]
-      description: save a print event log
-      body:
-        application/json:
-          type: print-events-request
-      responses:
-        201:
-          description: "All items have been successfully created or updated"
-        409:
-          description: "Optimistic locking version conflict"
-          body:
-            text/plain:
-              example: "version error"
-        413:
-          description: "Payload Too Large"
-          body:
-            text/plain:
-              example: "Payload Too Large"
-        422:
-          description: "Unprocessable Entity"
-          body:
-            application/json:
-              type: errors
-        500:
-          description: "Internal server error"
-          body:
-            text/plain:
-              example: "Internal server error"
+    /create-batch:
+      post:
+        is: [validate]
+        description: save a print event log
+        body:
+          application/json:
+            type: print-events-request
+        responses:
+          201:
+            description: "All items have been successfully created or updated"
+          409:
+            description: "Optimistic locking version conflict"
+            body:
+              text/plain:
+                example: "Version error"
+          413:
+            description: "Payload too large"
+            body:
+              text/plain:
+                example: "Payload too large"
+          422:
+            description: "Unprocessable entity"
+            body:
+              application/json:
+                type: errors
+          500:
+            description: "Internal server error"
+            body:
+              text/plain:
+                example: "Internal server error"
