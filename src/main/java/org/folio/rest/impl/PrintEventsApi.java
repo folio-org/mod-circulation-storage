@@ -18,11 +18,11 @@ public class PrintEventsApi implements PrintEventsStorage {
   private static final Logger LOG = LoggerFactory.getLogger(PrintEventsApi.class);
 
   @Override
-  public void postPrintEventsStoragePrintEventsCreateBatch(PrintEventsRequest printEventsRequest, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void postPrintEventsStoragePrintEvents(PrintEventsRequest printEventsRequest, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     LOG.info("postPrintEventsStoragePrintEvents:: save print events {}", printEventsRequest);
     new PrintEventsService(vertxContext, okapiHeaders)
       .create(printEventsRequest)
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
-      .onFailure(throwable -> asyncResultHandler.handle(succeededFuture(PostPrintEventsStoragePrintEventsCreateBatchResponse.respond500WithTextPlain(throwable.getMessage()))));
+      .onFailure(throwable -> asyncResultHandler.handle(succeededFuture(PostPrintEventsStoragePrintEventsResponse.respond500WithTextPlain(throwable))));
   }
 }

@@ -39,6 +39,6 @@ public class PrintEventsService {
       return event;
     }).toList();
     return PgUtil.postSync(PRINT_EVENTS_TABLE, printEvents, MAX_ENTITIES, false, okapiHeaders, vertxContext,
-      PrintEventsStorage.PostPrintEventsStoragePrintEventsCreateBatchResponse.class);
+      PrintEventsStorage.PostPrintEventsStoragePrintEventsResponse.class);
   }
 }

@@ -59,7 +59,7 @@ public class PrintEventsAPITest extends ApiTests {
   }
 
   private JsonObject getPrintEvent() {
-    List<String> requestIds = List.of("request1", "request2");
+    List<String> requestIds = List.of("5f5751b4-e352-4121-adca-204b0c2aec43", "5f5751b4-e352-4121-adca-204b0c2aec44");
     return new JsonObject()
       .put("requestIds", requestIds)
       .put("requesterId", "5f5751b4-e352-4121-adca-204b0c2aec43")
