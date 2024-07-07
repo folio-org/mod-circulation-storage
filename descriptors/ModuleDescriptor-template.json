@@ -653,7 +653,7 @@
           "methods": [
             "POST"
           ],
-          "pathPattern": "/print-events-storage/print-events",
+          "pathPattern": "/print-events-storage/print-events/create-batch",
           "permissionsRequired": [
             "circulation-storage.print-events.post"
           ]

@@ -15,9 +15,9 @@ types:
 traits:
   validate: !include raml-util/traits/validation.raml
 
-/print-events-storage:
-  /print-events:
-      post:
+/print-events-storage/print-events:
+  /create-batch:
+     post:
         is: [validate]
         description: save a print event log
         body:
