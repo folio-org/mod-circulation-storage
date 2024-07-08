@@ -3,59 +3,66 @@ package org.folio.rest.api;
 import io.vertx.core.json.JsonObject;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
-import org.folio.rest.support.http.AssertingRecordClient;
-import org.folio.rest.support.http.InterfaceUrls;
-import org.hamcrest.core.Is;
+import org.folio.rest.support.ResponseHandler;
 import org.junit.Test;
 
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
+import static org.folio.rest.support.http.InterfaceUrls.printEventsUrl;
+import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isCreated;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isUnprocessableEntity;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 public class PrintEventsAPITest extends ApiTests {
-  private final AssertingRecordClient printEventsClient =
-    new AssertingRecordClient(
-      client, StorageTestSuite.TENANT_ID, InterfaceUrls::printEventsUrl,
-      " ");
 
   @Test
-  public void canCreatePrintEventLog() throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
+  public void canCreatePrintEventLog() throws MalformedURLException, ExecutionException, InterruptedException {
     JsonObject printEventsJson = getPrintEvent();
-    JsonResponse response = printEventsClient.attemptCreate(printEventsJson);
-    assertThat(response.getStatusCode(), Is.is(HttpURLConnection.HTTP_CREATED));
+    final CompletableFuture<JsonResponse> postCompleted = new CompletableFuture<>();
+    client.post(printEventsUrl("/create-batch"), printEventsJson, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(postCompleted));
+    final JsonResponse postResponse = postCompleted.get();
+    assertThat(postResponse, isCreated());
   }
 
   @Test
-  public void createPrintEventLogWithMissingFields() throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
-    List<String> requestIds = List.of("request1", "request2");
+  public void createPrintEventLogWithMissingFields() throws MalformedURLException, ExecutionException, InterruptedException {
+    List<String> requestIds = List.of("5f5751b4-e352-4121-adca-204b0c2aec43", "5f5751b4-e352-4121-adca-204b0c2aec44");
     JsonObject printEventsJson = new JsonObject()
       .put("requestIds", requestIds)
       .put("requesterName", "Sample Requester")
       .put("printEventDate", "2024-06-25T14:30:00Z");
-    JsonResponse response = printEventsClient.attemptCreate(printEventsJson);
-    assertThat(response, isUnprocessableEntity());
+    final CompletableFuture<JsonResponse> postCompleted = new CompletableFuture<>();
+    client.post(printEventsUrl("/create-batch"), printEventsJson, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(postCompleted));
+    final JsonResponse postResponse = postCompleted.get();
+    assertThat(postResponse, isUnprocessableEntity());
   }
 
   @Test
-  public void createPrintEventLogWithBlankFields() throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
+  public void createPrintEventLogWithBlankFields() throws MalformedURLException, ExecutionException, InterruptedException {
     JsonObject printEventsJson = getPrintEvent();
     printEventsJson.put("requesterId", " ");
-    JsonResponse response = printEventsClient.attemptCreate(printEventsJson);
-    assertThat(response, isUnprocessableEntity());
+    final CompletableFuture<JsonResponse> postCompleted = new CompletableFuture<>();
+    client.post(printEventsUrl("/create-batch"), printEventsJson, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(postCompleted));
+    final JsonResponse postResponse = postCompleted.get();
+    assertThat(postResponse, isUnprocessableEntity());
   }
 
   @Test
-  public void createPrintEventLogWhenRequestListIsEmpty() throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
+  public void createPrintEventLogWhenRequestListIsEmpty() throws MalformedURLException, ExecutionException, InterruptedException {
     List<String> requestIds = List.of();
     JsonObject printEventsJson = getPrintEvent();
     printEventsJson.put("requestIds", requestIds);
-    JsonResponse response = printEventsClient.attemptCreate(printEventsJson);
-    assertThat(response, isUnprocessableEntity());
+    final CompletableFuture<JsonResponse> postCompleted = new CompletableFuture<>();
+    client.post(printEventsUrl("/create-batch"), printEventsJson, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(postCompleted));
+    final JsonResponse postResponse = postCompleted.get();
+    assertThat(postResponse, isUnprocessableEntity());
   }
 
   private JsonObject getPrintEvent() {
