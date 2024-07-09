@@ -533,7 +533,11 @@
       "index": [
         {
           "fieldName": "requestId",
-          "tOps": "ADD"
+          "tOps": "ADD",
+          "caseSensitive": true,
+          "removeAccents": false,
+          "sqlExpression": "(jsonb->>'requestId')",
+          "sqlExpressionQuery": "$"
         }
       ]
     }
