@@ -22,7 +22,7 @@ public class PrintEventsAPITest extends ApiTests {
   public void canCreatePrintEventLog() throws MalformedURLException, ExecutionException, InterruptedException {
     JsonObject printEventsJson = getPrintEvent();
     final CompletableFuture<JsonResponse> postCompleted = new CompletableFuture<>();
-    client.post(printEventsUrl("/create-batch"), printEventsJson, StorageTestSuite.TENANT_ID,
+    client.post(printEventsUrl("/print-events-entry"), printEventsJson, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(postCompleted));
     final JsonResponse postResponse = postCompleted.get();
     assertThat(postResponse, isCreated());
@@ -36,7 +36,7 @@ public class PrintEventsAPITest extends ApiTests {
       .put("requesterName", "Sample Requester")
       .put("printEventDate", "2024-06-25T14:30:00Z");
     final CompletableFuture<JsonResponse> postCompleted = new CompletableFuture<>();
-    client.post(printEventsUrl("/create-batch"), printEventsJson, StorageTestSuite.TENANT_ID,
+    client.post(printEventsUrl("/print-events-entry"), printEventsJson, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(postCompleted));
     final JsonResponse postResponse = postCompleted.get();
     assertThat(postResponse, isUnprocessableEntity());
@@ -47,7 +47,7 @@ public class PrintEventsAPITest extends ApiTests {
     JsonObject printEventsJson = getPrintEvent();
     printEventsJson.put("requesterId", " ");
     final CompletableFuture<JsonResponse> postCompleted = new CompletableFuture<>();
-    client.post(printEventsUrl("/create-batch"), printEventsJson, StorageTestSuite.TENANT_ID,
+    client.post(printEventsUrl("/print-events-entry"), printEventsJson, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(postCompleted));
     final JsonResponse postResponse = postCompleted.get();
     assertThat(postResponse, isUnprocessableEntity());
@@ -59,7 +59,7 @@ public class PrintEventsAPITest extends ApiTests {
     JsonObject printEventsJson = getPrintEvent();
     printEventsJson.put("requestIds", requestIds);
     final CompletableFuture<JsonResponse> postCompleted = new CompletableFuture<>();
-    client.post(printEventsUrl("/create-batch"), printEventsJson, StorageTestSuite.TENANT_ID,
+    client.post(printEventsUrl("/print-events-entry"), printEventsJson, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(postCompleted));
     final JsonResponse postResponse = postCompleted.get();
     assertThat(postResponse, isUnprocessableEntity());
