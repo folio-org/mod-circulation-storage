@@ -13,6 +13,7 @@ import java.util.concurrent.ExecutionException;
 
 import static org.folio.rest.support.http.InterfaceUrls.printEventsUrl;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isCreated;
+import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isOk;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isUnprocessableEntity;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
@@ -26,6 +27,11 @@ public class PrintEventsAPITest extends ApiTests {
       ResponseHandler.json(postCompleted));
     final JsonResponse postResponse = postCompleted.get();
     assertThat(postResponse, isCreated());
+    final CompletableFuture<JsonResponse> postCompleted1 = new CompletableFuture<>();
+    client.post(printEventsUrl("/print-events-status"), createPrintRequestIds(), StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(postCompleted1));
+    final JsonResponse postResponse1 = postCompleted1.get();
+    assertThat(postResponse1, isOk());
   }
 
   @Test
@@ -72,5 +78,11 @@ public class PrintEventsAPITest extends ApiTests {
       .put("requesterId", "5f5751b4-e352-4121-adca-204b0c2aec43")
       .put("requesterName", "requester")
       .put("printEventDate", "2024-06-25T14:30:00Z");
+  }
+
+  private JsonObject createPrintRequestIds() {
+    List<String> requestIds = List.of("5f5751b4-e352-4121-adca-204b0c2aec43", "5f5751b4-e352-4121-adca-204b0c2aec44");
+    return new JsonObject()
+      .put("requestIds", requestIds);
   }
 }
