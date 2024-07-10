@@ -2,9 +2,9 @@ package org.folio.service;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import org.folio.rest.model.PrintEvent;
 import org.folio.rest.jaxrs.model.PrintEventsRequest;
-import org.folio.rest.jaxrs.resource.PrintEventsStoragePrintEvents;
+import org.folio.rest.jaxrs.resource.PrintEventsStorage;
+import org.folio.rest.model.PrintEvent;
 import org.folio.rest.persist.PgUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +39,6 @@ public class PrintEventsService {
       return event;
     }).toList();
     return PgUtil.postSync(PRINT_EVENTS_TABLE, printEvents, MAX_ENTITIES, false, okapiHeaders, vertxContext,
-      PrintEventsStoragePrintEvents.PostPrintEventsStoragePrintEventsCreateBatchResponse.class);
+      PrintEventsStorage.PostPrintEventsStoragePrintEventsEntryResponse.class);
   }
 }
