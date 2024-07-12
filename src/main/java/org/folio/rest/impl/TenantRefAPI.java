@@ -41,18 +41,22 @@ public class TenantRefAPI extends TenantAPI {
         .createKafkaTopics(CirculationStorageKafkaTopic.values(), tenantId))
       .compose(r -> super.loadData(attributes, tenantId, headers, vertxContext))
       .compose(r -> loadData(attributes, headers, vertxContext))
-      .compose(r -> registerModule(headers, vertxContext))
+      .compose(r -> registerModuleInPubSub(headers, vertxContext))
       .mapEmpty();
   }
 
   private Future<Integer> loadData(TenantAttributes attributes, Map<String, String> headers,
       Context vertxContext) {
 
-    log.info("Initializing of tenant's data");
-    TenantLoading tl = new TenantLoading();
-    tl.withKey(REFERENCE_KEY).withLead(REFERENCE_LEAD);
+    log.info("loadData:: Initializing tenant data");
+
+    TenantLoading tenantLoading = new TenantLoading();
+    tenantLoading.withKey(REFERENCE_KEY).withLead(REFERENCE_LEAD);
     if (isNew(attributes, "14.0.0")) {
-      tl.withIdContent()
+      log.info("loadData:: Adding reference data: loan policies, request policies, " +
+        "patron notice policies, staff slips, circulation rules, cancellation reasons");
+
+      tenantLoading.withIdContent()
         .add("loan-policy-storage/loan-policies")
         .add("request-policy-storage/request-policies")
         .add("patron-notice-policy-storage/patron-notice-policies")
@@ -62,15 +66,19 @@ public class TenantRefAPI extends TenantAPI {
         .withIdContent()
         .add("cancellation-reason-storage/cancellation-reasons");
     }
-    tl.withKey(SAMPLE_KEY).withLead(SAMPLE_LEAD);
+    tenantLoading.withKey(SAMPLE_KEY).withLead(SAMPLE_LEAD);
     if (isNew(attributes, "7.0.0")) {
-      tl.add("loans", "loan-storage/loans")
+      log.info("loadData:: Adding sample data: loans, circulation settings");
+
+      tenantLoading.add("loans", "loan-storage/loans")
         .add("circulation-settings-storage/circulation-settings");
     }
     if (isNew(attributes, "16.1.0")) {
-      tl.add("requests", "request-storage/requests");
+      log.info("loadData:: Adding sample data: requests");
+
+      tenantLoading.add("requests", "request-storage/requests");
     }
-    return tl.perform(attributes, headers, vertxContext, 0);
+    return tenantLoading.perform(attributes, headers, vertxContext, 0);
   }
 
   /**
@@ -78,16 +86,21 @@ public class TenantRefAPI extends TenantAPI {
    * attributes.getModuleFrom() is null.
    */
   static boolean isNew(TenantAttributes attributes, String featureVersion) {
+    log.info("isNew:: params moduleFrom: {}, moduleTo: {}, purge: {}, featureVersion: {}",
+      attributes::getModuleFrom, attributes::getModuleTo, attributes::getPurge,
+      () -> featureVersion);
     if (attributes.getModuleFrom() == null) {
+      log.info("isNew:: moduleFrom is null, quitting");
       return true;
     }
-    var since = new Versioned() {
-    };
+    var since = new Versioned() { };
     since.setFromModuleVersion(featureVersion);
-    return since.isNewForThisInstall(attributes.getModuleFrom());
+    var result = since.isNewForThisInstall(attributes.getModuleFrom());
+    log.info("isNew:: {}", result);
+    return result;
   }
 
-  private Future<Boolean> registerModule(Map<String, String> headers, Context vertxContext) {
+  private Future<Boolean> registerModuleInPubSub(Map<String, String> headers, Context vertxContext) {
     var vertx = vertxContext.owner();
     return Future.fromCompletionStage(PubSubRegistrationService.registerModule(headers, vertx));
   }
