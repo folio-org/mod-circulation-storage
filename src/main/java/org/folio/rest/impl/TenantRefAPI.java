@@ -52,7 +52,7 @@ public class TenantRefAPI extends TenantAPI {
 
     TenantLoading tenantLoading = new TenantLoading();
     tenantLoading.withKey(REFERENCE_KEY).withLead(REFERENCE_LEAD);
-    if (isNew(attributes, "14.0.0")) {
+    if (isNew(attributes, "17.4.0")) {
       log.info("loadData:: Adding reference data: loan policies, request policies, " +
         "patron notice policies, staff slips, circulation rules, cancellation reasons");
 
