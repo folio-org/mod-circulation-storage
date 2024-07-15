@@ -75,16 +75,24 @@ public class PrintEventsService {
   }
 
   public void getPrintEventRequestDetails(List<String> requestIds, Handler<AsyncResult<Response>> asyncResultHandler) {
+    LOG.debug("getPrintEventRequestDetails:: Fetching print event details for requestIds {}", requestIds);
     String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
     PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
     postgresClient.execute(formatQuery(tenantId, requestIds), handler -> {
-      if (handler.succeeded()) {
-        asyncResultHandler.handle(
-          succeededFuture(PrintEventsStorage.PostPrintEventsStoragePrintEventsStatusResponse
-            .respond200WithApplicationJson(mapRowSetToResponse(handler.result()))));
-      } else {
-        asyncResultHandler.handle(succeededFuture(PrintEventsStorage.PostPrintEventsStoragePrintEventsStatusResponse
-          .respond500WithTextPlain(handler.cause())));
+      try {
+        if (handler.succeeded()) {
+          asyncResultHandler.handle(
+            succeededFuture(PrintEventsStorage.PostPrintEventsStoragePrintEventsStatusResponse
+              .respond200WithApplicationJson(mapRowSetToResponse(handler.result()))));
+        } else {
+          LOG.warn("getPrintEventRequestDetails:: Error while executing query", handler.cause());
+          asyncResultHandler.handle(succeededFuture(PrintEventsStorage.PostPrintEventsStoragePrintEventsStatusResponse
+            .respond500WithTextPlain(handler.cause())));
+        }
+      } catch (Exception ex) {
+        LOG.warn("getPrintEventRequestDetails:: Error while fetching print details", ex);
+        asyncResultHandler.handle(succeededFuture(PrintEventsStorage.PostPrintEventsStoragePrintEventsEntryResponse
+          .respond500WithTextPlain(ex.getMessage())));
       }
     });
   }
