@@ -51,13 +51,13 @@ traits:
   /print-events-status:
     post:
       is: [validate]
-      description: Fetch batch of print event log details
+      description: Fetch batch of print event details
       body:
         application/json:
           type: print-events-status-request
       responses:
         200:
-          description: "All items have been successfully created or updated"
+          description: "Requests print event details are successfully retreived"
           body:
             application/json:
               type: print-events-status-responses

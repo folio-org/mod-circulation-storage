@@ -78,7 +78,7 @@ public class PrintEventsService {
     String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
     PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
     postgresClient.execute(formatQuery(tenantId, requestIds), handler -> {
-      if(handler.succeeded()) {
+      if (handler.succeeded()) {
         asyncResultHandler.handle(
           succeededFuture(PrintEventsStorage.PostPrintEventsStoragePrintEventsStatusResponse
             .respond200WithApplicationJson(mapRowSetToResponse(handler.result()))));
@@ -90,7 +90,9 @@ public class PrintEventsService {
   }
 
   private String formatQuery(String tenantId, List<String> requestIds) {
-    String formattedRequestIds = requestIds.stream().map(requestId -> "'" + requestId + "'")
+    String formattedRequestIds = requestIds
+      .stream()
+      .map(requestId -> "'" + requestId + "'")
       .collect(Collectors.joining(", "));
     return String.format(PRINT_EVENT_FETCH_QUERY, convertToPsqlStandard(tenantId), PRINT_EVENTS_TABLE, formattedRequestIds);
   }
