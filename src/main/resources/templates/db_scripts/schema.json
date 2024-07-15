@@ -525,6 +525,11 @@
           "removeAccents": true
         }
       ]
+    },
+    {
+      "tableName": "print_events",
+      "withMetadata": true,
+      "withAuditing": false
     }
   ],
   "scripts": [
