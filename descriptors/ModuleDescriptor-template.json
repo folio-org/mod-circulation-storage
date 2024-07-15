@@ -655,7 +655,7 @@
           ],
           "pathPattern": "/print-events-storage/print-events-entry",
           "permissionsRequired": [
-            "circulation-storage.print-events.post"
+            "print-events-storage.print-events-entry.item.post"
           ]
         },
         {
@@ -702,8 +702,8 @@
   ],
   "permissionSets": [
     {
-      "permissionName": "circulation-storage.print-events.post",
-      "displayName": "Circulation storage - save print event log",
+      "permissionName": "print-events-storage.print-events-entry.item.post",
+      "displayName": "print events storage - save print event logs",
       "description": "save print event log in storage"
     },
     {
@@ -1168,7 +1168,7 @@
         "circulation-storage.circulation-settings.item.post",
         "circulation-storage.circulation-settings.item.put",
         "circulation-storage.circulation-settings.item.delete",
-        "circulation-storage.print-events.post",
+        "print-events-storage.print-events-entry.item.post",
         "print-events-storage.print-events-status.item.post"
       ]
     },
