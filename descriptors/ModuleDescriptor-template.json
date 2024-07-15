@@ -694,7 +694,7 @@
   "permissionSets": [
     {
       "permissionName": "print-events-storage.print-events-entry.item.post",
-      "displayName": "print events storage - save print event log",
+      "displayName": "print events storage - save print event logs",
       "description": "save print event log in storage"
     },
     {
