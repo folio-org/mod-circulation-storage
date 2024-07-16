@@ -7,6 +7,7 @@ import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.support.kafka.topic.CirculationStorageKafkaTopic;
+import org.folio.dbschema.Versioned;
 import org.folio.kafka.services.KafkaAdminClientService;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.TenantAttributes;
@@ -20,8 +21,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
 
 public class TenantRefAPI extends TenantAPI {
 
@@ -41,35 +40,69 @@ public class TenantRefAPI extends TenantAPI {
       .compose(r -> new KafkaAdminClientService(vertxContext.owner())
         .createKafkaTopics(CirculationStorageKafkaTopic.values(), tenantId))
       .compose(r -> super.loadData(attributes, tenantId, headers, vertxContext))
-      .compose(superRecordsLoaded -> {
-        log.info("Initializing of tenant's data");
-        Vertx vertx = vertxContext.owner();
-        Promise<Integer> promise = Promise.promise();
-        TenantLoading tl = new TenantLoading();
-        tl.withKey(REFERENCE_KEY).withLead(REFERENCE_LEAD)
-          .withIdContent()
-          .add("loan-policy-storage/loan-policies")
-          .add("request-policy-storage/request-policies")
-          .add("patron-notice-policy-storage/patron-notice-policies")
-          .add("staff-slips-storage/staff-slips")
-          .withIdRaw()
-          .add("circulation-rules-storage")
-          .withIdContent()
-          .add("cancellation-reason-storage/cancellation-reasons")
-          .withKey(SAMPLE_KEY).withLead(SAMPLE_LEAD)
-          .add("loans", "loan-storage/loans")
-          .add("requests", "request-storage/requests");
+      .compose(r -> loadData(attributes, headers, vertxContext))
+      .compose(r -> registerModuleInPubSub(headers, vertxContext))
+      .mapEmpty();
+  }
 
-        tl.perform(attributes, headers, vertx, res -> {
-          if (res.failed()) {
-            promise.fail(res.cause());
-          } else {
-            PubSubRegistrationService.registerModule(headers, vertx)
-              .whenComplete((aBoolean, throwable) -> promise.complete());
-          }
-        });
-        return promise.future();
-      });
+  private Future<Integer> loadData(TenantAttributes attributes, Map<String, String> headers,
+      Context vertxContext) {
+
+    log.info("loadData:: Initializing tenant data");
+
+    TenantLoading tenantLoading = new TenantLoading();
+    tenantLoading.withKey(REFERENCE_KEY).withLead(REFERENCE_LEAD);
+    if (isNew(attributes, "14.0.0")) {
+      log.info("loadData:: Adding reference data: loan policies, request policies, " +
+        "patron notice policies, staff slips, circulation rules, cancellation reasons");
+
+      tenantLoading.withIdContent()
+        .add("loan-policy-storage/loan-policies")
+        .add("request-policy-storage/request-policies")
+        .add("patron-notice-policy-storage/patron-notice-policies")
+        .add("staff-slips-storage/staff-slips")
+        .withIdRaw()
+        .add("circulation-rules-storage")
+        .withIdContent()
+        .add("cancellation-reason-storage/cancellation-reasons");
+    }
+    tenantLoading.withKey(SAMPLE_KEY).withLead(SAMPLE_LEAD);
+    if (isNew(attributes, "7.0.0")) {
+      log.info("loadData:: Adding sample data: loans, circulation settings");
+
+      tenantLoading.add("loans", "loan-storage/loans")
+        .add("circulation-settings-storage/circulation-settings");
+    }
+    if (isNew(attributes, "16.1.0")) {
+      log.info("loadData:: Adding sample data: requests");
+
+      tenantLoading.add("requests", "request-storage/requests");
+    }
+    return tenantLoading.perform(attributes, headers, vertxContext, 0);
+  }
+
+  /**
+   * Returns attributes.getModuleFrom() < featureVersion or
+   * attributes.getModuleFrom() is null.
+   */
+  static boolean isNew(TenantAttributes attributes, String featureVersion) {
+    log.info("isNew:: params moduleFrom: {}, moduleTo: {}, purge: {}, featureVersion: {}",
+      attributes::getModuleFrom, attributes::getModuleTo, attributes::getPurge,
+      () -> featureVersion);
+    if (attributes.getModuleFrom() == null) {
+      log.info("isNew:: moduleFrom is null, quitting");
+      return true;
+    }
+    var since = new Versioned() { };
+    since.setFromModuleVersion(featureVersion);
+    var result = since.isNewForThisInstall(attributes.getModuleFrom());
+    log.info("isNew:: {}", result);
+    return result;
+  }
+
+  private Future<Boolean> registerModuleInPubSub(Map<String, String> headers, Context vertxContext) {
+    var vertx = vertxContext.owner();
+    return Future.fromCompletionStage(PubSubRegistrationService.registerModule(headers, vertx));
   }
 
   @Validate

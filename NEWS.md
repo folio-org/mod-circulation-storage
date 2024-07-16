@@ -1,3 +1,6 @@
+* ## 17.2.2 2024-07-16
+* Upgrading tenant resets reference and sample records (CIRCSTORE-496)
+* 
 * ## 17.2.1 2024-04-17
 * Upgrade folio-kafka-wrapper to 3.1.1, org.aspectj to 1.9.22  (CIRCSTORE-499)
 
