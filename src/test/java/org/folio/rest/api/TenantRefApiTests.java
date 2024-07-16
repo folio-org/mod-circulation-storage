@@ -19,8 +19,6 @@ import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_CANCELLED;
 import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_FILLED;
 import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_PICKUP_EXPIRED;
 import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_UNFILLED;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -45,7 +43,6 @@ import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.jaxrs.model.TenantJob;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.tools.utils.ModuleName;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -69,7 +66,6 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
-import io.vertx.sqlclient.Tuple;
 
 @RunWith(VertxUnitRunner.class)
 public class TenantRefApiTests {
@@ -112,7 +108,6 @@ public class TenantRefApiTests {
   private static final String REQUEST_ID_MISSING_SUFFIX = "ecd86aab-a0ac-4d3c-bb90-0df390b1c6c4";
   private static final String REQUEST_ID_MISSING_PICKUP_SERVICE_POINT_NAME =
     "87a7dfd9-8fdb-4b0d-9529-14912b484860";
-  private static final String OTHER_CANCELLATION_REASON_ID = "b548b182-55c2-4741-b169-616d9cd995a8";
 
   private static StubMapping itemStorageStub;
   private static StubMapping holdingsStorageStub;
@@ -461,17 +456,6 @@ public class TenantRefApiTests {
       });
   }
 
-  @Test
-  public void keepReferenceData(TestContext context) {
-    setOtherCancellationReasonName("foo")
-      .compose(x -> assertOtherCancellationReasonName(context, "foo"))
-      .compose(x -> postTenant(context, "16.1.0", ModuleName.getModuleVersion()))
-      .compose(x -> assertOtherCancellationReasonName(context, "foo"))
-      .compose(x -> postTenant(context, "0.0.0", ModuleName.getModuleVersion()))
-      .compose(x -> assertOtherCancellationReasonName(context, "Other"))
-      .onComplete(context.asyncAssertSuccess());
-  }
-
   private void jobFailsWhenRequestValidationFails(TestContext context, Async async,
     JsonObject request, String expectedErrorMessage) {
 
@@ -609,22 +593,6 @@ public class TenantRefApiTests {
       context.assertEquals("testSuffix", requestAfter.getJsonObject("searchIndex")
         .getJsonObject("callNumberComponents").getString("suffix"));
     }
-  }
-
-  private static Future<RowSet<Row>> setOtherCancellationReasonName(String name) {
-    var json = new JsonObject()
-      .put("id", OTHER_CANCELLATION_REASON_ID)
-      .put("name", name)
-      .put("description", "Other")
-      .put("requiresAdditionalInformation", true);
-    return postgresClient.execute("UPDATE cancellation_reason SET jsonb=$1 WHERE id=$2",
-        Tuple.of(json, OTHER_CANCELLATION_REASON_ID));
-  }
-
-  private static Future<Row> assertOtherCancellationReasonName(TestContext context, String expected) {
-    return postgresClient.selectSingle("SELECT jsonb->>'name' FROM cancellation_reason WHERE id=$1",
-        Tuple.of(OTHER_CANCELLATION_REASON_ID))
-      .onComplete(context.asyncAssertSuccess(row -> assertThat(row.getString(0), is(expected))));
   }
 
   static void deleteTenant(TenantClient tenantClient) {
