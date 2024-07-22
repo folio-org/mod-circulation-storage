@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Print events details",
+  "type": "object",
+  "properties": {
+    "requestId": {
+      "description": "ID of the request",
+      "type": "string"
+    },
+    "requesterId": {
+      "description": "ID of the requester",
+      "type": "string"
+    },
+    "requesterName": {
+      "description": "Name of the requester",
+      "type": "string"
+    },
+    "count": {
+      "description": "No of times the request is printed",
+      "type": "integer"
+    },
+    "printEventDate": {
+      "description": "Date and time when the print command is executed",
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

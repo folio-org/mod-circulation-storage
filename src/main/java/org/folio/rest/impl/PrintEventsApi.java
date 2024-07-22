@@ -4,6 +4,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import org.folio.rest.jaxrs.model.PrintEventsRequest;
+import org.folio.rest.jaxrs.model.PrintEventsStatusRequest;
 import org.folio.rest.jaxrs.resource.PrintEventsStorage;
 import org.folio.service.PrintEventsService;
 import org.slf4j.Logger;
@@ -24,5 +25,13 @@ public class PrintEventsApi implements PrintEventsStorage {
       .create(printEventsRequest)
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
       .onFailure(throwable -> asyncResultHandler.handle(succeededFuture(PostPrintEventsStoragePrintEventsEntryResponse.respond500WithTextPlain(throwable.getMessage()))));
+  }
+
+  @Override
+  public void postPrintEventsStoragePrintEventsStatus(PrintEventsStatusRequest entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+    LOG.info("postPrintEventsStoragePrintEventsStatus:: Fetching print event details for requestIds {}",
+      entity.getRequestIds());
+    new PrintEventsService(vertxContext, okapiHeaders)
+      .getPrintEventRequestDetails(entity.getRequestIds(), asyncResultHandler);
   }
 }

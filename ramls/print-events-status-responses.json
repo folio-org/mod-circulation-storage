@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Collection of print events details",
+  "type": "object",
+  "properties": {
+    "printEventsStatusResponses": {
+      "description": "List of print events details",
+      "id": "printEvents",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "print-events-status-response.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "printEventsStatusResponses",
+    "totalRecords"
+  ]
+}
