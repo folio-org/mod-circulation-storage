@@ -12,16 +12,21 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
 
+import static io.vertx.core.Future.succeededFuture;
+import static org.folio.rest.jaxrs.resource.CirculationSettingsStorage.PostCirculationSettingsStorageCirculationSettingsResponse.headersFor201;
+import static org.folio.rest.jaxrs.resource.CirculationSettingsStorage.PostCirculationSettingsStorageCirculationSettingsResponse.respond201WithApplicationJson;
+import static org.folio.rest.jaxrs.resource.CirculationSettingsStorage.PostCirculationSettingsStorageCirculationSettingsResponse.respond500WithTextPlain;
+
 public class CirculationSettingsAPI implements CirculationSettingsStorage {
 
   @Override
   public void postCirculationSettingsStorageCirculationSettings(String lang,
-    CirculationSetting circulationSettings, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-
+                                                                CirculationSetting circulationSettings, Map<String, String> okapiHeaders,
+                                                                Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     new CirculationSettingsService(vertxContext, okapiHeaders)
       .create(circulationSettings)
-      .onComplete(asyncResultHandler);
+      .onSuccess(reply -> asyncResultHandler.handle(succeededFuture(respond201WithApplicationJson(circulationSettings, headersFor201()))))
+      .onFailure(errorReply -> asyncResultHandler.handle(succeededFuture(respond500WithTextPlain(errorReply.getMessage()))));
   }
 
   @Override

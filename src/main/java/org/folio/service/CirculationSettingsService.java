@@ -1,8 +1,10 @@
 package org.folio.service;
 
+import static org.folio.rest.tools.utils.ValidationHelper.isDuplicate;
 import static org.folio.service.event.EntityChangedEventPublisherFactory.circulationSettingsEventPublisher;
 import static org.folio.support.ModuleConstants.CIRCULATION_SETTINGS_TABLE;
 
+import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
@@ -10,11 +12,13 @@ import javax.ws.rs.core.Response;
 import org.folio.persist.CirculationSettingsRepository;
 import org.folio.rest.jaxrs.model.CirculationSetting;
 import org.folio.rest.jaxrs.model.CirculationSettings;
+import org.folio.rest.jaxrs.model.Value;
 import org.folio.rest.jaxrs.resource.CirculationSettingsStorage.DeleteCirculationSettingsStorageCirculationSettingsByCirculationSettingsIdResponse;
 import org.folio.rest.jaxrs.resource.CirculationSettingsStorage.GetCirculationSettingsStorageCirculationSettingsByCirculationSettingsIdResponse;
 import org.folio.rest.jaxrs.resource.CirculationSettingsStorage.GetCirculationSettingsStorageCirculationSettingsResponse;
-import org.folio.rest.jaxrs.resource.CirculationSettingsStorage.PostCirculationSettingsStorageCirculationSettingsResponse;
 import org.folio.rest.jaxrs.resource.CirculationSettingsStorage.PutCirculationSettingsStorageCirculationSettingsByCirculationSettingsIdResponse;
+import org.folio.rest.persist.Criteria.Criteria;
+import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PgUtil;
 import org.folio.service.event.EntityChangedEventPublisher;
 
@@ -42,10 +46,10 @@ public class CirculationSettingsService {
       GetCirculationSettingsStorageCirculationSettingsResponse.class);
   }
 
-  public Future<Response> create(CirculationSetting circulationSetting) {
-    return PgUtil.post(CIRCULATION_SETTINGS_TABLE, circulationSetting, okapiHeaders, vertxContext,
-      PostCirculationSettingsStorageCirculationSettingsResponse.class)
-      .compose(eventPublisher.publishCreated());
+  public Future<CirculationSetting> create(CirculationSetting circulationSetting) {
+    return repository.save(circulationSetting.getId(), circulationSetting)
+      .map(circulationSetting)
+      .recover(throwable -> updateSettingsValue(circulationSetting, throwable));
   }
 
   public Future<Response> findById(String circulationSettingsId) {
@@ -66,5 +70,30 @@ public class CirculationSettingsService {
         DeleteCirculationSettingsStorageCirculationSettingsByCirculationSettingsIdResponse.class)
       .compose(eventPublisher.publishRemoved(circulationSetting))
     );
+  }
+
+  private Future<CirculationSetting> updateSettingsValue(CirculationSetting circulationSetting, Throwable throwable) {
+    if (!isDuplicate(throwable.getMessage())) {
+      return Future.failedFuture(throwable);
+    }
+
+    return getSettingsByName(circulationSetting.getName())
+      .compose(settings -> updateSettings(settings, circulationSetting));
+  }
+
+  private Future<CirculationSetting> updateSettings(List<CirculationSetting> settings, CirculationSetting circulationSetting) {
+    Value value = circulationSetting.getValue();
+    settings.forEach(setting -> setting.setValue(value));
+    return repository.update(settings)
+      .map(circulationSetting);
+  }
+
+  private Future<List<CirculationSetting>> getSettingsByName(String settingsName) {
+    Criterion filter = new Criterion(new Criteria()
+      .addField("'name'")
+      .setOperation("=")
+      .setVal(settingsName));
+
+    return repository.get(filter);
   }
 }
