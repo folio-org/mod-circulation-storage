@@ -6,7 +6,6 @@ import javax.ws.rs.core.Response;
 
 import org.folio.rest.jaxrs.model.CirculationSetting;
 import org.folio.rest.jaxrs.resource.CirculationSettingsStorage;
-import org.folio.rest.tools.utils.ValidationHelper;
 import org.folio.service.CirculationSettingsService;
 
 import io.vertx.core.AsyncResult;
@@ -28,13 +27,7 @@ public class CirculationSettingsAPI implements CirculationSettingsStorage {
     new CirculationSettingsService(vertxContext, okapiHeaders)
       .create(circulationSettings)
       .onSuccess(reply -> asyncResultHandler.handle(succeededFuture(respond201WithApplicationJson(circulationSettings, headersFor201()))))
-      .onFailure(errorReply -> {
-        if(isDuplicate(errorReply.getMessage())) {
-          asyncResultHandler.handle(succeededFuture(respond201WithApplicationJson(circulationSettings, headersFor201())));
-        } else {
-          asyncResultHandler.handle(succeededFuture(respond500WithTextPlain(errorReply.getMessage())));
-        }
-      });
+      .onFailure(errorReply -> asyncResultHandler.handle(succeededFuture(respond500WithTextPlain(errorReply.getMessage()))));
   }
 
   @Override

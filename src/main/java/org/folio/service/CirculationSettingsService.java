@@ -46,9 +46,10 @@ public class CirculationSettingsService {
       GetCirculationSettingsStorageCirculationSettingsResponse.class);
   }
 
-  public Future<String> create(CirculationSetting circulationSetting) {
+  public Future<CirculationSetting> create(CirculationSetting circulationSetting) {
     return repository.save(circulationSetting.getId(), circulationSetting)
-      .onFailure(throwable -> updateSettingsValue(circulationSetting, throwable));
+      .map(circulationSetting)
+      .recover(throwable -> updateSettingsValue(circulationSetting, throwable));
   }
 
   private Future<List<CirculationSetting>> getSettingsByName(String settingsName) {
@@ -60,13 +61,14 @@ public class CirculationSettingsService {
     return repository.get(filter);
   }
 
-  private Future<RowSet<Row>> updateSettings(List<CirculationSetting> settings, CirculationSetting circulationSetting) {
+  private Future<CirculationSetting> updateSettings(List<CirculationSetting> settings, CirculationSetting circulationSetting) {
     Value value = circulationSetting.getValue();
     settings.forEach(setting -> setting.setValue(value));
-    return repository.update(settings);
+    return repository.update(settings)
+      .map(circulationSetting);
   }
 
-  private Future<RowSet<Row>> updateSettingsValue(CirculationSetting circulationSetting, Throwable throwable) {
+  private Future<CirculationSetting> updateSettingsValue(CirculationSetting circulationSetting, Throwable throwable) {
     if (!isDuplicate(throwable.getMessage())) {
       return Future.failedFuture(throwable);
     }
