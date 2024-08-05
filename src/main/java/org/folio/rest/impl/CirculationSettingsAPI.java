@@ -17,6 +17,7 @@ import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.jaxrs.resource.CirculationSettingsStorage.PostCirculationSettingsStorageCirculationSettingsResponse.headersFor201;
 import static org.folio.rest.jaxrs.resource.CirculationSettingsStorage.PostCirculationSettingsStorageCirculationSettingsResponse.respond201WithApplicationJson;
 import static org.folio.rest.jaxrs.resource.CirculationSettingsStorage.PostCirculationSettingsStorageCirculationSettingsResponse.respond500WithTextPlain;
+import static org.folio.rest.tools.utils.ValidationHelper.isDuplicate;
 
 public class CirculationSettingsAPI implements CirculationSettingsStorage {
 
@@ -28,7 +29,7 @@ public class CirculationSettingsAPI implements CirculationSettingsStorage {
       .create(circulationSettings)
       .onSuccess(reply -> asyncResultHandler.handle(succeededFuture(respond201WithApplicationJson(circulationSettings, headersFor201()))))
       .onFailure(errorReply -> {
-        if(ValidationHelper.isDuplicate(errorReply.getMessage())) {
+        if(isDuplicate(errorReply.getMessage())) {
           asyncResultHandler.handle(succeededFuture(respond201WithApplicationJson(circulationSettings, headersFor201())));
         } else {
           asyncResultHandler.handle(succeededFuture(respond500WithTextPlain(errorReply.getMessage())));
