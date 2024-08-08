@@ -28,6 +28,7 @@ public class CirculationSettingsAPITest extends ApiTests {
 
     String id = UUID.randomUUID().toString();
     JsonObject circulationSettingsJson = getCirculationSetting(id);
+    circulationSettingsJson.put("name", "sample2");
     JsonObject circulationSettingsResponse =
       circulationSettingsClient.create(circulationSettingsJson).getJson();
     JsonObject circulationSettingsById = circulationSettingsClient.getById(id).getJson();
