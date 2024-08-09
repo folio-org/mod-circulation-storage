@@ -154,7 +154,14 @@
     {
       "tableName": "circulation_settings",
       "withMetadata": true,
-      "withAuditing": false
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD",
+          "caseSensitive": false
+        }
+      ]
     },
     {
       "tableName": "request",
