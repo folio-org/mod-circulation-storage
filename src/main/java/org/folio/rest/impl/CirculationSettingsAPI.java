@@ -21,8 +21,8 @@ public class CirculationSettingsAPI implements CirculationSettingsStorage {
 
   @Override
   public void postCirculationSettingsStorageCirculationSettings(String lang,
-                                                                CirculationSetting circulationSettings, Map<String, String> okapiHeaders,
-                                                                Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+    CirculationSetting circulationSettings, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     new CirculationSettingsService(vertxContext, okapiHeaders)
       .create(circulationSettings)
       .onSuccess(reply -> asyncResultHandler.handle(succeededFuture(respond201WithApplicationJson(circulationSettings, headersFor201()))))

@@ -12,7 +12,6 @@ import javax.ws.rs.core.Response;
 import org.folio.persist.CirculationSettingsRepository;
 import org.folio.rest.jaxrs.model.CirculationSetting;
 import org.folio.rest.jaxrs.model.CirculationSettings;
-import org.folio.rest.jaxrs.model.Value;
 import org.folio.rest.jaxrs.resource.CirculationSettingsStorage.DeleteCirculationSettingsStorageCirculationSettingsByCirculationSettingsIdResponse;
 import org.folio.rest.jaxrs.resource.CirculationSettingsStorage.GetCirculationSettingsStorageCirculationSettingsByCirculationSettingsIdResponse;
 import org.folio.rest.jaxrs.resource.CirculationSettingsStorage.GetCirculationSettingsStorageCirculationSettingsResponse;
@@ -72,7 +71,8 @@ public class CirculationSettingsService {
     );
   }
 
-  private Future<CirculationSetting> updateSettingsValue(CirculationSetting circulationSetting, Throwable throwable) {
+  private Future<CirculationSetting> updateSettingsValue(CirculationSetting circulationSetting,
+                                                         Throwable throwable) {
     if (!isDuplicate(throwable.getMessage())) {
       return Future.failedFuture(throwable);
     }
@@ -81,9 +81,9 @@ public class CirculationSettingsService {
       .compose(settings -> updateSettings(settings, circulationSetting));
   }
 
-  private Future<CirculationSetting> updateSettings(List<CirculationSetting> settings, CirculationSetting circulationSetting) {
-    Value value = circulationSetting.getValue();
-    settings.forEach(setting -> setting.setValue(value));
+  private Future<CirculationSetting> updateSettings(List<CirculationSetting> settings,
+                                                    CirculationSetting circulationSetting) {
+    settings.forEach(setting -> setting.setValue(circulationSetting.getValue()));
     return repository.update(settings)
       .map(circulationSetting);
   }
