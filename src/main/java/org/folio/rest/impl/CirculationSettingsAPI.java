@@ -25,8 +25,10 @@ public class CirculationSettingsAPI implements CirculationSettingsStorage {
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     new CirculationSettingsService(vertxContext, okapiHeaders)
       .create(circulationSettings)
-      .onSuccess(reply -> asyncResultHandler.handle(succeededFuture(respond201WithApplicationJson(circulationSettings, headersFor201()))))
-      .onFailure(errorReply -> asyncResultHandler.handle(succeededFuture(respond500WithTextPlain(errorReply.getMessage()))));
+      .onSuccess(reply -> asyncResultHandler.handle(succeededFuture(
+        respond201WithApplicationJson(circulationSettings, headersFor201()))))
+      .onFailure(errorReply -> asyncResultHandler.handle(succeededFuture(
+        respond500WithTextPlain(errorReply.getMessage()))));
   }
 
   @Override
@@ -44,9 +46,9 @@ public class CirculationSettingsAPI implements CirculationSettingsStorage {
     String circulationSettingsId, String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-      new CirculationSettingsService(vertxContext, okapiHeaders)
-        .findById(circulationSettingsId)
-        .onComplete(asyncResultHandler);
+    new CirculationSettingsService(vertxContext, okapiHeaders)
+      .findById(circulationSettingsId)
+      .onComplete(asyncResultHandler);
   }
 
   @Override
@@ -55,9 +57,9 @@ public class CirculationSettingsAPI implements CirculationSettingsStorage {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-      new CirculationSettingsService(vertxContext, okapiHeaders)
-        .update(circulationSettingsId, entity)
-        .onComplete(asyncResultHandler);
+    new CirculationSettingsService(vertxContext, okapiHeaders)
+      .update(circulationSettingsId, entity)
+      .onComplete(asyncResultHandler);
   }
 
   @Override
@@ -65,8 +67,8 @@ public class CirculationSettingsAPI implements CirculationSettingsStorage {
     String circulationSettingsId, String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-      new CirculationSettingsService(vertxContext, okapiHeaders)
-        .delete(circulationSettingsId)
-        .onComplete(asyncResultHandler);
+    new CirculationSettingsService(vertxContext, okapiHeaders)
+      .delete(circulationSettingsId)
+      .onComplete(asyncResultHandler);
   }
 }

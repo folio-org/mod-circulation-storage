@@ -57,22 +57,25 @@ public class CirculationSettingsService {
       GetCirculationSettingsStorageCirculationSettingsByCirculationSettingsIdResponse.class);
   }
 
-  public Future<Response> update(String circulationSettingsId, CirculationSetting circulationSetting) {
-    return PgUtil.put(CIRCULATION_SETTINGS_TABLE, circulationSetting, circulationSettingsId, okapiHeaders, vertxContext,
+  public Future<Response> update(String circulationSettingsId,
+    CirculationSetting circulationSetting) {
+    return PgUtil.put(CIRCULATION_SETTINGS_TABLE, circulationSetting, circulationSettingsId,
+        okapiHeaders, vertxContext,
         PutCirculationSettingsStorageCirculationSettingsByCirculationSettingsIdResponse.class)
       .compose(eventPublisher.publishUpdated(circulationSetting));
   }
 
   public Future<Response> delete(String circulationSettingsId) {
-    return repository.getById(circulationSettingsId).compose (
-      circulationSetting -> PgUtil.deleteById(CIRCULATION_SETTINGS_TABLE, circulationSettingsId, okapiHeaders, vertxContext,
-        DeleteCirculationSettingsStorageCirculationSettingsByCirculationSettingsIdResponse.class)
-      .compose(eventPublisher.publishRemoved(circulationSetting))
+    return repository.getById(circulationSettingsId).compose(
+      circulationSetting -> PgUtil.deleteById(CIRCULATION_SETTINGS_TABLE, circulationSettingsId,
+          okapiHeaders, vertxContext,
+          DeleteCirculationSettingsStorageCirculationSettingsByCirculationSettingsIdResponse.class)
+        .compose(eventPublisher.publishRemoved(circulationSetting))
     );
   }
 
   private Future<CirculationSetting> updateSettingsValue(CirculationSetting circulationSetting,
-                                                         Throwable throwable) {
+    Throwable throwable) {
     if (!isDuplicate(throwable.getMessage())) {
       return Future.failedFuture(throwable);
     }
@@ -82,7 +85,7 @@ public class CirculationSettingsService {
   }
 
   private Future<CirculationSetting> updateSettings(List<CirculationSetting> settings,
-                                                    CirculationSetting circulationSetting) {
+    CirculationSetting circulationSetting) {
     settings.forEach(setting -> setting.setValue(circulationSetting.getValue()));
     return repository.update(settings)
       .map(circulationSetting);
