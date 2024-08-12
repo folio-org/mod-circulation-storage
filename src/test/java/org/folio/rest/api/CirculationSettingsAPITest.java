@@ -26,12 +26,12 @@ public class CirculationSettingsAPITest extends ApiTests {
     ExecutionException, InterruptedException, TimeoutException {
     String id = UUID.randomUUID().toString();
     JsonObject circulationSettingsJson = getCirculationSetting(id);
-    circulationSettingsClient.create(circulationSettingsJson).getJson();
+    circulationSettingsClient.create(circulationSettingsJson);
 
     String id1 = UUID.randomUUID().toString();
     JsonObject circulationSettingsJsonUpdated = getCirculationSetting(id1);
     circulationSettingsJsonUpdated.put("value", new JsonObject().put("sample", "OK1"));
-    circulationSettingsClient.create(circulationSettingsJsonUpdated).getJson();
+    circulationSettingsClient.create(circulationSettingsJsonUpdated);
     JsonObject circulationSettingsById = circulationSettingsClient.getById(id).getJson();
 
     assertThat(circulationSettingsClient.getAll().getTotalRecords(), is(1));
