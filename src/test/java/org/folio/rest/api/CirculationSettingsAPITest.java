@@ -1,26 +1,42 @@
 package org.folio.rest.api;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.junit.MatcherAssert.assertThat;
+import io.vertx.core.json.JsonObject;
+import org.folio.rest.support.ApiTests;
+import org.folio.rest.support.http.AssertingRecordClient;
+import org.folio.rest.support.http.InterfaceUrls;
+import org.junit.Test;
 
 import java.net.MalformedURLException;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-import org.folio.rest.support.ApiTests;
-import org.folio.rest.support.http.AssertingRecordClient;
-import org.folio.rest.support.http.InterfaceUrls;
-import org.junit.Test;
-
-import io.vertx.core.json.JsonObject;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 public class CirculationSettingsAPITest extends ApiTests {
 
   private final AssertingRecordClient circulationSettingsClient =
     new AssertingRecordClient(
-    client, StorageTestSuite.TENANT_ID, InterfaceUrls::circulationSettingsUrl,
+      client, StorageTestSuite.TENANT_ID, InterfaceUrls::circulationSettingsUrl,
       "circulation-settings");
+
+  @Test
+  public void updateInsteadCreateWithTheSameName() throws MalformedURLException,
+    ExecutionException, InterruptedException, TimeoutException {
+    String id = UUID.randomUUID().toString();
+    JsonObject circulationSettingsJson = getCirculationSetting(id);
+    circulationSettingsClient.create(circulationSettingsJson).getJson();
+
+    String id1 = UUID.randomUUID().toString();
+    JsonObject circulationSettingsJsonUpdated = getCirculationSetting(id1);
+    circulationSettingsJsonUpdated.put("value", new JsonObject().put("sample", "OK1"));
+    circulationSettingsClient.create(circulationSettingsJsonUpdated).getJson();
+    JsonObject circulationSettingsById = circulationSettingsClient.getById(id).getJson();
+
+    assertThat(circulationSettingsClient.getAll().getTotalRecords(), is(1));
+    assertThat("OK1", is(getValue(circulationSettingsById)));
+  }
 
   @Test
   public void canCreateAndRetrieveCirculationSettings() throws MalformedURLException,
@@ -64,6 +80,11 @@ public class CirculationSettingsAPITest extends ApiTests {
     circulationSettingsClient.deleteById(id);
     var deletedCirculationSettings = circulationSettingsClient.attemptGetById(id);
     assertThat(deletedCirculationSettings.getStatusCode(), is(404));
+  }
+
+  private static String getValue(JsonObject circulationSettingsById) {
+    return circulationSettingsById.getJsonObject("value")
+      .getString("sample");
   }
 
   private JsonObject getCirculationSetting(String id) {
