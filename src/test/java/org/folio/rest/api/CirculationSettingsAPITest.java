@@ -4,6 +4,7 @@ import io.vertx.core.json.JsonObject;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.http.AssertingRecordClient;
 import org.folio.rest.support.http.InterfaceUrls;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.net.MalformedURLException;
@@ -16,10 +17,16 @@ import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 public class CirculationSettingsAPITest extends ApiTests {
 
+  private static final String TABLE_NAME = "circulation_settings";
   private final AssertingRecordClient circulationSettingsClient =
     new AssertingRecordClient(
       client, StorageTestSuite.TENANT_ID, InterfaceUrls::circulationSettingsUrl,
       "circulation-settings");
+
+  @Before
+  public void beforeEach() {
+    StorageTestSuite.cleanUpTable(TABLE_NAME);
+  }
 
   @Test
   public void updateInsteadCreateWithTheSameName() throws MalformedURLException,
@@ -44,7 +51,6 @@ public class CirculationSettingsAPITest extends ApiTests {
 
     String id = UUID.randomUUID().toString();
     JsonObject circulationSettingsJson = getCirculationSetting(id);
-    circulationSettingsJson.put("name", "sample2");
     JsonObject circulationSettingsResponse =
       circulationSettingsClient.create(circulationSettingsJson).getJson();
     JsonObject circulationSettingsById = circulationSettingsClient.getById(id).getJson();
