@@ -16,8 +16,8 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 public class CirculationSettingsAPITest extends ApiTests {
-
   private static final String TABLE_NAME = "circulation_settings";
+
   private final AssertingRecordClient circulationSettingsClient =
     new AssertingRecordClient(
       client, StorageTestSuite.TENANT_ID, InterfaceUrls::circulationSettingsUrl,
@@ -31,18 +31,21 @@ public class CirculationSettingsAPITest extends ApiTests {
   @Test
   public void updateInsteadCreateWithTheSameName() throws MalformedURLException,
     ExecutionException, InterruptedException, TimeoutException {
+
     String id = UUID.randomUUID().toString();
     JsonObject circulationSettingsJson = getCirculationSetting(id);
-    circulationSettingsClient.create(circulationSettingsJson);
-
-    String id1 = UUID.randomUUID().toString();
-    JsonObject circulationSettingsJsonUpdated = getCirculationSetting(id1);
-    circulationSettingsJsonUpdated.put("value", new JsonObject().put("sample", "OK1"));
+    JsonObject circulationSettingsResponse =
+      circulationSettingsClient.create(circulationSettingsJson).getJson();
+    String updatedId = UUID.randomUUID().toString();
+    JsonObject circulationSettingsJsonUpdated = getCirculationSetting(updatedId);
+    JsonObject updatedValue = new JsonObject().put("sample", "OK1");
+    circulationSettingsJsonUpdated.put("value", updatedValue);
     circulationSettingsClient.create(circulationSettingsJsonUpdated);
     JsonObject circulationSettingsById = circulationSettingsClient.getById(id).getJson();
 
+    assertThatCorrectCreation(circulationSettingsResponse, circulationSettingsJson);
     assertThat(circulationSettingsClient.getAll().getTotalRecords(), is(1));
-    assertThat("OK1", is(getValue(circulationSettingsById)));
+    assertThat(getValue(circulationSettingsJsonUpdated), is(getValue(circulationSettingsById)));
   }
 
   @Test
@@ -98,6 +101,18 @@ public class CirculationSettingsAPITest extends ApiTests {
       .put("id", id)
       .put("name", "sample")
       .put("value", new JsonObject().put("sample", "OK"));
+  }
+
+  private static void assertThatCorrectCreation(JsonObject circulationSettingsResponse,
+                                                JsonObject circulationSettingsJson) {
+
+    String actualCreatedId = circulationSettingsResponse.getString("id");
+    String expectedCreatedId = circulationSettingsJson.getString("id");
+    String actualCreatedName = circulationSettingsResponse.getString("name");
+    String expectedCreatedName = circulationSettingsJson.getString("name");
+
+    assertThat(actualCreatedId, is(expectedCreatedId));
+    assertThat(actualCreatedName, is(expectedCreatedName));
   }
 
 }

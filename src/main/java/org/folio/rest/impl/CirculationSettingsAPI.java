@@ -1,5 +1,10 @@
 package org.folio.rest.impl;
 
+import static io.vertx.core.Future.succeededFuture;
+import static org.folio.rest.jaxrs.resource.CirculationSettingsStorage.PostCirculationSettingsStorageCirculationSettingsResponse.headersFor201;
+import static org.folio.rest.jaxrs.resource.CirculationSettingsStorage.PostCirculationSettingsStorageCirculationSettingsResponse.respond201WithApplicationJson;
+import static org.folio.rest.jaxrs.resource.CirculationSettingsStorage.PostCirculationSettingsStorageCirculationSettingsResponse.respond500WithTextPlain;
+
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
@@ -12,10 +17,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
 
-import static io.vertx.core.Future.succeededFuture;
-import static org.folio.rest.jaxrs.resource.CirculationSettingsStorage.PostCirculationSettingsStorageCirculationSettingsResponse.headersFor201;
-import static org.folio.rest.jaxrs.resource.CirculationSettingsStorage.PostCirculationSettingsStorageCirculationSettingsResponse.respond201WithApplicationJson;
-import static org.folio.rest.jaxrs.resource.CirculationSettingsStorage.PostCirculationSettingsStorageCirculationSettingsResponse.respond500WithTextPlain;
 
 public class CirculationSettingsAPI implements CirculationSettingsStorage {
 
@@ -23,6 +24,7 @@ public class CirculationSettingsAPI implements CirculationSettingsStorage {
   public void postCirculationSettingsStorageCirculationSettings(String lang,
     CirculationSetting circulationSettings, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     new CirculationSettingsService(vertxContext, okapiHeaders)
       .create(circulationSettings)
       .onSuccess(reply -> asyncResultHandler.handle(
