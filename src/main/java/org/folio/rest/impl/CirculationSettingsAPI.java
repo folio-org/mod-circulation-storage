@@ -27,10 +27,10 @@ public class CirculationSettingsAPI implements CirculationSettingsStorage {
 
     new CirculationSettingsService(vertxContext, okapiHeaders)
       .create(circulationSettings)
-      .onSuccess(reply -> asyncResultHandler.handle(
+      .onSuccess(response -> asyncResultHandler.handle(
         succeededFuture(respond201WithApplicationJson(circulationSettings, headersFor201()))))
-      .onFailure(errorReply -> asyncResultHandler.handle(
-        succeededFuture(respond500WithTextPlain(errorReply.getMessage()))));
+      .onFailure(throwable -> asyncResultHandler.handle(
+        succeededFuture(respond500WithTextPlain(throwable.getMessage()))));
   }
 
   @Override

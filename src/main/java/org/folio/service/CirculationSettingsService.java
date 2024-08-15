@@ -9,6 +9,7 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
+import lombok.extern.log4j.Log4j2;
 import org.folio.persist.CirculationSettingsRepository;
 import org.folio.rest.jaxrs.model.CirculationSetting;
 import org.folio.rest.jaxrs.model.CirculationSettings;
@@ -24,6 +25,7 @@ import org.folio.service.event.EntityChangedEventPublisher;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 
+@Log4j2
 public class CirculationSettingsService {
 
   private final Context vertxContext;
@@ -46,7 +48,9 @@ public class CirculationSettingsService {
   }
 
   public Future<CirculationSetting> create(CirculationSetting circulationSetting) {
-    return repository.save(circulationSetting.getId(), circulationSetting)
+    log.debug("Trying to save circulationSetting: {}", circulationSetting);
+    return repository.saveAndReturnUpdatedEntity(circulationSetting.getId(),
+        circulationSetting)
       .recover(throwable -> updateSettingsValue(circulationSetting, throwable));
   }
 
@@ -78,6 +82,8 @@ public class CirculationSettingsService {
     Throwable throwable) {
 
     if (!isDuplicate(throwable.getMessage())) {
+      log.info("Setting with name: {} already exists.",
+        circulationSetting.getName());
       return Future.failedFuture(throwable);
     }
 
@@ -89,11 +95,14 @@ public class CirculationSettingsService {
     CirculationSetting circulationSetting) {
 
     settings.forEach(setting -> setting.setValue(circulationSetting.getValue()));
+    log.debug("Execute UPDATE instead INSERT settings with name: {}",
+      circulationSetting.getName());
     return repository.update(settings)
       .map(circulationSetting);
   }
 
   private Future<List<CirculationSetting>> getSettingsByName(String settingsName) {
+    log.debug("Trying to fetch setting by name: {}", settingsName);
     Criterion filter = new Criterion(new Criteria()
       .addField("'name'")
       .setOperation("=")
