@@ -48,7 +48,7 @@ public class CirculationSettingsService {
   }
 
   public Future<CirculationSetting> create(CirculationSetting circulationSetting) {
-    log.debug("Trying to save circulationSetting: {}", circulationSetting);
+    log.debug("create:: trying to save circulationSetting: {}", circulationSetting);
     return repository.saveAndReturnUpdatedEntity(circulationSetting.getId(),
         circulationSetting)
       .recover(throwable -> updateSettingsValue(circulationSetting, throwable));
@@ -82,7 +82,7 @@ public class CirculationSettingsService {
     Throwable throwable) {
 
     if (!isDuplicate(throwable.getMessage())) {
-      log.info("Setting with name: {} already exists.",
+      log.info("updateSettingsValue:: setting with name: {} already exists.",
         circulationSetting.getName());
       return Future.failedFuture(throwable);
     }
@@ -95,14 +95,13 @@ public class CirculationSettingsService {
     CirculationSetting circulationSetting) {
 
     settings.forEach(setting -> setting.setValue(circulationSetting.getValue()));
-    log.debug("Execute UPDATE instead INSERT settings with name: {}",
-      circulationSetting.getName());
+    log.debug("updateSettings:: updating settings with name '{}'", circulationSetting::getName);
     return repository.update(settings)
       .map(circulationSetting);
   }
 
   private Future<List<CirculationSetting>> getSettingsByName(String settingsName) {
-    log.debug("Trying to fetch setting by name: {}", settingsName);
+    log.debug("getSettingsByName:: trying to fetch setting by name: {}", settingsName);
     Criterion filter = new Criterion(new Criteria()
       .addField("'name'")
       .setOperation("=")
