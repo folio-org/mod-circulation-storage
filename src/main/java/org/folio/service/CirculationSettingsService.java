@@ -82,10 +82,13 @@ public class CirculationSettingsService {
     Throwable throwable) {
 
     if (!isDuplicate(throwable.getMessage())) {
-      log.info("updateSettingsValue:: setting with name: {} already exists.",
-        circulationSetting.getName());
+      log.debug("updateSettingsValue:: error during saving circulation setting: {}. message: {}.",
+        circulationSetting, throwable.getMessage());
       return Future.failedFuture(throwable);
     }
+
+    log.info("updateSettingsValue:: setting with name: {} already exists.",
+      circulationSetting.getName());
 
     return getSettingsByName(circulationSetting.getName())
       .compose(settings -> updateSettings(settings, circulationSetting));
@@ -95,7 +98,8 @@ public class CirculationSettingsService {
     CirculationSetting circulationSetting) {
 
     settings.forEach(setting -> setting.setValue(circulationSetting.getValue()));
-    log.debug("updateSettings:: updating settings with name '{}'", circulationSetting::getName);
+    log.debug("updateSettings:: updating {} setting(s) with name '{}'",
+      settings::size, circulationSetting::getName);
     return repository.update(settings)
       .map(circulationSetting);
   }

@@ -20,7 +20,7 @@ public class CirculationSettingsAPITest extends ApiTests {
   private static final String SAMPLE_VALUE = "sample";
   private static final String SAMPLE_KEY = "sample";
   private static final String INITIAL_VALUE = "OK";
-  public static final String UPDATED_VALUE = "OK1";
+  private static final String UPDATED_VALUE = "OK1";
   private static final String TABLE_NAME = "circulation_settings";
   private static final String CIRCULATION_SETTINGS_PROPERTY = "circulation-settings";
   private static final int NOT_FOUND_STATUS = 404;
