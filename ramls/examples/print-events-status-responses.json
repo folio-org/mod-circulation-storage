@@ -1,0 +1,19 @@
+{
+  "printEventsStatusResponses": [
+    {
+      "requestId": "fbbbe691-d6c6-4f40-b9dd-7364ccb1518a",
+      "requesterId": "44642483-f4d4-4a29-a2ba-8eefcf53de16",
+      "requesterName": "vignesh",
+      "count": 2,
+      "printEventDate": "2024-07-04T07:07:00.000+00:00"
+    },
+    {
+      "requestId": "fd831be3-f05f-4b6f-b68f-1a976ea1ab0f",
+      "requesterId": "44642483-f4d4-4a29-a2ba-8eefcf53de17",
+      "requesterName": "siddhu",
+      "count": 5,
+      "printEventDate": "2024-07-05T07:07:00.000+00:00"
+    }
+  ],
+  "totalRecords": 2
+}

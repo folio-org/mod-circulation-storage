@@ -1,0 +1,73 @@
+#%RAML 1.0
+title: Print Events Storage
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost:9130
+
+documentation:
+  - title: Print Events Storage API
+    content: <b>Storage for print events</b>
+
+types:
+  print-events-request: !include print-events-request.json
+  print-events-status-request: !include print-events-status-request.json
+  print-events-status-responses: !include print-events-status-responses.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  validate: !include raml-util/traits/validation.raml
+
+/print-events-storage:
+  /print-events-entry:
+     post:
+        is: [validate]
+        description: save a print event log
+        body:
+          application/json:
+            type: print-events-request
+        responses:
+          201:
+            description: "All items have been successfully created or updated"
+          409:
+            description: "Optimistic locking version conflict"
+            body:
+              text/plain:
+                example: "Version error"
+          413:
+            description: "Payload too large"
+            body:
+              text/plain:
+                example: "Payload too large"
+          422:
+            description: "Unprocessable entity"
+            body:
+              application/json:
+                type: errors
+          500:
+            description: "Internal server error"
+            body:
+              text/plain:
+                example: "Internal server error"
+  /print-events-status:
+    post:
+      is: [validate]
+      description: Fetch batch of print event details
+      body:
+        application/json:
+          type: print-events-status-request
+      responses:
+        200:
+          description: "Requests print event details are successfully retreived"
+          body:
+            application/json:
+              type: print-events-status-responses
+        422:
+          description: "Unprocessable entity"
+          body:
+            application/json:
+              type: errors
+        500:
+          description: "Internal server error"
+          body:
+            text/plain:
+              example: "Internal server error"
