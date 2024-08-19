@@ -24,6 +24,7 @@ public class CirculationSettingsAPITest extends ApiTests {
   private static final String TABLE_NAME = "circulation_settings";
   private static final String CIRCULATION_SETTINGS_PROPERTY = "circulation-settings";
   private static final int NOT_FOUND_STATUS = 404;
+  private static final String REQUEST_PRINT_SETTING = "Enable Request Print";
 
   private final AssertingRecordClient circulationSettingsClient =
     new AssertingRecordClient(
@@ -91,6 +92,28 @@ public class CirculationSettingsAPITest extends ApiTests {
     assertThat(deletedCirculationSettings.getStatusCode(), is(NOT_FOUND_STATUS));
   }
 
+  @Test
+  @SneakyThrows
+  public void canCreateAndRetrieveEnableRequestPrintDetailsSetting() {
+    String id = UUID.randomUUID().toString();
+    JsonObject enableRequestPrintDetailsSettingJson = new JsonObject();
+    enableRequestPrintDetailsSettingJson.put(ID_KEY, id);
+    enableRequestPrintDetailsSettingJson.put(NAME_KEY, REQUEST_PRINT_SETTING);
+    JsonObject enablePrintSettingJson = new JsonObject().put(REQUEST_PRINT_SETTING, true);
+    enableRequestPrintDetailsSettingJson.put(VALUE_KEY, enablePrintSettingJson);
+
+    JsonObject circulationSettingsResponse =
+      circulationSettingsClient.create(enableRequestPrintDetailsSettingJson).getJson();
+    JsonObject circulationSettingsById = circulationSettingsClient.getById(id).getJson();
+
+    assertThat(circulationSettingsResponse.getString(ID_KEY), is(id));
+    assertThat(circulationSettingsResponse.getString(NAME_KEY),
+      is(enableRequestPrintDetailsSettingJson.getString(NAME_KEY)));
+    assertThat(circulationSettingsById.getString(ID_KEY), is(id));
+    assertThat(circulationSettingsById.getJsonObject(VALUE_KEY),
+      is(enableRequestPrintDetailsSettingJson.getJsonObject(VALUE_KEY)));
+  }
+
   private static String getValue(JsonObject circulationSettingsById) {
     return circulationSettingsById.getJsonObject(VALUE_KEY).getString(SAMPLE_KEY);
   }
@@ -120,25 +143,5 @@ public class CirculationSettingsAPITest extends ApiTests {
     JsonObject updatedValue = new JsonObject().put(SAMPLE_KEY, UPDATED_VALUE);
     circulationSettingsJsonUpdated.put(VALUE_KEY, updatedValue);
     return circulationSettingsJsonUpdated;
-  }
-  @Test
-  public void canCreateAndRetrieveEnableRequestPrintDetailsSetting() throws MalformedURLException,
-    ExecutionException, InterruptedException, TimeoutException {
-    String id = UUID.randomUUID().toString();
-    JsonObject enableRequestPrintDetailsSettingJson = new JsonObject();
-    enableRequestPrintDetailsSettingJson.put("id", id);
-    enableRequestPrintDetailsSettingJson.put("name", "Enable Request Print");
-    enableRequestPrintDetailsSettingJson.put("value", new JsonObject().put("Enable Request Print", true));
-
-    JsonObject circulationSettingsResponse =
-      circulationSettingsClient.create(enableRequestPrintDetailsSettingJson).getJson();
-    JsonObject circulationSettingsById = circulationSettingsClient.getById(id).getJson();
-
-    assertThat(circulationSettingsResponse.getString("id"), is(id));
-    assertThat(circulationSettingsResponse.getString("name"),
-      is(enableRequestPrintDetailsSettingJson.getString("name")));
-    assertThat(circulationSettingsById.getString("id"), is(id));
-    assertThat(circulationSettingsById.getJsonObject("value"),
-      is(enableRequestPrintDetailsSettingJson.getJsonObject("value")));
   }
 }
