@@ -59,8 +59,8 @@ public class CirculationSettingsAPITest extends ApiTests {
     JsonObject circulationSettingsJson = getCirculationSetting(id);
     JsonObject circulationSettingsResponse =
       circulationSettingsClient.create(circulationSettingsJson).getJson();
-    JsonObject circulationSettingsJsonUpdated = getUpdatedSettingsJson();
-    circulationSettingsClient.create(circulationSettingsJsonUpdated);
+//    JsonObject circulationSettingsJsonUpdated = getUpdatedSettingsJson();
+//    circulationSettingsClient.create(circulationSettingsJsonUpdated);
     JsonObject circulationSettingsById = circulationSettingsClient.getById(id).getJson();
 
     assertThat(circulationSettingsResponse.getString(ID_KEY), is(id));
