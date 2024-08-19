@@ -646,6 +646,30 @@
       ]
     },
     {
+      "id": "print-events-storage",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/print-events-storage/print-events-entry",
+          "permissionsRequired": [
+            "print-events-storage.print-events-entry.item.post"
+          ]
+        },
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/print-events-storage/print-events-status",
+          "permissionsRequired": [
+            "print-events-storage.print-events-status.item.post"
+          ]
+        }
+      ]
+    },
+    {
       "id": "_timer",
       "version": "1.0",
       "interfaceType": "system",
@@ -677,6 +701,16 @@
     }
   ],
   "permissionSets": [
+    {
+      "permissionName": "print-events-storage.print-events-entry.item.post",
+      "displayName": "print events storage - save print event logs",
+      "description": "save print event log in storage"
+    },
+    {
+      "permissionName": "print-events-storage.print-events-status.item.post",
+      "displayName": "print-events-storage - Fetch print event status",
+      "description": "Fetch print event details for a batch of request Ids"
+    },
     {
       "permissionName": "check-in-storage.check-ins.collection.get",
       "displayName": "Check-in storage - get check-ins collection",
@@ -1133,7 +1167,9 @@
         "circulation-storage.circulation-settings.item.get",
         "circulation-storage.circulation-settings.item.post",
         "circulation-storage.circulation-settings.item.put",
-        "circulation-storage.circulation-settings.item.delete"
+        "circulation-storage.circulation-settings.item.delete",
+        "print-events-storage.print-events-entry.item.post",
+        "print-events-storage.print-events-status.item.post"
       ]
     },
     {

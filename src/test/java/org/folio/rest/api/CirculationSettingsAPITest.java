@@ -121,4 +121,24 @@ public class CirculationSettingsAPITest extends ApiTests {
     circulationSettingsJsonUpdated.put(VALUE_KEY, updatedValue);
     return circulationSettingsJsonUpdated;
   }
+  @Test
+  public void canCreateAndRetrieveEnableRequestPrintDetailsSetting() throws MalformedURLException,
+    ExecutionException, InterruptedException, TimeoutException {
+    String id = UUID.randomUUID().toString();
+    JsonObject enableRequestPrintDetailsSettingJson = new JsonObject();
+    enableRequestPrintDetailsSettingJson.put("id", id);
+    enableRequestPrintDetailsSettingJson.put("name", "Enable Request Print");
+    enableRequestPrintDetailsSettingJson.put("value", new JsonObject().put("Enable Request Print", true));
+
+    JsonObject circulationSettingsResponse =
+      circulationSettingsClient.create(enableRequestPrintDetailsSettingJson).getJson();
+    JsonObject circulationSettingsById = circulationSettingsClient.getById(id).getJson();
+
+    assertThat(circulationSettingsResponse.getString("id"), is(id));
+    assertThat(circulationSettingsResponse.getString("name"),
+      is(enableRequestPrintDetailsSettingJson.getString("name")));
+    assertThat(circulationSettingsById.getString("id"), is(id));
+    assertThat(circulationSettingsById.getJsonObject("value"),
+      is(enableRequestPrintDetailsSettingJson.getJsonObject("value")));
+  }
 }
