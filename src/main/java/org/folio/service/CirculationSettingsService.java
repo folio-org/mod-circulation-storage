@@ -1,26 +1,31 @@
 package org.folio.service;
 
+import static org.folio.rest.tools.utils.ValidationHelper.isDuplicate;
 import static org.folio.service.event.EntityChangedEventPublisherFactory.circulationSettingsEventPublisher;
 import static org.folio.support.ModuleConstants.CIRCULATION_SETTINGS_TABLE;
 
+import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
+import lombok.extern.log4j.Log4j2;
 import org.folio.persist.CirculationSettingsRepository;
 import org.folio.rest.jaxrs.model.CirculationSetting;
 import org.folio.rest.jaxrs.model.CirculationSettings;
 import org.folio.rest.jaxrs.resource.CirculationSettingsStorage.DeleteCirculationSettingsStorageCirculationSettingsByCirculationSettingsIdResponse;
 import org.folio.rest.jaxrs.resource.CirculationSettingsStorage.GetCirculationSettingsStorageCirculationSettingsByCirculationSettingsIdResponse;
 import org.folio.rest.jaxrs.resource.CirculationSettingsStorage.GetCirculationSettingsStorageCirculationSettingsResponse;
-import org.folio.rest.jaxrs.resource.CirculationSettingsStorage.PostCirculationSettingsStorageCirculationSettingsResponse;
 import org.folio.rest.jaxrs.resource.CirculationSettingsStorage.PutCirculationSettingsStorageCirculationSettingsByCirculationSettingsIdResponse;
+import org.folio.rest.persist.Criteria.Criteria;
+import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PgUtil;
 import org.folio.service.event.EntityChangedEventPublisher;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 
+@Log4j2
 public class CirculationSettingsService {
 
   private final Context vertxContext;
@@ -42,10 +47,11 @@ public class CirculationSettingsService {
       GetCirculationSettingsStorageCirculationSettingsResponse.class);
   }
 
-  public Future<Response> create(CirculationSetting circulationSetting) {
-    return PgUtil.post(CIRCULATION_SETTINGS_TABLE, circulationSetting, okapiHeaders, vertxContext,
-      PostCirculationSettingsStorageCirculationSettingsResponse.class)
-      .compose(eventPublisher.publishCreated());
+  public Future<CirculationSetting> create(CirculationSetting circulationSetting) {
+    log.debug("create:: trying to save circulationSetting: {}", circulationSetting);
+    return repository.saveAndReturnUpdatedEntity(circulationSetting.getId(),
+        circulationSetting)
+      .recover(throwable -> updateSettingsValue(circulationSetting, throwable));
   }
 
   public Future<Response> findById(String circulationSettingsId) {
@@ -66,5 +72,41 @@ public class CirculationSettingsService {
         DeleteCirculationSettingsStorageCirculationSettingsByCirculationSettingsIdResponse.class)
       .compose(eventPublisher.publishRemoved(circulationSetting))
     );
+  }
+
+  private Future<CirculationSetting> updateSettingsValue(CirculationSetting circulationSetting,
+    Throwable throwable) {
+
+    if (!isDuplicate(throwable.getMessage())) {
+      log.warn("updateSettingsValue:: error during saving circulation setting: {}",
+        circulationSetting, throwable);
+      return Future.failedFuture(throwable);
+    }
+
+    log.info("updateSettingsValue:: setting with name: {} already exists.",
+      circulationSetting.getName());
+
+    return getSettingsByName(circulationSetting.getName())
+      .compose(settings -> updateSettings(settings, circulationSetting));
+  }
+
+  private Future<CirculationSetting> updateSettings(List<CirculationSetting> settings,
+    CirculationSetting circulationSetting) {
+
+    settings.forEach(setting -> setting.setValue(circulationSetting.getValue()));
+    log.debug("updateSettings:: updating {} setting(s) with name '{}'",
+      settings::size, circulationSetting::getName);
+    return repository.update(settings)
+      .map(circulationSetting);
+  }
+
+  private Future<List<CirculationSetting>> getSettingsByName(String settingsName) {
+    log.debug("getSettingsByName:: trying to fetch setting by name: {}", settingsName);
+    Criterion filter = new Criterion(new Criteria()
+      .addField("'name'")
+      .setOperation("=")
+      .setVal(settingsName));
+
+    return repository.get(filter);
   }
 }
