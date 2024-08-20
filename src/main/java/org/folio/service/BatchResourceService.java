@@ -38,43 +38,54 @@ public class BatchResourceService {
    * @param batchFactories  - Factory to create a batch update chunk.
    * @param onFinishHandler - Callback.
    */
-  public void executeBatchUpdate(
+  public Future<Void> executeBatchUpdate(
     List<Function<SQLConnection, Future<RowSet<Row>>>> batchFactories,
     Handler<AsyncResult<Void>> onFinishHandler) {
 
+    Promise<Void> promise = Promise.promise();
+
     postgresClient.startTx(connectionResult -> {
       if (connectionResult.failed()) {
-        LOG.warn("Can not start transaction", connectionResult.cause());
-        onFinishHandler.handle(failedFuture(connectionResult.cause()));
+        LOG.warn("Cannot start transaction", connectionResult.cause());
+        onFinishHandler.handle(Future.failedFuture(connectionResult.cause()));
+        promise.fail(connectionResult.cause());
         return;
       }
 
       SQLConnection connection = connectionResult.result();
+      Future<RowSet<Row>> lastUpdate = Future.succeededFuture();
 
-      // Using this future for chaining updates
-      Future<RowSet<Row>> lastUpdate = succeededFuture();
       for (Function<SQLConnection, Future<RowSet<Row>>> factory : batchFactories) {
         lastUpdate = lastUpdate.compose(prev -> factory.apply(connection));
       }
 
-      // Handle overall update result and decide on whether to commit or rollback transaction
       lastUpdate.onComplete(updateResult -> {
         if (updateResult.failed()) {
           LOG.warn("Batch update rejected", updateResult.cause());
 
-          // Rollback transaction and keep original cause.
-          postgresClient.rollbackTx(connectionResult,
-            rollback -> onFinishHandler.handle(failedFuture(updateResult.cause()))
-          );
+          postgresClient.rollbackTx(connectionResult, rollback -> {
+            onFinishHandler.handle(Future.failedFuture(updateResult.cause()));
+            promise.fail(updateResult.cause());
+          });
         } else {
           LOG.debug("Update successful, committing transaction");
 
-          postgresClient.endTx(connectionResult, onFinishHandler);
+          postgresClient.endTx(connectionResult, commitResult -> {
+            if (commitResult.succeeded()) {
+              onFinishHandler.handle(Future.succeededFuture());
+              promise.complete();
+            } else {
+              LOG.warn("Failed to commit transaction", commitResult.cause());
+              onFinishHandler.handle(Future.failedFuture(commitResult.cause()));
+              promise.fail(commitResult.cause());
+            }
+          });
         }
       });
     });
-  }
 
+    return promise.future();
+  }
   /**
    * Creates update single entity batch function.
    *

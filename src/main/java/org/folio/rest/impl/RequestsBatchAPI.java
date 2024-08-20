@@ -43,15 +43,11 @@ public class RequestsBatchAPI implements RequestStorageBatch {
       return;
     }
 
-    BatchResourceService batchUpdateService = new BatchResourceService(
-      PgUtil.postgresClient(context, okapiHeaders)
-    );
+    RequestBatchResourceService requestBatchUpdateService = new RequestBatchResourceService(
+      context, okapiHeaders);
 
-    RequestBatchResourceService requestBatchUpdateService =
-      new RequestBatchResourceService(tenantId(okapiHeaders), batchUpdateService);
 
-    requestBatchUpdateService.executeRequestBatchUpdate(entity.getRequests(),
-      updateResult -> {
+    requestBatchUpdateService.executeRequestBatchUpdate(entity.getRequests(), updateResult -> {
         // Successfully updated
         if (updateResult.succeeded()) {
           LOG.debug("Batch update executed successfully");
