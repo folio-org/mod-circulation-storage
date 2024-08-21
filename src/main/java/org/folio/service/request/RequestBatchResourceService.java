@@ -89,7 +89,8 @@ public class RequestBatchResourceService {
       allDatabaseOperations.size());
 
     RequestQueueReordering payload = mapRequestsToPayload(requests);
-    LOG.info("executeRequestBatchUpdate:: payload: {}", payload);
+    LOG.info("executeRequestBatchUpdate:: instanceId: {}, requests: {}",
+      payload.getInstanceId(), payload.getRequestIds());
 
     batchResourceService.executeBatchUpdate(allDatabaseOperations, onFinishHandler)
       .compose(v -> eventPublisher.publishCreated(payload.getInstanceId(), payload));
