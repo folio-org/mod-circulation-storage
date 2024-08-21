@@ -41,11 +41,8 @@ public class RequestsBatchAPI implements RequestStorageBatch {
     }
 
     log.info("postRequestStorageBatchRequests:: requests: {}", entity.getRequests());
-    RequestBatchResourceService requestBatchUpdateService = new RequestBatchResourceService(
-      context, okapiHeaders);
-
-
-    requestBatchUpdateService.executeRequestBatchUpdate(entity.getRequests(), updateResult -> {
+    new RequestBatchResourceService(context, okapiHeaders)
+      .executeRequestBatchUpdate(entity.getRequests(), updateResult -> {
         // Successfully updated
         if (updateResult.succeeded()) {
           log.debug("Batch update executed successfully");
