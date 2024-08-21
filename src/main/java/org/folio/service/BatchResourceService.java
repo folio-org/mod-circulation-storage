@@ -23,7 +23,7 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 
 public class BatchResourceService {
-  private static final Logger LOG = LoggerFactory.getLogger(BatchResourceService.class);
+  private static final Logger log = LoggerFactory.getLogger(BatchResourceService.class);
   private static final String WHERE_CLAUSE = "WHERE id = '%s'";
 
   private final PostgresClient postgresClient;
@@ -46,37 +46,39 @@ public class BatchResourceService {
 
     postgresClient.startTx(connectionResult -> {
       if (connectionResult.failed()) {
-        LOG.warn("Cannot start transaction", connectionResult.cause());
-        onFinishHandler.handle(Future.failedFuture(connectionResult.cause()));
+        log.warn("Cannot start transaction", connectionResult.cause());
+        onFinishHandler.handle(failedFuture(connectionResult.cause()));
         promise.fail(connectionResult.cause());
         return;
       }
 
       SQLConnection connection = connectionResult.result();
-      Future<RowSet<Row>> lastUpdate = Future.succeededFuture();
 
+      // Using this future for chaining updates
+      Future<RowSet<Row>> lastUpdate = succeededFuture();
       for (Function<SQLConnection, Future<RowSet<Row>>> factory : batchFactories) {
         lastUpdate = lastUpdate.compose(prev -> factory.apply(connection));
       }
 
+      // Handle overall update result and decide on whether to commit or rollback transaction
       lastUpdate.onComplete(updateResult -> {
         if (updateResult.failed()) {
-          LOG.warn("Batch update rejected", updateResult.cause());
+          log.warn("Batch update rejected", updateResult.cause());
 
           postgresClient.rollbackTx(connectionResult, rollback -> {
             onFinishHandler.handle(Future.failedFuture(updateResult.cause()));
             promise.fail(updateResult.cause());
           });
         } else {
-          LOG.debug("Update successful, committing transaction");
+          log.debug("Update successful, committing transaction");
 
           postgresClient.endTx(connectionResult, commitResult -> {
             if (commitResult.succeeded()) {
-              onFinishHandler.handle(Future.succeededFuture());
+              onFinishHandler.handle(succeededFuture());
               promise.complete();
             } else {
-              LOG.warn("Failed to commit transaction", commitResult.cause());
-              onFinishHandler.handle(Future.failedFuture(commitResult.cause()));
+              log.warn("Failed to commit transaction", commitResult.cause());
+              onFinishHandler.handle(failedFuture(commitResult.cause()));
               promise.fail(commitResult.cause());
             }
           });
@@ -103,7 +105,7 @@ public class BatchResourceService {
       final Promise<RowSet<Row>> promise = promise();
       final Future<SQLConnection> connectionResult = succeededFuture(connection);
 
-      LOG.debug("Updating entity {} with id {}", entity, id);
+      log.debug("Updating entity {} with id {}", entity, id);
 
       postgresClient.update(connectionResult, tableName, entity, "jsonb",
         String.format(WHERE_CLAUSE, id), false, promise);
@@ -124,7 +126,7 @@ public class BatchResourceService {
     String query, Collection<?> params) {
 
     return connection -> {
-      LOG.debug("Executing SQL [{}], got [{}] parameters", query, params.size());
+      log.debug("Executing SQL [{}], got [{}] parameters", query, params.size());
 
       final Promise<RowSet<Row>> promise = promise();
       final Future<SQLConnection> connectionResult = succeededFuture(connection);
