@@ -1,3 +1,6 @@
+* ## 17.2.4 2024-08-22
+* Upgrade Vertx from 4.5.5 to 4.5.9 fixing Snappy vulns (CIRCSTORE-520)
+
 * ## 17.2.3 2024-07-16
 * Upgrading tenant resets reference and sample records (CIRCSTORE-496)
 * 
