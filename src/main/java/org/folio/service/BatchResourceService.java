@@ -65,8 +65,9 @@ public class BatchResourceService {
         if (updateResult.failed()) {
           log.warn("Batch update rejected", updateResult.cause());
 
+          // Rollback transaction and keep original cause.
           postgresClient.rollbackTx(connectionResult, rollback -> {
-            onFinishHandler.handle(Future.failedFuture(updateResult.cause()));
+            onFinishHandler.handle(failedFuture(updateResult.cause()));
             promise.fail(updateResult.cause());
           });
         } else {
