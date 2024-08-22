@@ -1,13 +1,11 @@
 package org.folio.rest.api;
 
-import static org.awaitility.Awaitility.await;
 import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.storageUrl;
-import static org.folio.rest.support.kafka.FakeKafkaConsumer.getRequestQueueReorderingEvents;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateRequestQueueReorderingEvent;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
@@ -15,6 +13,7 @@ import static org.hamcrest.Matchers.not;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -224,19 +223,17 @@ public class RequestBatchAPITest extends ApiTests {
   }
 
   @Test
-  public void canUpdateRequestPositionsInBatchForTheInstance() throws Exception {
-    UUID instanceId = UUID.randomUUID();
+  public void shouldPublishKafkaEventWhenUpdateRequestPositionsInBatchForTheInstance()
+    throws Exception {
 
+    UUID instanceId = UUID.randomUUID();
     JsonObject firstRequest = createRequestAtPosition(null, instanceId, 1);
     JsonObject secondRequest = createRequestAtPosition(null, instanceId, 2);
 
     ReorderRequest firstReorderRequest = new ReorderRequest(firstRequest, 2);
     ReorderRequest secondReorderRequest = new ReorderRequest(secondRequest, 1);
 
-    reorderRequests(
-      firstReorderRequest,
-      secondReorderRequest
-    );
+    reorderRequests(firstReorderRequest, secondReorderRequest);
 
     JsonObject requestsForInstanceReply = getAllRequestsForInstance(instanceId);
     assertThat(requestsForInstanceReply.getInteger("totalRecords"), is(2));
@@ -251,7 +248,8 @@ public class RequestBatchAPITest extends ApiTests {
     assertThat(r[0].getString("id"), is(secondRequest.getString("id")));
     assertThat(r[1].getString("id"), is(firstRequest.getString("id")));
 
-    assertCreateRequestQueueReorderingEvent();
+    assertCreateRequestQueueReorderingEvent(instanceId.toString(), List.of(
+      firstRequest.getString("id"), secondRequest.getString("id")));
   }
 
   private JsonObject getAllRequestsForItem(UUID itemId) throws Exception {
@@ -384,10 +382,6 @@ public class RequestBatchAPITest extends ApiTests {
     assertThat(errors.size(), is(1));
     assertThat(errors.getJsonObject(0).getString("message"),
       errorMessageMatcher);
-  }
-
-  public static void assertCreateRequestQueueReorderingEvent() {
-    await().until(() -> getRequestQueueReorderingEvents().size(), greaterThan(0));
   }
 
   /**

@@ -137,6 +137,10 @@ public final class FakeKafkaConsumer {
     return getFirstEvent(getCheckInEvents(checkInId));
   }
 
+  public static KafkaConsumerRecord<String, JsonObject> getFirstRequestQueueReorderingEvent() {
+    return getFirstEvent(getRequestQueueReorderingEvents());
+  }
+
   private static KafkaConsumerRecord<String, JsonObject> getFirstEvent(
       Collection<KafkaConsumerRecord<String, JsonObject>> events) {
 
