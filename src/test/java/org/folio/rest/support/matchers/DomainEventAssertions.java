@@ -111,7 +111,7 @@ public final class DomainEventAssertions {
     assertCreateEvent(getLastRequestEvent(requestId), request);
   }
 
-  public static void assertCreateRequestQueueReorderingEvent(String instanceId,
+  public static void assertRequestQueueReorderingEvent(String instanceId,
     List<String> requestIds) {
 
     await().until(() -> getRequestQueueReorderingEvents().size(), greaterThan(0));

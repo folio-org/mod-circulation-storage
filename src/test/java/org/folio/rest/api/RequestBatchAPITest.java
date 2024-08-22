@@ -3,7 +3,7 @@ package org.folio.rest.api;
 import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.storageUrl;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateRequestQueueReorderingEvent;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertRequestQueueReorderingEvent;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItems;
@@ -248,7 +248,7 @@ public class RequestBatchAPITest extends ApiTests {
     assertThat(r[0].getString("id"), is(secondRequest.getString("id")));
     assertThat(r[1].getString("id"), is(firstRequest.getString("id")));
 
-    assertCreateRequestQueueReorderingEvent(instanceId.toString(), List.of(
+    assertRequestQueueReorderingEvent(instanceId.toString(), List.of(
       firstRequest.getString("id"), secondRequest.getString("id")));
   }
 
