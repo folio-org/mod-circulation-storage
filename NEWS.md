@@ -1,3 +1,6 @@
+## 17.1.9 2024-08-23
+* Poppy: snappy-java 1.1.10.5 (CIRCSTORE-487)
+
 ## 17.1.8 2024-04-18
 * Upgrade folio-kafka-wrapper to 3.1.1, org.aspectj to 1.9.22  (CIRCSTORE-498)
 
