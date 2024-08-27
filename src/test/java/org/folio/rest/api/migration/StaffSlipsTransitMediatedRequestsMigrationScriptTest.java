@@ -21,7 +21,6 @@ public class StaffSlipsTransitMediatedRequestsMigrationScriptTest extends StaffS
 
   private static final String STAFF_SLIP_ID = "e6e29ec1-1a76-4913-bbd3-65f4ffd94e04";
   private static final String SCRIPT_NAME = "add_staff_slips_transit_mediated_requests.sql";
-  private static final String MIGRATION_SCRIPT = loadScript(SCRIPT_NAME);
   private static final String STAFF_SLIPS_KEY = "staffSlips";
   private static final String STAFF_SLIPS_SUB_PATH = "";
   private static final String STAFF_SLIP_NAME = "Transit (mediated requests)";
@@ -34,7 +33,7 @@ public class StaffSlipsTransitMediatedRequestsMigrationScriptTest extends StaffS
 
   @Test
   public void canMigrateStaffSlips() throws Exception {
-    executeMultipleSqlStatements(MIGRATION_SCRIPT);
+    executeMultipleSqlStatements(loadScript(SCRIPT_NAME));
     CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
     client.get(staffSlipsStorageUrl(STAFF_SLIPS_SUB_PATH), StorageTestSuite.TENANT_ID,
       ResponseHandler.json(getCompleted));
