@@ -576,7 +576,7 @@
     },
     {
       "run": "after",
-      "snippetPath": "add_staff_slips_mediated_request.sql",
+      "snippetPath": "add_staff_slips_transit_mediated_requests.sql",
       "fromModuleVersion": "17.3.0"
     },
     {

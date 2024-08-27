@@ -20,7 +20,8 @@ import io.vertx.core.json.JsonObject;
 public class StaffSlipsTransitMediatedRequestsMigrationScriptTest extends StaffSlipsMigrationTestBase{
 
   private static final String STAFF_SLIP_ID = "e6e29ec1-1a76-4913-bbd3-65f4ffd94e04";
-  private static final String MIGRATION_SCRIPT = loadScript("add_staff_slips_transit_mediated_requests.sql");
+  private static final String SCRIPT_NAME = "add_staff_slips_transit_mediated_requests.sql";
+  private static final String MIGRATION_SCRIPT = loadScript(SCRIPT_NAME);
   private static final String STAFF_SLIPS_KEY = "staffSlips";
   private static final String STAFF_SLIPS_SUB_PATH = "";
   private static final String STAFF_SLIP_NAME = "Transit (mediated requests)";
