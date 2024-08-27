@@ -576,6 +576,11 @@
     },
     {
       "run": "after",
+      "snippetPath": "add_staff_slips_mediated_request.sql",
+      "fromModuleVersion": "17.3.0"
+    },
+    {
+      "run": "after",
       "snippetPath": "removePositionFromClosedRequests.sql",
       "fromModuleVersion": "14.0.0"
     },
