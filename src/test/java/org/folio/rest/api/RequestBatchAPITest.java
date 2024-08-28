@@ -3,6 +3,7 @@ package org.folio.rest.api;
 import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.storageUrl;
+import static org.folio.rest.support.kafka.FakeKafkaConsumer.removeAllEvents;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRequestQueueReorderingEvent;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -44,6 +45,7 @@ public class RequestBatchAPITest extends ApiTests {
   @Before
   public void beforeEach() throws Exception {
     StorageTestSuite.deleteAll(requestStorageUrl());
+    removeAllEvents();
   }
 
   @After
