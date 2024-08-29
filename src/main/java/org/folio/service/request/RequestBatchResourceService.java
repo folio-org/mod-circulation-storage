@@ -2,21 +2,28 @@ package org.folio.service.request;
 
 import static java.util.stream.IntStream.rangeClosed;
 import static org.folio.rest.persist.PostgresClient.convertToPsqlStandard;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
+import static org.folio.service.event.EntityChangedEventPublisherFactory.requestBatchEventPublisher;
 import static org.folio.support.ModuleConstants.REQUEST_TABLE;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.folio.rest.jaxrs.model.Request;
+import org.folio.rest.jaxrs.model.RequestQueueReordering;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.service.BatchResourceService;
+import org.folio.service.event.EntityChangedEventPublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.sqlclient.Row;
@@ -29,12 +36,13 @@ public class RequestBatchResourceService {
 
   private final BatchResourceService batchResourceService;
   private final String tenantName;
+  private final EntityChangedEventPublisher<String, RequestQueueReordering> eventPublisher;
 
-  public RequestBatchResourceService(String tenantName,
-                                     BatchResourceService batchResourceService) {
-
-    this.batchResourceService = batchResourceService;
-    this.tenantName = tenantName;
+  public RequestBatchResourceService(Context context, Map<String, String> okapiHeaders) {
+    this.batchResourceService = new BatchResourceService(PgUtil.postgresClient(context,
+      okapiHeaders));
+    this.tenantName = tenantId(okapiHeaders);
+    this.eventPublisher = requestBatchEventPublisher(context, okapiHeaders);
   }
 
   /**
@@ -59,8 +67,8 @@ public class RequestBatchResourceService {
    * @param requests        - List of requests to execute in batch.
    * @param onFinishHandler - Callback function.
    */
-  public void executeRequestBatchUpdate(
-    List<Request> requests, Handler<AsyncResult<Void>> onFinishHandler) {
+  public void executeRequestBatchUpdate(List<Request> requests,
+    Handler<AsyncResult<Void>> onFinishHandler) {
 
     LOG.debug("Removing positions for all request to go through positions constraint");
     List<Function<SQLConnection, Future<RowSet<Row>>>> allDatabaseOperations =
@@ -80,7 +88,21 @@ public class RequestBatchResourceService {
     LOG.info("Executing batch update, total records to update [{}] (including remove positions)",
       allDatabaseOperations.size());
 
-    batchResourceService.executeBatchUpdate(allDatabaseOperations, onFinishHandler);
+    RequestQueueReordering payload = mapRequestsToPayload(requests);
+    LOG.info("executeRequestBatchUpdate:: instanceId: {}, requests: {}",
+      payload.getInstanceId(), payload.getRequestIds());
+
+    batchResourceService.executeBatchUpdate(allDatabaseOperations, onFinishHandler)
+      .compose(v -> eventPublisher.publishCreated(payload.getInstanceId(), payload));
+  }
+
+  private RequestQueueReordering mapRequestsToPayload(List<Request> requests) {
+
+    return new RequestQueueReordering()
+      .withRequestIds(requests.stream()
+        .map(Request::getId)
+        .toList())
+      .withInstanceId(requests.get(0).getInstanceId());
   }
 
   private Function<SQLConnection, Future<RowSet<Row>>> removePositionsForRequestsBatch(

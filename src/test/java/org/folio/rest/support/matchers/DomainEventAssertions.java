@@ -11,12 +11,14 @@ import static org.folio.rest.api.StorageTestSuite.storageUrl;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getCheckInEvents;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getCirculationRulesEvents;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstLoanEvent;
+import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstRequestQueueReorderingEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastCheckInEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastCirculationRulesEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastLoanEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastRequestEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLoanEvents;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getRequestEvents;
+import static org.folio.rest.support.kafka.FakeKafkaConsumer.getRequestQueueReorderingEvents;
 import static org.folio.rest.support.matchers.UUIDMatchers.hasUUIDFormat;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -34,6 +36,7 @@ import org.awaitility.core.ConditionFactory;
 import org.folio.service.event.DomainEventType;
 
 import io.vertx.core.MultiMap;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.producer.KafkaHeader;
@@ -106,6 +109,18 @@ public final class DomainEventAssertions {
     await().until(() -> getRequestEvents(requestId).size(), greaterThan(0));
 
     assertCreateEvent(getLastRequestEvent(requestId), request);
+  }
+
+  public static void assertRequestQueueReorderingEvent(String instanceId,
+    List<String> requestIds) {
+
+    await().until(() -> getRequestQueueReorderingEvents().size(), greaterThan(0));
+
+    JsonObject payload = new JsonObject()
+      .put("instanceId", instanceId)
+      .put("requestIds", new JsonArray(requestIds));
+
+    assertCreateEvent(getFirstRequestQueueReorderingEvent(), payload);
   }
 
   public static void assertNoRequestEvent(String requestId) {

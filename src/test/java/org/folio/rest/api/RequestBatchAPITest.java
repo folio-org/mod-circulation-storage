@@ -3,19 +3,23 @@ package org.folio.rest.api;
 import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.storageUrl;
+import static org.folio.rest.support.kafka.FakeKafkaConsumer.removeAllEvents;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertRequestQueueReorderingEvent;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItems;
-import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+
 import org.folio.rest.impl.RequestsBatchAPI;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.support.ApiTests;
@@ -41,6 +45,7 @@ public class RequestBatchAPITest extends ApiTests {
   @Before
   public void beforeEach() throws Exception {
     StorageTestSuite.deleteAll(requestStorageUrl());
+    removeAllEvents();
   }
 
   @After
@@ -52,8 +57,8 @@ public class RequestBatchAPITest extends ApiTests {
   public void canUpdateRequestPositionsInBatch() throws Exception {
     UUID itemId = UUID.randomUUID();
 
-    JsonObject firstRequest = createRequestForItemAtPosition(itemId, 1);
-    JsonObject secondRequest = createRequestForItemAtPosition(itemId, 2);
+    JsonObject firstRequest = createRequestAtPosition(itemId, null, 1);
+    JsonObject secondRequest = createRequestAtPosition(itemId, null, 2);
 
     ReorderRequest firstReorderRequest = new ReorderRequest(firstRequest, 2);
     ReorderRequest secondReorderRequest = new ReorderRequest(secondRequest, 1);
@@ -81,8 +86,8 @@ public class RequestBatchAPITest extends ApiTests {
   public void canCloseRequestsInBatch() throws Exception {
     UUID itemId = UUID.randomUUID();
 
-    JsonObject firstRequest = createRequestForItemAtPosition(itemId, 1);
-    JsonObject secondRequest = createRequestForItemAtPosition(itemId, 2);
+    JsonObject firstRequest = createRequestAtPosition(itemId, null, 1);
+    JsonObject secondRequest = createRequestAtPosition(itemId, null, 2);
 
     firstRequest.put("status", Request.Status.CLOSED_FILLED.value());
     firstRequest.remove("position");
@@ -111,8 +116,8 @@ public class RequestBatchAPITest extends ApiTests {
   public void canUpdateRequestFulfillmentPreferenceInBatch() throws Exception {
     UUID itemId = UUID.randomUUID();
 
-    JsonObject firstRequest = createRequestForItemAtPosition(itemId, 1);
-    JsonObject secondRequest = createRequestForItemAtPosition(itemId, 2);
+    JsonObject firstRequest = createRequestAtPosition(itemId, null, 1);
+    JsonObject secondRequest = createRequestAtPosition(itemId, null, 2);
 
     firstRequest.put("fulfillmentPreference", "Delivery");
     secondRequest.put("fulfillmentPreference", "Delivery");
@@ -153,8 +158,8 @@ public class RequestBatchAPITest extends ApiTests {
   public void willAbortBatchUpdateForRequestsAtTheSamePositionInAnItemsQueue() throws Exception {
     UUID itemId = UUID.randomUUID();
 
-    JsonObject firstRequest = createRequestForItemAtPosition(itemId, 1);
-    JsonObject secondRequest = createRequestForItemAtPosition(itemId, 2);
+    JsonObject firstRequest = createRequestAtPosition(itemId, null, 1);
+    JsonObject secondRequest = createRequestAtPosition(itemId, null, 2);
 
     JsonResponse reorderResponse = attemptReorderRequests(ResponseHandler::json,
       new ReorderRequest(firstRequest, 1),
@@ -170,8 +175,8 @@ public class RequestBatchAPITest extends ApiTests {
   public void willAbortBatchUpdateWhenOnlyOnePositionIsModified() throws Exception {
     UUID itemId = UUID.randomUUID();
 
-    JsonObject firstRequest = createRequestForItemAtPosition(itemId, 1);
-    JsonObject secondRequest = createRequestForItemAtPosition(itemId, 2);
+    JsonObject firstRequest = createRequestAtPosition(itemId, null, 1);
+    JsonObject secondRequest = createRequestAtPosition(itemId, null, 2);
 
     JsonResponse reorderResponse = attemptReorderRequests(ResponseHandler::json,
       new ReorderRequest(firstRequest, 2)
@@ -186,8 +191,8 @@ public class RequestBatchAPITest extends ApiTests {
   public void willAbortBatchUpdateOnNullPointerExceptionDueToNoIdInRequest() throws Exception {
     UUID itemId = UUID.randomUUID();
 
-    JsonObject firstRequest = createRequestForItemAtPosition(itemId, 1);
-    JsonObject secondRequest = createRequestForItemAtPosition(itemId, 2);
+    JsonObject firstRequest = createRequestAtPosition(itemId, null, 1);
+    JsonObject secondRequest = createRequestAtPosition(itemId, null, 2);
 
     JsonObject firstRequestCopy = firstRequest.copy();
     firstRequestCopy.remove("id");
@@ -205,7 +210,7 @@ public class RequestBatchAPITest extends ApiTests {
   public void cannotInjectSqlThroughRequestId() throws Exception {
     UUID itemId = UUID.randomUUID();
 
-    JsonObject firstRequest = createRequestForItemAtPosition(itemId, 1);
+    JsonObject firstRequest = createRequestAtPosition(itemId, null, 1);
 
     JsonObject firstRequestCopy = firstRequest.copy();
     firstRequestCopy.put("id", "1'; DELETE FROM request where id::text is not '1");
@@ -219,6 +224,36 @@ public class RequestBatchAPITest extends ApiTests {
     assertRequestsNotUpdated(itemId, firstRequest);
   }
 
+  @Test
+  public void shouldPublishKafkaEventWhenUpdateRequestPositionsInBatchForTheInstance()
+    throws Exception {
+
+    UUID instanceId = UUID.randomUUID();
+    JsonObject firstRequest = createRequestAtPosition(null, instanceId, 1);
+    JsonObject secondRequest = createRequestAtPosition(null, instanceId, 2);
+
+    ReorderRequest firstReorderRequest = new ReorderRequest(firstRequest, 2);
+    ReorderRequest secondReorderRequest = new ReorderRequest(secondRequest, 1);
+
+    reorderRequests(firstReorderRequest, secondReorderRequest);
+
+    JsonObject requestsForInstanceReply = getAllRequestsForInstance(instanceId);
+    assertThat(requestsForInstanceReply.getInteger("totalRecords"), is(2));
+    JsonArray requestsFromDb = requestsForInstanceReply.getJsonArray("requests");
+    assertThat(requestsFromDb.size(), is(2));
+    List<JsonObject> requestsSorted = requestsFromDb.stream()
+      .map(JsonObject.class::cast)
+      .sorted(Comparator.comparingInt(obj -> obj.getInteger("position")))
+      .toList();
+    assertThat(requestsSorted.get(0).getInteger("position"), is(1));
+    assertThat(requestsSorted.get(1).getInteger("position"), is(2));
+    assertThat(requestsSorted.get(0).getString("id"), is(secondRequest.getString("id")));
+    assertThat(requestsSorted.get(1).getString("id"), is(firstRequest.getString("id")));
+
+    assertRequestQueueReorderingEvent(instanceId.toString(), List.of(
+      firstRequest.getString("id"), secondRequest.getString("id")));
+  }
+
   private JsonObject getAllRequestsForItem(UUID itemId) throws Exception {
     CompletableFuture<JsonResponse> getRequestsCompleted = new CompletableFuture<>();
 
@@ -228,10 +263,30 @@ public class RequestBatchAPITest extends ApiTests {
     return getRequestsCompleted.get(5, TimeUnit.SECONDS).getJson();
   }
 
-  private JsonObject createRequestForItemAtPosition(UUID itemId, int position) throws Exception {
-    JsonObject request = createEntity(
-      new RequestRequestBuilder()
+  private JsonObject getAllRequestsForInstance(UUID instanceId) throws Exception {
+    CompletableFuture<JsonResponse> getRequestsCompleted = new CompletableFuture<>();
+
+    client.get(requestStorageUrl() + String.format("?query=instanceId==%s", instanceId),
+      TENANT_ID, ResponseHandler.json(getRequestsCompleted));
+
+    return getRequestsCompleted.get(5, TimeUnit.SECONDS).getJson();
+  }
+
+  private JsonObject createRequestAtPosition(UUID itemId, UUID instanceId, int position)
+    throws Exception {
+
+    RequestRequestBuilder requestBuilder = null;
+    if (instanceId != null) {
+      requestBuilder = new RequestRequestBuilder()
+        .withInstanceId(instanceId)
+        .withRequestLevel("Title");
+    } else {
+      requestBuilder = new RequestRequestBuilder()
         .withItemId(itemId)
+        .withRequestLevel("Item");
+    }
+    JsonObject request = createEntity(
+      requestBuilder
         .withPosition(position)
         .recall()
         .toHoldShelf()
@@ -240,7 +295,11 @@ public class RequestBatchAPITest extends ApiTests {
       requestStorageUrl()
     ).getJson();
 
-    assertThat(request.getString("itemId"), is(itemId.toString()));
+    if (itemId != null) {
+      assertThat(request.getString("itemId"), is(itemId.toString()));
+    } else {
+      assertThat(request.getString("instanceId"), is(instanceId.toString()));
+    }
     assertThat(request.getInteger("position"), is(position));
 
     return request;
