@@ -76,7 +76,7 @@ public class PrintEventsService {
     postgresClient.withTrans(conn -> conn.saveBatch(PRINT_EVENTS_TABLE,
       printEvents)
       .onSuccess(handler -> {
-          conn.execute("select * from request1")
+          conn.execute(String.format("select * from %s.request", convertToPsqlStandard(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT))))
             .onSuccess(res -> asyncResultHandler.handle(succeededFuture(PrintEventsStorage.PostPrintEventsStoragePrintEventsEntryResponse.respond201())))
             .onFailure(throwable -> asyncResultHandler.handle(succeededFuture(PrintEventsStorage.PostPrintEventsStoragePrintEventsEntryResponse.respond500WithTextPlain(throwable.getMessage()))));
         }
