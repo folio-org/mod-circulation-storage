@@ -22,9 +22,7 @@ public class PrintEventsApi implements PrintEventsStorage {
   public void postPrintEventsStoragePrintEventsEntry(PrintEventsRequest printEventsRequest, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     LOG.info("postPrintEventsStoragePrintEvents:: save print events {}", printEventsRequest);
     new PrintEventsService(vertxContext, okapiHeaders)
-      .create(printEventsRequest)
-      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
-      .onFailure(throwable -> asyncResultHandler.handle(succeededFuture(PostPrintEventsStoragePrintEventsEntryResponse.respond500WithTextPlain(throwable.getMessage()))));
+      .create(printEventsRequest, asyncResultHandler);
   }
 
   @Override

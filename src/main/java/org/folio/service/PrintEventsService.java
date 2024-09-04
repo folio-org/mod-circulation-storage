@@ -36,6 +36,7 @@ public class PrintEventsService {
   private static final int MAX_ENTITIES = 10000;
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
+  private final PostgresClient postgresClient;
 
   private static final String PRINT_EVENT_FETCH_QUERY = """
     WITH cte AS (
@@ -58,9 +59,10 @@ public class PrintEventsService {
   public PrintEventsService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
     this.okapiHeaders = okapiHeaders;
+    this.postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
   }
 
-  public Future<Response> create(PrintEventsRequest printEventRequest) {
+  public void create(PrintEventsRequest printEventRequest, Handler<AsyncResult<Response>> asyncResultHandler) {
     LOG.info("create:: save print events {}", printEventRequest);
     List<PrintEvent> printEvents = printEventRequest.getRequestIds().stream().map(requestId -> {
       PrintEvent event = new PrintEvent();
@@ -69,9 +71,17 @@ public class PrintEventsService {
       event.setRequesterName(printEventRequest.getRequesterName());
       event.setPrintEventDate(printEventRequest.getPrintEventDate());
       return event;
-    }).toList();
-    return PgUtil.postSync(PRINT_EVENTS_TABLE, printEvents, MAX_ENTITIES, false, okapiHeaders, vertxContext,
-      PrintEventsStorage.PostPrintEventsStoragePrintEventsEntryResponse.class);
+    })
+      .toList();
+    postgresClient.withTrans(conn -> conn.saveBatch(PRINT_EVENTS_TABLE,
+      printEvents)
+      .onSuccess(handler -> {
+          conn.execute("select * from request1")
+            .onSuccess(res -> asyncResultHandler.handle(succeededFuture(PrintEventsStorage.PostPrintEventsStoragePrintEventsEntryResponse.respond201())))
+            .onFailure(throwable -> asyncResultHandler.handle(succeededFuture(PrintEventsStorage.PostPrintEventsStoragePrintEventsEntryResponse.respond500WithTextPlain(throwable.getMessage()))));
+        }
+      )
+      .onFailure(throwable -> asyncResultHandler.handle(succeededFuture(PrintEventsStorage.PostPrintEventsStoragePrintEventsEntryResponse.respond500WithTextPlain(throwable.getMessage())))));
   }
 
   public void getPrintEventRequestDetails(List<String> requestIds, Handler<AsyncResult<Response>> asyncResultHandler) {
