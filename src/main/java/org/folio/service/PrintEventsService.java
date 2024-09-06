@@ -2,10 +2,10 @@ package org.folio.service;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import io.vertx.sqlclient.Tuple;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.PrintEventsRequest;
 import org.folio.rest.jaxrs.model.PrintEventsStatusResponse;
@@ -14,6 +14,7 @@ import org.folio.rest.jaxrs.resource.PrintEventsStorage;
 import org.folio.rest.model.PrintEvent;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.tools.utils.MetadataUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,12 +24,14 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.persist.PostgresClient.convertToPsqlStandard;
 import static org.folio.support.ModuleConstants.PRINT_EVENTS_TABLE;
+import static org.folio.support.ModuleConstants.REQUEST_TABLE;
 
 public class PrintEventsService {
 
@@ -36,6 +39,7 @@ public class PrintEventsService {
   private static final int MAX_ENTITIES = 10000;
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
+  private final PostgresClient postgresClient;
 
   private static final String PRINT_EVENT_FETCH_QUERY = """
     WITH cte AS (
@@ -53,14 +57,43 @@ public class PrintEventsService {
         rank = 1;
     """;
 
+  private static BiFunction<String, String, String> requestPrintSyncQueryFun =
+    (String schemaAndTableName, String ddd) -> String.format("""
+      WITH print_counts AS (
+        SELECT
+          jsonb->>'requestId' AS request_id,
+          COUNT(*) AS print_count
+        FROM %s
+        WHERE jsonb->>'requestId' IN ($1)
+        GROUP BY jsonb->>'requestId'
+      )
+      UPDATE %s
+      SET jsonb =
+        (jsonb
+          || jsonb_build_object(
+               'printDetails',
+               jsonb_build_object(
+                 'printCount', print_counts.print_count,
+                 'requesterId', $2,
+                 'printed', true,
+                 'printEventDate', $3
+               )
+             )
+        )
+      FROM print_counts
+      WHERE id = print_counts.request_id::uuid;
+      """, schemaAndTableName);
+
 
 
   public PrintEventsService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
     this.okapiHeaders = okapiHeaders;
+    this.postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
   }
 
-  public Future<Response> create(PrintEventsRequest printEventRequest) {
+  public void create(PrintEventsRequest printEventRequest,
+                  Handler<AsyncResult<Response>> asyncResultHandler) {
     LOG.info("create:: save print events {}", printEventRequest);
     List<PrintEvent> printEvents = printEventRequest.getRequestIds().stream().map(requestId -> {
       PrintEvent event = new PrintEvent();
@@ -70,8 +103,27 @@ public class PrintEventsService {
       event.setPrintEventDate(printEventRequest.getPrintEventDate());
       return event;
     }).toList();
-    return PgUtil.postSync(PRINT_EVENTS_TABLE, printEvents, MAX_ENTITIES, false, okapiHeaders, vertxContext,
-      PrintEventsStorage.PostPrintEventsStoragePrintEventsEntryResponse.class);
+    try {
+      MetadataUtil.populateMetadata(printEvents, okapiHeaders);
+    } catch (Throwable e) {
+      String msg = "Cannot populate metadata of printEvents list elements: " + e.getMessage();
+      LOG.error(msg, e);
+      asyncResultHandler.handle(succeededFuture(PrintEventsStorage.PostPrintEventsStoragePrintEventsEntryResponse.respond500WithTextPlain(msg)));
+      return;
+    }
+    postgresClient.withTrans(conn -> conn.saveBatch(PRINT_EVENTS_TABLE, printEvents)
+      .onSuccess(handler -> {
+        String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
+        conn.execute(requestPrintSyncQueryFun.apply(convertToPsqlStandard(tenantId) + PRINT_EVENTS_TABLE,
+              convertToPsqlStandard(tenantId) + REQUEST_TABLE),
+            Tuple.of(printEventRequest.getRequestIds(),
+              printEventRequest.getRequesterId(),
+              printEventRequest.getPrintEventDate()))
+          .onSuccess(res -> asyncResultHandler.handle(succeededFuture(PrintEventsStorage.PostPrintEventsStoragePrintEventsEntryResponse.respond201())))
+          .onFailure(throwable -> asyncResultHandler.handle(succeededFuture(PrintEventsStorage.PostPrintEventsStoragePrintEventsEntryResponse.respond500WithTextPlain(throwable.getMessage()))));
+
+      })
+      .onFailure(throwable -> asyncResultHandler.handle(succeededFuture(PrintEventsStorage.PostPrintEventsStoragePrintEventsEntryResponse.respond500WithTextPlain(throwable.getMessage())))));
   }
 
   public void getPrintEventRequestDetails(List<String> requestIds, Handler<AsyncResult<Response>> asyncResultHandler) {
