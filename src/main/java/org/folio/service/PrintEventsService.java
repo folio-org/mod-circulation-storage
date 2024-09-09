@@ -19,11 +19,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
+import java.text.SimpleDateFormat;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
@@ -111,19 +113,53 @@ public class PrintEventsService {
       asyncResultHandler.handle(succeededFuture(PrintEventsStorage.PostPrintEventsStoragePrintEventsEntryResponse.respond500WithTextPlain(msg)));
       return;
     }
-    postgresClient.withTrans(conn -> conn.saveBatch(PRINT_EVENTS_TABLE, printEvents)
-      .onSuccess(handler -> {
-        String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
-        conn.execute(requestPrintSyncQueryFun.apply(convertToPsqlStandard(tenantId) + PRINT_EVENTS_TABLE,
-              convertToPsqlStandard(tenantId) + REQUEST_TABLE),
-            Tuple.of(printEventRequest.getRequestIds(),
-              printEventRequest.getRequesterId(),
-              printEventRequest.getPrintEventDate()))
-          .onSuccess(res -> asyncResultHandler.handle(succeededFuture(PrintEventsStorage.PostPrintEventsStoragePrintEventsEntryResponse.respond201())))
-          .onFailure(throwable -> asyncResultHandler.handle(succeededFuture(PrintEventsStorage.PostPrintEventsStoragePrintEventsEntryResponse.respond500WithTextPlain(throwable.getMessage()))));
 
-      })
-      .onFailure(throwable -> asyncResultHandler.handle(succeededFuture(PrintEventsStorage.PostPrintEventsStoragePrintEventsEntryResponse.respond500WithTextPlain(throwable.getMessage())))));
+    String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
+    String printEventTableName =
+      convertToPsqlStandard(tenantId) + "." + PRINT_EVENTS_TABLE;
+    String requestTableName =
+      convertToPsqlStandard(tenantId) + "." + REQUEST_TABLE;
+
+//    postgresClient
+//      .execute(
+//        requestPrintSyncQueryFun.apply(printEventTableName,
+//          requestTableName),
+//        buildRequestPrintSyncQueryParams(printEventRequest)
+//      ).onSuccess(res -> asyncResultHandler.handle(succeededFuture(PrintEventsStorage.PostPrintEventsStoragePrintEventsEntryResponse.respond201())))
+//      .onFailure(throwable -> asyncResultHandler.handle(succeededFuture(PrintEventsStorage.PostPrintEventsStoragePrintEventsEntryResponse.respond500WithTextPlain(throwable.getMessage()))));
+    postgresClient.withTrans(conn -> {
+      // First saveBatch operationx
+      return conn.saveBatch(PRINT_EVENTS_TABLE, printEvents)
+        .compose(printEventsResult -> {
+          // Now proceed to the second operation after the first succeeds
+          return conn.execute(
+            requestPrintSyncQueryFun.apply(printEventTableName,
+              requestTableName),
+            buildRequestPrintSyncQueryParams(printEventRequest)
+          );
+        });
+    }).onFailure(handler ->
+        asyncResultHandler.handle(
+          succeededFuture(PrintEventsStorage.PostPrintEventsStoragePrintEventsEntryResponse.respond500WithTextPlain(handler.getMessage()))
+        )
+      ) // Handle failure
+      .onSuccess(handler ->
+        asyncResultHandler.handle(
+          succeededFuture(PrintEventsStorage.PostPrintEventsStoragePrintEventsEntryResponse.respond201())
+        )
+      );
+  }
+
+  private static Tuple buildRequestPrintSyncQueryParams(PrintEventsRequest printEventRequest) {
+    SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+    df.setTimeZone(TimeZone.getTimeZone(ZoneOffset.UTC));
+    return Tuple.of(
+      printEventRequest.getRequestIds().stream()
+        .map(requestId -> "'" + requestId + "'")
+        .collect(Collectors.joining(", ")),
+      printEventRequest.getRequesterId(),
+      df.format(printEventRequest.getPrintEventDate())
+    );
   }
 
   public void getPrintEventRequestDetails(List<String> requestIds, Handler<AsyncResult<Response>> asyncResultHandler) {
