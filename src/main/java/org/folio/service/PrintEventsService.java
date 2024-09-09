@@ -58,7 +58,7 @@ public class PrintEventsService {
     """;
 
   private static BiFunction<String, String, String> requestPrintSyncQueryFun =
-    (String schemaAndTableName, String ddd) -> String.format("""
+    (String printEventTableName, String requestTableName) -> String.format("""
       WITH print_counts AS (
         SELECT
           jsonb->>'requestId' AS request_id,
@@ -82,7 +82,7 @@ public class PrintEventsService {
         )
       FROM print_counts
       WHERE id = print_counts.request_id::uuid;
-      """, schemaAndTableName);
+      """, printEventTableName, requestTableName);
 
 
 
