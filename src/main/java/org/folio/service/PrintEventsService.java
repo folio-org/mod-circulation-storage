@@ -5,7 +5,6 @@ import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
-import io.vertx.sqlclient.Tuple;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.PrintEventsRequest;
 import org.folio.rest.jaxrs.model.PrintEventsStatusResponse;
@@ -26,7 +25,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
-import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import static io.vertx.core.Future.succeededFuture;
@@ -59,14 +57,13 @@ public class PrintEventsService {
         rank = 1;
     """;
 
-  private static BiFunction<String, String, String> requestPrintSyncQueryFun =
-    (String printEventTableName, String requestTableName) -> String.format("""
+  private static String requestPrintSyncQueryString = """
       WITH print_counts AS (
         SELECT
           jsonb->>'requestId' AS request_id,
           COUNT(*) AS print_count
         FROM %s
-        WHERE jsonb->>'requestId' IN ($1)
+        WHERE jsonb->>'requestId' IN (%s)
         GROUP BY jsonb->>'requestId'
       )
       UPDATE %s
@@ -76,15 +73,15 @@ public class PrintEventsService {
                'printDetails',
                jsonb_build_object(
                  'printCount', print_counts.print_count,
-                 'requesterId', $2,
+                 'requesterId', %s,
                  'printed', true,
-                 'printEventDate', $3
+                 'printEventDate', %s
                )
              )
         )
       FROM print_counts
       WHERE id = print_counts.request_id::uuid;
-      """, printEventTableName, requestTableName);
+      """;
 
 
 
@@ -114,35 +111,20 @@ public class PrintEventsService {
       return;
     }
 
-    String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
-    String printEventTableName =
-      convertToPsqlStandard(tenantId) + "." + PRINT_EVENTS_TABLE;
-    String requestTableName =
-      convertToPsqlStandard(tenantId) + "." + REQUEST_TABLE;
-
-//    postgresClient
-//      .execute(
-//        requestPrintSyncQueryFun.apply(printEventTableName,
-//          requestTableName),
-//        buildRequestPrintSyncQueryParams(printEventRequest)
-//      ).onSuccess(res -> asyncResultHandler.handle(succeededFuture(PrintEventsStorage.PostPrintEventsStoragePrintEventsEntryResponse.respond201())))
-//      .onFailure(throwable -> asyncResultHandler.handle(succeededFuture(PrintEventsStorage.PostPrintEventsStoragePrintEventsEntryResponse.respond500WithTextPlain(throwable.getMessage()))));
     postgresClient.withTrans(conn -> {
-      // First saveBatch operationx
-      return conn.saveBatch(PRINT_EVENTS_TABLE, printEvents)
-        .compose(printEventsResult -> {
-          // Now proceed to the second operation after the first succeeds
-          return conn.execute(
-            requestPrintSyncQueryFun.apply(printEventTableName,
-              requestTableName),
-            buildRequestPrintSyncQueryParams(printEventRequest)
-          );
-        });
-    }).onFailure(handler ->
+        // First saveBatch operationx
+        return conn.saveBatch(PRINT_EVENTS_TABLE, printEvents)
+          .compose(printEventsResult -> {
+            // Now proceed to the second operation after the first succeeds
+            return conn.execute(
+              buildRequestSyncQuery(printEventRequest, okapiHeaders)
+            );
+          });
+      }).onFailure(handler ->
         asyncResultHandler.handle(
           succeededFuture(PrintEventsStorage.PostPrintEventsStoragePrintEventsEntryResponse.respond500WithTextPlain(handler.getMessage()))
         )
-      ) // Handle failure
+      )
       .onSuccess(handler ->
         asyncResultHandler.handle(
           succeededFuture(PrintEventsStorage.PostPrintEventsStoragePrintEventsEntryResponse.respond201())
@@ -150,16 +132,26 @@ public class PrintEventsService {
       );
   }
 
-  private static Tuple buildRequestPrintSyncQueryParams(PrintEventsRequest printEventRequest) {
+  private String buildRequestSyncQuery(PrintEventsRequest printEventRequest,
+                                       Map<String, String> okapiHeaders) {
     SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
     df.setTimeZone(TimeZone.getTimeZone(ZoneOffset.UTC));
-    return Tuple.of(
-      printEventRequest.getRequestIds().stream()
-        .map(requestId -> "'" + requestId + "'")
-        .collect(Collectors.joining(", ")),
-      printEventRequest.getRequesterId(),
-      df.format(printEventRequest.getPrintEventDate())
-    );
+
+    String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
+    String printEventTableName =
+      convertToPsqlStandard(tenantId) + "." + PRINT_EVENTS_TABLE;
+    String requestTableName =
+      convertToPsqlStandard(tenantId) + "." + REQUEST_TABLE;
+    String requestIds = printEventRequest.getRequestIds().stream()
+      .map(requestId -> "'" + requestId + "'")
+      .collect(Collectors.joining(", "));
+    String requesterId = "'" + printEventRequest.getRequesterId() + "'";
+    String printEventDate =
+      "'" +  df.format(printEventRequest.getPrintEventDate()) + "'";
+
+    return requestPrintSyncQueryString.formatted(printEventTableName,
+      requestIds, requestTableName, requesterId,
+      printEventDate);
   }
 
   public void getPrintEventRequestDetails(List<String> requestIds, Handler<AsyncResult<Response>> asyncResultHandler) {
