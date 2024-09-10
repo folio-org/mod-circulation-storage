@@ -253,7 +253,8 @@ public class RequestBatchAPITest extends ApiTests {
 
     assertRequestQueueReorderingEvent(instanceId.toString(),
       requestsSorted.get(1).getString("itemId"), List.of(
-      firstRequest.getString("id"), secondRequest.getString("id")));
+      firstRequest.getString("id"), secondRequest.getString("id")),
+      RequestQueueReordering.RequestLevel.TITLE);
   }
 
   private JsonObject getAllRequestsForItem(UUID itemId) throws Exception {
