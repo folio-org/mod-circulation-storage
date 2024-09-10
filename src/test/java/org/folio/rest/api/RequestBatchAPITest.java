@@ -22,6 +22,7 @@ import java.util.function.Function;
 
 import org.folio.rest.impl.RequestsBatchAPI;
 import org.folio.rest.jaxrs.model.Request;
+import org.folio.rest.jaxrs.model.RequestQueueReordering;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.Response;
@@ -250,8 +251,10 @@ public class RequestBatchAPITest extends ApiTests {
     assertThat(r[0].getString("id"), is(secondRequest.getString("id")));
     assertThat(r[1].getString("id"), is(firstRequest.getString("id")));
 
-    assertRequestQueueReorderingEvent(instanceId.toString(), List.of(
-      firstRequest.getString("id"), secondRequest.getString("id")));
+    assertRequestQueueReorderingEvent(instanceId.toString(),
+      r[1].getString("itemId"), List.of(
+      firstRequest.getString("id"), secondRequest.getString("id")),
+      RequestQueueReordering.RequestLevel.TITLE);
   }
 
   private JsonObject getAllRequestsForItem(UUID itemId) throws Exception {

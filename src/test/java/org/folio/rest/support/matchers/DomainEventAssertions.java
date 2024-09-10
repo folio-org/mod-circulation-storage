@@ -33,6 +33,7 @@ import java.util.List;
 
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionFactory;
+import org.folio.rest.jaxrs.model.RequestQueueReordering;
 import org.folio.service.event.DomainEventType;
 
 import io.vertx.core.MultiMap;
@@ -111,13 +112,15 @@ public final class DomainEventAssertions {
     assertCreateEvent(getLastRequestEvent(requestId), request);
   }
 
-  public static void assertRequestQueueReorderingEvent(String instanceId,
-    List<String> requestIds) {
+  public static void assertRequestQueueReorderingEvent(String instanceId, String itemId,
+    List<String> requestIds, RequestQueueReordering.RequestLevel requestLevel) {
 
     await().until(() -> getRequestQueueReorderingEvents().size(), greaterThan(0));
 
     JsonObject payload = new JsonObject()
       .put("instanceId", instanceId)
+      .put("itemId", itemId)
+      .put("requestLevel", requestLevel.value())
       .put("requestIds", new JsonArray(requestIds));
 
     assertCreateEvent(getFirstRequestQueueReorderingEvent(), payload);
