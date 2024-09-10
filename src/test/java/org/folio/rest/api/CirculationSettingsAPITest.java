@@ -24,6 +24,7 @@ public class CirculationSettingsAPITest extends ApiTests {
   private static final String TABLE_NAME = "circulation_settings";
   private static final String CIRCULATION_SETTINGS_PROPERTY = "circulation-settings";
   private static final int NOT_FOUND_STATUS = 404;
+  private static final String REQUEST_PRINT_SETTING = "Enable Request Print";
 
   private final AssertingRecordClient circulationSettingsClient =
     new AssertingRecordClient(
@@ -89,6 +90,28 @@ public class CirculationSettingsAPITest extends ApiTests {
     circulationSettingsClient.deleteById(id);
     var deletedCirculationSettings = circulationSettingsClient.attemptGetById(id);
     assertThat(deletedCirculationSettings.getStatusCode(), is(NOT_FOUND_STATUS));
+  }
+
+  @Test
+  @SneakyThrows
+  public void canCreateAndRetrieveEnableRequestPrintDetailsSetting() {
+    String id = UUID.randomUUID().toString();
+    JsonObject enableRequestPrintDetailsSettingJson = new JsonObject();
+    enableRequestPrintDetailsSettingJson.put(ID_KEY, id);
+    enableRequestPrintDetailsSettingJson.put(NAME_KEY, REQUEST_PRINT_SETTING);
+    JsonObject enablePrintSettingJson = new JsonObject().put(REQUEST_PRINT_SETTING, true);
+    enableRequestPrintDetailsSettingJson.put(VALUE_KEY, enablePrintSettingJson);
+
+    JsonObject circulationSettingsResponse =
+      circulationSettingsClient.create(enableRequestPrintDetailsSettingJson).getJson();
+    JsonObject circulationSettingsById = circulationSettingsClient.getById(id).getJson();
+
+    assertThat(circulationSettingsResponse.getString(ID_KEY), is(id));
+    assertThat(circulationSettingsResponse.getString(NAME_KEY),
+      is(enableRequestPrintDetailsSettingJson.getString(NAME_KEY)));
+    assertThat(circulationSettingsById.getString(ID_KEY), is(id));
+    assertThat(circulationSettingsById.getJsonObject(VALUE_KEY),
+      is(enableRequestPrintDetailsSettingJson.getJsonObject(VALUE_KEY)));
   }
 
   private static String getValue(JsonObject circulationSettingsById) {

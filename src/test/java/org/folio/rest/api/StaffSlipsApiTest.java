@@ -38,8 +38,11 @@ public class StaffSlipsApiTest extends ApiTests {
   private static final String ID_KEY = "id";
   private static final String ACTIVE_KEY = "active";
   private static final String NAME_KEY = "name";
-  private static final String DESCRIPTON_KEY = "description";
+  private static final String DESCRIPTION_KEY = "description";
   private static final String TEMPLATE_KEY = "template";
+  private static final String [] STAFF_SLIP_NAMES = {"Hold", "Transit", "Request delivery", "Pick slip",
+    "Search slip (Hold requests)", "Transit (mediated requests)"};
+  private static final String STAFF_SLIPS_KEY = "staffSlips";
 
   private static AtomicBoolean isRefTestDone = new AtomicBoolean(false);
 
@@ -66,10 +69,9 @@ public class StaffSlipsApiTest extends ApiTests {
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
 
-    JsonArray slipsJsonArray = getResponse.getJson().getJsonArray("staffSlips");
+    JsonArray slipsJsonArray = getResponse.getJson().getJsonArray(STAFF_SLIPS_KEY);
     Object [] names = slipsJsonArray.stream().map(o -> ((JsonObject) o).getString(NAME_KEY)).toArray();
-    assertThat(names, arrayContainingInAnyOrder("Hold", "Transit", "Request delivery", "Pick slip",
-      "Search slip (Hold requests)"));
+    assertThat(names, arrayContainingInAnyOrder(STAFF_SLIP_NAMES));
   }
 
   /* Begin Tests */
@@ -86,7 +88,7 @@ public class StaffSlipsApiTest extends ApiTests {
     assertThat(creationResponse.getJson().getString(ID_KEY), notNullValue());
     assertThat(creationResponse.getJson().getBoolean(ACTIVE_KEY), is(true));
     assertThat(creationResponse.getJson().getString(NAME_KEY), is(TEST_STAFF_SLIP_1_NAME));
-    assertThat(creationResponse.getJson().getString(DESCRIPTON_KEY), is(TEST_STAFF_SLIP_1_DESCRIPTION));
+    assertThat(creationResponse.getJson().getString(DESCRIPTION_KEY), is(TEST_STAFF_SLIP_1_DESCRIPTION));
     assertThat(creationResponse.getJson().getString(TEMPLATE_KEY), is(TEST_STAFF_SLIP_1_Template));
 
   }
@@ -197,7 +199,7 @@ public class StaffSlipsApiTest extends ApiTests {
     JsonResponse getResponse = getCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(putReponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-    assertThat(getResponse.getJson().getString(DESCRIPTON_KEY), is(TEST_STAFF_SLIP_1_DESCRIPTION_ALTERNATE));
+    assertThat(getResponse.getJson().getString(DESCRIPTION_KEY), is(TEST_STAFF_SLIP_1_DESCRIPTION_ALTERNATE));
 
   }
 

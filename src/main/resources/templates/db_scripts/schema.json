@@ -532,6 +532,21 @@
           "removeAccents": true
         }
       ]
+    },
+    {
+      "tableName": "print_events",
+      "withMetadata": true,
+      "withAuditing": false,
+      "index": [
+        {
+          "fieldName": "requestId",
+          "tOps": "ADD",
+          "caseSensitive": true,
+          "removeAccents": false,
+          "sqlExpression": "(jsonb->>'requestId')",
+          "sqlExpressionQuery": "$"
+        }
+      ]
     }
   ],
   "scripts": [
@@ -558,6 +573,11 @@
       "run": "after",
       "snippetPath": "add_search_slips.sql",
       "fromModuleVersion": "17.2.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "add_staff_slips_transit_mediated_requests.sql",
+      "fromModuleVersion": "17.3.0"
     },
     {
       "run": "after",

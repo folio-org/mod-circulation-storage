@@ -242,19 +242,18 @@ public class RequestBatchAPITest extends ApiTests {
     assertThat(requestsForInstanceReply.getInteger("totalRecords"), is(2));
     JsonArray requestsFromDb = requestsForInstanceReply.getJsonArray("requests");
     assertThat(requestsFromDb.size(), is(2));
-    JsonObject [] r = new JsonObject [] { requestsFromDb.getJsonObject(0), requestsFromDb.getJsonObject(1) };
-    if (r[0].getInteger("position") == 2) {
-      r = new JsonObject [] { r[1], r[0] };
-    }
-    assertThat(r[0].getInteger("position"), is(1));
-    assertThat(r[1].getInteger("position"), is(2));
-    assertThat(r[0].getString("id"), is(secondRequest.getString("id")));
-    assertThat(r[1].getString("id"), is(firstRequest.getString("id")));
+    List<JsonObject> requestsSorted = requestsFromDb.stream()
+      .map(JsonObject.class::cast)
+      .sorted(Comparator.comparingInt(obj -> obj.getInteger("position")))
+      .toList();
+    assertThat(requestsSorted.get(0).getInteger("position"), is(1));
+    assertThat(requestsSorted.get(1).getInteger("position"), is(2));
+    assertThat(requestsSorted.get(0).getString("id"), is(secondRequest.getString("id")));
+    assertThat(requestsSorted.get(1).getString("id"), is(firstRequest.getString("id")));
 
     assertRequestQueueReorderingEvent(instanceId.toString(),
-      r[1].getString("itemId"), List.of(
-      firstRequest.getString("id"), secondRequest.getString("id")),
-      RequestQueueReordering.RequestLevel.TITLE);
+      requestsSorted.get(1).getString("itemId"), List.of(
+      firstRequest.getString("id"), secondRequest.getString("id")));
   }
 
   private JsonObject getAllRequestsForItem(UUID itemId) throws Exception {

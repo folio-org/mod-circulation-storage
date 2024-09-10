@@ -82,8 +82,8 @@ public class CirculationSettingsService {
     Throwable throwable) {
 
     if (!isDuplicate(throwable.getMessage())) {
-      log.debug("updateSettingsValue:: error during saving circulation setting: {}. message: {}.",
-        circulationSetting, throwable.getMessage());
+      log.warn("updateSettingsValue:: error during saving circulation setting: {}",
+        circulationSetting, throwable);
       return Future.failedFuture(throwable);
     }
 
