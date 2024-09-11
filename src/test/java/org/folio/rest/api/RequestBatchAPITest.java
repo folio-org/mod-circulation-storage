@@ -3,6 +3,7 @@ package org.folio.rest.api;
 import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.storageUrl;
+import static org.folio.rest.jaxrs.model.RequestQueueReordering.RequestLevel.TITLE;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.removeAllEvents;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRequestQueueReorderingEvent;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -246,15 +247,15 @@ public class RequestBatchAPITest extends ApiTests {
       .map(JsonObject.class::cast)
       .sorted(Comparator.comparingInt(obj -> obj.getInteger("position")))
       .toList();
+    String firstRequestId = firstRequest.getString("id");
+    String secondRequestId = secondRequest.getString("id");
     assertThat(requestsSorted.get(0).getInteger("position"), is(1));
     assertThat(requestsSorted.get(1).getInteger("position"), is(2));
-    assertThat(requestsSorted.get(0).getString("id"), is(secondRequest.getString("id")));
-    assertThat(requestsSorted.get(1).getString("id"), is(firstRequest.getString("id")));
+    assertThat(requestsSorted.get(0).getString("id"), is(secondRequestId));
+    assertThat(requestsSorted.get(1).getString("id"), is(firstRequestId));
 
     assertRequestQueueReorderingEvent(instanceId.toString(),
-      requestsSorted.get(1).getString("itemId"), List.of(
-      firstRequest.getString("id"), secondRequest.getString("id")),
-      RequestQueueReordering.RequestLevel.TITLE);
+      requestsSorted.get(1).getString("itemId"), List.of(firstRequestId, secondRequestId), TITLE);
   }
 
   private JsonObject getAllRequestsForItem(UUID itemId) throws Exception {
