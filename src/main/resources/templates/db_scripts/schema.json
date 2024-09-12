@@ -587,6 +587,11 @@
       "run": "after",
       "snippetPath": "fixSpellingOfFulfillmentPreference.sql",
       "fromModuleVersion": "17.1.2"
+    },
+    {
+      "run": "after",
+      "snippetPath": "add_due_date_slips.sql",
+      "fromModuleVersion": "17.4.0"
     }
   ]
 }
