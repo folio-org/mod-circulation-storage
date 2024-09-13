@@ -242,7 +242,8 @@
           "format": "date-time",
           "description": "Date and time when print slip was generated last time."
         }
-      }
+      },
+      "additionalProperties": false
     },
     "awaitingPickupRequestClosedDate": {
       "description": "A date when the request with awaiting pickup status was closed",
