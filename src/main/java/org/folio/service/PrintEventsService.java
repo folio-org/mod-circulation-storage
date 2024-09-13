@@ -74,7 +74,7 @@ public class PrintEventsService {
                jsonb_build_object(
                  'printCount', print_counts.print_count,
                  'requesterId', %s,
-                 'printed', true,
+                 'isPrinted', true,
                  'printEventDate', %s
                )
              )
