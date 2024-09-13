@@ -591,7 +591,7 @@
     {
       "run": "after",
       "snippetPath": "add_due_date_slips.sql",
-      "fromModuleVersion": "17.4.0"
+      "fromModuleVersion": "17.3.0"
     }
   ]
 }
