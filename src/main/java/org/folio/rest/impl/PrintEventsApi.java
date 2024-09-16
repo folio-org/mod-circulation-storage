@@ -13,8 +13,6 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.core.Response;
 import java.util.Map;
 
-import static io.vertx.core.Future.succeededFuture;
-
 public class PrintEventsApi implements PrintEventsStorage {
   private static final Logger LOG = LoggerFactory.getLogger(PrintEventsApi.class);
 

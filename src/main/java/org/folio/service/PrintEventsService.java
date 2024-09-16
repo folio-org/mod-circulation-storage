@@ -36,7 +36,6 @@ import static org.folio.support.ModuleConstants.REQUEST_TABLE;
 public class PrintEventsService {
 
   private static final Logger LOG = LoggerFactory.getLogger(PrintEventsService.class);
-  private static final int MAX_ENTITIES = 10000;
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
   private final PostgresClient postgresClient;
@@ -92,9 +91,10 @@ public class PrintEventsService {
   }
 
   public void create(PrintEventsRequest printEventRequest,
-                  Handler<AsyncResult<Response>> asyncResultHandler) {
+                     Handler<AsyncResult<Response>> asyncResultHandler) {
     LOG.info("create:: save print events {}", printEventRequest);
-    List<PrintEvent> printEvents = printEventRequest.getRequestIds().stream().map(requestId -> {
+    List<PrintEvent> printEvents =
+      printEventRequest.getRequestIds().stream().map(requestId -> {
       PrintEvent event = new PrintEvent();
       event.setRequestId(requestId);
       event.setRequesterId(printEventRequest.getRequesterId());
@@ -104,32 +104,26 @@ public class PrintEventsService {
     }).toList();
     try {
       MetadataUtil.populateMetadata(printEvents, okapiHeaders);
-    } catch (Throwable e) {
-      String msg = "Cannot populate metadata of printEvents list elements: " + e.getMessage();
+    } catch (Exception e) {
+      String msg =
+        "Cannot populate metadata of printEvents list elements: " + e.getMessage();
       LOG.error(msg, e);
       asyncResultHandler.handle(succeededFuture(PrintEventsStorage.PostPrintEventsStoragePrintEventsEntryResponse.respond500WithTextPlain(msg)));
       return;
     }
 
-    postgresClient.withTrans(conn -> {
-        // First saveBatch operationx
-        return conn.saveBatch(PRINT_EVENTS_TABLE, printEvents)
-          .compose(printEventsResult -> {
-            // Now proceed to the second operation after the first succeeds
-            return conn.execute(
-              buildRequestSyncQuery(printEventRequest, okapiHeaders)
-            );
-          });
-      }).onFailure(handler ->
+    postgresClient.withTrans(conn -> conn.saveBatch(PRINT_EVENTS_TABLE,
+          printEvents)
+        .compose(printEventsResult -> conn.execute(
+          buildRequestSyncQuery(printEventRequest, okapiHeaders)
+        ))).onFailure(handler ->
         asyncResultHandler.handle(
           succeededFuture(PrintEventsStorage.PostPrintEventsStoragePrintEventsEntryResponse.respond500WithTextPlain(handler.getMessage()))
         )
-      )
-      .onSuccess(handler ->
+      ).onSuccess(handler ->
         asyncResultHandler.handle(
           succeededFuture(PrintEventsStorage.PostPrintEventsStoragePrintEventsEntryResponse.respond201())
-        )
-      );
+        ));
   }
 
   private String buildRequestSyncQuery(PrintEventsRequest printEventRequest,
@@ -157,7 +151,6 @@ public class PrintEventsService {
   public void getPrintEventRequestDetails(List<String> requestIds, Handler<AsyncResult<Response>> asyncResultHandler) {
     LOG.debug("getPrintEventRequestDetails:: Fetching print event details for requestIds {}", requestIds);
     String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
-    PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
     postgresClient.execute(formatQuery(tenantId, requestIds), handler -> {
       try {
         if (handler.succeeded()) {
