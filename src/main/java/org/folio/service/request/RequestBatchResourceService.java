@@ -30,7 +30,7 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 
 public class RequestBatchResourceService {
-  private static final Logger LOG = LoggerFactory.getLogger(RequestBatchResourceService.class);
+  private static final Logger log = LoggerFactory.getLogger(RequestBatchResourceService.class);
   private static final String REMOVE_POSITIONS_SQL =
     "UPDATE %s.%s SET jsonb = jsonb - 'position' WHERE id::text IN (%s)";
 
@@ -70,7 +70,7 @@ public class RequestBatchResourceService {
   public void executeRequestBatchUpdate(List<Request> requests,
     Handler<AsyncResult<Void>> onFinishHandler) {
 
-    LOG.debug("Removing positions for all request to go through positions constraint");
+    log.debug("Removing positions for all request to go through positions constraint");
     List<Function<SQLConnection, Future<RowSet<Row>>>> allDatabaseOperations =
       new ArrayList<>();
 
@@ -85,24 +85,29 @@ public class RequestBatchResourceService {
     allDatabaseOperations.add(removePositionBatch);
     allDatabaseOperations.addAll(updateRequestsBatch);
 
-    LOG.info("Executing batch update, total records to update [{}] (including remove positions)",
+    log.info("Executing batch update, total records to update [{}] (including remove positions)",
       allDatabaseOperations.size());
 
     RequestQueueReordering payload = mapRequestsToPayload(requests);
-    LOG.info("executeRequestBatchUpdate:: instanceId: {}, requests: {}",
-      payload.getInstanceId(), payload.getRequestIds());
+    log.info("executeRequestBatchUpdate:: instanceId: {}, itemId: {}, requestLevel: {}, " +
+        "requests: {}", payload.getInstanceId(), payload.getItemId(), payload.getRequestLevel(),
+      payload.getRequestIds());
 
     batchResourceService.executeBatchUpdate(allDatabaseOperations, onFinishHandler)
       .compose(v -> eventPublisher.publishCreated(payload.getInstanceId(), payload));
   }
 
   private RequestQueueReordering mapRequestsToPayload(List<Request> requests) {
+    var firstRequest = requests.get(0);
 
     return new RequestQueueReordering()
       .withRequestIds(requests.stream()
         .map(Request::getId)
         .toList())
-      .withInstanceId(requests.get(0).getInstanceId());
+      .withInstanceId(firstRequest.getInstanceId())
+      .withItemId(firstRequest.getItemId())
+      .withRequestLevel(RequestQueueReordering.RequestLevel.valueOf(
+        firstRequest.getRequestLevel().name()));
   }
 
   private Function<SQLConnection, Future<RowSet<Row>>> removePositionsForRequestsBatch(

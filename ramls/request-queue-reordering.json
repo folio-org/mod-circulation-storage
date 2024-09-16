@@ -9,6 +9,16 @@
       "type": "string",
       "$ref": "raml-util/schemas/uuid.schema"
     },
+    "itemId": {
+      "description": "Item ID of reordered requests",
+      "type": "string",
+      "$ref": "raml-util/schemas/uuid.schema"
+    },
+    "requestLevel": {
+      "description": "Level of the request - Item or Title",
+      "type": "string",
+      "enum": ["Item", "Title"]
+    },
     "requestIds": {
       "description": "Array of requests ids",
       "type": "array",
@@ -18,5 +28,8 @@
       }
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "required": [
+    "requestLevel"
+  ]
 }
