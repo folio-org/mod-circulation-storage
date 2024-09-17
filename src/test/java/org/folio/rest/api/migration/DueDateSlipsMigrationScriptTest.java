@@ -14,7 +14,8 @@ import java.net.MalformedURLException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 
 public class DueDateSlipsMigrationScriptTest extends StaffSlipsMigrationTestBase {
   public static final String DUE_DATE_RECEIPT_ID = "0b52bca7-db17-4e91-a740-7872ed6d7323";
