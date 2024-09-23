@@ -52,6 +52,7 @@ public class RequestRequestBuilder extends JsonBuilder {
   private final String patronComments;
   private final UUID holdingsRecordId;
   private final SearchIndex searchIndex;
+  private final String itemLocationCode;
 
   public RequestRequestBuilder() {
     this(UUID.randomUUID(),
@@ -79,6 +80,7 @@ public class RequestRequestBuilder extends JsonBuilder {
       null,
       null,
       UUID.randomUUID(),
+      null,
       null);
   }
 
@@ -162,6 +164,10 @@ public class RequestRequestBuilder extends JsonBuilder {
       put(request, "searchIndex", JsonObject.mapFrom(searchIndex));
     }
 
+    if (itemLocationCode != null) {
+      put(request, "itemLocationCode", this.itemLocationCode);
+    }
+
     return request;
   }
 
@@ -204,7 +210,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.tags,
       this.patronComments,
       this.holdingsRecordId,
-      this.searchIndex);
+      this.searchIndex,
+      this.itemLocationCode);
   }
 
   public RequestRequestBuilder toHoldShelf() {
@@ -247,7 +254,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.tags,
       this.patronComments,
       this.holdingsRecordId,
-      this.searchIndex);
+      this.searchIndex,
+      this.itemLocationCode);
   }
 
   public RequestRequestBuilder withRequester(
@@ -282,7 +290,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.tags,
       this.patronComments,
       this.holdingsRecordId,
-      this.searchIndex);
+      this.searchIndex,
+      this.itemLocationCode);
   }
 
   public RequestRequestBuilder withRequester(
@@ -316,7 +325,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.tags,
       this.patronComments,
       this.holdingsRecordId,
-      this.searchIndex);
+      this.searchIndex,
+      this.itemLocationCode);
   }
 
   public RequestRequestBuilder withProxy(
@@ -350,7 +360,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.tags,
       this.patronComments,
       this.holdingsRecordId,
-      this.searchIndex);
+      this.searchIndex,
+      this.itemLocationCode);
   }
   public RequestRequestBuilder withNoPosition() {
     return withPosition(null);
