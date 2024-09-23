@@ -36,7 +36,6 @@ import static org.folio.support.ModuleConstants.REQUEST_TABLE;
 public class PrintEventsService {
 
   private static final Logger LOG = LoggerFactory.getLogger(PrintEventsService.class);
-  private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
   private final PostgresClient postgresClient;
 
@@ -85,7 +84,6 @@ public class PrintEventsService {
 
 
   public PrintEventsService(Context vertxContext, Map<String, String> okapiHeaders) {
-    this.vertxContext = vertxContext;
     this.okapiHeaders = okapiHeaders;
     this.postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
   }

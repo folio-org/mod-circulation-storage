@@ -15,6 +15,7 @@ import java.util.stream.IntStream;
 
 import static org.folio.rest.support.http.InterfaceUrls.printEventsUrl;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isCreated;
+import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isInternalServerError;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isOk;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isUnprocessableEntity;
 import static org.hamcrest.core.Is.is;
@@ -178,6 +179,18 @@ public class PrintEventsAPITest extends ApiTests {
     var jsonObject = response.getJson();
     assertThat(jsonObject.getInteger("totalRecords"), is(0));
     assertThat(jsonObject.getJsonArray("printEventsStatusResponses").size(), is(0));
+  }
+
+  @Test
+  public void createPrintEventLogAndValidate5XX() throws MalformedURLException,
+    ExecutionException, InterruptedException {
+    JsonObject printEventsJson = getPrintEvent();
+    final CompletableFuture<JsonResponse> postCompleted = new CompletableFuture<>();
+    client.post(printEventsUrl("/print-events-entry"), printEventsJson,
+      "INVALID_TENANT_ID",
+      ResponseHandler.json(postCompleted));
+    final JsonResponse postResponse = postCompleted.get();
+    assertThat(postResponse, isInternalServerError());
   }
 
   private JsonObject getPrintEvent() {
