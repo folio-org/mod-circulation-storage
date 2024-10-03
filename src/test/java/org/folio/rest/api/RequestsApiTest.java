@@ -158,6 +158,7 @@ public class RequestsApiTest extends ApiTests {
       .withPosition(1)
       .withPickupServicePointId(pickupServicePointId)
       .withTags(new Tags().withTagList(asList("new", "important")))
+      .withItemLocationCode("CN/P1")
       .create(),
       requestStorageUrl())
       .getJson();
@@ -227,6 +228,8 @@ public class RequestsApiTest extends ApiTests {
 
     assertThat(tagsRepresentation.containsKey("tagList"), is(true));
     assertThat(tagsRepresentation.getJsonArray("tagList"), contains("new", "important"));
+
+    assertThat(representation.getString("itemLocationCode"), is("CN/P1"));
 
     assertCreateEventForRequest(representation);
   }
