@@ -1,4 +1,7 @@
-* ## 17.2.0 2024-03-20
+## 17.3.0
+* [CIRCSTORE-533](https://folio-org.atlassian.net/browse/CIRCSTORE-533) Upgrade "holdings-storage" to 8.0
+
+## 17.2.0 2024-03-20
 * Upgrade RMB to 35.2.0, Vert.x to 4.5.5, Spring to 6.1.5 (CIRCSTORE-494)
 * Add `displaySummary` field to `ActualCostRecord` schema (CIRCSTORE-493)
 * Fix NPE for requests with no position (CIRCSTORE-422) 
