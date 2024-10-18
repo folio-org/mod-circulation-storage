@@ -52,6 +52,7 @@ public class RequestRequestBuilder extends JsonBuilder {
   private final String patronComments;
   private final UUID holdingsRecordId;
   private final SearchIndex searchIndex;
+  private final String itemLocationCode;
   private final String ecsRequestPhase;
 
   public RequestRequestBuilder() {
@@ -80,6 +81,7 @@ public class RequestRequestBuilder extends JsonBuilder {
       null,
       null,
       UUID.randomUUID(),
+      null,
       null,
       null);
   }
@@ -165,6 +167,10 @@ public class RequestRequestBuilder extends JsonBuilder {
       put(request, "searchIndex", JsonObject.mapFrom(searchIndex));
     }
 
+    if (itemLocationCode != null) {
+      put(request, "itemLocationCode", this.itemLocationCode);
+    }
+
     return request;
   }
 
@@ -208,7 +214,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.patronComments,
       this.holdingsRecordId,
       this.searchIndex,
-      this.ecsRequestPhase);
+      this.ecsRequestPhase,
+      this.itemLocationCode);
   }
 
   public RequestRequestBuilder toHoldShelf() {
@@ -252,7 +259,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.patronComments,
       this.holdingsRecordId,
       this.searchIndex,
-      this.ecsRequestPhase);
+      this.ecsRequestPhase,
+      this.itemLocationCode);
   }
 
   public RequestRequestBuilder withRequester(
@@ -288,7 +296,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.patronComments,
       this.holdingsRecordId,
       this.searchIndex,
-      this.ecsRequestPhase);
+      this.ecsRequestPhase,
+      this.itemLocationCode);
   }
 
   public RequestRequestBuilder withRequester(
@@ -323,7 +332,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.patronComments,
       this.holdingsRecordId,
       this.searchIndex,
-      this.ecsRequestPhase);
+      this.ecsRequestPhase,
+      this.itemLocationCode);
   }
 
   public RequestRequestBuilder withProxy(
@@ -358,7 +368,8 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.patronComments,
       this.holdingsRecordId,
       this.searchIndex,
-      this.ecsRequestPhase);
+      this.ecsRequestPhase,
+      this.itemLocationCode);
   }
   public RequestRequestBuilder withNoPosition() {
     return withPosition(null);

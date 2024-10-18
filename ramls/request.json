@@ -226,6 +226,30 @@
       "description": "Tags",
       "$ref": "raml-util/schemas/tags.schema"
     },
+    "printDetails": {
+      "type": "object",
+      "description": "PrintDetails",
+      "properties": {
+        "printCount": {
+          "type": "integer",
+          "description": "Number of times print slip generated."
+        },
+        "requesterId": {
+          "type": "string",
+          "description": "UUID of print slip requester."
+        },
+        "isPrinted": {
+          "type": "boolean",
+          "description": "Whether print slip was printed in past."
+        },
+        "printEventDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Date and time when print slip was generated last time."
+        }
+      },
+      "additionalProperties": false
+    },
     "awaitingPickupRequestClosedDate": {
       "description": "A date when the request with awaiting pickup status was closed",
       "type": "string",
@@ -236,6 +260,10 @@
       "description": "Request fields used for search",
       "type": "object",
       "$ref": "request-search-index.json"
+    },
+    "itemLocationCode": {
+      "description": "Allow specifying item location when creating title-level requests",
+      "type": "string"
     }
   },
   "additionalProperties": false,
