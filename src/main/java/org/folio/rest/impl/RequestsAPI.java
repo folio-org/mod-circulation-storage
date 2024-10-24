@@ -17,11 +17,8 @@ public class RequestsAPI implements RequestStorage {
 
   @Validate
   @Override
-  public void deleteRequestStorageRequests(
-    String lang,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void deleteRequestStorageRequests(Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     new RequestService(vertxContext, okapiHeaders).deleteAll()
         .onComplete(asyncResultHandler);
@@ -29,13 +26,8 @@ public class RequestsAPI implements RequestStorage {
 
   @Validate
   @Override
-  public void getRequestStorageRequests(
-    int offset,
-    int limit,
-    String query,
-    String lang,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
+  public void getRequestStorageRequests(String totalRecords, int offset, int limit, String query,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
     new RequestService(vertxContext, okapiHeaders).findByQuery(query, offset, limit)
@@ -44,12 +36,8 @@ public class RequestsAPI implements RequestStorage {
 
   @Validate
   @Override
-  public void postRequestStorageRequests(
-    String lang,
-    Request request,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void postRequestStorageRequests(Request request, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     new RequestService(vertxContext, okapiHeaders).create(request)
         .onComplete(asyncResultHandler);
@@ -57,11 +45,8 @@ public class RequestsAPI implements RequestStorage {
 
   @Validate
   @Override
-  public void getRequestStorageRequestsByRequestId(
-    String requestId,
-    String lang,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
+  public void getRequestStorageRequestsByRequestId(String requestId,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
     new RequestService(vertxContext, okapiHeaders).findById(requestId)
@@ -70,11 +55,8 @@ public class RequestsAPI implements RequestStorage {
 
   @Validate
   @Override
-  public void deleteRequestStorageRequestsByRequestId(
-    String requestId,
-    String lang,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
+  public void deleteRequestStorageRequestsByRequestId(String requestId,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
     new RequestService(vertxContext, okapiHeaders).delete(requestId)
@@ -83,11 +65,8 @@ public class RequestsAPI implements RequestStorage {
 
   @Validate
   @Override
-  public void putRequestStorageRequestsByRequestId(
-    String requestId,
-    String lang, Request request,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
+  public void putRequestStorageRequestsByRequestId(String requestId, Request request,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
     new RequestService(vertxContext, okapiHeaders).createOrUpdate(requestId, request)

@@ -36,7 +36,10 @@ public class RequestPoliciesAPI implements RequestPolicyStorage {
 
   @Validate
   @Override
-  public void getRequestPolicyStorageRequestPolicies(int offset, int limit, String query, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void getRequestPolicyStorageRequestPolicies(String totalRecords, int offset, int limit,
+    String query, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     PgUtil.get(REQUEST_POLICY_TABLE, REQUEST_POLICY_CLASS, RequestPolicies.class,
         query, offset, limit, okapiHeaders, vertxContext,
         GetRequestPolicyStorageRequestPoliciesResponse.class, asyncResultHandler);
@@ -44,7 +47,7 @@ public class RequestPoliciesAPI implements RequestPolicyStorage {
 
   @Validate
   @Override
-  public void postRequestPolicyStorageRequestPolicies(String lang, RequestPolicy entity,
+  public void postRequestPolicyStorageRequestPolicies(RequestPolicy entity,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
@@ -124,7 +127,8 @@ public class RequestPoliciesAPI implements RequestPolicyStorage {
 
   @Validate
   @Override
-  public void deleteRequestPolicyStorageRequestPolicies(String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void deleteRequestPolicyStorageRequestPolicies(Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -150,7 +154,10 @@ public class RequestPoliciesAPI implements RequestPolicyStorage {
 
   @Validate
   @Override
-  public void getRequestPolicyStorageRequestPoliciesByRequestPolicyId(String requestPolicyId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void getRequestPolicyStorageRequestPoliciesByRequestPolicyId(String requestPolicyId,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
     PgUtil.getById(REQUEST_POLICY_TABLE, REQUEST_POLICY_CLASS, requestPolicyId, okapiHeaders, vertxContext,
         GetRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse.class, asyncResultHandler);
   }
@@ -158,7 +165,7 @@ public class RequestPoliciesAPI implements RequestPolicyStorage {
   @Validate
   @Override
   public void putRequestPolicyStorageRequestPoliciesByRequestPolicyId(String requestPolicyId,
-    String lang, RequestPolicy entity, Map<String, String> okapiHeaders,
+    RequestPolicy entity, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     new RequestPolicyValidationService(vertxContext.owner(), okapiHeaders)
@@ -182,7 +189,10 @@ public class RequestPoliciesAPI implements RequestPolicyStorage {
 
   @Validate
   @Override
-  public void deleteRequestPolicyStorageRequestPoliciesByRequestPolicyId(String requestPolicyId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void deleteRequestPolicyStorageRequestPoliciesByRequestPolicyId(String requestPolicyId,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
     PgUtil.deleteById(REQUEST_POLICY_TABLE, requestPolicyId, okapiHeaders, vertxContext,
         DeleteRequestPolicyStorageRequestPoliciesByRequestPolicyIdResponse.class, asyncResultHandler);
   }

@@ -38,13 +38,9 @@ public class ScheduledNoticesAPI implements ScheduledNoticeStorage {
 
   @Validate
   @Override
-  public void getScheduledNoticeStorageScheduledNotices(int offset,
-                                                        int limit,
-                                                        String query,
-                                                        String lang,
-                                                        Map<String, String> okapiHeaders,
-                                                        Handler<AsyncResult<Response>> asyncResultHandler,
-                                                        Context vertxContext) {
+  public void getScheduledNoticeStorageScheduledNotices(String totalRecords, int offset, int limit,
+    String query, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     PgUtil.get(SCHEDULED_NOTICE_TABLE, ScheduledNotice.class, ScheduledNotices.class, query, offset, limit,
       okapiHeaders, vertxContext, GetScheduledNoticeStorageScheduledNoticesResponse.class, asyncResultHandler);
@@ -70,11 +66,10 @@ public class ScheduledNoticesAPI implements ScheduledNoticeStorage {
 
   @Validate
   @Override
-  public void postScheduledNoticeStorageScheduledNotices(String lang,
-                                                         ScheduledNotice entity,
-                                                         Map<String, String> okapiHeaders,
-                                                         Handler<AsyncResult<Response>> asyncResultHandler,
-                                                         Context vertxContext) {
+  public void postScheduledNoticeStorageScheduledNotices(ScheduledNotice entity,
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
 
     PgUtil.post(SCHEDULED_NOTICE_TABLE, entity, okapiHeaders, vertxContext,
       PostScheduledNoticeStorageScheduledNoticesResponse.class, asyncResultHandler);
@@ -83,10 +78,8 @@ public class ScheduledNoticesAPI implements ScheduledNoticeStorage {
   @Validate
   @Override
   public void getScheduledNoticeStorageScheduledNoticesByScheduledNoticeId(String scheduledNoticeId,
-                                                                           String lang,
-                                                                           Map<String, String> okapiHeaders,
-                                                                           Handler<AsyncResult<Response>> asyncResultHandler,
-                                                                           Context vertxContext) {
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
 
     PgUtil.getById(SCHEDULED_NOTICE_TABLE, ScheduledNotice.class, scheduledNoticeId, okapiHeaders, vertxContext,
       GetScheduledNoticeStorageScheduledNoticesByScheduledNoticeIdResponse.class, asyncResultHandler);
@@ -94,10 +87,9 @@ public class ScheduledNoticesAPI implements ScheduledNoticeStorage {
 
   @Validate
   @Override
-  public void deleteScheduledNoticeStorageScheduledNoticesByScheduledNoticeId(String scheduledNoticeId,
-                                                                              String lang, Map<String, String> okapiHeaders,
-                                                                              Handler<AsyncResult<Response>> asyncResultHandler,
-                                                                              Context vertxContext) {
+  public void deleteScheduledNoticeStorageScheduledNoticesByScheduledNoticeId(
+    String scheduledNoticeId, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     PgUtil.deleteById(SCHEDULED_NOTICE_TABLE, scheduledNoticeId, okapiHeaders, vertxContext,
       DeleteScheduledNoticeStorageScheduledNoticesByScheduledNoticeIdResponse.class, asyncResultHandler);
@@ -107,11 +99,8 @@ public class ScheduledNoticesAPI implements ScheduledNoticeStorage {
   @Validate
   @Override
   public void putScheduledNoticeStorageScheduledNoticesByScheduledNoticeId(String scheduledNoticeId,
-                                                                           String lang,
-                                                                           ScheduledNotice entity,
-                                                                           Map<String, String> okapiHeaders,
-                                                                           Handler<AsyncResult<Response>> asyncResultHandler,
-                                                                           Context vertxContext) {
+    ScheduledNotice entity, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     PgUtil.put(SCHEDULED_NOTICE_TABLE, entity, scheduledNoticeId, okapiHeaders, vertxContext,
       PutScheduledNoticeStorageScheduledNoticesByScheduledNoticeIdResponse.class, asyncResultHandler);
