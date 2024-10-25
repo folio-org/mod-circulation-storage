@@ -17,11 +17,8 @@ public class LoansAPI implements LoanStorage {
 
   @Validate
   @Override
-  public void deleteLoanStorageLoans(
-    String lang,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void deleteLoanStorageLoans(Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,Context vertxContext) {
 
     new LoanService(vertxContext, okapiHeaders).deleteAll()
         .onComplete(asyncResultHandler);
@@ -29,13 +26,8 @@ public class LoansAPI implements LoanStorage {
 
   @Validate
   @Override
-  public void getLoanStorageLoans(
-    int offset,
-    int limit,
-    String query,
-    String lang,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
+  public void getLoanStorageLoans(String totalRecords, int offset, int limit, String query,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
     new LoanService(vertxContext, okapiHeaders).findByQuery(query, offset, limit)
@@ -44,12 +36,8 @@ public class LoansAPI implements LoanStorage {
 
   @Validate
   @Override
-  public void postLoanStorageLoans(
-    String lang,
-    Loan loan,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void postLoanStorageLoans(Loan loan, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     new LoanService(vertxContext, okapiHeaders).create(loan)
         .onComplete(asyncResultHandler);
@@ -69,12 +57,8 @@ public class LoansAPI implements LoanStorage {
 
   @Validate
   @Override
-  public void getLoanStorageLoansByLoanId(
-    String loanId,
-    String lang,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void getLoanStorageLoansByLoanId(String loanId, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     new LoanService(vertxContext, okapiHeaders).findById(loanId)
         .onComplete(asyncResultHandler);
@@ -82,12 +66,8 @@ public class LoansAPI implements LoanStorage {
 
   @Validate
   @Override
-  public void deleteLoanStorageLoansByLoanId(
-    String loanId,
-    String lang,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void deleteLoanStorageLoansByLoanId(String loanId, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     new LoanService(vertxContext, okapiHeaders).delete(loanId)
         .onComplete(asyncResultHandler);
@@ -95,12 +75,8 @@ public class LoansAPI implements LoanStorage {
 
   @Validate
   @Override
-  public void putLoanStorageLoansByLoanId(
-    String loanId,
-    String lang,
-    Loan loan,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
+  public void putLoanStorageLoansByLoanId(String loanId, Loan loan,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
     new LoanService(vertxContext, okapiHeaders).createOrUpdate(loanId, loan)
@@ -109,9 +85,9 @@ public class LoansAPI implements LoanStorage {
 
   @Validate
   @Override
-  public void getLoanStorageLoanHistory(int offset, int limit, String query, String lang,
-                                        Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-                                        Context vertxContext) {
+  public void getLoanStorageLoanHistory(String totalRecords, int offset, int limit, String query,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
 
     new LoanService(vertxContext, okapiHeaders).getLoanHistory(query, offset, limit)
         .onComplete(asyncResultHandler);

@@ -19,8 +19,8 @@ import io.vertx.core.Handler;
 public class TlrFeatureToggleJobAPI implements TlrFeatureToggleJobStorage {
 
   @Override
-  public void getTlrFeatureToggleJobStorageTlrFeatureToggleJobs(int offset, int limit,
-    String query, String lang, Map<String, String> okapiHeaders,
+  public void getTlrFeatureToggleJobStorageTlrFeatureToggleJobs(String totalRecords, int offset,
+    int limit, String query, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     PgUtil.get(TLR_FEATURE_TOGGLE_JOB_TABLE, TLR_FEATURE_TOGGLE_JOB_CLASS, TlrFeatureToggleJobs.class,
@@ -29,16 +29,16 @@ public class TlrFeatureToggleJobAPI implements TlrFeatureToggleJobStorage {
   }
 
   @Override
-  public void postTlrFeatureToggleJobStorageTlrFeatureToggleJobs(String lang,
-    TlrFeatureToggleJob entity, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void postTlrFeatureToggleJobStorageTlrFeatureToggleJobs(TlrFeatureToggleJob entity,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
 
     PgUtil.post(TLR_FEATURE_TOGGLE_JOB_TABLE, entity, okapiHeaders, vertxContext,
       PostTlrFeatureToggleJobStorageTlrFeatureToggleJobsResponse.class, asyncResultHandler);
   }
 
   @Override
-  public void getTlrFeatureToggleJobStorageTlrFeatureToggleJobsById(String id, String lang,
+  public void getTlrFeatureToggleJobStorageTlrFeatureToggleJobsById(String id,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
@@ -48,7 +48,7 @@ public class TlrFeatureToggleJobAPI implements TlrFeatureToggleJobStorage {
   }
 
   @Override
-  public void putTlrFeatureToggleJobStorageTlrFeatureToggleJobsById(String id, String lang,
+  public void putTlrFeatureToggleJobStorageTlrFeatureToggleJobsById(String id,
     TlrFeatureToggleJob entity, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
@@ -58,7 +58,7 @@ public class TlrFeatureToggleJobAPI implements TlrFeatureToggleJobStorage {
   }
 
   @Override
-  public void deleteTlrFeatureToggleJobStorageTlrFeatureToggleJobsById(String id, String lang,
+  public void deleteTlrFeatureToggleJobStorageTlrFeatureToggleJobsById(String id,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 

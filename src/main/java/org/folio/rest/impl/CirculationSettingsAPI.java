@@ -20,7 +20,7 @@ import io.vertx.core.Handler;
 public class CirculationSettingsAPI implements CirculationSettingsStorage {
 
   @Override
-  public void postCirculationSettingsStorageCirculationSettings(String lang,
+  public void postCirculationSettingsStorageCirculationSettings(
     CirculationSetting circulationSettings, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
@@ -33,8 +33,8 @@ public class CirculationSettingsAPI implements CirculationSettingsStorage {
   }
 
   @Override
-  public void getCirculationSettingsStorageCirculationSettings(int offset,
-    int limit, String query, String lang, Map<String, String> okapiHeaders,
+  public void getCirculationSettingsStorageCirculationSettings(String totalRecords, int offset,
+    int limit, String query, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     new CirculationSettingsService(vertxContext, okapiHeaders)
@@ -44,7 +44,7 @@ public class CirculationSettingsAPI implements CirculationSettingsStorage {
 
   @Override
   public void getCirculationSettingsStorageCirculationSettingsByCirculationSettingsId(
-    String circulationSettingsId, String lang, Map<String, String> okapiHeaders,
+    String circulationSettingsId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     new CirculationSettingsService(vertxContext, okapiHeaders)
@@ -54,9 +54,8 @@ public class CirculationSettingsAPI implements CirculationSettingsStorage {
 
   @Override
   public void putCirculationSettingsStorageCirculationSettingsByCirculationSettingsId(
-    String circulationSettingsId, String lang, CirculationSetting entity,
-    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+    String circulationSettingsId, CirculationSetting entity, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     new CirculationSettingsService(vertxContext, okapiHeaders)
       .update(circulationSettingsId, entity)
@@ -65,7 +64,7 @@ public class CirculationSettingsAPI implements CirculationSettingsStorage {
 
   @Override
   public void deleteCirculationSettingsStorageCirculationSettingsByCirculationSettingsId(
-    String circulationSettingsId, String lang, Map<String, String> okapiHeaders,
+    String circulationSettingsId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     new CirculationSettingsService(vertxContext, okapiHeaders)

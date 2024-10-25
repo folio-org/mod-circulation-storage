@@ -26,10 +26,8 @@ public class LoanPoliciesAPI implements LoanPolicyStorage {
 
   @Override
   @Validate
-  public void deleteLoanPolicyStorageLoanPolicies(
-    String lang, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void deleteLoanPolicyStorageLoanPolicies(Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -53,14 +51,9 @@ public class LoanPoliciesAPI implements LoanPolicyStorage {
 
   @Override
   @Validate
-  public void getLoanPolicyStorageLoanPolicies(
-    int offset,
-    int limit,
-    String query,
-    String lang,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void getLoanPolicyStorageLoanPolicies(String totalRecords, int offset, int limit,
+    String query, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     PgUtil.get(LOAN_POLICY_TABLE,  LOAN_POLICY_CLASS, LoanPolicies.class, query, offset, limit,
         okapiHeaders, vertxContext,
@@ -69,9 +62,7 @@ public class LoanPoliciesAPI implements LoanPolicyStorage {
 
   @Override
   @Validate
-  public void postLoanPolicyStorageLoanPolicies(
-    String lang, LoanPolicy entity,
-    Map<String, String> okapiHeaders,
+  public void postLoanPolicyStorageLoanPolicies(LoanPolicy entity, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
@@ -82,11 +73,8 @@ public class LoanPoliciesAPI implements LoanPolicyStorage {
 
   @Override
   @Validate
-  public void getLoanPolicyStorageLoanPoliciesByLoanPolicyId(
-    String loanPolicyId,
-    String lang,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
+  public void getLoanPolicyStorageLoanPoliciesByLoanPolicyId(String loanPolicyId,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
     PgUtil.getById(LOAN_POLICY_TABLE, LOAN_POLICY_CLASS, loanPolicyId, okapiHeaders, vertxContext,
@@ -95,10 +83,8 @@ public class LoanPoliciesAPI implements LoanPolicyStorage {
 
   @Override
   @Validate
-  public void deleteLoanPolicyStorageLoanPoliciesByLoanPolicyId(
-    String loanPolicyId,
-    String lang, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
+  public void deleteLoanPolicyStorageLoanPoliciesByLoanPolicyId(String loanPolicyId,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
     PgUtil.deleteById(LOAN_POLICY_TABLE, loanPolicyId, okapiHeaders, vertxContext,
@@ -107,12 +93,8 @@ public class LoanPoliciesAPI implements LoanPolicyStorage {
 
   @Override
   @Validate
-  public void putLoanPolicyStorageLoanPoliciesByLoanPolicyId(
-    String loanPolicyId,
-    String lang,
-    LoanPolicy entity,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
+  public void putLoanPolicyStorageLoanPoliciesByLoanPolicyId(String loanPolicyId, LoanPolicy entity,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
     validate(entity, errors -> respond422(errors, asyncResultHandler), () ->
