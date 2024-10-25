@@ -41,7 +41,7 @@ public class StaffSlipsApiTest extends ApiTests {
   private static final String DESCRIPTION_KEY = "description";
   private static final String TEMPLATE_KEY = "template";
   private static final String [] STAFF_SLIP_NAMES = {"Hold", "Transit", "Request delivery", "Pick slip",
-    "Search slip (Hold requests)", "Transit (mediated requests)"};
+    "Search slip (Hold requests)", "Transit (mediated requests)", "Due date receipt"};
   private static final String STAFF_SLIPS_KEY = "staffSlips";
 
   private static AtomicBoolean isRefTestDone = new AtomicBoolean(false);
@@ -72,8 +72,6 @@ public class StaffSlipsApiTest extends ApiTests {
     JsonArray slipsJsonArray = getResponse.getJson().getJsonArray(STAFF_SLIPS_KEY);
     Object [] names = slipsJsonArray.stream().map(o -> ((JsonObject) o).getString(NAME_KEY)).toArray();
     assertThat(names, arrayContainingInAnyOrder(STAFF_SLIP_NAMES));
-    assertThat(names, arrayContainingInAnyOrder("Hold", "Transit", "Request delivery", "Pick slip",
-      "Search slip (Hold requests)","Due date receipt"));
   }
 
   /* Begin Tests */
