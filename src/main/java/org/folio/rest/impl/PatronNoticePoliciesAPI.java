@@ -72,13 +72,9 @@ public class PatronNoticePoliciesAPI implements PatronNoticePolicyStorage {
 
   @Validate
   @Override
-  public void getPatronNoticePolicyStoragePatronNoticePolicies(
-    int offset,
-    int limit,
-    String query,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void getPatronNoticePolicyStoragePatronNoticePolicies(String totalRecords, int offset,
+    int limit, String query, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {

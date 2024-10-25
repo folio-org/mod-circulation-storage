@@ -16,7 +16,6 @@ types:
   errors: !include raml-util/schemas/errors.schema
 
 traits:
-  language: !include raml-util/traits/language.raml
   pageable: !include raml-util/traits/pageable.raml
   searchable: !include raml-util/traits/searchable.raml
 
@@ -62,7 +61,6 @@ resourceTypes:
             text/plain:
               example: "Internal server error, contact administrator"
     delete:
-      is: [language]
       responses:
         204:
           description: "All request policies deleted"

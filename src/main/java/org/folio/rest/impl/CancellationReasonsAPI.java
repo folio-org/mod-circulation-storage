@@ -43,10 +43,8 @@ public class CancellationReasonsAPI implements CancellationReasonStorage {
 
   @Override
   @Validate
-  public void deleteCancellationReasonStorageCancellationReasons(String lang,
-      Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) {
+  public void deleteCancellationReasonStorageCancellationReasons(Map<String, String> okapiHeaders,
+      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     try {
       String tenantId = okapiHeaders.get(TENANT_HEADER);
       String deleteAllQuery = String.format("DELETE FROM %s_%s.%s", tenantId,
@@ -74,9 +72,10 @@ public class CancellationReasonsAPI implements CancellationReasonStorage {
 
   @Override
   @Validate
-  public void getCancellationReasonStorageCancellationReasons(int offset,
-      int limit, String query, String lang, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void getCancellationReasonStorageCancellationReasons(String totalRecords, int offset,
+    int limit, String query, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     PgUtil.get(TABLE_NAME, CancellationReason.class, CancellationReasons.class,
         query, offset, limit, okapiHeaders, vertxContext,
         GetCancellationReasonStorageCancellationReasonsResponse.class, asyncResultHandler);
@@ -84,9 +83,10 @@ public class CancellationReasonsAPI implements CancellationReasonStorage {
 
   @Override
   @Validate
-  public void postCancellationReasonStorageCancellationReasons(String lang,
-      CancellationReason entity, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void postCancellationReasonStorageCancellationReasons(CancellationReason entity,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
     PgUtil.post(TABLE_NAME, entity, okapiHeaders, vertxContext,
         PostCancellationReasonStorageCancellationReasonsResponse.class, asyncResultHandler);
   }
@@ -94,8 +94,9 @@ public class CancellationReasonsAPI implements CancellationReasonStorage {
   @Override
   @Validate
   public void getCancellationReasonStorageCancellationReasonsByCancellationReasonId(
-      String cancellationReasonId, String lang, Map<String, String> okapiHeaders,
+      String cancellationReasonId, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     PgUtil.getById(TABLE_NAME, CancellationReason.class, cancellationReasonId, okapiHeaders, vertxContext,
         GetCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse.class, asyncResultHandler);
   }
@@ -103,8 +104,9 @@ public class CancellationReasonsAPI implements CancellationReasonStorage {
   @Override
   @Validate
   public void deleteCancellationReasonStorageCancellationReasonsByCancellationReasonId(
-      String cancellationReasonId, String lang, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+    String cancellationReasonId, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     PgUtil.deleteById(TABLE_NAME, cancellationReasonId, okapiHeaders, vertxContext,
         DeleteCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse.class, asyncResultHandler);
   }
@@ -112,10 +114,9 @@ public class CancellationReasonsAPI implements CancellationReasonStorage {
   @Override
   @Validate
   public void putCancellationReasonStorageCancellationReasonsByCancellationReasonId(
-      String cancellationReasonId, String lang, CancellationReason entity,
-      Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) {
+      String cancellationReasonId, CancellationReason entity, Map<String, String> okapiHeaders,
+      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     PgUtil.put(TABLE_NAME, entity, cancellationReasonId, okapiHeaders, vertxContext,
         PutCancellationReasonStorageCancellationReasonsByCancellationReasonIdResponse.class, asyncResultHandler);
   }

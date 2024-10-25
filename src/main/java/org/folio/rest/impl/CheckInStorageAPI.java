@@ -17,9 +17,9 @@ public class CheckInStorageAPI implements CheckInStorageCheckIns {
 
   @Validate
   @Override
-  public void getCheckInStorageCheckIns(
-    int offset, int limit, String query, String lang, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void getCheckInStorageCheckIns(String totalRecords, int offset, int limit, String query,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
 
     new CheckInService(vertxContext, okapiHeaders).findByQuery(query, offset, limit)
         .onComplete(asyncResultHandler);
@@ -27,8 +27,7 @@ public class CheckInStorageAPI implements CheckInStorageCheckIns {
 
   @Validate
   @Override
-  public void postCheckInStorageCheckIns(
-    String lang, CheckIn entity, Map<String, String> okapiHeaders,
+  public void postCheckInStorageCheckIns(CheckIn entity, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     new CheckInService(vertxContext, okapiHeaders).create(entity)
@@ -37,9 +36,9 @@ public class CheckInStorageAPI implements CheckInStorageCheckIns {
 
   @Validate
   @Override
-  public void getCheckInStorageCheckInsByCheckInId(
-    String checkInId, String lang, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void getCheckInStorageCheckInsByCheckInId(String checkInId,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
 
     new CheckInService(vertxContext, okapiHeaders).findById(checkInId)
         .onComplete(asyncResultHandler);
