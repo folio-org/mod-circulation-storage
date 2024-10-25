@@ -34,11 +34,8 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorage {
   @Override
   @Validate
   public void deleteFixedDueDateScheduleStorageFixedDueDateSchedules(
-      String lang,
-      Map<String,
-      String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) {
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -74,14 +71,10 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorage {
 
   @Override
   @Validate
-  public void getFixedDueDateScheduleStorageFixedDueDateSchedules(
-      int offset,
-      int limit,
-      String query,
-      String lang,
-      Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) {
+  public void getFixedDueDateScheduleStorageFixedDueDateSchedules(String totalRecords, int offset,
+    int limit, String query, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     PgUtil.get(FIXED_SCHEDULE_TABLE, DUE_DATE_SCHEDULE_CLASS, FixedDueDateSchedules.class,
         query, offset, limit, okapiHeaders, vertxContext,
         FixedDueDateScheduleStorage.GetFixedDueDateScheduleStorageFixedDueDateSchedulesResponse.class,
@@ -90,11 +83,8 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorage {
 
   @Override
   @Validate
-  public void postFixedDueDateScheduleStorageFixedDueDateSchedules(
-      String lang,
-      FixedDueDateSchedule entity,
-      Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler,
+  public void postFixedDueDateScheduleStorageFixedDueDateSchedules(FixedDueDateSchedule entity,
+      Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
 
     Errors errors = isDateRangeValid(entity.getSchedules());
@@ -113,11 +103,8 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorage {
   @Override
   @Validate
   public void getFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleId(
-      String fixedDueDateScheduleId,
-      String lang,
-      Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) {
+    String fixedDueDateScheduleId, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     // TODO: do we really need this special check?
     // A 404 "Not found" from PgUtil.getById without "invalid UUID format" is good enough, isn't it?
@@ -135,13 +122,9 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorage {
   @Override
   @Validate
   public void deleteFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleId(
-      String fixedDueDateScheduleId,
-      String lang,
-      Map<String,
-      String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext
-      )  {
+      String fixedDueDateScheduleId, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+
     PgUtil.deleteById(FIXED_SCHEDULE_TABLE, fixedDueDateScheduleId, okapiHeaders, vertxContext,
         DeleteFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleIdResponse.class,
         asyncResultHandler);
@@ -150,13 +133,8 @@ public class FixedDueDateSchedulesAPI implements FixedDueDateScheduleStorage {
   @Override
   @Validate
   public void putFixedDueDateScheduleStorageFixedDueDateSchedulesByFixedDueDateScheduleId(
-      String fixedDueDateScheduleId,
-      String lang,
-      FixedDueDateSchedule entity,
-      Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext
-      ) {
+    String fixedDueDateScheduleId, FixedDueDateSchedule entity, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     Errors errors = isDateRangeValid(entity.getSchedules());
     if (errors != null){

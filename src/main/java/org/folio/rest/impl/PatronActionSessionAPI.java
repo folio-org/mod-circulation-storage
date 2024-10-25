@@ -45,8 +45,8 @@ public class PatronActionSessionAPI implements PatronActionSessionStorage {
 
   @Validate
   @Override
-  public void getPatronActionSessionStoragePatronActionSessions(int offset,
-    int limit, String query, String lang, Map<String, String> okapiHeaders,
+  public void getPatronActionSessionStoragePatronActionSessions(String totalRecords, int offset,
+    int limit, String query, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     PgUtil.get(PATRON_ACTION_SESSION_TABLE, PatronActionSession.class, PatronActionSessions.class,
@@ -56,9 +56,9 @@ public class PatronActionSessionAPI implements PatronActionSessionStorage {
 
   @Validate
   @Override
-  public void postPatronActionSessionStoragePatronActionSessions(
-    String lang, PatronActionSession entity, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void postPatronActionSessionStoragePatronActionSessions(PatronActionSession entity,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
 
     PgUtil.post(PATRON_ACTION_SESSION_TABLE, entity, okapiHeaders, vertxContext,
       PostPatronActionSessionStoragePatronActionSessionsResponse.class, asyncResultHandler);
@@ -67,7 +67,7 @@ public class PatronActionSessionAPI implements PatronActionSessionStorage {
   @Validate
   @Override
   public void getPatronActionSessionStoragePatronActionSessionsByPatronSessionId(
-    String patronSessionId, String lang, Map<String, String> okapiHeaders,
+    String patronSessionId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     PgUtil.getById(PATRON_ACTION_SESSION_TABLE, PatronActionSession.class, patronSessionId,
@@ -78,7 +78,7 @@ public class PatronActionSessionAPI implements PatronActionSessionStorage {
   @Validate
   @Override
   public void deletePatronActionSessionStoragePatronActionSessionsByPatronSessionId(
-    String patronSessionId, String lang, Map<String, String> okapiHeaders,
+    String patronSessionId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     PgUtil.deleteById(PATRON_ACTION_SESSION_TABLE, patronSessionId, okapiHeaders, vertxContext,
@@ -146,7 +146,7 @@ public class PatronActionSessionAPI implements PatronActionSessionStorage {
   @Validate
   @Override
   public void putPatronActionSessionStoragePatronActionSessionsByPatronSessionId(
-    String patronSessionId, String lang, PatronActionSession entity, Map<String, String> okapiHeaders,
+    String patronSessionId, PatronActionSession entity, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     PgUtil.put(PATRON_ACTION_SESSION_TABLE, entity, patronSessionId, okapiHeaders, vertxContext,

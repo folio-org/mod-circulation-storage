@@ -26,7 +26,10 @@ public class RequestPreferencesAPI implements RequestPreferenceStorage {
 
   @Override
   @Validate
-  public void getRequestPreferenceStorageRequestPreference(int offset, int limit, String query, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void getRequestPreferenceStorageRequestPreference(String totalRecords, int offset,
+    int limit, String query, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     PgUtil.get(REQUEST_PREFERENCE_TABLE, RequestPreference.class, RequestPreferences.class,
       query, offset, limit, okapiHeaders, vertxContext,
       GetRequestPreferenceStorageRequestPreferenceResponse.class, asyncResultHandler);
@@ -34,27 +37,39 @@ public class RequestPreferencesAPI implements RequestPreferenceStorage {
 
   @Override
   @Validate
-  public void postRequestPreferenceStorageRequestPreference(String lang, RequestPreference entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void postRequestPreferenceStorageRequestPreference(RequestPreference entity,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
     PgUtil.post(REQUEST_PREFERENCE_TABLE, entity, okapiHeaders, vertxContext, PostRequestPreferenceStorageRequestPreferenceResponse.class, uniqueUserViolationHandler(entity, asyncResultHandler));
   }
 
   @Override
   @Validate
-  public void getRequestPreferenceStorageRequestPreferenceById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void getRequestPreferenceStorageRequestPreferenceById(String id,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
     PgUtil.getById(REQUEST_PREFERENCE_TABLE, RequestPreference.class, id, okapiHeaders, vertxContext,
       GetRequestPreferenceStorageRequestPreferenceByIdResponse.class, asyncResultHandler);
   }
 
   @Override
   @Validate
-  public void deleteRequestPreferenceStorageRequestPreferenceById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void deleteRequestPreferenceStorageRequestPreferenceById(String id,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
     PgUtil.deleteById(REQUEST_PREFERENCE_TABLE, id, okapiHeaders, vertxContext,
       DeleteRequestPreferenceStorageRequestPreferenceByIdResponse.class, asyncResultHandler);
   }
 
   @Override
   @Validate
-  public void putRequestPreferenceStorageRequestPreferenceById(String id, String lang, RequestPreference entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void putRequestPreferenceStorageRequestPreferenceById(String id, RequestPreference entity,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
     PgUtil.put(REQUEST_PREFERENCE_TABLE, entity, id, okapiHeaders, vertxContext, PutRequestPreferenceStorageRequestPreferenceByIdResponse.class, uniqueUserViolationHandler(entity, asyncResultHandler));
   }
 

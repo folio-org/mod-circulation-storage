@@ -155,8 +155,7 @@ public class CheckOutLockAPI implements CheckOutLockStorage {
     });
   }
 
-  private String getLocksSqlWithQueryParams(String tenantId, String userId, int offset,
-    int limit) {
+  private String getLocksSqlWithQueryParams(String tenantId, String userId, int offset, int limit) {
 
     return String.format("select * from %s.%s where user_id = '%s' OFFSET '%s' LIMIT '%s'",
       convertToPsqlStandard(tenantId), CHECK_OUT_LOCK_TABLE, userId, offset, limit);

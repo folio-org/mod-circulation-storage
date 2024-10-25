@@ -17,16 +17,16 @@ import static org.folio.support.ModuleConstants.ACTUAL_COST_RECORD_TABLE;
 
 public class ActualCostRecordAPI implements ActualCostRecordStorage {
 
-  public void getActualCostRecordStorageActualCostRecords(int offset, int limit, String query,
-    String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void getActualCostRecordStorageActualCostRecords(String totalRecords, int offset,
+    int limit, String query, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     PgUtil.get(ACTUAL_COST_RECORD_TABLE, ACTUAL_COST_RECORD_CLASS, ActualCostRecords.class,
       query, offset, limit, okapiHeaders, vertxContext,
       GetActualCostRecordStorageActualCostRecordsResponse.class, asyncResultHandler);
   }
 
-  public void postActualCostRecordStorageActualCostRecords(String lang, ActualCostRecord entity,
+  public void postActualCostRecordStorageActualCostRecords(ActualCostRecord entity,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
@@ -34,7 +34,7 @@ public class ActualCostRecordAPI implements ActualCostRecordStorage {
       PostActualCostRecordStorageActualCostRecordsResponse.class, asyncResultHandler);
   }
 
-  public void getActualCostRecordStorageActualCostRecordsById(String id, String lang,
+  public void getActualCostRecordStorageActualCostRecordsById(String id,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
@@ -43,16 +43,16 @@ public class ActualCostRecordAPI implements ActualCostRecordStorage {
       asyncResultHandler);
   }
 
-  public void putActualCostRecordStorageActualCostRecordsById(String id, String lang,
-    ActualCostRecord entity, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void putActualCostRecordStorageActualCostRecordsById(String id, ActualCostRecord entity,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
 
     PgUtil.put(ACTUAL_COST_RECORD_TABLE, entity, id, okapiHeaders,
       vertxContext, PutActualCostRecordStorageActualCostRecordsByIdResponse.class,
       asyncResultHandler);
   }
 
-  public void deleteActualCostRecordStorageActualCostRecordsById(String id, String lang,
+  public void deleteActualCostRecordStorageActualCostRecordsById(String id,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 

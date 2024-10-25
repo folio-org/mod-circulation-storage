@@ -27,7 +27,7 @@ public class StaffSlipsAPI implements StaffSlipsStorage {
 
   @Validate
   @Override
-  public void deleteStaffSlipsStorageStaffSlips(String lang, Map<String, String> okapiHeaders,
+  public void deleteStaffSlipsStorageStaffSlips(Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
@@ -57,8 +57,9 @@ public class StaffSlipsAPI implements StaffSlipsStorage {
 
   @Validate
   @Override
-  public void getStaffSlipsStorageStaffSlips(int offset, int limit, String query, String lang,
-    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void getStaffSlipsStorageStaffSlips(String totalRecords, int offset, int limit,
+    String query, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     PgUtil.get(STAFF_SLIP_TABLE, STAFF_SLIP_CLASS, StaffSlips.class, query, offset, limit, okapiHeaders, vertxContext,
         GetStaffSlipsStorageStaffSlipsResponse.class, asyncResultHandler);
@@ -66,7 +67,7 @@ public class StaffSlipsAPI implements StaffSlipsStorage {
 
   @Validate
   @Override
-  public void postStaffSlipsStorageStaffSlips(String lang, StaffSlip entity, Map<String, String> okapiHeaders,
+  public void postStaffSlipsStorageStaffSlips(StaffSlip entity, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     ImmutablePair<Boolean, String> validationResult = validateStaffSlip(entity);
@@ -84,8 +85,9 @@ public class StaffSlipsAPI implements StaffSlipsStorage {
 
   @Validate
   @Override
-  public void getStaffSlipsStorageStaffSlipsByStaffSlipId(String staffSlipId, String lang,
-    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void getStaffSlipsStorageStaffSlipsByStaffSlipId(String staffSlipId,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
 
     PgUtil.getById(STAFF_SLIP_TABLE, STAFF_SLIP_CLASS, staffSlipId, okapiHeaders, vertxContext,
         GetStaffSlipsStorageStaffSlipsByStaffSlipIdResponse.class, asyncResultHandler);
@@ -93,8 +95,9 @@ public class StaffSlipsAPI implements StaffSlipsStorage {
 
   @Validate
   @Override
-  public void deleteStaffSlipsStorageStaffSlipsByStaffSlipId(String staffSlipId, String lang,
-    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void deleteStaffSlipsStorageStaffSlipsByStaffSlipId(String staffSlipId,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
 
     PgUtil.deleteById(STAFF_SLIP_TABLE, staffSlipId, okapiHeaders, vertxContext,
         DeleteStaffSlipsStorageStaffSlipsByStaffSlipIdResponse.class, asyncResultHandler);
@@ -102,8 +105,9 @@ public class StaffSlipsAPI implements StaffSlipsStorage {
 
   @Validate
   @Override
-  public void putStaffSlipsStorageStaffSlipsByStaffSlipId(String staffSlipId, String lang, StaffSlip entity,
-    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void putStaffSlipsStorageStaffSlipsByStaffSlipId(String staffSlipId, StaffSlip entity,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
 
     ImmutablePair<Boolean, String> validationResult = validateStaffSlip(entity);
 
