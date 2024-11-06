@@ -1,5 +1,16 @@
-## 17.3.0
-* [CIRCSTORE-533](https://folio-org.atlassian.net/browse/CIRCSTORE-533) Upgrade "holdings-storage" to 8.0
+## 17.3.0 2024-10-30
+* Upgrade RMB to 35.3.0, Vert.x to 4.5.9, Kafka wrapper to 3.1.1 (CIRCSTORE-520, CIRCSTORE-536, CIRCSTORE-499)
+* Upgrade `holdings-storage` API (CIRCSTORE-533)
+* Persisting due date slip template (CIRCSTORE-529)
+* Update existing setting instead of inserting new record with the same name (CIRCSTORE-519)
+* Create CRUD API for storing `circulation-settings` (CIRCSTORE-515)
+* Implement POST API to fetch print Event Details (CIRCSTORE-514)
+* Implementing post print Event API (CIRCSTORE-513)
+* Added a new test case for persisting and retrieving EnableRequestPrintDetailsSetting (CIRCSTORE-512)
+* Update interface `holdings-storage` to version 7.0 (CIRCSTORE-510)
+* Add isDcb flag in loan.json (CIRCSTORE-506)
+* Add required interface `configuration` (CIRCSTORE-505)
+* Keep existing reference/sample data on upgrade (CIRCSTORE-496)
 
 ## 17.2.0 2024-03-20
 * Upgrade RMB to 35.2.0, Vert.x to 4.5.5, Spring to 6.1.5 (CIRCSTORE-494)
