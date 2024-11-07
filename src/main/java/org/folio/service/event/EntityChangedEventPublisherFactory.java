@@ -5,6 +5,7 @@ import static org.folio.support.kafka.topic.CirculationStorageKafkaTopic.CHECK_I
 import static org.folio.support.kafka.topic.CirculationStorageKafkaTopic.CIRCULATION_SETTINGS;
 import static org.folio.support.kafka.topic.CirculationStorageKafkaTopic.LOAN;
 import static org.folio.support.kafka.topic.CirculationStorageKafkaTopic.REQUEST;
+import static org.folio.support.kafka.topic.CirculationStorageKafkaTopic.REQUEST_QUEUE_REORDERING;
 import static org.folio.support.kafka.topic.CirculationStorageKafkaTopic.RULES;
 
 import java.util.Map;
@@ -19,6 +20,7 @@ import org.folio.rest.jaxrs.model.CirculationRules;
 import org.folio.rest.jaxrs.model.CirculationSetting;
 import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.Request;
+import org.folio.rest.jaxrs.model.RequestQueueReordering;
 
 import io.vertx.core.Context;
 import lombok.extern.log4j.Log4j2;
@@ -51,6 +53,15 @@ public class EntityChangedEventPublisherFactory {
             REQUEST.fullTopicName(tenantId(okapiHeaders)),
             FailureHandler.noOperation()),
         new RequestRepository(vertxContext, okapiHeaders));
+  }
+
+  public static EntityChangedEventPublisher<String, RequestQueueReordering>
+  requestBatchEventPublisher(Context vertxContext, Map<String, String> okapiHeaders) {
+
+    return new EntityChangedEventPublisher<>(okapiHeaders, RequestQueueReordering::getInstanceId,
+      NULL_ID, new EntityChangedEventFactory<>(), new DomainEventPublisher<>(vertxContext,
+      REQUEST_QUEUE_REORDERING.fullTopicName(tenantId(okapiHeaders)),
+      FailureHandler.noOperation()), null);
   }
 
   public static EntityChangedEventPublisher<String, CheckIn> checkInEventPublisher(
