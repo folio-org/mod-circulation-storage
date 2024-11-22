@@ -760,7 +760,7 @@
       "permissionName": "circulation-storage.loans.anonymize.execute",
       "displayName": "Circulation storage - anonymize loans for a user",
       "description": "Anonymize closed loans for a single user",
-      "replaces": "circulation-storage.loans.collection.anonymize.user.post"
+      "replaces": ["circulation-storage.loans.collection.anonymize.user.post"]
     },
     {
       "permissionName": "anonymize-storage-loans.post",
