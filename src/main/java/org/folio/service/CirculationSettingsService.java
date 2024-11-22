@@ -60,17 +60,21 @@ public class CirculationSettingsService {
       GetCirculationSettingsStorageCirculationSettingsByCirculationSettingsIdResponse.class);
   }
 
-  public Future<Response> update(String circulationSettingsId, CirculationSetting circulationSetting) {
-    return PgUtil.put(CIRCULATION_SETTINGS_TABLE, circulationSetting, circulationSettingsId, okapiHeaders, vertxContext,
+  public Future<Response> update(String circulationSettingsId,
+    CirculationSetting circulationSetting) {
+
+    return PgUtil.put(CIRCULATION_SETTINGS_TABLE, circulationSetting, circulationSettingsId,
+        okapiHeaders, vertxContext,
         PutCirculationSettingsStorageCirculationSettingsByCirculationSettingsIdResponse.class)
       .compose(eventPublisher.publishUpdated(circulationSetting));
   }
 
   public Future<Response> delete(String circulationSettingsId) {
-    return repository.getById(circulationSettingsId).compose (
-      circulationSetting -> PgUtil.deleteById(CIRCULATION_SETTINGS_TABLE, circulationSettingsId, okapiHeaders, vertxContext,
-        DeleteCirculationSettingsStorageCirculationSettingsByCirculationSettingsIdResponse.class)
-      .compose(eventPublisher.publishRemoved(circulationSetting))
+    return repository.getById(circulationSettingsId)
+      .compose(circulationSetting -> PgUtil.deleteById(CIRCULATION_SETTINGS_TABLE,
+          circulationSettingsId, okapiHeaders, vertxContext,
+          DeleteCirculationSettingsStorageCirculationSettingsByCirculationSettingsIdResponse.class)
+        .compose(eventPublisher.publishRemoved(circulationSetting))
     );
   }
 

@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Requests batch update",
+  "description": "List of ids reordered requests",
+  "type": "object",
+  "properties": {
+    "instanceId": {
+      "description": "Instance ID of reordered requests",
+      "type": "string",
+      "$ref": "raml-util/schemas/uuid.schema"
+    },
+    "itemId": {
+      "description": "Item ID of reordered requests",
+      "type": "string",
+      "$ref": "raml-util/schemas/uuid.schema"
+    },
+    "requestLevel": {
+      "description": "Level of the request - Item or Title",
+      "type": "string",
+      "enum": ["Item", "Title"]
+    },
+    "requestIds": {
+      "description": "Array of requests ids",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "$ref": "raml-util/schemas/uuid.schema"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "requestLevel"
+  ]
+}

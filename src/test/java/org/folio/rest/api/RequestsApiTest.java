@@ -1961,6 +1961,46 @@ public class RequestsApiTest extends ApiTests {
     )));
   }
 
+  @Test
+  public void canCreateRequestWithEcsRequestPhase() throws MalformedURLException,
+    ExecutionException, InterruptedException, TimeoutException {
+
+    JsonObject representation = createEntity(
+      new RequestRequestBuilder()
+        .page()
+        .primary()
+        .withId(UUID.randomUUID())
+        .create(),
+      requestStorageUrl()).getJson();
+    assertThat(representation.getString("ecsRequestPhase"), is("Primary"));
+
+    representation = createEntity(
+      new RequestRequestBuilder()
+        .page()
+        .secondary()
+        .withId(UUID.randomUUID())
+        .create(),
+      requestStorageUrl()).getJson();
+    assertThat(representation.getString("ecsRequestPhase"), is("Secondary"));
+  }
+
+  @Test
+  public void shouldReturn400IfInvalidEcsRequestPhase() throws MalformedURLException,
+    ExecutionException, InterruptedException, TimeoutException {
+
+    var request = new RequestRequestBuilder()
+        .page()
+        .withEcsRequestPhase("Invalid")
+        .withId(UUID.randomUUID())
+        .create();
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+    client.post(requestStorageUrl(), request, TENANT_ID, ResponseHandler.json(createCompleted));
+
+    assertThat(createCompleted.get(5, TimeUnit.SECONDS).getStatusCode(), is(400));
+  }
+
+
   private RequestDto.RequestDtoBuilder holdShelfOpenRequest() {
     return RequestDto.builder()
       .requesterId(UUID.randomUUID().toString())
