@@ -28,7 +28,12 @@
   "holdingsRecordId": "e63273e7-48f5-4c43-ab4e-1751ecacaa21",
   "itemId": "195efae1-588f-47bd-a181-13a2eb437701",
   "item": {
-    "barcode": "760932543816"
+    "barcode": "760932543816",
+    "itemEffectiveLocationId" : "758258bc-ecc1-41b8-abca-f7b610822ffd",
+    "itemEffectiveLocationName" : "XYZ Location",
+    "retrievalServicePointId" : "c4c90014-c8c9-4ade-8f24-b5e313319f4b",
+    "retrievalServicePointName" : "Circ Desk Test"
+
   },
   "position": 1,
   "fulfillmentPreference": "Hold Shelf",

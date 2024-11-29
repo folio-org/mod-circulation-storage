@@ -133,6 +133,22 @@
         "barcode": {
           "description": "barcode of the item",
           "type": "string"
+        },
+        "itemEffectiveLocationId": {
+          "description": "Item's effective location",
+          "type": "string"
+        },
+        "itemEffectiveLocationName": {
+          "description": "Item's effective location name",
+          "type": "string"
+        },
+        "retrievalServicePointId": {
+          "description": "Item's location primary service point",
+          "type": "string"
+        },
+        "retrievalServicePointName": {
+          "description": "Item's location primary service point name",
+          "type": "string"
         }
       },
       "additionalProperties": false
