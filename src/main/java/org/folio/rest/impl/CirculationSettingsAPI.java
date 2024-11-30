@@ -47,9 +47,9 @@ public class CirculationSettingsAPI implements CirculationSettingsStorage {
     String circulationSettingsId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-      new CirculationSettingsService(vertxContext, okapiHeaders)
-        .findById(circulationSettingsId)
-        .onComplete(asyncResultHandler);
+    new CirculationSettingsService(vertxContext, okapiHeaders)
+      .findById(circulationSettingsId)
+      .onComplete(asyncResultHandler);
   }
 
   @Override
@@ -57,9 +57,9 @@ public class CirculationSettingsAPI implements CirculationSettingsStorage {
     String circulationSettingsId, CirculationSetting entity, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-      new CirculationSettingsService(vertxContext, okapiHeaders)
-        .update(circulationSettingsId, entity)
-        .onComplete(asyncResultHandler);
+    new CirculationSettingsService(vertxContext, okapiHeaders)
+      .update(circulationSettingsId, entity)
+      .onComplete(asyncResultHandler);
   }
 
   @Override
@@ -67,8 +67,8 @@ public class CirculationSettingsAPI implements CirculationSettingsStorage {
     String circulationSettingsId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-      new CirculationSettingsService(vertxContext, okapiHeaders)
-        .delete(circulationSettingsId)
-        .onComplete(asyncResultHandler);
+    new CirculationSettingsService(vertxContext, okapiHeaders)
+      .delete(circulationSettingsId)
+      .onComplete(asyncResultHandler);
   }
 }

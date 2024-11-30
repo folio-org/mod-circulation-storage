@@ -53,6 +53,7 @@ public class RequestRequestBuilder extends JsonBuilder {
   private final UUID holdingsRecordId;
   private final SearchIndex searchIndex;
   private final String itemLocationCode;
+  private final String ecsRequestPhase;
 
   public RequestRequestBuilder() {
     this(UUID.randomUUID(),
@@ -81,6 +82,7 @@ public class RequestRequestBuilder extends JsonBuilder {
       null,
       UUID.randomUUID(),
       null,
+      null,
       null);
   }
 
@@ -103,6 +105,7 @@ public class RequestRequestBuilder extends JsonBuilder {
     put(request, "requestExpirationDate", this.requestExpirationDate);
     put(request, "holdShelfExpirationDate", this.holdShelfExpirationDate);
     put(request, "pickupServicePointId", this.pickupServicePointId);
+    put(request, "ecsRequestPhase", this.ecsRequestPhase);
 
     if (this.itemSummary != null) {
       final JsonObject item = new JsonObject();
@@ -211,6 +214,7 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.patronComments,
       this.holdingsRecordId,
       this.searchIndex,
+      this.ecsRequestPhase,
       this.itemLocationCode);
   }
 
@@ -255,6 +259,7 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.patronComments,
       this.holdingsRecordId,
       this.searchIndex,
+      this.ecsRequestPhase,
       this.itemLocationCode);
   }
 
@@ -291,6 +296,7 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.patronComments,
       this.holdingsRecordId,
       this.searchIndex,
+      this.ecsRequestPhase,
       this.itemLocationCode);
   }
 
@@ -326,6 +332,7 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.patronComments,
       this.holdingsRecordId,
       this.searchIndex,
+      this.ecsRequestPhase,
       this.itemLocationCode);
   }
 
@@ -361,6 +368,7 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.patronComments,
       this.holdingsRecordId,
       this.searchIndex,
+      this.ecsRequestPhase,
       this.itemLocationCode);
   }
   public RequestRequestBuilder withNoPosition() {
@@ -384,6 +392,14 @@ public class RequestRequestBuilder extends JsonBuilder {
       this.middleName = middleName;
       this.barcode = barcode;
     }
+  }
+
+  public RequestRequestBuilder primary() {
+    return withEcsRequestPhase("Primary");
+  }
+
+  public RequestRequestBuilder secondary() {
+    return withEcsRequestPhase("Secondary");
   }
 
 }

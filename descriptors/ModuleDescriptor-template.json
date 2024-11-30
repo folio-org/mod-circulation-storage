@@ -78,7 +78,7 @@
         }, {
           "methods": ["POST"],
           "pathPattern": "/loan-storage/loans/anonymize/{userId}",
-          "permissionsRequired": ["circulation-storage.loans.collection.anonymize.user.post"]
+          "permissionsRequired": ["circulation-storage.loans.anonymize.execute"]
         }
       ]
     },
@@ -757,9 +757,10 @@
       "description": "Delete individual loan from storage"
     },
     {
-      "permissionName": "circulation-storage.loans.collection.anonymize.user.post",
+      "permissionName": "circulation-storage.loans.anonymize.execute",
       "displayName": "Circulation storage - anonymize loans for a user",
-      "description": "Anonymize closed loans for a single user"
+      "description": "Anonymize closed loans for a single user",
+      "replaces": ["circulation-storage.loans.collection.anonymize.user.post"]
     },
     {
       "permissionName": "anonymize-storage-loans.post",
@@ -1082,7 +1083,7 @@
         "circulation-storage.loans.item.put",
         "circulation-storage.loans.item.delete",
         "circulation-storage.loans.collection.delete",
-        "circulation-storage.loans.collection.anonymize.user.post",
+        "circulation-storage.loans.anonymize.execute",
         "circulation-storage.loans-history.collection.get",
         "circulation-storage.circulation-rules.get",
         "circulation-storage.circulation-rules.put",
