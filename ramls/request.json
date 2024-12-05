@@ -136,7 +136,8 @@
         },
         "itemEffectiveLocationId": {
           "description": "Item's effective location",
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
         },
         "itemEffectiveLocationName": {
           "description": "Item's effective location name",
@@ -144,7 +145,8 @@
         },
         "retrievalServicePointId": {
           "description": "Item's location primary service point",
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
         },
         "retrievalServicePointName": {
           "description": "Item's location primary service point name",
