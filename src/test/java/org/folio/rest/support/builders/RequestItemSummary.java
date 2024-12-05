@@ -23,7 +23,7 @@ public class RequestItemSummary {
   }
 
   private RequestItemSummary(String title, String barcode, List<Pair<UUID, String>> identifiers) {
-    this(title, barcode, Collections.emptyList(), null, null, null, null);
+    this(title, barcode, identifiers, null, null, null, null);
   }
 
   public RequestItemSummary(String title, String barcode, List<Pair<UUID, String>> identifiers, String itemEffectiveLocationId, String itemEffectiveLocationName, String retrievalServicePointId, String retrievalServicePointName) {
