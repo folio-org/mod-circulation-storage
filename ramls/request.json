@@ -133,6 +133,24 @@
         "barcode": {
           "description": "barcode of the item",
           "type": "string"
+        },
+        "itemEffectiveLocationId": {
+          "description": "Item's effective location",
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+        },
+        "itemEffectiveLocationName": {
+          "description": "Item's effective location name",
+          "type": "string"
+        },
+        "retrievalServicePointId": {
+          "description": "Item's location primary service point",
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+        },
+        "retrievalServicePointName": {
+          "description": "Item's location primary service point name",
+          "type": "string"
         }
       },
       "additionalProperties": false
