@@ -1993,6 +1993,15 @@ public class RequestsApiTest extends ApiTests {
         .create(),
       requestStorageUrl()).getJson();
     assertThat(representation.getString("ecsRequestPhase"), is("Secondary"));
+
+    representation = createEntity(
+      new RequestRequestBuilder()
+        .page()
+        .intermediate()
+        .withId(UUID.randomUUID())
+        .create(),
+      requestStorageUrl()).getJson();
+    assertThat(representation.getString("ecsRequestPhase"), is("Intermediate"));
   }
 
   @Test

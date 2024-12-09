@@ -405,4 +405,8 @@ public class RequestRequestBuilder extends JsonBuilder {
     return withEcsRequestPhase("Secondary");
   }
 
+  public RequestRequestBuilder intermediate() {
+    return withEcsRequestPhase("Intermediate");
+  }
+
 }
