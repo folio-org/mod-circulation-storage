@@ -21,7 +21,7 @@
     "ecsRequestPhase": {
       "description": "Stage in ECS request process, absence of this field means this is a single-tenant request",
       "type": "string",
-      "enum": ["Primary", "Secondary"]
+      "enum": ["Primary", "Secondary", "Intermediate"]
     },
     "requestDate": {
       "description": "Date the request was made",
