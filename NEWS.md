@@ -1,3 +1,6 @@
+## 17.3.2 2024-12-12
+* Add Intermediate ECS request phase (CIRCSTORE-542)
+
 ## 17.3.1 2024-11-30
 * Add ILR support for publishing batch request update events (CIRCSTORE-526)
 * Publish request batch event when requests are reordered (CIRCSTORE-521)
