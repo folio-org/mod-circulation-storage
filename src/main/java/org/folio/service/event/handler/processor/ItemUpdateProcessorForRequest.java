@@ -12,6 +12,7 @@ import java.util.Objects;
 
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.json.Json;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -124,6 +125,8 @@ public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request>
     if(Objects.nonNull(retrievalServicePoint)) {
       request.getItem().setRetrievalServicePointName(retrievalServicePoint.getName());
     }
+    log.info("ItemUpdateProcessorForRequest :: setServicePoint() :: request" +
+      ".item: {}", Json.encode(request.getItem()));
     return succeededFuture();
   }
 
