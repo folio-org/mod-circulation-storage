@@ -284,7 +284,7 @@
       "type": "string"
     },
     "isDcbReRequestCancellation": {
-      "description": "Indicates whether the request was cancelled during a DCB transaction update",
+      "description": "Indicates if the request was cancelled during a DCB transaction update. This determines whether the Kafka event will be handled and if an email notification will be sent",
       "type": "boolean"
     }
   },
