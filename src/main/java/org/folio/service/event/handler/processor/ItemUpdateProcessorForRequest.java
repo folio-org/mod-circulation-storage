@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Objects;
 
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -86,9 +87,15 @@ public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request>
             request.getItem().setRetrievalServicePointId(primaryServicePoint);
             inventoryStorageClient.getServicePoints(Collections.singletonList(effectiveLocationId))
               .compose(servicePoints -> setServicePoint(request, servicePoints,
-                primaryServicePoint));
+                primaryServicePoint)).onFailure(throwable -> {
+                  log.info("ItemUpdateProcessorForRequest :: Error while " +
+                    "fetching ServicePoint: {}", throwable.toString());
+              });;
           }
           return succeededFuture();
+        }).onFailure(throwable -> {
+          log.info("ItemUpdateProcessorForRequest :: Error while fetching " +
+            "gLocations: {}", throwable.toString());
         });
     }));
   }
