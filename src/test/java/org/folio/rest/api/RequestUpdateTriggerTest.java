@@ -59,7 +59,7 @@ class RequestUpdateTriggerTest {
 
   @Test
   @SneakyThrows
-  public void isDcbReRequestCancellationShouldBePresentAfterRequestUpdated() {
+  void isDcbReRequestCancellationShouldBePresentAfterRequestUpdated() {
     CompletableFuture<JsonObject> future = new CompletableFuture<>();
 
     String id = "3a57dc83-e70d-404b-b1f1-442b88760331";
