@@ -85,7 +85,7 @@ public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request>
         .compose(primaryServicePoint -> {
           if (!StringUtils.isBlank(primaryServicePoint)) {
             request.getItem().setRetrievalServicePointId(primaryServicePoint);
-            inventoryStorageClient.getServicePoints(Collections.singletonList(effectiveLocationId))
+            inventoryStorageClient.getServicePoints(Collections.singletonList(primaryServicePoint))
               .compose(servicePoints -> setServicePoint(request, servicePoints,
                 primaryServicePoint)).onFailure(throwable -> {
                   log.info("ItemUpdateProcessorForRequest :: Error while " +
