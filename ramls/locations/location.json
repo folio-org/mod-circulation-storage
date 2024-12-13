@@ -63,13 +63,5 @@
       "readonly": true
     }
   },
-  "additionalProperties": false,
-  "required": [
-    "name",
-    "code",
-    "institutionId",
-    "campusId",
-    "libraryId",
-    "primaryServicePoint"
-  ]
+  "additionalProperties": true
 }
