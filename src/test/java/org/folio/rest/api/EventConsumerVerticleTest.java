@@ -648,19 +648,8 @@ public class EventConsumerVerticleTest extends ApiTests {
     var record = KafkaProducerRecord.create(topic, "test-key", eventPayload);
     record.addHeader(OKAPI_TENANT_HEADER, TENANT_ID);
     record.addHeader(OKAPI_URL_HEADER, "http://localhost:" + PROXY_PORT);
-    record.addHeader(OKAPI_HEADER_TOKEN, "123");
+    record.addHeader(OKAPI_HEADER_TOKEN, "RANDOM_TOKEN");
     waitFor(producer.write(record));
-  }
-
-  private static String generateToken() {
-    final String payload = new JsonObject()
-      .put("user_id", randomId())
-      .put("tenant", TENANT_ID)
-      .put("sub", "admin")
-      .toString();
-
-    return format("1.%s.3", Base64.getEncoder()
-      .encodeToString(payload.getBytes()));
   }
 
   private static JsonObject buildUpdateEvent(JsonObject oldVersion, JsonObject newVersion) {
