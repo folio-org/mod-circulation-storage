@@ -82,10 +82,10 @@ public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request>
       if (request.getItem() == null) {
         request.setItem(new Item());
       }
-      request.getItem().setItemEffectiveLocationId(locationAndSpData.get("itemEffectiveLocationId"));
-      request.getItem().setItemEffectiveLocationName(locationAndSpData.get("itemEffectiveLocationName"));
-      request.getItem().setRetrievalServicePointId(locationAndSpData.get("retrievalServicePointId"));
-      request.getItem().setRetrievalServicePointName(locationAndSpData.get("retrievalServicePointName"));
+      request.getItem().setItemEffectiveLocationId(locationAndSpData.get(ITEM_EFFECTIVE_LOCATION_ID));
+      request.getItem().setItemEffectiveLocationName(locationAndSpData.get(ITEM_EFFECTIVE_LOCATION_NAME));
+      request.getItem().setRetrievalServicePointId(locationAndSpData.get(RETRIEVAL_SERVICE_POINT_ID));
+      request.getItem().setRetrievalServicePointName(locationAndSpData.get(RETRIEVAL_SERVICE_POINT_NAME));
     }));
     return Future.succeededFuture(changes);
   }
