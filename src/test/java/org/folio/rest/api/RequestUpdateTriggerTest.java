@@ -22,12 +22,14 @@ import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import lombok.SneakyThrows;
 
 import org.joda.time.DateTime;
 import org.joda.time.Seconds;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
@@ -53,6 +55,31 @@ class RequestUpdateTriggerTest {
   @BeforeEach
   void beforeEach() throws MalformedURLException {
     StorageTestSuite.deleteAll(requestStorageUrl());
+  }
+
+  @Test
+  @SneakyThrows
+  void isDcbReRequestCancellationShouldBePresentAfterRequestUpdated() {
+    CompletableFuture<JsonObject> future = new CompletableFuture<>();
+
+    String id = "3a57dc83-e70d-404b-b1f1-442b88760331";
+    Request request = new Request()
+      .withStatus(fromValue(Request.Status.OPEN_NOT_YET_FILLED.toString()));
+
+    assertThat(request.getIsDcbReRequestCancellation(), is(nullValue()));
+
+    saveRequest(id, request)
+      .compose(v -> updateRequest(id, request
+        .withStatus(fromValue(Request.Status.CLOSED_CANCELLED.toString()))
+        .withIsDcbReRequestCancellation(Boolean.TRUE)))
+      .compose(v -> getRequest(id))
+      .onComplete(updatedRequest -> future.complete(updatedRequest.result()));
+
+    JsonObject updatedRequest = future.get(5, TimeUnit.SECONDS);
+
+    assertThat(updatedRequest.getString("isDcbReRequestCancellation"),
+      is(notNullValue()));
+
   }
 
   @ParameterizedTest

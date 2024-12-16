@@ -231,6 +231,10 @@
       "description": "Request fields used for search",
       "type": "object",
       "$ref": "request-search-index.json"
+    },
+    "isDcbReRequestCancellation": {
+      "description": "Indicates if the request was cancelled during a DCB transaction update. This determines whether the Kafka event will be handled and if an email notification will be sent",
+      "type": "boolean"
     }
   },
   "additionalProperties": false,
