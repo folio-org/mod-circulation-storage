@@ -7,6 +7,7 @@ import static org.folio.service.event.handler.processor.util.AllowedServicePoint
 import java.util.ArrayList;
 import java.util.List;
 
+import io.vertx.core.Future;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.RequestPolicyRepository;
@@ -27,7 +28,7 @@ public class ServicePointDeleteProcessorForRequestPolicy
   }
 
   @Override
-  protected List<Change<RequestPolicy>> collectRelevantChanges(JsonObject payload) {
+  protected Future<List<Change<RequestPolicy>>> collectRelevantChanges(JsonObject payload) {
     log.debug("collectRelevantChanges:: payload: {}", payload);
 
     JsonObject oldObject = payload.getJsonObject("old");
@@ -38,7 +39,7 @@ public class ServicePointDeleteProcessorForRequestPolicy
     changes.add(new Change<>(requestPolicy -> removeServicePointFromRequestPolicy(requestPolicy,
       deletedServicePointId)));
 
-    return changes;
+    return Future.succeededFuture(changes);
   }
 
   @Override

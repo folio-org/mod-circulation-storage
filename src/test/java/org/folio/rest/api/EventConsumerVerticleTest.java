@@ -11,14 +11,22 @@ import static org.awaitility.Awaitility.waitAtMost;
 import static org.folio.kafka.services.KafkaEnvironmentProperties.environment;
 import static org.folio.kafka.services.KafkaEnvironmentProperties.host;
 import static org.folio.kafka.services.KafkaEnvironmentProperties.port;
+import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
+import static org.folio.rest.api.StorageTestSuite.PROXY_PORT;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.getVertx;
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET_FILLED;
 import static org.folio.rest.tools.utils.ModuleName.getModuleName;
 import static org.folio.rest.tools.utils.ModuleName.getModuleVersion;
+import static org.folio.rest.util.OkapiConnectionParams.OKAPI_TENANT_HEADER;
+import static org.folio.rest.util.OkapiConnectionParams.OKAPI_URL_HEADER;
 import static org.folio.service.event.InventoryEventType.INVENTORY_ITEM_UPDATED;
 import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_DELETED;
 import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_UPDATED;
+import static org.folio.service.event.handler.processor.ItemUpdateProcessorForRequest.ITEM_EFFECTIVE_LOCATION_ID;
+import static org.folio.service.event.handler.processor.ItemUpdateProcessorForRequest.ITEM_EFFECTIVE_LOCATION_NAME;
+import static org.folio.service.event.handler.processor.ItemUpdateProcessorForRequest.RETRIEVAL_SERVICE_POINT_ID;
+import static org.folio.service.event.handler.processor.ItemUpdateProcessorForRequest.RETRIEVAL_SERVICE_POINT_NAME;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.hasItems;
@@ -27,6 +35,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.URL;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -43,6 +52,7 @@ import org.folio.rest.jaxrs.model.SearchIndex;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.builders.ItemBuilder;
 import org.folio.rest.support.builders.ItemBuilder.ItemCallNumberComponents;
+import org.folio.rest.support.builders.LocationBuilder;
 import org.folio.rest.support.builders.RequestItemSummary;
 import org.folio.rest.support.builders.RequestPolicyBuilder;
 import org.folio.rest.support.builders.RequestRequestBuilder;
@@ -167,6 +177,38 @@ public class EventConsumerVerticleTest extends ApiTests {
     publishItemUpdateEvent(oldItem, newItem);
     waitUntilValueIsIncreased(initialOffset, EventConsumerVerticleTest::getOffsetForItemUpdateEvents);
     verifyRequestSearchIndex(REQUEST_ID, searchIndex);
+  }
+
+  @Test
+  public void requestItemLocationAndSpIsSetWhenItemEffectiveLocationChange() {
+    JsonObject oldItem = buildItem(DEFAULT_CALL_NUMBER_PREFIX, DEFAULT_CALL_NUMBER,
+            DEFAULT_CALL_NUMBER_SUFFIX, DEFAULT_SHELVING_ORDER);
+    JsonObject newItem = oldItem.copy();
+
+    //Creating and mocking ServicePoint
+    String servicePointId = UUID.randomUUID().toString();
+    JsonObject servicePoint = buildServicePoint(servicePointId, "ServicePoint-1");
+    createStubForServicePoints(List.of(servicePoint));
+
+    //Creating and mocking Location
+    String locationId = UUID.randomUUID().toString();
+    JsonObject location = buildLocation(locationId, "Location-1", servicePointId);
+    createStubForLocations(List.of(location));
+    newItem.put("effectiveLocationId", locationId);
+
+    // Expected item
+    JsonObject expectedItem = new JsonObject();
+    expectedItem.put(ITEM_EFFECTIVE_LOCATION_ID, locationId);
+    expectedItem.put(ITEM_EFFECTIVE_LOCATION_NAME, location.getString("name"));
+    expectedItem.put(RETRIEVAL_SERVICE_POINT_ID, servicePointId);
+    expectedItem.put(RETRIEVAL_SERVICE_POINT_NAME, servicePoint.getString("name"));
+
+    createRequest(buildRequest(REQUEST_ID, oldItem));
+
+    int initialOffset = getOffsetForItemUpdateEvents();
+    publishItemUpdateEvent(oldItem, newItem);
+    waitUntilValueIsIncreased(initialOffset, EventConsumerVerticleTest::getOffsetForItemUpdateEvents);
+    verifyRequestItem(REQUEST_ID, expectedItem);
   }
 
   @Test
@@ -486,6 +528,18 @@ public class EventConsumerVerticleTest extends ApiTests {
       .create();
   }
 
+  private static JsonObject buildLocation(String id, String name, String primaryServicePoint) {
+    return buildLocation(id, name, "code", primaryServicePoint);
+  }
+
+  private static JsonObject buildLocation(String id, String name, String code, String primaryServicePoint) {
+    return new LocationBuilder(name)
+      .withId(id)
+      .withCode(code)
+      .withPrimaryServicePoint(primaryServicePoint)
+      .create();
+  }
+
   private static JsonObject buildServicePoint(String id, String name) {
     return buildServicePoint(id, name, "code");
   }
@@ -592,8 +646,21 @@ public class EventConsumerVerticleTest extends ApiTests {
 
   private void publishEvent(String topic, JsonObject eventPayload) {
     var record = KafkaProducerRecord.create(topic, "test-key", eventPayload);
-    record.addHeader("X-Okapi-Tenant", TENANT_ID);
+    record.addHeader(OKAPI_TENANT_HEADER, TENANT_ID);
+    record.addHeader(OKAPI_URL_HEADER, "http://localhost:" + PROXY_PORT);
+    record.addHeader(OKAPI_HEADER_TOKEN, "123");
     waitFor(producer.write(record));
+  }
+
+  private static String generateToken() {
+    final String payload = new JsonObject()
+      .put("user_id", randomId())
+      .put("tenant", TENANT_ID)
+      .put("sub", "admin")
+      .toString();
+
+    return format("1.%s.3", Base64.getEncoder()
+      .encodeToString(payload.getBytes()));
   }
 
   private static JsonObject buildUpdateEvent(JsonObject oldVersion, JsonObject newVersion) {
@@ -638,6 +705,19 @@ public class EventConsumerVerticleTest extends ApiTests {
       .until(() -> getRequestSearchIndex(requestId), equalTo(mapFrom(searchIndex)));
   }
 
+  private JsonObject verifyRequestItem(String requestId, JsonObject itemObject) {
+    return waitAtMost(60, SECONDS)
+      .until(() -> {
+        JsonObject requestItem = getRequestItem(requestId);
+        JsonObject actualItem = new JsonObject();
+        actualItem.put(ITEM_EFFECTIVE_LOCATION_ID, requestItem.getString(ITEM_EFFECTIVE_LOCATION_ID));
+        actualItem.put(ITEM_EFFECTIVE_LOCATION_NAME, requestItem.getString(ITEM_EFFECTIVE_LOCATION_NAME));
+        actualItem.put(RETRIEVAL_SERVICE_POINT_ID, requestItem.getString(RETRIEVAL_SERVICE_POINT_ID));
+        actualItem.put(RETRIEVAL_SERVICE_POINT_NAME, requestItem.getString(RETRIEVAL_SERVICE_POINT_NAME));
+        return actualItem;
+      }, equalTo(itemObject));
+  }
+
   private JsonObject verifyPickupServicePointName(String requestId, SearchIndex searchIndex) {
     return waitAtMost(60, SECONDS)
       .until(() -> getRequestSearchIndex(requestId), equalTo(mapFrom(searchIndex)));
@@ -666,6 +746,10 @@ public class EventConsumerVerticleTest extends ApiTests {
 
   private JsonObject getRequestSearchIndex(String requestId) {
     return getRequest(requestId).getJsonObject("searchIndex");
+  }
+
+  private JsonObject getRequestItem(String requestId) {
+    return getRequest(requestId).getJsonObject("item");
   }
 
   private static JsonObject buildRequestPolicy(String requestPolicyId,
@@ -760,6 +844,13 @@ public class EventConsumerVerticleTest extends ApiTests {
     StorageTestSuite.getWireMockServer()
       .stubFor(WireMock.get(urlPathMatching("/service-points.*"))
         .willReturn(ok().withBody(new JsonObject().put("servicepoints", new JsonArray(servicePoints))
+          .encodePrettily())));
+  }
+
+  private void createStubForLocations(List<JsonObject> locations) {
+    StorageTestSuite.getWireMockServer()
+      .stubFor(WireMock.get(urlPathMatching("/locations.*"))
+        .willReturn(ok().withBody(new JsonObject().put("locations", new JsonArray(locations))
           .encodePrettily())));
   }
 
