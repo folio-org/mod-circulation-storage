@@ -100,9 +100,7 @@ public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request>
             .compose(locations -> setEffectiveLocationData(locations, effectiveLocationId, locationAndSpData))
             .compose(primaryServicePoint -> setRetrievalServicePointData(primaryServicePoint, locationAndSpData))
             .compose(e -> Future.succeededFuture(locationAndSpData))
-            .onFailure(throwable -> {
-              log.info("ItemUpdateProcessorForRequest :: Error while fetching Locations: {}", throwable.toString());
-            });
+            .onFailure(throwable -> log.info("ItemUpdateProcessorForRequest :: Error while fetching Locations: {}", throwable.toString()));
   }
 
   private static Future<String> setEffectiveLocationData(Collection<Location> locations, String effectiveLocationId,
@@ -129,10 +127,8 @@ public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request>
                   locationAndSpData.put(RETRIEVAL_SERVICE_POINT_NAME, retrievalServicePoint.getName());
                 }
                 return succeededFuture();
-              }).onFailure(throwable -> {
-                log.info("ItemUpdateProcessorForRequest :: Error while fetching ServicePoint: {}",
-                        throwable.toString());
-              });
+              }).onFailure(throwable -> log.info("ItemUpdateProcessorForRequest :: Error while fetching ServicePoint: {}",
+                      throwable.toString()));
     }
     return succeededFuture();
   }

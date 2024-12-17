@@ -1,14 +1,11 @@
 package org.folio.service.event.handler;
 
-import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.kafka.KafkaHeaderUtils.kafkaHeadersToMap;
 
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
-import org.apache.logging.log4j.Logger;
 import org.folio.kafka.AsyncRecordHandler;
 import org.folio.persist.RequestRepository;
 import org.folio.rest.client.InventoryStorageClient;
-import org.folio.service.event.EntityChangedEventPublisher;
 import org.folio.service.event.handler.processor.ItemUpdateProcessorForRequest;
 
 import io.vertx.core.Context;
