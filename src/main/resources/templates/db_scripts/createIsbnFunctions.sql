@@ -1,8 +1,8 @@
 -- Usage: SELECT normalize_isbns(jsonb->'identifiers') FROM instance
 -- This takes each ISBN, normalizes it using RMB's normalize_digits(text),
 -- and concatenates the results using a space as separator.
-CREATE OR REPLACE FUNCTION normalize_isbns(jsonb_array jsonb) RETURNS text AS $$
-  SELECT string_agg(normalize_digits(identifiers->>'value'), ' ')
+CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.normalize_isbns(jsonb_array jsonb) RETURNS text AS $$
+SELECT string_agg(${myuniversity}_${mymodule}.normalize_digits(identifiers->>'value'), ' ')
   FROM jsonb_array_elements($1) as identifiers
   WHERE identifiers->>'identifierTypeId' = '8261054f-be78-422d-bd51-4ed9f33c3422';
 $$ LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT;
