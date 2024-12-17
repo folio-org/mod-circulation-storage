@@ -71,13 +71,15 @@ public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request>
       changes.add(new Change<>(request -> request.getSearchIndex().setShelvingOrder(newShelvingOrder)));
     }
 
-    Future<Map<String, String>> fetchLocationAndServicePoint = updateItemAndServicePoint(newObject, changes);
+    Future<Map<String, String>> fetchLocationAndServicePoint = updateItemAndServicePoint(newObject);
     return fetchLocationAndServicePoint
             .compose(locationAndSpData -> addLocationAndServicePointChanges(locationAndSpData, changes))
-            .compose(res -> Future.succeededFuture(changes));
+            .compose(r -> Future.succeededFuture(changes))
+            .recover(throwable -> Future.succeededFuture(changes));
   }
 
   private static Future<List<Change<Request>>> addLocationAndServicePointChanges(Map<String, String> locationAndSpData, List<Change<Request>> changes) {
+    log.info("ItemUpdateProcessorForRequest :: locationAndSpData: {}", locationAndSpData);
     changes.add(new Change<>(request -> {
       if (request.getItem() == null) {
         request.setItem(new Item());
@@ -90,7 +92,7 @@ public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request>
     return Future.succeededFuture(changes);
   }
 
-  private Future<Map<String, String>> updateItemAndServicePoint(JsonObject newObject, List<Change<Request>> changes) {
+  private Future<Map<String, String>> updateItemAndServicePoint(JsonObject newObject) {
     String effectiveLocationId = newObject.getString("effectiveLocationId");
     Map<String, String> locationAndSpData = new HashMap<>();
     locationAndSpData.put(ITEM_EFFECTIVE_LOCATION_ID, effectiveLocationId);
@@ -108,8 +110,6 @@ public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request>
     Location effectiveLocation = locations.stream()
             .filter(l -> l.getId().equals(effectiveLocationId))
             .findFirst().orElse(null);
-    log.info("ItemUpdateProcessorForRequest :: setEffectiveLocationName(): locationsName: {}",
-            JsonObject.mapFrom(effectiveLocation).encode());
     if (Objects.nonNull(effectiveLocation)) {
       locationAndSpData.put(ITEM_EFFECTIVE_LOCATION_NAME, effectiveLocation.getName());
       return succeededFuture(effectiveLocation.getPrimaryServicePoint().toString());
@@ -125,8 +125,6 @@ public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request>
                 Servicepoint retrievalServicePoint = servicePoints.stream()
                         .filter(sp -> sp.getId().equals(primaryServicePoint))
                         .findFirst().orElse(null);
-                log.info("ItemUpdateProcessorForRequest :: setServicePoint(): {}",
-                        JsonObject.mapFrom(retrievalServicePoint).encode());
                 if (Objects.nonNull(retrievalServicePoint)) {
                   locationAndSpData.put(RETRIEVAL_SERVICE_POINT_NAME, retrievalServicePoint.getName());
                 }
