@@ -9,6 +9,7 @@ import static org.folio.service.event.handler.processor.util.AllowedServicePoint
 import java.util.ArrayList;
 import java.util.List;
 
+import io.vertx.core.Future;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.RequestPolicyRepository;
@@ -28,7 +29,7 @@ public class ServicePointUpdateProcessorForRequestPolicy extends UpdateEventProc
   }
 
   @Override
-  protected List<Change<RequestPolicy>> collectRelevantChanges(JsonObject payload) {
+  protected Future<List<Change<RequestPolicy>>> collectRelevantChanges(JsonObject payload) {
     JsonObject oldObject = payload.getJsonObject("old");
     JsonObject newObject = payload.getJsonObject("new");
     List<Change<RequestPolicy>> changes = new ArrayList<>();
@@ -44,7 +45,7 @@ public class ServicePointUpdateProcessorForRequestPolicy extends UpdateEventProc
         updatedServicePointId)));
     }
 
-    return changes;
+    return Future.succeededFuture(changes);
   }
 
   @Override
