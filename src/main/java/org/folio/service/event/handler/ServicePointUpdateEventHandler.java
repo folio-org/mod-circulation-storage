@@ -6,6 +6,7 @@ import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.kafka.AsyncRecordHandler;
 import org.folio.persist.RequestPolicyRepository;
 import org.folio.persist.RequestRepository;
+import org.folio.service.event.handler.processor.ItemRetrievalServicePointUpdateProcessorForRequest;
 import org.folio.service.event.handler.processor.ServicePointUpdateProcessorForRequest;
 import org.folio.service.event.handler.processor.ServicePointUpdateProcessorForRequestPolicy;
 
@@ -31,6 +32,8 @@ public class ServicePointUpdateEventHandler implements AsyncRecordHandler<String
     return new ServicePointUpdateProcessorForRequest(requestRepository)
         .run(kafkaConsumerRecord.key(), payload)
       .compose(notUsed -> new ServicePointUpdateProcessorForRequestPolicy(requestPolicyRepository)
-        .run(kafkaConsumerRecord.key(), payload));
+        .run(kafkaConsumerRecord.key(), payload))
+      .compose(notUsed -> new ItemRetrievalServicePointUpdateProcessorForRequest(requestRepository)
+              .run(kafkaConsumerRecord.key(), payload));
   }
 }
