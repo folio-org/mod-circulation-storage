@@ -26,21 +26,18 @@ public class ItemRetrievalServicePointUpdateProcessorForRequest extends UpdateEv
 
   @Override
   protected Future<List<Change<Request>>> collectRelevantChanges(JsonObject payload) {
-    JsonObject oldObject = payload.getJsonObject("old");
     JsonObject newObject = payload.getJsonObject("new");
-
+    JsonObject oldObject = payload.getJsonObject("old");
     List<Change<Request>> changes = new ArrayList<>();
 
     // compare service point names
-    String oldServicePointName = oldObject.getString(SERVICE_POINT_NAME_KEY);
     String newServicePointName = newObject.getString(SERVICE_POINT_NAME_KEY);
+    String oldServicePointName = oldObject.getString(SERVICE_POINT_NAME_KEY);
     if (notEqual(oldServicePointName, newServicePointName)) {
       log.info("ItemRetrievalServicePointUpdateProcessorForRequest :: collectRelevantChanges:: changing item.retrievalServicePointName from {} to {}",
               oldServicePointName, newServicePointName);
-      changes.add(new Change<>(request -> request.getItem()
-              .setRetrievalServicePointName(newServicePointName)));
+      changes.add(new Change<>(request -> request.getItem().setRetrievalServicePointName(newServicePointName)));
     }
-
     return Future.succeededFuture(changes);
   }
 
@@ -48,7 +45,6 @@ public class ItemRetrievalServicePointUpdateProcessorForRequest extends UpdateEv
   protected Criterion criterionForObjectsToBeUpdated(String oldObjectId) {
     log.info("ItemRetrievalServicePointUpdateProcessorForRequest :: criterionForObjectsToBeUpdated:: oldObjectId: {}",
             oldObjectId);
-
     return new Criterion(
       new Criteria()
         .addField("'item'")
