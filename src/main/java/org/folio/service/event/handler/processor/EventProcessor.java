@@ -49,20 +49,24 @@ public abstract class EventProcessor<T> {
       return succeededFuture();
     }
 
-    List<Change<T>> relevantChanges = collectRelevantChanges(payload);
+    Future<List<Change<T>>> relevantChangesFuture =
+      collectRelevantChanges(payload);
 
-    if (relevantChanges.isEmpty()) {
-      log.info("processEvent:: no relevant changes detected");
-      return succeededFuture();
-    }
+    return relevantChangesFuture.compose(relevantChanges -> {
 
-    log.info("processEvent:: {} relevant changes detected, applying", relevantChanges::size);
-    return applyChanges(relevantChanges, payload);
+      if (relevantChanges.isEmpty()) {
+        log.info("processEvent:: no relevant changes detected");
+        return succeededFuture();
+      }
+
+      log.info("processEvent:: {} relevant changes detected, applying", relevantChanges::size);
+      return applyChanges(relevantChanges, payload);
+    });
   }
 
   protected abstract boolean validatePayload(JsonObject payload);
 
-  protected abstract List<Change<T>> collectRelevantChanges(JsonObject payload);
+  protected abstract Future<List<Change<T>>> collectRelevantChanges(JsonObject payload);
 
   private Future<List<T>> applyChanges(List<Change<T>> changes, JsonObject payload) {
     log.debug("applyChanges:: payload: {}", payload);
