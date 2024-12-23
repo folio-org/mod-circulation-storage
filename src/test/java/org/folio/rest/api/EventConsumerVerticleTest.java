@@ -35,6 +35,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.URL;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -210,42 +211,42 @@ public class EventConsumerVerticleTest extends ApiTests {
     verifyRequestItem(REQUEST_ID, expectedItem);
   }
 
-  @Test
-  public void requestItemSpIsSetWhenItemEffectiveLocationPrimarySpChange() {
-    //Creating and mocking ServicePoint
-    String servicePointId = UUID.randomUUID().toString();
-    JsonObject servicePoint = buildServicePoint(servicePointId, "ServicePoint-1");
-    createStubForServicePoints(List.of(servicePoint));
+    @Test
+    public void requestItemSpIsSetWhenItemEffectiveLocationPrimarySpChange() {
+        //Creating and mocking ServicePoint
+        String servicePointId = UUID.randomUUID().toString();
+        JsonObject servicePoint = buildServicePoint(servicePointId, "ServicePoint-1");
+        createStubForServicePoints(List.of(servicePoint));
 
-    //Creating and mocking Location
-    String locationId = UUID.randomUUID().toString();
-    JsonObject location = buildLocation(locationId, "Location-1", servicePointId);
-    createStubForLocations(List.of(location));
+        //Creating and mocking Location
+        String locationId = UUID.randomUUID().toString();
+        JsonObject location = buildLocation(locationId, "Location-1", servicePointId);
+        createStubForLocations(List.of(location));
 
-    //Creating request with retrieval service-point in item object
-    JsonObject item = buildItem();
-    JsonObject request = buildRequest(REQUEST_ID, item);
-    JsonObject requestItem = request.getJsonObject("item");
-    requestItem.put(RETRIEVAL_SERVICE_POINT_ID, servicePointId);
-    requestItem.put(RETRIEVAL_SERVICE_POINT_NAME, servicePoint.getString("name"));
-    createRequest(request);
+        //Creating request with retrieval service-point in item object
+        JsonObject item = buildItem();
+        JsonObject request = buildRequest(REQUEST_ID, item);
+        JsonObject requestItem = request.getJsonObject("item");
+        requestItem.put(RETRIEVAL_SERVICE_POINT_ID, servicePointId);
+        requestItem.put(RETRIEVAL_SERVICE_POINT_NAME, servicePoint.getString("name"));
+        createRequest(request);
 
-    int initialOffset = getOffsetForServicePointUpdateEvents();
+        int initialOffset = getOffsetForServicePointUpdateEvents();
 
-    //Change ServicePoint Name in stub and publish SP update event
-    JsonObject servicePointNew = servicePoint.copy();
-    servicePointNew.put("name", "ServicePoint-2-Changed");
-    createStubForServicePoints(List.of(servicePoint));
-    publishServicePointUpdateEvent(servicePoint, servicePointNew);
+        //Change ServicePoint Name in stub and publish SP update event
+        JsonObject servicePointNew = servicePoint.copy();
+        servicePointNew.put("name", "ServicePoint-2-Changed");
+        createStubForServicePoints(List.of(servicePoint));
+        publishServicePointUpdateEvent(servicePoint, servicePointNew);
 
-    // Expected RETRIEVAL_SERVICE_POINT in item
-    JsonObject expectedItemRetrivalServicePoint = new JsonObject();
-    expectedItemRetrivalServicePoint.put(RETRIEVAL_SERVICE_POINT_ID, servicePointId);
-    expectedItemRetrivalServicePoint.put(RETRIEVAL_SERVICE_POINT_NAME, servicePointNew.getString("name"));
+        // Expected RETRIEVAL_SERVICE_POINT in item
+        JsonObject expectedItemRetrivalServicePoint = new JsonObject();
+        expectedItemRetrivalServicePoint.put(RETRIEVAL_SERVICE_POINT_ID, servicePointId);
+        expectedItemRetrivalServicePoint.put(RETRIEVAL_SERVICE_POINT_NAME, servicePointNew.getString("name"));
 
-    waitUntilValueIsIncreased(initialOffset, EventConsumerVerticleTest::getOffsetForServicePointUpdateEvents);
-    verifyRequestItemRetrievalServicePoint(REQUEST_ID, expectedItemRetrivalServicePoint);
-  }
+        waitUntilValueIsIncreased(initialOffset, EventConsumerVerticleTest::getOffsetForServicePointUpdateEvents);
+        verifyRequestItemRetrievalServicePoint(REQUEST_ID, expectedItemRetrivalServicePoint);
+    }
 
   @Test
   public void requestSearchIndexIsNotUpdatedWhenRequestAndEventAreForDifferentItems() {
@@ -743,16 +744,16 @@ public class EventConsumerVerticleTest extends ApiTests {
       }, equalTo(itemObject));
   }
 
-  private JsonObject verifyRequestItemRetrievalServicePoint(String requestId, JsonObject itemObject) {
-    return waitAtMost(60, SECONDS)
-            .until(() -> {
-              JsonObject requestItem = getRequestItem(requestId);
-              JsonObject actualItem = new JsonObject();
-              actualItem.put(RETRIEVAL_SERVICE_POINT_ID, requestItem.getString(RETRIEVAL_SERVICE_POINT_ID));
-              actualItem.put(RETRIEVAL_SERVICE_POINT_NAME, requestItem.getString(RETRIEVAL_SERVICE_POINT_NAME));
-              return actualItem;
-            }, equalTo(itemObject));
-  }
+    private JsonObject verifyRequestItemRetrievalServicePoint(String requestId, JsonObject itemObject) {
+        return waitAtMost(60, SECONDS)
+                .until(() -> {
+                    JsonObject requestItem = getRequestItem(requestId);
+                    JsonObject actualItem = new JsonObject();
+                    actualItem.put(RETRIEVAL_SERVICE_POINT_ID, requestItem.getString(RETRIEVAL_SERVICE_POINT_ID));
+                    actualItem.put(RETRIEVAL_SERVICE_POINT_NAME, requestItem.getString(RETRIEVAL_SERVICE_POINT_NAME));
+                    return actualItem;
+                }, equalTo(itemObject));
+    }
 
   private JsonObject verifyPickupServicePointName(String requestId, SearchIndex searchIndex) {
     return waitAtMost(60, SECONDS)
