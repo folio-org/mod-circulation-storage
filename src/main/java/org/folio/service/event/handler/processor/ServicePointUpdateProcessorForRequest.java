@@ -6,6 +6,7 @@ import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT
 import java.util.ArrayList;
 import java.util.List;
 
+import io.vertx.core.Future;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.RequestRepository;
@@ -24,7 +25,7 @@ public class ServicePointUpdateProcessorForRequest extends UpdateEventProcessor<
   }
 
   @Override
-  protected List<Change<Request>> collectRelevantChanges(JsonObject payload) {
+  protected Future<List<Change<Request>>> collectRelevantChanges(JsonObject payload) {
     JsonObject oldObject = payload.getJsonObject("old");
     JsonObject newObject = payload.getJsonObject("new");
 
@@ -40,7 +41,7 @@ public class ServicePointUpdateProcessorForRequest extends UpdateEventProcessor<
         .setPickupServicePointName(newServicePointName)));
     }
 
-    return changes;
+    return Future.succeededFuture(changes);
   }
 
   @Override
