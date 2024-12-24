@@ -238,7 +238,6 @@ public class EventConsumerVerticleTest extends ApiTests {
     //Change ServicePoint Name in stub and publish SP update event
     JsonObject servicePointNew = servicePoint.copy();
     servicePointNew.put("name", "ServicePoint-2-Changed");
-    createStubForServicePoints(List.of(servicePoint));
     publishServicePointUpdateEvent(servicePoint, servicePointNew);
 
     // Expected RETRIEVAL_SERVICE_POINT in item
