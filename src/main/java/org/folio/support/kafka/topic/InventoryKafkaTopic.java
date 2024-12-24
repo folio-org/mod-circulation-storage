@@ -4,7 +4,8 @@ import org.folio.kafka.services.KafkaTopic;
 
 public enum InventoryKafkaTopic implements KafkaTopic {
   ITEM("item", 10),
-  SERVICE_POINT("service-point", 10);
+  SERVICE_POINT("service-point", 10),
+  LOCATION("location", 10);
 
   private final String topic;
   private final int partitions;
