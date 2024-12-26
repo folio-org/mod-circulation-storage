@@ -21,6 +21,7 @@ import static org.folio.rest.tools.utils.ModuleName.getModuleVersion;
 import static org.folio.rest.util.OkapiConnectionParams.OKAPI_TENANT_HEADER;
 import static org.folio.rest.util.OkapiConnectionParams.OKAPI_URL_HEADER;
 import static org.folio.service.event.InventoryEventType.INVENTORY_ITEM_UPDATED;
+import static org.folio.service.event.InventoryEventType.INVENTORY_LOCATION_UPDATED;
 import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_DELETED;
 import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_UPDATED;
 import static org.folio.service.event.handler.processor.ItemUpdateProcessorForRequest.ITEM_EFFECTIVE_LOCATION_ID;
@@ -96,6 +97,8 @@ public class EventConsumerVerticleTest extends ApiTests {
     "%s.%s.inventory.item", environment(), TENANT_ID);
   private static final String INVENTORY_SERVICE_POINT_TOPIC = format(
     "%s.%s.inventory.service-point", environment(), TENANT_ID);
+  private static final String INVENTORY_LOCATION_TOPIC = format(
+          "%s.%s.inventory.location", environment(), TENANT_ID);
 
   private static KafkaProducer<String, JsonObject> producer;
   private static KafkaAdminClient adminClient;
@@ -235,7 +238,6 @@ public class EventConsumerVerticleTest extends ApiTests {
     //Change ServicePoint Name in stub and publish SP update event
     JsonObject servicePointNew = servicePoint.copy();
     servicePointNew.put("name", "ServicePoint-2-Changed");
-    createStubForServicePoints(List.of(servicePoint));
     publishServicePointUpdateEvent(servicePoint, servicePointNew);
 
     // Expected RETRIEVAL_SERVICE_POINT in item
@@ -245,6 +247,42 @@ public class EventConsumerVerticleTest extends ApiTests {
 
     waitUntilValueIsIncreased(initialOffset, EventConsumerVerticleTest::getOffsetForServicePointUpdateEvents);
     verifyRequestItemRetrievalServicePoint(REQUEST_ID, expectedItemRetrivalServicePoint);
+  }
+
+  @Test
+  public void requestItemLocationIsSetWhenItemEffectiveLocationNameChange() {
+    //Creating and mocking ServicePoint
+    String servicePointId = UUID.randomUUID().toString();
+    JsonObject servicePoint = buildServicePoint(servicePointId, "ServicePoint-1");
+    createStubForServicePoints(List.of(servicePoint));
+
+    //Creating and mocking Location
+    String locationId = UUID.randomUUID().toString();
+    JsonObject location = buildLocation(locationId, "Location-1", servicePointId);
+    createStubForLocations(List.of(location));
+
+    //Creating request with location in item object
+    JsonObject item = buildItem();
+    JsonObject request = buildRequest(REQUEST_ID, item);
+    JsonObject requestItem = request.getJsonObject("item");
+    requestItem.put(ITEM_EFFECTIVE_LOCATION_ID, locationId);
+    requestItem.put(ITEM_EFFECTIVE_LOCATION_NAME, location.getString("name"));
+    createRequest(request);
+
+    int initialOffset = getOffsetForLocationUpdateEvents();
+
+    //Change Location Name in stub and publish location update event
+    JsonObject locationNew = location.copy();
+    locationNew.put("name", "Location-2-Changed");
+    publishLocationUpdateEvent(location, locationNew);
+
+    // Expected LOCATION in item
+    JsonObject expectedItemLocation = new JsonObject();
+    expectedItemLocation.put(ITEM_EFFECTIVE_LOCATION_ID, locationId);
+    expectedItemLocation.put(ITEM_EFFECTIVE_LOCATION_NAME, locationNew.getString("name"));
+
+    waitUntilValueIsIncreased(initialOffset, EventConsumerVerticleTest::getOffsetForLocationUpdateEvents);
+    verifyRequestItemEffectiveLocation(REQUEST_ID, expectedItemLocation);
   }
 
   @Test
@@ -672,6 +710,10 @@ public class EventConsumerVerticleTest extends ApiTests {
     publishEvent(INVENTORY_SERVICE_POINT_TOPIC, buildUpdateEvent(oldServicePoint, newServicePoint));
   }
 
+  private void publishLocationUpdateEvent(JsonObject oldLocation, JsonObject newLocation) {
+    publishEvent(INVENTORY_LOCATION_TOPIC, buildUpdateEvent(oldLocation, newLocation));
+  }
+
   private void publishServicePointDeleteEvent(JsonObject servicePoint) {
     publishEvent(INVENTORY_SERVICE_POINT_TOPIC, buildDeleteEvent(servicePoint));
   }
@@ -750,6 +792,17 @@ public class EventConsumerVerticleTest extends ApiTests {
               JsonObject actualItem = new JsonObject();
               actualItem.put(RETRIEVAL_SERVICE_POINT_ID, requestItem.getString(RETRIEVAL_SERVICE_POINT_ID));
               actualItem.put(RETRIEVAL_SERVICE_POINT_NAME, requestItem.getString(RETRIEVAL_SERVICE_POINT_NAME));
+              return actualItem;
+            }, equalTo(itemObject));
+  }
+
+  private JsonObject verifyRequestItemEffectiveLocation(String requestId, JsonObject itemObject) {
+    return waitAtMost(60, SECONDS)
+            .until(() -> {
+              JsonObject requestItem = getRequestItem(requestId);
+              JsonObject actualItem = new JsonObject();
+              actualItem.put(ITEM_EFFECTIVE_LOCATION_ID, requestItem.getString(ITEM_EFFECTIVE_LOCATION_ID));
+              actualItem.put(ITEM_EFFECTIVE_LOCATION_NAME, requestItem.getString(ITEM_EFFECTIVE_LOCATION_NAME));
               return actualItem;
             }, equalTo(itemObject));
   }
@@ -845,6 +898,11 @@ public class EventConsumerVerticleTest extends ApiTests {
   private static Integer getOffsetForServicePointUpdateEvents() {
     return getOffset(INVENTORY_SERVICE_POINT_TOPIC,
       buildConsumerGroupId(INVENTORY_SERVICE_POINT_UPDATED.name()));
+  }
+
+  private static Integer getOffsetForLocationUpdateEvents() {
+    return getOffset(INVENTORY_LOCATION_TOPIC,
+            buildConsumerGroupId(INVENTORY_LOCATION_UPDATED.name()));
   }
 
   private static Integer getOffsetForServicePointDeleteEvents() {
