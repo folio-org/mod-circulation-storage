@@ -1,3 +1,9 @@
+## 17.3.3 2025-01-13
+* Add new LocationUpdateKafkaProcessor to sync location with request table (CIRCSTORE-556)
+* Add new class like ServicePointUpdateProcessorForRequest to sync RetrievalSP updates in Request records (CIRCSTORE-541)
+* Extend ItemUpdateProcessorForRequest to sync item updates in Request records (CIRCSTORE-540)
+* Filter request by Retrieval Service Point (CIRCSTORE-539)
+
 ## 17.3.2 2024-12-12
 * Add Intermediate ECS request phase (CIRCSTORE-542)
 

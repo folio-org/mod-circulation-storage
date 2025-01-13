@@ -29,6 +29,14 @@
     {
       "id": "configuration",
       "version": "2.0"
+    },
+    {
+      "id": "locations",
+      "version": "3.1"
+    },
+    {
+      "id": "service-points",
+      "version": "3.4"
     }
   ],
   "provides": [
@@ -179,7 +187,7 @@
     },
     {
       "id": "request-storage",
-      "version": "6.1",
+      "version": "6.2",
       "handlers": [
         {
           "methods": ["GET"],

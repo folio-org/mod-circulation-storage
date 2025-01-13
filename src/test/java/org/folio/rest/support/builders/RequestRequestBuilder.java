@@ -1,18 +1,16 @@
 package org.folio.rest.support.builders;
 
-import java.util.UUID;
-import java.util.stream.Collectors;
-
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import lombok.AllArgsConstructor;
 import lombok.With;
-
 import org.folio.rest.jaxrs.model.SearchIndex;
+import org.folio.rest.jaxrs.model.Tags;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-import org.folio.rest.jaxrs.model.Tags;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @With
@@ -110,6 +108,11 @@ public class RequestRequestBuilder extends JsonBuilder {
     if (this.itemSummary != null) {
       final JsonObject item = new JsonObject();
       put(item, "barcode", this.itemSummary.barcode);
+
+      put(item, "itemEffectiveLocationId", this.itemSummary.itemEffectiveLocationId);
+      put(item, "itemEffectiveLocationName", this.itemSummary.itemEffectiveLocationName);
+      put(item, "retrievalServicePointId", this.itemSummary.retrievalServicePointId);
+      put(item, "retrievalServicePointName", this.itemSummary.retrievalServicePointName);
 
       final JsonArray identifiers = new JsonArray(this.itemSummary.identifiers
         .stream()

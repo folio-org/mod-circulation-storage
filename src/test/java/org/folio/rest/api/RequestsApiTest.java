@@ -41,6 +41,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -126,6 +127,10 @@ public class RequestsApiTest extends ApiTests {
     UUID holdingsRecordId = UUID.randomUUID();
     UUID instanceId = UUID.randomUUID();
     UUID pickupServicePointId = UUID.randomUUID();
+    String itemEffectiveLocationId = UUID.randomUUID().toString();
+    String itemEffectiveLocationName = "Book";
+    String retrievalServicePointId = UUID.randomUUID().toString();
+    String retrievalServicePointName = "SP-1";
     DateTime requestDate = new DateTime(2017, 7, 22, 10, 22, 54, DateTimeZone.UTC);
     DateTime requestExpirationDate = new DateTime(2017, 7, 30, 0, 0, DateTimeZone.UTC);
     DateTime holdShelfExpirationDate = new DateTime(2017, 8, 31, 0, 0, DateTimeZone.UTC);
@@ -133,7 +138,9 @@ public class RequestsApiTest extends ApiTests {
     UUID isbnIdentifierId = UUID.randomUUID();
     UUID issnIdentifierId = UUID.randomUUID();
 
-    final RequestItemSummary nod = new RequestItemSummary("Nod", "565578437802")
+    final RequestItemSummary nod = new RequestItemSummary("Nod",
+      "565578437802", Collections.emptyList(), itemEffectiveLocationId,
+      itemEffectiveLocationName, retrievalServicePointId, retrievalServicePointName)
       .addIdentifier(isbnIdentifierId, "978-92-8011-566-9")
       .addIdentifier(issnIdentifierId, "2193988");
 
@@ -182,6 +189,10 @@ public class RequestsApiTest extends ApiTests {
     assertThat(representation.containsKey("item"), is(true));
     JsonObject item = representation.getJsonObject("item");
     assertThat(item.getString("barcode"), is("565578437802"));
+    assertThat(item.getString("itemEffectiveLocationId"), is(itemEffectiveLocationId));
+    assertThat(item.getString("itemEffectiveLocationName"), is(itemEffectiveLocationName));
+    assertThat(item.getString("retrievalServicePointId"), is(retrievalServicePointId));
+    assertThat(item.getString("retrievalServicePointName"), is(retrievalServicePointName));
 
     assertThat(representation.containsKey("instance"), is(true));
     JsonObject instance = representation.getJsonObject("instance");
