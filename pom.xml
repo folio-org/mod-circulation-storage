@@ -229,7 +229,7 @@
     <url>https://github.com/folio-org/mod-circulation-storage</url>
     <connection>scm:git:git://github.com:folio-org/mod-circulation-storage.git</connection>
     <developerConnection>scm:git:git@github.com:folio-org/mod-circulation-storage.git</developerConnection>
-    <tag>v17.3.0</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <build>
