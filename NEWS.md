@@ -1,3 +1,21 @@
+## 17.3.3 2025-01-13
+* Add new LocationUpdateKafkaProcessor to sync location with request table (CIRCSTORE-556)
+* Add new class like ServicePointUpdateProcessorForRequest to sync RetrievalSP updates in Request records (CIRCSTORE-541)
+* Extend ItemUpdateProcessorForRequest to sync item updates in Request records (CIRCSTORE-540)
+* Filter request by Retrieval Service Point (CIRCSTORE-539)
+
+## 17.3.2 2024-12-12
+* Add Intermediate ECS request phase (CIRCSTORE-542)
+
+## 17.3.1 2024-11-30
+* Add ILR support for publishing batch request update events (CIRCSTORE-526)
+* Publish request batch event when requests are reordered (CIRCSTORE-521)
+* Create new transit staff slip for mediated request activities (CIRCSTORE-525)
+* Update instead save with the same name circ settings (CIRCSTORE-519)
+* Create CRUD API for storing `circulation-settings` (CIRCSTORE-509)
+* Add `ecsRequestPhase` field to request schema (CIRCSTORE-502)
+* Review and cleanup Module Descriptor for mod-circulation-storage (CIRCSTORE-524)
+
 ## 17.3.0 2024-10-30
 * Upgrade RMB to 35.3.0, Vert.x to 4.5.9, Kafka wrapper to 3.1.1 (CIRCSTORE-520, CIRCSTORE-536, CIRCSTORE-499)
 * Upgrade `holdings-storage` API (CIRCSTORE-533)
