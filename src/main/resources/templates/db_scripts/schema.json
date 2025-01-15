@@ -526,7 +526,7 @@
       {
       "run": "before",
       "snippetPath": "createIsbnFunctions.sql",
-      "fromModuleVersion": "12.3.0"
+      "fromModuleVersion": "17.3.4"
     },
     {
       "run": "after",

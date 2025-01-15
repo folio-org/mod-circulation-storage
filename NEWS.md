@@ -1,3 +1,6 @@
+* ## 17.2.5 2025-01-15
+* Update normalize\_isbns to have full schema path (CIRCSTORE-553)
+
 * ## 17.2.4 2024-08-22
 * Upgrade Vertx from 4.5.5 to 4.5.9 fixing Snappy vulns (CIRCSTORE-520)
 
