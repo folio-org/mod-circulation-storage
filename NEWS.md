@@ -1,3 +1,6 @@
+## 17.3.4 2025-01-15
+* Create script to update normalize_isbns to have full schema path (CIRCSTORE-553)
+
 ## 17.3.3 2025-01-13
 * Add new LocationUpdateKafkaProcessor to sync location with request table (CIRCSTORE-556)
 * Add new class like ServicePointUpdateProcessorForRequest to sync RetrievalSP updates in Request records (CIRCSTORE-541)
