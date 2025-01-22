@@ -1,3 +1,6 @@
+## 17.3.5 2025-01-22
+*  Support DCB Re-requests added isDcbReRequestCancellation in Request.json (CIRCSTORE-552)
+
 ## 17.3.4 2025-01-15
 * Create script to update normalize_isbns to have full schema path (CIRCSTORE-553)
 
