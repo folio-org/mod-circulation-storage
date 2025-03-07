@@ -28,8 +28,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
-    <vertx-version>4.5.9</vertx-version>
-    <raml-module-builder-version>35.3.0</raml-module-builder-version>
+    <vertx-version>4.5.13</vertx-version>
+    <raml-module-builder-version>35.4.0</raml-module-builder-version>
     <spring.version>6.1.5</spring.version>
 
     <!--Folio dependencies properties-->
@@ -131,7 +131,7 @@
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
-      <version>1.18.28</version>
+      <version>1.18.36</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -244,7 +244,7 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.8.1</version>
         <configuration>
-          <release>17</release>
+          <release>21</release>
           <encoding>UTF-8</encoding>
         </configuration>
       </plugin>
@@ -298,7 +298,7 @@
         <configuration>
           <verbose>true</verbose>
           <showWeaveInfo>false</showWeaveInfo>
-          <release>17</release>
+          <release>21</release>
           <includes>
             <include>**/impl/*.java</include>
             <include>**/*.aj</include>
