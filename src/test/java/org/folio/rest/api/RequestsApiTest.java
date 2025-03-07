@@ -90,6 +90,7 @@ import junitparams.Parameters;
 public class RequestsApiTest extends ApiTests {
 
   private final String METADATA_PROPERTY = "metadata";
+
   private static final String REQUEST_STORAGE_URL = "/request-storage/requests";
   private static final String CANCEL_REASON_URL = "/cancellation-reason-storage/cancellation-reasons";
   private static final String REQUEST_TABLE = "request";
