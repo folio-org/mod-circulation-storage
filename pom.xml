@@ -30,7 +30,7 @@
     <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
     <vertx-version>4.5.13</vertx-version>
     <raml-module-builder-version>35.4.0</raml-module-builder-version>
-    <spring.version>6.1.5</spring.version>
+    <spring.version>6.2.3</spring.version>
 
     <!--Folio dependencies properties-->
     <folio-module-descriptor-validator.version>1.0.0</folio-module-descriptor-validator.version>
