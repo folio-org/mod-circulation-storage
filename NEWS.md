@@ -1,17 +1,19 @@
-## 17.3.5 2025-01-22
-*  Support DCB Re-requests added isDcbReRequestCancellation in Request.json (CIRCSTORE-552)
-
-## 17.3.4 2025-01-15
+## 17.4.0 2025-03-12
+* Upgrade to Java v21 (CIRCSTORE-576)
+* Sync location changes with request records (CIRCSTORE-556)
+* Sync retrieval SP updates with request records (CIRCSTORE-541)
+* Sync item updates with request records (CIRCSTORE-540)
 * Create script to update normalize_isbns to have full schema path (CIRCSTORE-553)
-
-## 17.3.3 2025-01-13
-* Add new LocationUpdateKafkaProcessor to sync location with request table (CIRCSTORE-556)
-* Add new class like ServicePointUpdateProcessorForRequest to sync RetrievalSP updates in Request records (CIRCSTORE-541)
-* Extend ItemUpdateProcessorForRequest to sync item updates in Request records (CIRCSTORE-540)
+* Support DCB Re-requests (CIRCSTORE-552)
+* Support for intermediate requests (CIRCSTORE-542)
 * Filter request by Retrieval Service Point (CIRCSTORE-539)
-
-## 17.3.2 2024-12-12
-* Add Intermediate ECS request phase (CIRCSTORE-542)
+* Review and cleanup Module Descriptor (CIRCSTORE-524)
+* Add ILR support for publishing batch request update events (CIRCSTORE-526)
+* Publish request batch event when requests are reordered (CIRCSTORE-521)
+* Create new transit staff slip for mediated request activities (CIRCSTORE-525)
+* Update instead save with the same name circ settings (CIRCSTORE-519)
+* Create CRUD API for storing circulation-settings (CIRCSTORE-509)
+* Add ecsRequestPhase field to request schema (CIRCSTORE-502)
 
 ## 17.3.1 2024-11-30
 * Add ILR support for publishing batch request update events (CIRCSTORE-526)
