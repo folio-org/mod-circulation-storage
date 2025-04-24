@@ -15,6 +15,7 @@ import org.folio.rest.configuration.TlrSettings;
 import org.folio.rest.jaxrs.model.Setting;
 import org.folio.rest.jaxrs.model.SettingsEntries;
 import org.folio.support.exception.HttpException;
+import org.folio.util.StringUtil;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -24,8 +25,8 @@ import io.vertx.core.json.JsonObject;
 
 public class SettingsClient extends OkapiClient {
   private static final Logger log = LogManager.getLogger(MethodHandles.lookup().lookupClass());
-  private static final String URL =
-    "/settings/entries?query=(scope==circulation and key==generalTlr)";
+  private static final String URL = "/settings/entries?query=" +
+    StringUtil.urlEncode("(scope==circulation and key==generalTlr)");
 
   public SettingsClient(Vertx vertx, Map<String, String> okapiHeaders) {
     super(vertx, okapiHeaders);
