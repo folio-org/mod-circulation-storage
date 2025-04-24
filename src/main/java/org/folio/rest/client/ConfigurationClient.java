@@ -39,17 +39,14 @@ public class ConfigurationClient extends OkapiClient {
   }
 
   public Future<TlrSettingsConfiguration> getTlrSettings() {
-    log.info("getTlrSettings:: 1");
     return getTlrSettings(() -> failedFuture("Failed to find TLR configuration"));
   }
 
   private Future<TlrSettingsConfiguration> getTlrSettings(
     Supplier<Future<TlrSettingsConfiguration>> otherwise) {
 
-    log.info("getTlrSettings:: 2");
     return okapiGet(URL)
       .compose(response -> {
-        log.info("getTlrSettings:: 3 {}", response.bodyAsString());
         int responseStatus = response.statusCode();
         if (responseStatus != 200) {
           String errorMessage = format("Failed to find TLR configuration. Response: %d %s",
@@ -58,18 +55,12 @@ public class ConfigurationClient extends OkapiClient {
           return failedFuture(new HttpException(GET, URL, response));
         } else {
           try {
-            log.info("getTlrSettings:: 4");
             return objectMapper.readValue(response.bodyAsString(), KvConfigurations.class)
               .getConfigs().stream()
               .findFirst()
               .map(Config::getValue)
               .map(JsonObject::new)
               .map(TlrSettingsConfiguration::from)
-              .map(tlrSettings -> {
-                log.info("getTlrSettings:: 5 enabled: {}",
-                  tlrSettings.isTitleLevelRequestsFeatureEnabled());
-                return tlrSettings;
-              })
               .map(Future::succeededFuture)
               .orElseGet(otherwise);
           } catch (JsonProcessingException e) {

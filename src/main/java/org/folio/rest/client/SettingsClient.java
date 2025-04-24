@@ -55,7 +55,8 @@ public class SettingsClient extends OkapiClient {
                 .getItems().stream()
                 .findFirst()
                 .map(Setting::getValue)
-                .map(JsonObject.class::cast)
+                .map(Map.class::cast)
+                .map(JsonObject::new)
                 .map(TlrSettings::from)
                 .map(tlrSettings -> {
                   log.info("getTlrSettings:: 5 enabled: {}",
