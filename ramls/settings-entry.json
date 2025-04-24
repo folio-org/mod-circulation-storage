@@ -1,0 +1,32 @@
+{
+  "description": "Setting",
+  "type": "object",
+  "javaType": "org.folio.rest.jaxrs.model.Setting",
+  "properties": {
+    "id": {
+      "description": "Identifier",
+      "type": "string",
+      "format": "uuid"
+    },
+    "scope": {
+      "type": "string",
+      "description": "Scope for this entry (normally a module)"
+    },
+    "key": {
+      "type": "string",
+      "description": "Key within scope for this setting"
+    },
+    "value": {
+      "description": "Settings value (any type)"
+    },
+    "userId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Owner of this setting (optional)"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "id", "scope", "key", "value"
+  ]
+}

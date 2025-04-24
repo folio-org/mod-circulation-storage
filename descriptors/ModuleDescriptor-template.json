@@ -37,19 +37,25 @@
     {
       "id": "service-points",
       "version": "3.4"
+    },
+    {
+      "id": "settings",
+      "version": "1.0"
     }
   ],
   "provides": [
     {
       "id": "request-storage-batch",
-      "version": "2.0",
+      "version": "2.1",
       "handlers": [
         {
           "methods": ["POST"],
           "pathPattern": "/request-storage-batch/requests",
           "permissionsRequired": ["circulation-storage.request-batch.item.post"],
           "modulePermissions": [
-            "configuration.entries.collection.get"
+            "mod-settings.entries.item.get",
+            "mod-settings.entries.collection.get",
+            "mod-settings.global.read.circulation"
           ]
         }
       ]
