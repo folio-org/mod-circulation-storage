@@ -39,14 +39,17 @@ public class ConfigurationClient extends OkapiClient {
   }
 
   public Future<TlrSettingsConfiguration> getTlrSettings() {
+    log.info("getTlrSettings:: 1");
     return getTlrSettings(() -> failedFuture("Failed to find TLR configuration"));
   }
 
   private Future<TlrSettingsConfiguration> getTlrSettings(
     Supplier<Future<TlrSettingsConfiguration>> otherwise) {
 
+    log.info("getTlrSettings:: 2");
     return okapiGet(URL)
       .compose(response -> {
+        log.info("getTlrSettings:: 3");
         int responseStatus = response.statusCode();
         if (responseStatus != 200) {
           String errorMessage = format("Failed to find TLR configuration. Response: %d %s",

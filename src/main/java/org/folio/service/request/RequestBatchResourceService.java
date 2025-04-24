@@ -93,11 +93,6 @@ public class RequestBatchResourceService {
       allDatabaseOperations.size());
 
     configurationClient.getTlrSettings()
-      .map(tlrSettings -> {
-        log.info("executeRequestBatchUpdate:: TLR feature enabled: {}",
-          tlrSettings.isTitleLevelRequestsFeatureEnabled());
-        return tlrSettings;
-      })
       .map(tlrSettings -> mapRequestsToPayload(requests, tlrSettings))
       .compose(payload -> batchResourceService.executeBatchUpdate(allDatabaseOperations, onFinishHandler)
         .compose(v -> eventPublisher.publishCreated(payload.getInstanceId(), payload)));
@@ -105,6 +100,10 @@ public class RequestBatchResourceService {
 
   private RequestQueueReordering mapRequestsToPayload(List<Request> requests,
     TlrSettingsConfiguration tlrSettingsConfiguration) {
+
+    log.info("mapRequestsToPayload:: queue size: {}; TLR fearue enabled: {}",
+      requests == null ? 0 : requests.size(),
+      tlrSettingsConfiguration.isTitleLevelRequestsFeatureEnabled());
 
     var firstRequest = requests.get(0);
     var queueLevel = tlrSettingsConfiguration.isTitleLevelRequestsFeatureEnabled()
