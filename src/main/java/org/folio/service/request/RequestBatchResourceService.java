@@ -13,6 +13,8 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.folio.rest.client.ConfigurationClient;
+import org.folio.rest.configuration.TlrSettingsConfiguration;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.jaxrs.model.RequestQueueReordering;
 import org.folio.rest.persist.PgUtil;
@@ -37,12 +39,14 @@ public class RequestBatchResourceService {
   private final BatchResourceService batchResourceService;
   private final String tenantName;
   private final EntityChangedEventPublisher<String, RequestQueueReordering> eventPublisher;
+  private final ConfigurationClient configurationClient;
 
   public RequestBatchResourceService(Context context, Map<String, String> okapiHeaders) {
     this.batchResourceService = new BatchResourceService(PgUtil.postgresClient(context,
       okapiHeaders));
     this.tenantName = tenantId(okapiHeaders);
     this.eventPublisher = requestBatchEventPublisher(context, okapiHeaders);
+    this.configurationClient = new ConfigurationClient(context.owner(), okapiHeaders);
   }
 
   /**
@@ -88,26 +92,33 @@ public class RequestBatchResourceService {
     log.info("Executing batch update, total records to update [{}] (including remove positions)",
       allDatabaseOperations.size());
 
-    RequestQueueReordering payload = mapRequestsToPayload(requests);
-    log.info("executeRequestBatchUpdate:: instanceId: {}, itemId: {}, requestLevel: {}, " +
-        "requests: {}", payload.getInstanceId(), payload.getItemId(), payload.getRequestLevel(),
-      payload.getRequestIds());
-
-    batchResourceService.executeBatchUpdate(allDatabaseOperations, onFinishHandler)
-      .compose(v -> eventPublisher.publishCreated(payload.getInstanceId(), payload));
+    configurationClient.getTlrSettings()
+      .map(tlrSettings -> mapRequestsToPayload(requests, tlrSettings))
+      .compose(payload -> batchResourceService.executeBatchUpdate(allDatabaseOperations, onFinishHandler)
+        .compose(v -> eventPublisher.publishCreated(payload.getInstanceId(), payload)));
   }
 
-  private RequestQueueReordering mapRequestsToPayload(List<Request> requests) {
-    var firstRequest = requests.get(0);
+  private RequestQueueReordering mapRequestsToPayload(List<Request> requests,
+    TlrSettingsConfiguration tlrSettingsConfiguration) {
 
-    return new RequestQueueReordering()
+    var firstRequest = requests.get(0);
+    var queueLevel = tlrSettingsConfiguration.isTitleLevelRequestsFeatureEnabled()
+      ? RequestQueueReordering.RequestLevel.TITLE
+      : RequestQueueReordering.RequestLevel.ITEM;
+
+    var payload = new RequestQueueReordering()
       .withRequestIds(requests.stream()
         .map(Request::getId)
         .toList())
       .withInstanceId(firstRequest.getInstanceId())
       .withItemId(firstRequest.getItemId())
-      .withRequestLevel(RequestQueueReordering.RequestLevel.valueOf(
-        firstRequest.getRequestLevel().name()));
+      .withRequestLevel(queueLevel);
+
+    log.debug("mapRequestsToPayload:: instanceId: {}, itemId: {}, requestLevel: {}, " +
+        "requests: {}", payload.getInstanceId(), payload.getItemId(), payload.getRequestLevel(),
+      payload.getRequestIds());
+
+    return payload;
   }
 
   private Function<SQLConnection, Future<RowSet<Row>>> removePositionsForRequestsBatch(
