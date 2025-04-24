@@ -47,7 +47,10 @@
         {
           "methods": ["POST"],
           "pathPattern": "/request-storage-batch/requests",
-          "permissionsRequired": ["circulation-storage.request-batch.item.post"]
+          "permissionsRequired": ["circulation-storage.request-batch.item.post"],
+          "modulePermissions": [
+            "configuration.entries.collection.get"
+          ]
         }
       ]
     },
