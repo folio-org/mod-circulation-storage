@@ -25,8 +25,7 @@ public class TlrSettings {
       return new TlrSettings(
         getBooleanProperty(jsonObject, "titleLevelRequestsFeatureEnabled"),
         getBooleanProperty(jsonObject, "createTitleLevelRequestsByDefault"),
-        getBooleanProperty(jsonObject, "tlrHoldShouldFollowCirculationRules")
-      );
+        getBooleanProperty(jsonObject, "tlrHoldShouldFollowCirculationRules"));
     }
     catch (IllegalArgumentException e) {
       log.error("Failed to parse TLR setting", e);

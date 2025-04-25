@@ -53,7 +53,7 @@ public class OkapiClient {
   }
 
   Future<HttpResponse<Buffer>> okapiGet(String path) {
-    log.info("okapiGet:: path: {}", path);
+    log.debug("okapiGet:: path: {}", path);
 
     try {
       return webClient.getAbs(okapiUrl + path)

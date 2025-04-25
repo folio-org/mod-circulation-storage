@@ -36,17 +36,12 @@ public class SettingsClient extends OkapiClient {
     return getTlrSettings(() -> succeededFuture(new TlrSettings(false, false, false)));
   }
 
-  private Future<TlrSettings> getTlrSettings() {
-    log.info("getTlrSettings:: 1");
-    return getTlrSettings(() -> failedFuture("Failed to find TLR configuration"));
-  }
-
   private Future<TlrSettings> getTlrSettings(Supplier<Future<TlrSettings>> otherwise) {
-    log.info("getTlrSettings:: 2");
+    log.debug("getTlrSettings:: Fetching TLR settings: {}", URL);
     return okapiGet(URL)
       .compose(response -> {
-          log.info("getTlrSettings:: 3 {}", response.bodyAsString());
           int responseStatus = response.statusCode();
+          log.debug("getTlrSettings:: Response status: {}", responseStatus);
           if (responseStatus != 200) {
             String errorMessage = format("Failed to find TLR configuration. Response: %d %s",
               responseStatus, response.bodyAsString());
@@ -54,7 +49,6 @@ public class SettingsClient extends OkapiClient {
             return failedFuture(new HttpException(GET, URL, response));
           } else {
             try {
-              log.info("getTlrSettings:: 4");
               return objectMapper.readValue(response.bodyAsString(), SettingsEntries.class)
                 .getItems().stream()
                 .findFirst()
@@ -62,11 +56,6 @@ public class SettingsClient extends OkapiClient {
                 .map(Map.class::cast)
                 .map(JsonObject::new)
                 .map(TlrSettings::from)
-                .map(tlrSettings -> {
-                  log.info("getTlrSettings:: 5 enabled: {}",
-                    tlrSettings.isTitleLevelRequestsFeatureEnabled());
-                  return tlrSettings;
-                })
                 .map(Future::succeededFuture)
                 .orElseGet(otherwise);
             } catch (JsonProcessingException e) {

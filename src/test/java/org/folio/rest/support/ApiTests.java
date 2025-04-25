@@ -156,16 +156,11 @@ public class ApiTests {
               .put("value", new JsonObject()
                 .put("titleLevelRequestsFeatureEnabled", titleLevelRequestsFeatureEnabled)
                 .put("createTitleLevelRequestsByDefault", createTitleLevelRequestsByDefault)
-                .put("tlrHoldShouldFollowCirculationRules", tlrHoldShouldFollowCirculationRules)
-              )
-
-            ))
+                .put("tlrHoldShouldFollowCirculationRules", tlrHoldShouldFollowCirculationRules))))
             .put("resultInfo", new JsonObject()
               .put("totalRecords", 1)
-              .put("diagnostics", JsonArray.of())
-            )
-            .encodePrettily()
-        )));
+              .put("diagnostics", JsonArray.of()))
+            .encodePrettily())));
   }
 
   protected void stubTlrConfiguration(boolean isTlrEnabled) {
