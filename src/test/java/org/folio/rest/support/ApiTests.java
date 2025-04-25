@@ -36,6 +36,7 @@ import org.junit.BeforeClass;
 import com.github.tomakehurst.wiremock.client.WireMock;
 
 import io.vertx.core.Future;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import lombok.SneakyThrows;
 
@@ -142,7 +143,33 @@ public class ApiTests {
     return future.get(5, TimeUnit.SECONDS);
   }
 
-  protected void stubTlrSettings(boolean isTlrEnabled) {
+  protected void stubTlrSettings(boolean titleLevelRequestsFeatureEnabled,
+    boolean createTitleLevelRequestsByDefault, boolean tlrHoldShouldFollowCirculationRules) {
+    StorageTestSuite.getWireMockServer()
+      .stubFor(WireMock.get(urlPathMatching("/settings.*"))
+        .willReturn(ok().withBody(
+          new JsonObject()
+            .put("items", JsonArray.of(new JsonObject()
+              .put("id", randomId())
+              .put("scope", "circulation")
+              .put("key", "generalTlr")
+              .put("value", new JsonObject()
+                .put("titleLevelRequestsFeatureEnabled", titleLevelRequestsFeatureEnabled)
+                .put("createTitleLevelRequestsByDefault", createTitleLevelRequestsByDefault)
+                .put("tlrHoldShouldFollowCirculationRules", tlrHoldShouldFollowCirculationRules))))
+            .put("resultInfo", new JsonObject()
+              .put("totalRecords", 1)
+              .put("diagnostics", JsonArray.of()))
+            .encodePrettily())));
+  }
+
+  protected void stub404ForTlrSettings() {
+    StorageTestSuite.getWireMockServer()
+      .stubFor(WireMock.get(urlPathMatching("/settings.*"))
+        .willReturn(notFound().withBody("Resource not found")));
+  }
+
+  protected void stubTlrConfiguration(boolean isTlrEnabled) {
     final var tlrSettingsConfiguration = new TlrSettingsConfiguration(
       isTlrEnabled, false, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
     StorageTestSuite.getWireMockServer().stubFor(WireMock.get(urlPathMatching(
@@ -154,19 +181,19 @@ public class ApiTests {
         .encodePrettily())));
   }
 
-  protected void stub404ForTlrSettings() {
+  protected void stub404ForTlrConfiguration() {
     StorageTestSuite.getWireMockServer().stubFor(WireMock.get(urlPathMatching(
         CONFIGURATIONS_ENTRIES_URL_PATTERN))
       .willReturn(notFound().withBody("Resource not found")));
   }
 
-  protected void stubWithInvalidTlrSettings() {
+  protected void stubWithInvalidTlrConfiguration() {
     StorageTestSuite.getWireMockServer().stubFor(WireMock.get(urlPathMatching(
         CONFIGURATIONS_ENTRIES_URL_PATTERN))
       .willReturn(ok().withBody("Invalid configurations response")));
   }
 
-  protected void stubWithEmptyTlrSettings() {
+  protected void stubWithEmptyTlrConfiguration() {
     StorageTestSuite.getWireMockServer().stubFor(WireMock.get(urlPathMatching(
         CONFIGURATIONS_ENTRIES_URL_PATTERN))
       .willReturn(ok().withBody(mapFrom(
