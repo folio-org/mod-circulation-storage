@@ -92,7 +92,7 @@ public class RequestBatchResourceService {
     log.info("Executing batch update, total records to update [{}] (including remove positions)",
       allDatabaseOperations.size());
 
-    settingsClient.getTlrSettings()
+    settingsClient.getTlrSettingsOrDefault()
       .map(tlrSettings -> mapRequestsToPayload(requests, tlrSettings))
       .compose(payload -> batchResourceService.executeBatchUpdate(allDatabaseOperations, onFinishHandler)
         .compose(v -> eventPublisher.publishCreated(payload.getInstanceId(), payload)));

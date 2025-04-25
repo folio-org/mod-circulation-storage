@@ -32,7 +32,11 @@ public class SettingsClient extends OkapiClient {
     super(vertx, okapiHeaders);
   }
 
-  public Future<TlrSettings> getTlrSettings() {
+  public Future<TlrSettings> getTlrSettingsOrDefault() {
+    return getTlrSettings(() -> succeededFuture(new TlrSettings(false, false, false)));
+  }
+
+  private Future<TlrSettings> getTlrSettings() {
     log.info("getTlrSettings:: 1");
     return getTlrSettings(() -> failedFuture("Failed to find TLR configuration"));
   }

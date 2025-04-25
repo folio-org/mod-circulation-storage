@@ -1,7 +1,5 @@
 package org.folio.rest.api;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.ok;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.storageUrl;
@@ -25,7 +23,6 @@ import java.util.function.Function;
 
 import org.folio.rest.impl.RequestsBatchAPI;
 import org.folio.rest.jaxrs.model.Request;
-import org.folio.rest.jaxrs.model.RequestQueueReordering;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.Response;
@@ -36,9 +33,6 @@ import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import com.github.tomakehurst.wiremock.client.WireMock;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -46,15 +40,13 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
-import junitparams.JUnitParamsRunner;
 
-@RunWith(JUnitParamsRunner.class)
 public class RequestBatchAPITest extends ApiTests {
-
   @Before
   public void beforeEach() throws Exception {
     StorageTestSuite.deleteAll(requestStorageUrl());
     removeAllEvents();
+    stubTlrSettings(true, false, false);
   }
 
   @After
@@ -64,17 +56,6 @@ public class RequestBatchAPITest extends ApiTests {
 
   @Test
   public void canUpdateRequestPositionsInBatch() throws Exception {
-    StorageTestSuite.getWireMockServer()
-      .stubFor(WireMock.get(urlPathMatching("/settings.*"))
-        .willReturn(ok().withBody("{ \"items\" : " +
-          "[{\"id\":\"8bfafdd4-56d7-4e08-b38f-dd0db1d7ab01\"," +
-          "\"scope\":\"circulation\",\"key\":\"generalTlr\"," +
-          "\"value\":{" +
-          "\"titleLevelRequestsFeatureEnabled\":true," +
-          "\"createTitleLevelRequestsByDefault\":false," +
-          "\"tlrHoldShouldFollowCirculationRules\":false}}], " +
-          "\"resultInfo\": {\"totalRecords\":1,\"diagnostics\":[]}}")));
-
     UUID itemId = UUID.randomUUID();
 
     JsonObject firstRequest = createRequestAtPosition(itemId, null, 1);
