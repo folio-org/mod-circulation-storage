@@ -208,6 +208,24 @@ public class RequestBatchAPITest extends ApiTests {
   }
 
   @Test
+  public void failWhenTrlSettingsNotAvailable() throws Exception {
+    stub404ForTlrSettings();
+
+    UUID itemId = UUID.randomUUID();
+
+    JsonObject firstRequest = createRequestAtPosition(itemId, null, 1);
+    JsonObject secondRequest = createRequestAtPosition(itemId, null, 2);
+
+    TextResponse reorderResponse = attemptReorderRequests(ResponseHandler::text,
+      new ReorderRequest(firstRequest, 2),
+      new ReorderRequest(secondRequest, 1)
+    );
+    assertThat(reorderResponse.getStatusCode(), is(500));
+
+    assertRequestsNotUpdated(itemId, firstRequest, secondRequest);
+  }
+
+  @Test
   public void cannotInjectSqlThroughRequestId() throws Exception {
     UUID itemId = UUID.randomUUID();
 

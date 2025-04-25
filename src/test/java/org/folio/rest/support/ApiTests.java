@@ -163,6 +163,12 @@ public class ApiTests {
             .encodePrettily())));
   }
 
+  protected void stub404ForTlrSettings() {
+    StorageTestSuite.getWireMockServer()
+      .stubFor(WireMock.get(urlPathMatching("/settings.*"))
+        .willReturn(notFound().withBody("Resource not found")));
+  }
+
   protected void stubTlrConfiguration(boolean isTlrEnabled) {
     final var tlrSettingsConfiguration = new TlrSettingsConfiguration(
       isTlrEnabled, false, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());

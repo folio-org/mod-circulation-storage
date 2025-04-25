@@ -95,7 +95,8 @@ public class RequestBatchResourceService {
     settingsClient.getTlrSettingsOrDefault()
       .map(tlrSettings -> mapRequestsToPayload(requests, tlrSettings))
       .compose(payload -> batchResourceService.executeBatchUpdate(allDatabaseOperations, onFinishHandler)
-        .compose(v -> eventPublisher.publishCreated(payload.getInstanceId(), payload)));
+        .compose(v -> eventPublisher.publishCreated(payload.getInstanceId(), payload)))
+      .onFailure(t -> onFinishHandler.handle(Future.failedFuture(t)));
   }
 
   private RequestQueueReordering mapRequestsToPayload(List<Request> requests,
