@@ -17,10 +17,10 @@ public class LoansAPI implements LoanStorage {
 
   @Validate
   @Override
-  public void deleteLoanStorageLoans(Map<String, String> okapiHeaders,
+  public void deleteLoanStorageLoans(String query, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,Context vertxContext) {
 
-    new LoanService(vertxContext, okapiHeaders).deleteAll()
+    new LoanService(vertxContext, okapiHeaders).deleteByCql(query)
         .onComplete(asyncResultHandler);
   }
 
@@ -69,7 +69,7 @@ public class LoansAPI implements LoanStorage {
   public void deleteLoanStorageLoansByLoanId(String loanId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-    new LoanService(vertxContext, okapiHeaders).delete(loanId)
+    new LoanService(vertxContext, okapiHeaders).deleteById(loanId)
         .onComplete(asyncResultHandler);
   }
 
