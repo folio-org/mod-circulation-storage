@@ -25,7 +25,6 @@ import org.folio.rest.api.StorageTestSuite;
 import org.folio.rest.configuration.TlrSettingsConfiguration;
 import org.folio.rest.jaxrs.model.Config;
 import org.folio.rest.jaxrs.model.KvConfigurations;
-import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.hamcrest.MatcherAssert;
@@ -213,8 +212,13 @@ public class ApiTests {
       .get(timeoutSeconds, TimeUnit.SECONDS);
   }
 
-  protected static void truncateTable(String tableName) {
-    waitFor(pgClient.delete(tableName, new Criterion()));
+  /**
+   * Truncate one or multiple tables.
+   *
+   * @param tableNames  Comma separated table names
+   */
+  protected static void truncateTables(String tableNames) {
+    waitFor(pgClient.execute("TRUNCATE " + tableNames));
   }
 
   protected static String randomId() {
