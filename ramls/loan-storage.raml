@@ -40,7 +40,7 @@ resourceTypes:
     get:
       is: [pageable,
         searchable: {description: "searchable using CQL",
-                        example: "requesterId=\"cf23adf0-61ba-4887-bf82-956c4aae2260\""},
+                        example: "userId==\"cf23adf0-61ba-4887-bf82-956c4aae2260\""},
         ]
       responses:
         501:
@@ -48,9 +48,16 @@ resourceTypes:
     post:
       is: [validate]
     delete:
+      is: [searchable: { description: "CQL to select loans to delete, use cql.allRecords=1 to delete all",
+                         example: "itemEffectiveLocationIdAtCheckOut==\"fcd64ce1-6995-48f0-840e-89ffa2288371\"" } ]
       responses:
         204:
-          description: "All loans deleted"
+          description: "Loans deleted"
+        400:
+          description: "Bad request, e.g. malformed query parameter"
+          body:
+            text/plain:
+              example: "query parameter is empty"
         500:
           description: "Internal server error, e.g. due to misconfiguration"
           body:
