@@ -39,7 +39,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
-import org.testcontainers.containers.KafkaContainer;
+import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -99,7 +99,7 @@ public class StorageTestSuite {
   private static final WireMockServer wireMockServer = new WireMockServer(PROXY_PORT);
 
   private static final KafkaContainer kafkaContainer
-    = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.2.0"));
+    = new KafkaContainer(DockerImageName.parse("apache/kafka-native:3.8.0"));
 
   /**
    * Return a URL for the path and the parameters.
