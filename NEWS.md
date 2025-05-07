@@ -1,3 +1,6 @@
+## 17.3.6 2025-05-07
+* Set queue level based on TLR feature status (CIRCSTORE-589)
+
 ## 17.3.5 2025-01-22
 *  Support DCB Re-requests added isDcbReRequestCancellation in Request.json (CIRCSTORE-552)
 

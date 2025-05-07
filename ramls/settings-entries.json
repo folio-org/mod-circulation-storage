@@ -1,0 +1,23 @@
+{
+  "description": "Setting entries response",
+  "type": "object",
+  "properties": {
+    "items": {
+      "description": "List of settings",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "settings-entry.json"
+      }
+    },
+    "resultInfo": {
+      "description": "Common result set information",
+      "type": "object",
+      "$ref" : "settings-result-info.json"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "items"
+  ]
+}

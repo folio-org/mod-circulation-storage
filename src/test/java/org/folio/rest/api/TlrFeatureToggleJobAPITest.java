@@ -148,7 +148,7 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
   public void processingShouldRecalculatePositionsForTitleLevelRequests()
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
-    stubTlrSettings(true);
+    stubTlrConfiguration(true);
     UUID firstInstanceId = UUID.randomUUID();
     UUID secondInstanceId = UUID.randomUUID();
     var initialQueue = createItemLevelRequestsQueue(firstInstanceId, secondInstanceId);
@@ -188,7 +188,7 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
   public void processingShouldRecalculatePositionsForItemLevelRequests()
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
-    stubTlrSettings(false);
+    stubTlrConfiguration(false);
     UUID firstItemId = UUID.randomUUID();
     UUID secondItemId = UUID.randomUUID();
     var initialQueue = createTitleLevelRequestsQueue(firstItemId, secondItemId);
@@ -225,7 +225,7 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
   public void processingShouldFailWhenConfigurationIsNotFound() throws MalformedURLException,
     ExecutionException, InterruptedException, TimeoutException {
 
-    stub404ForTlrSettings();
+    stub404ForTlrConfiguration();
     checkFailedTlrFeatureToggleJob("Resource not found");
   }
 
@@ -233,7 +233,7 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
   public void processingShouldFailWhenConfigurationIsInvalid()
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
-    stubWithInvalidTlrSettings();
+    stubWithInvalidTlrConfiguration();
     checkFailedTlrFeatureToggleJob("Unrecognized token");
   }
 
@@ -241,7 +241,7 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
   public void processingShouldFailWhenItemIdIsNull()
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
-    stubTlrSettings(false);
+    stubTlrConfiguration(false);
     UUID firstItemId = UUID.randomUUID();
     createTitleLevelRequestsQueue(firstItemId, null);
     checkFailedTlrFeatureToggleJob("element cannot be mapped to a null key");
