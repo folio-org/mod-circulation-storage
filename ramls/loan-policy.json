@@ -55,6 +55,15 @@
           "description": "Number of items allowed",
           "minimum": 1,
           "maximum": 9999
+        },
+        "forUseAtLocation": {
+          "type": "boolean",
+          "description": "Must items be used in the library"
+        },
+        "holdShelfExpiryPeriodForUseAtLocation" :{
+          "type": "object",
+          "$ref": "time-period.json",
+          "description": "expiration period for items on the hold shelf for use at the location"
         }
       }
     },
