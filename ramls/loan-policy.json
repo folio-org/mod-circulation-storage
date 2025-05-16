@@ -58,7 +58,7 @@
         },
         "forUseAtLocation": {
           "type": "boolean",
-          "description": "Indicates that loaned items be used in the library, i.e. in reading room"
+          "description": "Indicates that loaned items must be used in the library, i.e. in a reading room"
         },
         "holdShelfExpiryPeriodForUseAtLocation" :{
           "type": "object",
