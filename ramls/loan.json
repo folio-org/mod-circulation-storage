@@ -38,7 +38,7 @@
       "additionalProperties": false
     },
     "forUseAtLocation": {
-      "description": "Status of loan/item that is to be used in the library",
+      "description": "Status of loan/item that is to be used in the library, i.e. in a reading room",
       "type": "object",
       "properties": {
         "status": {
