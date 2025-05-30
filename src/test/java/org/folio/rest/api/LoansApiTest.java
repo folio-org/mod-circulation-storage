@@ -4,6 +4,7 @@ import static java.lang.Boolean.TRUE;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForLoan;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertLoanEventCount;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoLoanEvent;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForLoan;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForLoan;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForLoan;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isBadRequest;
@@ -17,6 +18,7 @@ import static org.folio.rest.support.matchers.ValidationResponseMatchers.isValid
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.core.Is.is;
@@ -39,7 +41,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-
+import lombok.SneakyThrows;
 import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.IndividualResource;
@@ -49,6 +51,7 @@ import org.folio.rest.support.TextResponse;
 import org.folio.rest.support.builders.LoanRequestBuilder;
 import org.folio.rest.support.http.AssertingRecordClient;
 import org.folio.rest.support.http.InterfaceUrls;
+import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
@@ -67,10 +70,11 @@ public class LoansApiTest extends ApiTests {
     client, StorageTestSuite.TENANT_ID, InterfaceUrls::loanStorageUrl, "loans");
 
   @Before
-  public void beforeEach()
-    throws MalformedURLException {
-
-    StorageTestSuite.deleteAll(InterfaceUrls.loanStorageUrl());
+  @SneakyThrows
+  public void beforeEach() {
+    pgClient.execute("TRUNCATE loan")
+    .toCompletionStage().toCompletableFuture().get(5, TimeUnit.SECONDS);
+    FakeKafkaConsumer.removeAllEvents();
   }
 
   @After
@@ -1456,6 +1460,50 @@ public class LoansApiTest extends ApiTests {
     JsonObject loan = loanResouce.getJson();
     assertCreateEventForLoan(loan);
     assertRemoveEventForLoan(loan);
+  }
+
+  @Test
+  @SneakyThrows
+  public void canDeleteAllLoans() {
+    loansClient.create(new LoanRequestBuilder().create());
+    loansClient.create(new LoanRequestBuilder().create());
+
+    loansClient.deleteByCql("cql.allRecords=1");
+
+    assertThat(loansClient.getAll().getRecords(), is(empty()));
+    assertRemoveAllEventForLoan();
+  }
+
+  @Test
+  @SneakyThrows
+  public void canDeleteByCql() {
+    var loanId1 = UUID.randomUUID();
+    var loanId2 = UUID.randomUUID();
+    var loanId3 = UUID.randomUUID();
+    var userId = UUID.randomUUID();
+    var loan1 = loansClient.create(new LoanRequestBuilder().withId(loanId1).withUserId(userId).create());
+    loansClient.create(new LoanRequestBuilder().withId(loanId2).create());
+    var loan3 = loansClient.create(new LoanRequestBuilder().withId(loanId3).withUserId(userId).create());
+
+    loansClient.deleteByCql("userId==" + userId);
+
+    assertThat(loansClient.attemptGetById(loanId1).getStatusCode(), is(404));
+    assertThat(loansClient.attemptGetById(loanId3).getStatusCode(), is(404));
+    assertRemoveEventForLoan(loan1.getJson());
+    assertRemoveEventForLoan(loan3.getJson());
+    loansClient.getById(loanId2);
+  }
+
+  @Test
+  public void cannotDeleteWithoutCql() {
+    var response = loansClient.attemptDelete();
+    assertThat(response.getStatusCode(), is(400));
+  }
+
+  @Test
+  public void cannotDeleteByInvalidCql() {
+    var response = loansClient.attemptDeleteByCql(")");
+    assertThat(response.getStatusCode(), is(400));
   }
 
   @Test

@@ -29,10 +29,8 @@ import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 public class LoansApiHistoryTest extends ApiTests {
   @Before
-  public void beforeEach()
-    throws MalformedURLException {
-
-    StorageTestSuite.deleteAll(loanStorageUrl());
+  public void beforeEach() {
+    truncateTables("loan");
   }
 
   @After

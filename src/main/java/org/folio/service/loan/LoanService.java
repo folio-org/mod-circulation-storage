@@ -2,6 +2,7 @@ package org.folio.service.loan;
 
 import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.Promise.promise;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
@@ -12,6 +13,8 @@ import static org.folio.support.ModuleConstants.LOAN_TABLE;
 import static org.folio.support.ModuleConstants.MODULE_NAME;
 import static org.folio.support.ModuleConstants.OPEN_LOAN_STATUS;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
@@ -24,6 +27,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.dbschema.ObjectMapperTool;
 import org.folio.persist.LoanRepository;
 import org.folio.rest.impl.util.OkapiResponseUtil;
 import org.folio.rest.jaxrs.model.Error;
@@ -36,8 +40,10 @@ import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.jaxrs.resource.LoanStorage;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.cql.CQLQueryValidationException;
 import org.folio.rest.tools.utils.ValidationHelper;
 import org.folio.service.event.EntityChangedEventPublisher;
+import org.folio.support.CqlQuery;
 import org.folio.support.ResponseUtil;
 import org.folio.support.ResultHandlerFactory;
 import org.folio.support.ServerErrorResponder;
@@ -55,6 +61,7 @@ import jakarta.validation.constraints.NotNull;
 public class LoanService {
 
   private static final Logger log = LogManager.getLogger(LoanService.class);
+  private static final ObjectMapper MAPPER = ObjectMapperTool.getMapper();
 
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
@@ -154,7 +161,7 @@ public class LoanService {
         });
   }
 
-  public Future<Response> delete(String loanId) {
+  public Future<Response> deleteById(String loanId) {
     return repository.getById(loanId)
         .compose(loan -> {
           final Promise<Response> deleteResult = promise();
@@ -166,21 +173,41 @@ public class LoanService {
               .compose(eventPublisher.publishRemoved(loan));
         });
   }
-
-  public Future<Response> deleteAll() {
-    Promise<Response> deleteAllResult = Promise.promise();
-
-    try {
-      postgresClient.execute(String.format("TRUNCATE TABLE %s_%s.loan", tenantId(okapiHeaders), MODULE_NAME),
-          result -> deleteAllResult.complete(result.succeeded()
-              ? LoanStorage.DeleteLoanStorageLoansResponse.respond204()
-              : LoanStorage.DeleteLoanStorageLoansResponse.respond500WithTextPlain(result.cause().getMessage())));
-    } catch (Exception e) {
-      deleteAllResult.complete(LoanStorage.DeleteLoanStorageLoansResponse
-          .respond500WithTextPlain(e.getMessage()));
+  public Future<Response> deleteByCql(String cql) {
+    if (isBlank(cql)) {
+      return succeededFuture(LoanStorage.DeleteLoanStorageLoansResponse.respond400WithTextPlain(
+          "Expected CQL but query parameter is empty"));
+    }
+    if (new CqlQuery(cql).isMatchingAll()) {
+      return deleteAll();  // faster: TRUNCATE (not DELETE), only one Kafka message
     }
 
-    return deleteAllResult.future()
+    return repository.deleteByCql(cql)
+      .map(rowSet -> {
+        rowSet.iterator().forEachRemaining(row -> {
+          var loanId = row.getString(0);
+          try {
+            var loan = MAPPER.readValue(row.getString(1), Loan.class);
+            eventPublisher.publishRemoved(loanId, loan);
+          } catch (IOException e) {
+            log.error("deleteByCql:: Failed to parse json of loanId {}: {}", loanId, e.getMessage(), e);
+          }
+        });
+        return Response.noContent().build();
+      })
+      .otherwise(e -> {
+        log.error("deleteByCql:: {}", e.getMessage(), e);
+        if (e instanceof CQLQueryValidationException) {
+          return LoanStorage.DeleteLoanStorageLoansResponse.respond400WithTextPlain(e.getMessage());
+        }
+        return LoanStorage.DeleteLoanStorageLoansResponse.respond500WithTextPlain("Internal server error, see log");
+      });
+  }
+
+  private Future<Response> deleteAll() {
+    return postgresClient.execute(String.format("TRUNCATE TABLE %s_%s.loan", tenantId(okapiHeaders), MODULE_NAME))
+        .<Response>map(LoanStorage.DeleteLoanStorageLoansResponse.respond204())
+        .otherwise(e -> LoanStorage.DeleteLoanStorageLoansResponse.respond500WithTextPlain(e.getMessage()))
         .compose(eventPublisher.publishAllRemoved());
   }
 
