@@ -12,7 +12,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
+import lombok.SneakyThrows;
 import org.folio.rest.api.StorageTestSuite;
 import org.folio.rest.support.OkapiHttpClient;
 import org.folio.rest.support.IndividualResource;
@@ -21,6 +21,7 @@ import org.folio.rest.support.MultipleRecords;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.TextResponse;
 import org.folio.rest.support.builders.Builder;
+import org.folio.util.PercentCodec;
 import org.folio.util.StringUtil;
 
 import io.vertx.core.json.JsonObject;
@@ -231,6 +232,11 @@ public class AssertingRecordClient {
     assertThat("Failed to delete record", deleteResponse, isNoContent());
   }
 
+  public void deleteByCql(String cql) {
+    var response = attemptDeleteByCql(cql);
+    assertThat("Failed to delete records by CQL", response, isNoContent());
+  }
+
   public void delete(IndividualResource toDelete) throws MalformedURLException,
     InterruptedException, ExecutionException, TimeoutException {
 
@@ -314,6 +320,25 @@ public class AssertingRecordClient {
     return deleteCompleted.get(5, TimeUnit.SECONDS);
   }
 
+  @SneakyThrows
+  public TextResponse attemptDeleteByCql(String cql) {
+    CompletableFuture<TextResponse> deleteCompleted = new CompletableFuture<>();
+
+    client.delete(urlMaker.combine("?query=" + PercentCodec.encode(cql)),
+        StorageTestSuite.TENANT_ID, ResponseHandler.text(deleteCompleted));
+
+    return deleteCompleted.get(5, TimeUnit.SECONDS);
+  }
+
+  @SneakyThrows
+  public TextResponse attemptDelete() {
+    CompletableFuture<TextResponse> deleteCompleted = new CompletableFuture<>();
+
+    client.delete(urlMaker.combine(""),
+        StorageTestSuite.TENANT_ID, ResponseHandler.text(deleteCompleted));
+
+    return deleteCompleted.get(5, TimeUnit.SECONDS);
+  }
 
   public JsonResponse attemptPutById(JsonObject updateObject)
     throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {

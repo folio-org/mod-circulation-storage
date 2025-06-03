@@ -68,7 +68,7 @@ public class RequestPoliciesApiTest extends ApiTests {
 
   @Before
   public void beforeEach() {
-    truncateTable("request_policy");
+    truncateTables("request_policy");
   }
 
   @Test
