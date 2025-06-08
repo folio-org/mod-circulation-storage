@@ -63,7 +63,7 @@
         "holdShelfExpiryPeriodForUseAtLocation" :{
           "type": "object",
           "$ref": "time-period.json",
-          "description": "expiration period for items on the hold shelf for use at the location"
+          "description": "Expiration period for items on the hold shelf for use at the location"
         }
       }
     },

@@ -62,7 +62,7 @@
     },
     {
       "id": "loan-storage",
-      "version": "7.3",
+      "version": "7.4",
       "handlers": [
         {
           "methods": ["GET"],
@@ -165,7 +165,7 @@
     },
     {
       "id": "loan-policy-storage",
-      "version": "2.3",
+      "version": "2.4",
       "handlers": [
         {
           "methods": ["GET"],
