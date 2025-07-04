@@ -43,10 +43,8 @@ public class LoansAnonymizationApiTest extends ApiTests {
     client, StorageTestSuite.TENANT_ID, InterfaceUrls::loanStorageUrl, "loans");
 
   @Before
-  public void beforeEach()
-    throws MalformedURLException {
-
-    StorageTestSuite.deleteAll(loanStorageUrl());
+  public void beforeEach() {
+    truncateTables("loan");
   }
 
   @After

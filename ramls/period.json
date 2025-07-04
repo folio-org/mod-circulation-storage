@@ -5,8 +5,8 @@
   "properties": {
     "duration": {
       "type": "integer",
-      "minimum": 1,
-      "description": "Duration of the period, number of times the interval repeats"
+      "minimum": 0,
+      "description": "Duration of the period, number of times the interval repeats; 0 should be used with days only and means until the end of the day"
     },
     "intervalId": {
       "type": "string",

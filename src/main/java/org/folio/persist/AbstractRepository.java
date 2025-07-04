@@ -13,6 +13,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.folio.rest.persist.Criteria.Criterion;
+import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.persist.interfaces.Results;
@@ -117,6 +119,23 @@ public abstract class AbstractRepository<T> {
 
   public Future<RowSet<Row>> deleteAll() {
     return postgresClient.delete(tableName, new Criterion());
+  }
+
+
+  /**
+   * Delete by CQL. For each deleted record return a {@link Row} with the instance id String
+   * and with the instance jsonb String.
+   */
+  public Future<RowSet<Row>> deleteByCql(String cql) {
+    try {
+      CQLWrapper cqlWrapper = new CQLWrapper(new CQL2PgJSON(tableName + ".jsonb"), cql, -1, -1);
+      String sql = "DELETE FROM " + postgresClient.getSchemaName() + "." + tableName
+        + " " + cqlWrapper.getWhereClause()
+        + " RETURNING id::text, jsonb::text";
+      return postgresClient.execute(sql);
+    } catch (Exception e) {
+      return Future.failedFuture(e);
+    }
   }
 
   public Future<RowSet<Row>> deleteById(String id) {
