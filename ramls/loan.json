@@ -54,6 +54,11 @@
           "description": "Date and time the status was registered",
           "type": "string",
           "format": "date-time"
+        },
+        "holdShelfExpirationDate": {
+          "description": "Date when a held item expires",
+          "type": "string",
+          "format": "date-time"
         }
       }
     },
