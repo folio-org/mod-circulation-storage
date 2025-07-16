@@ -35,7 +35,23 @@ public class CirculationRulesApiTest extends ApiTests {
   @Before
   public void cleanUpRulesTable() {
     StorageTestSuite.cleanUpTable(CIRCULATION_RULES_TABLE);
-    put204(exampleRules());
+
+    CirculationRules defaultRules = exampleRules();
+    defaultRules.setId("2d7589ab-a889-bb8e-e15a-1a65fe86cb22");
+
+    CompletableFuture<Void> insertCompleted = new CompletableFuture<>();
+    org.folio.rest.persist.PostgresClient.getInstance(
+        StorageTestSuite.getVertx(), StorageTestSuite.TENANT_ID)
+      .save(CIRCULATION_RULES_TABLE, defaultRules.getId(), defaultRules, res -> {
+        if (res.succeeded()) {
+          insertCompleted.complete(null);
+        } else {
+          insertCompleted.completeExceptionally(res.cause());
+        }
+      });
+    insertCompleted.get(5, TimeUnit.SECONDS);
+
+    put204(defaultRules);
   }
 
   public static URL rulesStorageUrl() throws MalformedURLException {
