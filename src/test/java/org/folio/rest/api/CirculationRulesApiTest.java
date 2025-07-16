@@ -18,6 +18,7 @@ import org.folio.rest.jaxrs.model.CirculationRules;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
+import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
@@ -27,7 +28,12 @@ import io.vertx.core.json.JsonObject;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class CirculationRulesApiTest extends ApiTests {
 
-  //comment
+  private static final String CIRCULATION_RULES_TABLE = "circulation_rules";
+
+  @Before
+  public void cleanUpRulesTable() {
+    StorageTestSuite.cleanUpTable(CIRCULATION_RULES_TABLE);
+  }
 
   public static URL rulesStorageUrl() throws MalformedURLException {
     return rulesStorageUrl("");
