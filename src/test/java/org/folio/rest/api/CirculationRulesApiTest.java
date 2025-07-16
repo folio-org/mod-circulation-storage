@@ -27,6 +27,8 @@ import io.vertx.core.json.JsonObject;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class CirculationRulesApiTest extends ApiTests {
 
+  //comment
+
   public static URL rulesStorageUrl() throws MalformedURLException {
     return rulesStorageUrl("");
   }
