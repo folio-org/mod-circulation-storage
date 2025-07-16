@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.persist.PostgresClient.getInstance;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForCirculationRules;
 import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.matchesNoContent;
 import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.matchesOk;
@@ -11,10 +12,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.folio.rest.jaxrs.model.CirculationRules;
+import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
@@ -30,6 +33,7 @@ import lombok.SneakyThrows;
 public class CirculationRulesApiTest extends ApiTests {
 
   private static final String CIRCULATION_RULES_TABLE = "circulation_rules";
+  public static final String DEFAULT_RULE_ID = "2d7589ab-a889-bb8e-e15a-1a65fe86cb22";
 
   @SneakyThrows
   @Before
@@ -37,21 +41,23 @@ public class CirculationRulesApiTest extends ApiTests {
     StorageTestSuite.cleanUpTable(CIRCULATION_RULES_TABLE);
 
     CirculationRules defaultRules = exampleRules();
-    defaultRules.setId("2d7589ab-a889-bb8e-e15a-1a65fe86cb22");
+    defaultRules.setId(DEFAULT_RULE_ID);
+    defaultRules.setMetadata(new Metadata()
+      .withCreatedDate(new Date())
+      .withCreatedByUserId(randomId())
+      .withUpdatedDate(new Date())
+      .withUpdatedByUserId(randomId()));
 
-    CompletableFuture<Void> insertCompleted = new CompletableFuture<>();
-    org.folio.rest.persist.PostgresClient.getInstance(
-        StorageTestSuite.getVertx(), StorageTestSuite.TENANT_ID)
+    CompletableFuture<String> insertFuture = new CompletableFuture<>();
+    getInstance(StorageTestSuite.getVertx(), StorageTestSuite.TENANT_ID)
       .save(CIRCULATION_RULES_TABLE, defaultRules.getId(), defaultRules, res -> {
         if (res.succeeded()) {
-          insertCompleted.complete(null);
+          insertFuture.complete(defaultRules.getId());
         } else {
-          insertCompleted.completeExceptionally(res.cause());
+          insertFuture.completeExceptionally(res.cause());
         }
       });
-    insertCompleted.get(5, TimeUnit.SECONDS);
-
-    put204(defaultRules);
+    insertFuture.get(5, TimeUnit.SECONDS);
   }
 
   public static URL rulesStorageUrl() throws MalformedURLException {
