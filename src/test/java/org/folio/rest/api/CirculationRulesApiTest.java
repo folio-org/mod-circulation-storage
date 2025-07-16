@@ -24,15 +24,18 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import io.vertx.core.json.JsonObject;
+import lombok.SneakyThrows;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class CirculationRulesApiTest extends ApiTests {
 
   private static final String CIRCULATION_RULES_TABLE = "circulation_rules";
 
+  @SneakyThrows
   @Before
   public void cleanUpRulesTable() {
     StorageTestSuite.cleanUpTable(CIRCULATION_RULES_TABLE);
+    put204(exampleRules());
   }
 
   public static URL rulesStorageUrl() throws MalformedURLException {
