@@ -40,24 +40,20 @@ public class CirculationRulesApiTest extends ApiTests {
   public void cleanUpCirculationRulesTable() {
     StorageTestSuite.cleanUpTable(CIRCULATION_RULES_TABLE);
 
+    Date now = new Date();
+    String userId = randomId();
     CirculationRules defaultRules = exampleRules()
       .withId(DEFAULT_RULE_ID)
       .withMetadata(new Metadata()
-        .withCreatedDate(new Date())
-        .withCreatedByUserId(randomId())
-        .withUpdatedDate(new Date())
-        .withUpdatedByUserId(randomId()));
+        .withCreatedDate(now)
+        .withCreatedByUserId(userId)
+        .withUpdatedDate(now)
+        .withUpdatedByUserId(userId));
 
-    CompletableFuture<String> insertFuture = new CompletableFuture<>();
     getInstance(StorageTestSuite.getVertx(), StorageTestSuite.TENANT_ID)
-      .save(CIRCULATION_RULES_TABLE, defaultRules.getId(), defaultRules, res -> {
-        if (res.succeeded()) {
-          insertFuture.complete(defaultRules.getId());
-        } else {
-          insertFuture.completeExceptionally(res.cause());
-        }
-      });
-    insertFuture.get(5, TimeUnit.SECONDS);
+      .save(CIRCULATION_RULES_TABLE, defaultRules.getId(), defaultRules)
+      .toCompletionStage().toCompletableFuture()
+      .get(5, TimeUnit.SECONDS);
   }
 
   public static URL rulesStorageUrl() throws MalformedURLException {
