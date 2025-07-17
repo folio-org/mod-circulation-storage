@@ -33,11 +33,11 @@ import lombok.SneakyThrows;
 public class CirculationRulesApiTest extends ApiTests {
 
   private static final String CIRCULATION_RULES_TABLE = "circulation_rules";
-  public static final String DEFAULT_RULE_ID = "2d7589ab-a889-bb8e-e15a-1a65fe86cb22";
+  private static final String DEFAULT_RULE_ID = "2d7589ab-a889-bb8e-e15a-1a65fe86cb22";
 
   @SneakyThrows
   @Before
-  public void cleanUpRulesTable() {
+  public void cleanUpCirculationRulesTable() {
     StorageTestSuite.cleanUpTable(CIRCULATION_RULES_TABLE);
 
     CirculationRules defaultRules = exampleRules();
