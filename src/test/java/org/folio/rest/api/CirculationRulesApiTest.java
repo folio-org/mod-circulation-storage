@@ -40,13 +40,13 @@ public class CirculationRulesApiTest extends ApiTests {
   public void cleanUpCirculationRulesTable() {
     StorageTestSuite.cleanUpTable(CIRCULATION_RULES_TABLE);
 
-    CirculationRules defaultRules = exampleRules();
-    defaultRules.setId(DEFAULT_RULE_ID);
-    defaultRules.setMetadata(new Metadata()
-      .withCreatedDate(new Date())
-      .withCreatedByUserId(randomId())
-      .withUpdatedDate(new Date())
-      .withUpdatedByUserId(randomId()));
+    CirculationRules defaultRules = exampleRules()
+      .withId(DEFAULT_RULE_ID)
+      .withMetadata(new Metadata()
+        .withCreatedDate(new Date())
+        .withCreatedByUserId(randomId())
+        .withUpdatedDate(new Date())
+        .withUpdatedByUserId(randomId()));
 
     CompletableFuture<String> insertFuture = new CompletableFuture<>();
     getInstance(StorageTestSuite.getVertx(), StorageTestSuite.TENANT_ID)
