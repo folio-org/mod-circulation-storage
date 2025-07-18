@@ -141,7 +141,7 @@ public final class DomainEventAssertions {
 
   public static void assertUpdateEventForCirculationRules(JsonObject oldRules, JsonObject newRules) {
     await().until(() -> getCirculationRulesEvents().size(), greaterThan(0));
-    assertUpdateEvent(getLastCirculationRulesEvent(), oldRules, newRules);
+    assertUpdateCirculationRulesEvent(getLastCirculationRulesEvent(), oldRules, newRules);
   }
 
   public static void assertRemoveEventForRequest(JsonObject request) {
@@ -175,6 +175,27 @@ public final class DomainEventAssertions {
     assertThat(getNewValue(updateEvent), is(newRecord));
 
     assertHeaders(updateEvent.headers());
+  }
+
+  private static void assertUpdateCirculationRulesEvent(KafkaConsumerRecord<String,
+    JsonObject> updateEvent, JsonObject oldRecord, JsonObject newRecord) {
+    assertThat("Update event should be present", updateEvent.value(), is(notNullValue()));
+    assertBasicEventFields(updateEvent, DomainEventType.UPDATED);
+
+    JsonObject oldValue = getOldValue(updateEvent);
+    JsonObject newValue = getNewValue(updateEvent);
+    assertJsonEqualsExceptMetadata(oldValue, oldRecord);
+    assertJsonEqualsExceptMetadata(newValue, newRecord);
+
+    assertHeaders(updateEvent.headers());
+  }
+
+  private static void assertJsonEqualsExceptMetadata(JsonObject actual, JsonObject expected) {
+    JsonObject actualCopy = actual.copy();
+    JsonObject expectedCopy = expected.copy();
+    actualCopy.remove("metadata");
+    expectedCopy.remove("metadata");
+    assertThat(actualCopy, is(expectedCopy));
   }
 
   private static void assertRemoveEvent(KafkaConsumerRecord<String, JsonObject> deleteEvent, JsonObject record) {
