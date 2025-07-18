@@ -34,14 +34,15 @@ public class CirculationRulesApiTest extends ApiTests {
 
   private static final String CIRCULATION_RULES_TABLE = "circulation_rules";
   private static final String DEFAULT_RULE_ID = "2d7589ab-a889-bb8e-e15a-1a65fe86cb22";
+  private static final long ONE_MINUTE_MILLIS = 60_000;
+  private final Date now = new Date();
+  private final String userId = randomId();
 
   @SneakyThrows
   @Before
   public void cleanUpCirculationRulesTable() {
     StorageTestSuite.cleanUpTable(CIRCULATION_RULES_TABLE);
 
-    Date now = new Date();
-    String userId = randomId();
     CirculationRules defaultRules = exampleRules()
       .withId(DEFAULT_RULE_ID)
       .withMetadata(new Metadata()
@@ -110,7 +111,15 @@ public class CirculationRulesApiTest extends ApiTests {
 
   public void putAndGet(CirculationRules circulationRules) throws Exception {
     JsonObject originalRules = get();
+    var updatedByUserId = java.util.UUID.randomUUID().toString();
     var oldUpdatedDate = originalRules.getJsonObject("metadata").getString("updatedDate");
+
+    circulationRules.withMetadata(new Metadata()
+      .withCreatedDate(now)
+      .withCreatedByUserId(userId)
+      .withUpdatedDate(new Date(now.getTime() + ONE_MINUTE_MILLIS))
+      .withUpdatedByUserId(updatedByUserId));
+
     put204(circulationRules);
     JsonObject updatedRules = get();
     assertThat(updatedRules.getString("rulesAsText"), is(circulationRules.getRulesAsText()));
