@@ -113,6 +113,8 @@ public class CirculationRulesApiTest extends ApiTests {
     JsonObject originalRules = get();
     var updatedByUserId = randomId();
     var oldUpdatedDate = originalRules.getJsonObject("metadata").getString("updatedDate");
+    var oldCreatedDate = originalRules.getJsonObject("metadata").getString("createdDate");
+    var oldCreatedByUserId = originalRules.getJsonObject("metadata").getString("createdByUserId");
 
     circulationRules.withMetadata(new Metadata()
       .withCreatedDate(now)
@@ -126,8 +128,10 @@ public class CirculationRulesApiTest extends ApiTests {
     var metadata = updatedRules.getJsonObject("metadata");
     assertThat(metadata.getString("updatedByUserId"), is(not(nullValue())));
     assertThat(metadata.getString("updatedDate"), is(not(oldUpdatedDate)));
-    if (!metadata.getString("updatedDate").equals(metadata.getString("createdDate")) &&
-        !metadata.getString("updatedByUserId").equals(metadata.getString("createdByUserId"))) {
+    var newUpdatedDate = metadata.getString("updatedDate");
+    var newUpdatedByUserId = metadata.getString("updatedByUserId");
+
+    if (!newUpdatedDate.equals(oldCreatedDate) || !newUpdatedByUserId.equals(oldCreatedByUserId)) {
       assertUpdateEventForCirculationRules(originalRules, updatedRules);
     }
   }
