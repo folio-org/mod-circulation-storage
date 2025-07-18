@@ -111,7 +111,7 @@ public class CirculationRulesApiTest extends ApiTests {
 
   public void putAndGet(CirculationRules circulationRules) throws Exception {
     JsonObject originalRules = get();
-    var updatedByUserId = java.util.UUID.randomUUID().toString();
+    var updatedByUserId = randomId();
     var oldUpdatedDate = originalRules.getJsonObject("metadata").getString("updatedDate");
 
     circulationRules.withMetadata(new Metadata()
