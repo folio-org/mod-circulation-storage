@@ -55,6 +55,15 @@
           "description": "Number of items allowed",
           "minimum": 1,
           "maximum": 9999
+        },
+        "forUseAtLocation": {
+          "type": "boolean",
+          "description": "Indicates that loaned items must be used in the library, i.e. in a reading room"
+        },
+        "holdShelfExpiryPeriodForUseAtLocation" :{
+          "type": "object",
+          "$ref": "time-period.json",
+          "description": "Expiration period for items on the hold shelf for use at the location"
         }
       }
     },
