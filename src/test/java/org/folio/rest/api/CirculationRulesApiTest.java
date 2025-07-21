@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.persist.PostgresClient.getInstance;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForCirculationRules;
 import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.matchesNoContent;
 import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.matchesOk;
@@ -11,21 +12,49 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.folio.rest.jaxrs.model.CirculationRules;
+import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
+import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import io.vertx.core.json.JsonObject;
+import lombok.SneakyThrows;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class CirculationRulesApiTest extends ApiTests {
+
+  private static final String CIRCULATION_RULES_TABLE = "circulation_rules";
+  private static final String DEFAULT_RULE_ID = "2d7589ab-a889-bb8e-e15a-1a65fe86cb22";
+
+  @SneakyThrows
+  @Before
+  public void cleanUpCirculationRulesTable() {
+    StorageTestSuite.cleanUpTable(CIRCULATION_RULES_TABLE);
+
+    Date now = new Date();
+    String userId = randomId();
+    CirculationRules defaultRules = exampleRules()
+      .withId(DEFAULT_RULE_ID)
+      .withMetadata(new Metadata()
+        .withCreatedDate(now)
+        .withCreatedByUserId(userId)
+        .withUpdatedDate(now)
+        .withUpdatedByUserId(userId));
+
+    getInstance(StorageTestSuite.getVertx(), StorageTestSuite.TENANT_ID)
+      .save(CIRCULATION_RULES_TABLE, defaultRules.getId(), defaultRules)
+      .toCompletionStage().toCompletableFuture()
+      .get(5, TimeUnit.SECONDS);
+  }
 
   public static URL rulesStorageUrl() throws MalformedURLException {
     return rulesStorageUrl("");
