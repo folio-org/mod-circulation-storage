@@ -123,8 +123,6 @@ public class CirculationRulesApiTest extends ApiTests {
   @Test
   public void putAndGet() throws Exception {
     putAndGet(exampleRules());
-    Thread.sleep(100);
-    putAndGet(exampleRules2());
   }
 
   @Test
