@@ -151,6 +151,15 @@
         "retrievalServicePointName": {
           "description": "Item's location primary service point name",
           "type": "string"
+        },
+        "loanTypeId": {
+          "description": "Item's temporary loan type, if any, otherwise item's permanent loan type",
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+        },
+        "loanTypeName": {
+          "description": "Name of item's temporary loan type, if any, otherwise name of item's permanent loan type",
+          "type": "string"
         }
       },
       "additionalProperties": false
