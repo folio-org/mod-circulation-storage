@@ -14,7 +14,7 @@
       "description": "Not anonymized loan IDs",
       "type": "array",
       "items": {
-        "description": "Collection of loans",
+        "description": "Collection of requests",
         "type": "object",
         "properties": {
           "reason": {
