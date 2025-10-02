@@ -3,7 +3,7 @@
   "description": "Request schema for anonymize requests",
   "type": "object",
   "properties": {
-    "loanIds": {
+    "requestIds": {
       "description": "request ids to be anonymized",
       "type": "array",
       "items": {
