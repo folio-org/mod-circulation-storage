@@ -3,15 +3,15 @@
   "description": "Response schema for anonymize requests request",
   "type": "object",
   "properties": {
-    "anonymizedLoans": {
+    "anonymizedRequests": {
       "description": "Successfully anonymized request ids",
       "type": "array",
       "items":{
         "type": "string"
       }
     },
-    "notAnonymizedLoans": {
-      "description": "Not anonymized loan IDs",
+    "notAnonymizedRequests": {
+      "description": "Not anonymized request IDs",
       "type": "array",
       "items": {
         "description": "Collection of requests",
@@ -21,8 +21,8 @@
             "description": "Reason of failure",
             "type": "string"
           },
-          "loanIds": {
-            "description": "List of loan IDs that have not been anonymized",
+          "requestIds": {
+            "description": "List of request IDs that have not been anonymized",
             "type": "array",
             "items": {
               "type": "string"
