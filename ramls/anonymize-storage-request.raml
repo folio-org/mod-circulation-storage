@@ -1,0 +1,35 @@
+#%RAML 1.0
+title: Anonymize requests
+version: v0.1
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost:9130
+
+documentation:
+  - title: Anonymize requests API
+    content: <b>Anonymize requests API</b>
+
+types:
+  errors: !include raml-util/schemas/errors.schema
+  anonymize-storage-requests-response: !include anonymize-storage-requests-response.json
+  anonymize-storage-requests-request: !include anonymize-storage-requests-request.json
+
+traits:
+  validate: !include raml-util/traits/validation.raml
+
+/anonymize-storage-requests:
+  post:
+    is: [validate]
+    body:
+      application/json:
+        type: anonymize-storage-requests-request
+    responses:
+      200:
+        description: "requests that have been anonymized"
+        body:
+          application/json:
+            type: anonymize-storage-requests-response
+      500:
+        description: "Internal server error, e.g. due to misconfiguration"
+        body:
+          text/plain:
+            example: "Internal server error, contact administrator"

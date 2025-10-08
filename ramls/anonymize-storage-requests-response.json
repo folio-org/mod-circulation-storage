@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Response schema for anonymize requests request",
+  "type": "object",
+  "properties": {
+    "anonymizedRequests": {
+      "description": "Successfully anonymized request ids",
+      "type": "array",
+      "items":{
+        "type": "string"
+      }
+    },
+    "notAnonymizedRequests": {
+      "description": "Not anonymized request IDs",
+      "type": "array",
+      "items": {
+        "description": "Collection of requests",
+        "type": "object",
+        "properties": {
+          "reason": {
+            "description": "Reason of failure",
+            "type": "string"
+          },
+          "requestIds": {
+            "description": "List of request IDs that have not been anonymized",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
