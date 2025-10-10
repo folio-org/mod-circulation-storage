@@ -100,21 +100,21 @@ resourceTypes:
       body:
         application/json:
           type: AnonymizationSettings
-        responses:
-          201:
-            body:
-              application/json:
-                type: AnonymizationSettingResponse
-          400:
-            description: Bad Request
-          401:
-            description: Not Authenticated
-          403:
-            description: Not authorized
-          422:
-            body:
-              application/json:
-                type: errors
-                example: !include raml-util/examples/errors.sample
+      responses:
+        201:
+          body:
+            application/json:
+              type: AnonymizationSettingResponse
+        400:
+          description: Bad Request
+        401:
+          description: Not Authenticated
+        403:
+          description: Not authorized
+        422:
+          body:
+            application/json:
+              type: errors
+              example: !include raml-util/examples/errors.sample
 
 
