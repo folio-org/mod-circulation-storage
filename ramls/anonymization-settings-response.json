@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "title": "AnonymizationSettingsResponse",
   "type": "object",
+  "description": "Response payload representing the stored request anonymization configuration.",
   "additionalProperties": false,
   "properties": {
     "id": {
@@ -10,17 +11,22 @@
       "pattern": "^[0-9a-fA-F-]{36}$"
     },
     "enabled": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "Whether anonymization of requests is enabled."
     },
     "retentionDays": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "description": "Number of days to retain request data before it becomes eligible for anonymization."
     },
     "fields": {
       "type": "array",
       "uniqueItems": true,
+      "description": "List of request fields that will be anonymized when the policy triggers.",
       "items": {
-        "type": "string"
+      "items": {
+        "type": "string",
+        "description": "A field name from the request record to anonymize."
       }
     },
     "metadata": {
@@ -28,10 +34,27 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "createdDate": { "type": "string", "format": "date-time" },
-        "createdByUserId": { "type": "string", "pattern": "^[0-9a-fA-F-]{36}$" },
-        "updatedDate": { "type": "string", "format": "date-time" },
-        "updatedByUserId": { "type": "string", "pattern": "^[0-9a-fA-F-]{36}$" }
+        "createdDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 timestamp when the record was created."
+          },
+        "createdByUserId": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F-]{36}$",
+          "description": "UUID of the user who created the record."
+        },
+        "updatedDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 timestamp when the record was last updated."
+        }
+      },
+        "updatedByUserId": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F-]{36}$",
+          "description": "UUID of the user who last updated the record."
+        }
       }
     }
   },

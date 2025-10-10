@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "title": "AnonymizationSettings",
+  "description": "Input payload to create or update the request anonymization configuration.",
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -18,7 +19,8 @@
       "type": "array",
       "uniqueItems": true,
       "items": {
-        "type": "string"
+        "type": "string",
+        "description": "A field name from the request record to anonymize."
       },
       "examples": [
         ["requesterId", "proxyUserId", "pickupServicePointId"]
