@@ -83,9 +83,7 @@ resourceTypes:
 
   /anonymization-settings:
     get:
-      description:  Get current request anonymization configuration
-      permissionsRequired:
-        -request-storage.anonymization-settings.get
+      description: Get current request anonymization configuration
       responses:
         200:
           body:
@@ -97,8 +95,6 @@ resourceTypes:
           description: Not authorized
     post:
       description: Create requestion anonymization configuration
-      permissionsRequired:
-        - request-storage.anonymization-settings.post
       body:
         application/json:
           type: AnonymizationSettings
