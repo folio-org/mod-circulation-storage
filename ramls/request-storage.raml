@@ -88,11 +88,13 @@ resourceTypes:
         200:
           body:
             application/json:
-              type: AnonymizationSettings
+              type: AnonymizationSettingsResponse
         401:
           description: Not Authenticated
         403:
           description: Not authorized
+        404:
+          description: No configuration found
     post:
       description: Create requestion anonymization configuration
       body:
