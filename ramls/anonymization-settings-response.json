@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "AnonymizationSettingsResponse",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "description": "Identifier of this settings record.",
+      "type": "string",
+      "pattern": "^[0-9a-fA-F-]{36}$"
+    },
+    "enabled": {
+      "type": "boolean"
+    },
+    "retentionDays": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "fields": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "metadata": {
+      "description": "Optional audit metadata.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "createdDate": { "type": "string", "format": "date-time" },
+        "createdByUserId": { "type": "string", "pattern": "^[0-9a-fA-F-]{36}$" },
+        "updatedDate": { "type": "string", "format": "date-time" },
+        "updatedByUserId": { "type": "string", "pattern": "^[0-9a-fA-F-]{36}$" }
+      }
+    }
+  },
+  "required": ["id", "enabled"]
+}

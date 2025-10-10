@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "AnonymizationSettings",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "enabled": {
+      "description": "Turn request anonymization on/off.",
+      "type": "boolean"
+    },
+    "retentionDays": {
+      "description": "Keep request data for this many days before anonymizing.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "fields": {
+      "description": "Request fields to anonymize when policy triggers.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      },
+      "examples": [
+        ["requesterId", "proxyUserId", "pickupServicePointId"]
+      ]
+    }
+  },
+  "required": ["enabled"]
+}

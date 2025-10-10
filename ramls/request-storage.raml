@@ -15,8 +15,10 @@ types:
   parameters: !include raml-util/schemas/parameters.schema
   location: !include locations/location.json
   locations: !include locations/locations.json
-  AnonymizationSettings: !include raml-util/anonymize-storage-requests-request.json
-  AnonymizationSettingsResponse: !include raml-util/anonymize-storage-requests-response.json
+  anonymize-requests-request: !include anonymize-storage-requests-request.json
+  anonymize-requests-response: !include anonymize-storage-requests-response.json
+  AnonymizationSettings: !include anonymization-settings.json
+  AnonymizationSettingsResponse: !include anonymization-settings-response.json
 
 traits:
   pageable: !include raml-util/traits/pageable.raml
