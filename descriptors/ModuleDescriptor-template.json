@@ -222,6 +222,16 @@
           "methods": ["DELETE"],
           "pathPattern": "/request-storage/requests",
           "permissionsRequired": ["circulation-storage.requests.collection.delete"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/request-storage/anonymization-settings",
+          "permissionsRequired": ["circulation-storage.request-anonymization-settings.collection.get"]
+        },
+        {
+          "methods": ["POST"],
+          "pathPattern": "/request-storage/anonymization-settings",
+          "permissionsRequired": ["circulation-storage.request-anonymization-settings.item.post"]
         }
       ]
     },
@@ -1088,6 +1098,16 @@
       "permissionName": "circulation-storage.circulation-settings.item.delete",
       "displayName": "Circulation storage - delete circulation setting by id",
       "description": "Delete circulation setting by id"
+    },
+    {
+      "permissionName": "circulation-storage.request-anonymization-settings.collection.get",
+      "displayName": "Circulation storage - get request anonymization settings",
+      "description": "Get request anonymization settings from storage"
+    },
+    {
+      "permissionName": "circulation-storage.request-anonymization-settings.item.post",
+      "displayName": "Circulation storage - create/update request anonymization settings",
+      "description": "Create or update request anonymization settings in storage"
     },
     {
       "permissionName": "circulation-storage.all",
