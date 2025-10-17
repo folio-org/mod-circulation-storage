@@ -7,6 +7,8 @@ import javax.ws.rs.core.Response;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.jaxrs.resource.RequestStorage;
+import org.folio.rest.jaxrs.model.AnonymizationSettings;
+import org.folio.rest.jaxrs.model.AnonymizationSettingsResponse;
 import org.folio.service.request.RequestService;
 
 import io.vertx.core.AsyncResult;
@@ -61,6 +63,29 @@ public class RequestsAPI implements RequestStorage {
 
     new RequestService(vertxContext, okapiHeaders).delete(requestId)
         .onComplete(asyncResultHandler);
+  }
+  @Validate
+  @Override
+  public void getRequestStorageAnonymizationSettings(
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+    new org.folio.service.request.RequestService(vertxContext, okapiHeaders)
+      .getAnonymizationSettings()
+      .onComplete(asyncResultHandler);
+  }
+
+  @Validate
+  @Override
+  public void postRequestStorageAnonymizationSettings(
+    org.folio.rest.jaxrs.model.AnonymizationSettings entity,
+    Map<String,String> okapiHeaders,
+    Handler<AsyncResult<Response>> h,
+    Context ctx) {
+    new org.folio.service.request.RequestService(ctx, okapiHeaders)
+      .createAnonymizationSettings(entity)
+      .onComplete(h);
   }
 
   @Validate

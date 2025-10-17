@@ -24,8 +24,11 @@ import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.jaxrs.model.Requests;
 import org.folio.rest.jaxrs.resource.RequestStorage;
+import org.folio.rest.jaxrs.model.AnonymizationSettings;
+import org.folio.rest.jaxrs.model.AnonymizationSettingsResponse;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
+
 import org.folio.service.event.EntityChangedEventPublisher;
 import org.folio.support.ResponseUtil;
 import org.folio.support.ServiceHelper;
@@ -45,6 +48,8 @@ public class RequestService {
   private final RequestRepository repository;
   private final EntityChangedEventPublisher<String, Request> eventPublisher;
   private final ServiceHelper<Request> helper;
+
+  private static final String ANON_SETTINGS_TABLE = "anonymization_settings";
 
   public RequestService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
@@ -144,6 +149,28 @@ public class RequestService {
 
     return deleteAllResult.future()
         .compose(eventPublisher.publishAllRemoved());
+  }
+
+  public Future<Response> getAnonymizationSettings() {
+    return PgUtil.get(
+      ANON_SETTINGS_TABLE,
+      AnonymizationSettingsResponse.class,
+      null, null,
+      0, 1,
+      okapiHeaders,
+      vertxContext,
+      RequestStorage.GetRequestStorageAnonymizationSettingsResponse.class
+    );
+  }
+
+  public Future<Response> createAnonymizationSettings(AnonymizationSettings body) {
+    return PgUtil.post(
+      ANON_SETTINGS_TABLE,
+      body,
+      okapiHeaders,
+      vertxContext,
+      RequestStorage.PostRequestStorageAnonymizationSettingsResponse.class
+    );
   }
 
   private boolean isSamePositionInQueueError(AsyncResult<Response> reply) {
