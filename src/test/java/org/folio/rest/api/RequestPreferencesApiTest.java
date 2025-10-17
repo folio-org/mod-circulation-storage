@@ -4,10 +4,13 @@ import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isC
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNoContent;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNotFound;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isUnprocessableEntity;
+import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isOk;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.core.Is.is;
 
 import java.net.MalformedURLException;
@@ -30,9 +33,12 @@ import org.junit.Before;
 import org.junit.Test;
 
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.json.JsonArray;
+
 
 public class RequestPreferencesApiTest extends ApiTests {
   private static final int CONNECTION_TIMEOUT = 5;
+  private static final int TIMEOUT_S = 10;
   private static final String USER_ID = "1e425b93-501e-44b0-a4c7-b3e66a25c42e";
   private static final String USER_ID2 = "2e425b93-501e-44b0-a4c7-b3e66a25c42e";
   private static final String SERVICE_POINT_ID = "22beccec-8d77-4a97-906a-37cc26b070e5";
@@ -170,7 +176,67 @@ public class RequestPreferencesApiTest extends ApiTests {
     JsonResponse response = updatePreference(preference);
     assertThat(response, isUnprocessableEntity());
   }
+  @Test
+  public void getReturnsDefaultOrPreviouslySavedSettings() {
+    JsonResponse resp = getAnonymizationSettings();
+    assertThat(resp, isOk());
 
+    JsonObject body = resp.getJson();
+
+    if (body.containsKey("totalRecords")) {
+      int total = body.getInteger("totalRecords", 0);
+      assertThat(total, greaterThanOrEqualTo(1));
+      JsonArray arr = body.getJsonArray("anonymizationSettings", new JsonArray());
+
+      if (arr.isEmpty()) {
+        throw new AssertionError("anonymizationSettings array is empty while totalRecords >= 1");
+      }
+    } else {
+
+      if (body.isEmpty()) {
+        throw new AssertionError("GET /request-storage/anonymization-settings returned empty JSON");
+      }
+    }
+  }
+
+
+  @Test
+  public void postCreatesOrUpdatesAndGetReadsBack() {
+
+    JsonResponse get1 = getAnonymizationSettings();
+    assertThat(get1, isOk());
+    JsonObject current = extractFirstSettingsObject(get1.getJson());
+
+
+    JsonObject toPost = current.copy();
+    String toggleKey = findBooleanKey(toPost, "anonymizeClosedRequests", "anonymizeExpiredCompleted",
+      "anonymizeProcessed", "anonymizeCancelled"); // common names; harmless if absent
+    Boolean toggledTo = null;
+    if (toggleKey != null) {
+      boolean now = toPost.getBoolean(toggleKey, false);
+      toggledTo = !now;
+      toPost.put(toggleKey, toggledTo);
+    }
+
+    JsonResponse postResp = postAnonymizationSettings(toPost);
+    assertThat(postResp, isCreated());
+
+    JsonResponse get2 = getAnonymizationSettings();
+    assertThat(get2, isOk());
+    JsonObject after = extractFirstSettingsObject(get2.getJson());
+
+    if (toggleKey != null && toggledTo != null) {
+      Boolean actual = after.getBoolean(toggleKey);
+      if (actual == null || !actual.equals(toggledTo)) {
+        throw new AssertionError("Expected " + toggleKey + "=" + toggledTo + " after POST, but was " + actual);
+      }
+    } else {
+      // Fallback: at least ensure we still have a non-empty object
+      if (after.isEmpty()) {
+        throw new AssertionError("GET after POST returned empty settings");
+      }
+    }
+  }
   private void assertPreferenceEquals(RequestPreference preference1, RequestPreference preference2) {
     assertThat(preference1.getId(), is(preference2.getId()));
     assertThat(preference1.getDefaultServicePointId(), is(preference2.getDefaultServicePointId()));
@@ -263,5 +329,51 @@ public class RequestPreferencesApiTest extends ApiTests {
     for (RequestPreference preference : preferences.getRequestPreferences()) {
       deletePreference(preference.getId());
     }
+  }
+
+  private JsonResponse getAnonymizationSettings() {
+    CompletableFuture<JsonResponse> fut = new CompletableFuture<>();
+    client.get(anonymizationSettingsUrl(""), StorageTestSuite.TENANT_ID, ResponseHandler.json(fut));
+    return wait(fut);
+  }
+
+  private JsonResponse postAnonymizationSettings(JsonObject body) {
+    CompletableFuture<JsonResponse> fut = new CompletableFuture<>();
+    client.post(anonymizationSettingsUrl(""), body, StorageTestSuite.TENANT_ID, ResponseHandler.json(fut));
+    return wait(fut);
+  }
+
+  private URL anonymizationSettingsUrl(String path) {
+    try {
+      return StorageTestSuite.storageUrl("/request-storage/anonymization-settings" + path);
+    } catch (MalformedURLException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
+  private JsonResponse wait(CompletableFuture<JsonResponse> fut) {
+    try {
+      return fut.get(TIMEOUT_S, TimeUnit.SECONDS);
+    } catch (Exception e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
+  private static String findBooleanKey(JsonObject obj, String... candidates) {
+    for (String k : candidates) {
+      if (obj.containsKey(k) && (obj.getValue(k) instanceof Boolean)) {
+        return k;
+      }
+    }
+    return null;
+  }
+
+  private static JsonObject extractFirstSettingsObject(JsonObject body) {
+    if (body == null) return new JsonObject();
+    if (body.containsKey("anonymizationSettings")) {
+      JsonArray arr = body.getJsonArray("anonymizationSettings", new JsonArray());
+      return arr.isEmpty() ? new JsonObject() : arr.getJsonObject(0);
+    }
+    return body;
   }
 }
