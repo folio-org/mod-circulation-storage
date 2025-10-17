@@ -7,8 +7,6 @@ import javax.ws.rs.core.Response;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.jaxrs.resource.RequestStorage;
-import org.folio.rest.jaxrs.model.AnonymizationSettings;
-import org.folio.rest.jaxrs.model.AnonymizationSettingsResponse;
 import org.folio.service.request.RequestService;
 
 import io.vertx.core.AsyncResult;
