@@ -49,7 +49,7 @@ public class RequestService {
   private final EntityChangedEventPublisher<String, Request> eventPublisher;
   private final ServiceHelper<Request> helper;
 
-  private static final String ANON_SETTINGS_TABLE = "anonymization_settings";
+  private static final String ANON_SETTINGS_TABLE = "request_anonymization_settings";
 
   public RequestService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
