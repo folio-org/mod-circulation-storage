@@ -20,6 +20,8 @@ import org.apache.logging.log4j.Logger;
 import org.folio.persist.RequestRepository;
 import org.folio.rest.impl.util.OkapiResponseUtil;
 import org.folio.rest.impl.util.RequestsApiUtil;
+import org.folio.rest.jaxrs.model.AnonymizationSettings;
+import org.folio.rest.jaxrs.model.AnonymizationSettingsResponse;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.jaxrs.model.Requests;
@@ -38,6 +40,7 @@ import io.vertx.core.Promise;
 public class RequestService {
 
   private static final Logger log = LogManager.getLogger(RequestService.class);
+  private static final String ANON_SETTINGS_TABLE = "anonymization_settings";
 
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
@@ -144,6 +147,28 @@ public class RequestService {
 
     return deleteAllResult.future()
         .compose(eventPublisher.publishAllRemoved());
+  }
+
+  public Future<Response> getAnonymizationSettings() {
+    return PgUtil.get(
+      ANON_SETTINGS_TABLE,
+      AnonymizationSettingsResponse.class,
+      null, null,
+      0, 1,
+      okapiHeaders,
+      vertxContext,
+      RequestStorage.GetRequestStorageAnonymizationSettingsResponse.class
+    );
+  }
+
+  public Future<Response> createAnonymizationSettings(AnonymizationSettings body) {
+    return PgUtil.post(
+      ANON_SETTINGS_TABLE,
+      body,
+      okapiHeaders,
+      vertxContext,
+      RequestStorage.PostRequestStorageAnonymizationSettingsResponse.class
+    );
   }
 
   private boolean isSamePositionInQueueError(AsyncResult<Response> reply) {

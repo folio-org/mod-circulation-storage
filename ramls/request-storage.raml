@@ -15,6 +15,10 @@ types:
   parameters: !include raml-util/schemas/parameters.schema
   location: !include locations/location.json
   locations: !include locations/locations.json
+  anonymize-requests-request: !include anonymize-storage-requests-request.json
+  anonymize-requests-response: !include anonymize-storage-requests-response.json
+  AnonymizationSettings: !include anonymization-settings.json
+  AnonymizationSettingsResponse: !include anonymization-settings-response.json
 
 traits:
   pageable: !include raml-util/traits/pageable.raml
@@ -76,3 +80,39 @@ resourceTypes:
         responses:
           501:
             description: "Not implemented yet"
+
+  /anonymization-settings:
+      get:
+        description: Get current request anonymization configuration
+        responses:
+          200:
+            body:
+              application/json:
+                type: AnonymizationSettingsResponse
+          401:
+            description: Not Authenticated
+          403:
+            description: Not authorized
+          404:
+            description: No configuration found
+      post:
+        description: Create requestion anonymization configuration
+        body:
+          application/json:
+            type: AnonymizationSettings
+        responses:
+          201:
+            body:
+              application/json:
+                type: AnonymizationSettingsResponse
+          400:
+            description: Bad Request
+          401:
+            description: Not Authenticated
+          403:
+            description: Not authorized
+          422:
+            body:
+              application/json:
+                type: errors
+                example: !include raml-util/examples/errors.sample

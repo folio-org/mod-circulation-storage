@@ -73,4 +73,28 @@ public class RequestsAPI implements RequestStorage {
         .onComplete(asyncResultHandler);
   }
 
+  @Validate
+  @Override
+  public void getRequestStorageAnonymizationSettings(
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+    new org.folio.service.request.RequestService(vertxContext, okapiHeaders)
+      .getAnonymizationSettings()
+      .onComplete(asyncResultHandler);
+  }
+
+  @Validate
+  @Override
+  public void postRequestStorageAnonymizationSettings(
+    org.folio.rest.jaxrs.model.AnonymizationSettings entity,
+    Map<String,String> okapiHeaders,
+    Handler<AsyncResult<Response>> h,
+    Context ctx) {
+    new org.folio.service.request.RequestService(ctx, okapiHeaders)
+      .createAnonymizationSettings(entity)
+      .onComplete(h);
+  }
+
 }

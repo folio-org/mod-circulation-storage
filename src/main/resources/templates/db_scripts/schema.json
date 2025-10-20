@@ -595,6 +595,18 @@
           "sqlExpressionQuery": "$"
         }
       ]
+    },
+    {
+      "tableName": "anonymization_settings",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD",
+          "caseSensitive": false
+        }
+      ]
     }
   ],
   "scripts": [
