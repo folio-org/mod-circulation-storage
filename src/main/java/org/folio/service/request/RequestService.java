@@ -40,7 +40,7 @@ import io.vertx.core.Promise;
 public class RequestService {
 
   private static final Logger log = LogManager.getLogger(RequestService.class);
-  private static final String ANON_SETTINGS_TABLE = "anonymization_settings";
+  private static final String ANON_SETTINGS_TABLE = "request_anonymization_settings";
 
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
