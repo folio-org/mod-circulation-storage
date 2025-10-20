@@ -36,6 +36,7 @@ import io.vertx.core.json.JsonObject;
 
 public class RequestPreferencesApiTest extends ApiTests {
   private static final int CONNECTION_TIMEOUT = 5;
+  private static final int TIMEOUT_S = 10;
   private static final String USER_ID = "1e425b93-501e-44b0-a4c7-b3e66a25c42e";
   private static final String USER_ID2 = "2e425b93-501e-44b0-a4c7-b3e66a25c42e";
   private static final String SERVICE_POINT_ID = "22beccec-8d77-4a97-906a-37cc26b070e5";
