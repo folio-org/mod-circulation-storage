@@ -24,7 +24,6 @@
       "uniqueItems": true,
       "description": "List of request fields that will be anonymized when the policy triggers.",
       "items": {
-        "items": {
           "type": "string",
           "description": "A field name from the request record to anonymize."
         }
