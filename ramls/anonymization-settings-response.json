@@ -24,7 +24,6 @@
       "uniqueItems": true,
       "description": "List of request fields that will be anonymized when the policy triggers.",
       "items": {
-      "items": {
         "type": "string",
         "description": "A field name from the request record to anonymize."
       }
@@ -48,8 +47,7 @@
           "type": "string",
           "format": "date-time",
           "description": "ISO-8601 timestamp when the record was last updated."
-        }
-      },
+        },
         "updatedByUserId": {
           "type": "string",
           "pattern": "^[0-9a-fA-F-]{36}$",
