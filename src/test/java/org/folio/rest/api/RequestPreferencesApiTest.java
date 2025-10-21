@@ -5,7 +5,6 @@ import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isN
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isNotFound;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isUnprocessableEntity;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isOk;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
