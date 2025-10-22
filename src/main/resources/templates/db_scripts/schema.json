@@ -597,7 +597,7 @@
       ]
     },
     {
-      "tableName": "anonymization_settings",
+      "tableName": "request_anonymization_settings",
       "withMetadata": true,
       "withAuditing": false
     }

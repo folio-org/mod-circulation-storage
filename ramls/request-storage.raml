@@ -88,33 +88,74 @@ resourceTypes:
         200:
           body:
             application/json:
-              type: AnonymizationSettingsResponse
+             # type: AnonymizationSettingsResponse
+             type: AnonymizationSettings
         401:
           description: Not Authenticated
         403:
           description: Not authorized
         404:
-          description: No configuration found
-    post:
-      description: Create requestion anonymization configuration
+          description: Not found
+          body:
+            text/plain:
+              example: Not found
+        500:
+          description: Internal server error
+          body:
+            text/plain:
+              example: "Internal server error"
+    put:
+      description: update requestion anonymization configuration
       body:
         application/json:
           type: AnonymizationSettings
+      headers:
+          X-Okapi-Tenant:
+            type: string
+            required: true
+          X-Okapi-Token:
+            type: string
+            required: true
       responses:
-        201:
+        200:
+          description: Updated existing configuration.
           body:
             application/json:
-              type: AnonymizationSettingsResponse
+              type: AnonymizationSettings
+        201:
+          headers:
+            Location:
+              description: URL to the created anonymization setting
+              type: string
+              example: "/request-storage/anonymization-settings"
+          body:
+            application/json:
+              # type: AnonymizationSettingsResponse
+              type: AnonymizationSettings
         400:
           description: Bad Request
+          body:
+            text/plain:
+              example: "Bad request"
         401:
           description: Not Authenticated
+          body:
+            text/plain:
+              example: "Not Authenticated"
         403:
-          description: Not authorized
+          description: Not Authorized
+          body:
+            text/plain:
+              example: "Not Authorized"
         422:
           body:
             application/json:
               type: errors
               example: !include raml-util/examples/errors.sample
+        500:
+            description: Internal server error
+            body:
+              text/plain:
+                example: "Internal server error"
 
 

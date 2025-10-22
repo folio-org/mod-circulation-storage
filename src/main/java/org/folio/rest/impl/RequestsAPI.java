@@ -66,23 +66,23 @@ public class RequestsAPI implements RequestStorage {
   @Override
   public void getRequestStorageAnonymizationSettings(
     Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
-
-    new org.folio.service.request.RequestService(vertxContext, okapiHeaders)
-      .getAnonymizationSettings()
-      .onComplete(asyncResultHandler);
+    Handler<AsyncResult<Response>> h,
+    Context ctx) {
+    new RequestService(ctx, okapiHeaders).getAnonymizationSettings() .onComplete(h);
   }
 
   @Validate
   @Override
-  public void postRequestStorageAnonymizationSettings(
+  public void putRequestStorageAnonymizationSettings(
+    String arg0,
+    String arg1,
     org.folio.rest.jaxrs.model.AnonymizationSettings entity,
     Map<String,String> okapiHeaders,
     Handler<AsyncResult<Response>> h,
     Context ctx) {
+
     new org.folio.service.request.RequestService(ctx, okapiHeaders)
-      .createAnonymizationSettings(entity)
+      .createAnonymizationSettings(entity)  // <-- pass the body, not javax.ws.rs.core.Request
       .onComplete(h);
   }
 

@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -50,6 +51,7 @@ public class RequestService {
   private final ServiceHelper<Request> helper;
 
   private static final String ANON_SETTINGS_TABLE = "request_anonymization_settings";
+  private static final String SINGLETON_ID = "0b52bca7-db17-4e91-a740-7872ed6d7323";
 
   public RequestService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
@@ -152,25 +154,78 @@ public class RequestService {
   }
 
   public Future<Response> getAnonymizationSettings() {
-    return PgUtil.get(
+    return PgUtil.getById(
       ANON_SETTINGS_TABLE,
-      AnonymizationSettingsResponse.class,
-      null, null,
-      0, 1,
+      org.folio.rest.jaxrs.model.AnonymizationSettings.class,
+      SINGLETON_ID,
       okapiHeaders,
       vertxContext,
       RequestStorage.GetRequestStorageAnonymizationSettingsResponse.class
-    );
+    ).map(response -> {
+
+      if (response.getStatus() == 200) {
+        return response;
+      }
+      if (response.getStatus() == 404) {
+        log.info("Anonymization settings not found, returning default settings.");
+        AnonymizationSettings defaultSettings = new AnonymizationSettings();
+        return RequestStorage.GetRequestStorageAnonymizationSettingsResponse
+          .respond200WithApplicationJson(defaultSettings);
+      }
+      return response;
+    });
   }
 
-  public Future<Response> createAnonymizationSettings(AnonymizationSettings body) {
-    return PgUtil.post(
+  public Future<Response> createAnonymizationSettings(AnonymizationSettings settings) {
+
+    Promise<Response> p = Promise.promise();
+    PgUtil.getById(
       ANON_SETTINGS_TABLE,
-      body,
+      AnonymizationSettings.class,
+      SINGLETON_ID,
       okapiHeaders,
       vertxContext,
-      RequestStorage.PostRequestStorageAnonymizationSettingsResponse.class
-    );
+      RequestStorage.GetRequestStorageAnonymizationSettingsResponse.class
+    ).onSuccess(getResp -> {
+      boolean exists = (getResp.getStatus() == 200);
+
+      if (exists) {
+        PgUtil.put(
+          ANON_SETTINGS_TABLE,
+          settings,
+          SINGLETON_ID,
+          okapiHeaders,
+          vertxContext,
+          RequestStorage.PutRequestStorageAnonymizationSettingsResponse.class
+        ).onSuccess(putResp -> {
+          p.complete(RequestStorage.PutRequestStorageAnonymizationSettingsResponse
+            .respond200WithApplicationJson(settings));
+        }).onFailure(err -> p.complete(
+          RequestStorage.PutRequestStorageAnonymizationSettingsResponse
+            .respond500WithTextPlain(err.getMessage())));
+      } else {
+        PgUtil.post(
+          ANON_SETTINGS_TABLE,
+          settings,
+          okapiHeaders,
+          vertxContext,
+          RequestStorage.PutRequestStorageAnonymizationSettingsResponse.class
+        ).onSuccess(postResp -> p.complete(
+          RequestStorage.PutRequestStorageAnonymizationSettingsResponse
+            .respond201WithApplicationJson(
+              settings,
+              RequestStorage.PutRequestStorageAnonymizationSettingsResponse.headersFor201()
+                .withLocation("/request-storage/anonymization-settings")
+            )
+        )).onFailure(err -> p.complete(
+          RequestStorage.PutRequestStorageAnonymizationSettingsResponse
+            .respond500WithTextPlain(err.getMessage())));
+      }
+    }).onFailure(err -> p.complete(
+      RequestStorage.PutRequestStorageAnonymizationSettingsResponse
+        .respond500WithTextPlain(err.getMessage())));
+
+    return p.future();
   }
 
   private boolean isSamePositionInQueueError(AsyncResult<Response> reply) {

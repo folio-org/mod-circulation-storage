@@ -10,6 +10,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.core.Is.is;
 
 import java.net.MalformedURLException;
@@ -22,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
 import org.folio.rest.jaxrs.model.RequestPreference;
 import org.folio.rest.jaxrs.model.RequestPreferences;
 import org.folio.rest.support.ApiTests;
@@ -35,6 +37,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.json.JsonArray;
 
 
+@Slf4j
 public class RequestPreferencesApiTest extends ApiTests {
   private static final int CONNECTION_TIMEOUT = 5;
   private static final int TIMEOUT_S = 10;
@@ -42,6 +45,7 @@ public class RequestPreferencesApiTest extends ApiTests {
   private static final String USER_ID2 = "2e425b93-501e-44b0-a4c7-b3e66a25c42e";
   private static final String SERVICE_POINT_ID = "22beccec-8d77-4a97-906a-37cc26b070e5";
   private static final String ADDRESS_TYPE_ID = "27a1b086-20ac-4b1d-b6ac-3be353383f3d";
+  private static final String ANON_ID ="0b52bca7-db17-4e91-a740-7872ed6d7323";
   private static final boolean HOLD_SHELF = true;
   private static final boolean DELIVERY = true;
   private static final RequestPreference.Fulfillment FULFILLMENT = RequestPreference.Fulfillment.DELIVERY;
@@ -177,7 +181,16 @@ public class RequestPreferencesApiTest extends ApiTests {
   }
   @Test
   public void getReturnsDefaultOrPreviouslySavedSettings() {
+    System.out.println("hello in or out ");
+
     JsonResponse resp = getAnonymizationSettings();
+
+    // --- START DIAGNOSTIC CODE ---
+    System.out.println("--- DIAGNOSTIC RESPONSE START ---");
+    System.out.println("Status: " + resp.getStatusCode());
+
+    System.out.println(resp.getJson().toString());
+    System.out.println("----------------------------------------------------chaonima-------------------------------------------------------");
     assertThat(resp, isOk());
 
     JsonObject body = resp.getJson();
@@ -200,25 +213,37 @@ public class RequestPreferencesApiTest extends ApiTests {
 
 
   @Test
-  public void postCreatesOrUpdatesAndGetReadsBack() {
-
+  public void putCreatesOrUpdatesAndGetReadsBack() {
+    System.out.println("hello in or out ");
+    System.out.println("------------------------------------------- what ------------------------------------------- ");
     JsonResponse get1 = getAnonymizationSettings();
     assertThat(get1, isOk());
     JsonObject current = extractFirstSettingsObject(get1.getJson());
+    System.out.println("Status: " + get1.getStatusCode());
 
+    System.out.println(get1.getJson().toString());
 
-    JsonObject toPost = current.copy();
-    String toggleKey = findBooleanKey(toPost, "anonymizeClosedRequests", "anonymizeExpiredCompleted",
-      "anonymizeProcessed", "anonymizeCancelled"); // common names; harmless if absent
-    Boolean toggledTo = null;
-    if (toggleKey != null) {
-      boolean now = toPost.getBoolean(toggleKey, false);
-      toggledTo = !now;
-      toPost.put(toggleKey, toggledTo);
+    JsonObject toPut = current.copy();
+
+    if (!toPut.containsKey("enabled")) {
+      toPut.put("enabled", true);
     }
 
-    JsonResponse postResp = postAnonymizationSettings(toPost);
-    assertThat(postResp, isCreated());
+    String toggleKey = findBooleanKey(toPut, "anonymizeClosedRequests", "anonymizeExpiredCompleted",
+      "anonymizeProcessed", "anonymizeCancelled");
+    Boolean toggledTo = null;
+    if (toggleKey != null) {
+      boolean now = toPut.getBoolean(toggleKey, false);
+      toggledTo = !now;
+      toPut.put(toggleKey, toggledTo);
+    }
+
+    JsonResponse putResp = putAnonymizationSettings(toPut);
+    System.out.println("------------------------------line 241--------------------------");
+    //System.out.println("Status: " + putResp.getStatusCode());
+    //System.out.println(putResp.getJson().toString());
+    System.out.println("----------------------------line 244----------------------------");
+    assertThat("PUT must return 200 or 201", putResp.getStatusCode(), anyOf(is(200),is(201)));
 
     JsonResponse get2 = getAnonymizationSettings();
     assertThat(get2, isOk());
@@ -227,15 +252,17 @@ public class RequestPreferencesApiTest extends ApiTests {
     if (toggleKey != null && toggledTo != null) {
       Boolean actual = after.getBoolean(toggleKey);
       if (actual == null || !actual.equals(toggledTo)) {
-        throw new AssertionError("Expected " + toggleKey + "=" + toggledTo + " after POST, but was " + actual);
+        throw new AssertionError("Expected " + toggleKey + "=" + toggledTo + " after PUT, but was " + actual);
       }
     } else {
       // Fallback: at least ensure we still have a non-empty object
       if (after.isEmpty()) {
-        throw new AssertionError("GET after POST returned empty settings");
+        throw new AssertionError("GET after PUT returned empty settings");
       }
     }
   }
+
+
   private void assertPreferenceEquals(RequestPreference preference1, RequestPreference preference2) {
     assertThat(preference1.getId(), is(preference2.getId()));
     assertThat(preference1.getDefaultServicePointId(), is(preference2.getDefaultServicePointId()));
@@ -336,9 +363,9 @@ public class RequestPreferencesApiTest extends ApiTests {
     return wait(fut);
   }
 
-  private JsonResponse postAnonymizationSettings(JsonObject body) {
+  private JsonResponse putAnonymizationSettings(JsonObject body) {
     CompletableFuture<JsonResponse> fut = new CompletableFuture<>();
-    client.post(anonymizationSettingsUrl(""), body, StorageTestSuite.TENANT_ID, ResponseHandler.json(fut));
+    client.put(anonymizationSettingsUrl(""), body, StorageTestSuite.TENANT_ID, ResponseHandler.json(fut));
     return wait(fut);
   }
 
