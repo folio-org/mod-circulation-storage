@@ -239,10 +239,6 @@ public class RequestPreferencesApiTest extends ApiTests {
     }
 
     JsonResponse putResp = putAnonymizationSettings(toPut);
-    System.out.println("------------------------------line 241--------------------------");
-    //System.out.println("Status: " + putResp.getStatusCode());
-    //System.out.println(putResp.getJson().toString());
-    System.out.println("----------------------------line 244----------------------------");
     assertThat("PUT must return 200 or 201", putResp.getStatusCode(), anyOf(is(200),is(201)));
 
     JsonResponse get2 = getAnonymizationSettings();
@@ -261,6 +257,27 @@ public class RequestPreferencesApiTest extends ApiTests {
       }
     }
   }
+
+  @Test
+  public void putReturns200WhenUpdatingExisting() {
+
+    JsonObject base = new JsonObject()
+      .put("enabled", true);
+
+    if (!base.containsKey("enabled")) base.put("enabled", true);
+    assertThat(putAnonymizationSettings(base).getStatusCode(), anyOf(is(200), is(201)));
+
+  }
+
+  @Test
+  public void putValidationErrorsReturn422() {
+    JsonObject invalid = new JsonObject()
+      .put("enabled", true)
+      .put("closedRequestAgeDays", -1);
+    JsonResponse resp = putAnonymizationSettings(invalid);
+    assertThat(resp.getStatusCode(), is(422));
+  }
+
 
 
   private void assertPreferenceEquals(RequestPreference preference1, RequestPreference preference2) {

@@ -178,7 +178,16 @@ public class RequestService {
 
   public Future<Response> createAnonymizationSettings(AnonymizationSettings settings) {
 
+    if (settings == null) {
+      return Future.succeededFuture(
+        RequestStorage.PutRequestStorageAnonymizationSettingsResponse
+          .respond400WithTextPlain("Request body is required"));
+    }
+
+
     Promise<Response> p = Promise.promise();
+
+    // 3) Existence check to decide 201 vs 200
     PgUtil.getById(
       ANON_SETTINGS_TABLE,
       AnonymizationSettings.class,
@@ -187,40 +196,34 @@ public class RequestService {
       vertxContext,
       RequestStorage.GetRequestStorageAnonymizationSettingsResponse.class
     ).onSuccess(getResp -> {
-      boolean exists = (getResp.getStatus() == 200);
+      final boolean exists = (getResp.getStatus() == 200);
 
-      if (exists) {
-        PgUtil.put(
-          ANON_SETTINGS_TABLE,
-          settings,
-          SINGLETON_ID,
-          okapiHeaders,
-          vertxContext,
-          RequestStorage.PutRequestStorageAnonymizationSettingsResponse.class
-        ).onSuccess(putResp -> {
-          p.complete(RequestStorage.PutRequestStorageAnonymizationSettingsResponse
-            .respond200WithApplicationJson(settings));
-        }).onFailure(err -> p.complete(
-          RequestStorage.PutRequestStorageAnonymizationSettingsResponse
-            .respond500WithTextPlain(err.getMessage())));
-      } else {
-        PgUtil.post(
-          ANON_SETTINGS_TABLE,
-          settings,
-          okapiHeaders,
-          vertxContext,
-          RequestStorage.PutRequestStorageAnonymizationSettingsResponse.class
-        ).onSuccess(postResp -> p.complete(
-          RequestStorage.PutRequestStorageAnonymizationSettingsResponse
-            .respond201WithApplicationJson(
-              settings,
-              RequestStorage.PutRequestStorageAnonymizationSettingsResponse.headersFor201()
-                .withLocation("/request-storage/anonymization-settings")
-            )
-        )).onFailure(err -> p.complete(
-          RequestStorage.PutRequestStorageAnonymizationSettingsResponse
-            .respond500WithTextPlain(err.getMessage())));
-      }
+      // Use PUT against fixed id (single row); for brand-new tenants we’ll POST to create
+      final Future<Response> writeFut = exists
+        ? PgUtil.put(
+        ANON_SETTINGS_TABLE, settings, SINGLETON_ID,
+        okapiHeaders, vertxContext,
+        RequestStorage.PutRequestStorageAnonymizationSettingsResponse.class)
+        : PgUtil.post(
+        ANON_SETTINGS_TABLE, settings,
+        okapiHeaders, vertxContext,
+        RequestStorage.PutRequestStorageAnonymizationSettingsResponse.class);
+
+      writeFut.onSuccess(__ -> {
+        Response out = exists
+          ? RequestStorage.PutRequestStorageAnonymizationSettingsResponse
+          .respond200WithApplicationJson(settings)
+          : RequestStorage.PutRequestStorageAnonymizationSettingsResponse
+          .respond201WithApplicationJson(
+            settings,
+            RequestStorage.PutRequestStorageAnonymizationSettingsResponse
+              .headersFor201()
+              .withLocation("/request-storage/anonymization-settings"));
+        p.complete(out);
+      }).onFailure(err -> p.complete(
+        RequestStorage.PutRequestStorageAnonymizationSettingsResponse
+          .respond500WithTextPlain(err.getMessage())));
+
     }).onFailure(err -> p.complete(
       RequestStorage.PutRequestStorageAnonymizationSettingsResponse
         .respond500WithTextPlain(err.getMessage())));

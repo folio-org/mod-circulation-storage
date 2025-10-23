@@ -62,13 +62,15 @@ public class RequestsAPI implements RequestStorage {
     new RequestService(vertxContext, okapiHeaders).delete(requestId)
         .onComplete(asyncResultHandler);
   }
+
   @Validate
   @Override
   public void getRequestStorageAnonymizationSettings(
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> h,
     Context ctx) {
-    new RequestService(ctx, okapiHeaders).getAnonymizationSettings() .onComplete(h);
+    new RequestService(ctx, okapiHeaders).getAnonymizationSettings()
+       .onComplete(h);
   }
 
   @Validate
@@ -81,8 +83,7 @@ public class RequestsAPI implements RequestStorage {
     Handler<AsyncResult<Response>> h,
     Context ctx) {
 
-    new org.folio.service.request.RequestService(ctx, okapiHeaders)
-      .createAnonymizationSettings(entity)  // <-- pass the body, not javax.ws.rs.core.Request
+    new org.folio.service.request.RequestService(ctx, okapiHeaders).createAnonymizationSettings(entity)
       .onComplete(h);
   }
 
