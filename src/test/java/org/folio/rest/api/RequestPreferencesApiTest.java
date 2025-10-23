@@ -278,6 +278,27 @@ public class RequestPreferencesApiTest extends ApiTests {
     assertThat(resp.getStatusCode(), is(422));
   }
 
+  @Test
+  public void putRejectsUnknownFields() {
+    JsonObject bad = validPayload(true, 0)
+      .put("closedRequestAgeDays", 5) // not part of the current model
+      .put("anonymizeClosedRequests", false); // also not part of the current model
+
+    JsonResponse resp = putAnonymizationSettings(bad);
+
+    if (resp.getStatusCode() != 422) {
+      throw new AssertionError("Expected 422 for unknown fields, got "
+        + resp.getStatusCode() + " body=" + (resp.getJson() == null ? "null" : resp.getJson().encodePrettily()));
+    }
+    if (resp.getJson() != null) {
+      String body = resp.getJson().encode();
+      // different stacks format the message differently; checking for a hint is ok
+      assertThat(body, anyOf(containsString("Unrecognized field"),
+        containsString("additionalProperties"),
+        containsString("unknown")));
+    }
+  }
+
 
 
   private void assertPreferenceEquals(RequestPreference preference1, RequestPreference preference2) {
@@ -394,14 +415,6 @@ public class RequestPreferencesApiTest extends ApiTests {
     }
   }
 
-  private JsonResponse wait(CompletableFuture<JsonResponse> fut) {
-    try {
-      return fut.get(TIMEOUT_S, TimeUnit.SECONDS);
-    } catch (Exception e) {
-      throw new IllegalStateException(e);
-    }
-  }
-
   private static String findBooleanKey(JsonObject obj, String... candidates) {
     for (String k : candidates) {
       if (obj.containsKey(k) && (obj.getValue(k) instanceof Boolean)) {
@@ -419,4 +432,34 @@ public class RequestPreferencesApiTest extends ApiTests {
     }
     return body;
   }
+
+  private static JsonObject validPayload(Boolean enabled, Integer retentionDays) {
+    JsonObject obj = new JsonObject();
+    if (enabled != null) obj.put("enabled", enabled);
+    if (retentionDays != null) obj.put("retentionDays", retentionDays);
+    return obj;
+  }
+
+  // Build a payload that matches the current model only.
+  private static JsonObject settingsPayload(boolean enabled, int retentionDays) {
+    return new JsonObject()
+      .put("enabled", enabled)
+      .put("retentionDays", retentionDays);
+  }
+
+  // (Optional) If you really must start from a GET object, sanitize it:
+  private static JsonObject sanitizeToModel(JsonObject raw) {
+    JsonObject clean = new JsonObject();
+    // default to false/0 if missing; adjust if you want different defaults
+    clean.put("enabled", raw.getBoolean("enabled", false));
+    Integer rd = raw.getInteger("retentionDays");
+    clean.put("retentionDays", rd == null ? 0 : rd);
+    return clean;
+  }
+
+  private JsonResponse wait(CompletableFuture<JsonResponse> fut) {
+    try { return fut.get(10, java.util.concurrent.TimeUnit.SECONDS); }
+    catch (Exception e) { throw new IllegalStateException(e); }
+  }
+
 }

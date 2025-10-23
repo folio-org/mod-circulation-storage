@@ -30,6 +30,7 @@ import org.folio.rest.jaxrs.model.AnonymizationSettingsResponse;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 
+import org.folio.rest.tools.utils.TenantTool;
 import org.folio.service.event.EntityChangedEventPublisher;
 import org.folio.support.ResponseUtil;
 import org.folio.support.ServiceHelper;
@@ -176,18 +177,11 @@ public class RequestService {
     });
   }
 
+
   public Future<Response> createAnonymizationSettings(AnonymizationSettings settings) {
-
-    if (settings == null) {
-      return Future.succeededFuture(
-        RequestStorage.PutRequestStorageAnonymizationSettingsResponse
-          .respond400WithTextPlain("Request body is required"));
-    }
-
 
     Promise<Response> p = Promise.promise();
 
-    // 3) Existence check to decide 201 vs 200
     PgUtil.getById(
       ANON_SETTINGS_TABLE,
       AnonymizationSettings.class,
@@ -198,7 +192,6 @@ public class RequestService {
     ).onSuccess(getResp -> {
       final boolean exists = (getResp.getStatus() == 200);
 
-      // Use PUT against fixed id (single row); for brand-new tenants we’ll POST to create
       final Future<Response> writeFut = exists
         ? PgUtil.put(
         ANON_SETTINGS_TABLE, settings, SINGLETON_ID,
@@ -207,7 +200,7 @@ public class RequestService {
         : PgUtil.post(
         ANON_SETTINGS_TABLE, settings,
         okapiHeaders, vertxContext,
-        RequestStorage.PutRequestStorageAnonymizationSettingsResponse.class);
+        RequestStorage.PutRequestStorageAnonymizationSettingsResponse.class),h;
 
       writeFut.onSuccess(__ -> {
         Response out = exists
@@ -230,6 +223,8 @@ public class RequestService {
 
     return p.future();
   }
+
+
 
   private boolean isSamePositionInQueueError(AsyncResult<Response> reply) {
     String message = OkapiResponseUtil.getErrorMessage(reply);
