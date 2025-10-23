@@ -299,8 +299,6 @@ public class RequestPreferencesApiTest extends ApiTests {
     }
   }
 
-
-
   private void assertPreferenceEquals(RequestPreference preference1, RequestPreference preference2) {
     assertThat(preference1.getId(), is(preference2.getId()));
     assertThat(preference1.getDefaultServicePointId(), is(preference2.getDefaultServicePointId()));
