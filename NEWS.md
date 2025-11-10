@@ -1,5 +1,6 @@
 ## (IN PROGRESS)
 * Add boolean field `isRawHtml` to the staff-slip JSON Schema, and bump interface `staff-slips-storage` to new minor version 1.1 to indictate the existence of this field (CIRCSTORE-585)
+* Add new Trigger `Hold request for item` to the notice enum (CIRCSTORE-620)
 
 ## 17.4.0 2025-03-12
 * Upgrade to Java v21 (CIRCSTORE-576)
