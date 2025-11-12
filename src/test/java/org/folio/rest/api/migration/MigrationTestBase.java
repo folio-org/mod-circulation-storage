@@ -4,11 +4,15 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 
 import io.vertx.core.Vertx;
+import lombok.SneakyThrows;
+
 import org.folio.rest.api.StorageTestSuite;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.ApiTests;
 import org.folio.util.ResourceUtil;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -30,12 +34,13 @@ abstract class MigrationTestBase extends ApiTests {
     return resource;
   }
 
-  static String getSchemaName() {
-    return String.format("%s_mod_circulation_storage", TENANT_ID);
+  static String loadTest(String scriptName) {
+    return loadScript(scriptName, MigrationTestBase::replaceSchema);
   }
 
   static String replaceSchema(String resource) {
-    return resource.replace("${myuniversity}_${mymodule}", getSchemaName());
+    return resource.replace("${myuniversity}", TENANT_ID)
+      .replace("${mymodule}", "mod_circulation_storage");
   }
 
   /**
@@ -63,5 +68,17 @@ abstract class MigrationTestBase extends ApiTests {
     });
 
     result.get(5, SECONDS);
+  }
+
+  @SneakyThrows
+  protected void executeSqlScript(String filePath) {
+    executeMultipleSqlStatements(readResource(filePath));
+  }
+
+  @SneakyThrows
+  protected String readResource(String filePath) {
+    return replaceSchema(
+      Files.readString(Path.of(getClass().getResource(filePath).toURI()))
+    );
   }
 }

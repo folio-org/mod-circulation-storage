@@ -25,6 +25,7 @@ import org.apache.logging.log4j.Logger;
 import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.api.loans.LoansAnonymizationApiTest;
+import org.folio.rest.api.migration.CirculationSettingsMigrationScriptTest;
 import org.folio.rest.api.migration.StaffSlipsHoldTransitMigrationScriptTest;
 import org.folio.rest.api.migration.StaffSlipsPickRequestMigrationScriptTest;
 import org.folio.rest.persist.Criteria.Criterion;
@@ -75,6 +76,7 @@ import lombok.SneakyThrows;
   CheckInStorageApiTest.class,
   StaffSlipsPickRequestMigrationScriptTest.class,
   StaffSlipsHoldTransitMigrationScriptTest.class,
+  CirculationSettingsMigrationScriptTest.class,
   RequestUpdateTriggerTest.class,
   JsonPropertyWriterTest.class,
   IsbnNormalizationTest.class,

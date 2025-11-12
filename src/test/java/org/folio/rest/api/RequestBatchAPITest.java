@@ -46,7 +46,7 @@ public class RequestBatchAPITest extends ApiTests {
   public void beforeEach() throws Exception {
     StorageTestSuite.deleteAll(requestStorageUrl());
     removeAllEvents();
-    stubTlrSettings(true, false, false);
+    circulationSettingsHelper.changeTlrSettings(true, false, false);
   }
 
   @After
@@ -201,24 +201,6 @@ public class RequestBatchAPITest extends ApiTests {
     TextResponse reorderResponse = attemptReorderRequests(ResponseHandler::text,
       new ReorderRequest(firstRequestCopy, 3),
       new ReorderRequest(secondRequest, 10)
-    );
-    assertThat(reorderResponse.getStatusCode(), is(500));
-
-    assertRequestsNotUpdated(itemId, firstRequest, secondRequest);
-  }
-
-  @Test
-  public void failWhenTrlSettingsNotAvailable() throws Exception {
-    stub404ForTlrSettings();
-
-    UUID itemId = UUID.randomUUID();
-
-    JsonObject firstRequest = createRequestAtPosition(itemId, null, 1);
-    JsonObject secondRequest = createRequestAtPosition(itemId, null, 2);
-
-    TextResponse reorderResponse = attemptReorderRequests(ResponseHandler::text,
-      new ReorderRequest(firstRequest, 2),
-      new ReorderRequest(secondRequest, 1)
     );
     assertThat(reorderResponse.getStatusCode(), is(500));
 
