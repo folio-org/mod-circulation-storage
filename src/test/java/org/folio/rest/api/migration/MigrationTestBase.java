@@ -34,10 +34,6 @@ abstract class MigrationTestBase extends ApiTests {
     return resource;
   }
 
-  static String loadTest(String scriptName) {
-    return loadScript(scriptName, MigrationTestBase::replaceSchema);
-  }
-
   static String replaceSchema(String resource) {
     return resource.replace("${myuniversity}", TENANT_ID)
       .replace("${mymodule}", "mod_circulation_storage");
