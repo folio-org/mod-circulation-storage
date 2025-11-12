@@ -5,6 +5,7 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.folio.rest.api.StorageTestSuite.cleanUpTable;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
@@ -51,7 +52,7 @@ public class CirculationSettingsMigrationScriptTest extends MigrationTestBase {
   @Test
   public void nothingIsMigratedIfSourceSchemasDoNotExist() {
     executeSqlScript(CIRCULATION_SETTINGS_MIGRATION_SCRIPT_PATH);
-    assertEquals(0, getCirculationSettings().size());
+    assertThat(getCirculationSettings(), empty());
   }
 
   @Test
@@ -59,7 +60,7 @@ public class CirculationSettingsMigrationScriptTest extends MigrationTestBase {
     executeSqlScript(CREATE_MOD_CONFIGURATION_SCHEMA_SCRIPT_PATH);
     executeSqlScript(CREATE_MOD_SETTINGS_SCHEMA_SCRIPT_PATH);
     executeSqlScript(CIRCULATION_SETTINGS_MIGRATION_SCRIPT_PATH);
-    assertEquals(0, getCirculationSettings().size());
+    assertThat(getCirculationSettings(), empty());
   }
 
   @Test
