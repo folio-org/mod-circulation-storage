@@ -1,11 +1,11 @@
 package org.folio.service;
 
+import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.tools.utils.ValidationHelper.isDuplicate;
 import static org.folio.service.event.EntityChangedEventPublisherFactory.circulationSettingsEventPublisher;
 import static org.folio.support.ModuleConstants.CIRCULATION_SETTINGS_TABLE;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -94,19 +94,19 @@ public class CirculationSettingsService {
   private Future<TlrSettings> getTlrSettings(boolean throwIfNotFound) {
     return getSettingsByName("generalTlr")
       .compose(gt -> gt.isEmpty() ? getSettingsByName("TLR") : succeededFuture(gt))
-      .map(settings -> handleTlrSettings(settings, throwIfNotFound));
+      .compose(settings -> handleTlrSettings(settings, throwIfNotFound));
   }
 
-  private static TlrSettings handleTlrSettings(Collection<CirculationSetting> settings,
+  private static Future<TlrSettings> handleTlrSettings(List<CirculationSetting> settings,
     boolean throwIfNotFound) {
 
     if (settings.isEmpty()) {
       log.info("handleTlrSettings:: TLR settings not found");
       if (throwIfNotFound) {
-        throw new IllegalStateException("TLR settings not found");
+        return failedFuture("TLR settings not found");
       }
       log.info("handleTlrSettings:: returning default TLR settings with feature disabled");
-      return new TlrSettings(false, false, false);
+      return succeededFuture(new TlrSettings(false, false, false));
     }
 
     return settings.stream()
@@ -115,7 +115,8 @@ public class CirculationSettingsService {
       .map(Value::getAdditionalProperties)
       .map(JsonObject::new)
       .map(TlrSettings::from)
-      .orElseThrow();
+      .map(Future::succeededFuture)
+      .orElseGet(() -> failedFuture("TLR settings not found"));
   }
 
   private Future<CirculationSetting> updateSettingsValue(CirculationSetting circulationSetting,
@@ -124,7 +125,7 @@ public class CirculationSettingsService {
     if (!isDuplicate(throwable.getMessage())) {
       log.warn("updateSettingsValue:: error during saving circulation setting: {}",
         circulationSetting, throwable);
-      return Future.failedFuture(throwable);
+      return failedFuture(throwable);
     }
 
     log.info("updateSettingsValue:: setting with name: {} already exists.",
