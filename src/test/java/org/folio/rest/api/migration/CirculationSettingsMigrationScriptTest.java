@@ -15,6 +15,7 @@ import java.util.Map;
 
 import org.folio.rest.jaxrs.model.CirculationSetting;
 import org.folio.rest.persist.Criteria.Criterion;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -44,6 +45,12 @@ public class CirculationSettingsMigrationScriptTest extends MigrationTestBase {
   @Before
   public void beforeEach() {
     cleanUpTable(CIRCULATION_SETTINGS_TABLE);
+    executeSqlScript(DROP_MOD_CONFIGURATION_SCHEMA_SCRIPT_PATH);
+    executeSqlScript(DROP_MOD_SETTINGS_SCHEMA_SCRIPT_PATH);
+  }
+
+  @AfterClass
+  public static void afterAll() {
     executeSqlScript(DROP_MOD_CONFIGURATION_SCHEMA_SCRIPT_PATH);
     executeSqlScript(DROP_MOD_SETTINGS_SCHEMA_SCRIPT_PATH);
   }
