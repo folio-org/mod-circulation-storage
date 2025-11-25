@@ -1,6 +1,7 @@
 package org.folio.service.event;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static org.folio.service.event.EntityChangedEventPublisherFactory.requestEventPublisher;
 
 import java.util.Map;
 
@@ -10,6 +11,7 @@ import org.folio.kafka.KafkaProducerManager;
 import org.folio.kafka.SimpleKafkaProducerManager;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
 import org.folio.kafka.services.KafkaProducerRecordBuilder;
+import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.tools.utils.TenantTool;
 
 import io.vertx.core.Context;

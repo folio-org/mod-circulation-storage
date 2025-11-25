@@ -11,6 +11,7 @@ import static org.folio.rest.jaxrs.model.Request.Status.OPEN_AWAITING_DELIVERY;
 import static org.folio.rest.jaxrs.model.Request.Status.OPEN_AWAITING_PICKUP;
 import static org.folio.rest.jaxrs.model.Request.Status.OPEN_IN_TRANSIT;
 import static org.folio.rest.jaxrs.model.Request.Status.OPEN_NOT_YET_FILLED;
+import static org.folio.service.event.EntityChangedEventPublisherFactory.requestEventPublisher;
 import static org.folio.support.DbUtil.rowSetToStream;
 import static org.folio.support.LogEventPayloadField.ORIGINAL;
 import static org.folio.support.LogEventPayloadField.REQUESTS;
@@ -18,6 +19,7 @@ import static org.folio.support.LogEventPayloadField.UPDATED;
 import static org.folio.support.ModuleConstants.REQUEST_TABLE;
 import static org.folio.support.exception.LogEventType.REQUEST_EXPIRED;
 
+import io.vertx.core.Context;
 import java.text.SimpleDateFormat;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -42,6 +44,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import org.folio.service.event.EntityChangedEventPublisher;
 
 public class RequestExpirationService {
   private static final Logger log = LogManager.getLogger();
@@ -50,29 +53,28 @@ public class RequestExpirationService {
   private final Function<Request, String> requestClassifier;
   private final PostgresClient pgClient;
   private final EventPublisherService eventPublisherService;
+  private final EntityChangedEventPublisher<String, Request> eventPublisher;
 
   public RequestExpirationService(Map<String, String> okapiHeaders, Vertx vertx,
-    String requestClassifierProperty, Function<Request, String> requestClassifier) {
+    Context vertxContext, String requestClassifierProperty,
+    Function<Request, String> requestClassifier) {
 
     this.requestClassifierProperty = requestClassifierProperty;
     this.requestClassifier = requestClassifier;
     pgClient = PostgresClient.getInstance(vertx, okapiHeaders.get(TENANT_HEADER));
     eventPublisherService = new EventPublisherService(vertx, okapiHeaders);
+    this.eventPublisher = requestEventPublisher(vertxContext, okapiHeaders);
   }
 
-  @SuppressWarnings("java:S1905")  // suppress false positive "Remove this unnecessary cast to Void"
   public Future<Void> doRequestExpiration() {
-    List<JsonObject> context = new ArrayList<>();
+    List<ExpiredRequestWrapper> context = new ArrayList<>();
 
     return pgClient.withTrans(conn -> getExpiredRequests(conn)
         .compose(expiredRequests -> closeRequests(conn, expiredRequests, context))
         .compose(associatedIds -> getOpenRequestsByIdFields(conn, associatedIds))
         .compose(openRequests -> reorderRequests(conn, openRequests))
-        .map(x -> {
-          context.forEach(p -> eventPublisherService
-              .publishLogRecord(new JsonObject().put(REQUESTS.value(), p), REQUEST_EXPIRED));
-          return (Void)null;
-        }))
+        .map(x -> publishPubSubLogEvents(context)))
+        .compose(x -> publishRequestDomainEvents(context))
         .onFailure(e -> log.error("Error in request processing", e));
   }
 
@@ -193,19 +195,17 @@ public class RequestExpirationService {
   }
 
   private Future<Set<String>> closeRequests(Conn conn,
-    List<Request> requests, List<JsonObject> context) {
+    List<Request> requests, List<ExpiredRequestWrapper> context) {
 
     Future<Void> future = succeededFuture();
     Set<String> closedRequestsAssociatedIds = new HashSet<>();
 
     for (Request request : requests) {
-      JsonObject pair = new JsonObject();
-      pair.put(ORIGINAL.value(), JsonObject.mapFrom(request));
+      var oldRequest = JsonObject.mapFrom(request);
       closedRequestsAssociatedIds.add(requestClassifier.apply(request));
       Request updatedRequest = changeRequestStatus(request).withPosition(null);
       updatedRequest.getMetadata().withUpdatedDate(new Date());
-      pair.put(UPDATED.value(), JsonObject.mapFrom(updatedRequest));
-      context.add(pair);
+      context.add(new ExpiredRequestWrapper(oldRequest, JsonObject.mapFrom(updatedRequest)));
       future = future.compose(v -> updateRequest(conn, updatedRequest));
     }
 
@@ -246,4 +246,29 @@ public class RequestExpirationService {
   private Future<Void> updateRequest(Conn conn, Request request) {
     return conn.update(REQUEST_TABLE, request, request.getId()).mapEmpty();
   }
+
+  private Void publishPubSubLogEvents(List<ExpiredRequestWrapper> context) {
+    context.forEach(requestWrapper -> {
+      var payload = new JsonObject()
+        .put(REQUESTS.value(), new JsonObject()
+          .put(ORIGINAL.value(), requestWrapper.originalValue())
+          .put(UPDATED.value(), requestWrapper.updatedValue()));
+      eventPublisherService.publishLogRecord(payload, REQUEST_EXPIRED);
+    });
+
+    return null;
+  }
+
+  private Future<Void> publishRequestDomainEvents(List<ExpiredRequestWrapper> context) {
+    Future<Void> future = succeededFuture();
+    for (ExpiredRequestWrapper requestWrapper : context) {
+      Request oldEntity = requestWrapper.originalValue().mapTo(Request.class);
+      Request newEntity = requestWrapper.updatedValue().mapTo(Request.class);
+      future = future.compose(v ->
+        eventPublisher.publishUpdated(newEntity.getId(), oldEntity, newEntity));
+    }
+    return future;
+  }
+
+  public record ExpiredRequestWrapper(JsonObject originalValue, JsonObject updatedValue) {}
 }

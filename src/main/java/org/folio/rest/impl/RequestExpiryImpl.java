@@ -30,19 +30,19 @@ public class RequestExpiryImpl implements ScheduledRequestExpiration {
 
     Vertx vertx = context.owner();
     new ConfigurationClient(vertx, okapiHeaders).getTlrSettingsOrDefault()
-    .compose(tlrSettings -> createRequestExpirationService(okapiHeaders, vertx, tlrSettings)
+    .compose(tlrSettings -> createRequestExpirationService(okapiHeaders, vertx, tlrSettings, context)
         .doRequestExpiration())
     .onSuccess(x -> handler.handle(succeededFuture(respond204())))
     .onFailure(e -> handler.handle(succeededFuture(respond500WithTextPlain(e.getMessage()))));
   }
 
   private RequestExpirationService createRequestExpirationService(Map<String, String> okapiHeaders,
-    Vertx vertx, TlrSettingsConfiguration tlrSettings) {
+    Vertx vertx, TlrSettingsConfiguration tlrSettings, Context vertxContext) {
 
     return tlrSettings.isTitleLevelRequestsFeatureEnabled()
-      ? new RequestExpirationService(okapiHeaders, vertx, "instanceId",
+      ? new RequestExpirationService(okapiHeaders, vertx, vertxContext, "instanceId",
         Request::getInstanceId)
-      : new RequestExpirationService(okapiHeaders, vertx, "itemId",
+      : new RequestExpirationService(okapiHeaders, vertx, vertxContext, "itemId",
         Request::getItemId);
   }
 }
