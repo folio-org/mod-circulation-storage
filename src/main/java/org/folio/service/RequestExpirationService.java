@@ -39,8 +39,10 @@ import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.service.event.EntityChangedEventPublisher;
+
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
@@ -56,12 +58,21 @@ public class RequestExpirationService {
 
   public RequestExpirationService(Map<String, String> okapiHeaders, Vertx vertx,
     String requestClassifierProperty, Function<Request, String> requestClassifier) {
+    this(requestClassifierProperty, requestClassifier,
+      PostgresClient.getInstance(vertx, okapiHeaders.get(TENANT_HEADER)),
+      new EventPublisherService(vertx, okapiHeaders),
+      requestEventPublisher(vertx.getOrCreateContext(), okapiHeaders));
+  }
 
+  RequestExpirationService(String requestClassifierProperty,
+    Function<Request, String> requestClassifier,
+    PostgresClient postgresClient, EventPublisherService eventPublisherService,
+    EntityChangedEventPublisher<String, Request> eventPublisher) {
     this.requestClassifierProperty = requestClassifierProperty;
     this.requestClassifier = requestClassifier;
-    pgClient = PostgresClient.getInstance(vertx, okapiHeaders.get(TENANT_HEADER));
-    eventPublisherService = new EventPublisherService(vertx, okapiHeaders);
-    this.eventPublisher = requestEventPublisher(vertx.getOrCreateContext(), okapiHeaders);
+    this.pgClient = postgresClient;
+    this.eventPublisherService = eventPublisherService;
+    this.eventPublisher = eventPublisher;
   }
 
   public Future<Void> doRequestExpiration() {
@@ -256,23 +267,37 @@ public class RequestExpirationService {
   }
 
   private Future<Void> publishExpiredRequestsEvents(List<ExpiredRequestWrapper> context) {
-    List<Future<Void>> futures = new ArrayList<>();
+    List<Future<Boolean>> futures = new ArrayList<>();
     for (ExpiredRequestWrapper requestWrapper : context) {
       Request oldEntity = requestWrapper.originalValue().mapTo(Request.class);
       Request newEntity = requestWrapper.updatedValue().mapTo(Request.class);
       String id = newEntity.getId();
 
-      var future = eventPublisher.publishUpdated(id, oldEntity, newEntity).recover(err -> {
-        log.warn("publishExpiredRequestsEvents:: failed to send event for request: {}", id, err);
-        return succeededFuture();
-      });
+      // replaces void with boolean = true if event is sent, with false if error occurred
+      var future = eventPublisher.publishUpdated(id, oldEntity, newEntity)
+        .map(x -> true)
+        .otherwise(err -> {
+          log.warn("publishExpiredRequestsEvents:: failed to send event for request: {}", id, err);
+          return false;
+        });
 
       futures.add(future);
     }
 
     return Future.all(futures)
-      .compose(Future::<Void>mapEmpty)
-      .onSuccess(cf -> log.info("publishExpiredRequestsEvents:: events published: {}", futures.size()));
+      .map(cf -> getSuccessEventsCount(cf, futures))
+      .onSuccess(num -> log.info("publishExpiredRequestsEvents:: count: {}", num))
+      .mapEmpty();
+  }
+
+  private static int getSuccessEventsCount(CompositeFuture cf, List<Future<Boolean>> futures) {
+    var successSends = 0;
+    for (var i = 0; i < futures.size(); i++) {
+      if (cf.resultAt(i)) {
+        successSends++;
+      }
+    }
+    return successSends;
   }
 
   public record ExpiredRequestWrapper(JsonObject originalValue, JsonObject updatedValue) {}
