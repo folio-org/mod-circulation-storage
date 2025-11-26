@@ -19,7 +19,6 @@ import static org.folio.support.LogEventPayloadField.UPDATED;
 import static org.folio.support.ModuleConstants.REQUEST_TABLE;
 import static org.folio.support.exception.LogEventType.REQUEST_EXPIRED;
 
-import io.vertx.core.Context;
 import java.text.SimpleDateFormat;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -56,14 +55,13 @@ public class RequestExpirationService {
   private final EntityChangedEventPublisher<String, Request> eventPublisher;
 
   public RequestExpirationService(Map<String, String> okapiHeaders, Vertx vertx,
-    Context vertxContext, String requestClassifierProperty,
-    Function<Request, String> requestClassifier) {
+    String requestClassifierProperty, Function<Request, String> requestClassifier) {
 
     this.requestClassifierProperty = requestClassifierProperty;
     this.requestClassifier = requestClassifier;
     pgClient = PostgresClient.getInstance(vertx, okapiHeaders.get(TENANT_HEADER));
     eventPublisherService = new EventPublisherService(vertx, okapiHeaders);
-    this.eventPublisher = requestEventPublisher(vertxContext, okapiHeaders);
+    this.eventPublisher = requestEventPublisher(vertx.getOrCreateContext(), okapiHeaders);
   }
 
   public Future<Void> doRequestExpiration() {
@@ -74,7 +72,7 @@ public class RequestExpirationService {
         .compose(associatedIds -> getOpenRequestsByIdFields(conn, associatedIds))
         .compose(openRequests -> reorderRequests(conn, openRequests))
         .onSuccess(x -> publishPubSubLogEvents(context)))
-        .compose(x -> publishRequestDomainEvents(context))
+        .compose(x -> publishExpiredRequestsEvents(context))
         .onFailure(e -> log.error("Error in request processing", e));
   }
 
@@ -257,7 +255,7 @@ public class RequestExpirationService {
     });
   }
 
-  private Future<Void> publishRequestDomainEvents(List<ExpiredRequestWrapper> context) {
+  private Future<Void> publishExpiredRequestsEvents(List<ExpiredRequestWrapper> context) {
     List<Future<Void>> futures = new ArrayList<>();
     for (ExpiredRequestWrapper requestWrapper : context) {
       Request oldEntity = requestWrapper.originalValue().mapTo(Request.class);
@@ -265,7 +263,7 @@ public class RequestExpirationService {
       String id = newEntity.getId();
 
       var future = eventPublisher.publishUpdated(id, oldEntity, newEntity).recover(err -> {
-        log.warn("publishRequestDomainEvents:: failed to send event for request: {}", id, err);
+        log.warn("publishExpiredRequestsEvents:: failed to send event for request: {}", id, err);
         return succeededFuture();
       });
 
@@ -274,7 +272,7 @@ public class RequestExpirationService {
 
     return Future.all(futures)
       .compose(Future::<Void>mapEmpty)
-      .onSuccess(cf -> log.info("publishRequestDomainEvents:: events published: {}", futures.size()));
+      .onSuccess(cf -> log.info("publishExpiredRequestsEvents:: events published: {}", futures.size()));
   }
 
   public record ExpiredRequestWrapper(JsonObject originalValue, JsonObject updatedValue) {}

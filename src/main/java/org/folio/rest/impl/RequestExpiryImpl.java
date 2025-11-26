@@ -40,9 +40,7 @@ public class RequestExpiryImpl implements ScheduledRequestExpiration {
     Vertx vertx, TlrSettingsConfiguration tlrSettings, Context vertxContext) {
 
     return tlrSettings.isTitleLevelRequestsFeatureEnabled()
-      ? new RequestExpirationService(okapiHeaders, vertx, vertxContext, "instanceId",
-        Request::getInstanceId)
-      : new RequestExpirationService(okapiHeaders, vertx, vertxContext, "itemId",
-        Request::getItemId);
+      ? new RequestExpirationService(okapiHeaders, vertx, "instanceId", Request::getInstanceId)
+      : new RequestExpirationService(okapiHeaders, vertx, "itemId", Request::getItemId);
   }
 }
