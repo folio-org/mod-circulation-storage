@@ -42,7 +42,6 @@ import org.folio.service.event.EntityChangedEventPublisher;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
@@ -267,37 +266,22 @@ public class RequestExpirationService {
   }
 
   private Future<Void> publishExpiredRequestsEvents(List<ExpiredRequestWrapper> context) {
-    List<Future<Boolean>> futures = new ArrayList<>();
+    Future<Void> future = succeededFuture();
+    AtomicInteger count = new AtomicInteger(0);
     for (ExpiredRequestWrapper requestWrapper : context) {
       Request oldEntity = requestWrapper.originalValue().mapTo(Request.class);
       Request newEntity = requestWrapper.updatedValue().mapTo(Request.class);
       String id = newEntity.getId();
 
-      // replaces void with boolean = true if event is sent, with false if error occurred
-      var future = eventPublisher.publishUpdated(id, oldEntity, newEntity)
-        .map(x -> true)
+      future = future.compose(x -> eventPublisher.publishUpdated(id, oldEntity, newEntity)
+        .onSuccess(voidResult -> count.getAndIncrement())
         .otherwise(err -> {
           log.warn("publishExpiredRequestsEvents:: failed to send event for request: {}", id, err);
-          return false;
-        });
-
-      futures.add(future);
+          return null;
+        }));
     }
 
-    return Future.all(futures)
-      .map(cf -> getSuccessEventsCount(cf, futures))
-      .onSuccess(num -> log.info("publishExpiredRequestsEvents:: count: {}", num))
-      .mapEmpty();
-  }
-
-  private static int getSuccessEventsCount(CompositeFuture cf, List<Future<Boolean>> futures) {
-    var successSends = 0;
-    for (var i = 0; i < futures.size(); i++) {
-      if (cf.resultAt(i)) {
-        successSends++;
-      }
-    }
-    return successSends;
+    return future.onSuccess(x -> log.info("publishExpiredRequestsEvents:: count: {}", count.get()));
   }
 
   public record ExpiredRequestWrapper(JsonObject originalValue, JsonObject updatedValue) {}

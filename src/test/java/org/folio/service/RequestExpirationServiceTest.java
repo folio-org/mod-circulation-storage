@@ -7,6 +7,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.STRICT_STUBS;
 
@@ -60,18 +62,21 @@ public class RequestExpirationServiceTest {
   public void shouldDoRequestExpirationWithoutErrorIfEventFailedToSent(TestContext context) {
     var id1 = UUID.randomUUID().toString();
     var id2 = UUID.randomUUID().toString();
+    var id3 = UUID.randomUUID().toString();
     when(postgresClient.getTenantId()).thenReturn(TENANT_ID);
     when(postgresClient.withTrans(any())).then(this::withTransHandler);
 
-    var expiredRequestsRowSet = new LocalRowSet(2)
-      .withRows(List.of(getRequestRowSetMock(id1), getRequestRowSetMock(id2)));
+    var expiredRequestsRowSet = new LocalRowSet(2).withRows(List.of(
+        getRequestRowSetMock(id1), getRequestRowSetMock(id2), getRequestRowSetMock(id3)));
     when(conn.execute(anyString())).thenReturn(succeededFuture(expiredRequestsRowSet));
     when(conn.update(anyString(), any(), any())).thenReturn(succeededFuture(new LocalRowSet(0)));
     when(eventPublisher.publishUpdated(eq(id1), any(), any())).thenReturn(succeededFuture());
     when(eventPublisher.publishUpdated(eq(id2), any(), any())).thenReturn(
       failedFuture(new NoStackTraceException("Event publishing failed: " + id2)));
+    when(eventPublisher.publishUpdated(eq(id3), any(), any())).thenReturn(succeededFuture());
 
     service.doRequestExpiration().onComplete(context.asyncAssertSuccess(context::assertNull));
+    verify(eventPublisher, times(3)).publishUpdated(any(), any(), any());
   }
 
   private Future<?> withTransHandler(InvocationOnMock inv) {
