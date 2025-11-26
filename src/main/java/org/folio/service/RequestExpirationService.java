@@ -73,7 +73,7 @@ public class RequestExpirationService {
         .compose(expiredRequests -> closeRequests(conn, expiredRequests, context))
         .compose(associatedIds -> getOpenRequestsByIdFields(conn, associatedIds))
         .compose(openRequests -> reorderRequests(conn, openRequests))
-        .map(x -> publishPubSubLogEvents(context)))
+        .onSuccess(x -> publishPubSubLogEvents(context)))
         .compose(x -> publishRequestDomainEvents(context))
         .onFailure(e -> log.error("Error in request processing", e));
   }
@@ -247,7 +247,7 @@ public class RequestExpirationService {
     return conn.update(REQUEST_TABLE, request, request.getId()).mapEmpty();
   }
 
-  private Void publishPubSubLogEvents(List<ExpiredRequestWrapper> context) {
+  private void publishPubSubLogEvents(List<ExpiredRequestWrapper> context) {
     context.forEach(requestWrapper -> {
       var payload = new JsonObject()
         .put(REQUESTS.value(), new JsonObject()
@@ -255,19 +255,26 @@ public class RequestExpirationService {
           .put(UPDATED.value(), requestWrapper.updatedValue()));
       eventPublisherService.publishLogRecord(payload, REQUEST_EXPIRED);
     });
-
-    return null;
   }
 
   private Future<Void> publishRequestDomainEvents(List<ExpiredRequestWrapper> context) {
-    Future<Void> future = succeededFuture();
+    List<Future<Void>> futures = new ArrayList<>();
     for (ExpiredRequestWrapper requestWrapper : context) {
       Request oldEntity = requestWrapper.originalValue().mapTo(Request.class);
       Request newEntity = requestWrapper.updatedValue().mapTo(Request.class);
-      future = future.compose(v ->
-        eventPublisher.publishUpdated(newEntity.getId(), oldEntity, newEntity));
+      String id = newEntity.getId();
+
+      var future = eventPublisher.publishUpdated(id, oldEntity, newEntity).recover(err -> {
+        log.warn("publishRequestDomainEvents:: failed to send event for request: {}", id, err);
+        return succeededFuture();
+      });
+
+      futures.add(future);
     }
-    return future;
+
+    return Future.all(futures)
+      .compose(Future::<Void>mapEmpty)
+      .onSuccess(cf -> log.info("publishRequestDomainEvents:: events published: {}", futures.size()));
   }
 
   public record ExpiredRequestWrapper(JsonObject originalValue, JsonObject updatedValue) {}
