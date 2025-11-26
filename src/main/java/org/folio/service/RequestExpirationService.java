@@ -38,12 +38,12 @@ import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.service.event.EntityChangedEventPublisher;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
-import org.folio.service.event.EntityChangedEventPublisher;
 
 public class RequestExpirationService {
   private static final Logger log = LogManager.getLogger();
