@@ -275,10 +275,8 @@ public class RequestExpirationService {
 
       future = future.compose(x -> eventPublisher.publishUpdated(id, oldEntity, newEntity)
         .onSuccess(voidResult -> count.getAndIncrement())
-        .otherwise(err -> {
-          log.warn("publishExpiredRequestsEvents:: failed to send event for request: {}", id, err);
-          return null;
-        }));
+        .onFailure(err -> log.warn("publishExpiredRequestsEvents:: failed to send: {}", id, err))
+        .otherwiseEmpty());
     }
 
     return future.onSuccess(x -> log.info("publishExpiredRequestsEvents:: count: {}", count.get()));
