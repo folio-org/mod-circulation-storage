@@ -63,7 +63,7 @@ public class RequestExpirationServiceTest {
     when(postgresClient.getTenantId()).thenReturn(TENANT_ID);
     when(postgresClient.withTrans(any())).then(this::withTransHandler);
 
-    var expiredRequestsRowSet = new LocalRowSet(2).withRows(List.of(
+    var expiredRequestsRowSet = new LocalRowSet(3).withRows(List.of(
         getRequestRowSetMock(id1), getRequestRowSetMock(id2), getRequestRowSetMock(id3)));
     when(conn.execute(anyString())).thenReturn(succeededFuture(expiredRequestsRowSet));
     when(conn.update(anyString(), any(), any())).thenReturn(succeededFuture(new LocalRowSet(0)));
