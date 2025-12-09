@@ -1,3 +1,6 @@
+## 17.4.1 2025-12-09
+* Add domain events for expired requests (CIRCSTORE-623)
+
 ## 17.4.0 2025-03-12
 * Upgrade to Java v21 (CIRCSTORE-576)
 * Sync location changes with request records (CIRCSTORE-556)
