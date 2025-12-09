@@ -221,7 +221,8 @@ public class TenantRefApiTests {
       .onSuccess(job -> {
         context.assertNull(job.getError());
         validateTlrMigrationResult(context, async);
-      });
+      })
+      .onFailure(context::fail);
   }
 
 
@@ -257,7 +258,8 @@ public class TenantRefApiTests {
       .onSuccess(job -> {
         context.assertNull(job.getError());
         validateRequestSearchMigrationResult(context, async);
-      });
+      })
+      .onFailure(context::fail);
   }
 
   @Test
