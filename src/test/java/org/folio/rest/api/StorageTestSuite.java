@@ -196,13 +196,9 @@ public class StorageTestSuite {
 
     CompletableFuture<String> undeploymentComplete = new CompletableFuture<>();
 
-    vertx.close(res -> {
-      if (res.succeeded()) {
-        undeploymentComplete.complete(null);
-      } else {
-        undeploymentComplete.completeExceptionally(res.cause());
-      }
-    });
+    vertx.close()
+      .onSuccess(res -> undeploymentComplete.complete(null))
+      .onFailure(undeploymentComplete::completeExceptionally);
 
     undeploymentComplete.get(20, TimeUnit.SECONDS);
   }
@@ -295,13 +291,9 @@ public class StorageTestSuite {
 
     CompletableFuture<String> deploymentComplete = new CompletableFuture<>();
 
-    vertx.deployVerticle(RestVerticle.class.getName(), options, res -> {
-      if (res.succeeded()) {
-        deploymentComplete.complete(res.result());
-      } else {
-        deploymentComplete.completeExceptionally(res.cause());
-      }
-    });
+    vertx.deployVerticle(RestVerticle.class.getName(), options)
+      .onSuccess(deploymentComplete::complete)
+      .onFailure(deploymentComplete::completeExceptionally);
 
     deploymentComplete.get(30, TimeUnit.SECONDS);
   }

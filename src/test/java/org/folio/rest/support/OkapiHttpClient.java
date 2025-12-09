@@ -67,14 +67,14 @@ public class OkapiHttpClient {
     stdHeaders(request, url, tenantId, userId);
 
     if (body == null) {
-      request.send(responseHandler);
+      request.send().onComplete(responseHandler);
       return;
     }
 
     Buffer encodedBody = Buffer.buffer(Json.encodePrettily(body));
     log.info(String.format("POST %s, Request: %s",
       url.toString(), body));
-    request.sendBuffer(encodedBody, responseHandler);
+    request.sendBuffer(encodedBody).onComplete(responseHandler);
   }
 
   public void post(URL url,
@@ -115,7 +115,7 @@ public class OkapiHttpClient {
     Buffer encodedBody = Buffer.buffer(Json.encodePrettily(body));
     log.info(String.format("PUT %s, Request: %s",
       url.toString(), body));
-    request.sendBuffer(encodedBody, responseHandler);
+    request.sendBuffer(encodedBody).onComplete(responseHandler);
   }
 
   public void get(URL url,
@@ -145,7 +145,7 @@ public class OkapiHttpClient {
     request.headers().add("Accept", "application/json");
 
     stdHeaders(request, null, tenantId, defaultUserId);
-    request.send(responseHandler);
+    request.send().onComplete(responseHandler);
   }
 
   public void delete(URL url,
@@ -157,7 +157,7 @@ public class OkapiHttpClient {
     request.headers().add("Accept", "application/json, text/plain");
 
     stdHeaders(request, url, tenantId, defaultUserId);
-    request.send(responseHandler);
+    request.send().onComplete(responseHandler);
   }
 
 }

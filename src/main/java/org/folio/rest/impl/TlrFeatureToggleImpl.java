@@ -26,16 +26,15 @@ public class TlrFeatureToggleImpl implements TlrFeatureToggleJobStart {
 
     asyncResultHandler.handle(succeededFuture(respond202()));
 
-    vertxContext.owner().executeBlocking(promise ->
-        new TlrFeatureToggleService(okapiHeaders, vertxContext)
-          .handle()
-          .onComplete(v -> promise.complete()),
-      result -> {
-        if (result.failed()) {
-          log.error("TLR feature toggle job failed", result.cause());
-        } else {
-          log.info("TLR feature toggle job succeeded");
-        }
-      });
+    vertxContext.owner().executeBlocking(() -> {
+      new TlrFeatureToggleService(okapiHeaders, vertxContext)
+        .handle()
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get();
+      return null;
+    }, false)
+    .onSuccess(v -> log.info("TLR feature toggle job succeeded"))
+    .onFailure(t -> log.error("TLR feature toggle job failed", t));
   }
 }

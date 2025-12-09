@@ -60,6 +60,7 @@ import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -181,10 +182,11 @@ public class TenantRefApiTests {
     deleteTenant(tenantClient);
     StorageTestSuite.after();
     Async async = context.async();
-    vertx.close(context.asyncAssertSuccess(res -> {
-      PostgresClient.stopPostgresTester();
-      async.complete();
-    }));
+    vertx.close()
+      .onComplete(context.asyncAssertSuccess(res -> {
+        PostgresClient.stopPostgresTester();
+        async.complete();
+      }));
   }
 
   @Test
@@ -515,7 +517,9 @@ public class TenantRefApiTests {
   }
 
   private static Future<RowSet<Row>> selectRead(String sql) {
-    return Future.future(promise -> postgresClient.selectRead(sql, 0, promise));
+    Promise<RowSet<Row>> promise = Promise.promise();
+    postgresClient.selectRead(sql, 0, promise::handle);
+    return promise.future();
   }
 
   private static Future<JsonObject> getRequestAsJson(String requestId) {

@@ -109,7 +109,7 @@ public class BatchResourceService {
       log.debug("Updating entity {} with id {}", entity, id);
 
       postgresClient.update(connectionResult, tableName, entity, "jsonb",
-        String.format(WHERE_CLAUSE, id), false, promise);
+        String.format(WHERE_CLAUSE, id), false, promise::handle);
 
       return promise.future();
     };
@@ -133,7 +133,7 @@ public class BatchResourceService {
       final Future<SQLConnection> connectionResult = succeededFuture(connection);
 
       postgresClient.execute(connectionResult, query,
-        tuple(new ArrayList<>(params)), promise);
+        tuple(new ArrayList<>(params)), promise::handle);
 
       return promise.future();
     };

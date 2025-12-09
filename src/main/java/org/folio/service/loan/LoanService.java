@@ -167,7 +167,7 @@ public class LoanService {
           final Promise<Response> deleteResult = promise();
 
           PgUtil.deleteById(LOAN_TABLE, loanId, okapiHeaders, vertxContext,
-              LoanStorage.DeleteLoanStorageLoansByLoanIdResponse.class, deleteResult);
+              LoanStorage.DeleteLoanStorageLoansByLoanIdResponse.class, deleteResult::handle);
 
           return deleteResult.future()
               .compose(eventPublisher.publishRemoved(loan));
@@ -229,7 +229,7 @@ public class LoanService {
 
     final ServerErrorResponder serverErrorResponder =
         new ServerErrorResponder(LoanStorage.PostLoanStorageLoansAnonymizeByUserIdResponse
-            ::respond500WithTextPlain, promise, log);
+            ::respond500WithTextPlain, promise::handle, log);
 
     final VertxContextRunner runner = new VertxContextRunner(
         vertxContext, serverErrorResponder::withError);

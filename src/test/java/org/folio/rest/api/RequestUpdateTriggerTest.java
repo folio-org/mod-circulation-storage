@@ -149,14 +149,14 @@ class RequestUpdateTriggerTest {
   private Future<Void> saveRequest(String id, Request request) {
 
     Promise<String> promise = Promise.promise();
-    pgClient.save(REQUEST_TABLE, id, request, promise);
+    pgClient.save(REQUEST_TABLE, id, request, promise::handle);
 
     return promise.future().map(s -> null);
   }
 
   private Future<Void> updateRequest(String id, Request request) {
     Promise<RowSet<Row>> promise = Promise.promise();
-    pgClient.update(REQUEST_TABLE, request, id, promise);
+    pgClient.update(REQUEST_TABLE, request, id, promise::handle);
 
     return promise.future().map(ur -> null);
   }
@@ -164,7 +164,7 @@ class RequestUpdateTriggerTest {
   private Future<JsonObject> getRequest(String id) {
 
     Promise<JsonObject> promise = Promise.promise();
-    pgClient.getById(REQUEST_TABLE, id, promise);
+    pgClient.getById(REQUEST_TABLE, id, promise::handle);
 
     return promise.future();
   }

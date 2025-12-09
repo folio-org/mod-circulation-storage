@@ -32,7 +32,6 @@ import org.folio.service.event.handler.ServicePointDeleteEventHandler;
 import org.folio.service.event.handler.ServicePointUpdateEventHandler;
 
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
@@ -67,7 +66,7 @@ public class EventConsumerVerticle extends AbstractVerticle {
   }
 
   private Future<Void> stopConsumers() {
-    return CompositeFuture.all(
+    return Future.all(
       consumers.stream()
         .map(KafkaConsumerWrapper::stop)
         .collect(toList()))
