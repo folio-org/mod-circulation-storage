@@ -21,8 +21,8 @@ import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.service.BatchResourceService;
 import org.folio.service.event.EntityChangedEventPublisher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -32,7 +32,7 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 
 public class RequestBatchResourceService {
-  private static final Logger log = LoggerFactory.getLogger(RequestBatchResourceService.class);
+  private static final Logger log = LogManager.getLogger();
   private static final String REMOVE_POSITIONS_SQL =
     "UPDATE %s.%s SET jsonb = jsonb - 'position' WHERE id::text IN (%s)";
 

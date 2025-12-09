@@ -348,8 +348,8 @@
           <outputFile />
           <properties>
             <property>
-              <name>log4j.configurationFile</name>
-              <value>${project.baseUri}src/main/resources/log4j.properties</value>
+              <name>log4j2.configurationFile</name>
+              <value>${project.baseUri}src/main/resources/log4j2.properties</value>
             </property>
           </properties>
         </configuration>
@@ -488,6 +488,7 @@
                     <Multi-Release>true</Multi-Release>
                   </manifestEntries>
                 </transformer>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
               </transformers>
               <artifactSet />
               <outputFile>${project.build.directory}/${project.artifactId}-fat.jar</outputFile>

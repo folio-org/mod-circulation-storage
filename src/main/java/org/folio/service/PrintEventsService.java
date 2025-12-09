@@ -1,23 +1,10 @@
 package org.folio.service;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Handler;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
-import org.folio.rest.RestVerticle;
-import org.folio.rest.jaxrs.model.PrintEventsRequest;
-import org.folio.rest.jaxrs.model.PrintEventsStatusResponse;
-import org.folio.rest.jaxrs.model.PrintEventsStatusResponses;
-import org.folio.rest.jaxrs.resource.PrintEventsStorage;
-import org.folio.rest.model.PrintEvent;
-import org.folio.rest.persist.PgUtil;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.tools.utils.MetadataUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static io.vertx.core.Future.succeededFuture;
+import static org.folio.rest.persist.PostgresClient.convertToPsqlStandard;
+import static org.folio.support.ModuleConstants.PRINT_EVENTS_TABLE;
+import static org.folio.support.ModuleConstants.REQUEST_TABLE;
 
-import javax.ws.rs.core.Response;
 import java.text.SimpleDateFormat;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -27,15 +14,29 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 
-import static io.vertx.core.Future.succeededFuture;
-import static org.folio.rest.persist.PgUtil.postgresClient;
-import static org.folio.rest.persist.PostgresClient.convertToPsqlStandard;
-import static org.folio.support.ModuleConstants.PRINT_EVENTS_TABLE;
-import static org.folio.support.ModuleConstants.REQUEST_TABLE;
+import javax.ws.rs.core.Response;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.folio.rest.RestVerticle;
+import org.folio.rest.jaxrs.model.PrintEventsRequest;
+import org.folio.rest.jaxrs.model.PrintEventsStatusResponse;
+import org.folio.rest.jaxrs.model.PrintEventsStatusResponses;
+import org.folio.rest.jaxrs.resource.PrintEventsStorage;
+import org.folio.rest.model.PrintEvent;
+import org.folio.rest.persist.PgUtil;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.tools.utils.MetadataUtil;
+
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Handler;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 
 public class PrintEventsService {
 
-  private static final Logger LOG = LoggerFactory.getLogger(PrintEventsService.class);
+  private static final Logger LOG = LogManager.getLogger();
   private final Map<String, String> okapiHeaders;
   private final PostgresClient postgresClient;
 

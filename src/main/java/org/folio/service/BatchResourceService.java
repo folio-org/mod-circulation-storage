@@ -10,10 +10,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 
+import org.apache.logging.log4j.LogManager;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.SQLConnection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.Logger;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -23,7 +23,7 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 
 public class BatchResourceService {
-  private static final Logger log = LoggerFactory.getLogger(BatchResourceService.class);
+  private static final Logger log = LogManager.getLogger();
   private static final String WHERE_CLAUSE = "WHERE id = '%s'";
 
   private final PostgresClient postgresClient;
