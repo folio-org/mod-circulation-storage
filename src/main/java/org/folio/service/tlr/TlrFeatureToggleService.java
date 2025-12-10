@@ -25,14 +25,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.RequestRepository;
 import org.folio.persist.TlrFeatureToggleJobRepository;
-import org.folio.rest.client.ConfigurationClient;
-import org.folio.rest.configuration.TlrSettingsConfiguration;
+import org.folio.rest.configuration.TlrSettings;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.jaxrs.model.TlrFeatureToggleJob;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.GroupedCriterias;
 import org.folio.rest.persist.Criteria.Order;
+import org.folio.service.CirculationSettingsService;
 import org.folio.support.exception.TlrFeatureToggleJobAlreadyRunningException;
 
 import io.vertx.core.Context;
@@ -47,13 +47,13 @@ public class TlrFeatureToggleService {
 
   private final TlrFeatureToggleJobRepository tlrFeatureToggleJobRepository;
   private final RequestRepository requestRepository;
-  private final ConfigurationClient configurationClient;
+  private final CirculationSettingsService circulationSettingsService;
 
   public TlrFeatureToggleService(Map<String, String> okapiHeaders, Context vertxContext) {
     this.tlrFeatureToggleJobRepository = new TlrFeatureToggleJobRepository(vertxContext,
       okapiHeaders);
     this.requestRepository = new RequestRepository(vertxContext, okapiHeaders);
-    this.configurationClient = new ConfigurationClient(vertxContext.owner(), okapiHeaders);
+    this.circulationSettingsService = new CirculationSettingsService(vertxContext, okapiHeaders);
   }
 
   public Future<Void> handle() {
@@ -75,7 +75,7 @@ public class TlrFeatureToggleService {
 
     return succeededFuture(job)
       .compose(j -> updateJobStatus(job, IN_PROGRESS))
-      .compose(r -> configurationClient.getTlrSettings())
+      .compose(r -> circulationSettingsService.getTlrSettingsOrThrow())
       .compose(this::fetchAndGroupOpenRequests)
       .map(groupedRequests -> updatePosition(groupedRequests, job))
       .compose(requestRepository::update)
@@ -85,14 +85,14 @@ public class TlrFeatureToggleService {
   }
 
   private Future<Map<String, List<Request>>> fetchAndGroupOpenRequests(
-    TlrSettingsConfiguration tlrSettingsConfiguration) {
+    TlrSettings tlrSettingsConfiguration) {
 
     return fetchOpenRequests()
       .map(requests -> groupRequests(requests, tlrSettingsConfiguration));
   }
 
   private Map<String, List<Request>> groupRequests(List<Request> requests,
-    TlrSettingsConfiguration tlrSettingsConfiguration) {
+    TlrSettings tlrSettingsConfiguration) {
 
     return requests.stream()
       .collect(Collectors.groupingBy(tlrSettingsConfiguration.isTitleLevelRequestsFeatureEnabled()

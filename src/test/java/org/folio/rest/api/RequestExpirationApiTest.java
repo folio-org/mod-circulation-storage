@@ -62,7 +62,7 @@ public class RequestExpirationApiTest extends ApiTests {
     throws MalformedURLException {
 
     StorageTestSuite.deleteAll(requestStorageUrl());
-    stubTlrConfiguration(false);
+    circulationSettingsHelper.changeTlrSettings(false);
   }
 
   @After
@@ -107,7 +107,7 @@ public class RequestExpirationApiTest extends ApiTests {
   @Test
   public void canExpireRequestWhenTlrSettingsNotSet() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
-    stubWithEmptyTlrConfiguration();
+    circulationSettingsHelper.removeTlrSettings();
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
 
@@ -174,7 +174,7 @@ public class RequestExpirationApiTest extends ApiTests {
   public void canExpireSingleOpenAwaitingPickupTlrRequest() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
-    stubTlrConfiguration(true);
+    circulationSettingsHelper.changeTlrSettings(true);
     UUID id = UUID.randomUUID();
     UUID instanceId = UUID.randomUUID();
 
@@ -211,7 +211,7 @@ public class RequestExpirationApiTest extends ApiTests {
   public void closedPickupExpiredTitleLevelRequestShouldBeRemovedFromQueue()
     throws InterruptedException, MalformedURLException, TimeoutException, ExecutionException {
 
-    stubTlrConfiguration(true);
+    circulationSettingsHelper.changeTlrSettings(true);
     UUID firstRequestId = UUID.randomUUID();
     UUID secondRequestId = UUID.randomUUID();
     UUID thirdRequestId = UUID.randomUUID();
@@ -1079,7 +1079,7 @@ public class RequestExpirationApiTest extends ApiTests {
   public void shouldRecalculateQueueAfterRequestExpirationWhenNoPositionRequestExists()
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
-      stubTlrConfiguration(true);
+      circulationSettingsHelper.changeTlrSettings(true);
       UUID firstRequestId = UUID.randomUUID();
       UUID secondRequestId = UUID.randomUUID();
       UUID thirdRequestId = UUID.randomUUID();

@@ -10,10 +10,10 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 
 import org.folio.rest.annotations.Validate;
-import org.folio.rest.client.ConfigurationClient;
-import org.folio.rest.configuration.TlrSettingsConfiguration;
+import org.folio.rest.configuration.TlrSettings;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.jaxrs.resource.ScheduledRequestExpiration;
+import org.folio.service.CirculationSettingsService;
 import org.folio.service.RequestExpirationService;
 
 import io.vertx.core.AsyncResult;
@@ -28,16 +28,15 @@ public class RequestExpiryImpl implements ScheduledRequestExpiration {
   public void expireRequests(Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> handler, Context context) {
 
-    Vertx vertx = context.owner();
-    new ConfigurationClient(vertx, okapiHeaders).getTlrSettingsOrDefault()
-    .compose(tlrSettings -> createRequestExpirationService(okapiHeaders, vertx, tlrSettings)
+    new CirculationSettingsService(context, okapiHeaders).getTlrSettingsOrDefault()
+    .compose(tlrSettings -> createRequestExpirationService(okapiHeaders, context.owner(), tlrSettings)
         .doRequestExpiration())
     .onSuccess(x -> handler.handle(succeededFuture(respond204())))
     .onFailure(e -> handler.handle(succeededFuture(respond500WithTextPlain(e.getMessage()))));
   }
 
   private RequestExpirationService createRequestExpirationService(Map<String, String> okapiHeaders,
-    Vertx vertx, TlrSettingsConfiguration tlrSettings) {
+    Vertx vertx, TlrSettings tlrSettings) {
 
     return tlrSettings.isTitleLevelRequestsFeatureEnabled()
       ? new RequestExpirationService(okapiHeaders, vertx, "instanceId",

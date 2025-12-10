@@ -645,6 +645,11 @@
       "run": "after",
       "snippetPath": "add_due_date_slips.sql",
       "fromModuleVersion": "17.3.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "migrate_circulation_settings.sql",
+      "fromModuleVersion": "17.5.0"
     }
   ]
 }
