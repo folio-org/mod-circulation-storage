@@ -318,7 +318,7 @@ public class StorageTestSuite {
     tenantOp(tenantId, jo);
   }
 
-  private static void removeTenant(String tenantId) {
+  protected static void removeTenant(String tenantId) {
     JsonObject jo = new JsonObject();
     jo.put("purge", Boolean.TRUE);
     tenantOp(tenantId, jo);

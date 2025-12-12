@@ -221,7 +221,7 @@ public class ApiTests {
     waitFor(pgClient.execute("TRUNCATE " + tableNames));
   }
 
-  protected static String randomId() {
+  public static String randomId() {
     return UUID.randomUUID().toString();
   }
 }

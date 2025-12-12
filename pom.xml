@@ -172,7 +172,7 @@
     <dependency>
       <groupId>com.github.tomakehurst</groupId>
       <artifactId>wiremock</artifactId>
-      <version>2.25.1</version>
+      <version>3.0.1</version>
       <exclusions>
         <exclusion>
           <groupId>net.sf.jopt-simple</groupId>
@@ -204,6 +204,33 @@
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <version>5.16.0</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- JUnit 5 API and engine -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>5.10.2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <version>5.10.2</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- Vert.x JUnit 5 -->
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-junit5</artifactId>
+      <version>${vertx-version}</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- Vintage engine to still run legacy JUnit 4 tests -->
+    <dependency>
+      <groupId>org.junit.vintage</groupId>
+      <artifactId>junit-vintage-engine</artifactId>
+      <version>5.10.2</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -499,22 +526,11 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.0.0-M5</version>
+        <version>3.2.5</version>
         <configuration>
-          <!-- TODO: update to version 3.0.0 and remove useSystemClassLoader
-               https://issues.folio.org/browse/CIRCSTORE-78
-               https://issues.folio.org/browse/FOLIO-1609
-               https://issues.apache.org/jira/browse/SUREFIRE-1588
-          -->
-          <useSystemClassLoader>false</useSystemClassLoader>
-          <excludes>
-            <exclude>org/folio/rest/api/**/*Test.java</exclude>
-          </excludes>
-          <includes>
-            <include>org/folio/rest/api/StorageTestSuite.java</include>
-            <include>org/folio/rest/api/TenantRefApiTests.java</include>
-            <include>org/folio/**</include>
-          </includes>
+          <useSystemClassLoader>true</useSystemClassLoader>
+          <useModulePath>false</useModulePath>
+          <!-- Run on JUnit Platform; auto-detect JUnit 5 and Vintage tests -->
         </configuration>
       </plugin>
       <plugin>
