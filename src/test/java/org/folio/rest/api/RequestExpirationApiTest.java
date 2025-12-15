@@ -76,7 +76,9 @@ class RequestExpirationApiTest {
 
   @BeforeAll
   static void beforeAll() throws InterruptedException, ExecutionException, TimeoutException, IOException {
-    StorageTestSuite.before();
+    if (StorageTestSuite.isNotInitialised()) {
+      StorageTestSuite.before();
+    }
     pgClient = PostgresClient.getInstance(getVertx(), TENANT_ID);
     client = new OkapiHttpClient(getVertx());
     kafkaConsumer = new FakeKafkaConsumer().consume(getVertx());
@@ -85,7 +87,7 @@ class RequestExpirationApiTest {
 
   @AfterAll
   static void afterAll() throws InterruptedException, ExecutionException, TimeoutException {
-    StorageTestSuite.after();
+    // Don't call after() - let the test suite manage cleanup
   }
 
   @BeforeEach

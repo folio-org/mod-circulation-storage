@@ -65,6 +65,7 @@ public class RequestExpirationServiceTest {
         getRequestRowSetMock(id1), getRequestRowSetMock(id2), getRequestRowSetMock(id3)));
     when(conn.execute(anyString())).thenReturn(succeededFuture(expiredRequestsRowSet));
     when(conn.update(anyString(), any(), any())).thenReturn(succeededFuture(new LocalRowSet(0)));
+    when(eventPublisherService.publishLogRecord(any(), any())).thenReturn(succeededFuture());
     when(eventPublisher.publishUpdated(eq(id1), any(), any())).thenReturn(succeededFuture());
     when(eventPublisher.publishUpdated(eq(id2), any(), any())).thenReturn(
       failedFuture(new NoStackTraceThrowable("Event publishing failed: " + id2)));

@@ -43,13 +43,15 @@ class RequestUpdateTriggerTest {
 
   @BeforeAll
   static void beforeAll() throws InterruptedException, ExecutionException, TimeoutException, IOException {
-    StorageTestSuite.before();
+    if (StorageTestSuite.isNotInitialised()) {
+      StorageTestSuite.before();
+    }
     pgClient = PostgresClient.getInstance(StorageTestSuite.getVertx(), StorageTestSuite.TENANT_ID);
   }
 
   @AfterAll
   static void afterAll() throws InterruptedException, ExecutionException, TimeoutException {
-    StorageTestSuite.after();
+    // Don't call after() - let the test suite manage cleanup
   }
 
   @BeforeEach

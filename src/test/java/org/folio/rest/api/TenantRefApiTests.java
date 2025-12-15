@@ -143,7 +143,9 @@ public class TenantRefApiTests {
     tenantClient = new TenantClient("http://localhost:" + wmPort, TENANT, TOKEN, WebClient.create(vertx));
 
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
-    StorageTestSuite.before();
+    if (StorageTestSuite.isNotInitialised()) {
+      StorageTestSuite.before();
+    }
 
     DeploymentOptions deploymentOptions = new DeploymentOptions()
       .setConfig(new JsonObject()
