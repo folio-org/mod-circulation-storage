@@ -10,7 +10,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.text.MatchesPattern.matchesPattern;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.MalformedURLException;
 import java.util.UUID;
@@ -26,9 +26,9 @@ import org.folio.rest.support.http.AssertingRecordClient;
 import org.folio.rest.support.http.InterfaceUrls;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import io.vertx.core.json.JsonObject;
 
@@ -39,12 +39,12 @@ public class CheckInStorageApiTest extends ApiTests {
     new AssertingRecordClient(client, StorageTestSuite.TENANT_ID,
       InterfaceUrls::checkInsStorageUrl, "checkIns");
 
-  @Before
+  @BeforeEach
   public void beforeEach() {
     StorageTestSuite.cleanUpTable(TABLE_NAME);
   }
 
-  @After
+  @AfterEach
   public void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs(TABLE_NAME);
   }

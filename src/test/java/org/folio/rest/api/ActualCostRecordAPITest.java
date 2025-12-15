@@ -30,14 +30,12 @@ import org.folio.rest.support.http.InterfaceUrls;
 import org.folio.rest.support.spring.TestContextConfiguration;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.rules.SpringClassRule;
-import org.springframework.test.context.junit4.rules.SpringMethodRule;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,13 +44,9 @@ import io.vertx.core.json.JsonObject;
 import lombok.SneakyThrows;
 
 @ContextConfiguration(classes = TestContextConfiguration.class)
+@ExtendWith(SpringExtension.class)
 public class ActualCostRecordAPITest extends ApiTests {
   private static final String ACTUAL_COST_RECORD_TABLE = "actual_cost_record";
-
-  @ClassRule
-  public static final SpringClassRule classRule = new SpringClassRule();
-  @Rule
-  public final SpringMethodRule methodRule = new SpringMethodRule();
 
   @Autowired
   private ObjectMapper objectMapper;
@@ -61,7 +55,7 @@ public class ActualCostRecordAPITest extends ApiTests {
     new AssertingRecordClient(client, StorageTestSuite.TENANT_ID,
       InterfaceUrls::actualCostRecord, "actualCostRecords");
 
-  @Before
+  @BeforeEach
   public void beforeEach() throws Exception {
     StorageTestSuite.cleanUpTable(ACTUAL_COST_RECORD_TABLE);
   }

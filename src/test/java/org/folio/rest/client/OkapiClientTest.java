@@ -6,33 +6,41 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.instanceOf;
 
 import io.vertx.core.Vertx;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
 import java.net.MalformedURLException;
 import java.util.List;
 import java.util.Map;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-@RunWith(VertxUnitRunner.class)
+@ExtendWith(VertxExtension.class)
 public class OkapiClientTest {
 
   @Test
-  public void noOkapiUrl(TestContext context) {
+  public void noOkapiUrl(VertxTestContext context) {
     new OkapiClient(Vertx.vertx(), Map.of())
     .get("/foo", "cql.allRecords=1", Object.class, "collectionName", 10)
-    .onComplete(context.asyncAssertFailure(e -> {
-      assertThat(e.getCause(), is(instanceOf(MalformedURLException.class)));
-    }));
+    .onComplete(ar -> {
+      context.verify(() -> {
+        assertThat(ar.failed(), is(true));
+        assertThat(ar.cause().getCause(), is(instanceOf(MalformedURLException.class)));
+      });
+      context.completeNow();
+    });
   }
 
   @Test
-  public void unknownHost(TestContext context) {
+  public void unknownHost(VertxTestContext context) {
     new OkapiClient(Vertx.vertx(), Map.of("x-okapi-url", "http://www.invalid"))
     .get("/foo", List.of("1"), "foo", Object.class)
-    .onComplete(context.asyncAssertFailure(e -> {
-      assertThat(e.getClass().getName(), containsString("UnknownHost"));
-    }));
+    .onComplete(ar -> {
+      context.verify(() -> {
+        assertThat(ar.failed(), is(true));
+        assertThat(ar.cause().getClass().getName(), containsString("UnknownHost"));
+      });
+      context.completeNow();
+    });
   }
 
 }

@@ -21,8 +21,8 @@ import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.RequestItemSummary;
 import org.folio.rest.support.builders.RequestRequestBuilder;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -37,7 +37,7 @@ public class IsbnNormalizationTest extends ApiTests {
   private final UUID isbnIdentifierId = UUID.fromString("8261054f-be78-422d-bd51-4ed9f33c3422");
 
   @SneakyThrows
-  @Before
+  @BeforeEach
   public void beforeEach() {
     StorageTestSuite.deleteAll(storageUrl(REQUEST_STORAGE_URL));
   }
@@ -71,7 +71,7 @@ public class IsbnNormalizationTest extends ApiTests {
   public void canSearchForSecondIsbnWithMissingHyphensAndTrunation() {
     createRequests("Interesting Times", "Temeraire", "Uprooted");
 
-    find("itemIsbn = 9780*", "Interesting Times", "Temeraire");  
+    find("itemIsbn = 9780*", "Interesting Times", "Temeraire");
   }
 
   @SneakyThrows
@@ -98,7 +98,7 @@ public class IsbnNormalizationTest extends ApiTests {
     find("itemIsbn = 552*");
   }
 
-  private void find(String cql, String ... expectedTitles) 
+  private void find(String cql, String ... expectedTitles)
    throws MalformedURLException, InterruptedException, TimeoutException, ExecutionException {
 
     JsonObject searchBody = searchForRequests(cql);
@@ -124,7 +124,7 @@ public class IsbnNormalizationTest extends ApiTests {
     .equals(titleToMatch);
   }
 
-  private JsonObject searchForRequests(String cql) 
+  private JsonObject searchForRequests(String cql)
     throws MalformedURLException, InterruptedException, TimeoutException, ExecutionException {
 
     CompletableFuture<Response> searchCompleted = new CompletableFuture<>();

@@ -12,8 +12,8 @@ import org.folio.rest.support.MultipleRecords;
 import org.folio.rest.support.TextResponse;
 import org.folio.rest.support.http.AssertingRecordClient;
 import org.folio.rest.support.http.InterfaceUrls;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
@@ -30,7 +30,7 @@ public class CheckOutLockAPITest extends ApiTests {
 
   private final ObjectMapper objectMapper = new ObjectMapper();
 
-  @Before
+  @BeforeEach
   public void beforeEach() throws Exception {
     StorageTestSuite.cleanUpTable(CHECK_OUT_LOCK_TABLE);
   }

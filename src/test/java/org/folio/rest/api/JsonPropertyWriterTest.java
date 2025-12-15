@@ -2,7 +2,7 @@ package org.folio.rest.api;
 
 import io.vertx.core.json.JsonObject;
 import org.folio.rest.support.ApiTests;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.folio.support.JsonPropertyWriter.write;
 import static org.hamcrest.CoreMatchers.is;

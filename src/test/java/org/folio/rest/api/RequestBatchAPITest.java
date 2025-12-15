@@ -30,9 +30,9 @@ import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.TextResponse;
 import org.folio.rest.support.builders.RequestRequestBuilder;
 import org.hamcrest.Matcher;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -42,14 +42,14 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
 
 public class RequestBatchAPITest extends ApiTests {
-  @Before
+  @BeforeEach
   public void beforeEach() throws Exception {
     StorageTestSuite.deleteAll(requestStorageUrl());
     removeAllEvents();
     stubTlrSettings(true, false, false);
   }
 
-  @After
+  @AfterEach
   public void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("request");
   }

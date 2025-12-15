@@ -35,16 +35,13 @@ import org.folio.rest.support.dto.NoticeConfigDto;
 import org.folio.rest.support.dto.ScheduledNoticeDto;
 import org.folio.rest.support.spring.TestContextConfiguration;
 import org.joda.time.DateTime;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import io.vertx.core.json.JsonObject;
 
-@RunWith(SpringRunner.class)
 @ContextConfiguration(classes = TestContextConfiguration.class)
 public class ScheduledNoticesAPITest extends ApiTests {
 
@@ -72,7 +69,7 @@ public class ScheduledNoticesAPITest extends ApiTests {
   @Autowired
   private ResourceClient<ScheduledNoticeDto> scheduledNoticeClient;
 
-  @Before
+  @BeforeEach
   public void beforeEach() throws MalformedURLException {
     StorageTestSuite.deleteAll(scheduledNoticesStorageUrl("/scheduled-notices"));
   }

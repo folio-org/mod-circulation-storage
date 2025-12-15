@@ -6,9 +6,9 @@ import org.folio.rest.support.builders.LoanRequestBuilder;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.ISODateTimeFormat;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
@@ -25,15 +25,15 @@ import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.hamcrest.core.Is.is;
-import static org.hamcrest.junit.MatcherAssert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class LoansApiHistoryTest extends ApiTests {
-  @Before
+  @BeforeEach
   public void beforeEach() {
     truncateTables("loan");
   }
 
-  @After
+  @AfterEach
   public void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("loan");
   }

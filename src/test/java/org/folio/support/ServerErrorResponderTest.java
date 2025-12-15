@@ -11,7 +11,7 @@ import java.util.concurrent.TimeoutException;
 
 import javax.ws.rs.core.Response;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import io.vertx.core.AsyncResult;
 import org.apache.logging.log4j.Logger;

@@ -32,9 +32,9 @@ import org.folio.rest.support.builders.LoanRequestBuilder;
 import org.folio.rest.support.http.AssertingRecordClient;
 import org.folio.rest.support.http.InterfaceUrls;
 import org.joda.time.DateTime;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import io.vertx.core.json.JsonObject;
 
@@ -42,12 +42,12 @@ public class LoansAnonymizationApiTest extends ApiTests {
   private final AssertingRecordClient loansClient = new AssertingRecordClient(
     client, StorageTestSuite.TENANT_ID, InterfaceUrls::loanStorageUrl, "loans");
 
-  @Before
+  @BeforeEach
   public void beforeEach() {
     truncateTables("loan");
   }
 
-  @After
+  @AfterEach
   public void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("loan");
   }

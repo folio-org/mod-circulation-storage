@@ -25,7 +25,7 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.hamcrest.core.IsNull.nullValue;
-import static org.hamcrest.junit.MatcherAssert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.joda.time.DateTime.parse;
 
 import java.net.HttpURLConnection;
@@ -57,10 +57,10 @@ import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Period;
 import org.joda.time.format.ISODateTimeFormat;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -69,7 +69,7 @@ public class LoansApiTest extends ApiTests {
   private final AssertingRecordClient loansClient = new AssertingRecordClient(
     client, StorageTestSuite.TENANT_ID, InterfaceUrls::loanStorageUrl, "loans");
 
-  @Before
+  @BeforeEach
   @SneakyThrows
   public void beforeEach() {
     pgClient.execute("TRUNCATE loan")
@@ -77,7 +77,7 @@ public class LoansApiTest extends ApiTests {
     FakeKafkaConsumer.removeAllEvents();
   }
 
-  @After
+  @AfterEach
   public void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("loan");
   }
@@ -1148,7 +1148,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  @Ignore("Should conditional field validation be done in a storage module?")
+  @Disabled("Should conditional field validation be done in a storage module?")
   public void returnDateIsMandatoryForClosedLoans()
     throws InterruptedException,
     MalformedURLException,

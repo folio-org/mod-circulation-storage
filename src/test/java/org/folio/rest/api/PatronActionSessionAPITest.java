@@ -4,7 +4,7 @@ import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isOk;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.junit.MatcherAssert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -29,18 +29,16 @@ import org.folio.rest.support.http.AssertingRecordClient;
 import org.folio.rest.support.http.InterfaceUrls;
 import org.joda.time.DateTime;
 import org.joda.time.format.ISODateTimeFormat;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
 
-@RunWith(JUnitParamsRunner.class)
 public class PatronActionSessionAPITest extends ApiTests {
 
   private static final String PATRON_ACTION_SESSION = "patron_action_session";
@@ -50,7 +48,7 @@ public class PatronActionSessionAPITest extends ApiTests {
     client, StorageTestSuite.TENANT_ID, InterfaceUrls::loanStorageUrl, "loans");
   private String existingLoanId;
 
-  @Before
+  @BeforeEach
   public void beforeTest() throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
     CompletableFuture<RowSet<Row>> future = new CompletableFuture<>();
     PostgresClient
@@ -188,7 +186,7 @@ public class PatronActionSessionAPITest extends ApiTests {
 
     assertThat(response.getStatusCode(), is(404));
   }
-  
+
   @Test
   public void canGetPatronActionSessionStorageExpiredSessionPatronIds() throws InterruptedException,
     ExecutionException, TimeoutException, MalformedURLException {
@@ -261,10 +259,9 @@ public class PatronActionSessionAPITest extends ApiTests {
       is("Date cannot be parsed"));
   }
 
-  @Test
-  @Parameters({"Check-in", "Check-out"})
-  public void canSaveAndRetrieveSessionWithSessionId(String actionType)
-    throws InterruptedException, MalformedURLException,TimeoutException, ExecutionException {
+  @ParameterizedTest
+  @ValueSource(strings = {"Check-in", "Check-out"})
+  public void canSaveAndRetrieveSessionWithSessionId(String actionType) throws InterruptedException, MalformedURLException, TimeoutException, ExecutionException {
 
     String sessionId = UUID.randomUUID().toString();
     JsonObject session = createPatronActionSession(actionType)
@@ -286,12 +283,11 @@ public class PatronActionSessionAPITest extends ApiTests {
   }
 
   private JsonObject createPatronActionSession(String actionType) {
-    JsonObject jsonObject = new JsonObject()
+    return new JsonObject()
       .put("id", UUID.randomUUID().toString())
       .put("patronId", UUID.randomUUID().toString())
       .put("loanId", existingLoanId)
       .put("actionType", actionType);
-    return jsonObject;
   }
 
   private JsonObject createPatronActionSessionRecords(String patronId, String actionType,
@@ -343,8 +339,6 @@ public class PatronActionSessionAPITest extends ApiTests {
 
     final CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
     this.client.get(url, StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
-    final JsonResponse response = getCompleted.get(5, TimeUnit.SECONDS);
-
-    return response;
+    return getCompleted.get(5, TimeUnit.SECONDS);
   }
 }

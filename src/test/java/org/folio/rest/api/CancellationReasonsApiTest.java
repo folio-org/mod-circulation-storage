@@ -4,11 +4,11 @@ import io.vertx.core.json.JsonObject;
 
 import org.folio.rest.support.*;
 import org.folio.rest.support.builders.RequestRequestBuilder;
-import org.hamcrest.junit.MatcherAssert;
+import org.hamcrest.MatcherAssert;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -26,9 +26,9 @@ import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.ma
 import static org.folio.rest.support.matchers.OkapiResponseStatusCodeMatchers.matchesUnprocessableEntity;
 import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
 import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_CANCELLED;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  *
@@ -167,7 +167,7 @@ public class CancellationReasonsApiTest extends ApiTests {
         response, matchesNoContent());
   }
   //Test Init
-  @Before
+  @BeforeEach
   public void beforeEach()
       throws MalformedURLException {
     StorageTestSuite.deleteAll(requestStorageUrl());

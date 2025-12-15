@@ -35,17 +35,17 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.TextResponse;
 import org.folio.rest.support.builders.LoanPolicyRequestBuilder;
-import org.hamcrest.junit.MatcherAssert;
+import org.hamcrest.MatcherAssert;
 import org.joda.time.DateTime;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 public class LoanPoliciesApiTest extends ApiTests {
-  @Before
+  @BeforeEach
   public void beforeEach()
     throws MalformedURLException {
 
@@ -53,7 +53,7 @@ public class LoanPoliciesApiTest extends ApiTests {
     StorageTestSuite.deleteAll(loanPolicyStorageUrl());
   }
 
-  @After
+  @AfterEach
   public void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("loan_policy");
   }

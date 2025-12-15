@@ -10,7 +10,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.iterableWithSize;
 import static org.hamcrest.core.Is.is;
-import static org.hamcrest.junit.MatcherAssert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.MalformedURLException;
 import java.util.Collection;
@@ -27,9 +27,9 @@ import org.folio.rest.support.builders.LoanRequestBuilder;
 import org.folio.rest.support.http.AssertingRecordClient;
 import org.folio.rest.support.http.InterfaceUrls;
 import org.folio.rest.support.matchers.LoanHistoryMatchers;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -43,7 +43,7 @@ public class AnonymizeLoansApiTest extends ApiTests {
   private final String firstLoanId = UUID.randomUUID().toString();
   private final String secondLoanId = UUID.randomUUID().toString();
 
-  @Before
+  @BeforeEach
   public void beforeEach() throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
@@ -67,7 +67,7 @@ public class AnonymizeLoansApiTest extends ApiTests {
     loansClient.replace(secondLoanId, LoanRequestBuilder.from(loan2).checkedIn());
   }
 
-  @After
+  @AfterEach
   public void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("loan");
     StorageTestSuite.checkForMismatchedIDs("audit_loan");

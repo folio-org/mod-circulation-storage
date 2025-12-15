@@ -23,18 +23,18 @@ import io.vertx.core.Vertx;
 import org.apache.kafka.common.errors.TopicExistsException;
 import org.folio.support.kafka.topic.CirculationStorageKafkaTopic;
 import org.folio.kafka.services.KafkaAdminClientService;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
 import org.mockito.ArgumentCaptor;
 
 import io.vertx.core.Future;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.kafka.admin.KafkaAdminClient;
 import io.vertx.kafka.admin.NewTopic;
 
-@RunWith(VertxUnitRunner.class)
+@ExtendWith(VertxExtension.class)
 public class KafkaAdminClientServiceTest {
 
   private final String STUB_TENANT = "foo-tenant";
@@ -50,14 +50,14 @@ public class KafkaAdminClientServiceTest {
   private KafkaAdminClient mockClient;
   private Vertx vertx;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     vertx = mock(Vertx.class);
     mockClient = mock(KafkaAdminClient.class);
   }
 
   @Test
-  public void shouldCreateTopicIfAlreadyExist(TestContext testContext) {
+  public void shouldCreateTopicIfAlreadyExist(VertxTestContext testContext) {
     when(mockClient.createTopics(anyList()))
         .thenReturn(failedFuture(new TopicExistsException("x")))
         .thenReturn(failedFuture(new TopicExistsException("y")))
@@ -67,76 +67,95 @@ public class KafkaAdminClientServiceTest {
     when(mockClient.close()).thenReturn(succeededFuture());
 
     createKafkaTopicsAsync(mockClient)
-        .onComplete(testContext.asyncAssertSuccess(notUsed -> {
-          verify(mockClient, times(4)).listTopics();
-          verify(mockClient, times(4)).createTopics(anyList());
-          verify(mockClient, times(1)).close();
-        }));
+        .onComplete(ar -> {
+          testContext.verify(() -> {
+            assertThat(ar.succeeded(), org.hamcrest.Matchers.is(true));
+            verify(mockClient, times(4)).listTopics();
+            verify(mockClient, times(4)).createTopics(anyList());
+            verify(mockClient, times(1)).close();
+          });
+          testContext.completeNow();
+        });
   }
 
   @Test
-  public void shouldFailIfExistExceptionIsPermanent(TestContext testContext) {
+  public void shouldFailIfExistExceptionIsPermanent(VertxTestContext testContext) {
     when(mockClient.createTopics(anyList())).thenReturn(failedFuture(new TopicExistsException("x")));
     when(mockClient.listTopics()).thenReturn(succeededFuture(Set.of("old")));
     when(mockClient.close()).thenReturn(succeededFuture());
 
     createKafkaTopicsAsync(mockClient)
-        .onComplete(testContext.asyncAssertFailure(e -> {
-          assertThat(e, instanceOf(TopicExistsException.class));
-          verify(mockClient, times(1)).close();
-        }));
+        .onComplete(ar -> {
+          testContext.verify(() -> {
+            assertThat(ar.failed(), org.hamcrest.Matchers.is(true));
+            assertThat(ar.cause(), instanceOf(TopicExistsException.class));
+            verify(mockClient, times(1)).close();
+          });
+          testContext.completeNow();
+        });
   }
 
   @Test
-  public void shouldNotCreateTopicOnOther(TestContext testContext) {
+  public void shouldNotCreateTopicOnOther(VertxTestContext testContext) {
     when(mockClient.createTopics(anyList())).thenReturn(failedFuture(new RuntimeException("err msg")));
     when(mockClient.listTopics()).thenReturn(succeededFuture(Set.of("old")));
     when(mockClient.close()).thenReturn(succeededFuture());
 
     createKafkaTopicsAsync(mockClient)
-        .onComplete(testContext.asyncAssertFailure(cause -> {
-              testContext.assertEquals("err msg", cause.getMessage());
-              verify(mockClient, times(1)).close();
-            }
-        ));
+        .onComplete(ar -> {
+          testContext.verify(() -> {
+            assertThat(ar.failed(), org.hamcrest.Matchers.is(true));
+            assertThat(ar.cause().getMessage(), org.hamcrest.Matchers.is("err msg"));
+            verify(mockClient, times(1)).close();
+          });
+          testContext.completeNow();
+        });
   }
 
   @Test
-  public void shouldCreateTopicIfNotExist(TestContext testContext) {
+  public void shouldCreateTopicIfNotExist(VertxTestContext testContext) {
     when(mockClient.createTopics(anyList())).thenReturn(succeededFuture());
     when(mockClient.listTopics()).thenReturn(succeededFuture(Set.of("old")));
     when(mockClient.close()).thenReturn(succeededFuture());
 
     createKafkaTopicsAsync(mockClient)
-        .onComplete(testContext.asyncAssertSuccess(notUsed -> {
+        .onComplete(ar -> {
+          testContext.verify(() -> {
+            assertThat(ar.succeeded(), org.hamcrest.Matchers.is(true));
 
-          @SuppressWarnings("unchecked")
-          final ArgumentCaptor<List<NewTopic>> createTopicsCaptor = forClass(List.class);
+            @SuppressWarnings("unchecked")
+            final ArgumentCaptor<List<NewTopic>> createTopicsCaptor = forClass(List.class);
 
-          verify(mockClient, times(1)).createTopics(createTopicsCaptor.capture());
-          verify(mockClient, times(1)).close();
+            verify(mockClient, times(1)).createTopics(createTopicsCaptor.capture());
+            verify(mockClient, times(1)).close();
 
-          // Only these items are expected, so implicitly checks size of list
-          assertThat(getTopicNames(createTopicsCaptor), containsInAnyOrder(allExpectedTopics.toArray()));
-        }));
+            // Only these items are expected, so implicitly checks size of list
+            assertThat(getTopicNames(createTopicsCaptor), containsInAnyOrder(allExpectedTopics.toArray()));
+          });
+          testContext.completeNow();
+        });
   }
 
   @Test
-  public void shouldDeleteTopics(TestContext testContext) {
+  public void shouldDeleteTopics(VertxTestContext testContext) {
     when(mockClient.deleteTopics(anyList())).thenReturn(succeededFuture());
     when(mockClient.close()).thenReturn(succeededFuture());
 
     deleteKafkaTopicsAsync(mockClient)
-        .onComplete(testContext.asyncAssertSuccess(notUsed -> {
+        .onComplete(ar -> {
+          testContext.verify(() -> {
+            assertThat(ar.succeeded(), org.hamcrest.Matchers.is(true));
 
-          @SuppressWarnings("unchecked")
-          final ArgumentCaptor<List<String>> deleteTopicsCaptor = forClass(List.class);
+            @SuppressWarnings("unchecked")
+            final ArgumentCaptor<List<String>> deleteTopicsCaptor = forClass(List.class);
 
-          verify(mockClient, times(1)).deleteTopics(deleteTopicsCaptor.capture());
-          verify(mockClient, times(1)).close();
+            verify(mockClient, times(1)).deleteTopics(deleteTopicsCaptor.capture());
+            verify(mockClient, times(1)).close();
 
-          assertThat(deleteTopicsCaptor.getAllValues().get(0), containsInAnyOrder(allExpectedTopics.toArray()));
-        }));
+            assertThat(deleteTopicsCaptor.getAllValues().get(0), containsInAnyOrder(allExpectedTopics.toArray()));
+          });
+          testContext.completeNow();
+        });
   }
 
   private List<String> getTopicNames(ArgumentCaptor<List<NewTopic>> createTopicsCaptor) {

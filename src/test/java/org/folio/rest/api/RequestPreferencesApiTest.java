@@ -26,8 +26,8 @@ import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
 import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import io.vertx.core.json.JsonObject;
 
@@ -41,7 +41,7 @@ public class RequestPreferencesApiTest extends ApiTests {
   private static final boolean DELIVERY = true;
   private static final RequestPreference.Fulfillment FULFILLMENT = RequestPreference.Fulfillment.DELIVERY;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     cleanupRequestPreferences();
   }

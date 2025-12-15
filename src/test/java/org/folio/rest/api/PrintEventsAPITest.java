@@ -4,7 +4,7 @@ import io.vertx.core.json.JsonObject;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.net.MalformedURLException;
 import java.util.List;
@@ -19,7 +19,7 @@ import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isI
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isOk;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isUnprocessableEntity;
 import static org.hamcrest.core.Is.is;
-import static org.hamcrest.junit.MatcherAssert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class PrintEventsAPITest extends ApiTests {
 

@@ -6,7 +6,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.junit.MatcherAssert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -24,9 +24,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
-import org.folio.rest.api.loans.LoansAnonymizationApiTest;
-import org.folio.rest.api.migration.StaffSlipsHoldTransitMigrationScriptTest;
-import org.folio.rest.api.migration.StaffSlipsPickRequestMigrationScriptTest;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.JsonResponse;
@@ -35,10 +32,8 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.support.MockServer;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -52,39 +47,6 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import lombok.SneakyThrows;
 
-@RunWith(Suite.class)
-
-@Suite.SuiteClasses({
-  AnonymizeLoansApiTest.class,
-  LoansApiTest.class,
-  LoansAnonymizationApiTest.class,
-  CirculationRulesApiTest.class,
-  FixedDueDateApiTest.class,
-  LoanPoliciesApiTest.class,
-  RequestPreferencesApiTest.class,
-  RequestsApiTest.class,
-  LoansApiHistoryTest.class,
-  StaffSlipsApiTest.class,
-  CancellationReasonsApiTest.class,
-  PatronNoticePoliciesApiTest.class,
-  RequestPoliciesApiTest.class,
-  RequestExpirationApiTest.class,
-  ScheduledNoticesAPITest.class,
-  PatronActionSessionAPITest.class,
-  RequestBatchAPITest.class,
-  CheckInStorageApiTest.class,
-  StaffSlipsPickRequestMigrationScriptTest.class,
-  StaffSlipsHoldTransitMigrationScriptTest.class,
-  RequestUpdateTriggerTest.class,
-  JsonPropertyWriterTest.class,
-  IsbnNormalizationTest.class,
-  TlrFeatureToggleJobAPITest.class,
-  ActualCostRecordAPITest.class,
-  EventConsumerVerticleTest.class,
-  CheckOutLockAPITest.class,
-  CirculationSettingsAPITest.class,
-  PrintEventsAPITest.class
-})
 public class StorageTestSuite {
 
   private static final Logger log = LogManager.getLogger();
@@ -138,7 +100,7 @@ public class StorageTestSuite {
     return wireMockServer;
   }
 
-  @BeforeClass
+  @BeforeAll
   public static void before()
     throws IOException,
     InterruptedException,
@@ -180,7 +142,7 @@ public class StorageTestSuite {
     initialised = true;
   }
 
-  @AfterClass
+  @AfterAll
   public static void after()
     throws InterruptedException,
     ExecutionException,

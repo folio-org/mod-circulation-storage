@@ -4,11 +4,11 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import org.folio.rest.support.*;
-import org.hamcrest.junit.MatcherAssert;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.hamcrest.MatcherAssert;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -39,7 +39,7 @@ public class FixedDueDateApiTest extends ApiTests {
   private static final String TABLE_NAME = "fixed_due_date_schedule";
   static final String SCHEDULE_SECTION = "schedules";
 
-  @Before
+  @BeforeEach
   public void beforeEach()
     throws MalformedURLException {
 
@@ -47,7 +47,7 @@ public class FixedDueDateApiTest extends ApiTests {
     StorageTestSuite.deleteAll(dueDateURL());
   }
 
-  @After
+  @AfterEach
   public void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs(TABLE_NAME);
   }
@@ -296,7 +296,7 @@ public class FixedDueDateApiTest extends ApiTests {
     assertThat(get3CompletedResponse.getJson().getJsonArray("fixedDueDateSchedules").size(), is(0));
   }
 
-  @Ignore("Fails on Mac OS due to differences in UTF-8 collation libraries")
+  @Disabled("Fails on Mac OS due to differences in UTF-8 collation libraries")
   @Test
   public void canSortDifferentCaseNamesAscending()
     throws InterruptedException,

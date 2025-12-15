@@ -8,21 +8,21 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import io.vertx.core.Vertx;
 
 public class VertxContextRunnerTest {
   private Vertx vertx;
 
-  @Before
+  @BeforeEach
   public void beforeAll() {
     vertx = Vertx.vertx();
   }
 
-  @After
+  @AfterEach
   public void afterAll() {
     if(vertx != null) {
       vertx.close();

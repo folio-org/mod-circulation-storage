@@ -5,8 +5,8 @@ import lombok.SneakyThrows;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.http.AssertingRecordClient;
 import org.folio.rest.support.http.InterfaceUrls;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
@@ -31,7 +31,7 @@ public class CirculationSettingsAPITest extends ApiTests {
       client, StorageTestSuite.TENANT_ID, InterfaceUrls::circulationSettingsUrl,
       CIRCULATION_SETTINGS_PROPERTY);
 
-  @Before
+  @BeforeEach
   public void beforeEach() {
     StorageTestSuite.cleanUpTable(TABLE_NAME);
   }
@@ -119,29 +119,30 @@ public class CirculationSettingsAPITest extends ApiTests {
   }
 
   private JsonObject getCirculationSetting(String id) {
-    return new JsonObject()
-      .put(ID_KEY, id)
-      .put(NAME_KEY, SAMPLE_VALUE)
-      .put(VALUE_KEY, new JsonObject().put(SAMPLE_KEY, INITIAL_VALUE));
+    var json = new JsonObject();
+    json.put(ID_KEY, id);
+    json.put(NAME_KEY, SAMPLE_VALUE);
+    var value = new JsonObject();
+    value.put(SAMPLE_KEY, INITIAL_VALUE);
+    json.put(VALUE_KEY, value);
+    return json;
   }
 
-  private static void assertThatCorrectCreation(JsonObject circulationSettingsResponse,
-    JsonObject circulationSettingsJson) {
-
-    String actualCreatedId = circulationSettingsResponse.getString(ID_KEY);
-    String expectedCreatedId = circulationSettingsJson.getString(ID_KEY);
-    String actualCreatedName = circulationSettingsResponse.getString(NAME_KEY);
-    String expectedCreatedName = circulationSettingsJson.getString(NAME_KEY);
-
-    assertThat(actualCreatedId, is(expectedCreatedId));
-    assertThat(actualCreatedName, is(expectedCreatedName));
+  private static void assertThatCorrectCreation(JsonObject response,
+    JsonObject expected) {
+    assertThat(response.getString(ID_KEY), is(expected.getString(ID_KEY)));
+    assertThat(response.getString(NAME_KEY), is(expected.getString(NAME_KEY)));
+    assertThat(response.getJsonObject(VALUE_KEY), is(expected.getJsonObject(VALUE_KEY)));
   }
 
-  private JsonObject getUpdatedSettingsJson() {
-    String updatedId = UUID.randomUUID().toString();
-    JsonObject circulationSettingsJsonUpdated = getCirculationSetting(updatedId);
-    JsonObject updatedValue = new JsonObject().put(SAMPLE_KEY, UPDATED_VALUE);
-    circulationSettingsJsonUpdated.put(VALUE_KEY, updatedValue);
-    return circulationSettingsJsonUpdated;
+  private static JsonObject getUpdatedSettingsJson() {
+    String id = UUID.randomUUID().toString();
+    var json = new JsonObject();
+    json.put(ID_KEY, id);
+    json.put(NAME_KEY, SAMPLE_VALUE);
+    var value = new JsonObject();
+    value.put(SAMPLE_KEY, UPDATED_VALUE);
+    json.put(VALUE_KEY, value);
+    return json;
   }
 }

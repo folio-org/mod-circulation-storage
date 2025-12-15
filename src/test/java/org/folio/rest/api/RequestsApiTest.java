@@ -64,28 +64,22 @@ import org.folio.rest.support.clients.ResourceClient;
 import org.folio.rest.support.dto.RequestDto;
 import org.folio.rest.support.spring.TestContextConfiguration;
 import org.folio.util.StringUtil;
-import org.hamcrest.junit.MatcherAssert;
+import org.hamcrest.MatcherAssert;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Seconds;
 import org.joda.time.format.ISODateTimeFormat;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.rules.SpringClassRule;
-import org.springframework.test.context.junit4.rules.SpringMethodRule;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
 
-@RunWith(JUnitParamsRunner.class)
 @ContextConfiguration(classes = TestContextConfiguration.class)
 public class RequestsApiTest extends ApiTests {
 
@@ -95,28 +89,23 @@ public class RequestsApiTest extends ApiTests {
   private static final String REQUEST_TABLE = "request";
   private static final String PATRON_COMMENTS = "A comment.";
 
-  @ClassRule
-  public static final SpringClassRule classRule = new SpringClassRule();
-  @Rule
-  public final SpringMethodRule methodRule = new SpringMethodRule();
-
   @Autowired
   public ResourceClient<RequestDto> requestClient;
 
-  @Before
+  @BeforeEach
   public void beforeEach()
     throws MalformedURLException {
 
     StorageTestSuite.deleteAll(requestStorageUrl());
   }
 
-  @After
+  @AfterEach
   public void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs(REQUEST_TABLE);
   }
 
-  @Test
-  @Parameters({"Title", "Item"})
+  @ParameterizedTest
+  @ValueSource(strings = {"Title", "Item"})
   public void canCreateARequest(String requestLevel) throws InterruptedException, MalformedURLException,
     TimeoutException, ExecutionException {
 
@@ -245,8 +234,8 @@ public class RequestsApiTest extends ApiTests {
     assertCreateEventForRequest(representation);
   }
 
-  @Test
-  @Parameters({
+  @ParameterizedTest
+  @ValueSource(strings = {
     OPEN_NOT_YET_FILLED,
     OPEN_AWAITING_PICKUP,
     OPEN_AWAITING_DELIVERY,
@@ -274,11 +263,8 @@ public class RequestsApiTest extends ApiTests {
     assertCreateEventForRequest(representation);
   }
 
-  @Test
-  @Parameters({
-    "Non-existent status",
-    ""
-  })
+  @ParameterizedTest
+  @ValueSource(strings = {"Non-existent status", ""})
   public void cannotCreateARequestWithInvalidStatus(String status)
     throws InterruptedException,
     MalformedURLException,
@@ -834,8 +820,8 @@ public class RequestsApiTest extends ApiTests {
     assertUpdateEventForRequest(createdRequest, representation);
   }
 
-  @Test
-  @Parameters({
+  @ParameterizedTest
+  @ValueSource(strings = {
     "Open - Awaiting pickup",
     "Closed - Filled"
   })
@@ -888,8 +874,8 @@ public class RequestsApiTest extends ApiTests {
     assertUpdateEventForRequest(getAfterCreateResponse, representation);
   }
 
-  @Test
-  @Parameters({
+  @ParameterizedTest
+  @ValueSource(strings = {
     "Non-existent status",
     ""
   })
@@ -1001,8 +987,8 @@ public class RequestsApiTest extends ApiTests {
       "Holdings record ID in item level request should not be absent")));
   }
 
-  @Test
-  @Parameters({ "holdingsRecordId", "itemId" })
+  @ParameterizedTest
+  @ValueSource(strings = {"holdingsRecordId", "itemId"})
   public void cannotCreateTitleLevelRequestIfOneOfItemIdAndHoldingsRecordIdIsNotPresent(
     String propertyToRemove) throws MalformedURLException, ExecutionException, InterruptedException,
     TimeoutException {
@@ -1025,8 +1011,8 @@ public class RequestsApiTest extends ApiTests {
       "Title level request must have both itemId and holdingsRecordId or neither")));
   }
 
-  @Test
-  @Parameters({ "holdingsRecordId", "itemId" })
+  @ParameterizedTest
+  @ValueSource(strings = {"holdingsRecordId", "itemId"})
   public void cannotPutTitleLevelRequestIfOneOfItemIdAndHoldingsRecordIdIsNotPresent(String
     propertyToRemove) throws MalformedURLException, ExecutionException, InterruptedException,
     TimeoutException {

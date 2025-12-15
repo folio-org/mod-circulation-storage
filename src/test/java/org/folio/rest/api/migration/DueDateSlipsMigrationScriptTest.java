@@ -6,8 +6,8 @@ import org.folio.rest.api.StorageTestSuite;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
 import org.hamcrest.core.Is;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -21,7 +21,7 @@ public class DueDateSlipsMigrationScriptTest extends StaffSlipsMigrationTestBase
   public static final String DUE_DATE_RECEIPT_ID = "0b52bca7-db17-4e91-a740-7872ed6d7323";
   private static final String MIGRATION_SCRIPT = loadScript("add_due_date_slips.sql");
 
-  @Before
+  @BeforeEach
   public void beforeEach() throws MalformedURLException {
     StorageTestSuite.deleteAll(staffSlipsStorageUrl(""));
   }

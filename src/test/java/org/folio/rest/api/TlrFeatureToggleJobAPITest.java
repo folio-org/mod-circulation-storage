@@ -45,20 +45,19 @@ import org.folio.rest.support.clients.RestAssuredClient;
 import org.folio.rest.support.spring.TestContextConfiguration;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.rules.SpringClassRule;
-import org.springframework.test.context.junit4.rules.SpringMethodRule;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 
 @ContextConfiguration(classes = TestContextConfiguration.class)
+@ExtendWith(SpringExtension.class)
 public class TlrFeatureToggleJobAPITest extends ApiTests {
   private static final String TLR_TOGGLE_JOB_URL =
     "/tlr-feature-toggle-job-storage/tlr-feature-toggle-jobs";
@@ -66,15 +65,10 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
   private static final String TLR_FEATURE_TOGGLE_JOB_TABLE = "tlr_feature_toggle_job";
   private static final String REQUEST_STORAGE_URL = "/request-storage/requests";
 
-  @ClassRule
-  public static final SpringClassRule classRule = new SpringClassRule();
-  @Rule
-  public final SpringMethodRule methodRule = new SpringMethodRule();
-
   @Autowired
   public RestAssuredClient restAssuredClient;
 
-  @Before
+  @BeforeEach
   public void beforeEach() throws Exception {
     CompletableFuture<RowSet<Row>> future = new CompletableFuture<>();
     PostgresClient
