@@ -101,7 +101,7 @@ public class StorageTestSuite {
   }
 
   @BeforeAll
-  public static void before()
+  public static synchronized void before()
     throws IOException,
     InterruptedException,
     ExecutionException,
@@ -143,10 +143,11 @@ public class StorageTestSuite {
   }
 
   @AfterAll
-  public static void after()
+  public static synchronized void after()
     throws InterruptedException,
     ExecutionException,
     TimeoutException {
+
 
     initialised = false;
 
