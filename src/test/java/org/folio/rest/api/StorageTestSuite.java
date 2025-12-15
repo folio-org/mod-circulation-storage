@@ -107,6 +107,11 @@ public class StorageTestSuite {
     ExecutionException,
     TimeoutException {
 
+    // If already initialized by another test class, skip
+    if (initialised) {
+      return;
+    }
+
     vertx = Vertx.vertx();
 
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
@@ -166,7 +171,7 @@ public class StorageTestSuite {
     undeploymentComplete.get(20, TimeUnit.SECONDS);
   }
 
-  public static boolean isNotInitialised() {
+  public static synchronized boolean isNotInitialised() {
     return !initialised;
   }
 
