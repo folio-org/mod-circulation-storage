@@ -528,9 +528,15 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.2.5</version>
         <configuration>
-          <useSystemClassLoader>true</useSystemClassLoader>
-          <useModulePath>false</useModulePath>
-          <!-- Run on JUnit Platform; auto-detect JUnit 5 and Vintage tests -->
+          <useSystemClassLoader>false</useSystemClassLoader>
+          <excludes>
+            <exclude>org/folio/rest/api/**/*Test.java</exclude>
+          </excludes>
+          <includes>
+            <include>org/folio/rest/api/StorageTestSuite.java</include>
+            <include>org/folio/rest/api/TenantRefApiTests.java</include>
+            <include>org/folio/**</include>
+          </includes>
         </configuration>
       </plugin>
       <plugin>
