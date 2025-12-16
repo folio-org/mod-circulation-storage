@@ -146,6 +146,23 @@ public class StorageTestSuite {
 
     log.info("Kafka configuration set: KAFKA_HOST={}, KAFKA_PORT={}", host, port);
 
+    // Also set the bootstrap servers property
+    String bootstrapServers = host + ":" + port;
+    System.setProperty("KAFKA_BOOTSTRAP_SERVERS", bootstrapServers);
+    System.setProperty("kafka.bootstrap.servers", bootstrapServers);
+
+    DeploymentOptions options = new DeploymentOptions();
+    JsonObject config = new JsonObject()
+      .put("http.port", verticlePort)
+      .put("KAFKA_HOST", host)
+      .put("KAFKA_PORT", port)
+      .put("kafka-host", host)
+      .put("kafka-port", port);
+    options.setConfig(config);
+
+    log.info("Verticle deployment config: {}", config.encodePrettily());
+    startVerticle(options);
+
     // Start mock server before verticle to ensure pubsub endpoints are available
     mockServer = new MockServer(OKAPI_MOCK_PORT, vertx);
     mockServer.start();
