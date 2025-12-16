@@ -6,7 +6,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -24,6 +24,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
+import org.folio.rest.api.loans.LoansAnonymizationApiTest;
+import org.folio.rest.api.migration.StaffSlipsHoldTransitMigrationScriptTest;
+import org.folio.rest.api.migration.StaffSlipsPickRequestMigrationScriptTest;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.JsonResponse;
@@ -34,7 +37,8 @@ import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.support.MockServer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.testcontainers.DockerClientFactory;
+import org.junit.platform.suite.api.SelectClasses;
+import org.junit.platform.suite.api.Suite;
 import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -48,6 +52,38 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import lombok.SneakyThrows;
 
+@Suite
+@SelectClasses({
+  AnonymizeLoansApiTest.class,
+  LoansApiTest.class,
+  LoansAnonymizationApiTest.class,
+  CirculationRulesApiTest.class,
+  FixedDueDateApiTest.class,
+  LoanPoliciesApiTest.class,
+  RequestPreferencesApiTest.class,
+  RequestsApiTest.class,
+  LoansApiHistoryTest.class,
+  StaffSlipsApiTest.class,
+  CancellationReasonsApiTest.class,
+  PatronNoticePoliciesApiTest.class,
+  RequestPoliciesApiTest.class,
+  RequestExpirationApiTest.class,
+  ScheduledNoticesAPITest.class,
+  PatronActionSessionAPITest.class,
+  RequestBatchAPITest.class,
+  CheckInStorageApiTest.class,
+  StaffSlipsPickRequestMigrationScriptTest.class,
+  StaffSlipsHoldTransitMigrationScriptTest.class,
+  RequestUpdateTriggerTest.class,
+  JsonPropertyWriterTest.class,
+  IsbnNormalizationTest.class,
+  TlrFeatureToggleJobAPITest.class,
+  ActualCostRecordAPITest.class,
+  EventConsumerVerticleTest.class,
+  CheckOutLockAPITest.class,
+  CirculationSettingsAPITest.class,
+  PrintEventsAPITest.class
+})
 public class StorageTestSuite {
 
   private static final Logger log = LogManager.getLogger();
@@ -62,8 +98,7 @@ public class StorageTestSuite {
   private static final WireMockServer wireMockServer = new WireMockServer(PROXY_PORT);
 
   private static final KafkaContainer kafkaContainer
-    = new KafkaContainer(DockerImageName.parse("apache/kafka-native:3.8.0"))
-      .withReuse(true);
+    = new KafkaContainer(DockerImageName.parse("apache/kafka-native:3.8.0"));
 
   /**
    * Return a URL for the path and the parameters.
@@ -77,7 +112,7 @@ public class StorageTestSuite {
     }
     if (parameterKeyValue.length % 2 == 1) {
       throw new InvalidParameterException("Expected even number of key/value strings, found "
-          + parameterKeyValue.length + ": " + String.join(", ", parameterKeyValue));
+        + parameterKeyValue.length + ": " + String.join(", ", parameterKeyValue));
     }
     try {
       StringBuilder completePath = new StringBuilder(path);
@@ -103,154 +138,71 @@ public class StorageTestSuite {
   }
 
   @BeforeAll
-  public static synchronized void before()
+  public static void before()
     throws IOException,
     InterruptedException,
     ExecutionException,
     TimeoutException {
 
-    // If already initialized by another test class, skip
-    if (initialised) {
-      log.info("Test suite already initialized, skipping");
-      return;
-    }
-
-    log.info("Initializing test suite...");
-
     vertx = Vertx.vertx();
 
-    // Set PostgresTester only once
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
 
-    // Check if Docker is available before trying to start Kafka
-    String kafkaHost;
-    String kafkaPort;
+    kafkaContainer.start();
+    var host = kafkaContainer.getHost();
+    var port = String.valueOf(kafkaContainer.getFirstMappedPort());
+    log.info("Starting Kafka host={} port={}", host, port);
+    System.setProperty("kafka-port", port);
+    System.setProperty("kafka-host", host);
 
-    try {
-      if (DockerClientFactory.instance().isDockerAvailable()) {
-        // Start Kafka container if not already running
-        if (!kafkaContainer.isRunning()) {
-          log.info("Starting Kafka container...");
-          kafkaContainer.start();
-        } else {
-          log.info("Kafka container already running, reusing it");
-        }
+    final int verticlePort = NetworkUtils.nextFreePort();
 
-        kafkaHost = kafkaContainer.getHost();
-        kafkaPort = String.valueOf(kafkaContainer.getFirstMappedPort());
-        log.info("Kafka available at host={} port={}", kafkaHost, kafkaPort);
-      } else {
-        log.warn("Docker is not available, using fallback Kafka configuration");
-        // Use environment variables or default values when Docker is not available
-        kafkaHost = System.getenv().getOrDefault("KAFKA_HOST", "localhost");
-        kafkaPort = System.getenv().getOrDefault("KAFKA_PORT", "9092");
-        log.info("Using fallback Kafka configuration: host={} port={}", kafkaHost, kafkaPort);
-      }
-    } catch (Exception e) {
-      log.warn("Could not start Kafka container, using fallback configuration: {}", e.getMessage());
-      // Use environment variables or default values when Docker fails
-      kafkaHost = System.getenv().getOrDefault("KAFKA_HOST", "localhost");
-      kafkaPort = System.getenv().getOrDefault("KAFKA_PORT", "9092");
-      log.info("Using fallback Kafka configuration: host={} port={}", kafkaHost, kafkaPort);
-    }
+    DeploymentOptions options = new DeploymentOptions();
+    options.setConfig(new JsonObject().put("http.port", verticlePort));
+    startVerticle(options);
 
-    // Set both system properties and environment variables for Kafka
-    System.setProperty("kafka-port", kafkaPort);
-    System.setProperty("kafka-host", kafkaHost);
-    System.setProperty("KAFKA_PORT", kafkaPort);
-    System.setProperty("KAFKA_HOST", kafkaHost);
-
-    // Also set the bootstrap servers property
-    String bootstrapServers = kafkaHost + ":" + kafkaPort;
-    System.setProperty("KAFKA_BOOTSTRAP_SERVERS", bootstrapServers);
-    System.setProperty("kafka.bootstrap.servers", bootstrapServers);
-
-    log.info("Kafka configuration set: KAFKA_HOST={}, KAFKA_PORT={}", kafkaHost, kafkaPort);
-
-    // Start mock server before verticle to ensure pubsub endpoints are available
     mockServer = new MockServer(OKAPI_MOCK_PORT, vertx);
     mockServer.start();
 
     wireMockServer.start();
 
-    int port = NetworkUtils.nextFreePort();
-
-    DeploymentOptions options = new DeploymentOptions();
-    JsonObject config = new JsonObject()
-      .put("http.port", port)
-      .put("KAFKA_HOST", kafkaHost)
-      .put("KAFKA_PORT", kafkaPort)
-      .put("kafka-host", kafkaHost)
-      .put("kafka-port", kafkaPort)
-      .put("REPLICATION_FACTOR", "1")
-      .put("ENV", "test");
-    options.setConfig(config);
-
-    log.info("Verticle deployment config: {}", config.encodePrettily());
-
-    // Configure WireMock stubs before starting verticle
     wireMockServer.stubFor(post(urlMatching("/pubsub/.*"))
       .atPriority(1)
       .willReturn(aResponse().proxiedFrom("http://localhost:" + OKAPI_MOCK_PORT)));
 
     wireMockServer.stubFor(any(anyUrl())
       .atPriority(10)
-      .willReturn(aResponse().proxiedFrom("http://localhost:" + port)));
-
-    startVerticle(options);
+      .willReturn(aResponse().proxiedFrom("http://localhost:" + verticlePort)));
 
     prepareTenant(TENANT_ID, true);
 
     initialised = true;
-    log.info("Test suite initialization complete");
   }
 
   @AfterAll
-  public static synchronized void after()
+  public static void after()
     throws InterruptedException,
     ExecutionException,
     TimeoutException {
 
-    if (!initialised) {
-      log.info("Test suite not initialized, skipping cleanup");
-      return;
-    }
-
-    log.info("Cleaning up test suite...");
-
     initialised = false;
 
-    try {
-      removeTenant(TENANT_ID);
-    } catch (Exception e) {
-      log.warn("Failed to remove tenant: {}", e.getMessage());
-    }
+    removeTenant(TENANT_ID);
 
-    // Don't stop Kafka container - it's reusable and will be cleaned up by Testcontainers
-    // kafkaContainer.stop();
+    kafkaContainer.stop();
 
-    if (mockServer != null) {
-      mockServer.close();
-    }
-
-    if (wireMockServer != null && wireMockServer.isRunning()) {
-      wireMockServer.stop();
-    }
+    mockServer.close();
 
     CompletableFuture<String> undeploymentComplete = new CompletableFuture<>();
 
-    if (vertx != null) {
-      vertx.close()
-        .onSuccess(res -> undeploymentComplete.complete(null))
-        .onFailure(undeploymentComplete::completeExceptionally);
+    vertx.close()
+      .onSuccess(res -> undeploymentComplete.complete(null))
+      .onFailure(undeploymentComplete::completeExceptionally);
 
-      undeploymentComplete.get(20, TimeUnit.SECONDS);
-    }
-
-    log.info("Test suite cleanup complete");
+    undeploymentComplete.get(20, TimeUnit.SECONDS);
   }
 
-  public static synchronized boolean isNotInitialised() {
+  public static boolean isNotInitialised() {
     return !initialised;
   }
 
@@ -365,7 +317,7 @@ public class StorageTestSuite {
     tenantOp(tenantId, jo);
   }
 
-  protected static void removeTenant(String tenantId) {
+  private static void removeTenant(String tenantId) {
     JsonObject jo = new JsonObject();
     jo.put("purge", Boolean.TRUE);
     tenantOp(tenantId, jo);
@@ -378,12 +330,12 @@ public class StorageTestSuite {
     OkapiHttpClient client = new OkapiHttpClient(vertx);
 
     client.post(storageUrl("/_/tenant"), job, tenantId,
-        ResponseHandler.json(tenantPrepared));
+      ResponseHandler.json(tenantPrepared));
 
     JsonResponse response = tenantPrepared.get(60, TimeUnit.SECONDS);
 
     String failureMessage = String.format("Tenant post failed: %s: %s",
-        response.getStatusCode(), response);
+      response.getStatusCode(), response);
 
     // wait if not complete ...
     if (response.getStatusCode() == 201) {
@@ -391,11 +343,11 @@ public class StorageTestSuite {
 
       tenantPrepared = new CompletableFuture<>();
       client.get(storageUrl("/_/tenant/" + id + "?wait=60000"), tenantId,
-          ResponseHandler.json(tenantPrepared));
+        ResponseHandler.json(tenantPrepared));
       response = tenantPrepared.get(60, TimeUnit.SECONDS);
 
       failureMessage = String.format("Tenant get failed: %s: %s",
-          response.getStatusCode(), response.getBody());
+        response.getStatusCode(), response.getBody());
 
       assertThat(failureMessage, response.getStatusCode(), is(200));
     } else {
