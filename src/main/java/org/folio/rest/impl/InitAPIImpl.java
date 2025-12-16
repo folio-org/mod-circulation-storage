@@ -31,33 +31,17 @@ public class InitAPIImpl implements InitAPI {
 
   @Override
   public void init(Vertx vertx, Context context, Handler<AsyncResult<Boolean>> resultHandler) {
-    deployEventConsumerVerticle(vertx, context)
+    deployEventConsumerVerticle(vertx)
       .map(true)
       .onSuccess(r -> log.info("init:: initialization complete"))
       .onFailure(t -> log.error("init:: initialization failed", t))
       .onComplete(resultHandler);
   }
 
-  private static Future<String> deployEventConsumerVerticle(Vertx vertx, Context context) {
-    // Read from context config first (for testing), then fall back to environment
-    JsonObject contextConfig = context.config();
-
-    String kafkaHost = contextConfig.getString(KAFKA_HOST);
-    if (kafkaHost == null) {
-      kafkaHost = KafkaEnvironmentProperties.host();
-    }
-
-    String kafkaPort = contextConfig.getString(KAFKA_PORT);
-    if (kafkaPort == null) {
-      kafkaPort = KafkaEnvironmentProperties.port();
-    }
-
-    log.info("deployEventConsumerVerticle:: Using Kafka configuration - host: {}, port: {}",
-      kafkaHost, kafkaPort);
-
+  private static Future<String> deployEventConsumerVerticle(Vertx vertx) {
     JsonObject kafkaConfig = new JsonObject()
-      .put(KAFKA_HOST, kafkaHost)
-      .put(KAFKA_PORT, kafkaPort)
+      .put(KAFKA_HOST, KafkaEnvironmentProperties.host())
+      .put(KAFKA_PORT, KafkaEnvironmentProperties.port())
       .put(KAFKA_REPLICATION_FACTOR, KafkaEnvironmentProperties.replicationFactor())
       .put(KAFKA_ENV, KafkaEnvironmentProperties.environment())
       .put(OKAPI_URL, getenv().getOrDefault(OKAPI_URL, DEFAULT_OKAPI_URL))
