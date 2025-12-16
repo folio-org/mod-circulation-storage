@@ -60,8 +60,9 @@ public class StorageTestSuite {
   private static MockServer mockServer;
   private static final WireMockServer wireMockServer = new WireMockServer(PROXY_PORT);
 
-  private static final KafkaContainer kafkaContainer
-    = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.4.0"));
+  private static final KafkaContainer kafkaContainer =
+    new KafkaContainer(DockerImageName.parse("apache/kafka-native:3.8.0"))
+      .withStartupAttempts(3);
 
   /**
    * Return a URL for the path and the parameters.
