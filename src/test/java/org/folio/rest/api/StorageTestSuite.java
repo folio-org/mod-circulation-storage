@@ -24,9 +24,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
-import org.folio.rest.api.loans.LoansAnonymizationApiTest;
-import org.folio.rest.api.migration.StaffSlipsHoldTransitMigrationScriptTest;
-import org.folio.rest.api.migration.StaffSlipsPickRequestMigrationScriptTest;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.JsonResponse;
@@ -37,8 +34,6 @@ import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.support.MockServer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.platform.suite.api.SelectClasses;
-import org.junit.platform.suite.api.Suite;
 import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -52,38 +47,6 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import lombok.SneakyThrows;
 
-@Suite
-@SelectClasses({
-  AnonymizeLoansApiTest.class,
-  LoansApiTest.class,
-  LoansAnonymizationApiTest.class,
-  CirculationRulesApiTest.class,
-  FixedDueDateApiTest.class,
-  LoanPoliciesApiTest.class,
-  RequestPreferencesApiTest.class,
-  RequestsApiTest.class,
-  LoansApiHistoryTest.class,
-  StaffSlipsApiTest.class,
-  CancellationReasonsApiTest.class,
-  PatronNoticePoliciesApiTest.class,
-  RequestPoliciesApiTest.class,
-  RequestExpirationApiTest.class,
-  ScheduledNoticesAPITest.class,
-  PatronActionSessionAPITest.class,
-  RequestBatchAPITest.class,
-  CheckInStorageApiTest.class,
-  StaffSlipsPickRequestMigrationScriptTest.class,
-  StaffSlipsHoldTransitMigrationScriptTest.class,
-  RequestUpdateTriggerTest.class,
-  JsonPropertyWriterTest.class,
-  IsbnNormalizationTest.class,
-  TlrFeatureToggleJobAPITest.class,
-  ActualCostRecordAPITest.class,
-  EventConsumerVerticleTest.class,
-  CheckOutLockAPITest.class,
-  CirculationSettingsAPITest.class,
-  PrintEventsAPITest.class
-})
 public class StorageTestSuite {
 
   private static final Logger log = LogManager.getLogger();
@@ -98,7 +61,7 @@ public class StorageTestSuite {
   private static final WireMockServer wireMockServer = new WireMockServer(PROXY_PORT);
 
   private static final KafkaContainer kafkaContainer
-    = new KafkaContainer(DockerImageName.parse("apache/kafka-native:3.8.0"));
+    = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.4.0"));
 
   /**
    * Return a URL for the path and the parameters.
