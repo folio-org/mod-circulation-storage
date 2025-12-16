@@ -34,6 +34,7 @@ import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.support.MockServer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -121,17 +122,37 @@ public class StorageTestSuite {
     // Set PostgresTester only once
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
 
-    // Start Kafka container if not already running
-    if (!kafkaContainer.isRunning()) {
-      log.info("Starting Kafka container...");
-      kafkaContainer.start();
-    } else {
-      log.info("Kafka container already running, reusing it");
-    }
+    // Check if Docker is available before trying to start Kafka
+    String host;
+    String port;
 
-    var host = kafkaContainer.getHost();
-    var port = String.valueOf(kafkaContainer.getFirstMappedPort());
-    log.info("Kafka available at host={} port={}", host, port);
+    try {
+      if (DockerClientFactory.instance().isDockerAvailable()) {
+        // Start Kafka container if not already running
+        if (!kafkaContainer.isRunning()) {
+          log.info("Starting Kafka container...");
+          kafkaContainer.start();
+        } else {
+          log.info("Kafka container already running, reusing it");
+        }
+
+        host = kafkaContainer.getHost();
+        port = String.valueOf(kafkaContainer.getFirstMappedPort());
+        log.info("Kafka available at host={} port={}", host, port);
+      } else {
+        log.warn("Docker is not available, using fallback Kafka configuration");
+        // Use environment variables or default values when Docker is not available
+        host = System.getenv().getOrDefault("KAFKA_HOST", "localhost");
+        port = System.getenv().getOrDefault("KAFKA_PORT", "9092");
+        log.info("Using fallback Kafka configuration: host={} port={}", host, port);
+      }
+    } catch (Exception e) {
+      log.warn("Could not start Kafka container, using fallback configuration: {}", e.getMessage());
+      // Use environment variables or default values when Docker fails
+      host = System.getenv().getOrDefault("KAFKA_HOST", "localhost");
+      port = System.getenv().getOrDefault("KAFKA_PORT", "9092");
+      log.info("Using fallback Kafka configuration: host={} port={}", host, port);
+    }
 
     // Set both system properties and environment variables for Kafka
     System.setProperty("kafka-port", port);
