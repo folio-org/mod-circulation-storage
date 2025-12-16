@@ -61,7 +61,8 @@ public class StorageTestSuite {
   private static final WireMockServer wireMockServer = new WireMockServer(PROXY_PORT);
 
   private static final KafkaContainer kafkaContainer
-    = new KafkaContainer(DockerImageName.parse("apache/kafka-native:3.8.0"));
+    = new KafkaContainer(DockerImageName.parse("apache/kafka-native:3.8.0"))
+      .withReuse(true);
 
   /**
    * Return a URL for the path and the parameters.
@@ -109,31 +110,62 @@ public class StorageTestSuite {
 
     // If already initialized by another test class, skip
     if (initialised) {
+      log.info("Test suite already initialized, skipping");
       return;
     }
 
+    log.info("Initializing test suite...");
+
     vertx = Vertx.vertx();
 
+    // Set PostgresTester only once
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
 
-    kafkaContainer.start();
+    // Start Kafka container if not already running
+    if (!kafkaContainer.isRunning()) {
+      log.info("Starting Kafka container...");
+      kafkaContainer.start();
+    } else {
+      log.info("Kafka container already running, reusing it");
+    }
+
     var host = kafkaContainer.getHost();
     var port = String.valueOf(kafkaContainer.getFirstMappedPort());
-    log.info("Starting Kafka host={} port={}", host, port);
+    log.info("Kafka available at host={} port={}", host, port);
+
+    // Set both system properties and environment variables for Kafka
     System.setProperty("kafka-port", port);
     System.setProperty("kafka-host", host);
+    System.setProperty("KAFKA_PORT", port);
+    System.setProperty("KAFKA_HOST", host);
 
-    final int verticlePort = NetworkUtils.nextFreePort();
+    // Also set the bootstrap servers property
+    String bootstrapServers = host + ":" + port;
+    System.setProperty("KAFKA_BOOTSTRAP_SERVERS", bootstrapServers);
+    System.setProperty("kafka.bootstrap.servers", bootstrapServers);
 
-    DeploymentOptions options = new DeploymentOptions();
-    options.setConfig(new JsonObject().put("http.port", verticlePort));
-    startVerticle(options);
+    log.info("Kafka configuration set: KAFKA_HOST={}, KAFKA_PORT={}", host, port);
 
+    // Start mock server before verticle to ensure pubsub endpoints are available
     mockServer = new MockServer(OKAPI_MOCK_PORT, vertx);
     mockServer.start();
 
     wireMockServer.start();
 
+    final int verticlePort = NetworkUtils.nextFreePort();
+
+    DeploymentOptions options = new DeploymentOptions();
+    JsonObject config = new JsonObject()
+      .put("http.port", verticlePort)
+      .put("KAFKA_HOST", host)
+      .put("KAFKA_PORT", port)
+      .put("kafka-host", host)
+      .put("kafka-port", port);
+    options.setConfig(config);
+
+    log.info("Verticle deployment config: {}", config.encodePrettily());
+
+    // Configure WireMock stubs before starting verticle
     wireMockServer.stubFor(post(urlMatching("/pubsub/.*"))
       .atPriority(1)
       .willReturn(aResponse().proxiedFrom("http://localhost:" + OKAPI_MOCK_PORT)));
@@ -142,9 +174,12 @@ public class StorageTestSuite {
       .atPriority(10)
       .willReturn(aResponse().proxiedFrom("http://localhost:" + verticlePort)));
 
+    startVerticle(options);
+
     prepareTenant(TENANT_ID, true);
 
     initialised = true;
+    log.info("Test suite initialization complete");
   }
 
   @AfterAll
@@ -153,22 +188,43 @@ public class StorageTestSuite {
     ExecutionException,
     TimeoutException {
 
+    if (!initialised) {
+      log.info("Test suite not initialized, skipping cleanup");
+      return;
+    }
+
+    log.info("Cleaning up test suite...");
 
     initialised = false;
 
-    removeTenant(TENANT_ID);
+    try {
+      removeTenant(TENANT_ID);
+    } catch (Exception e) {
+      log.warn("Failed to remove tenant: {}", e.getMessage());
+    }
 
-    kafkaContainer.stop();
+    // Don't stop Kafka container - it's reusable and will be cleaned up by Testcontainers
+    // kafkaContainer.stop();
 
-    mockServer.close();
+    if (mockServer != null) {
+      mockServer.close();
+    }
+
+    if (wireMockServer != null && wireMockServer.isRunning()) {
+      wireMockServer.stop();
+    }
 
     CompletableFuture<String> undeploymentComplete = new CompletableFuture<>();
 
-    vertx.close()
-      .onSuccess(res -> undeploymentComplete.complete(null))
-      .onFailure(undeploymentComplete::completeExceptionally);
+    if (vertx != null) {
+      vertx.close()
+        .onSuccess(res -> undeploymentComplete.complete(null))
+        .onFailure(undeploymentComplete::completeExceptionally);
 
-    undeploymentComplete.get(20, TimeUnit.SECONDS);
+      undeploymentComplete.get(20, TimeUnit.SECONDS);
+    }
+
+    log.info("Test suite cleanup complete");
   }
 
   public static synchronized boolean isNotInitialised() {
