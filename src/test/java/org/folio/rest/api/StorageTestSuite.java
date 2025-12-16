@@ -123,8 +123,8 @@ public class StorageTestSuite {
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
 
     // Check if Docker is available before trying to start Kafka
-    String host;
-    String port;
+    String kafkaHost;
+    String kafkaPort;
 
     try {
       if (DockerClientFactory.instance().isDockerAvailable()) {
@@ -136,36 +136,36 @@ public class StorageTestSuite {
           log.info("Kafka container already running, reusing it");
         }
 
-        host = kafkaContainer.getHost();
-        port = String.valueOf(kafkaContainer.getFirstMappedPort());
-        log.info("Kafka available at host={} port={}", host, port);
+        kafkaHost = kafkaContainer.getHost();
+        kafkaPort = String.valueOf(kafkaContainer.getFirstMappedPort());
+        log.info("Kafka available at host={} port={}", kafkaHost, kafkaPort);
       } else {
         log.warn("Docker is not available, using fallback Kafka configuration");
         // Use environment variables or default values when Docker is not available
-        host = System.getenv().getOrDefault("KAFKA_HOST", "localhost");
-        port = System.getenv().getOrDefault("KAFKA_PORT", "9092");
-        log.info("Using fallback Kafka configuration: host={} port={}", host, port);
+        kafkaHost = System.getenv().getOrDefault("KAFKA_HOST", "localhost");
+        kafkaPort = System.getenv().getOrDefault("KAFKA_PORT", "9092");
+        log.info("Using fallback Kafka configuration: host={} port={}", kafkaHost, kafkaPort);
       }
     } catch (Exception e) {
       log.warn("Could not start Kafka container, using fallback configuration: {}", e.getMessage());
       // Use environment variables or default values when Docker fails
-      host = System.getenv().getOrDefault("KAFKA_HOST", "localhost");
-      port = System.getenv().getOrDefault("KAFKA_PORT", "9092");
-      log.info("Using fallback Kafka configuration: host={} port={}", host, port);
+      kafkaHost = System.getenv().getOrDefault("KAFKA_HOST", "localhost");
+      kafkaPort = System.getenv().getOrDefault("KAFKA_PORT", "9092");
+      log.info("Using fallback Kafka configuration: host={} port={}", kafkaHost, kafkaPort);
     }
 
     // Set both system properties and environment variables for Kafka
-    System.setProperty("kafka-port", port);
-    System.setProperty("kafka-host", host);
-    System.setProperty("KAFKA_PORT", port);
-    System.setProperty("KAFKA_HOST", host);
+    System.setProperty("kafka-port", kafkaPort);
+    System.setProperty("kafka-host", kafkaHost);
+    System.setProperty("KAFKA_PORT", kafkaPort);
+    System.setProperty("KAFKA_HOST", kafkaHost);
 
     // Also set the bootstrap servers property
-    String bootstrapServers = host + ":" + port;
+    String bootstrapServers = kafkaHost + ":" + kafkaPort;
     System.setProperty("KAFKA_BOOTSTRAP_SERVERS", bootstrapServers);
     System.setProperty("kafka.bootstrap.servers", bootstrapServers);
 
-    log.info("Kafka configuration set: KAFKA_HOST={}, KAFKA_PORT={}", host, port);
+    log.info("Kafka configuration set: KAFKA_HOST={}, KAFKA_PORT={}", kafkaHost, kafkaPort);
 
     // Start mock server before verticle to ensure pubsub endpoints are available
     mockServer = new MockServer(OKAPI_MOCK_PORT, vertx);
@@ -173,15 +173,17 @@ public class StorageTestSuite {
 
     wireMockServer.start();
 
-    final int verticlePort = NetworkUtils.nextFreePort();
+    int port = NetworkUtils.nextFreePort();
 
     DeploymentOptions options = new DeploymentOptions();
     JsonObject config = new JsonObject()
-      .put("http.port", verticlePort)
-      .put("KAFKA_HOST", host)
-      .put("KAFKA_PORT", port)
-      .put("kafka-host", host)
-      .put("kafka-port", port);
+      .put("http.port", port)
+      .put("KAFKA_HOST", kafkaHost)
+      .put("KAFKA_PORT", kafkaPort)
+      .put("kafka-host", kafkaHost)
+      .put("kafka-port", kafkaPort)
+      .put("REPLICATION_FACTOR", "1")
+      .put("ENV", "test");
     options.setConfig(config);
 
     log.info("Verticle deployment config: {}", config.encodePrettily());
@@ -193,7 +195,7 @@ public class StorageTestSuite {
 
     wireMockServer.stubFor(any(anyUrl())
       .atPriority(10)
-      .willReturn(aResponse().proxiedFrom("http://localhost:" + verticlePort)));
+      .willReturn(aResponse().proxiedFrom("http://localhost:" + port)));
 
     startVerticle(options);
 
