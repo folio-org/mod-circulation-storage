@@ -154,7 +154,6 @@ public class TenantRefApiTests {
     vertx.deployVerticle(RestVerticle.class.getName(), deploymentOptions)
       .compose(r -> postTenant(TLR_MIGRATION_OLD_MODULE_VERSION, TLR_MIGRATION_PREV_MODULE_VERSION))
       .onComplete(context.succeeding(job -> {
-        // Ensure PostgresClient is available for subsequent operations
         postgresClient = PostgresClient.getInstance(vertx, TENANT);
         context.completeNow();
       }));
@@ -167,8 +166,6 @@ public class TenantRefApiTests {
       .onComplete(context.succeeding(requests -> {
         requestsBeforeMigration = requests.stream()
           .collect(toMap(TenantRefApiTests::getId, identity()));
-        // Need to reset all mocks before each test because some tests can remove stubs to mimic
-        // a failure on other modules' side
         mockEndpoints();
         context.completeNow();
       }));
@@ -239,9 +236,19 @@ public class TenantRefApiTests {
   @Test
   public void jobCompletedWhenRequestSearchMigrationIsSuccessful(VertxTestContext context) {
     postTenant(REQ_SEARCH_MIGRATION_PREV_MOD_VER, REQ_SEARCH_MIGRATION_MOD_VER)
-      .onComplete(context.succeeding(job -> {
-        assertThat(job.getError(), is(nullValue()));
-        validateRequestSearchMigrationResult(context);
+      .compose(job -> {
+        context.verify(() -> {
+          assertThat("jobCompletedWhenRequestSearchMigrationIsSuccessful: job error present: " +
+            job.getError(), job.getError(), is(nullValue()));
+        });
+        return getAllRequestsAsJson();
+      })
+      .onComplete(context.succeeding(requestsAfterMigration -> {
+        context.verify(() -> {
+          assertThat(requestsBeforeMigration.size(), is(requestsAfterMigration.size()));
+          requestsAfterMigration.forEach(this::validateRequestSearchIndexFields);
+        });
+        context.completeNow();
       }));
   }
 
@@ -451,7 +458,7 @@ public class TenantRefApiTests {
   }
 
   private void jobFailsWhenRequestValidationFails(VertxTestContext context,
-                                                  JsonObject request, String expectedErrorMessage) {
+    JsonObject request, String expectedErrorMessage) {
 
     postgresClient.update(REQUEST_TABLE_NAME, request, getId(request))
       .compose(r -> postTenant(TLR_MIGRATION_PREV_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION))
@@ -476,7 +483,7 @@ public class TenantRefApiTests {
   }
 
   private static void assertThatNoRequestsWereUpdatedByMigration(VertxTestContext context,
-                                                                 String field) {
+    String field) {
 
     selectRead(format("SELECT COUNT(*) " +
       "FROM " + REQUEST_TABLE + " " +
@@ -715,6 +722,31 @@ public class TenantRefApiTests {
         requestsAfterMigration.forEach(this::validateTlrMigrationResult);
         context.completeNow();
       });
+  }
+
+  private void validateRequestSearchIndexFields(JsonObject requestAfter) {
+    JsonObject searchIndex = requestAfter.getJsonObject("searchIndex");
+
+    if (searchIndex != null) {
+      String requestId = getId(requestAfter);
+
+      // Validate that search index fields are populated
+      if (!REQUEST_ID_MISSING_EFFECTIVE_SHELVING_ORDER.equals(requestId)) {
+        assertThat(searchIndex.getString("shelvingOrder"), is(notNullValue()));
+      }
+
+      if (!REQUEST_ID_MISSING_CALL_NUMBER.equals(requestId) &&
+          !REQUEST_ID_MISSING_EFFECTIVE_CALL_NUMBER_COMPONENTS.equals(requestId)) {
+        assertThat(searchIndex.getString("callNumberComponents"), is(notNullValue()));
+      }
+
+      if (!REQUEST_ID_MISSING_PICKUP_SERVICE_POINT_NAME.equals(requestId)) {
+        String pickupServicePointName = searchIndex.getString("pickupServicePointName");
+        if (requestAfter.getString("pickupServicePointId") != null) {
+          assertThat(pickupServicePointName, is(notNullValue()));
+        }
+      }
+    }
   }
 
   private static int getCount(RowSet<Row> rowSet) {
