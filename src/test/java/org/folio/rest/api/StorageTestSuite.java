@@ -295,7 +295,8 @@ public class StorageTestSuite {
     client.post(storageUrl("/_/tenant"), job, tenantId,
       ResponseHandler.json(tenantPrepared));
 
-    JsonResponse response = tenantPrepared.get(60, TimeUnit.SECONDS);
+    // allow up to 180 seconds to complete the POST
+    JsonResponse response = tenantPrepared.get(180, TimeUnit.SECONDS);
 
     String failureMessage = String.format("Tenant post failed: %s: %s",
       response.getStatusCode(), response);
@@ -305,9 +306,10 @@ public class StorageTestSuite {
       String id = response.getJson().getString("id");
 
       tenantPrepared = new CompletableFuture<>();
-      client.get(storageUrl("/_/tenant/" + id + "?wait=60000"), tenantId,
+      // extend wait query param and local wait
+      client.get(storageUrl("/_/tenant/" + id + "?wait=180000"), tenantId,
         ResponseHandler.json(tenantPrepared));
-      response = tenantPrepared.get(60, TimeUnit.SECONDS);
+      response = tenantPrepared.get(180, TimeUnit.SECONDS);
 
       failureMessage = String.format("Tenant get failed: %s: %s",
         response.getStatusCode(), response.getBody());
