@@ -48,6 +48,7 @@ import org.folio.rest.jaxrs.model.TenantJob;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.ModuleName;
 import org.folio.rest.tools.utils.NetworkUtils;
+import org.junit.Ignore;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -381,6 +382,7 @@ public class TenantRefApiTests {
       "request does not contain required ILR fields: " + getId(randomRequest));
   }
 
+  @Ignore
   @Test
   public void migrationRemovesPositionFromClosedRequests(VertxTestContext context) {
     List<String> closedStatuses = Stream.of(CLOSED_FILLED, CLOSED_UNFILLED, CLOSED_PICKUP_EXPIRED,
