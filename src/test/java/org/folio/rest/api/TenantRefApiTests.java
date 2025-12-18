@@ -18,6 +18,7 @@ import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_CANCELLED;
 import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_FILLED;
 import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_PICKUP_EXPIRED;
 import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_UNFILLED;
+import static org.folio.rest.support.ApiTests.waitFor;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
@@ -51,7 +52,6 @@ import org.folio.rest.tools.utils.NetworkUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -162,6 +162,7 @@ public class TenantRefApiTests {
 
   @BeforeEach
   public void beforeEach(VertxTestContext context) throws Exception {
+    waitFor(postgresClient.execute("TRUNCATE rmb_internal"));
     loadRequests()
       .compose(r -> getAllRequestsAsJson())
       .onComplete(context.succeeding(requests -> {
@@ -382,7 +383,6 @@ public class TenantRefApiTests {
       "request does not contain required ILR fields: " + getId(randomRequest));
   }
 
-  @Disabled
   @Test
   public void migrationRemovesPositionFromClosedRequests(VertxTestContext context) {
     List<String> closedStatuses = Stream.of(CLOSED_FILLED, CLOSED_UNFILLED, CLOSED_PICKUP_EXPIRED,

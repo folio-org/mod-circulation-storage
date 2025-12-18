@@ -14,6 +14,7 @@ import static org.folio.rest.jaxrs.model.Request.Status.OPEN_NOT_YET_FILLED;
 
 import java.util.UUID;
 
+import io.vertx.core.Future;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import org.apache.commons.lang3.StringUtils;
@@ -41,7 +42,7 @@ public class ServiceHelperTest {
   public void shouldPublishCreatedEvent(VertxTestContext testContext) {
     when(repository.getById(eq(ENTITY_ID))).thenReturn(succeededFuture());
     when(repository.upsert(eq(ENTITY_ID), any())).thenReturn(succeededFuture(ENTITY_ID));
-    when(eventPublisher.publishCreated()).thenReturn(io.vertx.core.Future::succeededFuture);
+    when(eventPublisher.publishCreated()).thenReturn(Future::succeededFuture);
 
     serviceHelper.upsertAndPublishEvents(ENTITY_ID, NEW_ENTITY)
       .onComplete(ar -> {
@@ -58,7 +59,7 @@ public class ServiceHelperTest {
   public void shouldPushUpdatedEvent(VertxTestContext testContext) {
     when(repository.getById(eq(ENTITY_ID))).thenReturn(succeededFuture(OLD_ENTITY));
     when(repository.upsert(any(), any())).thenReturn(succeededFuture(ENTITY_ID));
-    when(eventPublisher.publishUpdated(any())).thenReturn(io.vertx.core.Future::succeededFuture);
+    when(eventPublisher.publishUpdated(any())).thenReturn(Future::succeededFuture);
 
     serviceHelper.upsertAndPublishEvents(ENTITY_ID, NEW_ENTITY)
       .onComplete(ar -> {
