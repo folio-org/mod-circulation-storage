@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>mod-circulation-storage</artifactId>
   <groupId>org.folio</groupId>
-  <version>17.3.7-SNAPSHOT</version>
+  <version>17.3.8-SNAPSHOT</version>
   <licenses>
     <license>
       <name>Apache License 2.0</name>
@@ -28,8 +28,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
-    <vertx-version>4.5.9</vertx-version>
-    <raml-module-builder-version>35.3.0</raml-module-builder-version>
+    <vertx-version>4.5.23</vertx-version>
+    <raml-module-builder-version>35.3.2</raml-module-builder-version>
     <spring.version>6.1.5</spring.version>
 
     <!--Folio dependencies properties-->
