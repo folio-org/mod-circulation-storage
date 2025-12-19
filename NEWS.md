@@ -1,3 +1,6 @@
+## 17.3.7 2025-12-19
+* Upgrade to Vertx 4.5.23 and RMB 35.3.2 (CIRCSTORE-627)
+
 ## 17.3.6 2025-05-07
 * Set queue level based on TLR feature status (CIRCSTORE-589)
 
