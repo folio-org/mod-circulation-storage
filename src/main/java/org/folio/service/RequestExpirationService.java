@@ -256,15 +256,14 @@ public class RequestExpirationService {
   }
 
   private Future<Void> publishPubSubLogEvents(List<ExpiredRequestWrapper> context) {
-    Future<Void> future = succeededFuture();
-    for (ExpiredRequestWrapper requestWrapper : context) {
+    context.forEach(requestWrapper -> {
       var payload = new JsonObject()
         .put(REQUESTS.value(), new JsonObject()
           .put(ORIGINAL.value(), requestWrapper.originalValue())
           .put(UPDATED.value(), requestWrapper.updatedValue()));
-      future = future.compose(x -> eventPublisherService.publishLogRecord(payload, REQUEST_EXPIRED));
-    }
-    return future;
+      eventPublisherService.publishLogRecord(payload, REQUEST_EXPIRED);
+    });
+    return succeededFuture();
   }
 
   private Future<Void> publishExpiredRequestsEvents(List<ExpiredRequestWrapper> context) {

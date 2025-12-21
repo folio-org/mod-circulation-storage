@@ -58,7 +58,6 @@ import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.support.MockServer;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -83,11 +82,6 @@ class RequestExpirationApiTest {
     client = new OkapiHttpClient(getVertx());
     kafkaConsumer = new FakeKafkaConsumer().consume(getVertx());
     removeAllEvents();
-  }
-
-  @AfterAll
-  static void afterAll() throws InterruptedException, ExecutionException, TimeoutException {
-    // Don't call after() - let the test suite manage cleanup
   }
 
   @BeforeEach

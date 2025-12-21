@@ -15,6 +15,7 @@ import org.folio.service.tlr.TlrFeatureToggleService;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 
 public class TlrFeatureToggleImpl implements TlrFeatureToggleJobStart {
@@ -26,7 +27,13 @@ public class TlrFeatureToggleImpl implements TlrFeatureToggleJobStart {
 
     asyncResultHandler.handle(succeededFuture(respond202()));
 
-    new TlrFeatureToggleService(okapiHeaders, vertxContext)
+    vertxContext.owner().executeBlocking(() -> executeTlrFeatureToggleJob(okapiHeaders, vertxContext));
+  }
+
+  private Future<Void> executeTlrFeatureToggleJob(Map<String, String> okapiHeaders,
+    Context vertxContext) {
+
+    return new TlrFeatureToggleService(okapiHeaders, vertxContext)
       .handle()
       .onSuccess(v -> log.info("TLR feature toggle job succeeded"))
       .onFailure(t -> log.error("TLR feature toggle job failed", t));
