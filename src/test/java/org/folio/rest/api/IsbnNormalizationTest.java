@@ -5,7 +5,6 @@ import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.storageUrl;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.MalformedURLException;
@@ -32,19 +31,19 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
 import lombok.SneakyThrows;
 
-public class IsbnNormalizationTest extends ApiTests {
+class IsbnNormalizationTest extends ApiTests {
   private static final String REQUEST_STORAGE_URL = "/request-storage/requests";
   private final UUID isbnIdentifierId = UUID.fromString("8261054f-be78-422d-bd51-4ed9f33c3422");
 
   @SneakyThrows
   @BeforeEach
-  public void beforeEach() {
+  void beforeEach() {
     StorageTestSuite.deleteAll(storageUrl(REQUEST_STORAGE_URL));
   }
 
   @SneakyThrows
   @Test
-  public void canSearchForFirstIsbnWithAdditionalHyphens() {
+  void canSearchForFirstIsbnWithAdditionalHyphens() {
     createRequests("Interesting Times", "Uprooted");
 
     find("itemIsbn = 0-552-16754-1", "Interesting Times");
@@ -52,7 +51,7 @@ public class IsbnNormalizationTest extends ApiTests {
 
   @SneakyThrows
   @Test
-  public void canSearchForFirstIsbnWithAdditionalHyphenAndTruncation() {
+  void canSearchForFirstIsbnWithAdditionalHyphenAndTruncation() {
     createRequests("Interesting Times", "Uprooted");
 
     find("itemIsbn = 05-5*", "Interesting Times");
@@ -60,7 +59,7 @@ public class IsbnNormalizationTest extends ApiTests {
 
   @SneakyThrows
   @Test
-  public void canSearchForSecondIsbnWithMissingHyphens() {
+  void canSearchForSecondIsbnWithMissingHyphens() {
     createRequests("Interesting Times", "Uprooted");
 
     find("itemIsbn = 9780552167543", "Interesting Times");
@@ -68,7 +67,7 @@ public class IsbnNormalizationTest extends ApiTests {
 
   @SneakyThrows
   @Test
-  public void canSearchForSecondIsbnWithMissingHyphensAndTrunation() {
+  void canSearchForSecondIsbnWithMissingHyphensAndTrunation() {
     createRequests("Interesting Times", "Temeraire", "Uprooted");
 
     find("itemIsbn = 9780*", "Interesting Times", "Temeraire");
@@ -76,7 +75,7 @@ public class IsbnNormalizationTest extends ApiTests {
 
   @SneakyThrows
   @Test
-  public void canSearchForSecondIsbnWithAlteredHyphens() {
+  void canSearchForSecondIsbnWithAlteredHyphens() {
     createRequests("Interesting Times", "Temeraire");
 
     find("itemIsbn = 9-7-8-055-2167-543", "Interesting Times");
@@ -84,7 +83,7 @@ public class IsbnNormalizationTest extends ApiTests {
 
   @SneakyThrows
   @Test
-  public void cannotFindIsbnWithTailString() {
+  void cannotFindIsbnWithTailString() {
     createRequests("Interesting Times");
 
     find("itemIsbn = 552-16754-3");

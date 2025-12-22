@@ -50,7 +50,7 @@ class PatronNoticePoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreatePatronNoticePolicy() throws MalformedURLException, InterruptedException, ExecutionException,
+  void canCreatePatronNoticePolicy() throws MalformedURLException, InterruptedException, ExecutionException,
     TimeoutException {
 
     JsonObject sendOptions = new JsonObject()
@@ -133,7 +133,7 @@ class PatronNoticePoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotCreatePatronNoticePolicyWithNotUniqueName() throws MalformedURLException, InterruptedException,
+  void cannotCreatePatronNoticePolicyWithNotUniqueName() throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
     JsonObject noticePolicy = new JsonObject()
@@ -148,7 +148,7 @@ class PatronNoticePoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void canUpdatePatronNoticePolicy() throws MalformedURLException, InterruptedException, ExecutionException,
+  void canUpdatePatronNoticePolicy() throws MalformedURLException, InterruptedException, ExecutionException,
     TimeoutException {
 
     JsonObject noticePolicy = new JsonObject()
@@ -187,7 +187,7 @@ class PatronNoticePoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotUpdatePatronNoticePolicyWithNotUniqueName() throws MalformedURLException, InterruptedException,
+  void cannotUpdatePatronNoticePolicyWithNotUniqueName() throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
     JsonObject firstPolicy = new JsonObject()
@@ -209,7 +209,7 @@ class PatronNoticePoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotUpdateNonexistentPatronNoticePolicy() throws InterruptedException, MalformedURLException,
+  void cannotUpdateNonexistentPatronNoticePolicy() throws InterruptedException, MalformedURLException,
     TimeoutException, ExecutionException {
 
     JsonObject nonexistentPolicy = new JsonObject()
@@ -221,7 +221,7 @@ class PatronNoticePoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void canGetAllPatronNoticePolicies() throws MalformedURLException, InterruptedException, ExecutionException,
+  void canGetAllPatronNoticePolicies() throws MalformedURLException, InterruptedException, ExecutionException,
     TimeoutException {
 
     JsonObject firstPolicy = new JsonObject()
@@ -254,7 +254,7 @@ class PatronNoticePoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void canGetPatronNoticePolicy() throws MalformedURLException, InterruptedException, ExecutionException,
+  void canGetPatronNoticePolicy() throws MalformedURLException, InterruptedException, ExecutionException,
     TimeoutException {
 
     JsonObject noticePolicy = new JsonObject()
@@ -273,7 +273,7 @@ class PatronNoticePoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotGetNonexistentPatronNoticePolicy() throws MalformedURLException, InterruptedException,
+  void cannotGetNonexistentPatronNoticePolicy() throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
     JsonObject nonexistentPolicy = new JsonObject()
@@ -292,7 +292,7 @@ class PatronNoticePoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void canDeletePatronNoticePolicy() throws MalformedURLException, InterruptedException,
+  void canDeletePatronNoticePolicy() throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
     JsonObject noticePolicy = new JsonObject()
@@ -304,7 +304,7 @@ class PatronNoticePoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotDeleteNonexistentPatronNoticePolicyId() throws MalformedURLException, InterruptedException,
+  void cannotDeleteNonexistentPatronNoticePolicyId() throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
     String id = UUID.randomUUID().toString();
@@ -315,7 +315,7 @@ class PatronNoticePoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotDeleteInUsePatronNoticePolicy() throws InterruptedException, MalformedURLException,
+  void cannotDeleteInUsePatronNoticePolicy() throws InterruptedException, MalformedURLException,
     TimeoutException, ExecutionException {
 
     String inUsePolicyId = "16b88363-0d93-464a-967a-ad5ad0f9187c";
@@ -340,7 +340,7 @@ class PatronNoticePoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotUpdatePatronNoticePolicyWithNotValidSendHow() throws InterruptedException,
+  void cannotUpdatePatronNoticePolicyWithNotValidSendHow() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
     JsonObject sendOptions = new JsonObject()
@@ -361,7 +361,7 @@ class PatronNoticePoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotUpdatePatronNoticePolicyWithNotValidSendBy() throws InterruptedException,
+  void cannotUpdatePatronNoticePolicyWithNotValidSendBy() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
     JsonObject sendBy = new JsonObject()
@@ -380,7 +380,7 @@ class PatronNoticePoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotUpdatePatronNoticePolicyWithNotValidSendEvery() throws InterruptedException,
+  void cannotUpdatePatronNoticePolicyWithNotValidSendEvery() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
     JsonObject sendEvery = new JsonObject()
@@ -399,7 +399,7 @@ class PatronNoticePoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotUpdatePatronNoticePolicyWithWrongSendHow() throws InterruptedException,
+  void cannotUpdatePatronNoticePolicyWithWrongSendHow() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
     JsonObject sendOptions = new JsonObject()
@@ -421,7 +421,7 @@ class PatronNoticePoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotUpdatePatronNoticePolicyWithWrongFrequency() throws InterruptedException,
+  void cannotUpdatePatronNoticePolicyWithWrongFrequency() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
     JsonObject sendEvery = new JsonObject()

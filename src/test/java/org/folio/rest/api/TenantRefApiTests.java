@@ -456,7 +456,7 @@ class TenantRefApiTests {
       .compose(x -> assertOtherCancellationReasonName("foo"))
       .compose(x -> postTenant("0.0.0", ModuleName.getModuleVersion()))
       .compose(x -> assertOtherCancellationReasonName("Other"))
-      .onComplete(context.succeeding(v -> context.completeNow()));
+      .onComplete(context.succeedingThenComplete());
   }
 
   private void jobFailsWhenRequestValidationFails(VertxTestContext context,
@@ -666,13 +666,10 @@ class TenantRefApiTests {
   }
 
   static void deleteTenant(TenantClient tenantClient) {
-    CompletableFuture<Void> future = new CompletableFuture<>();
     tenantClient.deleteTenantByOperationId(jobId, deleted -> {
       if (deleted.failed()) {
-        future.completeExceptionally(new RuntimeException("Failed to delete tenant"));
-        return;
+        throw new RuntimeException("Failed to delete tenant");
       }
-      future.complete(null);
     });
   }
 

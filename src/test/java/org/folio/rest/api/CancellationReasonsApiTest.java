@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @author kurt
  */
-public class CancellationReasonsApiTest extends ApiTests {
+class CancellationReasonsApiTest extends ApiTests {
 
   private static URL cancelReasonURL() throws MalformedURLException {
     return cancelReasonURL("");
@@ -168,14 +168,14 @@ public class CancellationReasonsApiTest extends ApiTests {
   }
   //Test Init
   @BeforeEach
-  public void beforeEach()
+  void beforeEach()
       throws MalformedURLException {
     StorageTestSuite.deleteAll(requestStorageUrl());
     StorageTestSuite.deleteAll(cancelReasonURL());
   }
   //Tests
   @Test
-  public void canCreateCancellationReason()
+  void canCreateCancellationReason()
       throws MalformedURLException,
       InterruptedException,
       ExecutionException,
@@ -189,7 +189,7 @@ public class CancellationReasonsApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateAndRetrieveCancellationRequest()
+  void canCreateAndRetrieveCancellationRequest()
       throws MalformedURLException,
       InterruptedException,
       ExecutionException,
@@ -208,7 +208,7 @@ public class CancellationReasonsApiTest extends ApiTests {
   }
 
   @Test
-  public void canUpdateCancellationRequest()
+  void canUpdateCancellationRequest()
       throws MalformedURLException,
       InterruptedException,
       ExecutionException,
@@ -230,7 +230,7 @@ public class CancellationReasonsApiTest extends ApiTests {
   }
 
   @Test
-  public void canRetrieveByCQL()
+  void canRetrieveByCQL()
       throws MalformedURLException,
       InterruptedException,
       ExecutionException,
@@ -251,7 +251,7 @@ public class CancellationReasonsApiTest extends ApiTests {
   }
 
   @Test
-  public void canDeleteCancellationRequest()
+  void canDeleteCancellationRequest()
       throws MalformedURLException,
       InterruptedException,
       ExecutionException,
@@ -268,7 +268,7 @@ public class CancellationReasonsApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotCreateDuplicateCancellationRequestNames()
+  void cannotCreateDuplicateCancellationRequestNames()
       throws MalformedURLException,
       InterruptedException,
       ExecutionException,

@@ -13,7 +13,7 @@ import java.util.UUID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
-public class CirculationSettingsAPITest extends ApiTests {
+class CirculationSettingsAPITest extends ApiTests {
   private static final String ID_KEY = "id";
   private static final String NAME_KEY = "name";
   private static final String VALUE_KEY = "value";
@@ -32,13 +32,13 @@ public class CirculationSettingsAPITest extends ApiTests {
       CIRCULATION_SETTINGS_PROPERTY);
 
   @BeforeEach
-  public void beforeEach() {
+  void beforeEach() {
     StorageTestSuite.cleanUpTable(TABLE_NAME);
   }
 
   @Test
   @SneakyThrows
-  public void updateInsteadCreateWithTheSameName() {
+  void updateInsteadCreateWithTheSameName() {
     String id = UUID.randomUUID().toString();
     JsonObject circulationSettingsJson = getCirculationSetting(id);
     JsonObject circulationSettingsResponse =
@@ -54,7 +54,7 @@ public class CirculationSettingsAPITest extends ApiTests {
 
   @Test
   @SneakyThrows
-  public void canCreateAndRetrieveCirculationSettings() {
+  void canCreateAndRetrieveCirculationSettings() {
     String id = UUID.randomUUID().toString();
     JsonObject circulationSettingsJson = getCirculationSetting(id);
     JsonObject circulationSettingsResponse =
@@ -69,7 +69,7 @@ public class CirculationSettingsAPITest extends ApiTests {
 
   @Test
   @SneakyThrows
-  public void canUpdateCirculationSettings() {
+  void canUpdateCirculationSettings() {
     String id = UUID.randomUUID().toString();
     JsonObject circulationSettingsJson = getCirculationSetting(id);
     circulationSettingsClient.create(circulationSettingsJson).getJson();
@@ -84,7 +84,7 @@ public class CirculationSettingsAPITest extends ApiTests {
 
   @Test
   @SneakyThrows
-  public void canDeleteCirculationSettings() {
+  void canDeleteCirculationSettings() {
     UUID id = UUID.randomUUID();
     circulationSettingsClient.create(getCirculationSetting(id.toString())).getJson();
     circulationSettingsClient.deleteById(id);

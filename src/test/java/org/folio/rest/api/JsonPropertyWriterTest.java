@@ -8,9 +8,10 @@ import static org.folio.support.JsonPropertyWriter.write;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public class JsonPropertyWriterTest extends ApiTests {
+class JsonPropertyWriterTest extends ApiTests {
+
   @Test
-  public void writeExistingValue() {
+  void writeExistingValue() {
     JsonObject jsonObject = new JsonObject();
     write(jsonObject, "key", "value");
     assertThat(jsonObject.size(), is(1));

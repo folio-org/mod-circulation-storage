@@ -45,7 +45,7 @@ import lombok.SneakyThrows;
 
 @ContextConfiguration(classes = TestContextConfiguration.class)
 @ExtendWith(SpringExtension.class)
-public class ActualCostRecordAPITest extends ApiTests {
+class ActualCostRecordAPITest extends ApiTests {
   private static final String ACTUAL_COST_RECORD_TABLE = "actual_cost_record";
 
   @Autowired
@@ -56,7 +56,7 @@ public class ActualCostRecordAPITest extends ApiTests {
       InterfaceUrls::actualCostRecord, "actualCostRecords");
 
   @BeforeEach
-  public void beforeEach() throws Exception {
+  void beforeEach() throws Exception {
     StorageTestSuite.cleanUpTable(ACTUAL_COST_RECORD_TABLE);
   }
 

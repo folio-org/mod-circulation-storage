@@ -5,12 +5,10 @@ import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.http.InterfaceUrls.anonymizeLoansURL;
 import static org.folio.rest.support.matchers.LoanMatchers.isAnonymized;
-import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.everyItem;
-import static org.hamcrest.Matchers.iterableWithSize;
 import static org.hamcrest.core.Is.is;
-import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.MalformedURLException;
 import java.util.Collection;
@@ -34,7 +32,7 @@ import org.junit.jupiter.api.Test;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-public class AnonymizeLoansApiTest extends ApiTests {
+class AnonymizeLoansApiTest extends ApiTests {
   private final AssertingRecordClient loansClient = new AssertingRecordClient(
     client, TENANT_ID, InterfaceUrls::loanStorageUrl, "loans");
   private final AssertingRecordClient loanHistoryClient = new AssertingRecordClient(
@@ -44,7 +42,7 @@ public class AnonymizeLoansApiTest extends ApiTests {
   private final String secondLoanId = UUID.randomUUID().toString();
 
   @BeforeEach
-  public void beforeEach() throws MalformedURLException, InterruptedException,
+  void beforeEach() throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
     StorageTestSuite.deleteAll(InterfaceUrls.loanStorageUrl());
@@ -68,7 +66,7 @@ public class AnonymizeLoansApiTest extends ApiTests {
   }
 
   @AfterEach
-  public void checkIdsAfterEach() {
+  void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("loan");
     StorageTestSuite.checkForMismatchedIDs("audit_loan");
   }

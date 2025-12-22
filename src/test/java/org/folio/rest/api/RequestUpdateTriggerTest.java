@@ -51,7 +51,7 @@ class RequestUpdateTriggerTest {
 
   @AfterAll
   static void afterAll() throws InterruptedException, ExecutionException, TimeoutException {
-    // Don't call after() - let the test suite manage cleanup
+    StorageTestSuite.after();
   }
 
   @BeforeEach

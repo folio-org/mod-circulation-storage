@@ -37,7 +37,7 @@ class CheckOutLockAPITest extends ApiTests {
 
   @SneakyThrows
   @Test
-  public void canCreateCheckOutLock() {
+  void canCreateCheckOutLock() {
 
     String userId1 = UUID.randomUUID().toString();
     JsonObject checkOutLock1 = toJsonObject(createCheckoutLockRequest(userId1, 1000));
@@ -63,7 +63,7 @@ class CheckOutLockAPITest extends ApiTests {
 
   @SneakyThrows
   @Test
-  public void canGetCheckOutLock() {
+  void canGetCheckOutLock() {
     String userId1 = UUID.randomUUID().toString();
     JsonObject checkOutLock1 = toJsonObject(createCheckoutLockRequest(userId1, 1000));
     JsonResponse response = checkOutLockClient.attemptCreate(checkOutLock1);
@@ -82,7 +82,7 @@ class CheckOutLockAPITest extends ApiTests {
 
   @SneakyThrows
   @Test
-  public void canGetCheckoutLocksByQueryParams() {
+  void canGetCheckoutLocksByQueryParams() {
     String userId1 = UUID.randomUUID().toString();
     JsonObject checkOutLock1 = toJsonObject(createCheckoutLockRequest(userId1, 1000));
     JsonResponse response1 = checkOutLockClient.attemptCreate(checkOutLock1);

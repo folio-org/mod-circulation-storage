@@ -140,7 +140,7 @@ class EventConsumerVerticleTest extends ApiTests {
     "OLD_PFX, NEW_PFX, OLD_CN, NEW_CN, OLD_SFX, NEW_SFX, OLD_SO, NEW_SO",
     "OLD_PFX, ,        OLD_CN, ,       OLD_SFX, ,       OLD_SO, ",
     ",        NEW_PFX, ,      NEW_CN,  ,       NEW_SFX, ,      NEW_SO",
-  }, nullValues = {"null"})
+  })
   void requestSearchIndexIsUpdatedWhenItemIsUpdated(
     String oldPrefix, String newPrefix,
     String oldCallNumber, String newCallNumber,
@@ -303,7 +303,7 @@ class EventConsumerVerticleTest extends ApiTests {
     "OLD_SP_NAME, NEW_SP_NAME",
     "OLD_SP_NAME,",
     ",           NEW_SP_NAME",
-  }, nullValues = {"null"})
+  })
   void requestPickupServicePointNameIsUpdatedWhenServicePointIsUpdated(
     String oldServicePointName, String newServicePointName) {
 
@@ -350,7 +350,7 @@ class EventConsumerVerticleTest extends ApiTests {
   }
 
   @Test
-  public void
+  void
   requestPickupServicePointNameIsNotUpdatedWhenRequestAndEventAreForDifferentServicePoints() {
     JsonObject item = buildItem();
     String servicePointId = randomId();
@@ -453,7 +453,7 @@ class EventConsumerVerticleTest extends ApiTests {
   }
 
   @ParameterizedTest
-  @CsvSource(value = {"false", "null"}, nullValues = {"null"})
+  @CsvSource(value = {"false", "null"})
   void shouldUpdateRequestPolicyWhenServicePointIsNoLongerPickupLocation(
     Boolean isPickupLocation) {
 
@@ -514,7 +514,7 @@ class EventConsumerVerticleTest extends ApiTests {
   }
 
   @ParameterizedTest
-  @CsvSource(value = {"false", "null"}, nullValues = {"null"})
+  @CsvSource(value = {"false", "null"})
   void shouldRemoveAllowedServicePointsWhenSingleServicePointBecomesNotPickupLocation(
     Boolean isPickupLocation) {
 
@@ -537,7 +537,7 @@ class EventConsumerVerticleTest extends ApiTests {
   }
 
   @ParameterizedTest
-  @CsvSource(value = {"false", "null"}, nullValues = {"null"})
+  @CsvSource(value = {"false", "null"})
   void requestPolicyShouldNotContainPageWhenSingleServicePointBecomesNotPickupLocation(
     Boolean isPickupLocation) {
 

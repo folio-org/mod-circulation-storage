@@ -27,19 +27,20 @@ import static java.net.HttpURLConnection.HTTP_OK;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public class LoansApiHistoryTest extends ApiTests {
+class LoansApiHistoryTest extends ApiTests {
+
   @BeforeEach
-  public void beforeEach() {
+  void beforeEach() {
     truncateTables("loan");
   }
 
   @AfterEach
-  public void checkIdsAfterEach() {
+  void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("loan");
   }
 
   @Test
-  public void creatingALoanCreatesHistoryEntry()
+  void creatingALoanCreatesHistoryEntry()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -117,7 +118,7 @@ public class LoansApiHistoryTest extends ApiTests {
   }
 
   @Test
-  public void replacingALoanCreatesHistoryRecord()
+  void replacingALoanCreatesHistoryRecord()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,

@@ -3,6 +3,7 @@ package org.folio.rest.api;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.*;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsArrayContainingInAnyOrder.arrayContainingInAnyOrder;
 import static org.hamcrest.core.Is.*;
 import java.net.HttpURLConnection;
@@ -66,11 +67,11 @@ class StaffSlipsApiTest extends ApiTests {
 
     JsonResponse getResponse = getCompleted.get(5, TimeUnit.SECONDS);
 
-    MatcherAssert.assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
 
     JsonArray slipsJsonArray = getResponse.getJson().getJsonArray(STAFF_SLIPS_KEY);
     Object [] names = slipsJsonArray.stream().map(o -> ((JsonObject) o).getString(NAME_KEY)).toArray();
-    MatcherAssert.assertThat(names, arrayContainingInAnyOrder(STAFF_SLIP_NAMES));
+    assertThat(names, arrayContainingInAnyOrder(STAFF_SLIP_NAMES));
   }
 
   /* Begin Tests */
@@ -82,13 +83,13 @@ class StaffSlipsApiTest extends ApiTests {
     JsonResponse creationResponse = makeStaffSlip(new StaffSlipRequestBuilder().withName(TEST_STAFF_SLIP_1_NAME)
       .withDescription(TEST_STAFF_SLIP_1_DESCRIPTION).withTemplate(TEST_STAFF_SLIP_1_Template).create());
 
-    MatcherAssert.assertThat(creationResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    assertThat(creationResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    MatcherAssert.assertThat(creationResponse.getJson().getString(ID_KEY), notNullValue());
-    MatcherAssert.assertThat(creationResponse.getJson().getBoolean(ACTIVE_KEY), is(true));
-    MatcherAssert.assertThat(creationResponse.getJson().getString(NAME_KEY), is(TEST_STAFF_SLIP_1_NAME));
-    MatcherAssert.assertThat(creationResponse.getJson().getString(DESCRIPTION_KEY), is(TEST_STAFF_SLIP_1_DESCRIPTION));
-    MatcherAssert.assertThat(creationResponse.getJson().getString(TEMPLATE_KEY), is(TEST_STAFF_SLIP_1_Template));
+    assertThat(creationResponse.getJson().getString(ID_KEY), notNullValue());
+    assertThat(creationResponse.getJson().getBoolean(ACTIVE_KEY), is(true));
+    assertThat(creationResponse.getJson().getString(NAME_KEY), is(TEST_STAFF_SLIP_1_NAME));
+    assertThat(creationResponse.getJson().getString(DESCRIPTION_KEY), is(TEST_STAFF_SLIP_1_DESCRIPTION));
+    assertThat(creationResponse.getJson().getString(TEMPLATE_KEY), is(TEST_STAFF_SLIP_1_Template));
 
   }
 
@@ -97,7 +98,7 @@ class StaffSlipsApiTest extends ApiTests {
     throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
     JsonResponse creationResponse = makeStaffSlip(new StaffSlipRequestBuilder().withName(null).create());
 
-    MatcherAssert.assertThat(String.format("Creating the loan should fail: %s", creationResponse.getBody()),
+    assertThat(String.format("Creating the loan should fail: %s", creationResponse.getBody()),
       creationResponse, isUnprocessableEntity());
 
   }
@@ -108,7 +109,7 @@ class StaffSlipsApiTest extends ApiTests {
 
     JsonResponse creationResponse = makeStaffSlip(new StaffSlipRequestBuilder().withActive(false).create());
 
-    MatcherAssert.assertThat(creationResponse.getJson().getBoolean(ACTIVE_KEY), is(false));
+    assertThat(creationResponse.getJson().getBoolean(ACTIVE_KEY), is(false));
 
   }
 
@@ -121,7 +122,7 @@ class StaffSlipsApiTest extends ApiTests {
     JsonResponse creationAttemptResponse = makeStaffSlip(
       new StaffSlipRequestBuilder().withName(TEST_STAFF_SLIP_1_NAME).create());
 
-    MatcherAssert.assertThat(creationAttemptResponse, isBadRequest());
+    assertThat(creationAttemptResponse, isBadRequest());
 
   }
 
@@ -139,8 +140,8 @@ class StaffSlipsApiTest extends ApiTests {
 
     JsonResponse getResponse = getCompleted.get(5, TimeUnit.SECONDS);
 
-    MatcherAssert.assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-    MatcherAssert.assertThat(getResponse.getJson().getString(ID_KEY), is(slipId));
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(getResponse.getJson().getString(ID_KEY), is(slipId));
 
   }
 
@@ -160,11 +161,11 @@ class StaffSlipsApiTest extends ApiTests {
 
     JsonResponse getResponse = getCompleted.get(10, TimeUnit.SECONDS);
 
-    MatcherAssert.assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
 
     JsonArray slipsJsonArray = getResponse.getJson().getJsonArray("staffSlips");
 
-    MatcherAssert.assertThat(slipsJsonArray.getJsonObject(0).getString(ID_KEY), is(slipId));
+    assertThat(slipsJsonArray.getJsonObject(0).getString(ID_KEY), is(slipId));
 
   }
 
@@ -178,7 +179,7 @@ class StaffSlipsApiTest extends ApiTests {
       new StaffSlipRequestBuilder().withId(slipId).withName(TEST_STAFF_SLIP_1_NAME)
         .withDescription(TEST_STAFF_SLIP_1_DESCRIPTION).withTemplate(TEST_STAFF_SLIP_1_Template).create());
 
-    MatcherAssert.assertThat(String.format("%s", creationResponse.getBody()), creationResponse.getStatusCode(),
+    assertThat(String.format("%s", creationResponse.getBody()), creationResponse.getStatusCode(),
       is(HttpURLConnection.HTTP_CREATED));
 
     CompletableFuture<Response> putCompleted = new CompletableFuture<>();
@@ -197,8 +198,8 @@ class StaffSlipsApiTest extends ApiTests {
 
     JsonResponse getResponse = getCompleted.get(5, TimeUnit.SECONDS);
 
-    MatcherAssert.assertThat(putReponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-    MatcherAssert.assertThat(getResponse.getJson().getString(DESCRIPTION_KEY), is(TEST_STAFF_SLIP_1_DESCRIPTION_ALTERNATE));
+    assertThat(putReponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    assertThat(getResponse.getJson().getString(DESCRIPTION_KEY), is(TEST_STAFF_SLIP_1_DESCRIPTION_ALTERNATE));
 
   }
 
@@ -224,8 +225,8 @@ class StaffSlipsApiTest extends ApiTests {
 
     JsonResponse getResponse = getCompleted.get(5, TimeUnit.SECONDS);
 
-    MatcherAssert.assertThat(deleteReponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-    MatcherAssert.assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+    assertThat(deleteReponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
 
   private JsonResponse makeStaffSlip(JsonObject staffSlipJson)

@@ -34,7 +34,7 @@ public class CirculationRulesApiTest extends ApiTests {
 
   @SneakyThrows
   @BeforeEach
-  public void cleanUpCirculationRulesTable() {
+  void cleanUpCirculationRulesTable() {
     StorageTestSuite.cleanUpTable(CIRCULATION_RULES_TABLE);
 
     Date now = new Date();
@@ -118,7 +118,7 @@ public class CirculationRulesApiTest extends ApiTests {
   }
 
   @Test
-  public void putAndGet() throws Exception {
+  void putAndGet() throws Exception {
     putAndGet(exampleRules());
   }
 
