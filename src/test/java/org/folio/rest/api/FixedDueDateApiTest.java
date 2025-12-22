@@ -35,12 +35,12 @@ import static org.hamcrest.core.Is.is;
  * @author shale
  *
  */
-public class FixedDueDateApiTest extends ApiTests {
+class FixedDueDateApiTest extends ApiTests {
   private static final String TABLE_NAME = "fixed_due_date_schedule";
   static final String SCHEDULE_SECTION = "schedules";
 
   @BeforeEach
-  public void beforeEach()
+  void beforeEach()
     throws MalformedURLException {
 
     StorageTestSuite.deleteAll(loanPolicyStorageUrl());
@@ -48,12 +48,12 @@ public class FixedDueDateApiTest extends ApiTests {
   }
 
   @AfterEach
-  public void checkIdsAfterEach() {
+  void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs(TABLE_NAME);
   }
 
   @Test
-  public void canCreateSchedule()
+  void canCreateSchedule()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -298,7 +298,7 @@ public class FixedDueDateApiTest extends ApiTests {
 
   @Disabled("Fails on Mac OS due to differences in UTF-8 collation libraries")
   @Test
-  public void canSortDifferentCaseNamesAscending()
+  void canSortDifferentCaseNamesAscending()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -335,7 +335,7 @@ public class FixedDueDateApiTest extends ApiTests {
   }
 
   @Test
-  public void canSortByNameAscending()
+  void canSortByNameAscending()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -373,7 +373,7 @@ public class FixedDueDateApiTest extends ApiTests {
   }
 
   @Test
-  public void canSortByNameDescending()
+  void canSortByNameDescending()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,

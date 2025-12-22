@@ -186,7 +186,7 @@ public class LoansApiHistoryTest extends ApiTests {
   }
 
   @Test
-  public void loanHistoryQuery()
+  void loanHistoryQuery()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,

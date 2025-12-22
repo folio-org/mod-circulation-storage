@@ -92,7 +92,7 @@ public class IsbnNormalizationTest extends ApiTests {
 
   @SneakyThrows
   @Test
-  public void cannotFindIsbnWithInnerStringAndTruncation() {
+  void cannotFindIsbnWithInnerStringAndTruncation() {
     createRequests("Interesting Times");
 
     find("itemIsbn = 552*");

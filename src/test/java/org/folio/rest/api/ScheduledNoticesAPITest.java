@@ -46,7 +46,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = TestContextConfiguration.class)
-public class ScheduledNoticesAPITest extends ApiTests {
+class ScheduledNoticesAPITest extends ApiTests {
 
   private static final List<String> ALL_TRIGGERING_EVENTS = List.of(
     "Request expiration",
@@ -73,12 +73,12 @@ public class ScheduledNoticesAPITest extends ApiTests {
   private ResourceClient<ScheduledNoticeDto> scheduledNoticeClient;
 
   @BeforeEach
-  public void beforeEach() throws MalformedURLException {
+  void beforeEach() throws MalformedURLException {
     StorageTestSuite.deleteAll(scheduledNoticesStorageUrl("/scheduled-notices"));
   }
 
   @Test
-  public void canCreateScheduledNotice() throws MalformedURLException,InterruptedException, ExecutionException,
+  void canCreateScheduledNotice() throws MalformedURLException,InterruptedException, ExecutionException,
     TimeoutException {
 
     String templateId = UUID.randomUUID().toString();
@@ -109,7 +109,7 @@ public class ScheduledNoticesAPITest extends ApiTests {
   }
 
   @Test
-  public void canGetScheduledNoticesCollection() throws MalformedURLException, InterruptedException,
+  void canGetScheduledNoticesCollection() throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
     for (String triggeringEvent : ALL_TRIGGERING_EVENTS) {
@@ -141,7 +141,7 @@ public class ScheduledNoticesAPITest extends ApiTests {
   }
 
   @Test
-  public void canGetScheduledNoticesCollectionByQuery() throws MalformedURLException, InterruptedException,
+  void canGetScheduledNoticesCollectionByQuery() throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
     String templateId = UUID.randomUUID().toString();
@@ -187,7 +187,7 @@ public class ScheduledNoticesAPITest extends ApiTests {
   }
 
   @Test
-  public void canGetScheduledNoticeById() throws MalformedURLException, InterruptedException,ExecutionException,
+  void canGetScheduledNoticeById() throws MalformedURLException, InterruptedException,ExecutionException,
     TimeoutException {
 
     String templateId = UUID.randomUUID().toString();
@@ -215,7 +215,7 @@ public class ScheduledNoticesAPITest extends ApiTests {
   }
 
   @Test
-  public void canUpdateScheduledNoticeById() throws MalformedURLException, InterruptedException,ExecutionException,
+  void canUpdateScheduledNoticeById() throws MalformedURLException, InterruptedException,ExecutionException,
     TimeoutException {
 
     String noticeId = createScheduledNotice(org.folio.rest.jaxrs.model.NoticeConfig.Timing.BEFORE, ONE_DAY_PERIOD,
@@ -250,7 +250,7 @@ public class ScheduledNoticesAPITest extends ApiTests {
   }
 
   @Test
-  public void canDeleteScheduledNoticeById() throws InterruptedException, MalformedURLException, TimeoutException,
+  void canDeleteScheduledNoticeById() throws InterruptedException, MalformedURLException, TimeoutException,
     ExecutionException {
 
     String noticeId = createScheduledNotice(org.folio.rest.jaxrs.model.NoticeConfig.Timing.BEFORE, ONE_DAY_PERIOD,
@@ -268,7 +268,7 @@ public class ScheduledNoticesAPITest extends ApiTests {
   }
 
   @Test
-  public void canDeleteAllScheduledNotices() throws InterruptedException, MalformedURLException, TimeoutException,
+  void canDeleteAllScheduledNotices() throws InterruptedException, MalformedURLException, TimeoutException,
     ExecutionException {
 
     createScheduledNotice(org.folio.rest.jaxrs.model.NoticeConfig.Timing.BEFORE, ONE_DAY_PERIOD,
@@ -291,7 +291,7 @@ public class ScheduledNoticesAPITest extends ApiTests {
   }
 
   @Test
-  public void canDeleteScheduledNoticesByQuery() throws Exception {
+  void canDeleteScheduledNoticesByQuery() throws Exception {
 
     String templateId = UUID.randomUUID().toString();
 
@@ -330,7 +330,7 @@ public class ScheduledNoticesAPITest extends ApiTests {
   }
 
   @Test
-  public void cannotDeleteScheduledNoticesWithInvalidQuery() throws MalformedURLException, InterruptedException,
+  void cannotDeleteScheduledNoticesWithInvalidQuery() throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
     String query = "query=invalidQuery";
@@ -343,7 +343,7 @@ public class ScheduledNoticesAPITest extends ApiTests {
   }
 
   @Test
-  public void canFilterNoticesByNextRunTime() {
+  void canFilterNoticesByNextRunTime() {
     final Date firstNextRunTime = DateTime.parse("2020-06-16T08:50:54.306+0000").toDate();
     final Date secondNextRunTime = DateTime.parse("2020-06-19T08:50:54.306+0000").toDate();
 
@@ -364,7 +364,7 @@ public class ScheduledNoticesAPITest extends ApiTests {
   }
 
   @Test
-  public void canFilterNoticesByConfigSendInRealTime() {
+  void canFilterNoticesByConfigSendInRealTime() {
     final NoticeConfigDto sendInRealTimeConfig = emailUponAtConfig()
       .sendInRealTime(true).build();
     final NoticeConfigDto doNotSendInRealTimeConfig = emailUponAtConfig()
@@ -386,7 +386,7 @@ public class ScheduledNoticesAPITest extends ApiTests {
   }
 
   @Test
-  public void canFilterNoticesByTriggeringEvent() {
+  void canFilterNoticesByTriggeringEvent() {
     final ScheduledNoticeDto holdExpirationNotice = holdExpirationEmailNotice().build();
     final ScheduledNoticeDto requestExpirationNotice = holdExpirationEmailNotice()
       .triggeringEvent("Request expiration").build();
@@ -402,7 +402,7 @@ public class ScheduledNoticesAPITest extends ApiTests {
   }
 
   @Test
-  public void canFilterNoticesByRequestId() {
+  void canFilterNoticesByRequestId() {
     final String holdRequestId = UUID.randomUUID().toString();
     final String recallRequestId = UUID.randomUUID().toString();
 

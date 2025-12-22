@@ -92,9 +92,9 @@ public class CirculationSettingsAPITest extends ApiTests {
     assertThat(deletedCirculationSettings.getStatusCode(), is(NOT_FOUND_STATUS));
   }
 
-  @Test
   @SneakyThrows
-  public void canCreateAndRetrieveEnableRequestPrintDetailsSetting() {
+  @Test
+  void canCreateAndRetrieveEnableRequestPrintDetailsSetting() {
     String id = UUID.randomUUID().toString();
     JsonObject enableRequestPrintDetailsSettingJson = new JsonObject();
     enableRequestPrintDetailsSettingJson.put(ID_KEY, id);

@@ -74,7 +74,7 @@ public class AnonymizeLoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canAnonymizeLoans() throws InterruptedException, ExecutionException,
+  void canAnonymizeLoans() throws InterruptedException, ExecutionException,
     TimeoutException, MalformedURLException {
 
     final var response = anonymizeLoans(firstLoanId, secondLoanId);
@@ -92,14 +92,14 @@ public class AnonymizeLoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canNotAnonymizeEmptyList() throws MalformedURLException {
+  void canNotAnonymizeEmptyList() throws MalformedURLException {
     JsonResponse response = attemptAnonymizeLoans();
 
     assertThat(response.getStatusCode(), is(422));
   }
 
   @Test
-  public void canAnonymizeInvalidAndValidUuids() throws MalformedURLException {
+  void canAnonymizeInvalidAndValidUuids() throws MalformedURLException {
     final String firstNotValidId = "not valid";
     final String secondNotValidId = "null";
 

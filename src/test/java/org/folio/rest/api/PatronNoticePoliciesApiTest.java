@@ -38,10 +38,10 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 
-public class PatronNoticePoliciesApiTest extends ApiTests {
+class PatronNoticePoliciesApiTest extends ApiTests {
 
   @BeforeEach
-  public void cleanUp() {
+  void cleanUp() {
     CompletableFuture<RowSet<Row>> future = new CompletableFuture<>();
     PostgresClient
       .getInstance(StorageTestSuite.getVertx(), TENANT_ID)
@@ -448,7 +448,7 @@ public class PatronNoticePoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateAndUpdatePatronNoticePolicyWithLoanAgedToLostNotices()
+  void canCreateAndUpdatePatronNoticePolicyWithLoanAgedToLostNotices()
     throws InterruptedException, MalformedURLException, TimeoutException, ExecutionException {
 
     final PatronNoticePolicy patronNoticePolicy = new PatronNoticePolicy()

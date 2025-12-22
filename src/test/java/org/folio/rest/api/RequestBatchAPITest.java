@@ -41,21 +41,21 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
 
-public class RequestBatchAPITest extends ApiTests {
+class RequestBatchAPITest extends ApiTests {
   @BeforeEach
-  public void beforeEach() throws Exception {
+  void beforeEach() throws Exception {
     StorageTestSuite.deleteAll(requestStorageUrl());
     removeAllEvents();
     stubTlrSettings(true, false, false);
   }
 
   @AfterEach
-  public void checkIdsAfterEach() {
+  void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("request");
   }
 
   @Test
-  public void canUpdateRequestPositionsInBatch() throws Exception {
+  void canUpdateRequestPositionsInBatch() throws Exception {
     UUID itemId = UUID.randomUUID();
 
     JsonObject firstRequest = createRequestAtPosition(itemId, null, 1);
@@ -84,7 +84,7 @@ public class RequestBatchAPITest extends ApiTests {
   }
 
   @Test
-  public void canCloseRequestsInBatch() throws Exception {
+  void canCloseRequestsInBatch() throws Exception {
     UUID itemId = UUID.randomUUID();
 
     JsonObject firstRequest = createRequestAtPosition(itemId, null, 1);
@@ -114,7 +114,7 @@ public class RequestBatchAPITest extends ApiTests {
   }
 
   @Test
-  public void canUpdateRequestFulfillmentPreferenceInBatch() throws Exception {
+  void canUpdateRequestFulfillmentPreferenceInBatch() throws Exception {
     UUID itemId = UUID.randomUUID();
 
     JsonObject firstRequest = createRequestAtPosition(itemId, null, 1);
@@ -142,7 +142,7 @@ public class RequestBatchAPITest extends ApiTests {
   }
 
   @Test
-  public void willAbortBatchUpdateOnPopulateMetadataException() throws Exception {
+  void willAbortBatchUpdateOnPopulateMetadataException() throws Exception {
     CompletableFuture<TextResponse> postCompleted = new CompletableFuture<>();
     new RequestsBatchAPI().postRequestStorageBatchRequests(
         null, null,
@@ -156,7 +156,7 @@ public class RequestBatchAPITest extends ApiTests {
   }
 
   @Test
-  public void willAbortBatchUpdateForRequestsAtTheSamePositionInAnItemsQueue() throws Exception {
+  void willAbortBatchUpdateForRequestsAtTheSamePositionInAnItemsQueue() throws Exception {
     UUID itemId = UUID.randomUUID();
 
     JsonObject firstRequest = createRequestAtPosition(itemId, null, 1);
@@ -173,7 +173,7 @@ public class RequestBatchAPITest extends ApiTests {
   }
 
   @Test
-  public void willAbortBatchUpdateWhenOnlyOnePositionIsModified() throws Exception {
+  void willAbortBatchUpdateWhenOnlyOnePositionIsModified() throws Exception {
     UUID itemId = UUID.randomUUID();
 
     JsonObject firstRequest = createRequestAtPosition(itemId, null, 1);
@@ -189,7 +189,7 @@ public class RequestBatchAPITest extends ApiTests {
   }
 
   @Test
-  public void willAbortBatchUpdateOnNullPointerExceptionDueToNoIdInRequest() throws Exception {
+  void willAbortBatchUpdateOnNullPointerExceptionDueToNoIdInRequest() throws Exception {
     UUID itemId = UUID.randomUUID();
 
     JsonObject firstRequest = createRequestAtPosition(itemId, null, 1);
@@ -208,7 +208,7 @@ public class RequestBatchAPITest extends ApiTests {
   }
 
   @Test
-  public void failWhenTrlSettingsNotAvailable() throws Exception {
+  void failWhenTrlSettingsNotAvailable() throws Exception {
     stub404ForTlrSettings();
 
     UUID itemId = UUID.randomUUID();
@@ -226,7 +226,7 @@ public class RequestBatchAPITest extends ApiTests {
   }
 
   @Test
-  public void cannotInjectSqlThroughRequestId() throws Exception {
+  void cannotInjectSqlThroughRequestId() throws Exception {
     UUID itemId = UUID.randomUUID();
 
     JsonObject firstRequest = createRequestAtPosition(itemId, null, 1);
@@ -244,7 +244,7 @@ public class RequestBatchAPITest extends ApiTests {
   }
 
   @Test
-  public void shouldPublishKafkaEventWhenUpdateRequestPositionsInBatchForTheInstance()
+  void shouldPublishKafkaEventWhenUpdateRequestPositionsInBatchForTheInstance()
     throws Exception {
 
     UUID instanceId = UUID.randomUUID();

@@ -123,7 +123,7 @@ public class CirculationRulesApiTest extends ApiTests {
   }
 
   @Test
-  public void putNullFields() throws Exception {
+  void putNullFields() throws Exception {
     CirculationRules circulationRules = new CirculationRules();
     assertThat(putResponse(circulationRules), matchesUnprocessableEntity());
   }

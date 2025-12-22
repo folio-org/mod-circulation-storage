@@ -74,7 +74,7 @@ import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
 
 @ExtendWith(VertxExtension.class)
-public class TenantRefApiTests {
+class TenantRefApiTests {
   protected static final String TLR_MIGRATION_OLD_MODULE_VERSION = "13.0.0";
   protected static final String TLR_MIGRATION_PREV_MODULE_VERSION = "13.1.0";
   protected static final String TLR_MIGRATION_MODULE_VERSION = "14.0.0";
@@ -161,7 +161,7 @@ public class TenantRefApiTests {
   }
 
   @BeforeEach
-  public void beforeEach(VertxTestContext context) throws Exception {
+  void beforeEach(VertxTestContext context) throws Exception {
     waitFor(postgresClient.execute("TRUNCATE rmb_internal"));
     loadRequests()
       .compose(r -> getAllRequestsAsJson())
@@ -186,7 +186,7 @@ public class TenantRefApiTests {
   }
 
   @Test
-  public void tlrMigrationShouldBeSkippedWhenUpgradingToLowerVersion(VertxTestContext context) {
+  void tlrMigrationShouldBeSkippedWhenUpgradingToLowerVersion(VertxTestContext context) {
     postTenant(TLR_MIGRATION_OLD_MODULE_VERSION, TLR_MIGRATION_PREV_MODULE_VERSION)
       .onComplete(context.succeeding(job -> {
         assertThatNoRequestsWereUpdatedByMigration(context, "requestLevel");
@@ -195,7 +195,7 @@ public class TenantRefApiTests {
   }
 
   @Test
-  public void tlrMigrationShouldBeSkippedWhenUpgradingFromAlreadyMigratedVersion(
+  void tlrMigrationShouldBeSkippedWhenUpgradingFromAlreadyMigratedVersion(
     VertxTestContext context) {
 
     postTenant(TLR_MIGRATION_MODULE_VERSION, TLR_MIGRATION_NEXT_MODULE_VERSION)
@@ -206,7 +206,7 @@ public class TenantRefApiTests {
   }
 
   @Test
-  public void jobCompletedWhenTlrMigrationIsSuccessful(VertxTestContext context) {
+  void jobCompletedWhenTlrMigrationIsSuccessful(VertxTestContext context) {
     postTenant(TLR_MIGRATION_PREV_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION)
       .onComplete(context.succeeding(job -> {
         assertThat(job.getError(), is(nullValue()));
@@ -216,7 +216,7 @@ public class TenantRefApiTests {
 
 
   @Test
-  public void requestSearchMigrationShouldBeSkippedWhenUpgradingToLowerVersion(VertxTestContext context) {
+  void requestSearchMigrationShouldBeSkippedWhenUpgradingToLowerVersion(VertxTestContext context) {
     postTenant(REQ_SEARCH_MIGRATION_OLD_MOD_VER, REQ_SEARCH_MIGRATION_PREV_MOD_VER)
       .onComplete(context.succeeding(job -> {
         assertThatNoRequestsWereUpdatedByMigration(context, "searchIndex");
@@ -225,7 +225,7 @@ public class TenantRefApiTests {
   }
 
   @Test
-  public void requestSearchMigrationShouldBeSkippedWhenUpgradingFromAlreadyMigratedVersion(
+  void requestSearchMigrationShouldBeSkippedWhenUpgradingFromAlreadyMigratedVersion(
     VertxTestContext context) {
 
     postTenant(REQ_SEARCH_MIGRATION_MOD_VER, REQ_SEARCH_MIGRATION_NEXT_MOD_VER)
@@ -236,7 +236,7 @@ public class TenantRefApiTests {
   }
 
   @Test
-  public void jobCompletedWhenRequestSearchMigrationIsSuccessful(VertxTestContext context) {
+  void jobCompletedWhenRequestSearchMigrationIsSuccessful(VertxTestContext context) {
     postTenant(REQ_SEARCH_MIGRATION_PREV_MOD_VER, REQ_SEARCH_MIGRATION_MOD_VER)
       .compose(job -> {
         context.verify(() -> {
@@ -255,19 +255,19 @@ public class TenantRefApiTests {
   }
 
   @Test
-  public void tlrMigrationFailsWhenItemStorageCallFails(VertxTestContext context) {
+  void tlrMigrationFailsWhenItemStorageCallFails(VertxTestContext context) {
     wireMock.removeStub(itemStorageStub);
     tlrMigrationFailsWhenRemoteCallFails(context);
   }
 
   @Test
-  public void tlrMigrationFailsWhenHoldingsStorageCallFails(VertxTestContext context) {
+  void tlrMigrationFailsWhenHoldingsStorageCallFails(VertxTestContext context) {
     wireMock.removeStub(holdingsStorageStub);
     tlrMigrationFailsWhenRemoteCallFails(context);
   }
 
   @Test
-  public void tlrMigrationFailsWhenItemWasNotFound(VertxTestContext context) {
+  void tlrMigrationFailsWhenItemWasNotFound(VertxTestContext context) {
     wireMock.removeStub(itemStorageStub);
     tlrMigrationFailsWhenRemoteCallFails(context);
   }
@@ -285,13 +285,13 @@ public class TenantRefApiTests {
   }
 
   @Test
-  public void requestSearchMigrationFailsWhenItemStorageCallFails(VertxTestContext context) {
+  void requestSearchMigrationFailsWhenItemStorageCallFails(VertxTestContext context) {
     wireMock.removeStub(itemStorageStub);
     requestSearchMigrationFailsWhenRemoteCallFails(context);
   }
 
   @Test
-  public void requestSearchMigrationFailsWhenServicePointsStorageCallFails(VertxTestContext context) {
+  void requestSearchMigrationFailsWhenServicePointsStorageCallFails(VertxTestContext context) {
     wireMock.removeStub(servicePointsStorageStub);
     requestSearchMigrationFailsWhenRemoteCallFails(context);
   }
@@ -309,7 +309,7 @@ public class TenantRefApiTests {
   }
 
   @Test
-  public void useDefaultValuesForInstanceIdAndHoldingsRecordIdWhenItemWasNotFound(VertxTestContext context) {
+  void useDefaultValuesForInstanceIdAndHoldingsRecordIdWhenItemWasNotFound(VertxTestContext context) {
     JsonObject randomRequest = requestsBeforeMigration.values()
       .stream()
       .findAny()
@@ -332,7 +332,7 @@ public class TenantRefApiTests {
   }
 
   @Test
-  public void changesMadeForAllBatchesAreRevertedInCaseOfError(VertxTestContext context) {
+  void changesMadeForAllBatchesAreRevertedInCaseOfError(VertxTestContext context) {
     wireMock.removeStub(itemStorageStub);
 
     // first batch - return valid response
@@ -358,7 +358,7 @@ public class TenantRefApiTests {
   }
 
   @Test
-  public void jobFailsWhenRequestAlreadyHasTitleLevelRequestField(VertxTestContext context) {
+  void jobFailsWhenRequestAlreadyHasTitleLevelRequestField(VertxTestContext context) {
     JsonObject randomRequest = requestsBeforeMigration.values()
       .stream()
       .findAny()
@@ -371,7 +371,7 @@ public class TenantRefApiTests {
   }
 
   @Test
-  public void jobFailsWhenRequestDoesNotHaveRequiredItemLevelRequestField(VertxTestContext context) {
+  void jobFailsWhenRequestDoesNotHaveRequiredItemLevelRequestField(VertxTestContext context) {
     JsonObject randomRequest = requestsBeforeMigration.values()
       .stream()
       .findAny()
@@ -384,7 +384,7 @@ public class TenantRefApiTests {
   }
 
   @Test
-  public void migrationRemovesPositionFromClosedRequests(VertxTestContext context) {
+  void migrationRemovesPositionFromClosedRequests(VertxTestContext context) {
     List<String> closedStatuses = Stream.of(CLOSED_FILLED, CLOSED_UNFILLED, CLOSED_PICKUP_EXPIRED,
         CLOSED_CANCELLED)
       .map(Request.Status::value)
@@ -408,7 +408,7 @@ public class TenantRefApiTests {
   }
 
   @Test
-  public void migrationShouldCorrectFulfillmentPreferenceSpelling(VertxTestContext context) {
+  void migrationShouldCorrectFulfillmentPreferenceSpelling(VertxTestContext context) {
     postTenant(REQ_FULFILLMENT_PREFERENCE_SPELLING_PREV_VER,
       REQ_FULFILLMENT_PREFERENCE_SPELLING_VER)
       .compose(job -> getAllRequestsAsJson())
@@ -425,7 +425,7 @@ public class TenantRefApiTests {
   }
 
   @Test
-  public void migrationShouldNotCorrectFulfillmentPreferenceSpellingFromAlreadyMigratedVersion(
+  void migrationShouldNotCorrectFulfillmentPreferenceSpellingFromAlreadyMigratedVersion(
     VertxTestContext context) {
 
     postTenant(REQ_FULFILLMENT_PREFERENCE_SPELLING_VER,
@@ -437,7 +437,7 @@ public class TenantRefApiTests {
   }
 
   @Test
-  public void migrationShouldNotCorrectFulfillmentPreferenceSpellingFromMigratedVersionToOlder(
+  void migrationShouldNotCorrectFulfillmentPreferenceSpellingFromMigratedVersionToOlder(
     VertxTestContext context) {
 
     postTenant(REQ_FULFILLMENT_PREFERENCE_SPELLING_VER,
@@ -449,7 +449,7 @@ public class TenantRefApiTests {
   }
 
   @Test
-  public void keepReferenceData(VertxTestContext context) {
+  void keepReferenceData(VertxTestContext context) {
     setOtherCancellationReasonName("foo")
       .compose(x -> assertOtherCancellationReasonName("foo"))
       .compose(x -> postTenant("16.1.0", ModuleName.getModuleVersion()))

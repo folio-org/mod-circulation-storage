@@ -32,7 +32,7 @@ import org.junit.jupiter.api.Test;
 
 import io.vertx.core.json.JsonObject;
 
-public class CheckInStorageApiTest extends ApiTests {
+class CheckInStorageApiTest extends ApiTests {
   private static final String TABLE_NAME = "check_in";
 
   private final AssertingRecordClient checkInClient =
@@ -40,17 +40,17 @@ public class CheckInStorageApiTest extends ApiTests {
       InterfaceUrls::checkInsStorageUrl, "checkIns");
 
   @BeforeEach
-  public void beforeEach() {
+  void beforeEach() {
     StorageTestSuite.cleanUpTable(TABLE_NAME);
   }
 
   @AfterEach
-  public void checkIdsAfterEach() {
+  void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs(TABLE_NAME);
   }
 
   @Test
-  public void canCreateCheckIn() throws InterruptedException,
+  void canCreateCheckIn() throws InterruptedException,
     ExecutionException, TimeoutException, MalformedURLException {
 
     JsonObject checkInToCreate = createSampleCheckIn().create();
@@ -63,7 +63,7 @@ public class CheckInStorageApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateRecordWithoutId() throws InterruptedException,
+  void canCreateRecordWithoutId() throws InterruptedException,
     ExecutionException, TimeoutException, MalformedURLException {
 
     JsonObject checkInToCreate = createSampleCheckIn()
@@ -78,7 +78,7 @@ public class CheckInStorageApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotCreateCheckInIfRequiredPropertyMissing() throws InterruptedException,
+  void cannotCreateCheckInIfRequiredPropertyMissing() throws InterruptedException,
     ExecutionException, TimeoutException, MalformedURLException {
 
     UUID recordId = UUID.randomUUID();
@@ -94,7 +94,7 @@ public class CheckInStorageApiTest extends ApiTests {
   }
 
   @Test
-  public void canFilterCheckInsByProperties()
+  void canFilterCheckInsByProperties()
     throws InterruptedException, ExecutionException, TimeoutException,
     MalformedURLException {
 
@@ -146,7 +146,7 @@ public class CheckInStorageApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotUseNegativeOffsetForSearch()
+  void cannotUseNegativeOffsetForSearch()
     throws InterruptedException, ExecutionException, TimeoutException,
     MalformedURLException {
 
@@ -159,7 +159,7 @@ public class CheckInStorageApiTest extends ApiTests {
   }
 
   @Test
-  public void canGetCheckInById() throws InterruptedException,
+  void canGetCheckInById() throws InterruptedException,
     ExecutionException, TimeoutException, MalformedURLException {
 
     JsonObject checkInToCreate = createSampleCheckIn().create();
@@ -172,7 +172,7 @@ public class CheckInStorageApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotGetCheckInByIdIfDoesNotExists() throws InterruptedException,
+  void cannotGetCheckInByIdIfDoesNotExists() throws InterruptedException,
     ExecutionException, TimeoutException, MalformedURLException {
 
     JsonResponse checkInById = checkInClient.attemptGetById(UUID.randomUUID());
@@ -181,7 +181,7 @@ public class CheckInStorageApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateRecordWithoutOptionalParameters() throws InterruptedException,
+  void canCreateRecordWithoutOptionalParameters() throws InterruptedException,
     ExecutionException, TimeoutException, MalformedURLException {
 
     JsonObject checkInToCreate = createSampleCheckIn()
@@ -198,7 +198,7 @@ public class CheckInStorageApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotCreateRecordWithNegativeRequestQueueSize() throws InterruptedException,
+  void cannotCreateRecordWithNegativeRequestQueueSize() throws InterruptedException,
     ExecutionException, TimeoutException, MalformedURLException {
 
     UUID recordId = UUID.randomUUID();

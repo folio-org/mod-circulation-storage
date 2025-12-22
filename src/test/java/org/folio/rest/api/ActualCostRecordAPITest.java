@@ -62,7 +62,7 @@ public class ActualCostRecordAPITest extends ApiTests {
 
   @Test
   @SneakyThrows
-  public void canCreateAndGetAndDeleteActualCostRecords() {
+  void canCreateAndGetAndDeleteActualCostRecords() {
     JsonObject actualCostRecord1 = toJsonObject(createActualCostRecord());
     JsonObject actualCostRecord2 = toJsonObject(createActualCostRecord());
     JsonObject createResult1 = actualCostRecordClient.create(actualCostRecord1).getJson();
@@ -86,7 +86,7 @@ public class ActualCostRecordAPITest extends ApiTests {
 
   @Test
   @SneakyThrows
-  public void canCreateAndGetAndUpdateActualCostRecord() {
+  void canCreateAndGetAndUpdateActualCostRecord() {
     JsonObject actualCostRecord = toJsonObject(createActualCostRecord());
     JsonObject createResult = actualCostRecordClient.create(actualCostRecord).getJson();
 
@@ -102,7 +102,7 @@ public class ActualCostRecordAPITest extends ApiTests {
 
   @Test
   @SneakyThrows
-  public void canCreateActualCostRecordWithDefaultStatus() {
+  void canCreateActualCostRecordWithDefaultStatus() {
     JsonObject recordWithoutStatus = toJsonObject(createActualCostRecord().withStatus(null));
     JsonObject postResponse = actualCostRecordClient.create(recordWithoutStatus).getJson();
     assertThat(postResponse.getString("status"), is("Open"));
@@ -118,7 +118,7 @@ public class ActualCostRecordAPITest extends ApiTests {
 
   @Test
   @SneakyThrows
-  public void canNotCreateActualCostRecordWithNegativeBilledAmount() {
+  void canNotCreateActualCostRecordWithNegativeBilledAmount() {
     ActualCostRecord actualCostRecord = createActualCostRecord();
     actualCostRecord.getFeeFine().setBilledAmount(-9.99);
     JsonResponse postResponse = actualCostRecordClient.attemptCreate(toJsonObject(actualCostRecord));

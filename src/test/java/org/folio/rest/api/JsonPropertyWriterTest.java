@@ -17,7 +17,7 @@ public class JsonPropertyWriterTest extends ApiTests {
   }
 
   @Test
-  public void writeNullValue() {
+  void writeNullValue() {
     JsonObject jsonObject = new JsonObject();
     write(jsonObject, "key", (String) null);
     assertThat(jsonObject.size(), is(0));

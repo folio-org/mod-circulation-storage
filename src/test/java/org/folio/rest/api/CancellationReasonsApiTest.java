@@ -285,7 +285,7 @@ public class CancellationReasonsApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotDeleteCancellationReasonInUse()
+  void cannotDeleteCancellationReasonInUse()
       throws MalformedURLException,
       InterruptedException,
       ExecutionException,
@@ -332,7 +332,7 @@ public class CancellationReasonsApiTest extends ApiTests {
   }
   @Test
   //My canary in the coalmine :)
-  public void dummyTest() {
+  void dummyTest() {
     assertTrue(true);
   }
 

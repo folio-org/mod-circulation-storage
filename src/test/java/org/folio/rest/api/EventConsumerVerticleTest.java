@@ -77,7 +77,7 @@ import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
 import lombok.SneakyThrows;
 
-public class EventConsumerVerticleTest extends ApiTests {
+class EventConsumerVerticleTest extends ApiTests {
 
   private static final String REQUEST_ID = "5d2bc53d-db13-4a51-a5a6-160a703706f1";
   private static final String REQUEST_POLICY_STORAGE_URL =
@@ -101,13 +101,13 @@ public class EventConsumerVerticleTest extends ApiTests {
   private static KafkaAdminClient adminClient;
 
   @BeforeAll
-  public static void setUpClass() {
+  static void setUpClass() {
     producer = createProducer();
     adminClient = createAdminClient();
   }
 
   @AfterAll
-  public static void tearDownClass() {
+  static void tearDownClass() {
     waitFor(
       producer.close()
         .compose(v -> adminClient.close())
@@ -115,7 +115,7 @@ public class EventConsumerVerticleTest extends ApiTests {
   }
 
   @AfterEach
-  public void afterEach() {
+  void afterEach() {
     truncateTables("request, request_policy");
   }
 
@@ -141,7 +141,7 @@ public class EventConsumerVerticleTest extends ApiTests {
     "OLD_PFX, ,        OLD_CN, ,       OLD_SFX, ,       OLD_SO, ",
     ",        NEW_PFX, ,      NEW_CN,  ,       NEW_SFX, ,      NEW_SO",
   }, nullValues = {"null"})
-  public void requestSearchIndexIsUpdatedWhenItemIsUpdated(
+  void requestSearchIndexIsUpdatedWhenItemIsUpdated(
     String oldPrefix, String newPrefix,
     String oldCallNumber, String newCallNumber,
     String oldSuffix, String newSuffix,
@@ -160,7 +160,7 @@ public class EventConsumerVerticleTest extends ApiTests {
   }
 
   @Test
-  public void requestSearchIndexIsNotUpdatedWhenEventContainsNoRelevantChanges() {
+  void requestSearchIndexIsNotUpdatedWhenEventContainsNoRelevantChanges() {
     JsonObject oldItem = buildItem(DEFAULT_CALL_NUMBER_PREFIX, DEFAULT_CALL_NUMBER,
       DEFAULT_CALL_NUMBER_SUFFIX, DEFAULT_SHELVING_ORDER);
     JsonObject newItem = oldItem.copy().put("barcode", "new-barcode"); // irrelevant change
@@ -177,7 +177,7 @@ public class EventConsumerVerticleTest extends ApiTests {
   }
 
   @Test
-  public void requestItemLocationAndSpIsSetWhenItemEffectiveLocationChange() {
+  void requestItemLocationAndSpIsSetWhenItemEffectiveLocationChange() {
     JsonObject oldItem = buildItem(DEFAULT_CALL_NUMBER_PREFIX, DEFAULT_CALL_NUMBER,
             DEFAULT_CALL_NUMBER_SUFFIX, DEFAULT_SHELVING_ORDER);
     JsonObject newItem = oldItem.copy();
@@ -209,7 +209,7 @@ public class EventConsumerVerticleTest extends ApiTests {
   }
 
   @Test
-  public void requestItemSpIsSetWhenItemEffectiveLocationPrimarySpChange() {
+  void requestItemSpIsSetWhenItemEffectiveLocationPrimarySpChange() {
     //Creating and mocking ServicePoint
     String servicePointId = UUID.randomUUID().toString();
     JsonObject servicePoint = buildServicePoint(servicePointId, "ServicePoint-1");
@@ -245,7 +245,7 @@ public class EventConsumerVerticleTest extends ApiTests {
   }
 
   @Test
-  public void requestItemLocationIsSetWhenItemEffectiveLocationNameChange() {
+  void requestItemLocationIsSetWhenItemEffectiveLocationNameChange() {
     //Creating and mocking ServicePoint
     String servicePointId = UUID.randomUUID().toString();
     JsonObject servicePoint = buildServicePoint(servicePointId, "ServicePoint-1");
@@ -281,7 +281,7 @@ public class EventConsumerVerticleTest extends ApiTests {
   }
 
   @Test
-  public void requestSearchIndexIsNotUpdatedWhenRequestAndEventAreForDifferentItems() {
+  void requestSearchIndexIsNotUpdatedWhenRequestAndEventAreForDifferentItems() {
     JsonObject oldItem = buildItem(DEFAULT_CALL_NUMBER_PREFIX, DEFAULT_CALL_NUMBER,
       DEFAULT_CALL_NUMBER_SUFFIX, DEFAULT_SHELVING_ORDER);
     JsonObject newItem = oldItem.copy().put("effectiveShelvingOrder", "new-order"); // relevant change
@@ -304,7 +304,7 @@ public class EventConsumerVerticleTest extends ApiTests {
     "OLD_SP_NAME,",
     ",           NEW_SP_NAME",
   }, nullValues = {"null"})
-  public void requestPickupServicePointNameIsUpdatedWhenServicePointIsUpdated(
+  void requestPickupServicePointNameIsUpdatedWhenServicePointIsUpdated(
     String oldServicePointName, String newServicePointName) {
 
     JsonObject item = buildItem();
@@ -327,7 +327,7 @@ public class EventConsumerVerticleTest extends ApiTests {
   }
 
   @Test
-  public void requestPickupServicePointNameIsNotUpdatedWhenEventContainsNoRelevantChanges() {
+  void requestPickupServicePointNameIsNotUpdatedWhenEventContainsNoRelevantChanges() {
     JsonObject item = buildItem();
     String servicePointId = randomId();
 
@@ -373,7 +373,7 @@ public class EventConsumerVerticleTest extends ApiTests {
   }
 
   @Test
-  public void requestPolicyIsUpdatedWhenServicePointIsDeleted() {
+  void requestPolicyIsUpdatedWhenServicePointIsDeleted() {
     String requestPolicyId = randomId();
 
     String servicePoint1Id = randomId();
@@ -421,7 +421,7 @@ public class EventConsumerVerticleTest extends ApiTests {
   }
 
   @Test
-  public void requestPolicyIsNotUpdatedWhenServicePointIsDeletedWithInvalidKafkaMessagePayload() {
+  void requestPolicyIsNotUpdatedWhenServicePointIsDeletedWithInvalidKafkaMessagePayload() {
     String requestPolicyId = randomId();
 
     String servicePoint1Id = randomId();
@@ -454,7 +454,7 @@ public class EventConsumerVerticleTest extends ApiTests {
 
   @ParameterizedTest
   @CsvSource(value = {"false", "null"}, nullValues = {"null"})
-  public void shouldUpdateRequestPolicyWhenServicePointIsNoLongerPickupLocation(
+  void shouldUpdateRequestPolicyWhenServicePointIsNoLongerPickupLocation(
     Boolean isPickupLocation) {
 
     String updatedServicePointId = randomId();
@@ -485,7 +485,7 @@ public class EventConsumerVerticleTest extends ApiTests {
   }
 
   @Test
-  public void shouldNotUpdateRequestPolicyWhenServicePointPickupLocationWasNotChanged() {
+  void shouldNotUpdateRequestPolicyWhenServicePointPickupLocationWasNotChanged() {
     String updatedServicePointId = randomId();
     String anotherServicePointId = randomId();
     JsonObject oldServicePoint = buildServicePoint(updatedServicePointId, "oldSp", true);
@@ -515,7 +515,7 @@ public class EventConsumerVerticleTest extends ApiTests {
 
   @ParameterizedTest
   @CsvSource(value = {"false", "null"}, nullValues = {"null"})
-  public void shouldRemoveAllowedServicePointsWhenSingleServicePointBecomesNotPickupLocation(
+  void shouldRemoveAllowedServicePointsWhenSingleServicePointBecomesNotPickupLocation(
     Boolean isPickupLocation) {
 
     String updatedServicePointId = randomId();
@@ -538,7 +538,7 @@ public class EventConsumerVerticleTest extends ApiTests {
 
   @ParameterizedTest
   @CsvSource(value = {"false", "null"}, nullValues = {"null"})
-  public void requestPolicyShouldNotContainPageWhenSingleServicePointBecomesNotPickupLocation(
+  void requestPolicyShouldNotContainPageWhenSingleServicePointBecomesNotPickupLocation(
     Boolean isPickupLocation) {
 
     String requestPolicyId = randomId();

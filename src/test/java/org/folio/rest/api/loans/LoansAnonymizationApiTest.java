@@ -38,22 +38,22 @@ import org.junit.jupiter.api.Test;
 
 import io.vertx.core.json.JsonObject;
 
-public class LoansAnonymizationApiTest extends ApiTests {
+class LoansAnonymizationApiTest extends ApiTests {
   private final AssertingRecordClient loansClient = new AssertingRecordClient(
     client, StorageTestSuite.TENANT_ID, InterfaceUrls::loanStorageUrl, "loans");
 
   @BeforeEach
-  public void beforeEach() {
+  void beforeEach() {
     truncateTables("loan");
   }
 
   @AfterEach
-  public void checkIdsAfterEach() {
+  void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("loan");
   }
 
   @Test
-  public void shouldSucceedEvenWhenNoLoans()
+  void shouldSucceedEvenWhenNoLoans()
     throws MalformedURLException,
     ExecutionException,
     InterruptedException,
@@ -65,7 +65,7 @@ public class LoansAnonymizationApiTest extends ApiTests {
   }
 
   @Test
-  public void shouldAnonymizeSingleClosedLoanForUser()
+  void shouldAnonymizeSingleClosedLoanForUser()
     throws MalformedURLException,
     ExecutionException,
     InterruptedException,
@@ -91,7 +91,7 @@ public class LoansAnonymizationApiTest extends ApiTests {
   }
 
   @Test
-  public void shouldNotAnonymizeOpenLoans()
+  void shouldNotAnonymizeOpenLoans()
     throws MalformedURLException,
     ExecutionException,
     InterruptedException,
@@ -121,7 +121,7 @@ public class LoansAnonymizationApiTest extends ApiTests {
   }
 
   @Test
-  public void shouldOnlyAnonymizeClosedLoansWhenBothArePresent()
+  void shouldOnlyAnonymizeClosedLoansWhenBothArePresent()
     throws MalformedURLException,
     ExecutionException,
     InterruptedException,
@@ -166,7 +166,7 @@ public class LoansAnonymizationApiTest extends ApiTests {
   }
 
   @Test
-  public void shouldNotAnonymizeLoansForOtherUser()
+  void shouldNotAnonymizeLoansForOtherUser()
     throws MalformedURLException,
     ExecutionException,
     InterruptedException,
@@ -192,7 +192,7 @@ public class LoansAnonymizationApiTest extends ApiTests {
   }
 
   @Test
-  public void shouldAnonymizeSingleClosedLoanHistoryForUser()
+  void shouldAnonymizeSingleClosedLoanHistoryForUser()
     throws MalformedURLException,
     ExecutionException,
     InterruptedException,
@@ -222,7 +222,7 @@ public class LoansAnonymizationApiTest extends ApiTests {
   }
 
   @Test
-  public void shouldNotAnonymizeLoanActionHistoryForOpenLoans()
+  void shouldNotAnonymizeLoanActionHistoryForOpenLoans()
     throws MalformedURLException,
     ExecutionException,
     InterruptedException,
@@ -249,7 +249,7 @@ public class LoansAnonymizationApiTest extends ApiTests {
   }
 
   @Test
-  public void shouldNotAnonymizeLoansHistoryForOtherUser()
+  void shouldNotAnonymizeLoansHistoryForOtherUser()
     throws MalformedURLException,
     ExecutionException,
     InterruptedException,
@@ -269,7 +269,7 @@ public class LoansAnonymizationApiTest extends ApiTests {
   }
 
   @Test
-  public void shouldOnlyAnonymizeClosedLoansHistoryWhenBothArePresent()
+  void shouldOnlyAnonymizeClosedLoansHistoryWhenBothArePresent()
     throws MalformedURLException,
     ExecutionException,
     InterruptedException,
@@ -399,7 +399,7 @@ public class LoansAnonymizationApiTest extends ApiTests {
   }
 
   @Test
-  public void shouldRejectInvalidUUID()
+  void shouldRejectInvalidUUID()
     throws MalformedURLException,
     ExecutionException,
     InterruptedException,

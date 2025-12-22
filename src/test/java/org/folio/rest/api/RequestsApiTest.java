@@ -84,7 +84,7 @@ import io.vertx.core.json.JsonObject;
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = TestContextConfiguration.class)
-public class RequestsApiTest extends ApiTests {
+class RequestsApiTest extends ApiTests {
 
   private final String METADATA_PROPERTY = "metadata";
   private static final String REQUEST_STORAGE_URL = "/request-storage/requests";
@@ -96,20 +96,20 @@ public class RequestsApiTest extends ApiTests {
   public ResourceClient<RequestDto> requestClient;
 
   @BeforeEach
-  public void beforeEach()
+  void beforeEach()
     throws MalformedURLException {
 
     StorageTestSuite.deleteAll(requestStorageUrl());
   }
 
   @AfterEach
-  public void checkIdsAfterEach() {
+  void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs(REQUEST_TABLE);
   }
 
   @ParameterizedTest
   @ValueSource(strings = {"Title", "Item"})
-  public void canCreateARequest(String requestLevel) throws InterruptedException, MalformedURLException,
+  void canCreateARequest(String requestLevel) throws InterruptedException, MalformedURLException,
     TimeoutException, ExecutionException {
 
     UUID id = UUID.randomUUID();
@@ -247,7 +247,7 @@ public class RequestsApiTest extends ApiTests {
     CLOSED_UNFILLED,
     CLOSED_PICKUP_EXPIRED
   })
-  public void canCreateARequestWithValidStatus(String status)
+  void canCreateARequestWithValidStatus(String status)
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -268,7 +268,7 @@ public class RequestsApiTest extends ApiTests {
 
   @ParameterizedTest
   @ValueSource(strings = {"Non-existent status", ""})
-  public void cannotCreateARequestWithInvalidStatus(String status)
+  void cannotCreateARequestWithInvalidStatus(String status)
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -291,7 +291,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateARequestToBeFulfilledByDeliveryToAnAddress()
+  void canCreateARequestToBeFulfilledByDeliveryToAnAddress()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -336,7 +336,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateARequestWithOnlyRequiredProperties()
+  void canCreateARequestWithOnlyRequiredProperties()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -373,7 +373,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateARequestWithPatronComments()
+  void canCreateARequestWithPatronComments()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -389,7 +389,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void createdRequestHasCreationMetadata()
+  void createdRequestHasCreationMetadata()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -436,7 +436,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateARequestWithoutAnId()
+  void canCreateARequestWithoutAnId()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -454,7 +454,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateMultipleRequestsForSameItemWithNoPosition()
+  void canCreateMultipleRequestsForSameItemWithNoPosition()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -484,7 +484,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateMultipleRequestsForDifferentItemsWithSamePosition()
+  void canCreateMultipleRequestsForDifferentItemsWithSamePosition()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -527,7 +527,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotCreateRequestForSameItemAndPosition()
+  void cannotCreateRequestForSameItemAndPosition()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -562,7 +562,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateMultipleClosedRequestsForTheSameItem()
+  void canCreateMultipleClosedRequestsForTheSameItem()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -596,7 +596,7 @@ public class RequestsApiTest extends ApiTests {
 
   //This should not happen, but shouldn't really fail either (maybe need to check)
   @Test
-  public void canCreateMultipleOpenRequestsForTheSameItemWithNoPosition()
+  void canCreateMultipleOpenRequestsForTheSameItemWithNoPosition()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -625,7 +625,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateARequestAtASpecificLocation()
+  void canCreateARequestAtASpecificLocation()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -678,7 +678,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotCreateRequestAtSpecificLocationForSameItemAndPosition()
+  void cannotCreateRequestAtSpecificLocationForSameItemAndPosition()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -715,7 +715,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void canUpdateAnExistingRequestAtASpecificLocation()
+  void canUpdateAnExistingRequestAtASpecificLocation()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -828,7 +828,7 @@ public class RequestsApiTest extends ApiTests {
     "Open - Awaiting pickup",
     "Closed - Filled"
   })
-  public void canUpdateARequestWithValidStatus(String status)
+  void canUpdateARequestWithValidStatus(String status)
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -882,7 +882,7 @@ public class RequestsApiTest extends ApiTests {
     "Non-existent status",
     ""
   })
-  public void cannotUpdateARequestWithInvalidStatus(String status)
+  void cannotUpdateARequestWithInvalidStatus(String status)
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -930,7 +930,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotUpdateRequestForSameItemToAnExistingPosition()
+  void cannotUpdateRequestForSameItemToAnExistingPosition()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -968,7 +968,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotCreateItemLevelRequestIfItemIdAndHoldingsRecordIdAreNull()
+  void cannotCreateItemLevelRequestIfItemIdAndHoldingsRecordIdAreNull()
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
@@ -992,7 +992,7 @@ public class RequestsApiTest extends ApiTests {
 
   @ParameterizedTest
   @ValueSource(strings = {"holdingsRecordId", "itemId"})
-  public void cannotCreateTitleLevelRequestIfOneOfItemIdAndHoldingsRecordIdIsNotPresent(
+  void cannotCreateTitleLevelRequestIfOneOfItemIdAndHoldingsRecordIdIsNotPresent(
     String propertyToRemove) throws MalformedURLException, ExecutionException, InterruptedException,
     TimeoutException {
     String requestLevel = "Title";
@@ -1016,7 +1016,7 @@ public class RequestsApiTest extends ApiTests {
 
   @ParameterizedTest
   @ValueSource(strings = {"holdingsRecordId", "itemId"})
-  public void cannotPutTitleLevelRequestIfOneOfItemIdAndHoldingsRecordIdIsNotPresent(String
+  void cannotPutTitleLevelRequestIfOneOfItemIdAndHoldingsRecordIdIsNotPresent(String
     propertyToRemove) throws MalformedURLException, ExecutionException, InterruptedException,
     TimeoutException {
     String requestLevel = "Title";
@@ -1040,7 +1040,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void updatedRequestHasUpdatedMetadata()
+  void updatedRequestHasUpdatedMetadata()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -1101,7 +1101,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void canGetARequestById()
+  void canGetARequestById()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -1156,7 +1156,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotGetRequestForUnknownId()
+  void cannotGetRequestForUnknownId()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -1167,7 +1167,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void canPageRequests()
+  void canPageRequests()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -1215,7 +1215,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void canSearchForRequestsByRequesterId()
+  void canSearchForRequestsByRequesterId()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -1250,7 +1250,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void createFailRequestsByUserProxyId()
+  void createFailRequestsByUserProxyId()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -1274,7 +1274,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void updateFailRequestsByUserProxyId()
+  void updateFailRequestsByUserProxyId()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -1303,7 +1303,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void canSearchRequestsByUserProxyId()
+  void canSearchRequestsByUserProxyId()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -1362,7 +1362,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void canSearchForRequestsForAnItem()
+  void canSearchForRequestsForAnItem()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -1410,7 +1410,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void canSearchForActiveRequestsForAnItem()
+  void canSearchForActiveRequestsForAnItem()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -1499,7 +1499,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void canFilterByRequestStatus()
+  void canFilterByRequestStatus()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -1584,7 +1584,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void canSortRequestsByAscendingRequestDate()
+  void canSortRequestsByAscendingRequestDate()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -1660,7 +1660,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void canSortRequestsByAscendingPosition()
+  void canSortRequestsByAscendingPosition()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -1729,7 +1729,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void canDeleteARequest()
+  void canDeleteARequest()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -1759,7 +1759,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void awaitingPickupRequestClosedDateIsPresentAfterStatusUpdateFromOpenAwaitingPickupToClosedPickupExpired()
+  void awaitingPickupRequestClosedDateIsPresentAfterStatusUpdateFromOpenAwaitingPickupToClosedPickupExpired()
     throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 
     JsonObject request = new RequestRequestBuilder()
@@ -1782,7 +1782,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void awaitingPickupRequestClosedDateIsPresentAfterStatusUpdateFromOpenAwaitingPickupToClosedCancelled()
+  void awaitingPickupRequestClosedDateIsPresentAfterStatusUpdateFromOpenAwaitingPickupToClosedCancelled()
     throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 
     JsonObject request = new RequestRequestBuilder()
@@ -1805,7 +1805,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void awaitingPickupRequestClosedDateIsNotPresentAfterStatusUpdateFromOpenNotYetFilledToClosedCancelled()
+  void awaitingPickupRequestClosedDateIsNotPresentAfterStatusUpdateFromOpenNotYetFilledToClosedCancelled()
     throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 
     JsonObject request = new RequestRequestBuilder()
@@ -1825,7 +1825,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void canFindRequestsWithIsbnIdentifier()
+  void canFindRequestsWithIsbnIdentifier()
     throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 
     final UUID nodRequestId = UUID.randomUUID();
@@ -1879,7 +1879,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void canFilterByPickupServicePointId() {
+  void canFilterByPickupServicePointId() {
     final String firstServicePointId = UUID.randomUUID().toString();
     final String secondServicePointId = UUID.randomUUID().toString();
 
@@ -1901,7 +1901,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void canFilterByRequesterId() {
+  void canFilterByRequesterId() {
     final String firstRequesterId = UUID.randomUUID().toString();
     final String secondRequesterId = UUID.randomUUID().toString();
 
@@ -1921,7 +1921,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void canFetchAllOpenRequests() {
+  void canFetchAllOpenRequests() {
     final RequestDto notYetFilledRequest = holdShelfOpenRequest().build();
 
     final RequestDto awaitingPickupRequest = holdShelfOpenRequest()
@@ -1942,7 +1942,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotCreateRequestWithoutStatus()
+  void cannotCreateRequestWithoutStatus()
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
     JsonObject request = new RequestRequestBuilder()
@@ -1962,7 +1962,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateRequestWithEcsRequestPhase() throws MalformedURLException,
+  void canCreateRequestWithEcsRequestPhase() throws MalformedURLException,
     ExecutionException, InterruptedException, TimeoutException {
 
     JsonObject representation = createEntity(
@@ -1994,7 +1994,7 @@ public class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void shouldReturn400IfInvalidEcsRequestPhase() throws MalformedURLException,
+  void shouldReturn400IfInvalidEcsRequestPhase() throws MalformedURLException,
     ExecutionException, InterruptedException, TimeoutException {
 
     var request = new RequestRequestBuilder()

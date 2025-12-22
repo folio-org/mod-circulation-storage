@@ -58,7 +58,7 @@ import io.vertx.sqlclient.RowSet;
 
 @ContextConfiguration(classes = TestContextConfiguration.class)
 @ExtendWith(SpringExtension.class)
-public class TlrFeatureToggleJobAPITest extends ApiTests {
+class TlrFeatureToggleJobAPITest extends ApiTests {
   private static final String TLR_TOGGLE_JOB_URL =
     "/tlr-feature-toggle-job-storage/tlr-feature-toggle-jobs";
   private static final String TLR_TOGGLE_JOB_START_URL = "/tlr-feature-toggle-job/start";

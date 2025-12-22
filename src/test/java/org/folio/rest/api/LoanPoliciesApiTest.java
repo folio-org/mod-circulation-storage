@@ -44,9 +44,9 @@ import org.junit.jupiter.api.Test;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-public class LoanPoliciesApiTest extends ApiTests {
+class LoanPoliciesApiTest extends ApiTests {
   @BeforeEach
-  public void beforeEach()
+  void beforeEach()
     throws MalformedURLException {
 
     System.out.println("attempting full delete LoanPoliciesApiTest.....");
@@ -54,12 +54,12 @@ public class LoanPoliciesApiTest extends ApiTests {
   }
 
   @AfterEach
-  public void checkIdsAfterEach() {
+  void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("loan_policy");
   }
 
   @Test
-  public void loanPolicyWithFixedDate() throws
+  void loanPolicyWithFixedDate() throws
     InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -222,7 +222,7 @@ public class LoanPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotUpdateWhenFixedIsRenewable() throws Exception {
+  void cannotUpdateWhenFixedIsRenewable() throws Exception {
     UUID id = UUID.randomUUID();
     CompletableFuture<JsonResponse> completed = new CompletableFuture<>();
     JsonObject loanPolicy = defaultRollingPolicy().withId(id).create();
@@ -239,7 +239,7 @@ public class LoanPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotCreateLoanPolicyWithLoanableFalseAndLoansPolicy() {
+  void cannotCreateLoanPolicyWithLoanableFalseAndLoansPolicy() {
     JsonObject loanPolicyRequest = new JsonObject()
         .put("name", "9").put("loanable", false).put("renewable", false)
         .put("loansPolicy", new JsonObject());
@@ -248,7 +248,7 @@ public class LoanPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateALoanPolicy()
+  void canCreateALoanPolicy()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -304,7 +304,7 @@ public class LoanPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotCreateALoanPolicyWithAdditionalPropertiesInLoanPolicy()
+  void cannotCreateALoanPolicyWithAdditionalPropertiesInLoanPolicy()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -333,7 +333,7 @@ public class LoanPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateLoanPolicyWithItemLimitWithinBounds()
+  void canCreateLoanPolicyWithItemLimitWithinBounds()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -363,7 +363,7 @@ public class LoanPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotCreateLoanPolicyWithItemLimitBelowMinimum()
+  void cannotCreateLoanPolicyWithItemLimitBelowMinimum()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -399,7 +399,7 @@ public class LoanPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotCreateLoanPolicyWithItemLimitAboveMaximum()
+  void cannotCreateLoanPolicyWithItemLimitAboveMaximum()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -435,7 +435,7 @@ public class LoanPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotCreateALoanPolicyWithInvalidPeriodInterval()
+  void cannotCreateALoanPolicyWithInvalidPeriodInterval()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -469,7 +469,7 @@ public class LoanPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateALoanPolicyWithoutAnId()
+  void canCreateALoanPolicyWithoutAnId()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -496,7 +496,7 @@ public class LoanPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateALoanPolicyAtASpecificLocation()
+  void canCreateALoanPolicyAtASpecificLocation()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -560,7 +560,7 @@ public class LoanPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void canGetALoanPolicyById()
+  void canGetALoanPolicyById()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -609,7 +609,7 @@ public class LoanPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotGetLoanPolicyForUnknownId()
+  void cannotGetLoanPolicyForUnknownId()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -621,7 +621,7 @@ public class LoanPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void canGetAllPolicies()
+  void canGetAllPolicies()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -658,7 +658,7 @@ public class LoanPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void canPageLoanPolicies()
+  void canPageLoanPolicies()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -706,7 +706,7 @@ public class LoanPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void canSearchForLoanPolicyById()
+  void canSearchForLoanPolicyById()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -758,7 +758,7 @@ public class LoanPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void canUpdateAnExistingLoanPolicyByReplacingItsRepresentation()
+  void canUpdateAnExistingLoanPolicyByReplacingItsRepresentation()
   throws InterruptedException,
   MalformedURLException,
   TimeoutException,
@@ -827,7 +827,7 @@ public class LoanPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void canDeleteALoanPolicy()
+  void canDeleteALoanPolicy()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -855,7 +855,7 @@ public class LoanPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotUseHoldAlternateRenewalLoanPeriodForFixedProfile() throws Exception {
+  void cannotUseHoldAlternateRenewalLoanPeriodForFixedProfile() throws Exception {
     DateTime from = DateTime.now().minusMonths(3);
     DateTime to = DateTime.now().plusMonths(3);
     DateTime dueDate = to.plusDays(15);
@@ -885,7 +885,7 @@ public class LoanPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotUseRenewalsPeriodForFixedProfile() throws Exception {
+  void cannotUseRenewalsPeriodForFixedProfile() throws Exception {
     DateTime from = DateTime.now().minusMonths(3);
     DateTime to = DateTime.now().plusMonths(3);
     DateTime dueDate = to.plusDays(15);

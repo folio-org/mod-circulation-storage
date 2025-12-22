@@ -261,7 +261,7 @@ public class PatronActionSessionAPITest extends ApiTests {
 
   @ParameterizedTest
   @ValueSource(strings = {"Check-in", "Check-out"})
-  public void canSaveAndRetrieveSessionWithSessionId(String actionType) throws InterruptedException, MalformedURLException, TimeoutException, ExecutionException {
+  void canSaveAndRetrieveSessionWithSessionId(String actionType) throws InterruptedException, MalformedURLException, TimeoutException, ExecutionException {
 
     String sessionId = UUID.randomUUID().toString();
     JsonObject session = createPatronActionSession(actionType)

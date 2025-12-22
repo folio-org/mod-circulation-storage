@@ -23,12 +23,12 @@ public class StaffSlipsPickRequestMigrationScriptTest extends StaffSlipsMigratio
   private static final String MIGRATION_SCRIPT = loadScript("add_staff_slips.sql");
 
   @BeforeEach
-  public void beforeEach() throws MalformedURLException {
+  void beforeEach() throws MalformedURLException {
     StorageTestSuite.deleteAll(staffSlipsStorageUrl(""));
   }
 
   @Test
-  public void canMigrateStaffSlips() throws Exception {
+  void canMigrateStaffSlips() throws Exception {
 
     executeMultipleSqlStatements(MIGRATION_SCRIPT);
 

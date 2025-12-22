@@ -20,7 +20,7 @@ import java.util.UUID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
-public class CheckOutLockAPITest extends ApiTests {
+class CheckOutLockAPITest extends ApiTests {
 
   private static final String CHECK_OUT_LOCK_TABLE = "check_out_lock";
 
@@ -31,7 +31,7 @@ public class CheckOutLockAPITest extends ApiTests {
   private final ObjectMapper objectMapper = new ObjectMapper();
 
   @BeforeEach
-  public void beforeEach() throws Exception {
+  void beforeEach() throws Exception {
     StorageTestSuite.cleanUpTable(CHECK_OUT_LOCK_TABLE);
   }
 
@@ -100,7 +100,7 @@ public class CheckOutLockAPITest extends ApiTests {
 
   @SneakyThrows
   @Test
-  public void canDeleteCheckOutLock() {
+  void canDeleteCheckOutLock() {
     String userId1 = UUID.randomUUID().toString();
     JsonObject checkOutLock1 = toJsonObject(createCheckoutLockRequest(userId1, 1000));
     JsonResponse response1 = checkOutLockClient.attemptCreate(checkOutLock1);

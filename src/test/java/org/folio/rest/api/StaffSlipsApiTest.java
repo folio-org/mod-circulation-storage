@@ -27,7 +27,7 @@ import org.hamcrest.MatcherAssert;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-public class StaffSlipsApiTest extends ApiTests {
+class StaffSlipsApiTest extends ApiTests {
 
   private static final String TEST_STAFF_SLIP_1_NAME = "Test Staff Slip 1";
   private static final String TEST_STAFF_SLIP_1_DESCRIPTION = "Test Staff Slip 1 Description";

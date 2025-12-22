@@ -27,12 +27,12 @@ public class StaffSlipsTransitMediatedRequestsMigrationScriptTest extends StaffS
   private static final int TIMEOUT_VALUE = 5;
 
   @BeforeEach
-  public void beforeEach() throws MalformedURLException {
+  void beforeEach() throws MalformedURLException {
     StorageTestSuite.deleteAll(staffSlipsStorageUrl(STAFF_SLIPS_SUB_PATH));
   }
 
   @Test
-  public void canMigrateStaffSlips() throws Exception {
+  void canMigrateStaffSlips() throws Exception {
     executeMultipleSqlStatements(loadScript(SCRIPT_NAME));
     CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
     client.get(staffSlipsStorageUrl(STAFF_SLIPS_SUB_PATH), StorageTestSuite.TENANT_ID,
