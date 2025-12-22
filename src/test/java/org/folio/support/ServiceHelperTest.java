@@ -27,7 +27,7 @@ import org.folio.rest.jaxrs.model.Request;
 import org.folio.service.event.EntityChangedEventPublisher;
 
 @ExtendWith(VertxExtension.class)
-public class ServiceHelperTest {
+class ServiceHelperTest {
 
   private static final String ENTITY_ID = UUID.randomUUID().toString();
   private static final Request OLD_ENTITY = new Request().withId(ENTITY_ID).withStatus(OPEN_NOT_YET_FILLED);
@@ -39,7 +39,7 @@ public class ServiceHelperTest {
   private final ServiceHelper<Request> serviceHelper = new ServiceHelper<>(repository, eventPublisher);
 
   @Test
-  public void shouldPublishCreatedEvent(VertxTestContext testContext) {
+  void shouldPublishCreatedEvent(VertxTestContext testContext) {
     when(repository.getById(eq(ENTITY_ID))).thenReturn(succeededFuture());
     when(repository.upsert(eq(ENTITY_ID), any())).thenReturn(succeededFuture(ENTITY_ID));
     when(eventPublisher.publishCreated()).thenReturn(Future::succeededFuture);
@@ -56,7 +56,7 @@ public class ServiceHelperTest {
   }
 
   @Test
-  public void shouldPushUpdatedEvent(VertxTestContext testContext) {
+  void shouldPushUpdatedEvent(VertxTestContext testContext) {
     when(repository.getById(eq(ENTITY_ID))).thenReturn(succeededFuture(OLD_ENTITY));
     when(repository.upsert(any(), any())).thenReturn(succeededFuture(ENTITY_ID));
     when(eventPublisher.publishUpdated(any())).thenReturn(Future::succeededFuture);
@@ -73,19 +73,19 @@ public class ServiceHelperTest {
   }
 
   @Test
-  public void shouldReturnJsonString() {
+  void shouldReturnJsonString() {
     var json = serviceHelper.jsonStringOrEmpty(NEW_ENTITY);
     assertFalse(StringUtils.isEmpty(json));
   }
 
   @Test
-  public void shouldReturnEmptyStringIfNullObject() {
+  void shouldReturnEmptyStringIfNullObject() {
     var json = serviceHelper.jsonStringOrEmpty(null);
     assertTrue(StringUtils.isEmpty(json));
   }
 
   @Test
-  public void shouldReturnEmptyStringIfSerializationFails() {
+  void shouldReturnEmptyStringIfSerializationFails() {
     var json = serviceHelper.jsonStringOrEmpty(new Object());
     assertTrue(StringUtils.isEmpty(json));
   }

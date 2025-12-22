@@ -54,13 +54,13 @@ public class KafkaAdminClientServiceTest {
   private Vertx vertx;
 
   @BeforeEach
-  public void setUp() {
+  void setUp() {
     vertx = mock(Vertx.class);
     mockClient = mock(KafkaAdminClient.class);
   }
 
   @Test
-  public void shouldCreateTopicIfAlreadyExist(VertxTestContext testContext) {
+  void shouldCreateTopicIfAlreadyExist(VertxTestContext testContext) {
     when(mockClient.createTopics(anyList()))
       .thenReturn(failedFuture(new TopicExistsException("x")))
       .thenReturn(failedFuture(new TopicExistsException("y")))
@@ -82,7 +82,7 @@ public class KafkaAdminClientServiceTest {
   }
 
   @Test
-  public void shouldFailIfExistExceptionIsPermanent(VertxTestContext testContext) {
+  void shouldFailIfExistExceptionIsPermanent(VertxTestContext testContext) {
     when(mockClient.createTopics(anyList())).thenReturn(failedFuture(new TopicExistsException("x")));
     when(mockClient.listTopics()).thenReturn(succeededFuture(Set.of("old")));
     when(mockClient.close()).thenReturn(succeededFuture());
@@ -99,7 +99,7 @@ public class KafkaAdminClientServiceTest {
   }
 
   @Test
-  public void shouldNotCreateTopicOnOther(VertxTestContext testContext) {
+  void shouldNotCreateTopicOnOther(VertxTestContext testContext) {
     when(mockClient.createTopics(anyList())).thenReturn(failedFuture(new RuntimeException("err msg")));
     when(mockClient.listTopics()).thenReturn(succeededFuture(Set.of("old")));
     when(mockClient.close()).thenReturn(succeededFuture());
@@ -116,7 +116,7 @@ public class KafkaAdminClientServiceTest {
   }
 
   @Test
-  public void shouldCreateTopicIfNotExist(VertxTestContext testContext) {
+  void shouldCreateTopicIfNotExist(VertxTestContext testContext) {
     when(mockClient.createTopics(anyList())).thenReturn(succeededFuture());
     when(mockClient.listTopics()).thenReturn(succeededFuture(Set.of("old")));
     when(mockClient.close()).thenReturn(succeededFuture());

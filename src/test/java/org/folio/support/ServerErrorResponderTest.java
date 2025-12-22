@@ -17,11 +17,11 @@ import io.vertx.core.AsyncResult;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
-public class ServerErrorResponderTest {
+class ServerErrorResponderTest {
   private static final Logger log = LogManager.getLogger();
 
   @Test
-  public void shouldRespondWithMessage()
+  void shouldRespondWithMessage()
     throws InterruptedException,
     ExecutionException,
     TimeoutException {
@@ -43,7 +43,7 @@ public class ServerErrorResponderTest {
   }
 
   @Test
-  public void shouldRespondWithMessageFromException()
+  void shouldRespondWithMessageFromException()
     throws InterruptedException,
     ExecutionException,
     TimeoutException {
@@ -65,7 +65,7 @@ public class ServerErrorResponderTest {
   }
 
   @Test
-  public void shouldRespondWhenErrorIsNull()
+  void shouldRespondWhenErrorIsNull()
     throws InterruptedException,
     ExecutionException,
     TimeoutException {

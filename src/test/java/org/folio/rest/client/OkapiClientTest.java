@@ -18,7 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 public class OkapiClientTest {
 
   @Test
-  public void noOkapiUrl(VertxTestContext context) {
+  void noOkapiUrl(VertxTestContext context) {
     new OkapiClient(Vertx.vertx(), Map.of())
     .get("/foo", "cql.allRecords=1", Object.class, "collectionName", 10)
     .onComplete(ar -> {
@@ -31,7 +31,7 @@ public class OkapiClientTest {
   }
 
   @Test
-  public void unknownHost(VertxTestContext context) {
+  void unknownHost(VertxTestContext context) {
     new OkapiClient(Vertx.vertx(), Map.of("x-okapi-url", "http://www.invalid"))
     .get("/foo", List.of("1"), "foo", Object.class)
     .onComplete(ar -> {

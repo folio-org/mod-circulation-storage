@@ -46,7 +46,7 @@ public class StaffSlipsApiTest extends ApiTests {
   private static AtomicBoolean isRefTestDone = new AtomicBoolean(false);
 
   @BeforeEach
-  public void beforeEach() throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+  void beforeEach() throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
     // check reference data once before deletion
     synchronized (this) {
       if (!isRefTestDone.get()) {
@@ -76,7 +76,7 @@ public class StaffSlipsApiTest extends ApiTests {
   /* Begin Tests */
 
   @Test
-  public void canCreateAStaffSlip()
+  void canCreateAStaffSlip()
     throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 
     JsonResponse creationResponse = makeStaffSlip(new StaffSlipRequestBuilder().withName(TEST_STAFF_SLIP_1_NAME)
@@ -93,7 +93,7 @@ public class StaffSlipsApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotCreateAStaffSlipWithoutAName()
+  void cannotCreateAStaffSlipWithoutAName()
     throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
     JsonResponse creationResponse = makeStaffSlip(new StaffSlipRequestBuilder().withName(null).create());
 
@@ -103,7 +103,7 @@ public class StaffSlipsApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateAnInactiveStaffSlip()
+  void canCreateAnInactiveStaffSlip()
     throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 
     JsonResponse creationResponse = makeStaffSlip(new StaffSlipRequestBuilder().withActive(false).create());
@@ -113,7 +113,7 @@ public class StaffSlipsApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotCreateStaffSlipWithDuplicateName()
+  void cannotCreateStaffSlipWithDuplicateName()
     throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 
     makeStaffSlip(new StaffSlipRequestBuilder().withName(TEST_STAFF_SLIP_1_NAME).create());
@@ -126,7 +126,7 @@ public class StaffSlipsApiTest extends ApiTests {
   }
 
   @Test
-  public void canGetStaffSlipById()
+  void canGetStaffSlipById()
     throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 
     JsonResponse creationResponse = makeStaffSlip(new StaffSlipRequestBuilder().create());
@@ -145,7 +145,7 @@ public class StaffSlipsApiTest extends ApiTests {
   }
 
   @Test
-  public void canQueryStaffSlip()
+  void canQueryStaffSlip()
     throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 
     JsonResponse creationResponse = makeStaffSlip(new StaffSlipRequestBuilder().create());
@@ -169,7 +169,7 @@ public class StaffSlipsApiTest extends ApiTests {
   }
 
   @Test
-  public void canUpdateStaffSlipById()
+  void canUpdateStaffSlipById()
     throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 
     UUID slipId = UUID.randomUUID();
@@ -203,7 +203,7 @@ public class StaffSlipsApiTest extends ApiTests {
   }
 
   @Test
-  public void canDeleteSlipById()
+  void canDeleteSlipById()
     throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 
     UUID slipId = UUID.randomUUID();

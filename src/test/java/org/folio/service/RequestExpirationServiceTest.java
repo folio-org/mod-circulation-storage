@@ -47,14 +47,14 @@ public class RequestExpirationServiceTest {
   @Mock private EntityChangedEventPublisher<String, Request> eventPublisher;
 
   @BeforeEach
-  public void setUp() {
+  void setUp() {
     MockitoAnnotations.openMocks(this);
     service = new RequestExpirationService("itemId", Request::getItemId,
       postgresClient, eventPublisherService, eventPublisher);
   }
 
   @Test
-  public void shouldDoRequestExpirationWithoutErrorIfEventFailedToSent(VertxTestContext context) {
+  void shouldDoRequestExpirationWithoutErrorIfEventFailedToSent(VertxTestContext context) {
     var id1 = UUID.randomUUID().toString();
     var id2 = UUID.randomUUID().toString();
     var id3 = UUID.randomUUID().toString();

@@ -14,23 +14,23 @@ import org.junit.jupiter.api.Test;
 
 import io.vertx.core.Vertx;
 
-public class VertxContextRunnerTest {
+class VertxContextRunnerTest {
   private Vertx vertx;
 
   @BeforeEach
-  public void beforeAll() {
+  void beforeAll() {
     vertx = Vertx.vertx();
   }
 
   @AfterEach
-  public void afterAll() {
+  void afterAll() {
     if(vertx != null) {
       vertx.close();
     }
   }
 
   @Test
-  public void shouldExecuteErrorConsumerWhenExceptionIsThrown()
+  void shouldExecuteErrorConsumerWhenExceptionIsThrown()
     throws InterruptedException,
     ExecutionException,
     TimeoutException {

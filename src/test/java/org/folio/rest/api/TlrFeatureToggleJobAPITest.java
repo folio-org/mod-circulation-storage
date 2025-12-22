@@ -69,7 +69,7 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
   public RestAssuredClient restAssuredClient;
 
   @BeforeEach
-  public void beforeEach() throws Exception {
+  void beforeEach() throws Exception {
     CompletableFuture<RowSet<Row>> future = new CompletableFuture<>();
     PostgresClient
       .getInstance(StorageTestSuite.getVertx(), TENANT_ID)
@@ -79,7 +79,7 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
   }
 
   @Test
-  public void canCreateAndDeleteTlrFeatureToggleJob() throws MalformedURLException,
+  void canCreateAndDeleteTlrFeatureToggleJob() throws MalformedURLException,
     ExecutionException, InterruptedException, TimeoutException {
 
     int numberOfUpdates = 10;
@@ -102,7 +102,7 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
   }
 
   @Test
-  public void canGetAndUpdateTlrFeatureToggleJobById() throws MalformedURLException,
+  void canGetAndUpdateTlrFeatureToggleJobById() throws MalformedURLException,
     ExecutionException, InterruptedException, TimeoutException {
 
     int numberOfUpdates = 10;
@@ -126,7 +126,7 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
   }
 
   @Test
-  public void processingShouldRespondWith202WhenThereAreRunningJobs() throws MalformedURLException,
+  void processingShouldRespondWith202WhenThereAreRunningJobs() throws MalformedURLException,
     ExecutionException, InterruptedException, TimeoutException  {
 
     TlrFeatureToggleJob tlrFeatureToggleJob = createTlrFeatureToggleJobWithStatus(IN_PROGRESS);
@@ -139,7 +139,7 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
   }
 
   @Test
-  public void processingShouldRecalculatePositionsForTitleLevelRequests()
+  void processingShouldRecalculatePositionsForTitleLevelRequests()
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
     stubTlrConfiguration(true);
@@ -179,7 +179,7 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
   }
 
   @Test
-  public void processingShouldRecalculatePositionsForItemLevelRequests()
+  void processingShouldRecalculatePositionsForItemLevelRequests()
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
     stubTlrConfiguration(false);
@@ -216,7 +216,7 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
   }
 
   @Test
-  public void processingShouldFailWhenConfigurationIsNotFound() throws MalformedURLException,
+  void processingShouldFailWhenConfigurationIsNotFound() throws MalformedURLException,
     ExecutionException, InterruptedException, TimeoutException {
 
     stub404ForTlrConfiguration();
@@ -224,7 +224,7 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
   }
 
   @Test
-  public void processingShouldFailWhenConfigurationIsInvalid()
+  void processingShouldFailWhenConfigurationIsInvalid()
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
     stubWithInvalidTlrConfiguration();
@@ -232,7 +232,7 @@ public class TlrFeatureToggleJobAPITest extends ApiTests {
   }
 
   @Test
-  public void processingShouldFailWhenItemIdIsNull()
+  void processingShouldFailWhenItemIdIsNull()
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
     stubTlrConfiguration(false);
