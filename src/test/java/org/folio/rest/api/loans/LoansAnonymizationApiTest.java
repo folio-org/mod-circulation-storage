@@ -38,7 +38,7 @@ import org.junit.jupiter.api.Test;
 
 import io.vertx.core.json.JsonObject;
 
-class LoansAnonymizationApiTest extends ApiTests {
+public class LoansAnonymizationApiTest extends ApiTests {
   private final AssertingRecordClient loansClient = new AssertingRecordClient(
     client, StorageTestSuite.TENANT_ID, InterfaceUrls::loanStorageUrl, "loans");
 

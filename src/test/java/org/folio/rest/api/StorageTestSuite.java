@@ -84,7 +84,7 @@ import lombok.SneakyThrows;
   CirculationSettingsAPITest.class,
   PrintEventsAPITest.class
 })
-class StorageTestSuite {
+public class StorageTestSuite {
 
   private static final Logger log = LogManager.getLogger();
 
