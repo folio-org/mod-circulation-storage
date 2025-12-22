@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static io.vertx.core.json.JsonObject.mapFrom;
 import static java.net.HttpURLConnection.HTTP_CREATED;
 import static org.apache.commons.collections4.CollectionUtils.emptyIfNull;
@@ -45,7 +46,10 @@ import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.awaitility.Awaitility;
+import org.folio.rest.configuration.TlrSettingsConfiguration;
+import org.folio.rest.jaxrs.model.Config;
 import org.folio.rest.jaxrs.model.Event;
+import org.folio.rest.jaxrs.model.KvConfigurations;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.IndividualResource;
@@ -62,6 +66,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import com.github.tomakehurst.wiremock.client.WireMock;
 
 import io.vertx.core.json.JsonObject;
 import lombok.SneakyThrows;
@@ -140,23 +146,23 @@ class RequestExpirationApiTest {
   }
 
   protected static void stubTlrConfiguration(boolean isTlrEnabled) {
-    final var tlrSettingsConfiguration = new org.folio.rest.configuration.TlrSettingsConfiguration(
+    final var tlrSettingsConfiguration = new TlrSettingsConfiguration(
       isTlrEnabled, false, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
-    StorageTestSuite.getWireMockServer().stubFor(com.github.tomakehurst.wiremock.client.WireMock.get(
-        com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching("/configurations/entries.*"))
-      .willReturn(com.github.tomakehurst.wiremock.client.WireMock.ok().withBody(mapFrom(
-        new org.folio.rest.jaxrs.model.KvConfigurations()
-          .withConfigs(List.of(new org.folio.rest.jaxrs.model.Config()
+    StorageTestSuite.getWireMockServer().stubFor(WireMock.get(
+        urlPathMatching("/configurations/entries.*"))
+      .willReturn(WireMock.ok().withBody(mapFrom(
+        new KvConfigurations()
+          .withConfigs(List.of(new Config()
             .withValue(mapFrom(tlrSettingsConfiguration).encodePrettily()))))
         .encodePrettily())));
   }
 
   protected static void stubWithEmptyTlrConfiguration() {
-    StorageTestSuite.getWireMockServer().stubFor(com.github.tomakehurst.wiremock.client.WireMock.get(
-        com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching("/configurations/entries.*"))
-      .willReturn(com.github.tomakehurst.wiremock.client.WireMock.ok().withBody(mapFrom(
-        new org.folio.rest.jaxrs.model.KvConfigurations()
-          .withConfigs(java.util.Collections.<org.folio.rest.jaxrs.model.Config>emptyList()))
+    StorageTestSuite.getWireMockServer().stubFor(WireMock.get(
+        urlPathMatching("/configurations/entries.*"))
+      .willReturn(WireMock.ok().withBody(mapFrom(
+        new KvConfigurations()
+          .withConfigs(List.of()))
         .encodePrettily())));
   }
 
