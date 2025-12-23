@@ -8,7 +8,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -171,9 +170,9 @@ public class StorageTestSuite {
       .atPriority(10)
       .willReturn(aResponse().proxiedFrom("http://localhost:" + verticlePort)));
 
-    initialised = true;
-
     prepareTenant(TENANT_ID, true);
+
+    initialised = true;
   }
 
   @AfterAll
