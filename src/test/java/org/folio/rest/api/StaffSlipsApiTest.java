@@ -1,11 +1,13 @@
 package org.folio.rest.api;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.*;
+import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isBadRequest;
+import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isUnprocessableEntity;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsArrayContainingInAnyOrder.arrayContainingInAnyOrder;
-import static org.hamcrest.core.Is.*;
+import static org.hamcrest.core.Is.is;
+
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -16,6 +18,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.Response;
@@ -23,7 +26,6 @@ import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.StaffSlipRequestBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.hamcrest.MatcherAssert;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;

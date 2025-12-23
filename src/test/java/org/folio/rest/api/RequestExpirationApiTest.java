@@ -51,7 +51,6 @@ import org.folio.rest.jaxrs.model.Config;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.KvConfigurations;
 import org.folio.rest.jaxrs.model.Request;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.OkapiHttpClient;
@@ -75,7 +74,6 @@ import lombok.SneakyThrows;
 class RequestExpirationApiTest {
 
   private static final String REQUEST_TABLE = "request";
-  private static PostgresClient pgClient;
   protected static OkapiHttpClient client;
   protected static FakeKafkaConsumer kafkaConsumer;
 
@@ -84,7 +82,6 @@ class RequestExpirationApiTest {
     if (StorageTestSuite.isNotInitialised()) {
       StorageTestSuite.before();
     }
-    pgClient = PostgresClient.getInstance(getVertx(), TENANT_ID);
     client = new OkapiHttpClient(getVertx());
     kafkaConsumer = new FakeKafkaConsumer().consume(getVertx());
     removeAllEvents();
@@ -1047,7 +1044,7 @@ class RequestExpirationApiTest {
   }
 
   @Test
-  public void canExpireOpenUnfilledWithNoExpirationDate() throws InterruptedException,
+  void canExpireOpenUnfilledWithNoExpirationDate() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
     UUID id = UUID.randomUUID();
@@ -1100,7 +1097,7 @@ class RequestExpirationApiTest {
 
   @Test
   @SneakyThrows
-  public void updatedDateIsUpdatedOnRequestExpiration() {
+  void updatedDateIsUpdatedOnRequestExpiration() {
     UUID requestId = UUID.randomUUID();
 
     RequestRequestBuilder requestBuilder = new RequestRequestBuilder()
@@ -1128,7 +1125,7 @@ class RequestExpirationApiTest {
 
   @Test
   @SneakyThrows
-  public void shouldOnlyExpireRequestsForSpecifiedTenant() {
+  void shouldOnlyExpireRequestsForSpecifiedTenant() {
     UUID firstRequestId = UUID.randomUUID();
     UUID firstItemId = UUID.randomUUID();
     UUID secondRequestId = UUID.randomUUID();
@@ -1171,7 +1168,7 @@ class RequestExpirationApiTest {
   }
 
   @Test
-  public void shouldRecalculateQueueAfterRequestExpirationWhenNoPositionRequestExists()
+  void shouldRecalculateQueueAfterRequestExpirationWhenNoPositionRequestExists()
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
       stubTlrConfiguration(true);

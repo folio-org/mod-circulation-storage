@@ -38,7 +38,7 @@ import io.vertx.kafka.admin.KafkaAdminClient;
 import io.vertx.kafka.admin.NewTopic;
 
 @ExtendWith(VertxExtension.class)
-public class KafkaAdminClientServiceTest {
+class KafkaAdminClientServiceTest {
 
   private final String STUB_TENANT = "foo-tenant";
   private final Set<String> allExpectedTopics = Set.of(
@@ -139,7 +139,7 @@ public class KafkaAdminClientServiceTest {
   }
 
   @Test
-  public void shouldDeleteTopics(VertxTestContext testContext) {
+  void shouldDeleteTopics(VertxTestContext testContext) {
     when(mockClient.deleteTopics(anyList())).thenReturn(succeededFuture());
     when(mockClient.close()).thenReturn(succeededFuture());
 

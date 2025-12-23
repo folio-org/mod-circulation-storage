@@ -679,7 +679,7 @@ class TenantRefApiTests {
       .onSuccess(requestsAfterMigration -> {
         context.verify(() -> {
           assertThat(requestsAfterMigration.size(), is(requestsBeforeMigration.size()));
-          requestsAfterMigration.forEach(request -> validateTlrMigrationResult(request));
+          requestsAfterMigration.forEach(this::validateTlrMigrationResult);
         });
         context.completeNow();
       });

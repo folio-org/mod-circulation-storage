@@ -32,10 +32,10 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -56,7 +56,7 @@ class ActualCostRecordAPITest extends ApiTests {
       InterfaceUrls::actualCostRecord, "actualCostRecords");
 
   @BeforeEach
-  void beforeEach() throws Exception {
+  void beforeEach() {
     StorageTestSuite.cleanUpTable(ACTUAL_COST_RECORD_TABLE);
   }
 

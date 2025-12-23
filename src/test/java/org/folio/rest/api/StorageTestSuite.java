@@ -138,7 +138,7 @@ public class StorageTestSuite {
   }
 
   @BeforeAll
-  public static void before() throws IOException, InterruptedException,
+  public static void before() throws InterruptedException,
     ExecutionException, TimeoutException {
 
     vertx = Vertx.vertx();
