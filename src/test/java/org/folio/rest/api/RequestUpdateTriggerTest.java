@@ -49,11 +49,6 @@ class RequestUpdateTriggerTest {
     pgClient = PostgresClient.getInstance(StorageTestSuite.getVertx(), StorageTestSuite.TENANT_ID);
   }
 
-  @AfterAll
-  static void afterAll() throws InterruptedException, ExecutionException, TimeoutException {
-    StorageTestSuite.after();
-  }
-
   @BeforeEach
   void beforeEach() throws MalformedURLException {
     StorageTestSuite.deleteAll(requestStorageUrl());

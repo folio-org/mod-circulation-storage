@@ -138,11 +138,8 @@ public class StorageTestSuite {
   }
 
   @BeforeAll
-  public static void before()
-    throws IOException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  public static void before() throws IOException, InterruptedException,
+    ExecutionException, TimeoutException {
 
     vertx = Vertx.vertx();
 
@@ -174,9 +171,9 @@ public class StorageTestSuite {
       .atPriority(10)
       .willReturn(aResponse().proxiedFrom("http://localhost:" + verticlePort)));
 
-    prepareTenant(TENANT_ID, true);
-
     initialised = true;
+
+    prepareTenant(TENANT_ID, true);
   }
 
   @AfterAll
