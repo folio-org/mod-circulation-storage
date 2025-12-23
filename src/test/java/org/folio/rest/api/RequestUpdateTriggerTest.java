@@ -9,7 +9,6 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -39,7 +38,7 @@ class RequestUpdateTriggerTest {
   private static PostgresClient pgClient;
 
   @BeforeAll
-  static void beforeAll() throws InterruptedException, ExecutionException, TimeoutException, IOException {
+  static void beforeAll() throws InterruptedException, ExecutionException, TimeoutException {
     if (StorageTestSuite.isNotInitialised()) {
       StorageTestSuite.before();
     }

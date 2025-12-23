@@ -32,7 +32,6 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.hamcrest.core.IsNull.nullValue;
 
-import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -78,7 +77,7 @@ class RequestExpirationApiTest {
   protected static FakeKafkaConsumer kafkaConsumer;
 
   @BeforeAll
-  static void beforeAll() throws InterruptedException, ExecutionException, TimeoutException, IOException {
+  static void beforeAll() throws InterruptedException, ExecutionException, TimeoutException {
     if (StorageTestSuite.isNotInitialised()) {
       StorageTestSuite.before();
     }
