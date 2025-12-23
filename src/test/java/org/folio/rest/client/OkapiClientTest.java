@@ -15,32 +15,28 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(VertxExtension.class)
-public class OkapiClientTest {
+class OkapiClientTest {
 
   @Test
   void noOkapiUrl(VertxTestContext context) {
     new OkapiClient(Vertx.vertx(), Map.of())
-    .get("/foo", "cql.allRecords=1", Object.class, "collectionName", 10)
-    .onComplete(ar -> {
-      context.verify(() -> {
-        assertThat(ar.failed(), is(true));
-        assertThat(ar.cause().getCause(), is(instanceOf(MalformedURLException.class)));
-      });
-      context.completeNow();
-    });
+      .get("/foo", "cql.allRecords=1", Object.class, "collectionName", 10)
+      .onSuccess(result -> context.failNow(new AssertionError("Expected failure but succeeded")))
+      .onFailure(cause -> context.verify(() -> {
+        assertThat(cause.getCause(), is(instanceOf(MalformedURLException.class)));
+        context.completeNow();
+      }));
   }
 
   @Test
   void unknownHost(VertxTestContext context) {
     new OkapiClient(Vertx.vertx(), Map.of("x-okapi-url", "http://www.invalid"))
-    .get("/foo", List.of("1"), "foo", Object.class)
-    .onComplete(ar -> {
-      context.verify(() -> {
-        assertThat(ar.failed(), is(true));
-        assertThat(ar.cause().getClass().getName(), containsString("UnknownHost"));
-      });
-      context.completeNow();
-    });
+      .get("/foo", List.of("1"), "foo", Object.class)
+      .onSuccess(result -> context.failNow(new AssertionError("Expected failure but succeeded")))
+      .onFailure(cause -> context.verify(() -> {
+        assertThat(cause.getClass().getName(), containsString("UnknownHost"));
+        context.completeNow();
+      }));
   }
 
 }

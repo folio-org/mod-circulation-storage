@@ -328,8 +328,7 @@ public class StorageTestSuite {
     client.post(storageUrl("/_/tenant"), job, tenantId,
       ResponseHandler.json(tenantPrepared));
 
-    // allow up to 180 seconds to complete the POST
-    JsonResponse response = tenantPrepared.get(180, TimeUnit.SECONDS);
+    JsonResponse response = tenantPrepared.get(60, TimeUnit.SECONDS);
 
     String failureMessage = String.format("Tenant post failed: %s: %s",
       response.getStatusCode(), response);
