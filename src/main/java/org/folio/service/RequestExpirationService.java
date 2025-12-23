@@ -80,8 +80,8 @@ public class RequestExpirationService {
     return pgClient.withTrans(conn -> getExpiredRequests(conn)
         .compose(expiredRequests -> closeRequests(conn, expiredRequests, context))
         .compose(associatedIds -> getOpenRequestsByIdFields(conn, associatedIds))
-        .compose(openRequests -> reorderRequests(conn, openRequests)))
-        .compose(x -> publishPubSubLogEvents(context))
+        .compose(openRequests -> reorderRequests(conn, openRequests))
+        .onSuccess(x -> publishPubSubLogEvents(context)))
         .compose(x -> publishExpiredRequestsEvents(context))
         .onFailure(e -> log.error("Error in request processing", e));
   }
@@ -255,7 +255,7 @@ public class RequestExpirationService {
     return conn.update(REQUEST_TABLE, request, request.getId()).mapEmpty();
   }
 
-  private Future<Void> publishPubSubLogEvents(List<ExpiredRequestWrapper> context) {
+  private void publishPubSubLogEvents(List<ExpiredRequestWrapper> context) {
     context.forEach(requestWrapper -> {
       var payload = new JsonObject()
         .put(REQUESTS.value(), new JsonObject()
@@ -263,7 +263,6 @@ public class RequestExpirationService {
           .put(UPDATED.value(), requestWrapper.updatedValue()));
       eventPublisherService.publishLogRecord(payload, REQUEST_EXPIRED);
     });
-    return succeededFuture();
   }
 
   private Future<Void> publishExpiredRequestsEvents(List<ExpiredRequestWrapper> context) {
