@@ -1,12 +1,8 @@
 package org.folio.rest.api;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
-import static io.vertx.core.json.JsonObject.mapFrom;
-import static java.net.HttpURLConnection.HTTP_CREATED;
 import static org.apache.commons.collections4.CollectionUtils.emptyIfNull;
 import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
-import static org.folio.rest.api.StorageTestSuite.getVertx;
 import static org.folio.rest.api.StorageTestSuite.prepareTenant;
 import static org.folio.rest.support.ResponseHandler.empty;
 import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_PICKUP_EXPIRED;
@@ -17,7 +13,6 @@ import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_IN_TRAN
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET_FILLED;
 import static org.folio.rest.support.http.InterfaceUrls.requestExpirationUrl;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getRequestEvents;
-import static org.folio.rest.support.kafka.FakeKafkaConsumer.removeAllEvents;
 import static org.folio.support.EventType.LOG_RECORD;
 import static org.folio.support.LogEventPayloadField.ORIGINAL;
 import static org.folio.support.LogEventPayloadField.PAYLOAD;
@@ -32,9 +27,7 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.hamcrest.core.IsNull.nullValue;
 
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -45,46 +38,24 @@ import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.awaitility.Awaitility;
-import org.folio.rest.configuration.TlrSettingsConfiguration;
-import org.folio.rest.jaxrs.model.Config;
 import org.folio.rest.jaxrs.model.Event;
-import org.folio.rest.jaxrs.model.KvConfigurations;
 import org.folio.rest.jaxrs.model.Request;
-import org.folio.rest.support.IndividualResource;
-import org.folio.rest.support.JsonResponse;
-import org.folio.rest.support.OkapiHttpClient;
+import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.Response;
-import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.RequestRequestBuilder;
-import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.support.MockServer;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import com.github.tomakehurst.wiremock.client.WireMock;
 
 import io.vertx.core.json.JsonObject;
 import lombok.SneakyThrows;
 
-class RequestExpirationApiTest {
+class RequestExpirationApiTest extends ApiTests {
 
   private static final String REQUEST_TABLE = "request";
-  protected static OkapiHttpClient client;
-  protected static FakeKafkaConsumer kafkaConsumer;
-
-  @BeforeAll
-  static void beforeAll() throws InterruptedException, ExecutionException, TimeoutException {
-    if (StorageTestSuite.isNotInitialised()) {
-      StorageTestSuite.before();
-    }
-    client = new OkapiHttpClient(getVertx());
-    kafkaConsumer = new FakeKafkaConsumer().consume(getVertx());
-    removeAllEvents();
-  }
 
   @BeforeEach
   void beforeEach()
@@ -98,68 +69,6 @@ class RequestExpirationApiTest {
   void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs(REQUEST_TABLE);
     clearPublishedEvents();
-  }
-
-  protected static IndividualResource createEntity(JsonObject entity, URL url, String tenantId)
-    throws InterruptedException, ExecutionException, TimeoutException {
-
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
-
-    client.post(url, entity, tenantId, ResponseHandler.json(createCompleted));
-
-    JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(String.format("Failed to create entity: %s", postResponse.getBody()),
-      postResponse.getStatusCode(), is(HTTP_CREATED));
-
-    return new IndividualResource(postResponse);
-  }
-
-  protected static IndividualResource createEntity(JsonObject entity, URL url)
-    throws InterruptedException, ExecutionException, TimeoutException {
-
-    return createEntity(entity, url, TENANT_ID);
-  }
-
-  protected static JsonObject getById(URL url, String tenantId)
-    throws InterruptedException, ExecutionException, TimeoutException {
-
-    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
-
-    client.get(url, tenantId, ResponseHandler.json(getCompleted));
-
-    JsonResponse getResponse = getCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(String.format("Failed to get request: %s", getResponse.getBody()),
-      getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-
-    return getResponse.getJson();
-  }
-
-  @SneakyThrows
-  protected static JsonObject getById(URL url) {
-    return getById(url, TENANT_ID);
-  }
-
-  protected static void stubTlrConfiguration(boolean isTlrEnabled) {
-    final var tlrSettingsConfiguration = new TlrSettingsConfiguration(
-      isTlrEnabled, false, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
-    StorageTestSuite.getWireMockServer().stubFor(WireMock.get(
-        urlPathMatching("/configurations/entries.*"))
-      .willReturn(WireMock.ok().withBody(mapFrom(
-        new KvConfigurations()
-          .withConfigs(List.of(new Config()
-            .withValue(mapFrom(tlrSettingsConfiguration).encodePrettily()))))
-        .encodePrettily())));
-  }
-
-  protected static void stubWithEmptyTlrConfiguration() {
-    StorageTestSuite.getWireMockServer().stubFor(WireMock.get(
-        urlPathMatching("/configurations/entries.*"))
-      .willReturn(WireMock.ok().withBody(mapFrom(
-        new KvConfigurations()
-          .withConfigs(List.of()))
-        .encodePrettily())));
   }
 
   @Test
