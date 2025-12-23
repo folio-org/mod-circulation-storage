@@ -15,15 +15,15 @@ import org.folio.rest.jaxrs.model.RequestsBatch;
 import org.folio.rest.jaxrs.resource.RequestStorageBatch;
 import org.folio.rest.tools.utils.MetadataUtil;
 import org.folio.service.request.RequestBatchResourceService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
 
 public class RequestsBatchAPI implements RequestStorageBatch {
-  private static final Logger log = LoggerFactory.getLogger(RequestsBatchAPI.class);
+  private static final Logger log = LogManager.getLogger();
 
   @Validate
   @Override

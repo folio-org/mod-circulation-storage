@@ -7,14 +7,14 @@ import org.folio.rest.jaxrs.model.PrintEventsRequest;
 import org.folio.rest.jaxrs.model.PrintEventsStatusRequest;
 import org.folio.rest.jaxrs.resource.PrintEventsStorage;
 import org.folio.service.PrintEventsService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.ws.rs.core.Response;
 import java.util.Map;
 
 public class PrintEventsApi implements PrintEventsStorage {
-  private static final Logger LOG = LoggerFactory.getLogger(PrintEventsApi.class);
+  private static final Logger LOG = LogManager.getLogger();
 
   @Override
   public void postPrintEventsStoragePrintEventsEntry(PrintEventsRequest printEventsRequest, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {

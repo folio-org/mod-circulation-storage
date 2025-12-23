@@ -21,23 +21,20 @@ import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
-import org.junit.Before;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runners.MethodSorters;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import io.vertx.core.json.JsonObject;
 import lombok.SneakyThrows;
 
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class CirculationRulesApiTest extends ApiTests {
 
   private static final String CIRCULATION_RULES_TABLE = "circulation_rules";
   private static final String DEFAULT_RULE_ID = "2d7589ab-a889-bb8e-e15a-1a65fe86cb22";
 
   @SneakyThrows
-  @Before
-  public void cleanUpCirculationRulesTable() {
+  @BeforeEach
+  void cleanUpCirculationRulesTable() {
     StorageTestSuite.cleanUpTable(CIRCULATION_RULES_TABLE);
 
     Date now = new Date();
@@ -121,12 +118,12 @@ public class CirculationRulesApiTest extends ApiTests {
   }
 
   @Test
-  public void putAndGet() throws Exception {
+  void putAndGet() throws Exception {
     putAndGet(exampleRules());
   }
 
   @Test
-  public void putNullFields() throws Exception {
+  void putNullFields() throws Exception {
     CirculationRules circulationRules = new CirculationRules();
     assertThat(putResponse(circulationRules), matchesUnprocessableEntity());
   }

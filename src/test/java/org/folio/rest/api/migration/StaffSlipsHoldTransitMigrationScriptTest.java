@@ -1,6 +1,6 @@
 package org.folio.rest.api.migration;
 
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -11,8 +11,8 @@ import org.folio.rest.api.StorageTestSuite;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
 import org.hamcrest.core.Is;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -22,13 +22,13 @@ public class StaffSlipsHoldTransitMigrationScriptTest extends StaffSlipsMigratio
   public static final String TRANSIT_ID = "f838cdaf-555a-473f-abf1-f35ef6ab8ae1";
   private static final String MIGRATION_SCRIPT = loadScript("add_staff_slips_hold_transit.sql");
 
-  @Before
-  public void beforeEach() throws MalformedURLException {
+  @BeforeEach
+  void beforeEach() throws MalformedURLException {
     StorageTestSuite.deleteAll(staffSlipsStorageUrl(""));
   }
 
   @Test
-  public void canMigrateStaffSlips() throws Exception {
+  void canMigrateStaffSlips() throws Exception {
 
     executeMultipleSqlStatements(MIGRATION_SCRIPT);
 

@@ -19,6 +19,7 @@ import io.vertx.core.Context;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.ThreadingModel;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
@@ -48,7 +49,7 @@ public class InitAPIImpl implements InitAPI {
         String.valueOf(DEFAULT_MAX_REQUEST_SIZE)));
 
     DeploymentOptions deploymentOptions = new DeploymentOptions()
-      .setWorker(true)
+      .setThreadingModel(ThreadingModel.WORKER)
       .setConfig(kafkaConfig);
 
     return vertx.deployVerticle(EventConsumerVerticle.class, deploymentOptions)

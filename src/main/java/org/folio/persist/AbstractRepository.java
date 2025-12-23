@@ -55,7 +55,7 @@ public abstract class AbstractRepository<T> {
   public Future<List<T>> get(Criterion criterion) {
     final Promise<Results<T>> getItemsResult = promise();
 
-    postgresClient.get(tableName, recordType, criterion, false, getItemsResult);
+    postgresClient.get(tableName, recordType, criterion, false, getItemsResult::handle);
 
     return getItemsResult.future().map(Results::getResults);
   }
@@ -63,7 +63,7 @@ public abstract class AbstractRepository<T> {
   public Future<List<T>> get(AsyncResult<SQLConnection> connection, Criterion criterion) {
     final Promise<Results<T>> getItemsResult = promise();
 
-    postgresClient.get(connection, tableName, recordType, criterion, false, true, getItemsResult);
+    postgresClient.get(connection, tableName, recordType, criterion, false, true, getItemsResult::handle);
 
     return getItemsResult.future().map(Results::getResults);
   }
@@ -71,7 +71,7 @@ public abstract class AbstractRepository<T> {
   public Future<Map<String, T>> getById(Collection<String> ids) {
     final Promise<Map<String, T>> promise = promise();
 
-    postgresClient.getById(tableName, new JsonArray(new ArrayList<>(ids)), recordType, promise);
+    postgresClient.getById(tableName, new JsonArray(new ArrayList<>(ids)), recordType, promise::handle);
 
     return promise.future();
   }
@@ -88,7 +88,7 @@ public abstract class AbstractRepository<T> {
     final Promise<RowSet<Row>> promise = promise();
 
     postgresClient.update(connection, tableName, rec, "jsonb",
-        format("WHERE id = '%s'", id), false, promise);
+        format("WHERE id = '%s'", id), false, promise::handle);
 
     return promise.future();
   }
@@ -100,7 +100,7 @@ public abstract class AbstractRepository<T> {
   public Future<RowSet<Row>> update(String id, T rec) {
     final Promise<RowSet<Row>> promise = promise();
 
-    postgresClient.update(tableName, rec, id, promise);
+    postgresClient.update(tableName, rec, id, promise::handle);
 
     return promise.future();
   }
@@ -108,7 +108,7 @@ public abstract class AbstractRepository<T> {
   public Future<RowSet<Row>> update(List<T> records) {
     final Promise<RowSet<Row>> promise = promise();
 
-    postgresClient.upsertBatch(tableName, records, promise);
+    postgresClient.upsertBatch(tableName, records, promise::handle);
 
     return promise.future();
   }

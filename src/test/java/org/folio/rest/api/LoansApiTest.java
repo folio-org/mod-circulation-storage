@@ -25,7 +25,7 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.hamcrest.core.IsNull.nullValue;
-import static org.hamcrest.junit.MatcherAssert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.joda.time.DateTime.parse;
 
 import java.net.HttpURLConnection;
@@ -57,33 +57,33 @@ import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Period;
 import org.joda.time.format.ISODateTimeFormat;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-public class LoansApiTest extends ApiTests {
+class LoansApiTest extends ApiTests {
   private final AssertingRecordClient loansClient = new AssertingRecordClient(
     client, StorageTestSuite.TENANT_ID, InterfaceUrls::loanStorageUrl, "loans");
 
-  @Before
+  @BeforeEach
   @SneakyThrows
-  public void beforeEach() {
+  void beforeEach() {
     pgClient.execute("TRUNCATE loan")
     .toCompletionStage().toCompletableFuture().get(5, TimeUnit.SECONDS);
     FakeKafkaConsumer.removeAllEvents();
   }
 
-  @After
-  public void checkIdsAfterEach() {
+  @AfterEach
+  void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("loan");
   }
 
   @Test
-  public void canCreateALoan()
+  void canCreateALoan()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -182,7 +182,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateALoanForDcb()
+  void canCreateALoanForDcb()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -228,7 +228,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateALoanForNonDcb()
+  void canCreateALoanForNonDcb()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -274,7 +274,7 @@ public class LoansApiTest extends ApiTests {
   }
 
     @Test
-  public void canCreateALoanWithDueDateChangedByRecallSet()
+  void canCreateALoanWithDueDateChangedByRecallSet()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -309,7 +309,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateALoanWithoutAnId()
+  void canCreateALoanWithoutAnId()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -364,7 +364,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateAnAlreadyClosedLoan()
+  void canCreateAnAlreadyClosedLoan()
     throws InterruptedException,
     ExecutionException,
     TimeoutException,
@@ -404,7 +404,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateAnAlreadyClosedLoanWithoutUserId()
+  void canCreateAnAlreadyClosedLoanWithoutUserId()
     throws InterruptedException,
     ExecutionException,
     TimeoutException,
@@ -431,7 +431,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateALoanAtViaPutToSpecificLocation()
+  void canCreateALoanAtViaPutToSpecificLocation()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -485,7 +485,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateALoanWithOnlyRequiredProperties()
+  void canCreateALoanWithOnlyRequiredProperties()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -514,7 +514,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateALoanAtSpecificLocationWithOnlyRequiredProperties()
+  void canCreateALoanAtSpecificLocationWithOnlyRequiredProperties()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -543,7 +543,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotCreateALoanWithoutAction()
+  void cannotCreateALoanWithoutAction()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -563,7 +563,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotCreateALoanWithInvalidDates()
+  void cannotCreateALoanWithInvalidDates()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -590,7 +590,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotCreateMultipleOpenLoansForSameItem()
+  void cannotCreateMultipleOpenLoansForSameItem()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -622,7 +622,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotCreateMultipleOpenLoansForSameItemViaPutToSpecificLocation()
+  void cannotCreateMultipleOpenLoansForSameItemViaPutToSpecificLocation()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -658,7 +658,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateOpenLoanWhenClosedLoansForSameItem()
+  void canCreateOpenLoanWhenClosedLoansForSameItem()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -689,7 +689,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateMultipleOpenLoansForDifferentItems()
+  void canCreateMultipleOpenLoansForDifferentItems()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -721,7 +721,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateMultipleClosedLoansForSameItem()
+  void canCreateMultipleClosedLoansForSameItem()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -750,7 +750,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateClosedLoanWhenOpenLoanForDifferentItem()
+  void canCreateClosedLoanWhenOpenLoanForDifferentItem()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -780,7 +780,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canGetALoanById()
+  void canGetALoanById()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -828,7 +828,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotGetALoanForUnknownId()
+  void cannotGetALoanForUnknownId()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -840,7 +840,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canCloseALoanByReturningTheItem()
+  void canCloseALoanByReturningTheItem()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -886,7 +886,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canRemoveUserIdFromClosedLoan()
+  void canRemoveUserIdFromClosedLoan()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -930,7 +930,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotCreateOpenLoanWithoutUserId()
+  void cannotCreateOpenLoanWithoutUserId()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -951,7 +951,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotCreateOpenLoanWithoutUserIdViaPut()
+  void cannotCreateOpenLoanWithoutUserIdViaPut()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -974,7 +974,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotRemoveUserIdFromOpenLoan()
+  void cannotRemoveUserIdFromOpenLoan()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -1004,7 +1004,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canRenewALoan()
+  void canRenewALoan()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -1053,7 +1053,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void omittedStatusFromReplacedLoanDefaultsToOpen()
+  void omittedStatusFromReplacedLoanDefaultsToOpen()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -1079,7 +1079,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotReopenLoanWhenOpenLoanForSameItem()
+  void cannotReopenLoanWhenOpenLoanForSameItem()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -1117,7 +1117,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotUpdateALoanWithInvalidDates()
+  void cannotUpdateALoanWithInvalidDates()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -1148,8 +1148,8 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  @Ignore("Should conditional field validation be done in a storage module?")
-  public void returnDateIsMandatoryForClosedLoans()
+  @Disabled("Should conditional field validation be done in a storage module?")
+  void returnDateIsMandatoryForClosedLoans()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -1181,7 +1181,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canPageLoans()
+  void canPageLoans()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -1229,7 +1229,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canSearchByUserId()
+  void canSearchByUserId()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -1283,7 +1283,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canFilterByLoanStatus()
+  void canFilterByLoanStatus()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -1334,7 +1334,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void shouldPopulateChangeMetadataProperties()
+  void shouldPopulateChangeMetadataProperties()
     throws Exception {
 
     UUID userId = UUID.randomUUID();
@@ -1441,7 +1441,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canDeleteALoan()
+  void canDeleteALoan()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -1464,7 +1464,7 @@ public class LoansApiTest extends ApiTests {
 
   @Test
   @SneakyThrows
-  public void canDeleteAllLoans() {
+  void canDeleteAllLoans() {
     loansClient.create(new LoanRequestBuilder().create());
     loansClient.create(new LoanRequestBuilder().create());
 
@@ -1476,7 +1476,7 @@ public class LoansApiTest extends ApiTests {
 
   @Test
   @SneakyThrows
-  public void canDeleteByCql() {
+  void canDeleteByCql() {
     var loanId1 = UUID.randomUUID();
     var loanId2 = UUID.randomUUID();
     var loanId3 = UUID.randomUUID();
@@ -1495,19 +1495,19 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotDeleteWithoutCql() {
+  void cannotDeleteWithoutCql() {
     var response = loansClient.attemptDelete();
     assertThat(response.getStatusCode(), is(400));
   }
 
   @Test
-  public void cannotDeleteByInvalidCql() {
+  void cannotDeleteByInvalidCql() {
     var response = loansClient.attemptDeleteByCql(")");
     assertThat(response.getStatusCode(), is(400));
   }
 
   @Test
-  public void cannotProvideAdditionalPropertiesInLoan()
+  void cannotProvideAdditionalPropertiesInLoan()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -1531,7 +1531,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotProvideAdditionalPropertiesInLoanStatus()
+  void cannotProvideAdditionalPropertiesInLoanStatus()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -1556,7 +1556,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canSearchByLoanStatus() throws Exception {
+  void canSearchByLoanStatus() throws Exception {
     final IndividualResource openLoan = loansClient.create(
       new LoanRequestBuilder().checkedOut());
 
@@ -1572,7 +1572,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canSearchByLoanItemStatus() throws Exception {
+  void canSearchByLoanItemStatus() throws Exception {
     final IndividualResource agedToLostLoan = loansClient.create(
       new LoanRequestBuilder().agedToLost());
 
@@ -1588,7 +1588,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canSearchByLoanAgedToLostItemHasBeenBilled() throws Exception {
+  void canSearchByLoanAgedToLostItemHasBeenBilled() throws Exception {
     final IndividualResource billedLoan = loansClient.create(
       new LoanRequestBuilder()
         .withAgedToLostDelayedBilling(true, DateTime.now(), DateTime.now()));
@@ -1607,7 +1607,7 @@ public class LoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canSearchByLoanAgedToLostBillingDate() throws Exception {
+  void canSearchByLoanAgedToLostBillingDate() throws Exception {
     final DateTime today = DateTime.now();
     final DateTime yesterday = today.minusDays(1);
     final DateTime tomorrow = today.plusDays(1);
