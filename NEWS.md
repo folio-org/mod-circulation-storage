@@ -1,3 +1,6 @@
+## 17.4.2 2026-01-06
+* Upgrade to Vert.x 4.5.23 and RMB 35.4.2 (CIRCSTORE-628)
+
 ## 17.4.1 2025-12-09
 * Add domain events for expired requests (CIRCSTORE-623)
 
