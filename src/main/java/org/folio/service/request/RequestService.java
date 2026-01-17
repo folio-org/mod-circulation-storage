@@ -25,7 +25,6 @@ import org.folio.rest.impl.util.RequestsApiUtil;
 import org.folio.rest.jaxrs.model.CancellationReason;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
-import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.jaxrs.model.Requests;
 import org.folio.rest.jaxrs.resource.RequestStorage;
@@ -106,34 +105,29 @@ public class RequestService {
     }
 
     // Validate cancellation reason only for update when status is CLOSED_CANCELLED
-    Request.Status status = request.getStatus();
-    if (status == CLOSED_CANCELLED) {
+    if (request.getStatus() == CLOSED_CANCELLED) {
       return validateCancellationReason(request)
         .compose(cancellationReasonErrors -> {
           if (!cancellationReasonErrors.getErrors().isEmpty()) {
             return succeededFuture(RequestStorage.PutRequestStorageRequestsByRequestIdResponse
               .respond422WithApplicationJson(cancellationReasonErrors));
           }
-
-          return helper.upsertAndPublishEvents(requestId, request)
-            .map(checkForSamePositionInQueueError(request))
-            .otherwise(err -> {
-              log.error("Failed to store request: id = {}, request = [{}]",
-                requestId, helper.jsonStringOrEmpty(request), err);
-
-              return ResponseUtil.internalErrorResponse(err);
-            });
+          return upsertRequest(requestId, request);
         });
     }
 
-    return helper.upsertAndPublishEvents(requestId, request)
-        .map(checkForSamePositionInQueueError(request))
-        .otherwise(err -> {
-          log.error("Failed to store request: id = {}, request = [{}]",
-              requestId, helper.jsonStringOrEmpty(request), err);
+    return upsertRequest(requestId, request);
+  }
 
-          return ResponseUtil.internalErrorResponse(err);
-        });
+  private Future<Response> upsertRequest(String requestId, Request request) {
+    return helper.upsertAndPublishEvents(requestId, request)
+      .map(checkForSamePositionInQueueError(request))
+      .otherwise(err -> {
+        log.error("Failed to store request: id = {}, request = [{}]",
+          requestId, helper.jsonStringOrEmpty(request), err);
+
+        return ResponseUtil.internalErrorResponse(err);
+      });
   }
 
   private Function<Response, Response> checkForSamePositionInQueueError(Request request) {
