@@ -8,7 +8,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -35,10 +34,10 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.support.MockServer;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.platform.suite.api.SelectClasses;
+import org.junit.platform.suite.api.Suite;
 import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -52,9 +51,8 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import lombok.SneakyThrows;
 
-@RunWith(Suite.class)
-
-@Suite.SuiteClasses({
+@Suite
+@SelectClasses({
   AnonymizeLoansApiTest.class,
   LoansApiTest.class,
   LoansAnonymizationApiTest.class,
@@ -98,8 +96,8 @@ public class StorageTestSuite {
   private static MockServer mockServer;
   private static final WireMockServer wireMockServer = new WireMockServer(PROXY_PORT);
 
-  private static final KafkaContainer kafkaContainer
-    = new KafkaContainer(DockerImageName.parse("apache/kafka-native:3.8.0"));
+  private static final KafkaContainer kafkaContainer = new KafkaContainer(DockerImageName.parse("apache/kafka-native:3.8.0"))
+      .withStartupAttempts(3);
 
   /**
    * Return a URL for the path and the parameters.
@@ -113,7 +111,7 @@ public class StorageTestSuite {
     }
     if (parameterKeyValue.length % 2 == 1) {
       throw new InvalidParameterException("Expected even number of key/value strings, found "
-          + parameterKeyValue.length + ": " + String.join(", ", parameterKeyValue));
+        + parameterKeyValue.length + ": " + String.join(", ", parameterKeyValue));
     }
     try {
       StringBuilder completePath = new StringBuilder(path);
@@ -138,12 +136,9 @@ public class StorageTestSuite {
     return wireMockServer;
   }
 
-  @BeforeClass
-  public static void before()
-    throws IOException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  @BeforeAll
+  public static void before() throws InterruptedException,
+    ExecutionException, TimeoutException {
 
     vertx = Vertx.vertx();
 
@@ -180,7 +175,7 @@ public class StorageTestSuite {
     initialised = true;
   }
 
-  @AfterClass
+  @AfterAll
   public static void after()
     throws InterruptedException,
     ExecutionException,
@@ -196,13 +191,9 @@ public class StorageTestSuite {
 
     CompletableFuture<String> undeploymentComplete = new CompletableFuture<>();
 
-    vertx.close(res -> {
-      if (res.succeeded()) {
-        undeploymentComplete.complete(null);
-      } else {
-        undeploymentComplete.completeExceptionally(res.cause());
-      }
-    });
+    vertx.close()
+      .onSuccess(res -> undeploymentComplete.complete(null))
+      .onFailure(undeploymentComplete::completeExceptionally);
 
     undeploymentComplete.get(20, TimeUnit.SECONDS);
   }
@@ -295,13 +286,9 @@ public class StorageTestSuite {
 
     CompletableFuture<String> deploymentComplete = new CompletableFuture<>();
 
-    vertx.deployVerticle(RestVerticle.class.getName(), options, res -> {
-      if (res.succeeded()) {
-        deploymentComplete.complete(res.result());
-      } else {
-        deploymentComplete.completeExceptionally(res.cause());
-      }
-    });
+    vertx.deployVerticle(RestVerticle.class.getName(), options)
+      .onSuccess(deploymentComplete::complete)
+      .onFailure(deploymentComplete::completeExceptionally);
 
     deploymentComplete.get(30, TimeUnit.SECONDS);
   }
@@ -339,24 +326,25 @@ public class StorageTestSuite {
     OkapiHttpClient client = new OkapiHttpClient(vertx);
 
     client.post(storageUrl("/_/tenant"), job, tenantId,
-        ResponseHandler.json(tenantPrepared));
+      ResponseHandler.json(tenantPrepared));
 
     JsonResponse response = tenantPrepared.get(60, TimeUnit.SECONDS);
 
     String failureMessage = String.format("Tenant post failed: %s: %s",
-        response.getStatusCode(), response);
+      response.getStatusCode(), response);
 
     // wait if not complete ...
     if (response.getStatusCode() == 201) {
       String id = response.getJson().getString("id");
 
       tenantPrepared = new CompletableFuture<>();
-      client.get(storageUrl("/_/tenant/" + id + "?wait=60000"), tenantId,
-          ResponseHandler.json(tenantPrepared));
-      response = tenantPrepared.get(60, TimeUnit.SECONDS);
+      // extend wait query param and local wait
+      client.get(storageUrl("/_/tenant/" + id + "?wait=180000"), tenantId,
+        ResponseHandler.json(tenantPrepared));
+      response = tenantPrepared.get(180, TimeUnit.SECONDS);
 
       failureMessage = String.format("Tenant get failed: %s: %s",
-          response.getStatusCode(), response.getBody());
+        response.getStatusCode(), response.getBody());
 
       assertThat(failureMessage, response.getStatusCode(), is(200));
     } else {

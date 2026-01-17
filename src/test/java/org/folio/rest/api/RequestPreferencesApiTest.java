@@ -26,12 +26,12 @@ import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
 import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import io.vertx.core.json.JsonObject;
 
-public class RequestPreferencesApiTest extends ApiTests {
+class RequestPreferencesApiTest extends ApiTests {
   private static final int CONNECTION_TIMEOUT = 5;
   private static final String USER_ID = "1e425b93-501e-44b0-a4c7-b3e66a25c42e";
   private static final String USER_ID2 = "2e425b93-501e-44b0-a4c7-b3e66a25c42e";
@@ -41,13 +41,13 @@ public class RequestPreferencesApiTest extends ApiTests {
   private static final boolean DELIVERY = true;
   private static final RequestPreference.Fulfillment FULFILLMENT = RequestPreference.Fulfillment.DELIVERY;
 
-  @Before
-  public void setUp() {
+  @BeforeEach
+  void setUp() {
     cleanupRequestPreferences();
   }
 
   @Test
-  public void canCreateARequestPreference() {
+  void canCreateARequestPreference() {
     JsonResponse response = createRequestPreference();
     RequestPreference preference = response.getJson().mapTo(RequestPreference.class);
 
@@ -61,7 +61,7 @@ public class RequestPreferencesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotCreateSecondRequestPreferenceForTheSameUser() {
+  void cannotCreateSecondRequestPreferenceForTheSameUser() {
     JsonResponse response1 = createRequestPreference();
     assertThat(response1, isCreated());
 
@@ -71,13 +71,13 @@ public class RequestPreferencesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotCreateRequestWithInvalidId() {
+  void cannotCreateRequestWithInvalidId() {
     JsonResponse response1 = createRequestPreference("invalid_id");
     assertThat(response1, isUnprocessableEntity());
   }
 
   @Test
-  public void canGetRequestPreferences() {
+  void canGetRequestPreferences() {
 
     createRequestPreference(USER_ID);
     createRequestPreference(USER_ID2);
@@ -95,7 +95,7 @@ public class RequestPreferencesApiTest extends ApiTests {
   }
 
   @Test
-  public void canGetRequestPreferenceByUserIdUsingQuery() {
+  void canGetRequestPreferenceByUserIdUsingQuery() {
     RequestPreference createdPreference = createRequestPreference().getJson().mapTo(RequestPreference.class);
 
     JsonResponse response = getPreferences("query=userId=" + USER_ID);
@@ -108,7 +108,7 @@ public class RequestPreferencesApiTest extends ApiTests {
   }
 
   @Test
-  public void canGetRequestPreferenceById() {
+  void canGetRequestPreferenceById() {
 
     RequestPreference preference = createRequestPreference().getJson().mapTo(RequestPreference.class);
 
@@ -117,26 +117,26 @@ public class RequestPreferencesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotGetRequestPreferenceByNotExistingId() {
+  void cannotGetRequestPreferenceByNotExistingId() {
     JsonResponse response = getPreference(UUID.randomUUID().toString());
     assertThat(response, isNotFound());
   }
 
   @Test
-  public void canDeleteRequestPreferenceById() {
+  void canDeleteRequestPreferenceById() {
     RequestPreference preference = createRequestPreference().getJson().mapTo(RequestPreference.class);
     JsonResponse response = deletePreference(preference.getId());
     assertThat(response, isNoContent());
   }
 
   @Test
-  public void cannotDeleteRequestPreferenceByNotExistingId() {
+  void cannotDeleteRequestPreferenceByNotExistingId() {
     JsonResponse response = deletePreference(UUID.randomUUID().toString());
     assertThat(response, isNotFound());
   }
 
   @Test
-  public void canUpdateRequestPreference() {
+  void canUpdateRequestPreference() {
     RequestPreference preference = createRequestPreference().getJson().mapTo(RequestPreference.class);
     preference.setDelivery(false);
     preference.setDefaultDeliveryAddressTypeId(null);
@@ -148,14 +148,14 @@ public class RequestPreferencesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotUpdateRequestPreferenceWithNotExistingId() {
+  void cannotUpdateRequestPreferenceWithNotExistingId() {
     RequestPreference preference = constructDefaultPreference(USER_ID).withId(UUID.randomUUID().toString());
     JsonResponse response = updatePreference(preference);
     assertThat(response, isNotFound());
   }
 
   @Test
-  public void cannotUpdateRequestPreferenceWithDuplicateUserId() {
+  void cannotUpdateRequestPreferenceWithDuplicateUserId() {
     createRequestPreference(USER_ID);
     RequestPreference secondPreference = createRequestPreference(USER_ID2).getJson().mapTo(RequestPreference.class);
 
@@ -165,7 +165,7 @@ public class RequestPreferencesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotUpdateRequestPreferenceWithInvalidId() {
+  void cannotUpdateRequestPreferenceWithInvalidId() {
     RequestPreference preference = constructDefaultPreference(USER_ID).withId("invalid_id");
     JsonResponse response = updatePreference(preference);
     assertThat(response, isUnprocessableEntity());

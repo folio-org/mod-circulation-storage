@@ -4,11 +4,11 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import org.folio.rest.support.*;
-import org.hamcrest.junit.MatcherAssert;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.hamcrest.MatcherAssert;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -35,25 +35,25 @@ import static org.hamcrest.core.Is.is;
  * @author shale
  *
  */
-public class FixedDueDateApiTest extends ApiTests {
+class FixedDueDateApiTest extends ApiTests {
   private static final String TABLE_NAME = "fixed_due_date_schedule";
   static final String SCHEDULE_SECTION = "schedules";
 
-  @Before
-  public void beforeEach()
+  @BeforeEach
+  void beforeEach()
     throws MalformedURLException {
 
     StorageTestSuite.deleteAll(loanPolicyStorageUrl());
     StorageTestSuite.deleteAll(dueDateURL());
   }
 
-  @After
-  public void checkIdsAfterEach() {
+  @AfterEach
+  void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs(TABLE_NAME);
   }
 
   @Test
-  public void canCreateSchedule()
+  void canCreateSchedule()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -296,9 +296,9 @@ public class FixedDueDateApiTest extends ApiTests {
     assertThat(get3CompletedResponse.getJson().getJsonArray("fixedDueDateSchedules").size(), is(0));
   }
 
-  @Ignore("Fails on Mac OS due to differences in UTF-8 collation libraries")
+  @Disabled("Fails on Mac OS due to differences in UTF-8 collation libraries")
   @Test
-  public void canSortDifferentCaseNamesAscending()
+  void canSortDifferentCaseNamesAscending()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -335,7 +335,7 @@ public class FixedDueDateApiTest extends ApiTests {
   }
 
   @Test
-  public void canSortByNameAscending()
+  void canSortByNameAscending()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -373,7 +373,7 @@ public class FixedDueDateApiTest extends ApiTests {
   }
 
   @Test
-  public void canSortByNameDescending()
+  void canSortByNameDescending()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,

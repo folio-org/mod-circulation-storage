@@ -4,7 +4,7 @@ import io.vertx.core.json.JsonObject;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.net.MalformedURLException;
 import java.util.List;
@@ -19,12 +19,12 @@ import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isI
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isOk;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isUnprocessableEntity;
 import static org.hamcrest.core.Is.is;
-import static org.hamcrest.junit.MatcherAssert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
-public class PrintEventsAPITest extends ApiTests {
+class PrintEventsAPITest extends ApiTests {
 
   @Test
-  public void canCreatePrintEventLog() throws MalformedURLException, ExecutionException, InterruptedException {
+  void canCreatePrintEventLog() throws MalformedURLException, ExecutionException, InterruptedException {
     JsonObject printEventsJson = getPrintEvent();
     final CompletableFuture<JsonResponse> postCompleted = new CompletableFuture<>();
     client.post(printEventsUrl("/print-events-entry"), printEventsJson, StorageTestSuite.TENANT_ID,
@@ -34,7 +34,7 @@ public class PrintEventsAPITest extends ApiTests {
   }
 
   @Test
-  public void createPrintEventLogWithMissingFields() throws MalformedURLException, ExecutionException, InterruptedException {
+  void createPrintEventLogWithMissingFields() throws MalformedURLException, ExecutionException, InterruptedException {
     List<String> requestIds = List.of("5f5751b4-e352-4121-adca-204b0c2aec43", "5f5751b4-e352-4121-adca-204b0c2aec44");
     JsonObject printEventsJson = new JsonObject()
       .put("requestIds", requestIds)
@@ -48,7 +48,7 @@ public class PrintEventsAPITest extends ApiTests {
   }
 
   @Test
-  public void createPrintEventLogWithBlankFields() throws MalformedURLException, ExecutionException, InterruptedException {
+  void createPrintEventLogWithBlankFields() throws MalformedURLException, ExecutionException, InterruptedException {
     JsonObject printEventsJson = getPrintEvent();
     printEventsJson.put("requesterId", " ");
     final CompletableFuture<JsonResponse> postCompleted = new CompletableFuture<>();
@@ -59,7 +59,7 @@ public class PrintEventsAPITest extends ApiTests {
   }
 
   @Test
-  public void createPrintEventLogWhenRequestListIsEmpty() throws MalformedURLException, ExecutionException, InterruptedException {
+  void createPrintEventLogWhenRequestListIsEmpty() throws MalformedURLException, ExecutionException, InterruptedException {
     List<String> requestIds = List.of();
     JsonObject printEventsJson = getPrintEvent();
     printEventsJson.put("requestIds", requestIds);
@@ -71,7 +71,7 @@ public class PrintEventsAPITest extends ApiTests {
   }
 
   @Test
-  public void createAndGetPrintEventDetails() throws MalformedURLException, ExecutionException, InterruptedException {
+  void createAndGetPrintEventDetails() throws MalformedURLException, ExecutionException, InterruptedException {
     List<UUID> requestIds = IntStream.range(0, 10)
       .mapToObj(notUsed -> UUID.randomUUID())
       .toList();
@@ -159,7 +159,7 @@ public class PrintEventsAPITest extends ApiTests {
   }
 
   @Test
-  public void getPrintEventStatusWithEmptyRequestIds() throws MalformedURLException, ExecutionException, InterruptedException {
+  void getPrintEventStatusWithEmptyRequestIds() throws MalformedURLException, ExecutionException, InterruptedException {
     JsonObject printEventsStatusRequestJson = createPrintRequestIds(List.of());
     CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
     client.post(printEventsUrl("/print-events-status"), printEventsStatusRequestJson, StorageTestSuite.TENANT_ID,
@@ -169,7 +169,7 @@ public class PrintEventsAPITest extends ApiTests {
   }
 
   @Test
-  public void getPrintEventStatusWithInvalidRequestIds() throws MalformedURLException, ExecutionException, InterruptedException {
+  void getPrintEventStatusWithInvalidRequestIds() throws MalformedURLException, ExecutionException, InterruptedException {
     CompletableFuture<JsonResponse> printEventStatusResponse = new CompletableFuture<>();
     JsonObject printEventsStatusRequestJson = createPrintRequestIds(List.of(UUID.randomUUID(), UUID.randomUUID()));
     client.post(printEventsUrl("/print-events-status"), printEventsStatusRequestJson, StorageTestSuite.TENANT_ID,
@@ -182,7 +182,7 @@ public class PrintEventsAPITest extends ApiTests {
   }
 
   @Test
-  public void createPrintEventLogAndValidate5XX() throws MalformedURLException,
+  void createPrintEventLogAndValidate5XX() throws MalformedURLException,
     ExecutionException, InterruptedException {
     JsonObject printEventsJson = getPrintEvent();
     final CompletableFuture<JsonResponse> postCompleted = new CompletableFuture<>();

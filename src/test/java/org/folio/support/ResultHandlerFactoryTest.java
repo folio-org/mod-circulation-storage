@@ -10,14 +10,14 @@ import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 
-public class ResultHandlerFactoryTest {
+class ResultHandlerFactoryTest {
   @Test
-  public void shouldExecuteConsumerOnSuccess() {
+  void shouldExecuteConsumerOnSuccess() {
     AtomicBoolean onSuccessCalled = new AtomicBoolean(false);
     AtomicBoolean onFailureCalled = new AtomicBoolean(false);
 
@@ -35,7 +35,7 @@ public class ResultHandlerFactoryTest {
   }
 
   @Test
-  public void shouldExecuteConsumerOnFailure() {
+  void shouldExecuteConsumerOnFailure() {
 
     AtomicBoolean onSuccessCalled = new AtomicBoolean(false);
     AtomicBoolean onFailureCalled = new AtomicBoolean(false);
@@ -54,7 +54,7 @@ public class ResultHandlerFactoryTest {
   }
 
   @Test
-  public void shouldExecuteFailureConsumerOnExceptionInSuccessConsumer() {
+  void shouldExecuteFailureConsumerOnExceptionInSuccessConsumer() {
     final RuntimeException expectedException
       = new RuntimeException("Something went wrong in success handler");
 
@@ -71,7 +71,7 @@ public class ResultHandlerFactoryTest {
   }
 
   @Test
-  public void shouldExecuteFailureConsumerWhenResultIsNull() {
+  void shouldExecuteFailureConsumerWhenResultIsNull() {
     AtomicReference<Throwable> receivedException = new AtomicReference<>();
 
     final Handler<AsyncResult<String>> resultHandler = when(
@@ -88,7 +88,7 @@ public class ResultHandlerFactoryTest {
   }
 
   @Test
-  public void shouldExecuteFailureConsumerWhenFailureCauseIsNull() {
+  void shouldExecuteFailureConsumerWhenFailureCauseIsNull() {
     AtomicReference<Throwable> receivedException = new AtomicReference<>();
 
     final Handler<AsyncResult<String>> resultHandler = when(

@@ -28,9 +28,10 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
-    <vertx-version>4.5.13</vertx-version>
-    <raml-module-builder-version>35.4.0</raml-module-builder-version>
+    <vertx-version>5.0.5</vertx-version>
+    <raml-module-builder-version>36.0.0-SNAPSHOT</raml-module-builder-version>
     <spring.version>6.2.3</spring.version>
+    <junit5.version>5.10.2</junit5.version>
 
     <!--Folio dependencies properties-->
     <folio-module-descriptor-validator.version>1.0.0</folio-module-descriptor-validator.version>
@@ -83,7 +84,7 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>folio-kafka-wrapper</artifactId>
-      <version>3.1.1</version>
+      <version>4.0.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -161,7 +162,7 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>mod-pubsub-client</artifactId>
-      <version>2.7.0</version>
+      <version>2.17.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.awaitility</groupId>
@@ -172,7 +173,7 @@
     <dependency>
       <groupId>com.github.tomakehurst</groupId>
       <artifactId>wiremock</artifactId>
-      <version>2.25.1</version>
+      <version>3.0.1</version>
       <exclusions>
         <exclusion>
           <groupId>net.sf.jopt-simple</groupId>
@@ -184,7 +185,7 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
-      <version>3.17.0</version>
+      <version>3.19.0</version>
     </dependency>
     <dependency>
       <groupId>commons-io</groupId>
@@ -204,6 +205,39 @@
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <version>5.16.0</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- JUnit 5 API and engine -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>${junit5.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <version>${junit5.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- Vert.x JUnit 5 -->
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-junit5</artifactId>
+      <version>${vertx-version}</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- JUnit Platform Suite API for test suites -->
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-suite-api</artifactId>
+      <version>1.10.2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-suite-engine</artifactId>
+      <version>1.10.2</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -324,12 +358,12 @@
           <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjrt</artifactId>
-            <version>1.9.22</version>
+            <version>1.9.22.1</version>
           </dependency>
           <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjtools</artifactId>
-            <version>1.9.22</version>
+            <version>1.9.22.1</version>
           </dependency>
         </dependencies>
       </plugin>
@@ -348,8 +382,8 @@
           <outputFile />
           <properties>
             <property>
-              <name>log4j.configurationFile</name>
-              <value>${project.baseUri}src/main/resources/log4j.properties</value>
+              <name>log4j2.configurationFile</name>
+              <value>${project.baseUri}src/main/resources/log4j2.properties</value>
             </property>
           </properties>
         </configuration>
@@ -488,6 +522,7 @@
                     <Multi-Release>true</Multi-Release>
                   </manifestEntries>
                 </transformer>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
               </transformers>
               <artifactSet />
               <outputFile>${project.build.directory}/${project.artifactId}-fat.jar</outputFile>
@@ -498,13 +533,8 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.0.0-M5</version>
+        <version>3.2.5</version>
         <configuration>
-          <!-- TODO: update to version 3.0.0 and remove useSystemClassLoader
-               https://issues.folio.org/browse/CIRCSTORE-78
-               https://issues.folio.org/browse/FOLIO-1609
-               https://issues.apache.org/jira/browse/SUREFIRE-1588
-          -->
           <useSystemClassLoader>false</useSystemClassLoader>
           <excludes>
             <exclude>org/folio/rest/api/**/*Test.java</exclude>

@@ -149,7 +149,7 @@ public class RequestService {
           final Promise<Response> deleteResult = promise();
 
           PgUtil.deleteById(REQUEST_TABLE, requestId, okapiHeaders, vertxContext,
-              RequestStorage.DeleteRequestStorageRequestsByRequestIdResponse.class, deleteResult);
+              RequestStorage.DeleteRequestStorageRequestsByRequestIdResponse.class, deleteResult::handle);
 
           return deleteResult.future()
               .compose(eventPublisher.publishRemoved(request));

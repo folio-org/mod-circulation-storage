@@ -45,7 +45,7 @@ public class CheckInService {
     Promise<Response> createResult = Promise.promise();
 
     PgUtil.post(CHECKIN_TABLE, entity, okapiHeaders, vertxContext,
-        CheckInStorageCheckIns.PostCheckInStorageCheckInsResponse.class, createResult);
+        CheckInStorageCheckIns.PostCheckInStorageCheckInsResponse.class, createResult::handle);
 
     return createResult.future()
         .compose(eventPublisher.publishCreated());
