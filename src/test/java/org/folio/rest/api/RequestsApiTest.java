@@ -16,6 +16,7 @@ import static org.folio.rest.support.clients.CqlQuery.exactMatch;
 import static org.folio.rest.support.clients.CqlQuery.fromTemplate;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForRequest;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoRequestEvent;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoUpdateEventForRequest;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForRequest;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForRequest;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.removeAllEvents;
@@ -678,7 +679,7 @@ class RequestsApiTest extends ApiTests {
       hasCode(ErrorCode.INVALID_CANCELLATION_REASON.name())
     )));
 
-    assertNoRequestEvent(createdRequest.getId());
+    assertNoUpdateEventForRequest(createdRequest.getId());
   }
 
   //This should not happen, but shouldn't really fail either (maybe need to check)
