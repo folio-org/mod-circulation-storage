@@ -598,7 +598,7 @@ class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void canUpdateRequestToCancelledStatusWithoutCancellationReasonId()
+  void canUpdateRequestToCancelledStatusWithoutCancellationReasonId()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -638,7 +638,7 @@ class RequestsApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotUpdateRequestWithNonExistentCancellationReasonId()
+  void cannotUpdateRequestWithNonExistentCancellationReasonId()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -655,7 +655,7 @@ class RequestsApiTest extends ApiTests {
         .withStatus(OPEN_NOT_YET_FILLED)
         .create(),
       requestStorageUrl());
-    
+
     // Clear events from creation to focus on update validation
     removeAllEvents();
 
