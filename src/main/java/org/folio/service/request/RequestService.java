@@ -3,6 +3,7 @@ package org.folio.service.request;
 import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.Promise.promise;
 import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
+import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_CANCELLED;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.folio.service.event.EntityChangedEventPublisherFactory.requestEventPublisher;
@@ -10,6 +11,7 @@ import static org.folio.support.ModuleConstants.MODULE_NAME;
 import static org.folio.support.ModuleConstants.REQUEST_CLASS;
 import static org.folio.support.ModuleConstants.REQUEST_TABLE;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -20,13 +22,17 @@ import org.apache.logging.log4j.Logger;
 import org.folio.persist.RequestRepository;
 import org.folio.rest.impl.util.OkapiResponseUtil;
 import org.folio.rest.impl.util.RequestsApiUtil;
+import org.folio.rest.jaxrs.model.CancellationReason;
+import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
+import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.jaxrs.model.Requests;
 import org.folio.rest.jaxrs.resource.RequestStorage;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.service.event.EntityChangedEventPublisher;
+import org.folio.support.ErrorCode;
 import org.folio.support.ResponseUtil;
 import org.folio.support.ServiceHelper;
 
@@ -38,6 +44,7 @@ import io.vertx.core.Promise;
 public class RequestService {
 
   private static final Logger log = LogManager.getLogger(RequestService.class);
+  private static final String CANCELLATION_REASON_TABLE = "cancellation_reason";
 
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
@@ -96,6 +103,27 @@ public class RequestService {
     if (!errors.getErrors().isEmpty()) {
       return succeededFuture(RequestStorage.PutRequestStorageRequestsByRequestIdResponse
           .respond422WithApplicationJson(errors));
+    }
+
+    // Validate cancellation reason only for update when status is CLOSED_CANCELLED
+    Request.Status status = request.getStatus();
+    if (status == CLOSED_CANCELLED) {
+      return validateCancellationReason(request)
+        .compose(cancellationReasonErrors -> {
+          if (!cancellationReasonErrors.getErrors().isEmpty()) {
+            return succeededFuture(RequestStorage.PutRequestStorageRequestsByRequestIdResponse
+              .respond422WithApplicationJson(cancellationReasonErrors));
+          }
+
+          return helper.upsertAndPublishEvents(requestId, request)
+            .map(checkForSamePositionInQueueError(request))
+            .otherwise(err -> {
+              log.error("Failed to store request: id = {}, request = [{}]",
+                requestId, helper.jsonStringOrEmpty(request), err);
+
+              return ResponseUtil.internalErrorResponse(err);
+            });
+        });
     }
 
     return helper.upsertAndPublishEvents(requestId, request)
@@ -162,6 +190,44 @@ public class RequestService {
         && response.hasEntity()
         && RequestsApiUtil
         .hasSamePositionConstraintViolated(response.getEntity().toString());
+  }
+
+  private Future<Errors> validateCancellationReason(Request request) {
+    String cancellationReasonId = request.getCancellationReasonId();
+
+    if (isCancellationReasonEmpty(cancellationReasonId)) {
+      return succeededFuture(emptyErrors());
+    }
+
+    return postgresClient.getById(CANCELLATION_REASON_TABLE, cancellationReasonId,
+        CancellationReason.class)
+      .map(cancellationReason -> cancellationReason == null
+        ? createCancellationReasonNotFoundError(cancellationReasonId)
+        : emptyErrors())
+      .recover(throwable -> handleCancellationReasonValidationError(cancellationReasonId, throwable));
+  }
+
+  private boolean isCancellationReasonEmpty(String cancellationReasonId) {
+    return cancellationReasonId == null || cancellationReasonId.trim().isEmpty();
+  }
+
+  private Errors emptyErrors() {
+    return new Errors().withErrors(List.of());
+  }
+
+  private Errors createCancellationReasonNotFoundError(String cancellationReasonId) {
+    log.warn("Cancellation reason not found: cancellationReasonId = {}", cancellationReasonId);
+    Error error = new Error()
+      .withMessage("Cancellation reason does not exist")
+      .withCode(ErrorCode.INVALID_CANCELLATION_REASON.name());
+    return new Errors().withErrors(List.of(error));
+  }
+
+  private Future<Errors> handleCancellationReasonValidationError(String cancellationReasonId,
+      Throwable throwable) {
+    log.error("Failed to validate cancellation reason: cancellationReasonId = {}",
+      cancellationReasonId, throwable);
+    return succeededFuture(createCancellationReasonNotFoundError(cancellationReasonId));
   }
 
 }
