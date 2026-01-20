@@ -26,8 +26,8 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.core.Is;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 
@@ -44,7 +44,7 @@ public class ApiTests {
   protected static CirculationSettingsHelper circulationSettingsHelper;
   private static final String CONFIGURATIONS_ENTRIES_URL_PATTERN = "/configurations/entries.*";
 
-  @BeforeClass
+  @BeforeAll
   public static void before() throws Exception {
     if(StorageTestSuite.isNotInitialised()) {
       System.out.println("Running test on own, initialising suite manually");
@@ -58,7 +58,7 @@ public class ApiTests {
     removeAllEvents();
   }
 
-  @AfterClass
+  @AfterAll
   public static void after()
     throws InterruptedException,
     ExecutionException,
@@ -169,7 +169,7 @@ public class ApiTests {
     waitFor(pgClient.execute("TRUNCATE " + tableNames));
   }
 
-  protected static String randomId() {
+  public static String randomId() {
     return UUID.randomUUID().toString();
   }
 }

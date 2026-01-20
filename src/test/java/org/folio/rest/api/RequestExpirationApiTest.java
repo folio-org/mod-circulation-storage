@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static org.apache.commons.collections4.CollectionUtils.emptyIfNull;
 import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.prepareTenant;
@@ -11,6 +12,7 @@ import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_AWAITIN
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_IN_TRANSIT;
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET_FILLED;
 import static org.folio.rest.support.http.InterfaceUrls.requestExpirationUrl;
+import static org.folio.rest.support.kafka.FakeKafkaConsumer.getRequestEvents;
 import static org.folio.support.EventType.LOG_RECORD;
 import static org.folio.support.LogEventPayloadField.ORIGINAL;
 import static org.folio.support.LogEventPayloadField.PAYLOAD;
@@ -22,9 +24,11 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.notNullValue;
 import static org.hamcrest.core.IsNull.nullValue;
 
 import java.net.MalformedURLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -32,6 +36,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.awaitility.Awaitility;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.Request;
@@ -41,33 +46,33 @@ import org.folio.rest.support.builders.RequestRequestBuilder;
 import org.folio.support.MockServer;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import io.vertx.core.json.JsonObject;
 import lombok.SneakyThrows;
 
-public class RequestExpirationApiTest extends ApiTests {
+class RequestExpirationApiTest extends ApiTests {
 
   private static final String REQUEST_TABLE = "request";
 
-  @Before
-  public void beforeEach()
+  @BeforeEach
+  void beforeEach()
     throws MalformedURLException {
 
     StorageTestSuite.deleteAll(requestStorageUrl());
     circulationSettingsHelper.changeTlrSettings(false);
   }
 
-  @After
-  public void checkIdsAfterEach() {
+  @AfterEach
+  void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs(REQUEST_TABLE);
     clearPublishedEvents();
   }
 
   @Test
-  public void canExpireASingleOpenUnfilledRequest() throws InterruptedException,
+  void canExpireASingleOpenUnfilledRequest() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
     UUID id = UUID.randomUUID();
@@ -91,6 +96,7 @@ public class RequestExpirationApiTest extends ApiTests {
       .until(MockServer::getPublishedEvents, hasSize(1));
 
     assertPublishedEvents(events);
+    assertDomainEvents(List.of(Pair.of(id, CLOSED_UNFILLED)));
 
     JsonObject response = getById(requestStorageUrl(String.format("/%s", id)));
 
@@ -99,7 +105,7 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void canExpireRequestWhenTlrSettingsNotSet() throws InterruptedException,
+  void canExpireRequestWhenTlrSettingsNotSet() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
     circulationSettingsHelper.removeTlrSettings();
     UUID id = UUID.randomUUID();
@@ -123,6 +129,7 @@ public class RequestExpirationApiTest extends ApiTests {
       .until(MockServer::getPublishedEvents, hasSize(1));
 
     assertPublishedEvents(events);
+    assertDomainEvents(List.of(Pair.of(id, CLOSED_UNFILLED)));
 
     JsonObject response = getById(requestStorageUrl(String.format("/%s", id)));
 
@@ -131,7 +138,7 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void canExpireASingleOpenAwaitingPickupRequest() throws InterruptedException,
+  void canExpireASingleOpenAwaitingPickupRequest() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
     UUID id = UUID.randomUUID();
@@ -149,6 +156,7 @@ public class RequestExpirationApiTest extends ApiTests {
       requestStorageUrl());
 
     expireRequests();
+    assertDomainEvents(List.of(Pair.of(id, CLOSED_PICKUP_EXPIRED)));
 
     List<JsonObject> events = Awaitility.await()
       .atMost(10, TimeUnit.SECONDS)
@@ -163,7 +171,7 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void canExpireSingleOpenAwaitingPickupTlrRequest() throws InterruptedException,
+  void canExpireSingleOpenAwaitingPickupTlrRequest() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
     circulationSettingsHelper.changeTlrSettings(true);
@@ -191,6 +199,7 @@ public class RequestExpirationApiTest extends ApiTests {
       .until(MockServer::getPublishedEvents, hasSize(1));
 
     assertPublishedEvents(events);
+    assertDomainEvents(List.of(Pair.of(id, CLOSED_PICKUP_EXPIRED)));
 
     JsonObject response = getById(requestStorageUrl(String.format("/%s", id)));
 
@@ -199,7 +208,7 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void closedPickupExpiredTitleLevelRequestShouldBeRemovedFromQueue()
+  void closedPickupExpiredTitleLevelRequestShouldBeRemovedFromQueue()
     throws InterruptedException, MalformedURLException, TimeoutException, ExecutionException {
 
     circulationSettingsHelper.changeTlrSettings(true);
@@ -257,6 +266,7 @@ public class RequestExpirationApiTest extends ApiTests {
       .until(MockServer::getPublishedEvents, hasSize(1));
 
     assertPublishedEvents(events);
+    assertDomainEvents(List.of(Pair.of(secondRequestId, CLOSED_PICKUP_EXPIRED)));
 
     JsonObject firstRequestById = getById(requestStorageUrl(String.format("/%s", firstRequestId)));
     assertThat(firstRequestById.getString("status"), is(OPEN_AWAITING_PICKUP));
@@ -272,7 +282,7 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void closedPickupExpiredItemLevelRequestShouldBeRemovedFromQueue()
+  void closedPickupExpiredItemLevelRequestShouldBeRemovedFromQueue()
     throws InterruptedException, MalformedURLException, TimeoutException, ExecutionException {
 
     UUID firstRequestId = UUID.randomUUID();
@@ -327,6 +337,8 @@ public class RequestExpirationApiTest extends ApiTests {
       .until(MockServer::getPublishedEvents, hasSize(1));
 
     assertPublishedEvents(events);
+    assertDomainEvents(List.of(Pair.of(secondRequestId, CLOSED_PICKUP_EXPIRED)));
+
     JsonObject firstRequestById = getById(requestStorageUrl(String.format("/%s", secondRequestId)));
     assertThat(firstRequestById.getString("status"), is(CLOSED_PICKUP_EXPIRED));
     assertThat(firstRequestById.containsKey("position"), is(false));
@@ -341,7 +353,7 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void canExpireSingleOpenAwaitingDeliveryRequest() throws InterruptedException,
+  void canExpireSingleOpenAwaitingDeliveryRequest() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
     UUID id = UUID.randomUUID();
@@ -373,7 +385,7 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void canExpireAnFirstAwaitingPickupRequest() throws InterruptedException,
+  void canExpireAnFirstAwaitingPickupRequest() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
     UUID id1 = UUID.randomUUID();
@@ -424,6 +436,7 @@ public class RequestExpirationApiTest extends ApiTests {
       .until(MockServer::getPublishedEvents, hasSize(1));
 
     assertPublishedEvents(events);
+    assertDomainEvents(List.of(Pair.of(id1, CLOSED_PICKUP_EXPIRED)));
 
     JsonObject response1 = getById(requestStorageUrl(String.format("/%s", id1)));
     JsonObject response2 = getById(requestStorageUrl(String.format("/%s", id2)));
@@ -440,7 +453,7 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void canExpireFirstAwaitingDeliveryRequest() throws InterruptedException,
+  void canExpireFirstAwaitingDeliveryRequest() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
     UUID id1 = UUID.randomUUID();
@@ -491,6 +504,7 @@ public class RequestExpirationApiTest extends ApiTests {
       .until(MockServer::getPublishedEvents, hasSize(1));
 
     assertPublishedEvents(events);
+    assertDomainEvents(List.of(Pair.of(id1, CLOSED_UNFILLED)));
 
     JsonObject response1 = getById(requestStorageUrl(String.format("/%s", id1)));
     JsonObject response2 = getById(requestStorageUrl(String.format("/%s", id2)));
@@ -507,7 +521,7 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void canExpireAnFirstOpenUnfilledRequest() throws InterruptedException,
+  void canExpireAnFirstOpenUnfilledRequest() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
     UUID id1_1 = UUID.randomUUID();
@@ -587,6 +601,7 @@ public class RequestExpirationApiTest extends ApiTests {
       requestStorageUrl());
 
     expireRequests();
+    assertDomainEvents(List.of(Pair.of(id1_1, CLOSED_UNFILLED)));
 
     JsonObject response1_1 = getById(requestStorageUrl(String.format("/%s", id1_1)));
     JsonObject response1_2 = getById(requestStorageUrl(String.format("/%s", id1_2)));
@@ -615,7 +630,7 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void canExpireOpenUnfilledRequestsInTheMiddleOfAQueue() throws InterruptedException,
+  void canExpireOpenUnfilledRequestsInTheMiddleOfAQueue() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
     UUID id1_1 = UUID.fromString("b272d1d0-cf06-45c4-9b6d-0c42a45e5084");
@@ -848,6 +863,17 @@ public class RequestExpirationApiTest extends ApiTests {
       .until(MockServer::getPublishedEvents, hasSize(10));
 
     assertPublishedEvents(events);
+    assertDomainEvents(List.of(
+      Pair.of(id1_2, CLOSED_UNFILLED),
+      Pair.of(id1_3, CLOSED_UNFILLED),
+      Pair.of(id1_6, CLOSED_UNFILLED),
+      Pair.of(id1_6, CLOSED_UNFILLED),
+      Pair.of(id2_2, CLOSED_UNFILLED),
+      Pair.of(id2_3, CLOSED_UNFILLED),
+      Pair.of(id3_3, CLOSED_UNFILLED),
+      Pair.of(id3_5, CLOSED_PICKUP_EXPIRED),
+      Pair.of(id3_6, CLOSED_UNFILLED)
+    ));
 
     JsonObject response1_1 = getById(requestStorageUrl(String.format("/%s", id1_1)));
     JsonObject response1_2 = getById(requestStorageUrl(String.format("/%s", id1_2)));
@@ -926,7 +952,7 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void canExpireOpenUnfilledWithNoExpirationDate() throws InterruptedException,
+  void canExpireOpenUnfilledWithNoExpirationDate() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
     UUID id = UUID.randomUUID();
@@ -952,7 +978,7 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void canExpireOpenAwaitingWithNoHoldShelfExpirationDate() throws InterruptedException,
+  void canExpireOpenAwaitingWithNoHoldShelfExpirationDate() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
     UUID id = UUID.randomUUID();
@@ -979,7 +1005,7 @@ public class RequestExpirationApiTest extends ApiTests {
 
   @Test
   @SneakyThrows
-  public void updatedDateIsUpdatedOnRequestExpiration() {
+  void updatedDateIsUpdatedOnRequestExpiration() {
     UUID requestId = UUID.randomUUID();
 
     RequestRequestBuilder requestBuilder = new RequestRequestBuilder()
@@ -997,6 +1023,7 @@ public class RequestExpirationApiTest extends ApiTests {
     Awaitility.await()
       .atMost(10, TimeUnit.SECONDS)
       .until(MockServer::getPublishedEvents, hasSize(1));
+    assertDomainEvents(List.of(Pair.of(requestId, CLOSED_UNFILLED)));
 
     JsonObject updatedRequest = getById(requestStorageUrl(String.format("/%s", requestId)));
     assertThat(updatedRequest.getString("status"), is(CLOSED_UNFILLED));
@@ -1006,7 +1033,7 @@ public class RequestExpirationApiTest extends ApiTests {
 
   @Test
   @SneakyThrows
-  public void shouldOnlyExpireRequestsForSpecifiedTenant() {
+  void shouldOnlyExpireRequestsForSpecifiedTenant() {
     UUID firstRequestId = UUID.randomUUID();
     UUID firstItemId = UUID.randomUUID();
     UUID secondRequestId = UUID.randomUUID();
@@ -1049,7 +1076,7 @@ public class RequestExpirationApiTest extends ApiTests {
   }
 
   @Test
-  public void shouldRecalculateQueueAfterRequestExpirationWhenNoPositionRequestExists()
+  void shouldRecalculateQueueAfterRequestExpirationWhenNoPositionRequestExists()
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
       circulationSettingsHelper.changeTlrSettings(true);
@@ -1139,6 +1166,24 @@ public class RequestExpirationApiTest extends ApiTests {
       Request original = payload.getJsonObject(REQUESTS.value()).getJsonObject(ORIGINAL.value()).mapTo(Request.class);
       Request updated = payload.getJsonObject(REQUESTS.value()).getJsonObject(UPDATED.value()).mapTo(Request.class);
       assertThat(original.getStatus(), not(equalTo(updated.getStatus())));
+    });
+  }
+
+  private static void assertDomainEvents(List<Pair<UUID, String>> expectedRequestsIds) {
+    expectedRequestsIds.forEach(assertPair -> {
+      var requestEvents = Awaitility.await().atMost(10, TimeUnit.SECONDS)
+          .until(() -> getRequestEvents(assertPair.getLeft().toString()), hasSize(2));
+      var actualRequestEvent = new ArrayList<>(emptyIfNull(requestEvents)).get(1);
+
+      assertThat(actualRequestEvent, notNullValue());
+      JsonObject value = actualRequestEvent.value();
+      assertThat(value.getString("type"), is(UPDATED.name()));
+
+      JsonObject data =  value.getJsonObject("data");
+      Request original = data.getJsonObject("old").mapTo(Request.class);
+      Request updated = data.getJsonObject("new").mapTo(Request.class);
+      assertThat(original.getStatus(), not(equalTo(updated.getStatus())));
+      assertThat(updated.getStatus().value(), is(assertPair.getRight()));
     });
   }
 

@@ -10,7 +10,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.text.MatchesPattern.matchesPattern;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.MalformedURLException;
 import java.util.UUID;
@@ -26,31 +26,31 @@ import org.folio.rest.support.http.AssertingRecordClient;
 import org.folio.rest.support.http.InterfaceUrls;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import io.vertx.core.json.JsonObject;
 
-public class CheckInStorageApiTest extends ApiTests {
+class CheckInStorageApiTest extends ApiTests {
   private static final String TABLE_NAME = "check_in";
 
   private final AssertingRecordClient checkInClient =
     new AssertingRecordClient(client, StorageTestSuite.TENANT_ID,
       InterfaceUrls::checkInsStorageUrl, "checkIns");
 
-  @Before
-  public void beforeEach() {
+  @BeforeEach
+  void beforeEach() {
     StorageTestSuite.cleanUpTable(TABLE_NAME);
   }
 
-  @After
-  public void checkIdsAfterEach() {
+  @AfterEach
+  void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs(TABLE_NAME);
   }
 
   @Test
-  public void canCreateCheckIn() throws InterruptedException,
+  void canCreateCheckIn() throws InterruptedException,
     ExecutionException, TimeoutException, MalformedURLException {
 
     JsonObject checkInToCreate = createSampleCheckIn().create();
@@ -63,7 +63,7 @@ public class CheckInStorageApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateRecordWithoutId() throws InterruptedException,
+  void canCreateRecordWithoutId() throws InterruptedException,
     ExecutionException, TimeoutException, MalformedURLException {
 
     JsonObject checkInToCreate = createSampleCheckIn()
@@ -78,7 +78,7 @@ public class CheckInStorageApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotCreateCheckInIfRequiredPropertyMissing() throws InterruptedException,
+  void cannotCreateCheckInIfRequiredPropertyMissing() throws InterruptedException,
     ExecutionException, TimeoutException, MalformedURLException {
 
     UUID recordId = UUID.randomUUID();
@@ -94,7 +94,7 @@ public class CheckInStorageApiTest extends ApiTests {
   }
 
   @Test
-  public void canFilterCheckInsByProperties()
+  void canFilterCheckInsByProperties()
     throws InterruptedException, ExecutionException, TimeoutException,
     MalformedURLException {
 
@@ -146,7 +146,7 @@ public class CheckInStorageApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotUseNegativeOffsetForSearch()
+  void cannotUseNegativeOffsetForSearch()
     throws InterruptedException, ExecutionException, TimeoutException,
     MalformedURLException {
 
@@ -159,7 +159,7 @@ public class CheckInStorageApiTest extends ApiTests {
   }
 
   @Test
-  public void canGetCheckInById() throws InterruptedException,
+  void canGetCheckInById() throws InterruptedException,
     ExecutionException, TimeoutException, MalformedURLException {
 
     JsonObject checkInToCreate = createSampleCheckIn().create();
@@ -172,7 +172,7 @@ public class CheckInStorageApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotGetCheckInByIdIfDoesNotExists() throws InterruptedException,
+  void cannotGetCheckInByIdIfDoesNotExists() throws InterruptedException,
     ExecutionException, TimeoutException, MalformedURLException {
 
     JsonResponse checkInById = checkInClient.attemptGetById(UUID.randomUUID());
@@ -181,7 +181,7 @@ public class CheckInStorageApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateRecordWithoutOptionalParameters() throws InterruptedException,
+  void canCreateRecordWithoutOptionalParameters() throws InterruptedException,
     ExecutionException, TimeoutException, MalformedURLException {
 
     JsonObject checkInToCreate = createSampleCheckIn()
@@ -198,7 +198,7 @@ public class CheckInStorageApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotCreateRecordWithNegativeRequestQueueSize() throws InterruptedException,
+  void cannotCreateRecordWithNegativeRequestQueueSize() throws InterruptedException,
     ExecutionException, TimeoutException, MalformedURLException {
 
     UUID recordId = UUID.randomUUID();

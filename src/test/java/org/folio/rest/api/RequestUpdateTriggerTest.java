@@ -1,21 +1,29 @@
 package org.folio.rest.api;
 
 
+import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
+import static org.folio.rest.jaxrs.model.Request.Status.fromValue;
+import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
 
-import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
-import static org.folio.rest.jaxrs.model.Request.Status.fromValue;
-import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
-
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import org.folio.rest.jaxrs.model.Request;
+import org.folio.rest.persist.PostgresClient;
+import org.joda.time.DateTime;
+import org.joda.time.Seconds;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -24,32 +32,17 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import lombok.SneakyThrows;
 
-import org.joda.time.DateTime;
-import org.joda.time.Seconds;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
-
-import org.folio.rest.jaxrs.model.Request;
-import org.folio.rest.persist.PostgresClient;
-
 class RequestUpdateTriggerTest {
 
   private static final String REQUEST_TABLE = "request";
   private static PostgresClient pgClient;
 
   @BeforeAll
-  static void beforeAll() throws InterruptedException, ExecutionException, TimeoutException, IOException {
-    StorageTestSuite.before();
+  static void beforeAll() throws InterruptedException, ExecutionException, TimeoutException {
+    if (StorageTestSuite.isNotInitialised()) {
+      StorageTestSuite.before();
+    }
     pgClient = PostgresClient.getInstance(StorageTestSuite.getVertx(), StorageTestSuite.TENANT_ID);
-  }
-
-  @AfterAll
-  static void afterAll() throws InterruptedException, ExecutionException, TimeoutException {
-    StorageTestSuite.after();
   }
 
   @BeforeEach
@@ -149,14 +142,14 @@ class RequestUpdateTriggerTest {
   private Future<Void> saveRequest(String id, Request request) {
 
     Promise<String> promise = Promise.promise();
-    pgClient.save(REQUEST_TABLE, id, request, promise);
+    pgClient.save(REQUEST_TABLE, id, request, promise::handle);
 
     return promise.future().map(s -> null);
   }
 
   private Future<Void> updateRequest(String id, Request request) {
     Promise<RowSet<Row>> promise = Promise.promise();
-    pgClient.update(REQUEST_TABLE, request, id, promise);
+    pgClient.update(REQUEST_TABLE, request, id, promise::handle);
 
     return promise.future().map(ur -> null);
   }
@@ -164,7 +157,7 @@ class RequestUpdateTriggerTest {
   private Future<JsonObject> getRequest(String id) {
 
     Promise<JsonObject> promise = Promise.promise();
-    pgClient.getById(REQUEST_TABLE, id, promise);
+    pgClient.getById(REQUEST_TABLE, id, promise::handle);
 
     return promise.future();
   }

@@ -25,13 +25,13 @@ public class PgClientFutureAdapter {
 
   public Future<RowSet<Row>> select(String sql) {
     final Promise<RowSet<Row>> promise = Promise.promise();
-    client.selectRead(sql, 0, promise);
+    client.selectRead(sql, 0, promise::handle);
     return promise.future();
   }
 
   public Future<RowSet<Row>> execute(String sql) {
     Promise<RowSet<Row>> promise = Promise.promise();
-    client.execute(sql, promise);
+    client.execute(sql, promise::handle);
     return promise.future();
   }
 }

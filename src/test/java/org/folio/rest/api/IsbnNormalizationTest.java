@@ -5,7 +5,6 @@ import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.storageUrl;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.MalformedURLException;
@@ -21,8 +20,8 @@ import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.RequestItemSummary;
 import org.folio.rest.support.builders.RequestRequestBuilder;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -32,19 +31,19 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
 import lombok.SneakyThrows;
 
-public class IsbnNormalizationTest extends ApiTests {
+class IsbnNormalizationTest extends ApiTests {
   private static final String REQUEST_STORAGE_URL = "/request-storage/requests";
   private final UUID isbnIdentifierId = UUID.fromString("8261054f-be78-422d-bd51-4ed9f33c3422");
 
   @SneakyThrows
-  @Before
-  public void beforeEach() {
+  @BeforeEach
+  void beforeEach() {
     StorageTestSuite.deleteAll(storageUrl(REQUEST_STORAGE_URL));
   }
 
   @SneakyThrows
   @Test
-  public void canSearchForFirstIsbnWithAdditionalHyphens() {
+  void canSearchForFirstIsbnWithAdditionalHyphens() {
     createRequests("Interesting Times", "Uprooted");
 
     find("itemIsbn = 0-552-16754-1", "Interesting Times");
@@ -52,7 +51,7 @@ public class IsbnNormalizationTest extends ApiTests {
 
   @SneakyThrows
   @Test
-  public void canSearchForFirstIsbnWithAdditionalHyphenAndTruncation() {
+  void canSearchForFirstIsbnWithAdditionalHyphenAndTruncation() {
     createRequests("Interesting Times", "Uprooted");
 
     find("itemIsbn = 05-5*", "Interesting Times");
@@ -60,7 +59,7 @@ public class IsbnNormalizationTest extends ApiTests {
 
   @SneakyThrows
   @Test
-  public void canSearchForSecondIsbnWithMissingHyphens() {
+  void canSearchForSecondIsbnWithMissingHyphens() {
     createRequests("Interesting Times", "Uprooted");
 
     find("itemIsbn = 9780552167543", "Interesting Times");
@@ -68,15 +67,15 @@ public class IsbnNormalizationTest extends ApiTests {
 
   @SneakyThrows
   @Test
-  public void canSearchForSecondIsbnWithMissingHyphensAndTrunation() {
+  void canSearchForSecondIsbnWithMissingHyphensAndTrunation() {
     createRequests("Interesting Times", "Temeraire", "Uprooted");
 
-    find("itemIsbn = 9780*", "Interesting Times", "Temeraire");  
+    find("itemIsbn = 9780*", "Interesting Times", "Temeraire");
   }
 
   @SneakyThrows
   @Test
-  public void canSearchForSecondIsbnWithAlteredHyphens() {
+  void canSearchForSecondIsbnWithAlteredHyphens() {
     createRequests("Interesting Times", "Temeraire");
 
     find("itemIsbn = 9-7-8-055-2167-543", "Interesting Times");
@@ -84,7 +83,7 @@ public class IsbnNormalizationTest extends ApiTests {
 
   @SneakyThrows
   @Test
-  public void cannotFindIsbnWithTailString() {
+  void cannotFindIsbnWithTailString() {
     createRequests("Interesting Times");
 
     find("itemIsbn = 552-16754-3");
@@ -92,13 +91,13 @@ public class IsbnNormalizationTest extends ApiTests {
 
   @SneakyThrows
   @Test
-  public void cannotFindIsbnWithInnerStringAndTruncation() {
+  void cannotFindIsbnWithInnerStringAndTruncation() {
     createRequests("Interesting Times");
 
     find("itemIsbn = 552*");
   }
 
-  private void find(String cql, String ... expectedTitles) 
+  private void find(String cql, String ... expectedTitles)
    throws MalformedURLException, InterruptedException, TimeoutException, ExecutionException {
 
     JsonObject searchBody = searchForRequests(cql);
@@ -124,7 +123,7 @@ public class IsbnNormalizationTest extends ApiTests {
     .equals(titleToMatch);
   }
 
-  private JsonObject searchForRequests(String cql) 
+  private JsonObject searchForRequests(String cql)
     throws MalformedURLException, InterruptedException, TimeoutException, ExecutionException {
 
     CompletableFuture<Response> searchCompleted = new CompletableFuture<>();

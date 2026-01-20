@@ -46,19 +46,17 @@ import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
 import org.joda.time.DateTime;
 import org.joda.time.Seconds;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
 
-@RunWith(JUnitParamsRunner.class)
-public class RequestPoliciesApiTest extends ApiTests {
+class RequestPoliciesApiTest extends ApiTests {
 
   private static final int CONNECTION_TIMEOUT = 5;
   private static final String DEFAULT_REQUEST_POLICY_NAME = "default_request_policy";
@@ -66,13 +64,13 @@ public class RequestPoliciesApiTest extends ApiTests {
   private static final String INVALID_ALLOWED_SERVICE_POINT_ERROR_CODE = "INVALID_ALLOWED_SERVICE_POINT";
   private static int REQ_POLICY_NAME_INCR = 0;  //This number is appended to the name of the default request policy to ensure uniqueness
 
-  @Before
-  public void beforeEach() {
+  @BeforeEach
+  void beforeEach() {
     truncateTables("request_policy");
   }
 
   @Test
-  public void canCreateARequestPolicy()
+  void canCreateARequestPolicy()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -82,7 +80,7 @@ public class RequestPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateRequestPolicyWithoutUID()
+  void canCreateRequestPolicyWithoutUID()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -93,7 +91,7 @@ public class RequestPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotCreateRequestPolicyWithoutName()
+  void cannotCreateRequestPolicyWithoutName()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -123,7 +121,7 @@ public class RequestPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotCreateRequestPolicyWithExistingName()
+  void cannotCreateRequestPolicyWithExistingName()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -159,7 +157,7 @@ public class RequestPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotCreateRequestPolicyWithBadUID()
+  void cannotCreateRequestPolicyWithBadUID()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -188,7 +186,7 @@ public class RequestPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void canGetRequestPolicies()
+  void canGetRequestPolicies()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -215,7 +213,7 @@ public class RequestPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void canGetRequestPoliciesByIdUsingQuery()
+  void canGetRequestPoliciesByIdUsingQuery()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -241,7 +239,7 @@ public class RequestPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotGetRequestPoliciesByUsingNegativeLimit()
+  void cannotGetRequestPoliciesByUsingNegativeLimit()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -262,7 +260,7 @@ public class RequestPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotGetRequestPoliciesByUsingNegativeOffset()
+  void cannotGetRequestPoliciesByUsingNegativeOffset()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -283,7 +281,7 @@ public class RequestPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotGetRequestPolicyByNonExistentName()
+  void cannotGetRequestPolicyByNonExistentName()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -305,7 +303,7 @@ public class RequestPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void canGetRequestPolicyByName()
+  void canGetRequestPolicyByName()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -333,7 +331,7 @@ public class RequestPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void canGetRequestPolicyById()
+  void canGetRequestPolicyById()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -357,7 +355,7 @@ public class RequestPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotGetRequestPoliciesByNonexistingId()
+  void cannotGetRequestPoliciesByNonexistingId()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -378,7 +376,7 @@ public class RequestPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void canDeleteRequestPolicies()
+  void canDeleteRequestPolicies()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -421,7 +419,7 @@ public class RequestPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void canDeleteRequestPoliciesById()
+  void canDeleteRequestPoliciesById()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -461,7 +459,7 @@ public class RequestPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotDeleteRequestPoliciesByNonExistingId()
+  void cannotDeleteRequestPoliciesByNonExistingId()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -478,7 +476,7 @@ public class RequestPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void canUpdateRequestPolicy()
+  void canUpdateRequestPolicy()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -517,7 +515,7 @@ public class RequestPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotUpdateRequestPolicyWithWrongId()
+  void cannotUpdateRequestPolicyWithWrongId()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -545,7 +543,7 @@ public class RequestPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotUpdateRequestPolicyToExistingPolicyName()
+  void cannotUpdateRequestPolicyToExistingPolicyName()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -578,7 +576,7 @@ public class RequestPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void cannotUpdateRequestPolicyWithoutName()
+  void cannotUpdateRequestPolicyWithoutName()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -609,7 +607,7 @@ public class RequestPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void canUpdateRequestPolicyWithNewId()
+  void canUpdateRequestPolicyWithNewId()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -637,7 +635,7 @@ public class RequestPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void createdRequestHasCreationMetadata()
+  void createdRequestHasCreationMetadata()
     throws InterruptedException,
     MalformedURLException,
     TimeoutException,
@@ -687,7 +685,7 @@ public class RequestPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void canCreateRequestPolicyWithNoAllowedServicePoints()
+  void canCreateRequestPolicyWithNoAllowedServicePoints()
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
     RequestPolicy policy = new RequestPolicy()
@@ -699,9 +697,9 @@ public class RequestPoliciesApiTest extends ApiTests {
     assertThat(response.getJson().getJsonObject("allowedServicePoints"), emptyIterable());
   }
 
-  @Test
-  @Parameters(source = RequestType.class)
-  public void canCreateRequestPolicyWithNullListOfAllowedServicePoints(RequestType requestType)
+  @ParameterizedTest
+  @EnumSource(RequestType.class)
+  void canCreateRequestPolicyWithNullListOfAllowedServicePoints(RequestType requestType)
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
     RequestPolicy policy = new RequestPolicy()
@@ -715,9 +713,9 @@ public class RequestPoliciesApiTest extends ApiTests {
     assertThat(response.getJson().getJsonObject("allowedServicePoints"), emptyIterable());
   }
 
-  @Test
-  @Parameters(source = RequestType.class)
-  public void canCreateRequestPolicyWithAllowedServicePoints(RequestType requestType)
+  @ParameterizedTest
+  @EnumSource(RequestType.class)
+  void canCreateRequestPolicyWithAllowedServicePoints(RequestType requestType)
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
     String servicePointId = randomId();
@@ -729,9 +727,9 @@ public class RequestPoliciesApiTest extends ApiTests {
     assertThat(response, isCreated());
   }
 
-  @Test
-  @Parameters(source = RequestType.class)
-  public void canNotCreateRequestPolicyWithEmptyListOfAllowedServicePoints(RequestType requestType)
+  @ParameterizedTest
+  @EnumSource(RequestType.class)
+  void canNotCreateRequestPolicyWithEmptyListOfAllowedServicePoints(RequestType requestType)
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
     JsonResponse response = createRequestPolicy(buildRequestPolicy(requestType, emptyList()));
@@ -740,9 +738,9 @@ public class RequestPoliciesApiTest extends ApiTests {
       containsString("size must be between 1 and 2147483647"));
   }
 
-  @Test
-  @Parameters(source = RequestType.class)
-  public void duplicateAllowedServicePointIdsAreRemoved(RequestType requestType)
+  @ParameterizedTest
+  @EnumSource(RequestType.class)
+  void duplicateAllowedServicePointIdsAreRemoved(RequestType requestType)
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
     String servicePointId = randomId();
@@ -762,9 +760,9 @@ public class RequestPoliciesApiTest extends ApiTests {
     assertThat(allowedServicePoints.getString(0), is(servicePointId));
   }
 
-  @Test
-  @Parameters(source = RequestType.class)
-  public void canNotCreateRequestPolicyWithNonExistentAllowedServicePoint(RequestType requestType)
+  @ParameterizedTest
+  @EnumSource(RequestType.class)
+  void canNotCreateRequestPolicyWithNonExistentAllowedServicePoint(RequestType requestType)
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
     createStubForServicePoints(emptyList());
@@ -778,9 +776,9 @@ public class RequestPoliciesApiTest extends ApiTests {
     )));
   }
 
-  @Test
-  @Parameters(source = RequestType.class)
-  public void canNotUpdateRequestPolicyWithNonExistentAllowedServicePoint(RequestType requestType)
+  @ParameterizedTest
+  @EnumSource(RequestType.class)
+  void canNotUpdateRequestPolicyWithNonExistentAllowedServicePoint(RequestType requestType)
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
     createStubForServicePoints(emptyList());
@@ -794,9 +792,9 @@ public class RequestPoliciesApiTest extends ApiTests {
     )));
   }
 
-  @Test
-  @Parameters(source = RequestType.class)
-  public void canNotCreateRequestPolicyWithNonPickupLocationServicePoint(RequestType requestType)
+  @ParameterizedTest
+  @EnumSource(RequestType.class)
+  void canNotCreateRequestPolicyWithNonPickupLocationServicePoint(RequestType requestType)
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
     final String servicePointId = randomId();
@@ -814,9 +812,9 @@ public class RequestPoliciesApiTest extends ApiTests {
     )));
   }
 
-  @Test
-  @Parameters(source = RequestType.class)
-  public void canNotUpdateRequestPolicyWithNonPickupLocationServicePoint(RequestType requestType)
+  @ParameterizedTest
+  @EnumSource(RequestType.class)
+  void canNotUpdateRequestPolicyWithNonPickupLocationServicePoint(RequestType requestType)
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
     final String servicePointId = randomId();
@@ -834,10 +832,10 @@ public class RequestPoliciesApiTest extends ApiTests {
     )));
   }
 
-  @Test
-  @Parameters(source = RequestType.class)
-  public void canNotCreateRequestPolicyWhenAllowedServicePointHasNullPickupLocation(
-    RequestType requestType) throws MalformedURLException, ExecutionException, InterruptedException,
+  @ParameterizedTest
+  @EnumSource(RequestType.class)
+  void canNotCreateRequestPolicyWhenAllowedServicePointHasNullPickupLocation(RequestType requestType)
+    throws MalformedURLException, ExecutionException, InterruptedException,
     TimeoutException {
 
     final String servicePointId = randomId();
@@ -855,10 +853,10 @@ public class RequestPoliciesApiTest extends ApiTests {
     )));
   }
 
-  @Test
-  @Parameters(source = RequestType.class)
-  public void canNotUpdateRequestPolicyWhenAllowedServicePointHasNullPickupLocation(
-    RequestType requestType) throws MalformedURLException, ExecutionException, InterruptedException,
+  @ParameterizedTest
+  @EnumSource(RequestType.class)
+  void canNotUpdateRequestPolicyWhenAllowedServicePointHasNullPickupLocation(RequestType requestType)
+    throws MalformedURLException, ExecutionException, InterruptedException,
     TimeoutException {
 
     final String servicePointId = randomId();
@@ -877,7 +875,7 @@ public class RequestPoliciesApiTest extends ApiTests {
   }
 
   @Test
-  public void singleErrorIsReturnedWhenUsingMultipleInvalidServicePointIds()
+  void singleErrorIsReturnedWhenUsingMultipleInvalidServicePointIds()
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
     String nonExistentServicePointId = randomId();
@@ -913,10 +911,10 @@ public class RequestPoliciesApiTest extends ApiTests {
     )));
   }
 
-  @Test
-  @Parameters(source = RequestType.class)
-  public void requestPolicyIsCreatedAndUpdatedWhenAllowedServicePointContainsStaffSlipsConfiguration(
-    RequestType requestType) throws MalformedURLException, ExecutionException, InterruptedException,
+  @ParameterizedTest
+  @EnumSource(RequestType.class)
+  void requestPolicyIsCreatedAndUpdatedWhenAllowedServicePointContainsStaffSlipsConfiguration(RequestType requestType)
+    throws MalformedURLException, ExecutionException, InterruptedException,
     TimeoutException {
 
     String servicePointId = randomId();

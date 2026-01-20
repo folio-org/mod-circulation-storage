@@ -5,12 +5,10 @@ import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.http.InterfaceUrls.anonymizeLoansURL;
 import static org.folio.rest.support.matchers.LoanMatchers.isAnonymized;
-import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.everyItem;
-import static org.hamcrest.Matchers.iterableWithSize;
 import static org.hamcrest.core.Is.is;
-import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import java.net.MalformedURLException;
 import java.util.Collection;
@@ -27,14 +25,14 @@ import org.folio.rest.support.builders.LoanRequestBuilder;
 import org.folio.rest.support.http.AssertingRecordClient;
 import org.folio.rest.support.http.InterfaceUrls;
 import org.folio.rest.support.matchers.LoanHistoryMatchers;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-public class AnonymizeLoansApiTest extends ApiTests {
+class AnonymizeLoansApiTest extends ApiTests {
   private final AssertingRecordClient loansClient = new AssertingRecordClient(
     client, TENANT_ID, InterfaceUrls::loanStorageUrl, "loans");
   private final AssertingRecordClient loanHistoryClient = new AssertingRecordClient(
@@ -43,8 +41,8 @@ public class AnonymizeLoansApiTest extends ApiTests {
   private final String firstLoanId = UUID.randomUUID().toString();
   private final String secondLoanId = UUID.randomUUID().toString();
 
-  @Before
-  public void beforeEach() throws MalformedURLException, InterruptedException,
+  @BeforeEach
+  void beforeEach() throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
     StorageTestSuite.deleteAll(InterfaceUrls.loanStorageUrl());
@@ -67,14 +65,14 @@ public class AnonymizeLoansApiTest extends ApiTests {
     loansClient.replace(secondLoanId, LoanRequestBuilder.from(loan2).checkedIn());
   }
 
-  @After
-  public void checkIdsAfterEach() {
+  @AfterEach
+  void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("loan");
     StorageTestSuite.checkForMismatchedIDs("audit_loan");
   }
 
   @Test
-  public void canAnonymizeLoans() throws InterruptedException, ExecutionException,
+  void canAnonymizeLoans() throws InterruptedException, ExecutionException,
     TimeoutException, MalformedURLException {
 
     final var response = anonymizeLoans(firstLoanId, secondLoanId);
@@ -92,14 +90,14 @@ public class AnonymizeLoansApiTest extends ApiTests {
   }
 
   @Test
-  public void canNotAnonymizeEmptyList() throws MalformedURLException {
+  void canNotAnonymizeEmptyList() throws MalformedURLException {
     JsonResponse response = attemptAnonymizeLoans();
 
     assertThat(response.getStatusCode(), is(422));
   }
 
   @Test
-  public void canAnonymizeInvalidAndValidUuids() throws MalformedURLException {
+  void canAnonymizeInvalidAndValidUuids() throws MalformedURLException {
     final String firstNotValidId = "not valid";
     final String secondNotValidId = "null";
 

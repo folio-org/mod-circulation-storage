@@ -31,6 +31,7 @@ import org.folio.rest.persist.PostgresClient;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
@@ -124,7 +125,9 @@ abstract class AbstractRequestMigrationService<T extends RequestMigrationContext
   }
 
   private Future<RowSet<Row>> selectRead(String sql) {
-    return Future.future(promise -> postgresClient.selectRead(sql, 0, promise));
+    Promise<RowSet<Row>> promise = Promise.promise();
+    postgresClient.selectRead(sql, 0, promise::handle);
+    return promise.future();
   }
 
   public Future<Void> migrateRequests(int batchCount) {

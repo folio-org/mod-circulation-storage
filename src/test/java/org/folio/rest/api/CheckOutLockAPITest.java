@@ -12,15 +12,15 @@ import org.folio.rest.support.MultipleRecords;
 import org.folio.rest.support.TextResponse;
 import org.folio.rest.support.http.AssertingRecordClient;
 import org.folio.rest.support.http.InterfaceUrls;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
-public class CheckOutLockAPITest extends ApiTests {
+class CheckOutLockAPITest extends ApiTests {
 
   private static final String CHECK_OUT_LOCK_TABLE = "check_out_lock";
 
@@ -30,14 +30,14 @@ public class CheckOutLockAPITest extends ApiTests {
 
   private final ObjectMapper objectMapper = new ObjectMapper();
 
-  @Before
-  public void beforeEach() throws Exception {
+  @BeforeEach
+  void beforeEach() throws Exception {
     StorageTestSuite.cleanUpTable(CHECK_OUT_LOCK_TABLE);
   }
 
   @SneakyThrows
   @Test
-  public void canCreateCheckOutLock() {
+  void canCreateCheckOutLock() {
 
     String userId1 = UUID.randomUUID().toString();
     JsonObject checkOutLock1 = toJsonObject(createCheckoutLockRequest(userId1, 1000));
@@ -63,7 +63,7 @@ public class CheckOutLockAPITest extends ApiTests {
 
   @SneakyThrows
   @Test
-  public void canGetCheckOutLock() {
+  void canGetCheckOutLock() {
     String userId1 = UUID.randomUUID().toString();
     JsonObject checkOutLock1 = toJsonObject(createCheckoutLockRequest(userId1, 1000));
     JsonResponse response = checkOutLockClient.attemptCreate(checkOutLock1);
@@ -82,7 +82,7 @@ public class CheckOutLockAPITest extends ApiTests {
 
   @SneakyThrows
   @Test
-  public void canGetCheckoutLocksByQueryParams() {
+  void canGetCheckoutLocksByQueryParams() {
     String userId1 = UUID.randomUUID().toString();
     JsonObject checkOutLock1 = toJsonObject(createCheckoutLockRequest(userId1, 1000));
     JsonResponse response1 = checkOutLockClient.attemptCreate(checkOutLock1);
@@ -100,7 +100,7 @@ public class CheckOutLockAPITest extends ApiTests {
 
   @SneakyThrows
   @Test
-  public void canDeleteCheckOutLock() {
+  void canDeleteCheckOutLock() {
     String userId1 = UUID.randomUUID().toString();
     JsonObject checkOutLock1 = toJsonObject(createCheckoutLockRequest(userId1, 1000));
     JsonResponse response1 = checkOutLockClient.attemptCreate(checkOutLock1);

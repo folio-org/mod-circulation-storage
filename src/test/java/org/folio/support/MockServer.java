@@ -44,26 +44,19 @@ public class MockServer extends AbstractVerticle {
   public void start() throws InterruptedException, ExecutionException, TimeoutException {
     HttpServer server = vertx.createHttpServer();
     CompletableFuture<HttpServer> deploymentComplete = new CompletableFuture<>();
-    server.requestHandler(register()).listen(port, result -> {
-      if(result.succeeded()) {
-        deploymentComplete.complete(result.result());
-      }
-      else {
-        deploymentComplete.completeExceptionally(result.cause());
-      }
-    });
+    server.requestHandler(register()).listen(port)
+      .onSuccess(deploymentComplete::complete)
+      .onFailure(deploymentComplete::completeExceptionally);
     deploymentComplete.get(30, TimeUnit.SECONDS);
   }
 
   public void close() {
-    vertx.close(res -> {
-      if (res.failed()) {
-        logger.error("Failed to shut down mock server", res.cause());
-        fail(res.cause().getMessage());
-      } else {
-        logger.info("Successfully shut down mock server");
-      }
-    });
+    vertx.close()
+      .onSuccess(res -> logger.info("Successfully shut down mock server"))
+      .onFailure(cause -> {
+        logger.error("Failed to shut down mock server", cause);
+        fail(cause.getMessage());
+      });
   }
 
   public Router register() {
@@ -74,7 +67,7 @@ public class MockServer extends AbstractVerticle {
 
     router.post("/pubsub/publish")
       .handler(routingContext -> {
-          publishedEvents.add(routingContext.getBodyAsJson());
+          publishedEvents.add(routingContext.body().asJsonObject());
           routingContext.response()
             .setStatusCode(HTTP_NO_CONTENT.toInt())
             .end();
@@ -99,9 +92,9 @@ public class MockServer extends AbstractVerticle {
                                  List<JsonObject> requestBodyList) {
 
     if (requestBodyList != null) {
-      requestBodyList.add(routingContext.getBodyAsJson());
+      requestBodyList.add(routingContext.body().asJsonObject());
     }
-    String json = routingContext.getBodyAsJson().encodePrettily();
+    String json = routingContext.body().asJsonObject().encodePrettily();
     Buffer buffer = Buffer.buffer(json, "UTF-8");
     routingContext.response()
       .setStatusCode(HTTP_CREATED.toInt())
@@ -111,7 +104,7 @@ public class MockServer extends AbstractVerticle {
   }
 
   private static void deleteTenant(RoutingContext routingContext) {
-    deletedEventTypes.add(Arrays.asList(routingContext.normalisedPath().split("/")).get(3));
+    deletedEventTypes.add(Arrays.asList(routingContext.normalizedPath().split("/")).get(3));
 
     routingContext.response()
       .setStatusCode(HTTP_NO_CONTENT.toInt())

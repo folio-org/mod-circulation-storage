@@ -1,6 +1,6 @@
 package org.folio.rest.api.migration;
 
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -11,8 +11,8 @@ import org.folio.rest.api.StorageTestSuite;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
 import org.hamcrest.core.Is;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -26,13 +26,13 @@ public class StaffSlipsTransitMediatedRequestsMigrationScriptTest extends StaffS
   private static final String STAFF_SLIP_NAME = "Transit (mediated requests)";
   private static final int TIMEOUT_VALUE = 5;
 
-  @Before
-  public void beforeEach() throws MalformedURLException {
+  @BeforeEach
+  void beforeEach() throws MalformedURLException {
     StorageTestSuite.deleteAll(staffSlipsStorageUrl(STAFF_SLIPS_SUB_PATH));
   }
 
   @Test
-  public void canMigrateStaffSlips() throws Exception {
+  void canMigrateStaffSlips() throws Exception {
     executeMultipleSqlStatements(loadScript(SCRIPT_NAME));
     CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
     client.get(staffSlipsStorageUrl(STAFF_SLIPS_SUB_PATH), StorageTestSuite.TENANT_ID,

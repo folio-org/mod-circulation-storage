@@ -97,7 +97,7 @@ public class AnonymizeStorageLoansAPI implements AnonymizeStorageLoans {
   private Future<RowSet<Row>> executeSql(PostgresClient postgresClient, String sql) {
     final Promise<RowSet<Row>> promise = Promise.promise();
 
-    postgresClient.execute(sql, promise);
+    postgresClient.execute(sql, promise::handle);
 
     return promise.future();
   }

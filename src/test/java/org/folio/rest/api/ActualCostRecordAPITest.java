@@ -30,14 +30,12 @@ import org.folio.rest.support.http.InterfaceUrls;
 import org.folio.rest.support.spring.TestContextConfiguration;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.rules.SpringClassRule;
-import org.springframework.test.context.junit4.rules.SpringMethodRule;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,13 +44,9 @@ import io.vertx.core.json.JsonObject;
 import lombok.SneakyThrows;
 
 @ContextConfiguration(classes = TestContextConfiguration.class)
-public class ActualCostRecordAPITest extends ApiTests {
+@ExtendWith(SpringExtension.class)
+class ActualCostRecordAPITest extends ApiTests {
   private static final String ACTUAL_COST_RECORD_TABLE = "actual_cost_record";
-
-  @ClassRule
-  public static final SpringClassRule classRule = new SpringClassRule();
-  @Rule
-  public final SpringMethodRule methodRule = new SpringMethodRule();
 
   @Autowired
   private ObjectMapper objectMapper;
@@ -61,14 +55,14 @@ public class ActualCostRecordAPITest extends ApiTests {
     new AssertingRecordClient(client, StorageTestSuite.TENANT_ID,
       InterfaceUrls::actualCostRecord, "actualCostRecords");
 
-  @Before
-  public void beforeEach() throws Exception {
+  @BeforeEach
+  void beforeEach() {
     StorageTestSuite.cleanUpTable(ACTUAL_COST_RECORD_TABLE);
   }
 
   @Test
   @SneakyThrows
-  public void canCreateAndGetAndDeleteActualCostRecords() {
+  void canCreateAndGetAndDeleteActualCostRecords() {
     JsonObject actualCostRecord1 = toJsonObject(createActualCostRecord());
     JsonObject actualCostRecord2 = toJsonObject(createActualCostRecord());
     JsonObject createResult1 = actualCostRecordClient.create(actualCostRecord1).getJson();
@@ -92,7 +86,7 @@ public class ActualCostRecordAPITest extends ApiTests {
 
   @Test
   @SneakyThrows
-  public void canCreateAndGetAndUpdateActualCostRecord() {
+  void canCreateAndGetAndUpdateActualCostRecord() {
     JsonObject actualCostRecord = toJsonObject(createActualCostRecord());
     JsonObject createResult = actualCostRecordClient.create(actualCostRecord).getJson();
 
@@ -108,7 +102,7 @@ public class ActualCostRecordAPITest extends ApiTests {
 
   @Test
   @SneakyThrows
-  public void canCreateActualCostRecordWithDefaultStatus() {
+  void canCreateActualCostRecordWithDefaultStatus() {
     JsonObject recordWithoutStatus = toJsonObject(createActualCostRecord().withStatus(null));
     JsonObject postResponse = actualCostRecordClient.create(recordWithoutStatus).getJson();
     assertThat(postResponse.getString("status"), is("Open"));
@@ -124,7 +118,7 @@ public class ActualCostRecordAPITest extends ApiTests {
 
   @Test
   @SneakyThrows
-  public void canNotCreateActualCostRecordWithNegativeBilledAmount() {
+  void canNotCreateActualCostRecordWithNegativeBilledAmount() {
     ActualCostRecord actualCostRecord = createActualCostRecord();
     actualCostRecord.getFeeFine().setBilledAmount(-9.99);
     JsonResponse postResponse = actualCostRecordClient.attemptCreate(toJsonObject(actualCostRecord));

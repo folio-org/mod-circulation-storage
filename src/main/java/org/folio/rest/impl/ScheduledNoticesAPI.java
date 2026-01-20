@@ -49,10 +49,8 @@ public class ScheduledNoticesAPI implements ScheduledNoticeStorage {
   @Validate
   @Override
   public void deleteScheduledNoticeStorageScheduledNotices(String query,
-                                                           Map<String, String> okapiHeaders,
-                                                           Handler<AsyncResult<Response>> asyncResultHandler,
-                                                           Context vertxContext) {
-
+     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+     Context vertxContext) {
 
       PostgresClient pgClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
 
