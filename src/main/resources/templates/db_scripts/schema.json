@@ -167,6 +167,7 @@
       "tableName": "request",
       "withMetadata": true,
       "withAuditing": false,
+      "withOptimisticLocking": "logOnConflict",
       "foreignKeys": [
         {
           "fieldName": "cancellationReasonId",
