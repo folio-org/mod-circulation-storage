@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import io.vertx.core.Future;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,6 +25,7 @@ import org.folio.rest.jaxrs.model.Servicepoint;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 
 public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request> {
@@ -53,6 +53,8 @@ public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request>
   protected Future<List<Change<Request>>> collectRelevantChanges(JsonObject payload) {
     JsonObject oldObject = payload.getJsonObject("old");
     JsonObject newObject = payload.getJsonObject("new");
+    log.info("old: {}", oldObject);
+    log.info("new: {}", newObject);
 
     List<Change<Request>> changes = new ArrayList<>();
 
@@ -84,9 +86,17 @@ public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request>
       if (request.getItem() == null) {
         request.setItem(new Item());
       }
+      log.info("locationId: old: {}, new: {}", request.getItem().getItemEffectiveLocationId(),
+              locationAndSpData.get(ITEM_EFFECTIVE_LOCATION_ID));
       request.getItem().setItemEffectiveLocationId(locationAndSpData.get(ITEM_EFFECTIVE_LOCATION_ID));
+      log.info("locationName: old: {}, new: {}", request.getItem().getItemEffectiveLocationName(),
+              locationAndSpData.get(ITEM_EFFECTIVE_LOCATION_NAME));
       request.getItem().setItemEffectiveLocationName(locationAndSpData.get(ITEM_EFFECTIVE_LOCATION_NAME));
+      log.info("retrievalServicePointId: old: {}, new: {}", request.getItem().getRetrievalServicePointId(),
+              locationAndSpData.get(RETRIEVAL_SERVICE_POINT_ID));
       request.getItem().setRetrievalServicePointId(locationAndSpData.get(RETRIEVAL_SERVICE_POINT_ID));
+      log.info("retrievalServicePointName: old: {}, new: {}", request.getItem().getRetrievalServicePointName(),
+              locationAndSpData.get(RETRIEVAL_SERVICE_POINT_NAME));
       request.getItem().setRetrievalServicePointName(locationAndSpData.get(RETRIEVAL_SERVICE_POINT_NAME));
     }));
     return Future.succeededFuture(changes);

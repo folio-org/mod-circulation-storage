@@ -52,4 +52,5 @@ public class ItemUpdateEventHandler implements AsyncRecordHandler<String, String
         .onSuccess(delayedEventProcessing::complete));
     return delayedEventProcessing.future();
   }
+
 }
