@@ -79,7 +79,7 @@ public class EventConsumerVerticle extends AbstractVerticle {
     final KafkaConfig config = getKafkaConfig();
 
     return createInventoryEventConsumer(INVENTORY_ITEM_UPDATED, config,
-      new ItemUpdateEventHandler(context))
+      new ItemUpdateEventHandler(context, 3000))
       .compose(r -> createInventoryEventConsumer(INVENTORY_SERVICE_POINT_UPDATED, config,
         new ServicePointUpdateEventHandler(context)))
       .compose(r -> createInventoryEventConsumer(INVENTORY_SERVICE_POINT_DELETED, config,
