@@ -221,7 +221,8 @@ public class RequestService {
   private Future<Errors> handleCancellationReasonValidationError(String cancellationReasonId,
       Throwable throwable) {
 
-    log.error("Failed to validate cancellation reason: cancellationReasonId = {}",
+    log.error("handleCancellationReasonValidationError:: failed to validate cancellation reason: " +
+        "cancellationReasonId = {}",
       cancellationReasonId, throwable);
     return succeededFuture(createCancellationReasonNotFoundError(cancellationReasonId));
   }
