@@ -123,7 +123,7 @@ public class RequestService {
     return helper.upsertAndPublishEvents(requestId, request)
       .map(checkForSamePositionInQueueError(request))
       .otherwise(err -> {
-        log.error("Failed to store request: id = {}, request = [{}]",
+        log.error("upsertRequest:: failed to store request: id = {}, request = [{}]",
           requestId, helper.jsonStringOrEmpty(request), err);
 
         return ResponseUtil.internalErrorResponse(err);
@@ -210,7 +210,8 @@ public class RequestService {
   }
 
   private Errors createCancellationReasonNotFoundError(String cancellationReasonId) {
-    log.warn("Cancellation reason not found: cancellationReasonId = {}", cancellationReasonId);
+    log.warn("createCancellationReasonNotFoundError:: cancellation reason not found: " +
+      "cancellationReasonId = {}", cancellationReasonId);
     Error error = new Error()
       .withMessage("Cancellation reason does not exist")
       .withCode(ErrorCode.INVALID_CANCELLATION_REASON.name());
@@ -219,6 +220,7 @@ public class RequestService {
 
   private Future<Errors> handleCancellationReasonValidationError(String cancellationReasonId,
       Throwable throwable) {
+
     log.error("Failed to validate cancellation reason: cancellationReasonId = {}",
       cancellationReasonId, throwable);
     return succeededFuture(createCancellationReasonNotFoundError(cancellationReasonId));
