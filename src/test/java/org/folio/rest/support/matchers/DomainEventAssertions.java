@@ -131,6 +131,14 @@ public final class DomainEventAssertions {
       .until(() -> getRequestEvents(requestId), is(empty()));
   }
 
+  public static void assertNoUpdateEventForRequest(String requestId) {
+    await().during(1, SECONDS)
+      .until(() -> getRequestEvents(requestId).stream()
+        .filter(event -> DomainEventType.UPDATED.name().equals(
+          event.value().getString("type")))
+        .toList(), is(empty()));
+  }
+
   public static void assertUpdateEventForRequest(JsonObject oldRequest, JsonObject newRequest) {
     final String requestId = oldRequest.getString("id");
 

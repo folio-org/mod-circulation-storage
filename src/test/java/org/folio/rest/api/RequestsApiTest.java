@@ -16,10 +16,13 @@ import static org.folio.rest.support.clients.CqlQuery.exactMatch;
 import static org.folio.rest.support.clients.CqlQuery.fromTemplate;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForRequest;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoRequestEvent;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoUpdateEventForRequest;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForRequest;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForRequest;
+import static org.folio.rest.support.kafka.FakeKafkaConsumer.removeAllEvents;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.equivalentTo;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
+import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasCode;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasErrorWith;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessageContaining;
@@ -63,6 +66,7 @@ import org.folio.rest.support.builders.RequestRequestBuilder;
 import org.folio.rest.support.clients.ResourceClient;
 import org.folio.rest.support.dto.RequestDto;
 import org.folio.rest.support.spring.TestContextConfiguration;
+import org.folio.support.ErrorCode;
 import org.folio.util.StringUtil;
 import org.hamcrest.MatcherAssert;
 import org.joda.time.DateTime;
@@ -592,6 +596,90 @@ class RequestsApiTest extends ApiTests {
       .withCancellationReasonId(cancellationReasonId)
       .create(),
       requestStorageUrl());
+  }
+
+  @Test
+  void canUpdateRequestToCancelledStatusWithoutCancellationReasonId()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID itemId = UUID.randomUUID();
+
+    // Create an initial request with OPEN status
+    IndividualResource createdRequest = createEntity(
+      new RequestRequestBuilder()
+        .withItemId(itemId)
+        .withPosition(1)
+        .withStatus(OPEN_NOT_YET_FILLED)
+        .create(),
+      requestStorageUrl());
+
+    // Update the request to CLOSED_CANCELLED status without cancellationReasonId
+    JsonObject updateRequest = createdRequest.getJson()
+      .copy()
+      .put("status", CLOSED_CANCELLED);
+
+    CompletableFuture<TextResponse> updateCompleted = new CompletableFuture<>();
+
+    client.put(requestStorageUrl(String.format("/%s", createdRequest.getId())),
+      updateRequest, TENANT_ID,
+      ResponseHandler.text(updateCompleted));
+
+    TextResponse response = updateCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to update request: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    JsonObject updatedRequest = getById(requestStorageUrl(String.format("/%s", createdRequest.getId())));
+    assertThat(updatedRequest.getString("status"), is(CLOSED_CANCELLED));
+
+    assertUpdateEventForRequest(createdRequest.getJson(), updatedRequest);
+  }
+
+  @Test
+  void cannotUpdateRequestWithNonExistentCancellationReasonId()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID itemId = UUID.randomUUID();
+    UUID nonExistentCancellationReasonId = UUID.randomUUID();
+
+    // Create an initial request with OPEN status
+    IndividualResource createdRequest = createEntity(
+      new RequestRequestBuilder()
+        .withItemId(itemId)
+        .withPosition(1)
+        .withStatus(OPEN_NOT_YET_FILLED)
+        .create(),
+      requestStorageUrl());
+
+    // Clear events from creation to focus on update validation
+    removeAllEvents();
+
+    // Try to update the request to CLOSED_CANCELLED status with non-existent cancellationReasonId
+    JsonObject updateRequest = createdRequest.getJson()
+      .copy()
+      .put("status", CLOSED_CANCELLED)
+      .put("cancellationReasonId", nonExistentCancellationReasonId.toString());
+
+    CompletableFuture<JsonResponse> updateCompleted = new CompletableFuture<>();
+
+    client.put(requestStorageUrl(String.format("/%s", createdRequest.getId())),
+      updateRequest, TENANT_ID,
+      ResponseHandler.json(updateCompleted));
+
+    JsonResponse response = updateCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response, isValidationResponseWhich(allOf(
+      hasMessage("Cancellation reason does not exist"),
+      hasCode(ErrorCode.INVALID_CANCELLATION_REASON.name())
+    )));
+
+    assertNoUpdateEventForRequest(createdRequest.getId());
   }
 
   //This should not happen, but shouldn't really fail either (maybe need to check)
