@@ -62,7 +62,7 @@ class RequestExpirationApiTest extends ApiTests {
     throws MalformedURLException {
 
     StorageTestSuite.deleteAll(requestStorageUrl());
-    stubTlrConfiguration(false);
+    circulationSettingsHelper.changeTlrSettings(false);
   }
 
   @AfterEach
@@ -107,7 +107,7 @@ class RequestExpirationApiTest extends ApiTests {
   @Test
   void canExpireRequestWhenTlrSettingsNotSet() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
-    stubWithEmptyTlrConfiguration();
+    circulationSettingsHelper.removeTlrSettings();
     UUID id = UUID.randomUUID();
     UUID itemId = UUID.randomUUID();
 
@@ -174,7 +174,7 @@ class RequestExpirationApiTest extends ApiTests {
   void canExpireSingleOpenAwaitingPickupTlrRequest() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
-    stubTlrConfiguration(true);
+    circulationSettingsHelper.changeTlrSettings(true);
     UUID id = UUID.randomUUID();
     UUID instanceId = UUID.randomUUID();
 
@@ -211,7 +211,7 @@ class RequestExpirationApiTest extends ApiTests {
   void closedPickupExpiredTitleLevelRequestShouldBeRemovedFromQueue()
     throws InterruptedException, MalformedURLException, TimeoutException, ExecutionException {
 
-    stubTlrConfiguration(true);
+    circulationSettingsHelper.changeTlrSettings(true);
     UUID firstRequestId = UUID.randomUUID();
     UUID secondRequestId = UUID.randomUUID();
     UUID thirdRequestId = UUID.randomUUID();
@@ -1079,7 +1079,7 @@ class RequestExpirationApiTest extends ApiTests {
   void shouldRecalculateQueueAfterRequestExpirationWhenNoPositionRequestExists()
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
-      stubTlrConfiguration(true);
+      circulationSettingsHelper.changeTlrSettings(true);
       UUID firstRequestId = UUID.randomUUID();
       UUID secondRequestId = UUID.randomUUID();
       UUID thirdRequestId = UUID.randomUUID();
