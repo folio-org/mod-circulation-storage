@@ -142,7 +142,7 @@ class TlrFeatureToggleJobAPITest extends ApiTests {
   void processingShouldRecalculatePositionsForTitleLevelRequests()
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
-    stubTlrConfiguration(true);
+    circulationSettingsHelper.changeTlrSettings(true);
     UUID firstInstanceId = UUID.randomUUID();
     UUID secondInstanceId = UUID.randomUUID();
     var initialQueue = createItemLevelRequestsQueue(firstInstanceId, secondInstanceId);
@@ -182,7 +182,7 @@ class TlrFeatureToggleJobAPITest extends ApiTests {
   void processingShouldRecalculatePositionsForItemLevelRequests()
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
-    stubTlrConfiguration(false);
+    circulationSettingsHelper.changeTlrSettings(false);
     UUID firstItemId = UUID.randomUUID();
     UUID secondItemId = UUID.randomUUID();
     var initialQueue = createTitleLevelRequestsQueue(firstItemId, secondItemId);
@@ -219,23 +219,15 @@ class TlrFeatureToggleJobAPITest extends ApiTests {
   void processingShouldFailWhenConfigurationIsNotFound() throws MalformedURLException,
     ExecutionException, InterruptedException, TimeoutException {
 
-    stub404ForTlrConfiguration();
-    checkFailedTlrFeatureToggleJob("Resource not found");
-  }
-
-  @Test
-  void processingShouldFailWhenConfigurationIsInvalid()
-    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
-
-    stubWithInvalidTlrConfiguration();
-    checkFailedTlrFeatureToggleJob("Unrecognized token");
+    circulationSettingsHelper.removeTlrSettings();
+    checkFailedTlrFeatureToggleJob("TLR settings not found");
   }
 
   @Test
   void processingShouldFailWhenItemIdIsNull()
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
-    stubTlrConfiguration(false);
+    circulationSettingsHelper.changeTlrSettings(false);
     UUID firstItemId = UUID.randomUUID();
     createTitleLevelRequestsQueue(firstItemId, null);
     checkFailedTlrFeatureToggleJob("element cannot be mapped to a null key");

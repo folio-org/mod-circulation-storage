@@ -1,5 +1,7 @@
 package org.folio.service;
 
+import static io.vertx.core.Future.failedFuture;
+import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.tools.utils.ValidationHelper.isDuplicate;
 import static org.folio.service.event.EntityChangedEventPublisherFactory.circulationSettingsEventPublisher;
 import static org.folio.support.ModuleConstants.CIRCULATION_SETTINGS_TABLE;
@@ -9,10 +11,11 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
-import lombok.extern.log4j.Log4j2;
 import org.folio.persist.CirculationSettingsRepository;
+import org.folio.rest.configuration.TlrSettings;
 import org.folio.rest.jaxrs.model.CirculationSetting;
 import org.folio.rest.jaxrs.model.CirculationSettings;
+import org.folio.rest.jaxrs.model.Value;
 import org.folio.rest.jaxrs.resource.CirculationSettingsStorage.DeleteCirculationSettingsStorageCirculationSettingsByCirculationSettingsIdResponse;
 import org.folio.rest.jaxrs.resource.CirculationSettingsStorage.GetCirculationSettingsStorageCirculationSettingsByCirculationSettingsIdResponse;
 import org.folio.rest.jaxrs.resource.CirculationSettingsStorage.GetCirculationSettingsStorageCirculationSettingsResponse;
@@ -24,6 +27,8 @@ import org.folio.service.event.EntityChangedEventPublisher;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import io.vertx.core.json.JsonObject;
+import lombok.extern.log4j.Log4j2;
 
 @Log4j2
 public class CirculationSettingsService {
@@ -78,13 +83,49 @@ public class CirculationSettingsService {
     );
   }
 
+  public Future<TlrSettings> getTlrSettingsOrDefault() {
+    return getTlrSettings(false);
+  }
+
+  public Future<TlrSettings> getTlrSettingsOrThrow() {
+    return getTlrSettings(true);
+  }
+
+  private Future<TlrSettings> getTlrSettings(boolean throwIfNotFound) {
+    return getSettingsByName("generalTlr")
+      .compose(gt -> gt.isEmpty() ? getSettingsByName("TLR") : succeededFuture(gt))
+      .compose(settings -> handleTlrSettings(settings, throwIfNotFound));
+  }
+
+  private static Future<TlrSettings> handleTlrSettings(List<CirculationSetting> settings,
+    boolean throwIfNotFound) {
+
+    if (settings.isEmpty()) {
+      log.info("handleTlrSettings:: TLR settings not found");
+      if (throwIfNotFound) {
+        return failedFuture("TLR settings not found");
+      }
+      log.info("handleTlrSettings:: returning default TLR settings with feature disabled");
+      return succeededFuture(new TlrSettings(false, false, false));
+    }
+
+    return settings.stream()
+      .findFirst()
+      .map(CirculationSetting::getValue)
+      .map(Value::getAdditionalProperties)
+      .map(JsonObject::new)
+      .map(TlrSettings::from)
+      .map(Future::succeededFuture)
+      .orElseGet(() -> failedFuture("TLR settings not found"));
+  }
+
   private Future<CirculationSetting> updateSettingsValue(CirculationSetting circulationSetting,
     Throwable throwable) {
 
     if (!isDuplicate(throwable.getMessage())) {
       log.warn("updateSettingsValue:: error during saving circulation setting: {}",
         circulationSetting, throwable);
-      return Future.failedFuture(throwable);
+      return failedFuture(throwable);
     }
 
     log.info("updateSettingsValue:: setting with name: {} already exists.",
