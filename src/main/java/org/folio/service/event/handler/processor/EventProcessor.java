@@ -108,6 +108,8 @@ public abstract class EventProcessor<T> {
         JsonObject updatedJson = JsonObject.mapFrom(object);
         log.info("new: {}", updatedJson.encodePrettily());
         String objectId = originalJson.getString("id");
+        originalJson.remove("metadata");
+        updatedJson.remove("metadata");
         if (originalJson.equals(updatedJson)) {
           log.debug("applyChanges:: object {} was not changed", objectId);
         } else {
