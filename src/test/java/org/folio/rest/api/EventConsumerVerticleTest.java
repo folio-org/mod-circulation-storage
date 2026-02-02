@@ -181,7 +181,7 @@ class EventConsumerVerticleTest extends ApiTests {
   void requestIsNotUpdatedWhenNoRelevantItemPropertiesWereUpdated() {
     JsonObject oldItem = buildItem(DEFAULT_CALL_NUMBER_PREFIX, DEFAULT_CALL_NUMBER,
       DEFAULT_CALL_NUMBER_SUFFIX, DEFAULT_SHELVING_ORDER)
-      .put("status", "Open - Not filled");
+      .put("status", "Open - Not yet filled");
     JsonObject newItem = oldItem.copy()
       .put("status", "Open - Awaiting pickup");
     createRequest(buildRequest(REQUEST_ID, oldItem));

@@ -93,18 +93,20 @@ public abstract class EventProcessor<T> {
     log.info("applyDbUpdates:: {}/{} object were changed, persisting changes",
       updatedObjects::size, objects::size);
 
-    return repository.update(objects).map(updatedObjects);
+    return repository.update(updatedObjects)
+      .map(updatedObjects);
   }
 
   private List<T> applyChanges(List<T> objects, Collection<Change<T>> changes) {
-
-
     List<T> updatedObjects = new ArrayList<>();
+
     for (T object : objects) {
       try {
         JsonObject originalJson = JsonObject.mapFrom(object);
+        log.info("old: {}", originalJson.encodePrettily());
         changes.forEach(change -> change.apply(object));
         JsonObject updatedJson = JsonObject.mapFrom(object);
+        log.info("new: {}", updatedJson.encodePrettily());
         String objectId = originalJson.getString("id");
         if (originalJson.equals(updatedJson)) {
           log.debug("applyChanges:: object {} was not changed", objectId);
