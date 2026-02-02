@@ -67,7 +67,7 @@ public abstract class EventProcessor<T> {
   protected abstract Future<List<Change<T>>> collectRelevantChanges(JsonObject payload);
 
   private Future<List<T>> applyChanges(List<Change<T>> changes, JsonObject payload) {
-    log.debug("applyChanges:: payload: {}", payload);
+    log.info("applyChanges:: payload: {}", payload);
 
     JsonObject oldObject = payload.getJsonObject("old");
 
