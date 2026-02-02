@@ -96,21 +96,29 @@ public abstract class EventProcessor<T> {
     return repository.update(objects).map(updatedObjects);
   }
 
-  private static <T> List<T> applyChanges(List<T> objects, Collection<Change<T>> changes) {
+  private List<T> applyChanges(List<T> objects, Collection<Change<T>> changes) {
+
+
     List<T> updatedObjects = new ArrayList<>();
     for (T object : objects) {
-      JsonObject originalJson = JsonObject.mapFrom(object);
-      changes.forEach(change -> change.apply(object));
-      JsonObject updatedJson = JsonObject.mapFrom(object);
-      log.info("applyChanges:: originalJson: {}, updatedJson: {}", originalJson, updatedJson);
-      String objectId = originalJson.getString("id");
-      if (originalJson.equals(updatedJson)) {
-        log.info("applyDbUpdates:: object {} was not changed", objectId);
-      } else {
-        log.info("applyDbUpdates:: object {} was changed", objectId);
+      try {
+        JsonObject originalJson = JsonObject.mapFrom(object);
+        changes.forEach(change -> change.apply(object));
+        JsonObject updatedJson = JsonObject.mapFrom(object);
+        String objectId = originalJson.getString("id");
+        if (originalJson.equals(updatedJson)) {
+          log.debug("applyChanges:: object {} was not changed", objectId);
+        } else {
+          log.debug("applyChanges:: object {} was changed", objectId);
+          updatedObjects.add(object);
+        }
+      } catch (IllegalArgumentException e) {
+        log.warn("applyChanges:: object is not JSON serializable, marking it as changed unconditionally", e);
+        changes.forEach(change -> change.apply(object));
         updatedObjects.add(object);
       }
     }
+
     return updatedObjects;
   }
 
