@@ -103,8 +103,10 @@ public abstract class EventProcessor<T> {
     for (T object : objects) {
       try {
         JsonObject originalJson = JsonObject.mapFrom(object);
+        log.info("old: {}", originalJson.encodePrettily());
         changes.forEach(change -> change.apply(object));
         JsonObject updatedJson = JsonObject.mapFrom(object);
+        log.info("new: {}", updatedJson.encodePrettily());
         String objectId = originalJson.getString("id");
         if (originalJson.equals(updatedJson)) {
           log.debug("applyChanges:: object {} was not changed", objectId);
