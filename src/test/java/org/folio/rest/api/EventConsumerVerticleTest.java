@@ -47,6 +47,7 @@ import java.util.stream.Collectors;
 
 import org.folio.rest.jaxrs.model.AllowedServicePoints;
 import org.folio.rest.jaxrs.model.CallNumberComponents;
+import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.jaxrs.model.RequestType;
 import org.folio.rest.jaxrs.model.SearchIndex;
 import org.folio.rest.support.ApiTests;
@@ -179,6 +180,25 @@ public class EventConsumerVerticleTest extends ApiTests {
     publishItemUpdateEvent(oldItem, newItem);
     waitUntilValueIsIncreased(initialOffset, EventConsumerVerticleTest::getOffsetForItemUpdateEvents);
     verifyRequestSearchIndex(REQUEST_ID, searchIndex);
+  }
+
+  @Test
+  public void requestIsNotUpdatedWhenNoRelevantItemPropertiesWereUpdated() {
+    JsonObject oldItem = buildItem(DEFAULT_CALL_NUMBER_PREFIX, DEFAULT_CALL_NUMBER,
+      DEFAULT_CALL_NUMBER_SUFFIX, DEFAULT_SHELVING_ORDER)
+      .put("status", "Open - Not yet filled");
+    JsonObject newItem = oldItem.copy()
+      .put("status", "Open - Awaiting pickup");
+    createRequest(buildRequest(REQUEST_ID, oldItem));
+    Request requestBeforeEvent = getRequestFromDatabase(REQUEST_ID);
+
+    int initialOffset = getOffsetForItemUpdateEvents();
+    publishItemUpdateEvent(oldItem, newItem);
+    waitUntilValueIsIncreased(initialOffset, EventConsumerVerticleTest::getOffsetForItemUpdateEvents);
+
+    Request requestAfterEvent = getRequestFromDatabase(REQUEST_ID);
+    assertThat(requestAfterEvent.getMetadata().getUpdatedDate(),
+      equalTo(requestBeforeEvent.getMetadata().getUpdatedDate()));
   }
 
   @Test
@@ -963,5 +983,9 @@ public class EventConsumerVerticleTest extends ApiTests {
       .put("name", "Request policy")
       .put("requestTypes", requestTypesArray)
       .put("allowedServicePoints", allowedServicePoints);
+  }
+
+  private static Request getRequestFromDatabase(String requestId) {
+    return waitFor(pgClient.getById("request", requestId, Request.class));
   }
 }
