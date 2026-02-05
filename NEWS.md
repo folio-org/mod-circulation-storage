@@ -1,3 +1,7 @@
+## 17.4.3 2026-02-05
+* Fix request status not updating upon check-in (CIRCSTORE-634)
+* Fix missing request position (CIRCSTORE-635)
+
 ## 17.4.2 2026-01-06
 * Upgrade to Vert.x 4.5.23 and RMB 35.4.2 (CIRCSTORE-628)
 
