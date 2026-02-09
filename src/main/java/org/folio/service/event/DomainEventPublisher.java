@@ -62,7 +62,8 @@ public class DomainEventPublisher<K, T> {
         log.error("publish:: Unable to send domain event with key [{}], kafka record [{}]",
           key, producerRecord, cause);
         failureHandler.handle(cause, producerRecord);
-      });
+      })
+      .onComplete(v -> producer.close());
   }
 
   private KafkaProducer<K, String> getOrCreateProducer() {
