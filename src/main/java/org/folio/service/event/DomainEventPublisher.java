@@ -1,8 +1,6 @@
 package org.folio.service.event;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static org.folio.service.event.EntityChangedEventPublisherFactory.requestEventPublisher;
-
 import java.util.Map;
 
 import org.apache.logging.log4j.Logger;
@@ -11,7 +9,6 @@ import org.folio.kafka.KafkaProducerManager;
 import org.folio.kafka.SimpleKafkaProducerManager;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
 import org.folio.kafka.services.KafkaProducerRecordBuilder;
-import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.tools.utils.TenantTool;
 
 import io.vertx.core.Context;
@@ -51,20 +48,31 @@ public class DomainEventPublisher<K, T> {
         .build();
     log.info("publish:: kafkaRecord = [{}]", producerRecord);
 
-    KafkaProducer<K, String> producer = getOrCreateProducer();
-    log.info("publish:: Producer created, sending the record...");
+    KafkaProducer<K, String> producer = null;
+    try {
+      producer = getOrCreateProducer();
+      log.info("publish:: Producer created, sending the record...");
 
-    return producer.send(producerRecord)
-      .onSuccess(r -> log.info("publish:: Succeeded sending domain event with key [{}], " +
-        "kafka record [{}]", key, producerRecord))
-      .<Void>mapEmpty()
-      .eventually(x -> producer.flush())
-      .eventually(x -> producer.close())
-      .onFailure(cause -> {
-        log.error("publish:: Unable to send domain event with key [{}], kafka record [{}]",
-          key, producerRecord, cause);
-        failureHandler.handle(cause, producerRecord);
-      });
+      final KafkaProducer<K, String> p = producer;
+      producer.send(producerRecord)
+        .onSuccess(r -> log.info("publish:: Succeeded sending domain event with key [{}], " +
+          "kafka record [{}]", key, producerRecord))
+        .onFailure(cause -> {
+          log.error("publish:: Unable to send domain event with key [{}], kafka record [{}]",
+            key, producerRecord, cause);
+          failureHandler.handle(cause, producerRecord);
+        })
+        .onComplete(v -> p.close());
+    } catch (Exception e) {
+      log.error("publish:: Failed to initiate send for domain event with key [{}], kafka record [{}]",
+        key, producerRecord, e);
+      if (producer != null) {
+        producer.close();
+      }
+      failureHandler.handle(e, producerRecord);
+    }
+
+    return Future.succeededFuture();
   }
 
   private KafkaProducer<K, String> getOrCreateProducer() {
