@@ -1,0 +1,16 @@
+[metadata]
+team = "vega"
+domain = "circulation"
+module = "mod-circulation-storage"
+
+[[sources]]
+name = "actual_cost_record"
+table = "actual_cost_record"
+
+[[entityTypes]]
+name = "actual_cost_record"
+private = false
+schema = "./ramls/actual-cost-record.json"
+source = "actual_cost_record"
+sort = ["id", "ASC"]
+permissions = ["actual-cost-record-storage.actual-cost-records.collection.get"]
