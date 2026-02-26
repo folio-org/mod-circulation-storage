@@ -58,6 +58,8 @@ public class DomainEventPublisher<K, T> {
       .onSuccess(r -> log.info("publish:: Succeeded sending domain event with key [{}], " +
         "kafka record [{}]", key, producerRecord))
       .<Void>mapEmpty()
+      .eventually(producer::flush)
+      .eventually(producer::close)
       .onFailure(cause -> {
         log.error("publish:: Unable to send domain event with key [{}], kafka record [{}]",
           key, producerRecord, cause);
