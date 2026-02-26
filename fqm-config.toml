@@ -9,7 +9,7 @@ table = "actual_cost_record"
 
 [[entityTypes]]
 name = "actual_cost_record"
-private = true
+private = false
 schema = "./ramls/actual-cost-record.json"
 source = "actual_cost_record"
 sort = ["id", "ASC"]

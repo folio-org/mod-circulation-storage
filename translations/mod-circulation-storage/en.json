@@ -1,5 +1,5 @@
 {
-  "fqm.entityType.actual_cost_record": "Actual cost record",
+  "fqm.entityType.actual_cost_record": "Actual cost record (draft)",
   "fqm.entityType.actual_cost_record._description": "Information about the actual cost of a lost item",
   "fqm.entityType.actual_cost_record.id": "UUID",
   "fqm.entityType.actual_cost_record.loss_type": "Loss type",
