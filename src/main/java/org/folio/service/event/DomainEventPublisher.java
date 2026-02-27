@@ -51,20 +51,32 @@ public class DomainEventPublisher<K, T> {
         .build();
     log.info("publish:: kafkaRecord = [{}]", producerRecord);
 
-    KafkaProducer<K, String> producer = getOrCreateProducer();
-    log.info("publish:: Producer created, sending the record...");
+    KafkaProducer<K, String> producer = null;
+    try {
+      producer = getOrCreateProducer();
+      log.info("publish:: Producer created, sending the record...");
 
-    return producer.send(producerRecord)
-      .onSuccess(r -> log.info("publish:: Succeeded sending domain event with key [{}], " +
-        "kafka record [{}]", key, producerRecord))
-      .<Void>mapEmpty()
-      .eventually(producer::flush)
-      .eventually(producer::close)
-      .onFailure(cause -> {
-        log.error("publish:: Unable to send domain event with key [{}], kafka record [{}]",
-          key, producerRecord, cause);
-        failureHandler.handle(cause, producerRecord);
-      });
+      producer.send(producerRecord)
+        .onSuccess(r -> log.info("publish:: Succeeded sending domain event with key [{}], " +
+          "kafka record [{}]", key, producerRecord))
+        .onFailure(cause -> {
+          log.error("publish:: Unable to send domain event with key [{}], kafka record [{}]",
+            key, producerRecord, cause);
+          failureHandler.handle(cause, producerRecord);
+        })
+        .eventually(producer::flush)
+        .eventually(producer::close);
+    } catch (Exception e) {
+      log.error("publish:: Failed to initiate send for domain event with key [{}], kafka record [{}]",
+        key, producerRecord, e);
+      if (producer != null) {
+        log.info("publish:: Producer is not null, trying to close. Event key: {}.", key);
+        producer.close();
+      }
+      failureHandler.handle(e, producerRecord);
+    }
+
+    return Future.succeededFuture();
   }
 
   private KafkaProducer<K, String> getOrCreateProducer() {
