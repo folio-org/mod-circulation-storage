@@ -16,9 +16,10 @@ import org.folio.rest.persist.Criteria.Criterion;
 
 import io.vertx.core.json.JsonObject;
 
-public class ServicePointUpdateProcessorForRequest extends UpdateEventProcessor<Request> {
+public class ServicePointUpdateProcessorForRequest extends BaseEventProcessor<Request> {
   private static final Logger log = LogManager.getLogger(ServicePointUpdateProcessorForRequest.class);
   private static final String SERVICE_POINT_NAME_KEY = "name";
+  private static final String ID_KEY = "id";
 
   public ServicePointUpdateProcessorForRequest(RequestRepository requestRepository) {
     super(INVENTORY_SERVICE_POINT_UPDATED, requestRepository);
@@ -28,8 +29,14 @@ public class ServicePointUpdateProcessorForRequest extends UpdateEventProcessor<
   protected Future<List<Change<Request>>> collectRelevantChanges(JsonObject payload) {
     JsonObject oldObject = payload.getJsonObject("old");
     JsonObject newObject = payload.getJsonObject("new");
-
     List<Change<Request>> changes = new ArrayList<>();
+
+    // Invalidate service point cache for updated/created service point
+    if (newObject != null && newObject.containsKey(ID_KEY)) {
+      String servicePointId = newObject.getString(ID_KEY);
+      invalidateServicePointCache(servicePointId);
+      log.info("ServicePointUpdateProcessorForRequest:: Service point cache invalidated for servicePointId: {}", servicePointId);
+    }
 
     // compare service point names
     String oldServicePointName = oldObject.getString(SERVICE_POINT_NAME_KEY);

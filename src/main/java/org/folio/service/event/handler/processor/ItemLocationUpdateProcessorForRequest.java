@@ -12,15 +12,15 @@ import org.folio.rest.persist.Criteria.Criterion;
 import java.util.ArrayList;
 import java.util.List;
 
+import static io.vertx.core.Future.succeededFuture;
 import static org.apache.commons.lang3.ObjectUtils.notEqual;
 import static org.folio.service.event.InventoryEventType.INVENTORY_ITEM_UPDATED;
 import static org.folio.service.event.handler.processor.ItemUpdateProcessorForRequest.ITEM_EFFECTIVE_LOCATION_ID;
 
-public class ItemLocationUpdateProcessorForRequest extends UpdateEventProcessor<Request> {
+public class ItemLocationUpdateProcessorForRequest extends BaseEventProcessor<Request> {
   private static final Logger log = LogManager.getLogger(ItemLocationUpdateProcessorForRequest.class);
 
   private static final String LOCATION_NAME_KEY = "name";
-
 
   public ItemLocationUpdateProcessorForRequest(RequestRepository repository) {
     super(INVENTORY_ITEM_UPDATED, repository);
@@ -30,19 +30,25 @@ public class ItemLocationUpdateProcessorForRequest extends UpdateEventProcessor<
   protected Future<List<Change<Request>>> collectRelevantChanges(JsonObject payload) {
     JsonObject oldObject = payload.getJsonObject("old");
     JsonObject newObject = payload.getJsonObject("new");
-
     List<Change<Request>> changes = new ArrayList<>();
+
+    // Invalidate location cache for updated/created location
+    if (newObject != null && newObject.containsKey("id")) {
+      String locationId = newObject.getString("id");
+      invalidateLocationCache(locationId);
+      log.info("ItemLocationUpdateProcessorForRequest:: Location cache invalidated for locationId: {}", locationId);
+    }
 
     // compare shelving order
     String oldLocationName = oldObject.getString(LOCATION_NAME_KEY);
     String newLocationName = newObject.getString(LOCATION_NAME_KEY);
     if (notEqual(oldLocationName, newLocationName)) {
       log.info("ItemLocationUpdateProcessorForRequest :: collectRelevantChanges:: changing item.itemEffectiveLocationId from {} to {}",
-              oldLocationName, newLocationName);
+        oldLocationName, newLocationName);
       changes.add(new Change<>(request -> request.getItem().setItemEffectiveLocationName(newLocationName)));
     }
 
-    return Future.succeededFuture(changes);
+    return succeededFuture(changes);
   }
 
   @Override

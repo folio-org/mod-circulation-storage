@@ -25,7 +25,8 @@ public class ItemUpdateEventHandler implements AsyncRecordHandler<String, String
     CaseInsensitiveMap<String, String> headers =
       new CaseInsensitiveMap<>(kafkaHeadersToMap(kafkaConsumerRecord.headers()));
     ItemUpdateProcessorForRequest itemUpdateProcessorForRequest =
-      new ItemUpdateProcessorForRequest(new RequestRepository(context, headers), new InventoryStorageClient(context.owner(), headers));
+      new ItemUpdateProcessorForRequest(new RequestRepository(context, headers),
+        new InventoryStorageClient(context.owner(), headers));
 
     return itemUpdateProcessorForRequest.run(kafkaConsumerRecord.key(), payload);
   }

@@ -1,18 +1,17 @@
 package org.folio.service.event.handler.processor;
 
 import static io.vertx.core.Future.succeededFuture;
+import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.ObjectUtils.notEqual;
 import static org.folio.service.event.InventoryEventType.INVENTORY_ITEM_UPDATED;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import io.vertx.core.Future;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,9 +25,10 @@ import org.folio.rest.jaxrs.model.Servicepoint;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 
-public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request> {
+public class ItemUpdateProcessorForRequest extends BaseEventProcessor<Request> {
 
   private static final Logger log = LogManager.getLogger(ItemUpdateProcessorForRequest.class);
   private final InventoryStorageClient inventoryStorageClient;
@@ -36,8 +36,8 @@ public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request>
   private static final String EFFECTIVE_SHELVING_ORDER_KEY = "effectiveShelvingOrder";
   private static final String EFFECTIVE_CALL_NUMBER_COMPONENTS_KEY = "effectiveCallNumberComponents";
   private static final String CALL_NUMBER_KEY = "callNumber";
-  private static final String CALL_NUMBER_PREFIX_KEY = "prefix";
-  private static final String CALL_NUMBER_SUFFIX_KEY = "suffix";
+  private static final String CALL_NUMBER_PREFIX_KEY = "suffix";
+  private static final String CALL_NUMBER_SUFFIX_KEY = "prefix";
 
   public static final String ITEM_EFFECTIVE_LOCATION_ID = "itemEffectiveLocationId";
   public static final String ITEM_EFFECTIVE_LOCATION_NAME = "itemEffectiveLocationName";
@@ -71,11 +71,10 @@ public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request>
       changes.add(new Change<>(request -> request.getSearchIndex().setShelvingOrder(newShelvingOrder)));
     }
 
-    Future<Map<String, String>> fetchLocationAndServicePoint = updateItemAndServicePoint(newObject);
-    return fetchLocationAndServicePoint
-            .compose(locationAndSpData -> addLocationAndServicePointChanges(locationAndSpData, changes))
-            .compose(r -> Future.succeededFuture(changes))
-            .recover(throwable -> Future.succeededFuture(changes));
+    return updateItemAndServicePoint(newObject)
+      .compose(locationAndSpData -> addLocationAndServicePointChanges(locationAndSpData, changes))
+      .compose(r -> succeededFuture(changes))
+      .recover(throwable -> succeededFuture(changes));
   }
 
   private static Future<List<Change<Request>>> addLocationAndServicePointChanges(Map<String, String> locationAndSpData, List<Change<Request>> changes) {
@@ -89,18 +88,38 @@ public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request>
       request.getItem().setRetrievalServicePointId(locationAndSpData.get(RETRIEVAL_SERVICE_POINT_ID));
       request.getItem().setRetrievalServicePointName(locationAndSpData.get(RETRIEVAL_SERVICE_POINT_NAME));
     }));
-    return Future.succeededFuture(changes);
+    return succeededFuture(changes);
   }
 
   private Future<Map<String, String>> updateItemAndServicePoint(JsonObject newObject) {
     String effectiveLocationId = newObject.getString("effectiveLocationId");
     Map<String, String> locationAndSpData = new HashMap<>();
     locationAndSpData.put(ITEM_EFFECTIVE_LOCATION_ID, effectiveLocationId);
-    return inventoryStorageClient.getLocations(Collections.singletonList(effectiveLocationId))
-            .compose(locations -> setEffectiveLocationData(locations, effectiveLocationId, locationAndSpData))
-            .compose(primaryServicePoint -> setRetrievalServicePointData(primaryServicePoint, locationAndSpData))
-            .compose(e -> Future.succeededFuture(locationAndSpData))
-            .onFailure(throwable -> log.info("ItemUpdateProcessorForRequest :: Error while fetching Locations: {}", throwable.toString()));
+
+    // Use cache for location
+    Location cachedLocation = locationCache.getIfPresent(effectiveLocationId);
+    Future<Collection<Location>> locationsFuture;
+    if (cachedLocation != null) {
+      log.info("updateItemAndServicePoint:: Location cache found for id: {}",
+        effectiveLocationId);
+      locationsFuture = succeededFuture(singletonList(cachedLocation));
+    } else {
+      log.info("updateItemAndServicePoint:: Location cache missed for id: {}",
+        effectiveLocationId);
+      locationsFuture = inventoryStorageClient.getLocations(singletonList(effectiveLocationId))
+        .onSuccess(locations -> {
+          locations.forEach(loc -> {
+            locationCache.put(loc.getId(), loc);
+            log.info("updateItemAndServicePoint:: Location cached for id: {}", loc.getId());
+          });
+        });
+    }
+
+    return locationsFuture
+      .compose(locations -> setEffectiveLocationData(locations, effectiveLocationId, locationAndSpData))
+      .compose(primaryServicePoint -> setRetrievalServicePointData(primaryServicePoint, locationAndSpData))
+      .compose(e -> succeededFuture(locationAndSpData))
+      .onFailure(throwable -> log.info("ItemUpdateProcessorForRequest :: Error while fetching Locations: ", throwable));
   }
 
   private static Future<String> setEffectiveLocationData(Collection<Location> locations, String effectiveLocationId,
@@ -117,22 +136,39 @@ public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request>
 
   private Future<Object> setRetrievalServicePointData(String primaryServicePoint, Map<String, String> locationAndSpData) {
     if (!StringUtils.isBlank(primaryServicePoint)) {
-      locationAndSpData.put(RETRIEVAL_SERVICE_POINT_ID, primaryServicePoint);
-      return inventoryStorageClient.getServicePoints(Collections.singletonList(primaryServicePoint))
-              .compose(servicePoints -> {
-                Servicepoint retrievalServicePoint = servicePoints.stream()
-                        .filter(sp -> sp.getId().equals(primaryServicePoint))
-                        .findFirst().orElse(null);
-                if (Objects.nonNull(retrievalServicePoint)) {
-                  locationAndSpData.put(RETRIEVAL_SERVICE_POINT_NAME, retrievalServicePoint.getName());
-                }
-                return succeededFuture();
-              }).onFailure(throwable -> log.info("ItemUpdateProcessorForRequest :: Error while fetching ServicePoint: {}",
-                      throwable.toString()));
+      // Use cache for service point
+      Servicepoint cachedSp = servicePointCache.getIfPresent(primaryServicePoint);
+      Future<Collection<Servicepoint>> servicePointsFuture;
+      if (cachedSp != null) {
+        log.info("setRetrievalServicePointData:: ServicePoint cache found for id: {}",
+          primaryServicePoint);
+        servicePointsFuture = succeededFuture(singletonList(cachedSp));
+      } else {
+        log.info("setRetrievalServicePointData:: ServicePoint cache missed for id: {}",
+          primaryServicePoint);
+        servicePointsFuture = inventoryStorageClient.getServicePoints(singletonList(primaryServicePoint))
+          .onSuccess(servicePoints -> {
+            servicePoints.forEach(sp -> {
+              servicePointCache.put(sp.getId(), sp);
+              log.info("setRetrievalServicePointData:: ServicePoint cached for id: {}",
+                sp.getId());
+            });
+          });
+      }
+      return servicePointsFuture
+        .compose(servicePoints -> {
+          Servicepoint retrievalServicePoint = servicePoints.stream()
+            .filter(sp -> sp.getId().equals(primaryServicePoint))
+            .findFirst().orElse(null);
+          if (Objects.nonNull(retrievalServicePoint)) {
+            locationAndSpData.put(RETRIEVAL_SERVICE_POINT_NAME, retrievalServicePoint.getName());
+          }
+          return succeededFuture();
+        })
+        .onFailure(throwable -> log.info("ItemUpdateProcessorForRequest :: Error while fetching ServicePoint: {}", throwable.toString()));
     }
     return succeededFuture();
   }
-
 
   @Override
   protected Criterion criterionForObjectsToBeUpdated(String oldObjectId) {

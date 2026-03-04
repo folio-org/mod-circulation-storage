@@ -34,6 +34,6 @@ public class ServicePointUpdateEventHandler implements AsyncRecordHandler<String
       .compose(notUsed -> new ServicePointUpdateProcessorForRequestPolicy(requestPolicyRepository)
         .run(kafkaConsumerRecord.key(), payload))
       .compose(notUsed -> new ItemRetrievalServicePointUpdateProcessorForRequest(requestRepository)
-              .run(kafkaConsumerRecord.key(), payload));
+        .run(kafkaConsumerRecord.key(), payload));
   }
 }
