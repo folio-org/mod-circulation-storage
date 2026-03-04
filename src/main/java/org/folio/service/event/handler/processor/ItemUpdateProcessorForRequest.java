@@ -36,8 +36,8 @@ public class ItemUpdateProcessorForRequest extends BaseEventProcessor<Request> {
   private static final String EFFECTIVE_SHELVING_ORDER_KEY = "effectiveShelvingOrder";
   private static final String EFFECTIVE_CALL_NUMBER_COMPONENTS_KEY = "effectiveCallNumberComponents";
   private static final String CALL_NUMBER_KEY = "callNumber";
-  private static final String CALL_NUMBER_PREFIX_KEY = "suffix";
-  private static final String CALL_NUMBER_SUFFIX_KEY = "prefix";
+  private static final String CALL_NUMBER_PREFIX_KEY = "prefix";
+  private static final String CALL_NUMBER_SUFFIX_KEY = "suffix";
 
   public static final String ITEM_EFFECTIVE_LOCATION_ID = "itemEffectiveLocationId";
   public static final String ITEM_EFFECTIVE_LOCATION_NAME = "itemEffectiveLocationName";
