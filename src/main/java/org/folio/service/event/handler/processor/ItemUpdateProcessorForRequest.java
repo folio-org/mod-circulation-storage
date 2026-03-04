@@ -123,7 +123,8 @@ public class ItemUpdateProcessorForRequest extends BaseEventProcessor<Request> {
   }
 
   private static Future<String> setEffectiveLocationData(Collection<Location> locations, String effectiveLocationId,
-                                                         Map<String, String> locationAndSpData) {
+    Map<String, String> locationAndSpData) {
+
     Location effectiveLocation = locations.stream()
             .filter(l -> l.getId().equals(effectiveLocationId))
             .findFirst().orElse(null);

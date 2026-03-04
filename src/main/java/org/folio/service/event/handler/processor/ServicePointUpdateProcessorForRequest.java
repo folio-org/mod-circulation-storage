@@ -35,7 +35,7 @@ public class ServicePointUpdateProcessorForRequest extends BaseEventProcessor<Re
     if (newObject != null && newObject.containsKey(ID_KEY)) {
       String servicePointId = newObject.getString(ID_KEY);
       invalidateServicePointCache(servicePointId);
-      log.info("ServicePointUpdateProcessorForRequest:: Service point cache invalidated for servicePointId: {}", servicePointId);
+      log.info("collectRelevantChanges:: Service point cache invalidated for servicePointId: {}", servicePointId);
     }
 
     // compare service point names

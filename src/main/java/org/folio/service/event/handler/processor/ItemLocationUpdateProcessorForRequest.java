@@ -36,14 +36,14 @@ public class ItemLocationUpdateProcessorForRequest extends BaseEventProcessor<Re
     if (newObject != null && newObject.containsKey("id")) {
       String locationId = newObject.getString("id");
       invalidateLocationCache(locationId);
-      log.info("ItemLocationUpdateProcessorForRequest:: Location cache invalidated for locationId: {}", locationId);
+      log.info("collectRelevantChanges:: Location cache invalidated for locationId: {}", locationId);
     }
 
     // compare shelving order
     String oldLocationName = oldObject.getString(LOCATION_NAME_KEY);
     String newLocationName = newObject.getString(LOCATION_NAME_KEY);
     if (notEqual(oldLocationName, newLocationName)) {
-      log.info("ItemLocationUpdateProcessorForRequest :: collectRelevantChanges:: changing item.itemEffectiveLocationId from {} to {}",
+      log.info("collectRelevantChanges :: collectRelevantChanges:: changing item.itemEffectiveLocationId from {} to {}",
         oldLocationName, newLocationName);
       changes.add(new Change<>(request -> request.getItem().setItemEffectiveLocationName(newLocationName)));
     }
@@ -53,8 +53,9 @@ public class ItemLocationUpdateProcessorForRequest extends BaseEventProcessor<Re
 
   @Override
   protected Criterion criterionForObjectsToBeUpdated(String oldObjectId) {
-    log.info("ItemLocationUpdateProcessorForRequest :: criterionForObjectsToBeUpdated:: oldObjectId: {}",
-            oldObjectId);
+    log.info("criterionForObjectsToBeUpdated :: criterionForObjectsToBeUpdated:: oldObjectId: {}",
+      oldObjectId);
+
     return new Criterion(
       new Criteria()
         .addField("'item'")
