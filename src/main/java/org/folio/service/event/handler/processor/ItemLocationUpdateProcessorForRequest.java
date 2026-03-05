@@ -43,7 +43,7 @@ public class ItemLocationUpdateProcessorForRequest extends BaseEventProcessor<Re
     String oldLocationName = oldObject.getString(LOCATION_NAME_KEY);
     String newLocationName = newObject.getString(LOCATION_NAME_KEY);
     if (notEqual(oldLocationName, newLocationName)) {
-      log.info("collectRelevantChanges :: collectRelevantChanges:: changing item.itemEffectiveLocationId from {} to {}",
+      log.info("collectRelevantChanges:: changing item.itemEffectiveLocationId from {} to {}",
         oldLocationName, newLocationName);
       changes.add(new Change<>(request -> request.getItem().setItemEffectiveLocationName(newLocationName)));
     }

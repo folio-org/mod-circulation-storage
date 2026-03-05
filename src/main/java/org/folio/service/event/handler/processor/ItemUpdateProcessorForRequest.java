@@ -60,6 +60,7 @@ public class ItemUpdateProcessorForRequest extends BaseEventProcessor<Request> {
     JsonObject oldCallNumberComponents = extractCallNumberComponents(oldObject);
     JsonObject newCallNumberComponents = extractCallNumberComponents(newObject);
     if (notEqual(oldCallNumberComponents, newCallNumberComponents)) {
+      log.info("ItemUpdateProcessorForRequest :: callNumberComponents changed, updating search index");
       changes.add(new Change<>(request -> request.getSearchIndex()
         .setCallNumberComponents(newCallNumberComponents.mapTo(CallNumberComponents.class))));
     }
@@ -71,10 +72,19 @@ public class ItemUpdateProcessorForRequest extends BaseEventProcessor<Request> {
       changes.add(new Change<>(request -> request.getSearchIndex().setShelvingOrder(newShelvingOrder)));
     }
 
-    return updateItemAndServicePoint(newObject)
-      .compose(locationAndSpData -> addLocationAndServicePointChanges(locationAndSpData, changes))
-      .compose(r -> succeededFuture(changes))
-      .recover(throwable -> succeededFuture(changes));
+    // compare effective location
+    String oldEffectiveLocationId = oldObject.getString("effectiveLocationId");
+    String newEffectiveLocationId = newObject.getString("effectiveLocationId");
+    if (notEqual(oldEffectiveLocationId, newEffectiveLocationId)) {
+      log.info("ItemUpdateProcessorForRequest :: effectiveLocationId changed from {} to {}",
+        oldEffectiveLocationId, newEffectiveLocationId);
+      return updateItemAndServicePoint(newObject)
+        .compose(locationAndSpData -> addLocationAndServicePointChanges(locationAndSpData, changes))
+        .compose(r -> succeededFuture(changes))
+        .recover(throwable -> succeededFuture(changes));
+    }
+
+    return succeededFuture(changes);
   }
 
   private static Future<List<Change<Request>>> addLocationAndServicePointChanges(Map<String, String> locationAndSpData, List<Change<Request>> changes) {
@@ -162,6 +172,7 @@ public class ItemUpdateProcessorForRequest extends BaseEventProcessor<Request> {
             .filter(sp -> sp.getId().equals(primaryServicePoint))
             .findFirst().orElse(null);
           if (Objects.nonNull(retrievalServicePoint)) {
+            locationAndSpData.put(RETRIEVAL_SERVICE_POINT_ID, retrievalServicePoint.getId());
             locationAndSpData.put(RETRIEVAL_SERVICE_POINT_NAME, retrievalServicePoint.getName());
           }
           return succeededFuture();
@@ -187,7 +198,6 @@ public class ItemUpdateProcessorForRequest extends BaseEventProcessor<Request> {
     JsonObject callNumberComponents = new JsonObject();
 
     if (itemCallNumberComponents != null) {
-      // extract only properties used in request search index
       callNumberComponents
         .put(CALL_NUMBER_KEY, itemCallNumberComponents.getString(CALL_NUMBER_KEY))
         .put(CALL_NUMBER_PREFIX_KEY, itemCallNumberComponents.getString(CALL_NUMBER_PREFIX_KEY))
