@@ -3,8 +3,6 @@ package org.folio.service.event.handler.processor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import org.folio.persist.RequestRepository;
-import org.folio.rest.client.InventoryStorageClient;
 import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.Servicepoint;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,15 +10,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 class ItemUpdateProcessorForRequestTest {
-  private ItemUpdateProcessorForRequest processor;
-  private RequestRepository requestRepository;
-  private InventoryStorageClient inventoryStorageClient;
 
   @BeforeEach
   void setUp() {
-    requestRepository = Mockito.mock(RequestRepository.class);
-    inventoryStorageClient = Mockito.mock(InventoryStorageClient.class);
-    processor = new ItemUpdateProcessorForRequest(requestRepository, inventoryStorageClient);
     ItemUpdateProcessorForRequest.locationCache.invalidateAll();
     ItemUpdateProcessorForRequest.servicePointCache.invalidateAll();
   }

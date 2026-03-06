@@ -8,7 +8,7 @@ import org.folio.service.event.InventoryEventType;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
-public abstract class BaseEventProcessor<T> extends UpdateEventProcessor<T> {
+abstract class BaseEventProcessor<T> extends UpdateEventProcessor<T> {
   protected static final Cache<String, Location> locationCache = Caffeine.newBuilder()
     .maximumSize(1000)
     .build();

@@ -117,12 +117,10 @@ public class ItemUpdateProcessorForRequest extends BaseEventProcessor<Request> {
       log.info("updateItemAndServicePoint:: Location cache missed for id: {}",
         effectiveLocationId);
       locationsFuture = inventoryStorageClient.getLocations(singletonList(effectiveLocationId))
-        .onSuccess(locations -> {
-          locations.forEach(loc -> {
-            locationCache.put(loc.getId(), loc);
-            log.info("updateItemAndServicePoint:: Location cached for id: {}", loc.getId());
-          });
-        });
+        .onSuccess(locations -> locations.forEach(loc -> {
+          locationCache.put(loc.getId(), loc);
+          log.info("updateItemAndServicePoint:: Location cached for id: {}", loc.getId());
+        }));
     }
 
     return locationsFuture
@@ -158,13 +156,11 @@ public class ItemUpdateProcessorForRequest extends BaseEventProcessor<Request> {
         log.info("setRetrievalServicePointData:: ServicePoint cache missed for id: {}",
           primaryServicePoint);
         servicePointsFuture = inventoryStorageClient.getServicePoints(singletonList(primaryServicePoint))
-          .onSuccess(servicePoints -> {
-            servicePoints.forEach(sp -> {
-              servicePointCache.put(sp.getId(), sp);
-              log.info("setRetrievalServicePointData:: ServicePoint cached for id: {}",
-                sp.getId());
-            });
-          });
+          .onSuccess(servicePoints -> servicePoints.forEach(sp -> {
+            servicePointCache.put(sp.getId(), sp);
+            log.info("setRetrievalServicePointData:: ServicePoint cached for id: {}",
+              sp.getId());
+          }));
       }
       return servicePointsFuture
         .compose(servicePoints -> {
