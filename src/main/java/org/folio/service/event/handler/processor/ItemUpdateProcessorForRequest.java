@@ -60,7 +60,7 @@ public class ItemUpdateProcessorForRequest extends BaseEventProcessor<Request> {
     JsonObject oldCallNumberComponents = extractCallNumberComponents(oldObject);
     JsonObject newCallNumberComponents = extractCallNumberComponents(newObject);
     if (notEqual(oldCallNumberComponents, newCallNumberComponents)) {
-      log.info("ItemUpdateProcessorForRequest :: callNumberComponents changed, updating search index");
+      log.info("collectRelevantChanges :: callNumberComponents changed, updating search index");
       changes.add(new Change<>(request -> request.getSearchIndex()
         .setCallNumberComponents(newCallNumberComponents.mapTo(CallNumberComponents.class))));
     }
@@ -76,7 +76,7 @@ public class ItemUpdateProcessorForRequest extends BaseEventProcessor<Request> {
     String oldEffectiveLocationId = oldObject.getString("effectiveLocationId");
     String newEffectiveLocationId = newObject.getString("effectiveLocationId");
     if (notEqual(oldEffectiveLocationId, newEffectiveLocationId)) {
-      log.info("ItemUpdateProcessorForRequest :: effectiveLocationId changed from {} to {}",
+      log.info("collectRelevantChanges :: effectiveLocationId changed from {} to {}",
         oldEffectiveLocationId, newEffectiveLocationId);
       return updateItemAndServicePoint(newObject)
         .compose(locationAndSpData -> addLocationAndServicePointChanges(locationAndSpData, changes))
@@ -88,7 +88,7 @@ public class ItemUpdateProcessorForRequest extends BaseEventProcessor<Request> {
   }
 
   private static Future<List<Change<Request>>> addLocationAndServicePointChanges(Map<String, String> locationAndSpData, List<Change<Request>> changes) {
-    log.info("ItemUpdateProcessorForRequest :: locationAndSpData: {}", locationAndSpData);
+    log.info("addLocationAndServicePointChanges :: locationAndSpData: {}", locationAndSpData);
     changes.add(new Change<>(request -> {
       if (request.getItem() == null) {
         request.setItem(new Item());
