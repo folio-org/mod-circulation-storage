@@ -17,7 +17,7 @@ import static org.apache.commons.lang3.ObjectUtils.notEqual;
 import static org.folio.service.event.InventoryEventType.INVENTORY_ITEM_UPDATED;
 import static org.folio.service.event.handler.processor.ItemUpdateProcessorForRequest.ITEM_EFFECTIVE_LOCATION_ID;
 
-public class ItemLocationUpdateProcessorForRequest extends BaseEventProcessor<Request> {
+public class ItemLocationUpdateProcessorForRequest extends AbstractRequestUpdateEventProcessor {
   private static final Logger log = LogManager.getLogger(ItemLocationUpdateProcessorForRequest.class);
 
   private static final String LOCATION_NAME_KEY = "name";

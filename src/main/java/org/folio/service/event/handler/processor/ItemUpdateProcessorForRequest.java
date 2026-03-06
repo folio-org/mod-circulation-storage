@@ -28,7 +28,7 @@ import org.folio.rest.persist.Criteria.Criterion;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 
-public class ItemUpdateProcessorForRequest extends BaseEventProcessor<Request> {
+public class ItemUpdateProcessorForRequest extends AbstractRequestUpdateEventProcessor {
 
   private static final Logger log = LogManager.getLogger(ItemUpdateProcessorForRequest.class);
   private final InventoryStorageClient inventoryStorageClient;

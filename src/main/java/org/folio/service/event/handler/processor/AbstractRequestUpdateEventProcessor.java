@@ -2,13 +2,14 @@ package org.folio.service.event.handler.processor;
 
 import org.folio.persist.AbstractRepository;
 import org.folio.rest.jaxrs.model.Location;
+import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.jaxrs.model.Servicepoint;
 import org.folio.service.event.InventoryEventType;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
-abstract class BaseEventProcessor<T> extends UpdateEventProcessor<T> {
+abstract class AbstractRequestUpdateEventProcessor extends UpdateEventProcessor<Request> {
   protected static final Cache<String, Location> locationCache = Caffeine.newBuilder()
     .maximumSize(1000)
     .build();
@@ -16,7 +17,9 @@ abstract class BaseEventProcessor<T> extends UpdateEventProcessor<T> {
     .maximumSize(1000)
     .build();
 
-  public BaseEventProcessor(InventoryEventType inventoryEventType, AbstractRepository<T> repository) {
+  public AbstractRequestUpdateEventProcessor(InventoryEventType inventoryEventType,
+    AbstractRepository<Request> repository) {
+
     super(inventoryEventType, repository);
   }
 

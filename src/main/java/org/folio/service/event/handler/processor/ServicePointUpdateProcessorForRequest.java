@@ -16,7 +16,7 @@ import org.folio.rest.persist.Criteria.Criterion;
 
 import io.vertx.core.json.JsonObject;
 
-public class ServicePointUpdateProcessorForRequest extends BaseEventProcessor<Request> {
+public class ServicePointUpdateProcessorForRequest extends AbstractRequestUpdateEventProcessor {
   private static final Logger log = LogManager.getLogger(ServicePointUpdateProcessorForRequest.class);
   private static final String SERVICE_POINT_NAME_KEY = "name";
   private static final String ID_KEY = "id";
