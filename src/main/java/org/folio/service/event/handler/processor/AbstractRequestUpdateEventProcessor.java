@@ -17,7 +17,7 @@ abstract class AbstractRequestUpdateEventProcessor extends UpdateEventProcessor<
     .maximumSize(1000)
     .build();
 
-  public AbstractRequestUpdateEventProcessor(InventoryEventType inventoryEventType,
+  AbstractRequestUpdateEventProcessor(InventoryEventType inventoryEventType,
     AbstractRepository<Request> repository) {
 
     super(inventoryEventType, repository);
