@@ -5,6 +5,7 @@ import static org.folio.rest.tools.utils.ModuleName.getModuleName;
 import static org.folio.rest.tools.utils.ModuleName.getModuleVersion;
 import static org.folio.service.event.InventoryEventType.INVENTORY_ITEM_UPDATED;
 import static org.folio.service.event.InventoryEventType.INVENTORY_LOCATION_DELETED;
+import static org.folio.service.event.InventoryEventType.INVENTORY_LOCATION_DELETED_ALL;
 import static org.folio.service.event.InventoryEventType.INVENTORY_LOCATION_UPDATED;
 import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_DELETED;
 import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_UPDATED;
@@ -89,6 +90,8 @@ public class EventConsumerVerticle extends AbstractVerticle {
       .compose(r -> createInventoryEventConsumer(INVENTORY_LOCATION_UPDATED, config,
         new LocationUpdateEventHandler(context)))
       .compose(r -> createInventoryEventConsumer(INVENTORY_LOCATION_DELETED, config,
+        new LocationDeleteEventHandler(context)))
+      .compose(r -> createInventoryEventConsumer(INVENTORY_LOCATION_DELETED_ALL, config,
         new LocationDeleteEventHandler(context)))
       .mapEmpty();
   }

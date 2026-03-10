@@ -1,6 +1,7 @@
 package org.folio.service.event;
 
 import static org.folio.service.event.InventoryEventType.PayloadType.DELETE;
+import static org.folio.service.event.InventoryEventType.PayloadType.DELETE_ALL;
 import static org.folio.service.event.InventoryEventType.PayloadType.UPDATE;
 import static org.folio.support.kafka.topic.InventoryKafkaTopic.ITEM;
 import static org.folio.support.kafka.topic.InventoryKafkaTopic.LOCATION;
@@ -18,7 +19,8 @@ public enum InventoryEventType {
   INVENTORY_SERVICE_POINT_UPDATED(SERVICE_POINT, UPDATE),
   INVENTORY_SERVICE_POINT_DELETED(SERVICE_POINT, DELETE),
   INVENTORY_LOCATION_UPDATED(LOCATION, UPDATE),
-  INVENTORY_LOCATION_DELETED(LOCATION, DELETE);
+  INVENTORY_LOCATION_DELETED(LOCATION, DELETE),
+  INVENTORY_LOCATION_DELETED_ALL(LOCATION, DELETE_ALL);
 
   private final KafkaTopic kafkaTopic;
   private final PayloadType payloadType;
