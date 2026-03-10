@@ -35,6 +35,7 @@ public class InventoryStorageClient extends OkapiClient {
 
   public InventoryStorageClient(Vertx vertx, Map<String, String> okapiHeaders,
     Cache<String, Location> locationCache, Cache<String, Servicepoint> servicePointCache) {
+
     super(vertx, okapiHeaders);
     this.locationCache = locationCache;
     this.servicePointCache = servicePointCache;
