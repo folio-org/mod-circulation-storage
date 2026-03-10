@@ -1,5 +1,6 @@
 package org.folio.service.event.handler.processor;
 
+import static io.vertx.core.Future.succeededFuture;
 import static org.apache.commons.lang3.ObjectUtils.notEqual;
 import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_UPDATED;
 
@@ -16,10 +17,9 @@ import org.folio.rest.persist.Criteria.Criterion;
 
 import io.vertx.core.json.JsonObject;
 
-public class ServicePointUpdateProcessorForRequest extends AbstractRequestUpdateEventProcessor {
+public class ServicePointUpdateProcessorForRequest extends UpdateEventProcessor<Request> {
   private static final Logger log = LogManager.getLogger(ServicePointUpdateProcessorForRequest.class);
   private static final String SERVICE_POINT_NAME_KEY = "name";
-  private static final String ID_KEY = "id";
 
   public ServicePointUpdateProcessorForRequest(RequestRepository requestRepository) {
     super(INVENTORY_SERVICE_POINT_UPDATED, requestRepository);
@@ -31,13 +31,6 @@ public class ServicePointUpdateProcessorForRequest extends AbstractRequestUpdate
     JsonObject newObject = payload.getJsonObject("new");
     List<Change<Request>> changes = new ArrayList<>();
 
-    // Invalidate service point cache for updated/created service point
-    if (newObject != null && newObject.containsKey(ID_KEY)) {
-      String servicePointId = newObject.getString(ID_KEY);
-      invalidateServicePointCache(servicePointId);
-      log.info("collectRelevantChanges:: Service point cache invalidated for servicePointId: {}", servicePointId);
-    }
-
     // compare service point names
     String oldServicePointName = oldObject.getString(SERVICE_POINT_NAME_KEY);
     String newServicePointName = newObject.getString(SERVICE_POINT_NAME_KEY);
@@ -48,7 +41,7 @@ public class ServicePointUpdateProcessorForRequest extends AbstractRequestUpdate
         .setPickupServicePointName(newServicePointName)));
     }
 
-    return Future.succeededFuture(changes);
+    return succeededFuture(changes);
   }
 
   @Override

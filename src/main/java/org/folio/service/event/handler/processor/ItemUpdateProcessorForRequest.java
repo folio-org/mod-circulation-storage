@@ -28,7 +28,7 @@ import org.folio.rest.persist.Criteria.Criterion;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 
-public class ItemUpdateProcessorForRequest extends AbstractRequestUpdateEventProcessor {
+public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request> {
 
   private static final Logger log = LogManager.getLogger(ItemUpdateProcessorForRequest.class);
   private final InventoryStorageClient inventoryStorageClient;
@@ -106,28 +106,12 @@ public class ItemUpdateProcessorForRequest extends AbstractRequestUpdateEventPro
     Map<String, String> locationAndSpData = new HashMap<>();
     locationAndSpData.put(ITEM_EFFECTIVE_LOCATION_ID, effectiveLocationId);
 
-    // Use cache for location
-    Location cachedLocation = locationCache.getIfPresent(effectiveLocationId);
-    Future<Collection<Location>> locationsFuture;
-    if (cachedLocation != null) {
-      log.info("updateItemAndServicePoint:: Location cache found for id: {}",
-        effectiveLocationId);
-      locationsFuture = succeededFuture(singletonList(cachedLocation));
-    } else {
-      log.info("updateItemAndServicePoint:: Location cache missed for id: {}",
-        effectiveLocationId);
-      locationsFuture = inventoryStorageClient.getLocations(singletonList(effectiveLocationId))
-        .onSuccess(locations -> locations.forEach(loc -> {
-          locationCache.put(loc.getId(), loc);
-          log.info("updateItemAndServicePoint:: Location cached for id: {}", loc.getId());
-        }));
-    }
-
-    return locationsFuture
+    // InventoryStorageClient handles caching internally
+    return inventoryStorageClient.getLocations(singletonList(effectiveLocationId))
       .compose(locations -> setEffectiveLocationData(locations, effectiveLocationId, locationAndSpData))
       .compose(primaryServicePoint -> setRetrievalServicePointData(primaryServicePoint, locationAndSpData))
       .compose(e -> succeededFuture(locationAndSpData))
-      .onFailure(throwable -> log.info("ItemUpdateProcessorForRequest :: Error while fetching Locations: ", throwable));
+      .onFailure(throwable -> log.info("updateItemAndServicePoint :: Error while fetching Locations: ", throwable));
   }
 
   private static Future<String> setEffectiveLocationData(Collection<Location> locations, String effectiveLocationId,
@@ -145,24 +129,8 @@ public class ItemUpdateProcessorForRequest extends AbstractRequestUpdateEventPro
 
   private Future<Object> setRetrievalServicePointData(String primaryServicePoint, Map<String, String> locationAndSpData) {
     if (!StringUtils.isBlank(primaryServicePoint)) {
-      // Use cache for service point
-      Servicepoint cachedSp = servicePointCache.getIfPresent(primaryServicePoint);
-      Future<Collection<Servicepoint>> servicePointsFuture;
-      if (cachedSp != null) {
-        log.info("setRetrievalServicePointData:: ServicePoint cache found for id: {}",
-          primaryServicePoint);
-        servicePointsFuture = succeededFuture(singletonList(cachedSp));
-      } else {
-        log.info("setRetrievalServicePointData:: ServicePoint cache missed for id: {}",
-          primaryServicePoint);
-        servicePointsFuture = inventoryStorageClient.getServicePoints(singletonList(primaryServicePoint))
-          .onSuccess(servicePoints -> servicePoints.forEach(sp -> {
-            servicePointCache.put(sp.getId(), sp);
-            log.info("setRetrievalServicePointData:: ServicePoint cached for id: {}",
-              sp.getId());
-          }));
-      }
-      return servicePointsFuture
+      // InventoryStorageClient handles caching internally
+      return inventoryStorageClient.getServicePoints(singletonList(primaryServicePoint))
         .compose(servicePoints -> {
           Servicepoint retrievalServicePoint = servicePoints.stream()
             .filter(sp -> sp.getId().equals(primaryServicePoint))
@@ -173,7 +141,7 @@ public class ItemUpdateProcessorForRequest extends AbstractRequestUpdateEventPro
           }
           return succeededFuture();
         })
-        .onFailure(throwable -> log.info("ItemUpdateProcessorForRequest :: Error while fetching ServicePoint: {}", throwable.toString()));
+        .onFailure(throwable -> log.info("setRetrievalServicePointData :: Error while fetching ServicePoint: {}", throwable.toString()));
     }
     return succeededFuture();
   }

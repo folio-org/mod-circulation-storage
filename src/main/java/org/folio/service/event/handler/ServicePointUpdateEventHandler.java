@@ -15,7 +15,7 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 
-public class ServicePointUpdateEventHandler implements AsyncRecordHandler<String, String> {
+public class ServicePointUpdateEventHandler extends BaseInventoryEventHandler implements AsyncRecordHandler<String, String> {
   private final Context context;
 
   public ServicePointUpdateEventHandler(Context context) {
@@ -26,7 +26,16 @@ public class ServicePointUpdateEventHandler implements AsyncRecordHandler<String
   public Future<String> handle(KafkaConsumerRecord<String, String> kafkaConsumerRecord) {
     JsonObject payload = new JsonObject(kafkaConsumerRecord.value());
     var headers = new CaseInsensitiveMap<>(kafkaHeadersToMap(kafkaConsumerRecord.headers()));
-    var requestRepository = new RequestRepository(context, headers);
+
+    // Invalidate cache for updated service point
+    JsonObject newObject = payload.getJsonObject("new");
+    if (newObject != null && newObject.containsKey("id")) {
+      String servicePointId = newObject.getString("id");
+      invalidateServicePointCache(servicePointId);
+    }
+
+    var requestRepository = new RequestRepository(context, headers,
+      getLocationCache(), getServicePointCache());
     var requestPolicyRepository = new RequestPolicyRepository(context, headers);
 
     return new ServicePointUpdateProcessorForRequest(requestRepository)

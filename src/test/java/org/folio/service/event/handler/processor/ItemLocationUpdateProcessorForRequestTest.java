@@ -1,8 +1,6 @@
 package org.folio.service.event.handler.processor;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
@@ -22,39 +20,50 @@ class ItemLocationUpdateProcessorForRequestTest {
   void setUp() {
     requestRepository = Mockito.mock(RequestRepository.class);
     processor = new ItemLocationUpdateProcessorForRequest(requestRepository);
-    ItemLocationUpdateProcessorForRequest.locationCache.invalidateAll();
-  }
-
-  @Test
-  void testCacheInvalidationOnUpdate() {
-    String locationId = "loc1";
-    ItemLocationUpdateProcessorForRequest.locationCache.put(locationId, Mockito.mock(org.folio.rest.jaxrs.model.Location.class));
-    assertNotNull(ItemLocationUpdateProcessorForRequest.locationCache.getIfPresent(locationId));
-
-    JsonObject payload = new JsonObject()
-      .put("new", new JsonObject().put("id", locationId).put("name", "NewName"))
-      .put("old", new JsonObject().put("id", locationId).put("name", "OldName"));
-    processor.collectRelevantChanges(payload);
-
-    assertNull(ItemLocationUpdateProcessorForRequest.locationCache.getIfPresent(locationId));
-  }
-
-  @Test
-  void testNoInvalidationIfNoId() {
-    JsonObject payload = new JsonObject()
-      .put("new", new JsonObject().put("name", "NewName"))
-      .put("old", new JsonObject().put("name", "OldName"));
-    processor.collectRelevantChanges(payload);
-    assertTrue(ItemLocationUpdateProcessorForRequest.locationCache.asMap().isEmpty());
   }
 
   @Test
   void testChangeIsReturnedOnNameUpdate() {
     JsonObject payload = new JsonObject()
-      .put("new", new JsonObject().put("id", "loc2").put("name", "NewName"))
-      .put("old", new JsonObject().put("id", "loc2").put("name", "OldName"));
+      .put("new", new JsonObject().put("id", "loc1").put("name", "NewName"))
+      .put("old", new JsonObject().put("id", "loc1").put("name", "OldName"));
+
     List<?> changes = processor.collectRelevantChanges(payload).result();
-    assertFalse(changes.isEmpty());
+
+    assertFalse(changes.isEmpty(), "Should return a change when location name changes");
+  }
+
+  @Test
+  void testNoChangeWhenNameIsSame() {
+    JsonObject payload = new JsonObject()
+      .put("new", new JsonObject().put("id", "loc2").put("name", "SameName"))
+      .put("old", new JsonObject().put("id", "loc2").put("name", "SameName"));
+
+    List<?> changes = processor.collectRelevantChanges(payload).result();
+
+    assertTrue(changes.isEmpty(), "Should not return changes when location name is the same");
+  }
+
+  @Test
+  void testChangeWithDifferentCaseNames() {
+    JsonObject payload = new JsonObject()
+      .put("new", new JsonObject().put("id", "loc3").put("name", "Location Name"))
+      .put("old", new JsonObject().put("id", "loc3").put("name", "location name"));
+
+    List<?> changes = processor.collectRelevantChanges(payload).result();
+
+    assertFalse(changes.isEmpty(), "Should return a change when location name case changes");
+  }
+
+  @Test
+  void testProcessorHandlesNullGracefully() {
+    JsonObject payload = new JsonObject()
+      .put("new", new JsonObject().put("id", "loc4"))
+      .put("old", new JsonObject().put("id", "loc4"));
+
+    List<?> changes = processor.collectRelevantChanges(payload).result();
+
+    assertTrue(changes.isEmpty(), "Should handle null names without throwing exception");
   }
 }
 

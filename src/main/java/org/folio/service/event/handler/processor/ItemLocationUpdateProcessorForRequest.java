@@ -17,7 +17,7 @@ import static org.apache.commons.lang3.ObjectUtils.notEqual;
 import static org.folio.service.event.InventoryEventType.INVENTORY_ITEM_UPDATED;
 import static org.folio.service.event.handler.processor.ItemUpdateProcessorForRequest.ITEM_EFFECTIVE_LOCATION_ID;
 
-public class ItemLocationUpdateProcessorForRequest extends AbstractRequestUpdateEventProcessor {
+public class ItemLocationUpdateProcessorForRequest extends UpdateEventProcessor<Request> {
   private static final Logger log = LogManager.getLogger(ItemLocationUpdateProcessorForRequest.class);
 
   private static final String LOCATION_NAME_KEY = "name";
@@ -32,18 +32,11 @@ public class ItemLocationUpdateProcessorForRequest extends AbstractRequestUpdate
     JsonObject newObject = payload.getJsonObject("new");
     List<Change<Request>> changes = new ArrayList<>();
 
-    // Invalidate location cache for updated/created location
-    if (newObject != null && newObject.containsKey("id")) {
-      String locationId = newObject.getString("id");
-      invalidateLocationCache(locationId);
-      log.info("collectRelevantChanges:: Location cache invalidated for locationId: {}", locationId);
-    }
-
     // compare shelving order
     String oldLocationName = oldObject.getString(LOCATION_NAME_KEY);
     String newLocationName = newObject.getString(LOCATION_NAME_KEY);
     if (notEqual(oldLocationName, newLocationName)) {
-      log.info("collectRelevantChanges:: changing item.itemEffectiveLocationId from {} to {}",
+      log.info("collectRelevantChanges:: changing item.itemEffectiveLocationName from {} to {}",
         oldLocationName, newLocationName);
       changes.add(new Change<>(request -> request.getItem().setItemEffectiveLocationName(newLocationName)));
     }

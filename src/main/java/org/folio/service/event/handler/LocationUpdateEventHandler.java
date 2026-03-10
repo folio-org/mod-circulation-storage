@@ -12,7 +12,8 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 
-public class LocationUpdateEventHandler implements AsyncRecordHandler<String, String> {
+public class LocationUpdateEventHandler extends BaseInventoryEventHandler implements AsyncRecordHandler<String, String> {
+
   private final Context context;
 
   public LocationUpdateEventHandler(Context context) {
@@ -25,8 +26,18 @@ public class LocationUpdateEventHandler implements AsyncRecordHandler<String, St
     CaseInsensitiveMap<String, String> headers =
       new CaseInsensitiveMap<>(kafkaHeadersToMap(kafkaConsumerRecord.headers()));
 
+    // Invalidate cache for updated location
+    JsonObject newObject = payload.getJsonObject("new");
+    if (newObject != null && newObject.containsKey("id")) {
+      String locationId = newObject.getString("id");
+      invalidateLocationCache(locationId);
+    }
+
+    RequestRepository requestRepository = new RequestRepository(context, headers,
+      getLocationCache(), getServicePointCache());
+
     ItemLocationUpdateProcessorForRequest itemLocationUpdateProcessorForRequest =
-      new ItemLocationUpdateProcessorForRequest(new RequestRepository(context, headers));
+      new ItemLocationUpdateProcessorForRequest(requestRepository);
 
     return itemLocationUpdateProcessorForRequest.run(kafkaConsumerRecord.key(), payload);
   }

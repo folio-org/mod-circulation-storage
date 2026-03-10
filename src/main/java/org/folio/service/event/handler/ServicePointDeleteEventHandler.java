@@ -12,7 +12,7 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 
-public class ServicePointDeleteEventHandler implements AsyncRecordHandler<String, String> {
+public class ServicePointDeleteEventHandler extends BaseInventoryEventHandler implements AsyncRecordHandler<String, String> {
   private final Context context;
 
   public ServicePointDeleteEventHandler(Context context) {
@@ -24,6 +24,13 @@ public class ServicePointDeleteEventHandler implements AsyncRecordHandler<String
     JsonObject payload = new JsonObject(kafkaConsumerRecord.value());
     CaseInsensitiveMap<String, String> headers =
       new CaseInsensitiveMap<>(kafkaHeadersToMap(kafkaConsumerRecord.headers()));
+
+    // Invalidate cache for deleted service point
+    JsonObject oldObject = payload.getJsonObject("old");
+    if (oldObject != null && oldObject.containsKey("id")) {
+      String servicePointId = oldObject.getString("id");
+      invalidateServicePointCache(servicePointId);
+    }
 
     ServicePointDeleteProcessorForRequestPolicy servicePointDeleteProcessorForRequestPolicy =
       new ServicePointDeleteProcessorForRequestPolicy(
