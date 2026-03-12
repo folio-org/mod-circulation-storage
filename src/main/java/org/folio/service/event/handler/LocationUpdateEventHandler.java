@@ -33,11 +33,8 @@ public class LocationUpdateEventHandler extends BaseInventoryEventHandler implem
       invalidateLocationCache(locationId);
     }
 
-    RequestRepository requestRepository = new RequestRepository(context, headers,
-      getLocationCache(), getServicePointCache());
-
     ItemLocationUpdateProcessorForRequest itemLocationUpdateProcessorForRequest =
-      new ItemLocationUpdateProcessorForRequest(requestRepository);
+      new ItemLocationUpdateProcessorForRequest(new RequestRepository(context, headers));
 
     return itemLocationUpdateProcessorForRequest.run(kafkaConsumerRecord.key(), payload);
   }

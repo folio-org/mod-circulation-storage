@@ -33,8 +33,7 @@ public class ServicePointDeleteEventHandler extends BaseInventoryEventHandler im
     }
 
     ServicePointDeleteProcessorForRequestPolicy servicePointDeleteProcessorForRequestPolicy =
-      new ServicePointDeleteProcessorForRequestPolicy(
-        new RequestPolicyRepository(context, headers));
+      new ServicePointDeleteProcessorForRequestPolicy(new RequestPolicyRepository(context, headers));
 
     return servicePointDeleteProcessorForRequestPolicy.run(kafkaConsumerRecord.key(), payload);
   }

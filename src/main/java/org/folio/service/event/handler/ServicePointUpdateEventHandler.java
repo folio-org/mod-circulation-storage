@@ -34,8 +34,7 @@ public class ServicePointUpdateEventHandler extends BaseInventoryEventHandler im
       invalidateServicePointCache(servicePointId);
     }
 
-    var requestRepository = new RequestRepository(context, headers,
-      getLocationCache(), getServicePointCache());
+    var requestRepository = new RequestRepository(context, headers);
     var requestPolicyRepository = new RequestPolicyRepository(context, headers);
 
     return new ServicePointUpdateProcessorForRequest(requestRepository)
