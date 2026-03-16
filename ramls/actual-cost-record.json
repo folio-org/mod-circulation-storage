@@ -5,11 +5,13 @@
   "properties": {
     "id": {
       "description": "Actual cost record ID",
+      "x-fqm-essential": true,
       "type": "string",
       "$ref": "raml-util/schemas/uuid.schema"
     },
     "lossType": {
       "description": "Type of the item loss",
+      "x-fqm-essential": true,
       "type": "string",
       "enum": [
         "Aged to lost",
@@ -18,11 +20,13 @@
     },
     "lossDate": {
       "description": "Date and time when the item was lost",
+      "x-fqm-essential": true,
       "type": "string",
       "format": "date-time"
     },
     "expirationDate": {
       "description": "Expiration date and time of actual cost record",
+      "x-fqm-essential": true,
       "type": "string",
       "format": "date-time"
     },
@@ -33,32 +37,39 @@
       "properties": {
         "id": {
           "description": "User ID",
+          "x-fqm-essential": true,
           "type": "string",
           "$ref": "raml-util/schemas/uuid.schema"
         },
         "barcode": {
           "description": "User barcode",
+          "x-fqm-essential": true,
           "type": "string"
         },
         "firstName": {
           "description": "User first name",
+          "x-fqm-essential": true,
           "type": "string"
         },
         "lastName": {
           "description": "User last name",
+          "x-fqm-essential": true,
           "type": "string"
         },
         "middleName": {
           "description": "User middle name",
+          "x-fqm-essential": true,
           "type": "string"
         },
         "patronGroupId": {
           "description": "Patron group ID",
+          "x-fqm-essential": true,
           "type": "string",
           "$ref": "raml-util/schemas/uuid.schema"
         },
         "patronGroup": {
           "description": "Patron group name",
+          "x-fqm-essential": true,
           "type": "string"
         }
       },
@@ -75,6 +86,7 @@
       "properties": {
         "id": {
           "description": "Loan ID",
+          "x-fqm-essential": true,
           "type": "string",
           "$ref": "raml-util/schemas/uuid.schema"
         }
@@ -91,51 +103,62 @@
       "properties": {
         "id": {
           "description": "Item ID",
+          "x-fqm-essential": true,
           "type": "string",
           "$ref": "raml-util/schemas/uuid.schema"
         },
         "barcode": {
           "description": "Item barcode",
+          "x-fqm-essential": true,
           "type": "string"
         },
         "materialTypeId": {
           "description": "Material type ID",
+          "x-fqm-essential": true,
           "type": "string",
           "$ref": "raml-util/schemas/uuid.schema"
         },
         "materialType": {
           "description": "Material type name",
+          "x-fqm-essential": true,
           "type": "string"
         },
         "permanentLocationId": {
           "description": "Permanent location ID",
+          "x-fqm-essential": true,
           "type": "string",
           "$ref": "raml-util/schemas/uuid.schema"
         },
         "permanentLocation": {
           "description": "Permanent location name",
+          "x-fqm-essential": true,
           "type": "string"
         },
         "effectiveLocationId": {
           "description": "Effective location ID",
+          "x-fqm-essential": true,
           "type": "string",
           "$ref": "raml-util/schemas/uuid.schema"
         },
         "effectiveLocation": {
           "description": "Effective location name",
+          "x-fqm-essential": true,
           "type": "string"
         },
         "loanTypeId": {
           "description": "Loan type ID",
+          "x-fqm-essential": true,
           "type": "string",
           "$ref": "raml-util/schemas/uuid.schema"
         },
         "loanType": {
           "description": "Loan type name",
+          "x-fqm-essential": true,
           "type": "string"
         },
         "holdingsRecordId": {
           "description": "Holdings record ID",
+          "x-fqm-essential": true,
           "type": "string",
           "$ref": "raml-util/schemas/uuid.schema"
         },
@@ -145,38 +168,46 @@
           "properties": {
             "callNumber": {
               "type": "string",
-              "description": "Effective Call Number is an identifier assigned to an item or its holding and associated with the item."
+              "description": "Effective Call Number is an identifier assigned to an item or its holding and associated with the item.",
+              "x-fqm-essential": true
             },
             "prefix": {
               "type": "string",
-              "description": "Effective Call Number Prefix is the prefix of the identifier assigned to an item or its holding and associated with the item."
+              "description": "Effective Call Number Prefix is the prefix of the identifier assigned to an item or its holding and associated with the item.",
+              "x-fqm-essential": true
             },
             "suffix": {
               "type": "string",
-              "description": "Effective Call Number Suffix is the suffix of the identifier assigned to an item or its holding and associated with the item."
+              "description": "Effective Call Number Suffix is the suffix of the identifier assigned to an item or its holding and associated with the item.",
+              "x-fqm-essential": true
             }
           },
           "additionalProperties": false
         },
         "volume": {
           "type": "string",
-          "description": "Volume is intended for monographs when a multipart monograph (e.g. a biography of George Bernard Shaw in three volumes)."
+          "description": "Volume is intended for monographs when a multipart monograph (e.g. a biography of George Bernard Shaw in three volumes).",
+          "x-fqm-essential": true
         },
         "enumeration": {
           "type": "string",
-          "description": "Enumeration is the descriptive information for the numbering scheme of a serial."
+          "description": "Enumeration is the descriptive information for the numbering scheme of a serial.",
+          "x-fqm-essential": true
         },
         "chronology": {
           "type": "string",
-          "description": "Chronology is the descriptive information for the dating scheme of a serial."
+          "description": "Chronology is the descriptive information for the dating scheme of a serial.",
+          "x-fqm-essential": true
         },
         "displaySummary": {
           "description": "Display summary about the item",
+          "x-fqm-essential": true,
           "type": "string"
         },
         "copyNumber": {
           "type": "string",
-          "description": "Copy number is the piece identifier. The copy number reflects if the library has a copy of a single-volume monograph; one copy of a multi-volume, (e.g. Copy 1, or C.7.)"
+          "description": "Copy number is the piece identifier. The copy number reflects if the library has a copy of a single-volume monograph; one copy of a multi-volume, (e.g. Copy 1, or C.7.)",
+          "x-fqm-essential": true
         }
       },
       "additionalProperties": false,
@@ -196,16 +227,19 @@
       "properties": {
         "id": {
           "description": "Instance ID",
+          "x-fqm-essential": true,
           "type": "string",
           "$ref": "raml-util/schemas/uuid.schema"
         },
         "title": {
           "description": "Instance title",
+          "x-fqm-essential": true,
           "type": "string"
         },
         "identifiers": {
           "type": "array",
           "description": "An extensible set of name-value pairs of identifiers associated with the resource",
+          "x-fqm-essential": true,
           "minItems": 0,
           "items": {
             "type": "object",
@@ -236,6 +270,7 @@
         "contributors": {
           "type": "array",
           "description": "List of contributors",
+          "x-fqm-essential": true,
           "minItems": 0,
           "items": {
             "type": "object",
@@ -265,30 +300,36 @@
       "properties": {
         "accountId": {
           "description": "ID of the fee/fine (\"account\") instance",
+          "x-fqm-essential": true,
           "type": "string",
           "$ref": "raml-util/schemas/uuid.schema"
         },
         "billedAmount": {
           "description": "Initial amount of a fee/fine created upon billing",
+          "x-fqm-essential": true,
           "type": "number",
           "minimum": 0.0
         },
         "ownerId": {
           "description": "Fee/fine owner ID",
+          "x-fqm-essential": true,
           "type": "string",
           "$ref": "raml-util/schemas/uuid.schema"
         },
         "owner": {
           "description": "Fee/fine owner name",
+          "x-fqm-essential": true,
           "type": "string"
         },
         "typeId": {
           "description": "Fee/fine type ID",
+          "x-fqm-essential": true,
           "type": "string",
           "$ref": "raml-util/schemas/uuid.schema"
         },
         "type": {
           "description": "Fee/fine type name",
+          "x-fqm-essential": true,
           "type": "string"
         }
       },
@@ -302,6 +343,7 @@
     },
     "status": {
       "description": "Status of the actual cost record",
+      "x-fqm-essential": true,
       "type": "string",
       "enum": [
         "Open",
@@ -313,10 +355,12 @@
     },
     "additionalInfoForStaff": {
       "description": "Additional information for staff",
+      "x-fqm-essential": true,
       "type": "string"
     },
     "additionalInfoForPatron": {
       "description": "Additional information for a patron",
+      "x-fqm-essential": true,
       "type": "string"
     },
     "metadata": {
