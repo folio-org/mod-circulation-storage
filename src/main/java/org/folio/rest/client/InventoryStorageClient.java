@@ -46,23 +46,27 @@ public class InventoryStorageClient extends OkapiClient {
       return succeededFuture(new ArrayList<>());
     }
 
-    // Check cache for single ID requests if cache is available
+    // Check cache for single non-null ID requests if cache is available
     if (servicePointCache != null && ids.size() == 1) {
       String id = ids.iterator().next();
-      Servicepoint cached = servicePointCache.getIfPresent(id);
-      if (cached != null) {
-        log.info("getServicePoints:: Cache hit for service point id: {}", id);
-        return succeededFuture(singletonList(cached));
+      if (id != null) {
+        Servicepoint cached = servicePointCache.getIfPresent(id);
+        if (cached != null) {
+          log.info("getServicePoints:: Cache hit for service point id: {}", id);
+          return succeededFuture(singletonList(cached));
+        }
+        log.info("getServicePoints:: Cache miss for service point id: {}", id);
       }
-      log.info("getServicePoints:: Cache miss for service point id: {}", id);
     }
 
     return get(SERVICE_POINTS_URL, ids, SERVICE_POINTS_COLLECTION_NAME, Servicepoint.class)
       .onSuccess(servicePoints -> {
         if (servicePointCache != null) {
           servicePoints.forEach(sp -> {
-            servicePointCache.put(sp.getId(), sp);
-            log.debug("getServicePoints:: Cached service point id: {}", sp.getId());
+            if (sp.getId() != null) {
+              servicePointCache.put(sp.getId(), sp);
+              log.debug("getServicePoints:: Cached service point id: {}", sp.getId());
+            }
           });
         }
       });
@@ -73,23 +77,27 @@ public class InventoryStorageClient extends OkapiClient {
       return succeededFuture(new ArrayList<>());
     }
 
-    // Check cache for single ID requests if cache is available
+    // Check cache for single non-null ID requests if cache is available
     if (locationCache != null && ids.size() == 1) {
       String id = ids.iterator().next();
-      Location cached = locationCache.getIfPresent(id);
-      if (cached != null) {
-        log.info("getLocations:: Cache hit for location id: {}", id);
-        return succeededFuture(singletonList(cached));
+      if (id != null) {
+        Location cached = locationCache.getIfPresent(id);
+        if (cached != null) {
+          log.info("getLocations:: Cache hit for location id: {}", id);
+          return succeededFuture(singletonList(cached));
+        }
+        log.info("getLocations:: Cache miss for location id: {}", id);
       }
-      log.info("getLocations:: Cache miss for location id: {}", id);
     }
 
     return get(LOCATION_URL, ids, LOCATION_COLLECTION_NAME, Location.class)
       .onSuccess(locations -> {
         if (locationCache != null) {
           locations.forEach(loc -> {
-            locationCache.put(loc.getId(), loc);
-            log.debug("getLocations:: Cached location id: {}", loc.getId());
+            if (loc.getId() != null) {
+              locationCache.put(loc.getId(), loc);
+              log.debug("getLocations:: Cached location id: {}", loc.getId());
+            }
           });
         }
       });
