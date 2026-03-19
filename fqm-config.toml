@@ -1,0 +1,51 @@
+[metadata]
+team = "vega"
+domain = "circulation"
+module = "mod-circulation-storage"
+
+[[sources]]
+name = "actual_cost_record"
+table = "actual_cost_record"
+
+[[entityTypes]]
+name = "actual_cost_record"
+private = false
+schema = "./ramls/actual-cost-record.json"
+source = "actual_cost_record"
+sort = ["id", "ASC"]
+permissions = ["actual-cost-record-storage.actual-cost-records.collection.get"]
+
+[entityTypes.fieldOverrides.user_id]
+x-fqm-essential = true
+x-fqm-joins-to-raw = [
+  { targetId = "bb058933-cd06-4539-bd3a-6f248ff98ee2", targetField = "id", direction = "left", type = "equality-cast-uuid" },
+  { targetId = "f2615ea6-450b-425d-804d-6a495afd9308", targetField = "id", direction = "left", type = "equality-cast-uuid" },
+]
+
+[entityTypes.fieldOverrides.metadata_created_date]
+x-fqm-essential = true
+
+[entityTypes.fieldOverrides.metadata_created_by_user_id]
+x-fqm-essential = true
+x-fqm-visibility = "hidden"
+x-fqm-joins-to-raw = [
+  { targetId = "bb058933-cd06-4539-bd3a-6f248ff98ee2", targetField = "id", direction = "left", type = "equality-cast-uuid" },
+  { targetId = "f2615ea6-450b-425d-804d-6a495afd9308", targetField = "id", direction = "left", type = "equality-cast-uuid" },
+]
+
+[entityTypes.fieldOverrides.metadata_created_by_username]
+x-fqm-essential = true
+
+[entityTypes.fieldOverrides.metadata_updated_date]
+x-fqm-essential = true
+
+[entityTypes.fieldOverrides.metadata_updated_by_user_id]
+x-fqm-essential = true
+x-fqm-visibility = "hidden"
+x-fqm-joins-to-raw = [
+  { targetId = "bb058933-cd06-4539-bd3a-6f248ff98ee2", targetField = "id", direction = "left", type = "equality-cast-uuid" },
+  { targetId = "f2615ea6-450b-425d-804d-6a495afd9308", targetField = "id", direction = "left", type = "equality-cast-uuid" },
+]
+
+[entityTypes.fieldOverrides.metadata_updated_by_username]
+x-fqm-essential = true
