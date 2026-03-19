@@ -90,9 +90,9 @@ public class EventConsumerVerticle extends AbstractVerticle {
       .compose(r -> createInventoryEventConsumer(INVENTORY_LOCATION_UPDATED, config,
         new LocationUpdateEventHandler(context)))
       .compose(r -> createInventoryEventConsumer(INVENTORY_LOCATION_DELETED, config,
-        new LocationDeleteEventHandler(context)))
+        new LocationDeleteEventHandler()))
       .compose(r -> createInventoryEventConsumer(INVENTORY_LOCATION_DELETED_ALL, config,
-        new LocationDeleteEventHandler(context)))
+        new LocationDeleteEventHandler()))
       .mapEmpty();
   }
 
