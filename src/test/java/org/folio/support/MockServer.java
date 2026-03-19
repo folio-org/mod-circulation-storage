@@ -18,10 +18,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
 import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_NO_CONTENT;
-import static org.junit.Assert.fail;
 
 public class MockServer extends AbstractVerticle {
 
@@ -35,6 +33,7 @@ public class MockServer extends AbstractVerticle {
 
   private final int port;
   private final Vertx vertx;
+  private HttpServer httpServer;
 
   public MockServer(int port, Vertx vertx) {
     this.port = port;
@@ -42,21 +41,28 @@ public class MockServer extends AbstractVerticle {
   }
 
   public void start() throws InterruptedException, ExecutionException, TimeoutException {
-    HttpServer server = vertx.createHttpServer();
+    httpServer = vertx.createHttpServer();
     CompletableFuture<HttpServer> deploymentComplete = new CompletableFuture<>();
-    server.requestHandler(register()).listen(port)
+    httpServer.requestHandler(register()).listen(port)
       .onSuccess(deploymentComplete::complete)
       .onFailure(deploymentComplete::completeExceptionally);
     deploymentComplete.get(30, TimeUnit.SECONDS);
   }
 
-  public void close() {
-    vertx.close()
-      .onSuccess(res -> logger.info("Successfully shut down mock server"))
-      .onFailure(cause -> {
-        logger.error("Failed to shut down mock server", cause);
-        fail(cause.getMessage());
-      });
+  public void close() throws InterruptedException, ExecutionException, TimeoutException {
+    if (httpServer != null) {
+      CompletableFuture<Void> closeComplete = new CompletableFuture<>();
+      httpServer.close()
+        .onSuccess(res -> {
+          logger.info("Successfully shut down mock server");
+          closeComplete.complete(null);
+        })
+        .onFailure(cause -> {
+          logger.error("Failed to shut down mock server", cause);
+          closeComplete.completeExceptionally(cause);
+        });
+      closeComplete.get(10, TimeUnit.SECONDS);
+    }
   }
 
   public Router register() {
