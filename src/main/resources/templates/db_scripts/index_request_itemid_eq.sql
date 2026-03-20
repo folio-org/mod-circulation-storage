@@ -2,7 +2,7 @@
     -- The existing request_itemid_idx uses lower(f_unaccent(...)) which does not match
     -- the plain equality query (jsonb->>'itemId') = ? generated during item update events
     -- (e.g. from mod-bulk-operations), resulting in sequential scans and high DB load.
-    -- See: https://folio-org.atlassian.net/browse/CIRC-XXXX
+    -- See: https://folio-org.atlassian.net/browse/CIRCSTORE-643
     DO $do$
     BEGIN
       PERFORM rmb_internal_index(
