@@ -13,8 +13,9 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 
-public class ItemUpdateEventHandler implements AsyncRecordHandler<String, String> {
+public class ItemUpdateEventHandler extends BaseInventoryEventHandler implements AsyncRecordHandler<String, String> {
   private final Context context;
+
   public ItemUpdateEventHandler(Context context) {
     this.context = context;
   }
@@ -24,8 +25,13 @@ public class ItemUpdateEventHandler implements AsyncRecordHandler<String, String
     JsonObject payload = new JsonObject(kafkaConsumerRecord.value());
     CaseInsensitiveMap<String, String> headers =
       new CaseInsensitiveMap<>(kafkaHeadersToMap(kafkaConsumerRecord.headers()));
+
+    RequestRepository requestRepository = new RequestRepository(context, headers);
+    InventoryStorageClient inventoryStorageClient = new InventoryStorageClient(
+      context.owner(), headers, getLocationCache(), getServicePointCache());
+
     ItemUpdateProcessorForRequest itemUpdateProcessorForRequest =
-      new ItemUpdateProcessorForRequest(new RequestRepository(context, headers), new InventoryStorageClient(context.owner(), headers));
+      new ItemUpdateProcessorForRequest(requestRepository, inventoryStorageClient);
 
     return itemUpdateProcessorForRequest.run(kafkaConsumerRecord.key(), payload);
   }

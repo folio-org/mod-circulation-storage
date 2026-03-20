@@ -1,5 +1,6 @@
 package org.folio.service.event.handler.processor;
 
+import static io.vertx.core.Future.succeededFuture;
 import static org.apache.commons.lang3.ObjectUtils.notEqual;
 import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_UPDATED;
 
@@ -28,7 +29,6 @@ public class ServicePointUpdateProcessorForRequest extends UpdateEventProcessor<
   protected Future<List<Change<Request>>> collectRelevantChanges(JsonObject payload) {
     JsonObject oldObject = payload.getJsonObject("old");
     JsonObject newObject = payload.getJsonObject("new");
-
     List<Change<Request>> changes = new ArrayList<>();
 
     // compare service point names
@@ -41,7 +41,7 @@ public class ServicePointUpdateProcessorForRequest extends UpdateEventProcessor<
         .setPickupServicePointName(newServicePointName)));
     }
 
-    return Future.succeededFuture(changes);
+    return succeededFuture(changes);
   }
 
   @Override
