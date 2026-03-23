@@ -661,8 +661,7 @@
     },
     {
       "run": "after",
-      "snippetPath": "index_request_itemid_eq.sql",
-      "fromModuleVersion": "17.5.0"
+      "snippetPath": "index_request_itemid_eq.sql"
     }
   ]
 }
