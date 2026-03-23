@@ -1,11 +1,12 @@
 package org.folio.rest.client;
 
 import static io.vertx.core.Future.succeededFuture;
-import static java.util.Collections.singletonList;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,64 +43,60 @@ public class InventoryStorageClient extends OkapiClient {
   }
 
   public Future<Collection<Servicepoint>> getServicePoints(Collection<String> ids) {
-    if (ids == null || ids.isEmpty()) {
-      return succeededFuture(new ArrayList<>());
-    }
-
-    // Check cache for single non-null ID requests if cache is available
-    if (servicePointCache != null && ids.size() == 1) {
-      String id = ids.iterator().next();
-      if (id != null) {
-        Servicepoint cached = servicePointCache.getIfPresent(id);
-        if (cached != null) {
-          log.info("getServicePoints:: Cache hit for service point id: {}", id);
-          return succeededFuture(singletonList(cached));
-        }
-        log.info("getServicePoints:: Cache miss for service point id: {}", id);
-      }
-    }
-
-    return get(SERVICE_POINTS_URL, ids, SERVICE_POINTS_COLLECTION_NAME, Servicepoint.class)
-      .onSuccess(servicePoints -> {
-        if (servicePointCache != null) {
-          servicePoints.forEach(sp -> {
-            if (sp.getId() != null) {
-              servicePointCache.put(sp.getId(), sp);
-              log.debug("getServicePoints:: Cached service point id: {}", sp.getId());
-            }
-          });
-        }
-      });
+    return fetchWithCache(ids, SERVICE_POINTS_URL, SERVICE_POINTS_COLLECTION_NAME,
+      Servicepoint.class, servicePointCache, Servicepoint::getId);
   }
 
   public Future<Collection<Location>> getLocations(Collection<String> ids) {
+    return fetchWithCache(ids, LOCATION_URL, LOCATION_COLLECTION_NAME,
+      Location.class, locationCache, Location::getId);
+  }
+
+  private <T> Future<Collection<T>> fetchWithCache(Collection<String> ids, String url,
+    String collectionName, Class<T> type, Cache<String, T> cache,
+    Function<T, String> idExtractor) {
+
     if (ids == null || ids.isEmpty()) {
+      log.info("fetchWithCache:: ids are null or empty, returning empty collection");
       return succeededFuture(new ArrayList<>());
     }
 
-    // Check cache for single non-null ID requests if cache is available
-    if (locationCache != null && ids.size() == 1) {
-      String id = ids.iterator().next();
-      if (id != null) {
-        Location cached = locationCache.getIfPresent(id);
-        if (cached != null) {
-          log.info("getLocations:: Cache hit for location id: {}", id);
-          return succeededFuture(singletonList(cached));
-        }
-        log.info("getLocations:: Cache miss for location id: {}", id);
+    if (cache == null) {
+      log.info("fetchWithCache:: cache is not available, fetching {} ids from {}",
+        ids.size(), url);
+      return get(url, ids, collectionName, type);
+    }
+
+    List<T> cachedResults = new ArrayList<>();
+    List<String> missingIds = new ArrayList<>();
+
+    for (String id : ids) {
+      T cached = cache.getIfPresent(id);
+      if (cached != null) {
+        log.debug("fetchWithCache:: Cache hit for id: {}", id);
+        cachedResults.add(cached);
+      } else {
+        log.debug("fetchWithCache:: Cache miss for id: {}", id);
+        missingIds.add(id);
       }
     }
 
-    return get(LOCATION_URL, ids, LOCATION_COLLECTION_NAME, Location.class)
-      .onSuccess(locations -> {
-        if (locationCache != null) {
-          locations.forEach(loc -> {
-            if (loc.getId() != null) {
-              locationCache.put(loc.getId(), loc);
-              log.debug("getLocations:: Cached location id: {}", loc.getId());
-            }
-          });
+    if (missingIds.isEmpty()) {
+      return succeededFuture(cachedResults);
+    }
+
+    return get(url, missingIds, collectionName, type)
+      .onSuccess(fetched -> fetched.forEach(item -> {
+        String id = idExtractor.apply(item);
+        if (id != null) {
+          cache.put(id, item);
+          log.debug("fetchWithCache:: Cached item with id: {}", id);
         }
+      }))
+      .map(fetched -> {
+        List<T> merged = new ArrayList<>(cachedResults);
+        merged.addAll(fetched);
+        return merged;
       });
   }
 }
