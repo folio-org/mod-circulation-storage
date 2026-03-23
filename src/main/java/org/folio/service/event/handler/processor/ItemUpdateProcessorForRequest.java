@@ -60,7 +60,7 @@ public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request>
     JsonObject oldCallNumberComponents = extractCallNumberComponents(oldObject);
     JsonObject newCallNumberComponents = extractCallNumberComponents(newObject);
     if (notEqual(oldCallNumberComponents, newCallNumberComponents)) {
-      log.info("collectRelevantChanges :: callNumberComponents changed, updating search index");
+      log.info("collectRelevantChanges:: callNumberComponents changed, updating search index");
       changes.add(new Change<>(request -> request.getSearchIndex()
         .setCallNumberComponents(newCallNumberComponents.mapTo(CallNumberComponents.class))));
     }
@@ -82,7 +82,7 @@ public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request>
   private static Future<List<Change<Request>>> addLocationAndServicePointChanges(
     Map<String, String> locationAndSpData, List<Change<Request>> changes) {
 
-    log.info("addLocationAndServicePointChanges :: locationAndSpData: {}", locationAndSpData);
+    log.info("addLocationAndServicePointChanges:: locationAndSpData: {}", locationAndSpData);
     changes.add(new Change<>(request -> {
       if (request.getItem() == null) {
         request.setItem(new Item());
@@ -104,7 +104,7 @@ public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request>
       .compose(locations -> setEffectiveLocationData(locations, effectiveLocationId, locationAndSpData))
       .compose(primaryServicePoint -> setRetrievalServicePointData(primaryServicePoint, locationAndSpData))
       .compose(e -> succeededFuture(locationAndSpData))
-      .onFailure(throwable -> log.info("updateItemAndServicePoint :: Error while fetching Locations: ", throwable));
+      .onFailure(throwable -> log.info("updateItemAndServicePoint:: Error while fetching Locations: ", throwable));
   }
 
   private static Future<String> setEffectiveLocationData(Collection<Location> locations, String effectiveLocationId,
@@ -134,7 +134,7 @@ public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request>
             locationAndSpData.put(RETRIEVAL_SERVICE_POINT_NAME, retrievalServicePoint.getName());
           }
           return succeededFuture();
-        }).onFailure(throwable -> log.info("ItemUpdateProcessorForRequest :: Error while fetching ServicePoint: {}",
+        }).onFailure(throwable -> log.info("setRetrievalServicePointData:: Error while fetching ServicePoint: {}",
           throwable.toString()));
     }
     return succeededFuture();
