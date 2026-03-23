@@ -71,6 +71,10 @@ public class InventoryStorageClient extends OkapiClient {
     List<String> missingIds = new ArrayList<>();
 
     for (String id : ids) {
+      if (id == null) {
+        log.warn("fetchWithCache:: null id encountered, skipping");
+        continue;
+      }
       T cached = cache.getIfPresent(id);
       if (cached != null) {
         log.debug("fetchWithCache:: Cache hit for id: {}", id);
