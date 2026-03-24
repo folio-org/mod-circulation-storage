@@ -1,10 +1,12 @@
 package org.folio.service.event.handler;
 
 import static org.folio.kafka.KafkaHeaderUtils.kafkaHeadersToMap;
+import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.kafka.AsyncRecordHandler;
 import org.folio.persist.RequestPolicyRepository;
+import org.folio.rest.client.InventoryStorageClient;
 import org.folio.service.event.handler.processor.ServicePointDeleteProcessorForRequestPolicy;
 
 import io.vertx.core.Context;
@@ -12,7 +14,7 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 
-public class ServicePointDeleteEventHandler extends BaseInventoryEventHandler implements AsyncRecordHandler<String, String> {
+public class ServicePointDeleteEventHandler implements AsyncRecordHandler<String, String> {
   private final Context context;
 
   public ServicePointDeleteEventHandler(Context context) {
@@ -24,17 +26,14 @@ public class ServicePointDeleteEventHandler extends BaseInventoryEventHandler im
     JsonObject payload = new JsonObject(kafkaConsumerRecord.value());
     CaseInsensitiveMap<String, String> headers =
       new CaseInsensitiveMap<>(kafkaHeadersToMap(kafkaConsumerRecord.headers()));
+    String tenantId = headers.get(OKAPI_HEADER_TENANT);
 
-    // Invalidate cache for deleted service point
     JsonObject oldObject = payload.getJsonObject("old");
     if (oldObject != null && oldObject.containsKey("id")) {
-      String servicePointId = oldObject.getString("id");
-      invalidateServicePointCache(servicePointId);
+      InventoryStorageClient.invalidateServicePoint(tenantId, oldObject.getString("id"));
     }
 
-    ServicePointDeleteProcessorForRequestPolicy servicePointDeleteProcessorForRequestPolicy =
-      new ServicePointDeleteProcessorForRequestPolicy(new RequestPolicyRepository(context, headers));
-
-    return servicePointDeleteProcessorForRequestPolicy.run(kafkaConsumerRecord.key(), payload);
+    return new ServicePointDeleteProcessorForRequestPolicy(new RequestPolicyRepository(context, headers))
+      .run(kafkaConsumerRecord.key(), payload);
   }
 }

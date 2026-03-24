@@ -14,6 +14,7 @@ import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.Servicepoint;
 
 import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -21,25 +22,52 @@ import io.vertx.core.Vertx;
 public class InventoryStorageClient extends OkapiClient {
   private static final Logger log = LogManager.getLogger(InventoryStorageClient.class);
 
+  public record CacheKey(String tenantId, String recordId) {}
+
   private static final String SERVICE_POINTS_URL = "/service-points";
   private static final String SERVICE_POINTS_COLLECTION_NAME = "servicepoints";
 
   private static final String LOCATION_URL = "/locations";
   private static final String LOCATION_COLLECTION_NAME = "locations";
 
-  private final Cache<String, Location> locationCache;
-  private final Cache<String, Servicepoint> servicePointCache;
+  private static final Cache<CacheKey, Location> locationCache = Caffeine.newBuilder()
+    .maximumSize(1000)
+    .build();
+
+  private static final Cache<CacheKey, Servicepoint> servicePointCache = Caffeine.newBuilder()
+    .maximumSize(1000)
+    .build();
 
   public InventoryStorageClient(Vertx vertx, Map<String, String> okapiHeaders) {
-    this(vertx, okapiHeaders, null, null);
+    super(vertx, okapiHeaders);
   }
 
-  public InventoryStorageClient(Vertx vertx, Map<String, String> okapiHeaders,
-    Cache<String, Location> locationCache, Cache<String, Servicepoint> servicePointCache) {
+  public static Cache<CacheKey, Location> locationCache() {
+    return locationCache;
+  }
 
-    super(vertx, okapiHeaders);
-    this.locationCache = locationCache;
-    this.servicePointCache = servicePointCache;
+  public static Cache<CacheKey, Servicepoint> servicePointCache() {
+    return servicePointCache;
+  }
+
+  public static void invalidateLocation(String tenantId, String locationId) {
+    log.info("invalidateLocation:: tenantId: {}, locationId: {}", tenantId, locationId);
+    locationCache.invalidate(new CacheKey(tenantId, locationId));
+  }
+
+  public static void invalidateAllLocations() {
+    log.info("invalidateAllLocations:: invalidating all location cache entries");
+    locationCache.invalidateAll();
+  }
+
+  public static void invalidateServicePoint(String tenantId, String servicePointId) {
+    log.info("invalidateServicePoint:: tenantId: {}, servicePointId: {}", tenantId, servicePointId);
+    servicePointCache.invalidate(new CacheKey(tenantId, servicePointId));
+  }
+
+  public static void invalidateAllServicePoints() {
+    log.info("invalidateAllServicePoints:: invalidating all service point cache entries");
+    servicePointCache.invalidateAll();
   }
 
   public Future<Collection<Servicepoint>> getServicePoints(Collection<String> ids) {
@@ -53,18 +81,12 @@ public class InventoryStorageClient extends OkapiClient {
   }
 
   private <T> Future<Collection<T>> fetchWithCache(Collection<String> ids, String url,
-    String collectionName, Class<T> type, Cache<String, T> cache,
+    String collectionName, Class<T> type, Cache<CacheKey, T> cache,
     Function<T, String> idExtractor) {
 
     if (ids == null || ids.isEmpty()) {
       log.info("fetchWithCache:: ids are null or empty, returning empty collection");
       return succeededFuture(new ArrayList<>());
-    }
-
-    if (cache == null) {
-      log.info("fetchWithCache:: cache is not available, fetching {} ids from {}",
-        ids.size(), url);
-      return get(url, ids, collectionName, type);
     }
 
     List<T> cachedResults = new ArrayList<>();
@@ -75,12 +97,12 @@ public class InventoryStorageClient extends OkapiClient {
         log.warn("fetchWithCache:: null id encountered, skipping");
         continue;
       }
-      T cached = cache.getIfPresent(id);
+      T cached = cache.getIfPresent(new CacheKey(getTenant(), id));
       if (cached != null) {
-        log.debug("fetchWithCache:: Cache hit for id: {}", id);
+        log.info("fetchWithCache:: Cache hit for tenantId: {}, id: {}", getTenant(), id);
         cachedResults.add(cached);
       } else {
-        log.debug("fetchWithCache:: Cache miss for id: {}", id);
+        log.info("fetchWithCache:: Cache miss for tenantId: {}, id: {}", getTenant(), id);
         missingIds.add(id);
       }
     }
@@ -93,8 +115,8 @@ public class InventoryStorageClient extends OkapiClient {
       .onSuccess(fetched -> fetched.forEach(item -> {
         String id = idExtractor.apply(item);
         if (id != null) {
-          cache.put(id, item);
-          log.debug("fetchWithCache:: Cached item with id: {}", id);
+          cache.put(new CacheKey(getTenant(), id), item);
+          log.info("fetchWithCache:: Cached item with tenantId: {}, id: {}", getTenant(), id);
         }
       }))
       .map(fetched -> {

@@ -3,67 +3,60 @@ package org.folio.service.event.handler.processor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import org.folio.rest.client.InventoryStorageClient;
 import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.Servicepoint;
-import org.folio.service.event.handler.BaseInventoryEventHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import com.github.benmanes.caffeine.cache.Cache;
-
 class ItemUpdateProcessorForRequestTest {
 
-  private TestEventHandler testEventHandler;
+  private static final String TENANT = "test_tenant";
 
   @BeforeEach
   void setUp() {
-    testEventHandler = new TestEventHandler();
-    testEventHandler.getLocationCache().invalidateAll();
-    testEventHandler.getServicePointCache().invalidateAll();
+    InventoryStorageClient.invalidateAllLocations();
+    InventoryStorageClient.invalidateAllServicePoints();
   }
 
   @Test
   void testLocationCacheSharedAcrossHandlers() {
-    String locationId = "locShared";
+    InventoryStorageClient.CacheKey key = new InventoryStorageClient.CacheKey(TENANT, "locShared");
     Location location = Mockito.mock(Location.class);
-    testEventHandler.getLocationCache().put(locationId, location);
-    assertNotNull(testEventHandler.getLocationCache().getIfPresent(locationId));
+
+    InventoryStorageClient.locationCache().put(key, location);
+
+    assertNotNull(InventoryStorageClient.locationCache().getIfPresent(key));
   }
 
   @Test
   void testServicePointCacheSharedAcrossHandlers() {
-    String servicePointId = "spShared";
+    InventoryStorageClient.CacheKey key = new InventoryStorageClient.CacheKey(TENANT, "spShared");
     Servicepoint sp = Mockito.mock(Servicepoint.class);
-    testEventHandler.getServicePointCache().put(servicePointId, sp);
-    assertNotNull(testEventHandler.getServicePointCache().getIfPresent(servicePointId));
+
+    InventoryStorageClient.servicePointCache().put(key, sp);
+
+    assertNotNull(InventoryStorageClient.servicePointCache().getIfPresent(key));
   }
 
   @Test
   void testLocationCachePutAndGet() {
-    String locationId = "locTest";
+    InventoryStorageClient.CacheKey key = new InventoryStorageClient.CacheKey(TENANT, "locTest");
     Location location = Mockito.mock(Location.class);
-    testEventHandler.getLocationCache().put(locationId, location);
-    assertEquals(location, testEventHandler.getLocationCache().getIfPresent(locationId));
+
+    InventoryStorageClient.locationCache().put(key, location);
+
+    assertEquals(location, InventoryStorageClient.locationCache().getIfPresent(key));
   }
 
   @Test
   void testServicePointCachePutAndGet() {
-    String servicePointId = "spTest";
+    InventoryStorageClient.CacheKey key = new InventoryStorageClient.CacheKey(TENANT, "spTest");
     Servicepoint sp = Mockito.mock(Servicepoint.class);
-    testEventHandler.getServicePointCache().put(servicePointId, sp);
-    assertEquals(sp, testEventHandler.getServicePointCache().getIfPresent(servicePointId));
-  }
 
-  private static class TestEventHandler extends BaseInventoryEventHandler {
-    @Override
-    public Cache<String, Location> getLocationCache() {
-      return super.getLocationCache();
-    }
+    InventoryStorageClient.servicePointCache().put(key, sp);
 
-    @Override
-    public Cache<String, Servicepoint> getServicePointCache() {
-      return super.getServicePointCache();
-    }
+    assertEquals(sp, InventoryStorageClient.servicePointCache().getIfPresent(key));
   }
 }
