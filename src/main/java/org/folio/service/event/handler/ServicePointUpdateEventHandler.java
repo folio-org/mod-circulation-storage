@@ -8,6 +8,7 @@ import org.folio.kafka.AsyncRecordHandler;
 import org.folio.persist.RequestPolicyRepository;
 import org.folio.persist.RequestRepository;
 import org.folio.rest.client.InventoryStorageClient;
+import org.folio.rest.jaxrs.model.Servicepoint;
 import org.folio.service.event.handler.processor.ItemRetrievalServicePointUpdateProcessorForRequest;
 import org.folio.service.event.handler.processor.ServicePointUpdateProcessorForRequest;
 import org.folio.service.event.handler.processor.ServicePointUpdateProcessorForRequestPolicy;
@@ -32,7 +33,8 @@ public class ServicePointUpdateEventHandler implements AsyncRecordHandler<String
 
     JsonObject newObject = payload.getJsonObject("new");
     if (newObject != null && newObject.containsKey("id")) {
-      InventoryStorageClient.invalidateServicePoint(tenantId, newObject.getString("id"));
+      InventoryStorageClient.updateServicePointCache(tenantId, newObject.getString("id"),
+        newObject.mapTo(Servicepoint.class));
     }
 
     var requestRepository = new RequestRepository(context, headers);

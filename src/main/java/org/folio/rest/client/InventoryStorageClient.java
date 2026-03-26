@@ -59,6 +59,13 @@ public class InventoryStorageClient extends OkapiClient {
     locationCache.invalidate(new CacheKey(tenantId, locationId));
   }
 
+  public static void updateLocationCache(String tenantId, String locationId,
+    Location location) {
+
+    log.info("updateLocationCache:: tenantId: {}, locationId: {}", tenantId, locationId);
+    locationCache.put(new CacheKey(tenantId, locationId), location);
+  }
+
   public static void invalidateAllLocations() {
     log.info("invalidateAllLocations:: invalidating all location cache entries");
     locationCache.invalidateAll();
@@ -67,6 +74,14 @@ public class InventoryStorageClient extends OkapiClient {
   public static void invalidateServicePoint(String tenantId, String servicePointId) {
     log.info("invalidateServicePoint:: tenantId: {}, servicePointId: {}", tenantId, servicePointId);
     servicePointCache.invalidate(new CacheKey(tenantId, servicePointId));
+  }
+
+  public static void updateServicePointCache(String tenantId, String servicePointId,
+    Servicepoint servicePoint) {
+
+    log.info("updateServicePointCache:: tenantId: {}, servicePointId: {}", tenantId,
+      servicePointId);
+    servicePointCache.put(new CacheKey(tenantId, servicePointId), servicePoint);
   }
 
   public static void invalidateAllServicePoints() {

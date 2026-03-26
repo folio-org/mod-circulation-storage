@@ -7,6 +7,7 @@ import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.kafka.AsyncRecordHandler;
 import org.folio.persist.RequestRepository;
 import org.folio.rest.client.InventoryStorageClient;
+import org.folio.rest.jaxrs.model.Location;
 import org.folio.service.event.handler.processor.ItemLocationUpdateProcessorForRequest;
 
 import io.vertx.core.Context;
@@ -32,7 +33,8 @@ public class LocationUpdateEventHandler implements AsyncRecordHandler<String, St
     // Invalidate cache for updated location
     JsonObject newObject = payload.getJsonObject("new");
     if (newObject != null && newObject.containsKey("id")) {
-      InventoryStorageClient.invalidateLocation(tenantId, newObject.getString("id"));
+      InventoryStorageClient.updateLocationCache(tenantId, newObject.getString("id"),
+        newObject.mapTo(Location.class));
     }
 
     ItemLocationUpdateProcessorForRequest itemLocationUpdateProcessorForRequest =
