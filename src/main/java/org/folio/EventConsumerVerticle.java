@@ -80,6 +80,7 @@ public class EventConsumerVerticle extends AbstractVerticle {
 
   private Future<Void> createConsumers() {
     final KafkaConfig config = getKafkaConfig();
+    var locationDeleteHandler = new LocationDeleteEventHandler();
 
     return createInventoryEventConsumer(INVENTORY_ITEM_UPDATED, config,
       new ItemUpdateEventHandler(context))
@@ -90,9 +91,9 @@ public class EventConsumerVerticle extends AbstractVerticle {
       .compose(r -> createInventoryEventConsumer(INVENTORY_LOCATION_UPDATED, config,
         new LocationUpdateEventHandler(context)))
       .compose(r -> createInventoryEventConsumer(INVENTORY_LOCATION_DELETED, config,
-        new LocationDeleteEventHandler()))
+        locationDeleteHandler))
       .compose(r -> createInventoryEventConsumer(INVENTORY_LOCATION_DELETED_ALL, config,
-        new LocationDeleteEventHandler()))
+        locationDeleteHandler))
       .mapEmpty();
   }
 
