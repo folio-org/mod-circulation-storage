@@ -10,7 +10,6 @@ import org.folio.kafka.AsyncRecordHandler;
 import org.folio.persist.RequestPolicyRepository;
 import org.folio.persist.RequestRepository;
 import org.folio.rest.client.InventoryStorageClient;
-import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.Servicepoint;
 import org.folio.service.event.handler.processor.ItemRetrievalServicePointUpdateProcessorForRequest;
 import org.folio.service.event.handler.processor.ServicePointUpdateProcessorForRequest;
