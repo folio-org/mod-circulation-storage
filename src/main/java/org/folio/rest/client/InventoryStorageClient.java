@@ -13,6 +13,8 @@ import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.Servicepoint;
 
+import java.util.concurrent.TimeUnit;
+
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
@@ -32,10 +34,12 @@ public class InventoryStorageClient extends OkapiClient {
 
   private static final Cache<CacheKey, Location> locationCache = Caffeine.newBuilder()
     .maximumSize(1000)
+    .expireAfterWrite(1, TimeUnit.HOURS)
     .build();
 
   private static final Cache<CacheKey, Servicepoint> servicePointCache = Caffeine.newBuilder()
     .maximumSize(1000)
+    .expireAfterWrite(1, TimeUnit.HOURS)
     .build();
 
   public InventoryStorageClient(Vertx vertx, Map<String, String> okapiHeaders) {

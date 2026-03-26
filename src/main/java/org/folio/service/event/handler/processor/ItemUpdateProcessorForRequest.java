@@ -75,8 +75,8 @@ public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request>
     Future<Map<String, String>> fetchLocationAndServicePoint = updateItemAndServicePoint(newObject);
     return fetchLocationAndServicePoint
       .compose(locationAndSpData -> addLocationAndServicePointChanges(locationAndSpData, changes))
-      .compose(r -> Future.succeededFuture(changes))
-      .recover(throwable -> Future.succeededFuture(changes));
+      .compose(r -> succeededFuture(changes))
+      .recover(throwable -> succeededFuture(changes));
   }
 
   private static Future<List<Change<Request>>> addLocationAndServicePointChanges(
