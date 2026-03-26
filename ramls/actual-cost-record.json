@@ -5,12 +5,16 @@
   "properties": {
     "id": {
       "description": "Actual cost record ID",
+      "x-fqm-visible-by-default": false,
+      "x-fqm-visibility": "hidden",
       "x-fqm-essential": true,
       "type": "string",
       "$ref": "raml-util/schemas/uuid.schema"
     },
     "lossType": {
       "description": "Type of the item loss",
+      "x-fqm-visible-by-default": true,
+      "x-fqm-visibility": "all",
       "x-fqm-essential": true,
       "type": "string",
       "enum": [
@@ -20,12 +24,16 @@
     },
     "lossDate": {
       "description": "Date and time when the item was lost",
+      "x-fqm-visible-by-default": true,
+      "x-fqm-visibility": "all",
       "x-fqm-essential": true,
       "type": "string",
       "format": "date-time"
     },
     "expirationDate": {
       "description": "Expiration date and time of actual cost record",
+      "x-fqm-visible-by-default": false,
+      "x-fqm-visibility": "all",
       "x-fqm-essential": true,
       "type": "string",
       "format": "date-time"
@@ -37,38 +45,74 @@
       "properties": {
         "id": {
           "description": "User ID",
+          "x-fqm-visible-by-default": false,
+          "x-fqm-visibility": "all",
           "x-fqm-essential": true,
+          "x-fqm-joins-to-raw": [
+            {
+              "targetId": "bb058933-cd06-4539-bd3a-6f248ff98ee2",
+              "targetField": "id",
+              "direction": "left",
+              "type": "equality-cast-uuid"
+            },
+            {
+              "targetId": "f2615ea6-450b-425d-804d-6a495afd9308",
+              "targetField": "id",
+              "direction": "left",
+              "type": "equality-cast-uuid"
+            }
+          ],
           "type": "string",
           "$ref": "raml-util/schemas/uuid.schema"
         },
         "barcode": {
           "description": "User barcode",
+          "x-fqm-visible-by-default": true,
+          "x-fqm-visibility": "all",
           "x-fqm-essential": true,
           "type": "string"
         },
         "firstName": {
           "description": "User first name",
+          "x-fqm-visible-by-default": true,
+          "x-fqm-visibility": "all",
           "x-fqm-essential": true,
           "type": "string"
         },
         "lastName": {
           "description": "User last name",
+          "x-fqm-visible-by-default": true,
+          "x-fqm-visibility": "all",
           "x-fqm-essential": true,
           "type": "string"
         },
         "middleName": {
           "description": "User middle name",
+          "x-fqm-visible-by-default": false,
+          "x-fqm-visibility": "all",
           "x-fqm-essential": true,
           "type": "string"
         },
         "patronGroupId": {
           "description": "Patron group ID",
+          "x-fqm-visible-by-default": false,
+          "x-fqm-visibility": "hidden",
           "x-fqm-essential": true,
+          "x-fqm-joins-to-raw": [
+            {
+              "targetId": "e7717b38-4ff3-4fb9-ae09-b3d0c8400710",
+              "targetField": "id",
+              "direction": "left",
+              "type": "equality-cast-uuid"
+            }
+          ],
           "type": "string",
           "$ref": "raml-util/schemas/uuid.schema"
         },
         "patronGroup": {
           "description": "Patron group name",
+          "x-fqm-visible-by-default": true,
+          "x-fqm-visibility": "all",
           "x-fqm-essential": true,
           "type": "string"
         }
@@ -86,7 +130,17 @@
       "properties": {
         "id": {
           "description": "Loan ID",
+          "x-fqm-visible-by-default": false,
+          "x-fqm-visibility": "all",
           "x-fqm-essential": true,
+          "x-fqm-joins-to-raw": [
+            {
+              "targetId": "00349126-c923-4045-a29f-3b6db4c6bea9",
+              "targetField": "id",
+              "direction": "left",
+              "type": "equality-cast-uuid"
+            }
+          ],
           "type": "string",
           "$ref": "raml-util/schemas/uuid.schema"
         }
@@ -103,62 +157,132 @@
       "properties": {
         "id": {
           "description": "Item ID",
+          "x-fqm-visible-by-default": false,
+          "x-fqm-visibility": "all",
           "x-fqm-essential": true,
+          "x-fqm-joins-to-raw": [
+            {
+              "targetId": "372e025a-9444-473a-9ffd-fa0f63db1674",
+              "targetField": "id",
+              "direction": "left",
+              "type": "equality-cast-uuid"
+            }
+          ],
           "type": "string",
           "$ref": "raml-util/schemas/uuid.schema"
         },
         "barcode": {
           "description": "Item barcode",
+          "x-fqm-visible-by-default": true,
+          "x-fqm-visibility": "all",
           "x-fqm-essential": true,
           "type": "string"
         },
         "materialTypeId": {
           "description": "Material type ID",
+          "x-fqm-visible-by-default": false,
+          "x-fqm-visibility": "hidden",
           "x-fqm-essential": true,
+          "x-fqm-joins-to-raw": [
+            {
+              "targetId": "8b1f51d6-8795-4113-a72e-3b7dc6cc6dfe",
+              "targetField": "id",
+              "direction": "left",
+              "type": "equality-cast-uuid"
+            }
+          ],
           "type": "string",
           "$ref": "raml-util/schemas/uuid.schema"
         },
         "materialType": {
           "description": "Material type name",
+          "x-fqm-visible-by-default": true,
+          "x-fqm-visibility": "all",
           "x-fqm-essential": true,
           "type": "string"
         },
         "permanentLocationId": {
           "description": "Permanent location ID",
+          "x-fqm-visible-by-default": false,
+          "x-fqm-visibility": "hidden",
           "x-fqm-essential": true,
+          "x-fqm-joins-to-raw": [
+            {
+              "targetId": "74ddf1a6-19e0-4d63-baf0-cd2da9a46ca4",
+              "targetField": "id",
+              "direction": "left",
+              "type": "equality-cast-uuid"
+            }
+          ],
           "type": "string",
           "$ref": "raml-util/schemas/uuid.schema"
         },
         "permanentLocation": {
           "description": "Permanent location name",
+          "x-fqm-visible-by-default": true,
+          "x-fqm-visibility": "all",
           "x-fqm-essential": true,
           "type": "string"
         },
         "effectiveLocationId": {
           "description": "Effective location ID",
+          "x-fqm-visible-by-default": false,
+          "x-fqm-visibility": "hidden",
           "x-fqm-essential": true,
+          "x-fqm-joins-to-raw": [
+            {
+              "targetId": "74ddf1a6-19e0-4d63-baf0-cd2da9a46ca4",
+              "targetField": "id",
+              "direction": "left",
+              "type": "equality-cast-uuid"
+            }
+          ],
           "type": "string",
           "$ref": "raml-util/schemas/uuid.schema"
         },
         "effectiveLocation": {
           "description": "Effective location name",
+          "x-fqm-visible-by-default": false,
+          "x-fqm-visibility": "all",
           "x-fqm-essential": true,
           "type": "string"
         },
         "loanTypeId": {
           "description": "Loan type ID",
+          "x-fqm-visible-by-default": false,
+          "x-fqm-visibility": "hidden",
           "x-fqm-essential": true,
+          "x-fqm-joins-to-raw": [
+            {
+              "targetId": "04107b49-ad2f-47ad-879f-6737b3018027",
+              "targetField": "id",
+              "direction": "left",
+              "type": "equality-cast-uuid"
+            }
+          ],
           "type": "string",
           "$ref": "raml-util/schemas/uuid.schema"
         },
         "loanType": {
           "description": "Loan type name",
+          "x-fqm-visible-by-default": true,
+          "x-fqm-visibility": "all",
           "x-fqm-essential": true,
           "type": "string"
         },
         "holdingsRecordId": {
           "description": "Holdings record ID",
-          "x-fqm-essential": true,
+          "x-fqm-visible-by-default": false,
+          "x-fqm-visibility": "all",
+          "x-fqm-essential": false,
+          "x-fqm-joins-to-raw": [
+            {
+              "targetId": "30a5cfad-1868-4f46-86b9-a6ef67e2d9bf",
+              "targetField": "id",
+              "direction": "left",
+              "type": "equality-cast-uuid"
+            }
+          ],
           "type": "string",
           "$ref": "raml-util/schemas/uuid.schema"
         },
@@ -169,17 +293,23 @@
             "callNumber": {
               "type": "string",
               "description": "Effective Call Number is an identifier assigned to an item or its holding and associated with the item.",
-              "x-fqm-essential": true
+              "x-fqm-visible-by-default": false,
+              "x-fqm-visibility": "all",
+              "x-fqm-essential": false
             },
             "prefix": {
               "type": "string",
               "description": "Effective Call Number Prefix is the prefix of the identifier assigned to an item or its holding and associated with the item.",
-              "x-fqm-essential": true
+              "x-fqm-visible-by-default": false,
+              "x-fqm-visibility": "all",
+              "x-fqm-essential": false
             },
             "suffix": {
               "type": "string",
               "description": "Effective Call Number Suffix is the suffix of the identifier assigned to an item or its holding and associated with the item.",
-              "x-fqm-essential": true
+              "x-fqm-visible-by-default": false,
+              "x-fqm-visibility": "all",
+              "x-fqm-essential": false
             }
           },
           "additionalProperties": false
@@ -187,27 +317,37 @@
         "volume": {
           "type": "string",
           "description": "Volume is intended for monographs when a multipart monograph (e.g. a biography of George Bernard Shaw in three volumes).",
-          "x-fqm-essential": true
+          "x-fqm-visible-by-default": false,
+          "x-fqm-visibility": "all",
+          "x-fqm-essential": false
         },
         "enumeration": {
           "type": "string",
           "description": "Enumeration is the descriptive information for the numbering scheme of a serial.",
-          "x-fqm-essential": true
+          "x-fqm-visible-by-default": false,
+          "x-fqm-visibility": "all",
+          "x-fqm-essential": false
         },
         "chronology": {
           "type": "string",
           "description": "Chronology is the descriptive information for the dating scheme of a serial.",
-          "x-fqm-essential": true
+          "x-fqm-visible-by-default": false,
+          "x-fqm-visibility": "all",
+          "x-fqm-essential": false
         },
         "displaySummary": {
           "description": "Display summary about the item",
-          "x-fqm-essential": true,
+          "x-fqm-visible-by-default": false,
+          "x-fqm-visibility": "all",
+          "x-fqm-essential": false,
           "type": "string"
         },
         "copyNumber": {
           "type": "string",
           "description": "Copy number is the piece identifier. The copy number reflects if the library has a copy of a single-volume monograph; one copy of a multi-volume, (e.g. Copy 1, or C.7.)",
-          "x-fqm-essential": true
+          "x-fqm-visible-by-default": false,
+          "x-fqm-visibility": "all",
+          "x-fqm-essential": false
         }
       },
       "additionalProperties": false,
@@ -227,18 +367,32 @@
       "properties": {
         "id": {
           "description": "Instance ID",
+          "x-fqm-visible-by-default": false,
+          "x-fqm-visibility": "all",
           "x-fqm-essential": true,
+          "x-fqm-joins-to-raw": [
+            {
+              "targetId": "8fc4a9d2-7ccf-4233-afb8-796911839862",
+              "targetField": "id",
+              "direction": "left",
+              "type": "equality-cast-uuid"
+            }
+          ],
           "type": "string",
           "$ref": "raml-util/schemas/uuid.schema"
         },
         "title": {
           "description": "Instance title",
+          "x-fqm-visible-by-default": true,
+          "x-fqm-visibility": "all",
           "x-fqm-essential": true,
           "type": "string"
         },
         "identifiers": {
           "type": "array",
           "description": "An extensible set of name-value pairs of identifiers associated with the resource",
+          "x-fqm-visible-by-default": false,
+          "x-fqm-visibility": "results-only",
           "x-fqm-essential": true,
           "minItems": 0,
           "items": {
@@ -247,15 +401,24 @@
             "properties": {
               "value": {
                 "type": "string",
-                "description": "Resource identifier value"
+                "description": "Resource identifier value",
+                "x-fqm-visible-by-default": false,
+                "x-fqm-visibility": "all",
+                "x-fqm-essential": false
               },
               "identifierType": {
                 "type": "string",
-                "description": "Name of resource identifier type (e.g. ISBN, ISSN, LCCN, CODEN, Locally defined identifiers)"
+                "description": "Name of resource identifier type (e.g. ISBN, ISSN, LCCN, CODEN, Locally defined identifiers)",
+                "x-fqm-visible-by-default": false,
+                "x-fqm-visibility": "all",
+                "x-fqm-essential": false
               },
               "identifierTypeId": {
                 "type": "string",
                 "description": "UUID of resource identifier type (e.g. ISBN, ISSN, LCCN, CODEN, Locally defined identifiers)",
+                "x-fqm-visible-by-default": false,
+                "x-fqm-visibility": "all",
+                "x-fqm-essential": false,
                 "$ref": "raml-util/schemas/uuid.schema"
               }
             },
@@ -270,6 +433,8 @@
         "contributors": {
           "type": "array",
           "description": "List of contributors",
+          "x-fqm-visible-by-default": false,
+          "x-fqm-visibility": "results-only",
           "x-fqm-essential": true,
           "minItems": 0,
           "items": {
@@ -277,7 +442,10 @@
             "properties": {
               "name": {
                 "type": "string",
-                "description": "Contributor name"
+                "description": "Contributor name",
+                "x-fqm-visible-by-default": false,
+                "x-fqm-visibility": "all",
+                "x-fqm-essential": false
               }
             },
             "additionalProperties": false,
@@ -300,35 +468,63 @@
       "properties": {
         "accountId": {
           "description": "ID of the fee/fine (\"account\") instance",
+          "x-fqm-visible-by-default": false,
+          "x-fqm-visibility": "all",
           "x-fqm-essential": true,
+          "x-fqm-joins-to-raw": [
+            {
+              "targetId": "fccb5cd8-c146-5c0a-8156-837f1bd3f1cc",
+              "targetField": "id",
+              "direction": "left",
+              "type": "equality-cast-uuid"
+            }
+          ],
           "type": "string",
           "$ref": "raml-util/schemas/uuid.schema"
         },
         "billedAmount": {
           "description": "Initial amount of a fee/fine created upon billing",
+          "x-fqm-visible-by-default": true,
+          "x-fqm-visibility": "all",
           "x-fqm-essential": true,
           "type": "number",
           "minimum": 0.0
         },
         "ownerId": {
           "description": "Fee/fine owner ID",
+          "x-fqm-visible-by-default": false,
+          "x-fqm-visibility": "hidden",
           "x-fqm-essential": true,
+          "x-fqm-joins-to-raw": [
+            {
+              "targetId": "a49dc8b4-8316-534d-94af-c5ca7748d6e9",
+              "targetField": "id",
+              "direction": "left",
+              "type": "equality-cast-uuid"
+            }
+          ],
           "type": "string",
           "$ref": "raml-util/schemas/uuid.schema"
         },
         "owner": {
           "description": "Fee/fine owner name",
+          "x-fqm-visible-by-default": true,
+          "x-fqm-visibility": "all",
           "x-fqm-essential": true,
           "type": "string"
         },
         "typeId": {
           "description": "Fee/fine type ID",
+          "x-fqm-visible-by-default": false,
+          "x-fqm-visibility": "hidden",
           "x-fqm-essential": true,
           "type": "string",
           "$ref": "raml-util/schemas/uuid.schema"
         },
         "type": {
           "description": "Fee/fine type name",
+          "x-fqm-visible-by-default": true,
+          "x-fqm-visibility": "all",
           "x-fqm-essential": true,
           "type": "string"
         }
@@ -343,6 +539,8 @@
     },
     "status": {
       "description": "Status of the actual cost record",
+      "x-fqm-visible-by-default": true,
+      "x-fqm-visibility": "all",
       "x-fqm-essential": true,
       "type": "string",
       "enum": [
@@ -355,11 +553,15 @@
     },
     "additionalInfoForStaff": {
       "description": "Additional information for staff",
+      "x-fqm-visible-by-default": true,
+      "x-fqm-visibility": "all",
       "x-fqm-essential": true,
       "type": "string"
     },
     "additionalInfoForPatron": {
       "description": "Additional information for a patron",
+      "x-fqm-visible-by-default": true,
+      "x-fqm-visibility": "all",
       "x-fqm-essential": true,
       "type": "string"
     },
