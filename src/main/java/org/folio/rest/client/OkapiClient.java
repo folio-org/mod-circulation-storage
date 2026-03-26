@@ -52,6 +52,10 @@ public class OkapiClient {
     token = okapiHeaders.get(OKAPI_HEADER_TOKEN);
   }
 
+  protected String getTenant() {
+    return tenant;
+  }
+
   Future<HttpResponse<Buffer>> okapiGet(String path) {
     log.debug("okapiGet:: path: {}", path);
 

@@ -23,7 +23,7 @@
     "fqm.entityType.actual_cost_record.item_effective_location": "Item effective location",
     "fqm.entityType.actual_cost_record.item_loan_type_id": "Item loan type UUID",
     "fqm.entityType.actual_cost_record.item_loan_type": "Item loan type",
-    "fqm.entityType.actual_cost_record.item_holdings_record_id": "Item holdings record UUID",
+    "fqm.entityType.actual_cost_record.item_holdingholdings_record_id": "Holdings UUID",
     "fqm.entityType.actual_cost_record.item_effective_call_number_components_call_number": "Item effective call number components — Call number",
     "fqm.entityType.actual_cost_record.item_effective_call_number_components_prefix": "Item effective call number components — Prefix",
     "fqm.entityType.actual_cost_record.item_effective_call_number_components_suffix": "Item effective call number components — Suffix",
