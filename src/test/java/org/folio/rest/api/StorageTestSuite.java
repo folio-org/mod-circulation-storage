@@ -142,6 +142,11 @@ public class StorageTestSuite {
   public static void before() throws InterruptedException,
     ExecutionException, TimeoutException {
 
+    if (initialised) {
+      log.info("before:: already initialised, skipping");
+      return;
+    }
+
     vertx = Vertx.vertx();
 
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
@@ -185,11 +190,23 @@ public class StorageTestSuite {
 
     initialised = false;
 
-    removeTenant(TENANT_ID);
+    try {
+      removeTenant(TENANT_ID);
+    } catch (Throwable e) {
+      log.warn("after:: removeTenant failed (ignored): {}", e.getMessage());
+    }
 
-    kafkaContainer.stop();
+    try {
+      kafkaContainer.stop();
+    } catch (Throwable e) {
+      log.warn("after:: kafkaContainer.stop() failed (ignored): {}", e.getMessage());
+    }
 
-    mockServer.close();
+    try {
+      mockServer.close();
+    } catch (Throwable e) {
+      log.warn("after:: mockServer.close() failed (ignored): {}", e.getMessage());
+    }
 
     CompletableFuture<String> undeploymentComplete = new CompletableFuture<>();
 

@@ -4,6 +4,8 @@ import static java.util.stream.Collectors.toList;
 import static org.folio.rest.tools.utils.ModuleName.getModuleName;
 import static org.folio.rest.tools.utils.ModuleName.getModuleVersion;
 import static org.folio.service.event.InventoryEventType.INVENTORY_ITEM_UPDATED;
+import static org.folio.service.event.InventoryEventType.INVENTORY_LOCATION_DELETED;
+import static org.folio.service.event.InventoryEventType.INVENTORY_LOCATION_DELETED_ALL;
 import static org.folio.service.event.InventoryEventType.INVENTORY_LOCATION_UPDATED;
 import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_DELETED;
 import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_UPDATED;
@@ -27,6 +29,7 @@ import org.folio.kafka.SubscriptionDefinition;
 import org.folio.kafka.services.KafkaTopic;
 import org.folio.service.event.InventoryEventType;
 import org.folio.service.event.handler.ItemUpdateEventHandler;
+import org.folio.service.event.handler.LocationDeleteEventHandler;
 import org.folio.service.event.handler.LocationUpdateEventHandler;
 import org.folio.service.event.handler.ServicePointDeleteEventHandler;
 import org.folio.service.event.handler.ServicePointUpdateEventHandler;
@@ -77,6 +80,7 @@ public class EventConsumerVerticle extends AbstractVerticle {
 
   private Future<Void> createConsumers() {
     final KafkaConfig config = getKafkaConfig();
+    var locationDeleteHandler = new LocationDeleteEventHandler();
 
     return createInventoryEventConsumer(INVENTORY_ITEM_UPDATED, config,
       new ItemUpdateEventHandler(context))
@@ -86,6 +90,10 @@ public class EventConsumerVerticle extends AbstractVerticle {
         new ServicePointDeleteEventHandler(context)))
       .compose(r -> createInventoryEventConsumer(INVENTORY_LOCATION_UPDATED, config,
         new LocationUpdateEventHandler(context)))
+      .compose(r -> createInventoryEventConsumer(INVENTORY_LOCATION_DELETED, config,
+        locationDeleteHandler))
+      .compose(r -> createInventoryEventConsumer(INVENTORY_LOCATION_DELETED_ALL, config,
+        locationDeleteHandler))
       .mapEmpty();
   }
 
