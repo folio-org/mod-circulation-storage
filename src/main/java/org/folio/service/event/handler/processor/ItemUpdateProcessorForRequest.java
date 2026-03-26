@@ -74,12 +74,12 @@ public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request>
 
     Future<Map<String, String>> fetchLocationAndServicePoint = updateItemAndServicePoint(newObject);
     return fetchLocationAndServicePoint
-      .compose(locationAndSpData -> addLocationAndServicePointChanges(locationAndSpData, changes))
+      .map(locationAndSpData -> addLocationAndServicePointChanges(locationAndSpData, changes))
       .compose(r -> succeededFuture(changes))
       .recover(throwable -> succeededFuture(changes));
   }
 
-  private static Future<List<Change<Request>>> addLocationAndServicePointChanges(
+  private static List<Change<Request>> addLocationAndServicePointChanges(
     Map<String, String> locationAndSpData, List<Change<Request>> changes) {
 
     log.info("addLocationAndServicePointChanges:: locationAndSpData: {}", locationAndSpData);
@@ -92,7 +92,7 @@ public class ItemUpdateProcessorForRequest extends UpdateEventProcessor<Request>
       request.getItem().setRetrievalServicePointId(locationAndSpData.get(RETRIEVAL_SERVICE_POINT_ID));
       request.getItem().setRetrievalServicePointName(locationAndSpData.get(RETRIEVAL_SERVICE_POINT_NAME));
     }));
-    return succeededFuture(changes);
+    return changes;
   }
 
   private Future<Map<String, String>> updateItemAndServicePoint(JsonObject newObject) {
