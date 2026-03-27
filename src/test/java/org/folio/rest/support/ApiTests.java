@@ -50,6 +50,8 @@ public class ApiTests {
       System.out.println("Running test on own, initialising suite manually");
       runningOnOwn = true;
       StorageTestSuite.before();
+    } else {
+      runningOnOwn = false;
     }
 
     pgClient = PostgresClient.getInstance(getVertx(), TENANT_ID);
