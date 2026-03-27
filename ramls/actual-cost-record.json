@@ -6,7 +6,7 @@
     "id": {
       "description": "Actual cost record ID",
       "x-fqm-visible-by-default": false,
-      "x-fqm-visibility": "hidden",
+      "x-fqm-visibility": "all",
       "x-fqm-essential": true,
       "type": "string",
       "$ref": "raml-util/schemas/uuid.schema"
