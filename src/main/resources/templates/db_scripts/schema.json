@@ -276,14 +276,6 @@
           "removeAccents": true
         },
         {
-          "fieldName": "itemIdEq",
-          "tOps": "ADD",
-          "caseSensitive": true,
-          "removeAccents": false,
-          "sqlExpression": "(jsonb->>'itemId')",
-          "sqlExpressionQuery": "$"
-        },
-        {
           "fieldName": "pickupServicePointId",
           "tOps": "ADD",
           "caseSensitive": false,
