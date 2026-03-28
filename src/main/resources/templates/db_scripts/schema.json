@@ -276,6 +276,14 @@
           "removeAccents": true
         },
         {
+          "fieldName": "itemIdEq",
+          "tOps": "ADD",
+          "caseSensitive": true,
+          "removeAccents": false,
+          "sqlExpression": "(jsonb->>'itemId')",
+          "sqlExpressionQuery": "$"
+        },
+        {
           "fieldName": "pickupServicePointId",
           "tOps": "ADD",
           "caseSensitive": false,
@@ -650,6 +658,10 @@
       "run": "after",
       "snippetPath": "migrate_circulation_settings.sql",
       "fromModuleVersion": "17.5.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "index_request_itemid_eq.sql"
     }
   ]
 }
