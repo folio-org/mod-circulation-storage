@@ -49,3 +49,7 @@ x-fqm-joins-to-raw = [
   { targetId = "bb058933-cd06-4539-bd3a-6f248ff98ee2", targetField = "id", direction = "left", type = "equality-cast-uuid" },
   { targetId = "f2615ea6-450b-425d-804d-6a495afd9308", targetField = "id", direction = "left", type = "equality-cast-uuid" },
 ]
+
+[[sources]]
+name = "request"
+table = "request"
