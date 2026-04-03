@@ -6,7 +6,7 @@
     "fqm.entityType.actual_cost_record.loss_date": "Loss date",
     "fqm.entityType.actual_cost_record.expiration_date": "Expiration date",
     "fqm.entityType.actual_cost_record.user_id": "User UUID",
-    "fqm.entityType.actual_cost_record.user_barcode": "User barcode",
+    "fqm.entityType.actual_cost_record.user_barcode": "Personen-Barcode",
     "fqm.entityType.actual_cost_record.user_first_name": "User first name",
     "fqm.entityType.actual_cost_record.user_last_name": "User last name",
     "fqm.entityType.actual_cost_record.user_middle_name": "User middle name",
