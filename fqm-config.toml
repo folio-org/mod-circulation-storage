@@ -4,12 +4,16 @@ domain = "circulation"
 module = "mod-circulation-storage"
 
 [[sources]]
+name = "request"
+table = "request"
+
+[[sources]]
 name = "actual_cost_record"
 table = "actual_cost_record"
 
 [[entityTypes]]
 name = "actual_cost_record"
-private = false
+private = true
 schema = "./ramls/actual-cost-record.json"
 source = "actual_cost_record"
 sort = ["id", "ASC"]
