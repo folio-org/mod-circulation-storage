@@ -4,12 +4,16 @@ domain = "circulation"
 module = "mod-circulation-storage"
 
 [[sources]]
+name = "request"
+table = "request"
+
+[[sources]]
 name = "actual_cost_record"
 table = "actual_cost_record"
 
 [[entityTypes]]
 name = "actual_cost_record"
-private = false
+private = true
 schema = "./ramls/actual-cost-record.json"
 source = "actual_cost_record"
 sort = ["id", "ASC"]
@@ -49,7 +53,3 @@ x-fqm-joins-to-raw = [
   { targetId = "bb058933-cd06-4539-bd3a-6f248ff98ee2", targetField = "id", direction = "left", type = "equality-cast-uuid" },
   { targetId = "f2615ea6-450b-425d-804d-6a495afd9308", targetField = "id", direction = "left", type = "equality-cast-uuid" },
 ]
-
-[[sources]]
-name = "request"
-table = "request"
