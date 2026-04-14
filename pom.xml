@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>mod-circulation-storage</artifactId>
   <groupId>org.folio</groupId>
-  <version>17.5.0-SNAPSHOT</version>
+  <version>17.6.0-SNAPSHOT</version>
   <licenses>
     <license>
       <name>Apache License 2.0</name>
@@ -29,7 +29,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
     <vertx-version>5.0.5</vertx-version>
-    <raml-module-builder-version>36.0.0-SNAPSHOT</raml-module-builder-version>
+    <raml-module-builder-version>36.0.0</raml-module-builder-version>
     <spring.version>6.2.3</spring.version>
     <junit5.version>5.10.2</junit5.version>
 
@@ -84,7 +84,7 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>folio-kafka-wrapper</artifactId>
-      <version>4.0.0-SNAPSHOT</version>
+      <version>4.0.0</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -162,7 +162,7 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>mod-pubsub-client</artifactId>
-      <version>2.17.0-SNAPSHOT</version>
+      <version>2.17.0</version>
     </dependency>
     <dependency>
       <groupId>org.awaitility</groupId>
@@ -527,7 +527,7 @@
                     <Multi-Release>true</Multi-Release>
                   </manifestEntries>
                 </transformer>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
               </transformers>
               <artifactSet />
               <outputFile>${project.build.directory}/${project.artifactId}-fat.jar</outputFile>
