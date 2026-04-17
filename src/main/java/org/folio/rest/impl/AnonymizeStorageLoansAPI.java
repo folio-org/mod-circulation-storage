@@ -54,7 +54,7 @@ public class AnonymizeStorageLoansAPI implements AnonymizeStorageLoans {
     List<String> invalidIds = loanIdsMap.get(false);
 
     if (CollectionUtils.isNotEmpty(invalidIds)) {
-      log.warn("Invalid loan UUIDs provided: ", invalidIds);
+      log.warn("Invalid loan UUIDs provided: {}", invalidIds);
       addToNotAnonimizedLoans(response, "invalidLoanIds", invalidIds);
     }
 
@@ -66,7 +66,7 @@ public class AnonymizeStorageLoansAPI implements AnonymizeStorageLoans {
       return;
     }
 
-    log.info("Anonymizing loans: ", validIds);
+    log.info("Anonymizing loans: {}", validIds.size());
 
     final String tenantId = TenantTool.tenantId(okapiHeaders);
     final PostgresClient postgresClient = PgUtil.postgresClient(vertxContext,
@@ -74,7 +74,6 @@ public class AnonymizeStorageLoansAPI implements AnonymizeStorageLoans {
 
     final String combinedAnonymizationSql = createAnonymizationSQL(validIds,
       tenantId);
-    log.info(String.format("Anonymization SQL: %s", combinedAnonymizationSql));
 
     executeSql(postgresClient, combinedAnonymizationSql).map(
       updateResult -> PostAnonymizeStorageLoansResponse.respond200WithApplicationJson(

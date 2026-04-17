@@ -10,13 +10,14 @@ import static org.folio.rest.jaxrs.resource.RequestStorageBatch.PostRequestStora
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.RequestsBatch;
 import org.folio.rest.jaxrs.resource.RequestStorageBatch;
 import org.folio.rest.tools.utils.MetadataUtil;
 import org.folio.service.request.RequestBatchResourceService;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -40,7 +41,7 @@ public class RequestsBatchAPI implements RequestStorageBatch {
       return;
     }
 
-    log.info("postRequestStorageBatchRequests:: requests: {}", entity.getRequests());
+    log.info("postRequestStorageBatchRequests:: requests count: {}", entity.getRequests().size());
     new RequestBatchResourceService(context, okapiHeaders)
       .executeRequestBatchUpdate(entity.getRequests(), updateResult -> {
         // Successfully updated

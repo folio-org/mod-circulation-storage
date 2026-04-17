@@ -123,8 +123,7 @@ public class RequestService {
     return helper.upsertAndPublishEvents(requestId, request)
       .map(checkForSamePositionInQueueError(request))
       .otherwise(err -> {
-        log.error("upsertRequest:: failed to store request: id = {}, request = [{}]",
-          requestId, helper.jsonStringOrEmpty(request), err);
+        log.error("upsertRequest:: failed to store request: id = {}", requestId, err);
 
         return ResponseUtil.internalErrorResponse(err);
       });
