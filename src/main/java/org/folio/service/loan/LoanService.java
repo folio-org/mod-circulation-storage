@@ -13,7 +13,6 @@ import static org.folio.support.ModuleConstants.LOAN_TABLE;
 import static org.folio.support.ModuleConstants.MODULE_NAME;
 import static org.folio.support.ModuleConstants.OPEN_LOAN_STATUS;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
@@ -51,6 +50,8 @@ import org.folio.support.ServiceHelper;
 import org.folio.support.UUIDValidation;
 import org.folio.support.VertxContextRunner;
 import org.joda.time.DateTime;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -91,7 +92,7 @@ public class LoanService {
   }
 
   public Future<Response> create(Loan loan) {
-    log.info("create:: Creating loan: userId: {}, itemId: {}", loan.getUserId(), loan.getItemId());
+    log.info("create:: Creating loan: itemId: {}", loan.getItemId());
     if (loan.getStatus() == null) {
       loan.setStatus(new Status().withName(OPEN_LOAN_STATUS));
     }
@@ -155,7 +156,7 @@ public class LoanService {
     return helper.upsertAndPublishEvents(loanId, loan)
         .map(checkForMultipleOpenLoanError(loan))
         .otherwise(err -> {
-          log.error("Failed to store loan: id = {}, loan = [{}]", loanId, helper.jsonStringOrEmpty(loan), err);
+          log.error("Failed to store loan: id = {}", loanId, err);
 
           return ResponseUtil.internalErrorResponse(err);
         });
@@ -245,8 +246,6 @@ public class LoanService {
       }
 
       final String combinedAnonymizationSql = createAnonymizationSQL(userId, tenantId(okapiHeaders));
-
-      log.info(String.format("Anonymization SQL: %s", combinedAnonymizationSql));
 
       postgresClient.execute(combinedAnonymizationSql, ResultHandlerFactory.when(
           s -> promise.complete(LoanStorage.PostLoanStorageLoansAnonymizeByUserIdResponse.respond204()),
