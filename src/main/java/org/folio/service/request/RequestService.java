@@ -63,8 +63,17 @@ public class RequestService {
   }
 
   public Future<Response> findByQuery(String query, int offset, int limit) {
+    if (containsEmptyCqlSet(query)) {
+      log.info("findByQuery:: query contains empty CQL set, returning empty result: {}", query);
+      return succeededFuture(RequestStorage.GetRequestStorageRequestsResponse
+        .respond200WithApplicationJson(new Requests().withRequests(List.of()).withTotalRecords(0)));
+    }
     return PgUtil.get(REQUEST_TABLE, REQUEST_CLASS, Requests.class, query, offset, limit, okapiHeaders, vertxContext,
         RequestStorage.GetRequestStorageRequestsResponse.class);
+  }
+
+  private static boolean containsEmptyCqlSet(String query) {
+    return query != null && query.contains("==()");
   }
 
   public Future<Response> findById(String requestId) {

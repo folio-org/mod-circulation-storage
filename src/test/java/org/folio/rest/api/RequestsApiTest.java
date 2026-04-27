@@ -2174,4 +2174,23 @@ class RequestsApiTest extends ApiTests {
     return StorageTestSuite.storageUrl(
       CANCEL_REASON_URL + subPath);
   }
+
+  @Test
+  void shouldReturnEmptyResultWhenQueryContainsEmptyCqlSet()
+    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
+
+    client.get(requestStorageUrl() + "?query=itemId==()&limit=10000",
+      TENANT_ID, ResponseHandler.json(getCompleted));
+
+    JsonResponse response = getCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Expected 200 OK but got: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject body = response.getJson();
+    assertThat(body.getJsonArray("requests").size(), is(0));
+    assertThat(body.getInteger("totalRecords"), is(0));
+  }
 }
