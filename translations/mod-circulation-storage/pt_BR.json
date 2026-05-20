@@ -1,5 +1,5 @@
 {
-    "fqm.entityType.actual_cost_record": "Registro de custo real (rascunho)",
+    "fqm.entityType.actual_cost_record": "Registro de custo real",
     "fqm.entityType.actual_cost_record._description": "Informações sobre o custo real de um item perdido",
     "fqm.entityType.actual_cost_record.id": "UUID",
     "fqm.entityType.actual_cost_record.loss_type": "Tipo de perda",

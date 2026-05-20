@@ -1,5 +1,5 @@
 {
-    "fqm.entityType.actual_cost_record": "Záznam skutečné ceny (návrh)",
+    "fqm.entityType.actual_cost_record": "Záznam skutečné ceny",
     "fqm.entityType.actual_cost_record._description": "Informace o skutečné ceně ztracené jednotky",
     "fqm.entityType.actual_cost_record.id": "UUID",
     "fqm.entityType.actual_cost_record.loss_type": "Typ ztráty",
