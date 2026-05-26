@@ -40,6 +40,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.platform.suite.api.SelectClasses;
 import org.junit.platform.suite.api.Suite;
 import org.testcontainers.kafka.KafkaContainer;
+import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -98,8 +99,14 @@ public class StorageTestSuite {
   private static MockServer mockServer;
   private static final WireMockServer wireMockServer = new WireMockServer(PROXY_PORT);
 
-  private static final KafkaContainer kafkaContainer = new KafkaContainer(DockerImageName.parse("apache/kafka-native:3.8.0"))
+  private static final KafkaContainer kafkaContainer = new KafkaContainer(DockerImageName.parse("apache/kafka-native:4.2.0"))
       .withStartupAttempts(3);
+
+  @SuppressWarnings("resource")
+  private static final GenericContainer<?> sidecarContainer = new GenericContainer<>(
+      DockerImageName.parse("folioci/folio-module-sidecar:latest"))
+      .withExposedPorts(8081)
+      .withNetworkAliases("folio-module-sidecar");
 
   /**
    * Return a URL for the path and the parameters.
@@ -152,6 +159,7 @@ public class StorageTestSuite {
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
 
     kafkaContainer.start();
+    sidecarContainer.start();
     var host = kafkaContainer.getHost();
     var port = String.valueOf(kafkaContainer.getFirstMappedPort());
     log.info("Starting Kafka host={} port={}", host, port);
@@ -200,6 +208,12 @@ public class StorageTestSuite {
       kafkaContainer.stop();
     } catch (Throwable e) {
       log.warn("after:: kafkaContainer.stop() failed (ignored): {}", e.getMessage());
+    }
+
+    try {
+      sidecarContainer.stop();
+    } catch (Throwable e) {
+      log.warn("after:: sidecarContainer.stop() failed (ignored): {}", e.getMessage());
     }
 
     try {
