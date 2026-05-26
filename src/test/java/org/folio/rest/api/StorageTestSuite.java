@@ -99,8 +99,7 @@ public class StorageTestSuite {
   private static final WireMockServer wireMockServer = new WireMockServer(PROXY_PORT);
 
   private static final KafkaContainer kafkaContainer = new KafkaContainer(DockerImageName.parse("apache/kafka-native:4.2.0"))
-      .withStartupAttempts(3);
-
+    .withStartupAttempts(3);
 
   /**
    * Return a URL for the path and the parameters.
@@ -202,7 +201,6 @@ public class StorageTestSuite {
     } catch (Throwable e) {
       log.warn("after:: kafkaContainer.stop() failed (ignored): {}", e.getMessage());
     }
-
 
     try {
       mockServer.close();
