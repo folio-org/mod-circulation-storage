@@ -56,7 +56,8 @@ public class DomainEventPublisher<K, T> {
       producer = getOrCreateProducer();
       log.info("publish:: Producer created, sending the record...");
 
-      producer.send(producerRecord)
+      final KafkaProducer<K, String> finalProducer = producer;
+      finalProducer.send(producerRecord)
         .onSuccess(r -> log.info("publish:: Succeeded sending domain event with key [{}], " +
           "kafka record [{}]", key, producerRecord))
         .onFailure(cause -> {
@@ -64,8 +65,8 @@ public class DomainEventPublisher<K, T> {
             key, producerRecord, cause);
           failureHandler.handle(cause, producerRecord);
         })
-        .eventually(producer::flush)
-        .eventually(producer::close);
+        .eventually(() -> finalProducer.flush())
+        .eventually(() -> finalProducer.close());
     } catch (Exception e) {
       log.error("publish:: Failed to initiate send for domain event with key [{}], kafka record [{}]",
         key, producerRecord, e);
