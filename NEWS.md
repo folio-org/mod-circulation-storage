@@ -1,3 +1,6 @@
+## 17.4.4 2026-06-09
+* Flush and close Kafka producer (CIRCSTORE-654)
+
 ## 17.4.3 2026-02-05
 * Fix request status not updating upon check-in (CIRCSTORE-634)
 * Fix missing request position (CIRCSTORE-635)
