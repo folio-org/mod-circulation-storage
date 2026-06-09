@@ -63,7 +63,7 @@ public class DomainEventPublisher<K, T> {
   }
 
   private KafkaProducerRecord<K, String> buildProducerRecord(K key, DomainEvent<T> event,
-      Map<String, String> okapiHeaders) {
+    Map<String, String> okapiHeaders) {
 
     return new KafkaProducerRecordBuilder<K, DomainEvent<T>>(TenantTool.tenantId(okapiHeaders))
       .key(key)
@@ -74,7 +74,8 @@ public class DomainEventPublisher<K, T> {
   }
 
   private void send(KafkaProducer<K, String> producer, K key,
-      KafkaProducerRecord<K, String> producerRecord) {
+    KafkaProducerRecord<K, String> producerRecord) {
+
     producer.send(producerRecord)
       .onSuccess(r -> log.info("send:: Succeeded sending domain event with key [{}], " +
         "kafka record [{}]", key, producerRecord))
