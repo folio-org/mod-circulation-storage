@@ -86,8 +86,8 @@ public class AnonymizeStorageRequestsAPI implements AnonymizeStorageRequests {
 
   private void addToNotAnonymizedRequests(AnonymizeStorageRequestsResponse response,
       String reason, List<String> ids) {
-    List<NotAnonymizedRequest> notAnonimizedLoans = response.getNotAnonymizedRequests();
-    notAnonimizedLoans.add(
+    List<NotAnonymizedRequest> notAnonymizedRequests = response.getNotAnonymizedRequests();
+    notAnonymizedRequests.add(
         new NotAnonymizedRequest().withReason(reason).withRequestIds(ids));
   }
 
@@ -102,15 +102,23 @@ public class AnonymizeStorageRequestsAPI implements AnonymizeStorageRequests {
   private String createAnonymizationSQL(@NotNull Collection<String> requestIdList,
       String tenantId) {
 
-    String loanIds = requestIdList.stream()
+    String requestIds = requestIdList.stream()
         .map(s -> "\'" + s + "\'")
         .collect(Collectors.joining(",", "(", ")"));
 
     final String AnonymizeStorageRequestsSql = String.format(
-        "TODO: Write the SQL",
+        new StringBuilder().append("UPDATE %s_%s.request ")
+            .append(" SET jsonb = jsonb - ARRAY['requesterId', 'proxyUserId', 'requester', 'proxy']")
+            .append(" WHERE request.id in ")
+            .append(requestIds)
+            .append(" AND request.jsonb->>'status' LIKE 'Closed - %%'")
+            .append(" AND (request.jsonb->>'requesterId' is NOT null")
+            .append(" OR request.jsonb->>'proxyUserId' is NOT null")
+            .append(" OR request.jsonb->>'requester' is NOT null")
+            .append(" OR request.jsonb->>'proxy' is NOT null)")
+            .toString(),
         tenantId, MODULE_NAME);
 
-    // Loan action history needs to go first, as needs to be for specific loans
     return AnonymizeStorageRequestsSql;
   }
 }
