@@ -114,10 +114,10 @@ class AnonymizeRequestsApiTest extends ApiTests {
         .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
         .create()).getJson();
 
-    // This implementation is carried over from anonymizing loans
-    // The id is returned as anonymized but actually won't be unless criteria is met
     final var response = anonymizeRequests(firstRequestId, secondRequestId, openRequestId);
 
+    // This implementation is carried over from anonymizing loans
+    // The id is returned as anonymized but actually won't be unless criteria is met
     assertThat(response.getAnonymizedRequests(), containsInAnyOrder(firstRequestId, secondRequestId, openRequestId));
     assertThat(requestsClient.getById(openRequestId).getJson(), isNotAnonymized());
   }
