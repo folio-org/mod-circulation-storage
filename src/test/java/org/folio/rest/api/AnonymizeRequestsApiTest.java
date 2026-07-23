@@ -4,6 +4,7 @@ import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.http.InterfaceUrls.anonymizeRequestsURL;
 import static org.folio.rest.support.matchers.RequestMatchers.isAnonymized;
+import static org.folio.rest.support.matchers.RequestMatchers.isNotAnonymized;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.core.Is.is;
@@ -47,6 +48,7 @@ class AnonymizeRequestsApiTest extends ApiTests {
         .withId(UUID.fromString(firstRequestId))
         .withItemId(UUID.randomUUID())
         .withRequesterId(UUID.randomUUID())
+        .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
         .create()).getJson();
 
     JsonObject request2 = requestsClient.create(new RequestRequestBuilder()
@@ -55,6 +57,9 @@ class AnonymizeRequestsApiTest extends ApiTests {
         .withId(UUID.fromString(secondRequestId))
         .withItemId(UUID.randomUUID())
         .withRequesterId(UUID.randomUUID())
+        .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
+        .withProxyId(UUID.randomUUID())
+        .withProxy("Stuart", "Rebecca", "6059539205")
         .create()).getJson();
 
     requestsClient.replace(firstRequestId, RequestRequestBuilder.from(request1).closed());
@@ -75,6 +80,46 @@ class AnonymizeRequestsApiTest extends ApiTests {
     assertThat(response.getAnonymizedRequests(), containsInAnyOrder(firstRequestId, secondRequestId));
     assertThat(requestsClient.getById(firstRequestId).getJson(), isAnonymized());
     assertThat(requestsClient.getById(secondRequestId).getJson(), isAnonymized());
+  }
+
+  @Test
+  void canAnonymizeAlreadyAnonymizedRequests() throws InterruptedException, ExecutionException,
+      TimeoutException, MalformedURLException {
+
+    var response = anonymizeRequests(firstRequestId, secondRequestId);
+
+    assertThat(response.getAnonymizedRequests(), containsInAnyOrder(firstRequestId, secondRequestId));
+    assertThat(requestsClient.getById(firstRequestId).getJson(), isAnonymized());
+    assertThat(requestsClient.getById(secondRequestId).getJson(), isAnonymized());
+
+    response = anonymizeRequests(firstRequestId, secondRequestId);
+
+    assertThat(response.getAnonymizedRequests(), containsInAnyOrder(firstRequestId, secondRequestId));
+    assertThat(requestsClient.getById(firstRequestId).getJson(), isAnonymized());
+    assertThat(requestsClient.getById(secondRequestId).getJson(), isAnonymized());
+  }
+
+  @Test
+  void onlyAnonymizesOpenRequests() throws InterruptedException, ExecutionException,
+      TimeoutException, MalformedURLException {
+
+    final var openRequestId = UUID.randomUUID().toString();
+
+    requestsClient.create(new RequestRequestBuilder()
+        .hold()
+        .toHoldShelf()
+        .withId(UUID.fromString(openRequestId))
+        .withItemId(UUID.randomUUID())
+        .withRequesterId(UUID.randomUUID())
+        .withRequester("Jones", "Stuart", "Anthony", "6837502674015")
+        .create()).getJson();
+
+    // This implementation is carried over from anonymizing loans
+    // The id is returned as anonymized but actually won't be unless criteria is met
+    final var response = anonymizeRequests(firstRequestId, secondRequestId, openRequestId);
+
+    assertThat(response.getAnonymizedRequests(), containsInAnyOrder(firstRequestId, secondRequestId, openRequestId));
+    assertThat(requestsClient.getById(openRequestId).getJson(), isNotAnonymized());
   }
 
   @Test

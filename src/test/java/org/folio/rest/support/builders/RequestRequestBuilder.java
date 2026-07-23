@@ -108,10 +108,33 @@ public class RequestRequestBuilder extends JsonBuilder implements Builder {
     final UUID requesterId = example.containsKey("requesterId")
         ? UUID.fromString(example.getString("requesterId"))
         : null;
+    PatronSummary requesterSummary = null;
+
+    if (example.containsKey("requester")) {
+      JsonObject requester = example.getJsonObject("requester");
+
+      requesterSummary = new PatronSummary(
+          requester.getString("lastName"),
+          requester.getString("firstName"),
+          requester.getString("middleName"),
+          requester.getString("barcode"));
+    }
 
     final UUID proxyId = example.containsKey("proxyUserId")
         ? UUID.fromString(example.getString("proxyUserId"))
         : null;
+
+    PatronSummary proxySummary = null;
+
+    if (example.containsKey("proxy")) {
+      JsonObject proxy = example.getJsonObject("proxy");
+
+      proxySummary = new PatronSummary(
+          proxy.getString("lastName"),
+          proxy.getString("firstName"),
+          proxy.getString("middleName"),
+          proxy.getString("barcode"));
+    }
 
     final UUID deliveryAddressTypeId = example.containsKey("deliveryAddressTypeId")
         ? UUID.fromString(example.getString("deliveryAddressTypeId"))
@@ -159,8 +182,8 @@ public class RequestRequestBuilder extends JsonBuilder implements Builder {
         requestExpirationDate,
         holdShelfExpirationDate,
         null,
-        null,
-        null,
+        requesterSummary,
+        proxySummary,
         example.getString("status"),
         cancellationReasonId,
         cancelledByUserId,
@@ -478,7 +501,7 @@ public class RequestRequestBuilder extends JsonBuilder implements Builder {
     return withPosition(null);
   }
 
-  private class PatronSummary {
+  private static class PatronSummary {
     final String lastName;
     final String firstName;
     final String middleName;
