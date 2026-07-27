@@ -1,0 +1,106 @@
+#%RAML 1.0
+title: Anonymization due date storage
+version: v0.1
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost:9130
+
+documentation:
+  - title: Anonymization due date storage API
+    content: <b>Internal maintenance and finders for the derived anonymization
+      due-date in the loan_anonymization_due table. Stamp is called only by the
+      scheduled anonymization job; clear is called by invalidation hooks. The
+      due and unevaluated finders drive the drain and evaluation passes.</b>
+
+types:
+  errors: !include raml-util/schemas/errors.schema
+  loans: !include loans.json
+  anonymization-due-date-stamp-request: !include anonymization-due-date-stamp-request.json
+  anonymization-due-date-clear-request: !include anonymization-due-date-clear-request.json
+  anonymization-due-date-response: !include anonymization-due-date-response.json
+
+traits:
+  validate: !include raml-util/traits/validation.raml
+
+/anonymization-due-date-storage:
+  /stamp:
+    post:
+      is: [validate]
+      body:
+        application/json:
+          type: anonymization-due-date-stamp-request
+      responses:
+        200:
+          description: "Loans stamped"
+          body:
+            application/json:
+              type: anonymization-due-date-response
+        422:
+          description: "Validation error (malformed loan id or due date)"
+          body:
+            application/json:
+              type: errors
+        500:
+          description: "Internal server error"
+          body:
+            text/plain:
+              example: "Internal server error, contact administrator"
+  /clear:
+    post:
+      is: [validate]
+      body:
+        application/json:
+          type: anonymization-due-date-clear-request
+      responses:
+        200:
+          description: "Stamps cleared"
+          body:
+            application/json:
+              type: anonymization-due-date-response
+        422:
+          description: "Validation error (exactly one of loanIds, all required)"
+          body:
+            application/json:
+              type: errors
+        500:
+          description: "Internal server error"
+          body:
+            text/plain:
+              example: "Internal server error, contact administrator"
+  /due:
+    get:
+      description: "Closed loans with a userId whose due_at has arrived, oldest first (drain pass)"
+      queryParameters:
+        limit:
+          description: "Maximum number of loans to return"
+          type: integer
+          required: false
+          default: 50000
+      responses:
+        200:
+          body:
+            application/json:
+              type: loans
+        500:
+          description: "Internal server error"
+          body:
+            text/plain:
+              example: "Internal server error, contact administrator"
+  /unevaluated:
+    get:
+      description: "Closed loans with a userId that have no due-date row yet (evaluation pass)"
+      queryParameters:
+        limit:
+          description: "Maximum number of loans to return"
+          type: integer
+          required: false
+          default: 50000
+      responses:
+        200:
+          body:
+            application/json:
+              type: loans
+        500:
+          description: "Internal server error"
+          body:
+            text/plain:
+              example: "Internal server error, contact administrator"

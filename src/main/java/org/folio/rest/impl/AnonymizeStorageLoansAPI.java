@@ -118,6 +118,12 @@ public class AnonymizeStorageLoansAPI implements AnonymizeStorageLoans {
         .toString(),
       tenantId, MODULE_NAME);
 
+    // Remove the loan's due-date row. The text literals cast to the uuid
+    // loan_id column implicitly.
+    final String AnonymizeDueDateSql = String.format(
+      "DELETE FROM %s_%s.loan_anonymization_due WHERE loan_id IN %s",
+      tenantId, MODULE_NAME, loanIds);
+
     // Only anonymize the history for loans that are currently closed
     // meaning that we need to refer to loans in this query
     final String AnonymizeStorageLoansActionHistorySql = String.format(
@@ -133,6 +139,7 @@ public class AnonymizeStorageLoansAPI implements AnonymizeStorageLoans {
       tenantId, MODULE_NAME, LOAN_HISTORY_TABLE, tenantId, MODULE_NAME);
 
     // Loan action history needs to go first, as needs to be for specific loans
-    return AnonymizeStorageLoansActionHistorySql + "; " + AnonymizeStorageLoansSql;
+    return AnonymizeStorageLoansActionHistorySql + "; " + AnonymizeStorageLoansSql
+      + "; " + AnonymizeDueDateSql;
   }
 }

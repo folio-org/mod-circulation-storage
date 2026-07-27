@@ -100,6 +100,32 @@
       ]
     },
     {
+      "id": "anonymization-due-date-storage",
+      "version": "0.1",
+      "handlers": [
+        {
+          "methods": ["POST"],
+          "pathPattern": "/anonymization-due-date-storage/stamp",
+          "permissionsRequired": ["anonymization-due-date-storage.stamp.post"]
+        },
+        {
+          "methods": ["POST"],
+          "pathPattern": "/anonymization-due-date-storage/clear",
+          "permissionsRequired": ["anonymization-due-date-storage.clear.post"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/anonymization-due-date-storage/due",
+          "permissionsRequired": ["anonymization-due-date-storage.due.get"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/anonymization-due-date-storage/unevaluated",
+          "permissionsRequired": ["anonymization-due-date-storage.unevaluated.get"]
+        }
+      ]
+    },
+    {
       "id": "circulation-rules-storage",
       "version": "1.0",
       "handlers": [
@@ -772,6 +798,26 @@
       "description": "anonymize a list of loans"
     },
     {
+      "permissionName": "anonymization-due-date-storage.stamp.post",
+      "displayName": "circulation - stamp anonymization due dates",
+      "description": "set the anonymization due-date on closed loans (scheduled job only)"
+    },
+    {
+      "permissionName": "anonymization-due-date-storage.clear.post",
+      "displayName": "circulation - clear anonymization due dates",
+      "description": "clear anonymization due-dates so loans are re-evaluated"
+    },
+    {
+      "permissionName": "anonymization-due-date-storage.due.get",
+      "displayName": "circulation - find loans due for anonymization",
+      "description": "closed loans whose derived due-date has arrived (scheduled anonymization drain)"
+    },
+    {
+      "permissionName": "anonymization-due-date-storage.unevaluated.get",
+      "displayName": "circulation - find unevaluated closed loans",
+      "description": "closed loans with no derived due-date row yet (scheduled anonymization evaluation sweep)"
+    },
+    {
       "permissionName": "circulation-storage.circulation-rules.get",
       "displayName": "Circulation storage - get circulation rules",
       "description": "Get circulation rules from storage"
@@ -1145,6 +1191,10 @@
         "scheduled-notice-storage.scheduled-notices.item.delete",
         "scheduled-notice-storage.scheduled-notices.collection.delete",
         "anonymize-storage-loans.post",
+        "anonymization-due-date-storage.stamp.post",
+        "anonymization-due-date-storage.clear.post",
+        "anonymization-due-date-storage.due.get",
+        "anonymization-due-date-storage.unevaluated.get",
         "patron-action-session-storage.patron-action-sessions.collection.get",
         "patron-action-session-storage.patron-action-sessions.item.get",
         "patron-action-session-storage.patron-action-sessions.item.post",
