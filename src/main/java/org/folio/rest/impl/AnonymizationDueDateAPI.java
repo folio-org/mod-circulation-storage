@@ -4,7 +4,6 @@ import static io.vertx.core.Future.succeededFuture;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import javax.ws.rs.core.Response;
 
@@ -41,7 +40,7 @@ public class AnonymizationDueDateAPI implements AnonymizationDueDateStorage {
 
     final List<StampEntry> entries = request.getEntries().stream()
       .map(e -> new StampEntry(e.getLoanId(), e.getDueAt()))
-      .collect(Collectors.toList());
+      .toList();
 
     log.info("postAnonymizationDueDateStorageStamp:: stamping {} loans", entries.size());
 

@@ -48,7 +48,7 @@ public class AnonymizationDueDateService {
    */
   public Future<Integer> stamp(List<StampEntry> entries) {
     for (StampEntry entry : entries) {
-      if (!UUIDValidation.isValidUUID(entry.loanId())) {
+      if (!Boolean.TRUE.equals(UUIDValidation.isValidUUID(entry.loanId()))) {
         return Future.failedFuture(new IllegalArgumentException(
           "Invalid loan id: " + entry.loanId()));
       }
@@ -81,7 +81,7 @@ public class AnonymizationDueDateService {
   /** Return specific loans to the unevaluated state. */
   public Future<Integer> clearByLoanIds(List<String> loanIds) {
     for (String loanId : loanIds) {
-      if (!UUIDValidation.isValidUUID(loanId)) {
+      if (!Boolean.TRUE.equals(UUIDValidation.isValidUUID(loanId))) {
         return Future.failedFuture(new IllegalArgumentException("Invalid loan id: " + loanId));
       }
     }
