@@ -55,6 +55,7 @@ import lombok.SneakyThrows;
 @Suite
 @SelectClasses({
   AnonymizeLoansApiTest.class,
+  AnonymizationDueDateApiTest.class,
   LoansApiTest.class,
   LoansAnonymizationApiTest.class,
   CirculationRulesApiTest.class,
