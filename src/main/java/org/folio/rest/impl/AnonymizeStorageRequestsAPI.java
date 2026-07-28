@@ -53,7 +53,7 @@ public class AnonymizeStorageRequestsAPI implements AnonymizeStorageRequests {
     List<String> invalidIds = requestIdsMap.get(false);
 
     if (CollectionUtils.isNotEmpty(invalidIds)) {
-      log.warn("Invalid request UUIDs provided: {}", invalidIds);
+      log.warn("postAnonymizeStorageRequests:: Invalid request UUIDs provided: {}", invalidIds);
       addToNotAnonymizedRequests(response, "invalidRequestIds", invalidIds);
     }
 
@@ -65,7 +65,7 @@ public class AnonymizeStorageRequestsAPI implements AnonymizeStorageRequests {
       return;
     }
 
-    log.info("Anonymizing requests: {}", validIds.size());
+    log.info("postAnonymizeStorageRequests:: Anonymizing requests: {}", validIds.size());
 
     final String tenantId = TenantTool.tenantId(okapiHeaders);
     final PostgresClient postgresClient = PgUtil.postgresClient(vertxContext,
