@@ -1,3 +1,6 @@
+## 17.4.5 2026-07-28
+* Fix intermittent issue with closed requests cannot be viewed (CIRCSTORE-660)
+
 ## 17.4.4 2026-06-09
 * Flush and close Kafka producer (CIRCSTORE-654)
 
