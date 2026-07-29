@@ -106,7 +106,7 @@ public class AnonymizeStorageRequestsAPI implements AnonymizeStorageRequests {
         .map(s -> "\'" + s + "\'")
         .collect(Collectors.joining(",", "(", ")"));
 
-    final String AnonymizeStorageRequestsSql = String.format(
+    return String.format(
         new StringBuilder().append("UPDATE %s_%s.request ")
             .append(" SET jsonb = jsonb - ARRAY['requesterId', 'proxyUserId', 'requester', 'proxy']")
             .append(" WHERE request.id in ")
@@ -118,7 +118,5 @@ public class AnonymizeStorageRequestsAPI implements AnonymizeStorageRequests {
             .append(" OR request.jsonb->>'proxy' is NOT null)")
             .toString(),
         tenantId, MODULE_NAME);
-
-    return AnonymizeStorageRequestsSql;
   }
 }
