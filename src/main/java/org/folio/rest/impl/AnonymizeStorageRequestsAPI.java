@@ -82,7 +82,7 @@ public class AnonymizeStorageRequestsAPI implements AnonymizeStorageRequests {
     final String combinedAnonymizationSql = createAnonymizationSQL(validIds,
         tenantId);
 
-    executeSql(postgresClient, combinedAnonymizationSql).map(
+    postgresClient.execute(combinedAnonymizationSql).map(
         updateResult -> PostAnonymizeStorageRequestsResponse.respond200WithApplicationJson(
             response.withAnonymizedRequests(validIds)))
         .map(Response.class::cast)
@@ -99,14 +99,6 @@ public class AnonymizeStorageRequestsAPI implements AnonymizeStorageRequests {
         new NotAnonymizedRequest().withReason(reason).withRequestIds(ids));
   }
 
-  private Future<RowSet<Row>> executeSql(PostgresClient postgresClient, String sql) {
-    final Promise<RowSet<Row>> promise = Promise.promise();
-
-    postgresClient.execute(sql, promise::handle);
-
-    return promise.future();
-  }
-
   private String createAnonymizationSQL(@NotNull Collection<String> requestIdList,
       String tenantId) {
 
@@ -114,17 +106,15 @@ public class AnonymizeStorageRequestsAPI implements AnonymizeStorageRequests {
         .map(s -> "\'" + s + "\'")
         .collect(Collectors.joining(",", "(", ")"));
 
-    return String.format(
-        new StringBuilder().append("UPDATE %s_%s.request ")
-            .append(" SET jsonb = jsonb - ARRAY['requesterId', 'proxyUserId', 'requester', 'proxy']")
-            .append(" WHERE request.id in ")
-            .append(requestIds)
-            .append(" AND request.jsonb->>'status' LIKE 'Closed - %%'")
-            .append(" AND (request.jsonb->>'requesterId' is NOT null")
-            .append(" OR request.jsonb->>'proxyUserId' is NOT null")
-            .append(" OR request.jsonb->>'requester' is NOT null")
-            .append(" OR request.jsonb->>'proxy' is NOT null)")
-            .toString(),
-        tenantId, MODULE_NAME);
+    return """
+        UPDATE %s_%s.request
+        SET jsonb = jsonb - ARRAY['requesterId', 'proxyUserId', 'requester', 'proxy']
+        WHERE request.id in %s
+          AND request.jsonb->>'status' LIKE 'Closed - %%'
+          AND (request.jsonb->>'requesterId' is NOT null
+            OR request.jsonb->>'proxyUserId' is NOT null
+            OR request.jsonb->>'requester' is NOT null
+            OR request.jsonb->>'proxy' is NOT null)
+        """.formatted(tenantId, MODULE_NAME, requestIds);
   }
 }
