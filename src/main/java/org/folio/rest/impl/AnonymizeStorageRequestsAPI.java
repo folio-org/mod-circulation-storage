@@ -46,6 +46,14 @@ public class AnonymizeStorageRequestsAPI implements AnonymizeStorageRequests {
     AnonymizeStorageRequestsResponse response = new AnonymizeStorageRequestsResponse();
     List<String> requestIds = request.getRequestIds();
 
+    if (requestIds == null || CollectionUtils.isEmpty(requestIds)) {
+      final Errors errors = ValidationHelper.createValidationErrorMessage(
+          "requestIds", "null", "Please provide valid requestIds");
+      responseHandler.handle(succeededFuture(
+          PostAnonymizeStorageRequestsResponse.respond422WithApplicationJson(errors)));
+      return;
+    }
+
     Map<Boolean, List<String>> requestIdsMap = requestIds.stream()
         .collect(Collectors.groupingBy(UUIDValidation::isValidUUID));
 
