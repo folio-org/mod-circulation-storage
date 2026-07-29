@@ -1,3 +1,6 @@
+## 17.5.1 2026-07-29
+* Fix intermittent issue with closed requests cannot be viewed (CIRCSTORE-660)
+
 ## 17.5.0 2026-04-14
 * Update FQM translations (MODFQMMGR-1095)
 * Add request view for FQM (MODFQMMGR-770)
