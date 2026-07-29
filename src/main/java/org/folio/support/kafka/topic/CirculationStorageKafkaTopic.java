@@ -8,7 +8,8 @@ public enum CirculationStorageKafkaTopic implements KafkaTopic {
   CIRCULATION_SETTINGS("circulation-settings", 10),
   LOAN("loan", 10),
   CHECK_IN("check-in", 10),
-  RULES("rules", 10);
+  RULES("rules", 10),
+  LOG_RECORD("LOG_RECORD", 10);
 
   private final String topic;
   private final int partitions;

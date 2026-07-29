@@ -56,6 +56,7 @@ public class CirculationSettingsService {
     log.debug("create:: trying to save circulationSetting: {}", circulationSetting);
     return repository.saveAndReturnUpdatedEntity(circulationSetting.getId(),
         circulationSetting)
+      .compose(saved -> eventPublisher.publishCreated(saved.getId(), saved).map(saved))
       .recover(throwable -> updateSettingsValue(circulationSetting, throwable));
   }
 
@@ -138,10 +139,19 @@ public class CirculationSettingsService {
   private Future<CirculationSetting> updateSettings(List<CirculationSetting> settings,
     CirculationSetting circulationSetting) {
 
+    var existingSetting = settings.get(0);
+    var oldValue = existingSetting.getValue();
+    var oldSetting = new CirculationSetting()
+      .withId(existingSetting.getId())
+      .withName(existingSetting.getName())
+      .withValue(oldValue)
+      .withMetadata(existingSetting.getMetadata());
+
     settings.forEach(setting -> setting.setValue(circulationSetting.getValue()));
     log.debug("updateSettings:: updating {} setting(s) with name '{}'",
       settings::size, circulationSetting::getName);
     return repository.update(settings)
+      .compose(v -> eventPublisher.publishUpdated(existingSetting.getId(), oldSetting, existingSetting))
       .map(circulationSetting);
   }
 
