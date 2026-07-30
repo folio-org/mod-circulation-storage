@@ -80,6 +80,7 @@ class CirculationSettingsAPITest extends ApiTests {
     String id = UUID.randomUUID().toString();
     JsonObject circulationSettingsJson = getCirculationSetting(id);
     JsonObject created = circulationSettingsClient.create(circulationSettingsJson).getJson();
+    JsonObject originalCirculationSettings = circulationSettingsClient.getById(id).getJson();
     JsonObject updated = circulationSettingsJson.copy().put(VALUE_KEY, new JsonObject().put(SAMPLE_KEY, "DONE"));
     circulationSettingsClient.attemptPutById(updated);
     JsonObject updatedCirculationSettings = circulationSettingsClient.getById(id).getJson();
@@ -87,7 +88,7 @@ class CirculationSettingsAPITest extends ApiTests {
     assertThat(updatedCirculationSettings.getString(ID_KEY), is(id));
     assertThat(updatedCirculationSettings.getJsonObject(VALUE_KEY), is(updated.getJsonObject(VALUE_KEY)));
 
-    assertUpdateEventForCirculationSetting(updated, updatedCirculationSettings);
+    assertUpdateEventForCirculationSetting(originalCirculationSettings, updatedCirculationSettings);
   }
 
   @Test

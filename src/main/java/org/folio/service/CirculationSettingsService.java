@@ -69,10 +69,11 @@ public class CirculationSettingsService {
   public Future<Response> update(String circulationSettingsId,
     CirculationSetting circulationSetting) {
 
-    return PgUtil.put(CIRCULATION_SETTINGS_TABLE, circulationSetting, circulationSettingsId,
-        okapiHeaders, vertxContext,
-        PutCirculationSettingsStorageCirculationSettingsByCirculationSettingsIdResponse.class)
-      .compose(eventPublisher.publishUpdated(circulationSetting));
+    return repository.getById(circulationSettingsId)
+      .compose(oldCirculationSetting -> PgUtil.put(CIRCULATION_SETTINGS_TABLE, circulationSetting,
+          circulationSettingsId, okapiHeaders, vertxContext,
+          PutCirculationSettingsStorageCirculationSettingsByCirculationSettingsIdResponse.class)
+        .compose(eventPublisher.publishUpdated(oldCirculationSetting)));
   }
 
   public Future<Response> delete(String circulationSettingsId) {
