@@ -115,7 +115,7 @@ public final class DomainEventAssertions {
   public static void assertRequestQueueReorderingEvent(String instanceId, String itemId,
     List<String> requestIds, RequestQueueReordering.RequestLevel requestLevel) {
 
-    await().until(() -> getRequestQueueReorderingEvents(instanceId).size(), greaterThan(0));
+    await().until(() -> getRequestQueueReorderingEvents().size(), greaterThan(0));
 
     JsonObject payload = new JsonObject()
       .put("instanceId", instanceId)
@@ -123,7 +123,7 @@ public final class DomainEventAssertions {
       .put("requestLevel", requestLevel.value())
       .put("requestIds", new JsonArray(requestIds));
 
-    assertCreateEvent(getFirstRequestQueueReorderingEvent(instanceId), payload);
+    assertCreateEvent(getFirstRequestQueueReorderingEvent(), payload);
   }
 
   public static void assertNoRequestEvent(String requestId) {

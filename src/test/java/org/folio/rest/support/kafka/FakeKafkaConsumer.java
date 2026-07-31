@@ -105,10 +105,6 @@ public final class FakeKafkaConsumer {
       .orElseGet(Collections::emptyList);
   }
 
-  public static Collection<KafkaConsumerRecord<String, JsonObject>> getRequestQueueReorderingEvents(String instanceId) {
-    return requestQueueReorderingEvents.getOrDefault(instanceId, emptyList());
-  }
-
   public static KafkaConsumerRecord<String, JsonObject>  getFirstLoanEvent(String loanId) {
     return getFirstEvent(getLoanEvents(loanId));
   }
@@ -143,10 +139,6 @@ public final class FakeKafkaConsumer {
 
   public static KafkaConsumerRecord<String, JsonObject> getFirstRequestQueueReorderingEvent() {
     return getFirstEvent(getRequestQueueReorderingEvents());
-  }
-
-  public static KafkaConsumerRecord<String, JsonObject> getFirstRequestQueueReorderingEvent(String instanceId) {
-    return getFirstEvent(getRequestQueueReorderingEvents(instanceId));
   }
 
   private static KafkaConsumerRecord<String, JsonObject> getFirstEvent(
