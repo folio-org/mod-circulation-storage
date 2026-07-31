@@ -79,6 +79,7 @@ class CirculationSettingsAPITest extends ApiTests {
   void canUpdateCirculationSettings() {
     String id = UUID.randomUUID().toString();
     JsonObject circulationSettingsJson = getCirculationSetting(id);
+    circulationSettingsClient.create(circulationSettingsJson);
     JsonObject originalCirculationSettings = circulationSettingsClient.getById(id).getJson();
     JsonObject updated = circulationSettingsJson.copy().put(VALUE_KEY, new JsonObject().put(SAMPLE_KEY, "DONE"));
     circulationSettingsClient.attemptPutById(updated);
