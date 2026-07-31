@@ -28,7 +28,6 @@ public final class FakeKafkaConsumer {
   private static final String CHECKIN_TOPIC_NAME = "folio.test_tenant.circulation.check-in";
   private static final String CIRCULATION_RULES_TOPIC_NAME = "folio.test_tenant.circulation.rules";
   private static final String REQUEST_QUEUE_REORDERING_TOPIC_NAME = "folio.test_tenant.circulation.request-queue-reordering";
-  private static final String CIRCULATION_SETTINGS_TOPIC_NAME = "folio.test_tenant.circulation.circulation-settings";
 
   private static final Map<String, List<KafkaConsumerRecord<String, JsonObject>>> loanEvents =
       new ConcurrentHashMap<>();
@@ -40,23 +39,19 @@ public final class FakeKafkaConsumer {
     new ConcurrentHashMap<>();
   private static final Map<String, List<KafkaConsumerRecord<String, JsonObject>>> requestQueueReorderingEvents =
     new ConcurrentHashMap<>();
-  private static final Map<String, List<KafkaConsumerRecord<String, JsonObject>>> circulationSettingsEvents =
-    new ConcurrentHashMap<>();
   private static final Map<String, Map<String, List<KafkaConsumerRecord<String, JsonObject>>>> topicToEvents = Map.of(
     LOAN_TOPIC_NAME, loanEvents,
     REQUEST_TOPIC_NAME, requestEvents,
     CHECKIN_TOPIC_NAME, checkInEvents,
     CIRCULATION_RULES_TOPIC_NAME, circulationRulesEvents,
-    REQUEST_QUEUE_REORDERING_TOPIC_NAME, requestQueueReorderingEvents,
-    CIRCULATION_SETTINGS_TOPIC_NAME, circulationSettingsEvents
+    REQUEST_QUEUE_REORDERING_TOPIC_NAME, requestQueueReorderingEvents
   );
 
   public FakeKafkaConsumer consume(Vertx vertx) {
     final KafkaConsumer<String, JsonObject> consumer = create(vertx, consumerProperties());
 
     consumer.subscribe(Set.of(LOAN_TOPIC_NAME, REQUEST_TOPIC_NAME, CHECKIN_TOPIC_NAME,
-      CIRCULATION_RULES_TOPIC_NAME, REQUEST_QUEUE_REORDERING_TOPIC_NAME,
-      CIRCULATION_SETTINGS_TOPIC_NAME));
+      CIRCULATION_RULES_TOPIC_NAME, REQUEST_QUEUE_REORDERING_TOPIC_NAME));
 
     consumer.handler(message -> {
       var recordEvents = topicToEvents.get(message.topic());
@@ -78,7 +73,6 @@ public final class FakeKafkaConsumer {
     checkInEvents.clear();
     circulationRulesEvents.clear();
     requestQueueReorderingEvents.clear();
-    circulationSettingsEvents.clear();
   }
 
   public static int getAllPublishedLoanCount() {
@@ -109,6 +103,10 @@ public final class FakeKafkaConsumer {
       .stream()
       .findFirst()
       .orElseGet(Collections::emptyList);
+  }
+
+  public static Collection<KafkaConsumerRecord<String, JsonObject>> getRequestQueueReorderingEvents(String instanceId) {
+    return requestQueueReorderingEvents.getOrDefault(instanceId, emptyList());
   }
 
   public static KafkaConsumerRecord<String, JsonObject>  getFirstLoanEvent(String loanId) {
@@ -147,16 +145,8 @@ public final class FakeKafkaConsumer {
     return getFirstEvent(getRequestQueueReorderingEvents());
   }
 
-  public static Collection<KafkaConsumerRecord<String, JsonObject>> getCirculationSettingsEvents(String settingsId) {
-    return circulationSettingsEvents.getOrDefault(settingsId, emptyList());
-  }
-
-  public static KafkaConsumerRecord<String, JsonObject> getFirstCirculationSettingsEvent(String settingsId) {
-    return getFirstEvent(getCirculationSettingsEvents(settingsId));
-  }
-
-  public static KafkaConsumerRecord<String, JsonObject> getLastCirculationSettingsEvent(String settingsId) {
-    return getLastEvent(getCirculationSettingsEvents(settingsId));
+  public static KafkaConsumerRecord<String, JsonObject> getFirstRequestQueueReorderingEvent(String instanceId) {
+    return getFirstEvent(getRequestQueueReorderingEvents(instanceId));
   }
 
   private static KafkaConsumerRecord<String, JsonObject> getFirstEvent(

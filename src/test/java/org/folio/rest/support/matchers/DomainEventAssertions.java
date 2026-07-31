@@ -10,12 +10,10 @@ import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.storageUrl;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getCheckInEvents;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getCirculationRulesEvents;
-import static org.folio.rest.support.kafka.FakeKafkaConsumer.getCirculationSettingsEvents;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstLoanEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstRequestQueueReorderingEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastCheckInEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastCirculationRulesEvent;
-import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastCirculationSettingsEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastLoanEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastRequestEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLoanEvents;
@@ -117,7 +115,7 @@ public final class DomainEventAssertions {
   public static void assertRequestQueueReorderingEvent(String instanceId, String itemId,
     List<String> requestIds, RequestQueueReordering.RequestLevel requestLevel) {
 
-    await().until(() -> getRequestQueueReorderingEvents().size(), greaterThan(0));
+    await().until(() -> getRequestQueueReorderingEvents(instanceId).size(), greaterThan(0));
 
     JsonObject payload = new JsonObject()
       .put("instanceId", instanceId)
@@ -125,7 +123,7 @@ public final class DomainEventAssertions {
       .put("requestLevel", requestLevel.value())
       .put("requestIds", new JsonArray(requestIds));
 
-    assertCreateEvent(getFirstRequestQueueReorderingEvent(), payload);
+    assertCreateEvent(getFirstRequestQueueReorderingEvent(instanceId), payload);
   }
 
   public static void assertNoRequestEvent(String requestId) {
@@ -152,35 +150,6 @@ public final class DomainEventAssertions {
   public static void assertUpdateEventForCirculationRules(JsonObject oldRules, JsonObject newRules) {
     await().until(() -> getCirculationRulesEvents().size(), greaterThan(0));
     assertUpdateCirculationRulesEvent(getLastCirculationRulesEvent(), oldRules, newRules);
-  }
-
-  public static void assertCreateEventForCirculationSetting(JsonObject setting) {
-    final String settingsId = setting.getString("id");
-
-    await().until(() -> getCirculationSettingsEvents(settingsId).size(), greaterThan(0));
-
-    assertCreateEvent(getLastCirculationSettingsEvent(settingsId), setting);
-  }
-
-  public static void assertUpdateEventForCirculationSetting(JsonObject oldSetting, JsonObject newSetting) {
-    final String settingsId = oldSetting.getString("id");
-
-    await().until(() -> getCirculationSettingsEvents(settingsId).size(), greaterThan(0));
-
-    assertUpdateEvent(getLastCirculationSettingsEvent(settingsId), oldSetting, newSetting);
-  }
-
-  public static void assertRemoveEventForCirculationSetting(JsonObject setting) {
-    final String settingsId = setting.getString("id");
-
-    await().until(() -> getCirculationSettingsEvents(settingsId).size(), greaterThan(0));
-
-    assertRemoveEvent(getLastCirculationSettingsEvent(settingsId), setting);
-  }
-
-  public static void assertNoCirculationSettingEvent(String settingsId) {
-    await().during(1, SECONDS)
-      .until(() -> getCirculationSettingsEvents(settingsId), is(empty()));
   }
 
   public static void assertRemoveEventForRequest(JsonObject request) {

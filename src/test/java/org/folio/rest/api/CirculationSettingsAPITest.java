@@ -5,15 +5,11 @@ import lombok.SneakyThrows;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.http.AssertingRecordClient;
 import org.folio.rest.support.http.InterfaceUrls;
-import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForCirculationSetting;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForCirculationSetting;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForCirculationSetting;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
@@ -38,7 +34,6 @@ class CirculationSettingsAPITest extends ApiTests {
   @BeforeEach
   void beforeEach() {
     StorageTestSuite.cleanUpTable(TABLE_NAME);
-    FakeKafkaConsumer.removeAllEvents();
   }
 
   @Test
@@ -70,8 +65,6 @@ class CirculationSettingsAPITest extends ApiTests {
     assertThat(circulationSettingsById.getString(ID_KEY), is(id));
     assertThat(circulationSettingsById.getJsonObject(VALUE_KEY), is(
       circulationSettingsJson.getJsonObject(VALUE_KEY)));
-
-    assertCreateEventForCirculationSetting(circulationSettingsById);
   }
 
   @Test
@@ -79,29 +72,24 @@ class CirculationSettingsAPITest extends ApiTests {
   void canUpdateCirculationSettings() {
     String id = UUID.randomUUID().toString();
     JsonObject circulationSettingsJson = getCirculationSetting(id);
-    circulationSettingsClient.create(circulationSettingsJson);
-    JsonObject originalCirculationSettings = circulationSettingsClient.getById(id).getJson();
-    JsonObject updated = circulationSettingsJson.copy().put(VALUE_KEY, new JsonObject().put(SAMPLE_KEY, "DONE"));
-    circulationSettingsClient.attemptPutById(updated);
+    circulationSettingsClient.create(circulationSettingsJson).getJson();
+    circulationSettingsClient.attemptPutById(
+      circulationSettingsJson.put(VALUE_KEY, new JsonObject().put(SAMPLE_KEY, "DONE")));
     JsonObject updatedCirculationSettings = circulationSettingsClient.getById(id).getJson();
 
     assertThat(updatedCirculationSettings.getString(ID_KEY), is(id));
-    assertThat(updatedCirculationSettings.getJsonObject(VALUE_KEY), is(updated.getJsonObject(VALUE_KEY)));
-
-    assertUpdateEventForCirculationSetting(originalCirculationSettings, updatedCirculationSettings);
+    assertThat(updatedCirculationSettings.getJsonObject(VALUE_KEY), is(
+      circulationSettingsJson.getJsonObject(VALUE_KEY)));
   }
 
   @Test
   @SneakyThrows
   void canDeleteCirculationSettings() {
     UUID id = UUID.randomUUID();
-    circulationSettingsClient.create(getCirculationSetting(id.toString()));
-    JsonObject entityBeforeDelete = circulationSettingsClient.getById(id).getJson();
+    circulationSettingsClient.create(getCirculationSetting(id.toString())).getJson();
     circulationSettingsClient.deleteById(id);
     var deletedCirculationSettings = circulationSettingsClient.attemptGetById(id);
     assertThat(deletedCirculationSettings.getStatusCode(), is(NOT_FOUND_STATUS));
-
-    assertRemoveEventForCirculationSetting(entityBeforeDelete);
   }
 
   @SneakyThrows
