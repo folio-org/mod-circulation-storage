@@ -27,6 +27,7 @@ import org.folio.rest.api.loans.LoansAnonymizationApiTest;
 import org.folio.rest.api.migration.CirculationSettingsMigrationScriptTest;
 import org.folio.rest.api.migration.StaffSlipsHoldTransitMigrationScriptTest;
 import org.folio.rest.api.migration.StaffSlipsPickRequestMigrationScriptTest;
+import org.folio.rest.impl.TenantRefAPI;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.JsonResponse;
@@ -159,6 +160,8 @@ public class StorageTestSuite {
     System.setProperty("kafka-port", port);
     System.setProperty("kafka-host", host);
 
+    TenantRefAPI.enableNativeKafkaIntegration();
+
     final int verticlePort = NetworkUtils.nextFreePort();
 
     DeploymentOptions options = new DeploymentOptions();
@@ -190,6 +193,7 @@ public class StorageTestSuite {
     TimeoutException {
 
     initialised = false;
+    TenantRefAPI.disableNativeKafkaIntegration();
 
     try {
       removeTenant(TENANT_ID);
