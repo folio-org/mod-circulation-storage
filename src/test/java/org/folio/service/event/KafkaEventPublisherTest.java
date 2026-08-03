@@ -21,7 +21,6 @@ import org.junit.jupiter.api.Test;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.producer.KafkaProducer;
-import io.vertx.kafka.client.producer.KafkaProducerRecord;
 
 class KafkaEventPublisherTest {
 
@@ -30,11 +29,13 @@ class KafkaEventPublisherTest {
 
   @SuppressWarnings("unchecked")
   private final KafkaProducerManager producerManager = mock(KafkaProducerManager.class);
-  @SuppressWarnings("unchecked")
-  private final KafkaProducer<String, String> producer = mock(KafkaProducer.class);
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  private final KafkaProducer producer = mock(KafkaProducer.class);
 
+  @SuppressWarnings("unchecked")
   private KafkaEventPublisher<String, JsonObject> publisher;
 
+  @SuppressWarnings("unchecked")
   @BeforeEach
   void setUp() {
     publisher = new KafkaEventPublisher<>(TOPIC, producerManager);
@@ -59,7 +60,7 @@ class KafkaEventPublisherTest {
 
     assertThat(result.succeeded(), is(true));
     verify(producerManager, times(1)).createShared(TOPIC);
-    verify(producer, times(1)).send(any(KafkaProducerRecord.class));
+    verify(producer, times(1)).send(any());
   }
 
   @Test

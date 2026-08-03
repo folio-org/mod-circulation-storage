@@ -16,8 +16,6 @@ import org.folio.kafka.services.KafkaAdminClientService;
 import org.folio.support.kafka.topic.CirculationStorageKafkaTopic;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedConstruction;
-import org.mockito.Mockito;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -35,52 +33,47 @@ class KafkaServiceTest {
     adminClientService = mock(KafkaAdminClientService.class);
     when(adminClientService.createKafkaTopics(any(), anyString())).thenReturn(succeededFuture());
     when(adminClientService.deleteKafkaTopics(any(), anyString())).thenReturn(succeededFuture());
+
+    kafkaService = new KafkaService(adminClientService);
   }
 
   @Test
-  void createCirculationStorageTopicsCallsAdminService() {
-    try (MockedConstruction<KafkaAdminClientService> mocked =
-        Mockito.mockConstruction(KafkaAdminClientService.class,
-          (mock, ctx) -> when(mock.createKafkaTopics(any(), anyString())).thenReturn(succeededFuture()))) {
+  void createCirculationStorageTopicsDelegatesToAdminService() {
+    Future<Void> result = kafkaService.createCirculationStorageTopics(TENANT_ID);
 
-      kafkaService = new KafkaService(mock(Vertx.class));
-      Future<Void> result = kafkaService.createCirculationStorageTopics(TENANT_ID);
-
-      assertThat(result.succeeded(), is(true));
-      verify(mocked.constructed().get(0), times(1))
-        .createKafkaTopics(CirculationStorageKafkaTopic.values(), TENANT_ID);
-    }
+    assertThat(result.succeeded(), is(true));
+    verify(adminClientService, times(1))
+      .createKafkaTopics(CirculationStorageKafkaTopic.values(), TENANT_ID);
   }
 
   @Test
-  void deleteCirculationStorageTopicsCallsAdminService() {
-    try (MockedConstruction<KafkaAdminClientService> mocked =
-        Mockito.mockConstruction(KafkaAdminClientService.class,
-          (mock, ctx) -> when(mock.deleteKafkaTopics(any(), anyString())).thenReturn(succeededFuture()))) {
+  void deleteCirculationStorageTopicsDelegatesToAdminService() {
+    Future<Void> result = kafkaService.deleteCirculationStorageTopics(TENANT_ID);
 
-      kafkaService = new KafkaService(mock(Vertx.class));
-      Future<Void> result = kafkaService.deleteCirculationStorageTopics(TENANT_ID);
-
-      assertThat(result.succeeded(), is(true));
-      verify(mocked.constructed().get(0), times(1))
-        .deleteKafkaTopics(CirculationStorageKafkaTopic.values(), TENANT_ID);
-    }
+    assertThat(result.succeeded(), is(true));
+    verify(adminClientService, times(1))
+      .deleteKafkaTopics(CirculationStorageKafkaTopic.values(), TENANT_ID);
   }
 
   @Test
-  void createPublisherReturnsPublisher() {
-    try (MockedConstruction<KafkaAdminClientService> ignored =
-        Mockito.mockConstruction(KafkaAdminClientService.class)) {
+  void createTopicsDelegatesToAdminService() {
+    var topics = new CirculationStorageKafkaTopic[]{ CirculationStorageKafkaTopic.LOG_RECORD };
 
-      kafkaService = new KafkaService(mock(Vertx.class));
-      Context context = mock(Context.class);
-      when(context.owner()).thenReturn(mock(Vertx.class));
+    Future<Void> result = kafkaService.createTopics(topics, TENANT_ID);
 
-      var publisher = kafkaService.createPublisher(CirculationStorageKafkaTopic.LOG_RECORD, context, TENANT_ID);
+    assertThat(result.succeeded(), is(true));
+    verify(adminClientService, times(1)).createKafkaTopics(topics, TENANT_ID);
+  }
 
-      assertThat(publisher, is(notNullValue()));
-      assertThat(publisher, instanceOf(KafkaEventPublisher.class));
-    }
+  @Test
+  void createPublisherReturnsKafkaEventPublisher() {
+    Context context = mock(Context.class);
+    when(context.owner()).thenReturn(mock(Vertx.class));
+
+    var publisher = kafkaService.createPublisher(CirculationStorageKafkaTopic.LOG_RECORD, context, TENANT_ID);
+
+    assertThat(publisher, notNullValue());
+    assertThat(publisher, instanceOf(KafkaEventPublisher.class));
   }
 
 }

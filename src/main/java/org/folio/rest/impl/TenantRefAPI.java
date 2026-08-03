@@ -53,7 +53,7 @@ public class TenantRefAPI extends TenantAPI {
       .mapEmpty();
   }
 
-  private Future<?> createKafkaTopicsOrRegisterPubSub(String tenantId,
+  Future<?> createKafkaTopicsOrRegisterPubSub(String tenantId,
       Map<String, String> headers, Context vertxContext) {
 
     return ENABLE_NATIVE_KAFKA_INTEGRATION

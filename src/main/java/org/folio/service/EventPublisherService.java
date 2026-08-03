@@ -34,6 +34,14 @@ public class EventPublisherService {
     this.logRecordEventPublisher = new LogRecordEventPublisher(vertxContext, okapiHeaders);
   }
 
+  // Package-private for testing
+  EventPublisherService(PubSubPublishingService pubSubPublishingService,
+      LogRecordEventPublisher logRecordEventPublisher, Map<String, String> okapiHeaders) {
+    this.okapiHeaders = okapiHeaders;
+    this.pubSubPublishingService = pubSubPublishingService;
+    this.logRecordEventPublisher = logRecordEventPublisher;
+  }
+
   public Future<Void> publishLogRecord(JsonObject context, LogEventType payloadType) {
     log.debug("publishLogRecord:: publishing LOG_RECORD event to Kafka");
     logRecordEventPublisher.publish(context, payloadType, okapiHeaders);

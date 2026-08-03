@@ -19,6 +19,11 @@ public class KafkaService {
     this.kafkaAdminClientService = new KafkaAdminClientService(vertx);
   }
 
+  // Package-private for testing
+  KafkaService(KafkaAdminClientService kafkaAdminClientService) {
+    this.kafkaAdminClientService = kafkaAdminClientService;
+  }
+
   public Future<Void> createCirculationStorageTopics(String tenantId) {
     return createTopics(CirculationStorageKafkaTopic.values(), tenantId);
   }
