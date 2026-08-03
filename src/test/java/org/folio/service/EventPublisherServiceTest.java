@@ -52,7 +52,7 @@ class EventPublisherServiceTest {
 
     assertThat(result.succeeded(), is(true));
     verify(logRecordEventPublisher, times(1))
-      .publish(eq(payload), eq(LogEventType.REQUEST_EXPIRED), eq(HEADERS));
+      .publish(payload, LogEventType.REQUEST_EXPIRED, HEADERS);
     verify(pubSubPublishingService, times(1)).publishEvent(eq("LOG_RECORD"), anyString());
   }
 

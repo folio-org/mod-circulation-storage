@@ -25,13 +25,12 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import io.vertx.core.Context;
-import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 
 @ExtendWith(VertxExtension.class)
-class TenantRefAPITest {
+class NativeKafkaIntegrationTest {
 
   private static final String TENANT_ID = "test-tenant";
   private static final Map<String, String> HEADERS = Map.of(XOkapiHeaders.TENANT, TENANT_ID);
@@ -42,14 +41,33 @@ class TenantRefAPITest {
   }
 
   @Test
-  void enableAndDisableNativeKafkaIntegration() {
-    // Just verify no exceptions are thrown when toggling the flag
+  void whenFlagEnabledKafkaTopicsAreCreatedAndPubSubIsSkipped(VertxTestContext testContext, Vertx vertx) {
     TenantRefAPI.enableNativeKafkaIntegration();
-    TenantRefAPI.disableNativeKafkaIntegration();
+
+    try (MockedConstruction<KafkaService> kafkaMock =
+           Mockito.mockConstruction(KafkaService.class,
+             (mock, ctx) -> when(mock.createCirculationStorageTopics(anyString()))
+               .thenReturn(succeededFuture()));
+         MockedStatic<PubSubRegistrationService> pubSubMock =
+           Mockito.mockStatic(PubSubRegistrationService.class)) {
+
+      Context vertxContext = mock(Context.class);
+      when(vertxContext.owner()).thenReturn(vertx);
+
+      new TenantRefAPI()
+        .createKafkaTopicsOrRegisterPubSub(TENANT_ID, HEADERS, vertxContext)
+        .onComplete(ar -> testContext.verify(() -> {
+          assertThat(ar.succeeded(), is(true));
+          assertThat(kafkaMock.constructed().size(), is(1));
+          verify(kafkaMock.constructed().get(0), times(1)).createCirculationStorageTopics(TENANT_ID);
+          pubSubMock.verify(() -> PubSubRegistrationService.registerModule(any(), any()), never());
+          testContext.completeNow();
+        }));
+    }
   }
 
   @Test
-  void whenFlagDisabledItCallsPubSubRegistration(VertxTestContext testContext, Vertx vertx) {
+  void whenFlagDisabledPubSubRegistrationIsCalledAndKafkaIsSkipped(VertxTestContext testContext, Vertx vertx) {
     TenantRefAPI.disableNativeKafkaIntegration();
 
     try (MockedConstruction<KafkaService> kafkaMock =
@@ -63,42 +81,14 @@ class TenantRefAPITest {
       Context vertxContext = mock(Context.class);
       when(vertxContext.owner()).thenReturn(vertx);
 
-      Future<?> result = new TenantRefAPI()
-        .createKafkaTopicsOrRegisterPubSub(TENANT_ID, HEADERS, vertxContext);
-
-      result.onComplete(ar -> testContext.verify(() -> {
-        assertThat(ar.succeeded(), is(true));
-        pubSubMock.verify(() -> PubSubRegistrationService.registerModule(HEADERS, vertx), times(1));
-        assertThat("KafkaService should NOT be instantiated", kafkaMock.constructed().isEmpty(), is(true));
-        testContext.completeNow();
-      }));
-    }
-  }
-
-  @Test
-  void whenFlagEnabledItCreatesKafkaTopics(VertxTestContext testContext, Vertx vertx) {
-    TenantRefAPI.enableNativeKafkaIntegration();
-
-    try (MockedConstruction<KafkaService> kafkaMock =
-           Mockito.mockConstruction(KafkaService.class,
-             (mock, ctx) -> when(mock.createCirculationStorageTopics(anyString()))
-               .thenReturn(succeededFuture()));
-         MockedStatic<PubSubRegistrationService> pubSubMock =
-           Mockito.mockStatic(PubSubRegistrationService.class)) {
-
-      Context vertxContext = mock(Context.class);
-      when(vertxContext.owner()).thenReturn(vertx);
-
-      Future<?> result = new TenantRefAPI()
-        .createKafkaTopicsOrRegisterPubSub(TENANT_ID, HEADERS, vertxContext);
-
-      result.onComplete(ar -> testContext.verify(() -> {
-        assertThat(ar.succeeded(), is(true));
-        pubSubMock.verify(() -> PubSubRegistrationService.registerModule(any(), any()), never());
-        assertThat(kafkaMock.constructed().size(), is(1));
-        verify(kafkaMock.constructed().get(0), times(1)).createCirculationStorageTopics(TENANT_ID);
-        testContext.completeNow();
-      }));
+      new TenantRefAPI()
+        .createKafkaTopicsOrRegisterPubSub(TENANT_ID, HEADERS, vertxContext)
+        .onComplete(ar -> testContext.verify(() -> {
+          assertThat(ar.succeeded(), is(true));
+          pubSubMock.verify(() -> PubSubRegistrationService.registerModule(HEADERS, vertx), times(1));
+          assertThat(kafkaMock.constructed().isEmpty(), is(true));
+          testContext.completeNow();
+        }));
     }
   }
 

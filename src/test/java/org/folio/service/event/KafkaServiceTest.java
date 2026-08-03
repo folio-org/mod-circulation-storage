@@ -68,7 +68,8 @@ class KafkaServiceTest {
   @Test
   void createPublisherReturnsKafkaEventPublisher() {
     Context context = mock(Context.class);
-    when(context.owner()).thenReturn(mock(Vertx.class));
+    var mock = mock(Vertx.class);
+    when(context.owner()).thenReturn(mock);
 
     var publisher = kafkaService.createPublisher(CirculationStorageKafkaTopic.LOG_RECORD, context, TENANT_ID);
 
