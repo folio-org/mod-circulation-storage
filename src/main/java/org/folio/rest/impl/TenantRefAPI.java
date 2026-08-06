@@ -56,9 +56,10 @@ public class TenantRefAPI extends TenantAPI {
   Future<Void> createKafkaTopicsOrRegisterPubSub(String tenantId,
       Map<String, String> headers, Context vertxContext) {
 
-    return ENABLE_NATIVE_KAFKA_INTEGRATION
-      ? new KafkaService(vertxContext.owner()).createCirculationStorageTopics(tenantId)
-      : registerModuleInPubSub(headers, vertxContext).mapEmpty();
+    return new KafkaService(vertxContext.owner()).createCirculationStorageTopics(tenantId)
+      .compose(v -> ENABLE_NATIVE_KAFKA_INTEGRATION
+        ? Future.succeededFuture()
+        : registerModuleInPubSub(headers, vertxContext).mapEmpty());
   }
 
   private Future<Integer> loadData(TenantAttributes attributes, Map<String, String> headers,

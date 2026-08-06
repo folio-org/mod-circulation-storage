@@ -57,7 +57,7 @@ class KafkaServiceTest {
 
   @Test
   void createTopicsDelegatesToAdminService() {
-    var topics = new CirculationStorageKafkaTopic[]{ CirculationStorageKafkaTopic.LOG_RECORD };
+    var topics = new CirculationStorageKafkaTopic[]{ CirculationStorageKafkaTopic.LOAN };
 
     Future<Void> result = kafkaService.createTopics(topics, TENANT_ID);
 
@@ -66,15 +66,15 @@ class KafkaServiceTest {
   }
 
   @Test
-  void createPublisherReturnsKafkaEventPublisher() {
+  void createPublisherReturnsDomainEventPublisher() {
     Context context = mock(Context.class);
     var mock = mock(Vertx.class);
     when(context.owner()).thenReturn(mock);
 
-    var publisher = kafkaService.createPublisher(CirculationStorageKafkaTopic.LOG_RECORD, context, TENANT_ID);
+    var publisher = kafkaService.createPublisher(CirculationStorageKafkaTopic.LOAN, context, TENANT_ID);
 
     assertThat(publisher, notNullValue());
-    assertThat(publisher, instanceOf(KafkaEventPublisher.class));
+    assertThat(publisher, instanceOf(DomainEventPublisher.class));
   }
 
 }

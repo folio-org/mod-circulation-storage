@@ -42,11 +42,11 @@ public class KafkaService {
     return kafkaAdminClientService.deleteKafkaTopics(topics, tenantId);
   }
 
-  public KafkaEventPublisher<String, JsonObject> createPublisher(CirculationStorageKafkaTopic topic,
+  public DomainEventPublisher<String, JsonObject> createPublisher(CirculationStorageKafkaTopic topic,
     Context context, String tenantId) {
 
     log.info("createPublisher:: tenant={}, topic={}", tenantId, topic);
-    return new KafkaEventPublisher<>(context, topic.fullTopicName(tenantId));
+    return new DomainEventPublisher<>(context, topic.fullTopicName(tenantId), FailureHandler.noOperation());
   }
 
 }
