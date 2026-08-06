@@ -47,9 +47,12 @@ public class TenantRefAPI extends TenantAPI {
 
     return (new TlrDataMigrationService(attributes, vertxContext, headers).migrate())
       .compose(f -> new RequestSearchFieldsMigrationService(attributes, vertxContext, headers).migrate())
-      .compose(r -> createKafkaTopicsOrRegisterPubSub(tenantId, headers, vertxContext))
+      .compose(r -> new KafkaService(vertxContext.owner()).createCirculationStorageTopics(tenantId))
       .compose(r -> super.loadData(attributes, tenantId, headers, vertxContext))
       .compose(r -> loadData(attributes, headers, vertxContext))
+      .compose(r -> ENABLE_NATIVE_KAFKA_INTEGRATION
+        ? Future.succeededFuture()
+        : registerModuleInPubSub(headers, vertxContext).mapEmpty())
       .mapEmpty();
   }
 

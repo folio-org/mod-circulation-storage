@@ -47,8 +47,7 @@ class KafkaAdminClientServiceTest {
     "folio.foo-tenant.circulation.check-in",
     "folio.foo-tenant.circulation.rules",
     "folio.foo-tenant.circulation.circulation-settings",
-    "folio.foo-tenant.circulation.request-queue-reordering",
-    "folio.foo-tenant.circulation.LOG_RECORD"
+    "folio.foo-tenant.circulation.request-queue-reordering"
   );
 
   private KafkaAdminClient mockClient;
