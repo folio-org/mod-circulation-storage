@@ -19,16 +19,12 @@ import lombok.extern.log4j.Log4j2;
 public class EventPublisherService {
 
   private final PubSubPublishingService pubSubPublishingService;
-  private final Map<String, String> okapiHeaders;
 
   public EventPublisherService(Vertx vertx, Map<String, String> okapiHeaders) {
-    this(new PubSubPublishingService(vertx, okapiHeaders), okapiHeaders);
+    this(new PubSubPublishingService(vertx, okapiHeaders));
   }
 
-  // Package-private for testing
-  EventPublisherService(PubSubPublishingService pubSubPublishingService,
-      Map<String, String> okapiHeaders) {
-    this.okapiHeaders = okapiHeaders;
+  EventPublisherService(PubSubPublishingService pubSubPublishingService) {
     this.pubSubPublishingService = pubSubPublishingService;
   }
 
@@ -45,4 +41,3 @@ public class EventPublisherService {
   }
 
 }
-

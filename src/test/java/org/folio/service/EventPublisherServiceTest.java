@@ -35,7 +35,7 @@ class EventPublisherServiceTest {
     when(pubSubPublishingService.publishEvent(anyString(), anyString()))
       .thenReturn(CompletableFuture.completedFuture(true));
 
-    service = new EventPublisherService(pubSubPublishingService, HEADERS);
+    service = new EventPublisherService(pubSubPublishingService);
   }
 
   @Test
