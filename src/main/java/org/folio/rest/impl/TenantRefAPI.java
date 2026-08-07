@@ -6,14 +6,13 @@ import javax.ws.rs.core.Response;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.support.kafka.topic.CirculationStorageKafkaTopic;
 import org.folio.dbschema.Versioned;
-import org.folio.kafka.services.KafkaAdminClientService;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.tools.utils.TenantLoading;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.service.PubSubRegistrationService;
+import org.folio.service.event.KafkaService;
 import org.folio.service.migration.TlrDataMigrationService;
 import org.folio.service.migration.RequestSearchFieldsMigrationService;
 
@@ -23,6 +22,17 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 
 public class TenantRefAPI extends TenantAPI {
+
+  // For testing purposes, remove once mod-pubsub deprecation is complete
+  private static boolean ENABLE_NATIVE_KAFKA_INTEGRATION = false;
+
+  public static void enableNativeKafkaIntegration() {
+    ENABLE_NATIVE_KAFKA_INTEGRATION = true;
+  }
+
+  public static void disableNativeKafkaIntegration() {
+    ENABLE_NATIVE_KAFKA_INTEGRATION = false;
+  }
 
   private static final Logger log = LogManager.getLogger();
   public static final String REFERENCE_KEY = "loadReference";
@@ -37,12 +47,19 @@ public class TenantRefAPI extends TenantAPI {
 
     return (new TlrDataMigrationService(attributes, vertxContext, headers).migrate())
       .compose(f -> new RequestSearchFieldsMigrationService(attributes, vertxContext, headers).migrate())
-      .compose(r -> new KafkaAdminClientService(vertxContext.owner())
-        .createKafkaTopics(CirculationStorageKafkaTopic.values(), tenantId))
       .compose(r -> super.loadData(attributes, tenantId, headers, vertxContext))
       .compose(r -> loadData(attributes, headers, vertxContext))
-      .compose(r -> registerModuleInPubSub(headers, vertxContext))
+      .compose(r -> createKafkaTopicsOrRegisterPubSub(tenantId, headers, vertxContext))
       .mapEmpty();
+  }
+
+  Future<Void> createKafkaTopicsOrRegisterPubSub(String tenantId,
+      Map<String, String> headers, Context vertxContext) {
+
+    return new KafkaService(vertxContext.owner()).createCirculationStorageTopics(tenantId)
+      .compose(v -> ENABLE_NATIVE_KAFKA_INTEGRATION
+        ? Future.succeededFuture()
+        : registerModuleInPubSub(headers, vertxContext).mapEmpty());
   }
 
   private Future<Integer> loadData(TenantAttributes attributes, Map<String, String> headers,
@@ -110,7 +127,7 @@ public class TenantRefAPI extends TenantAPI {
     // delete Kafka topics if tenant purged
     var tenantId = TenantTool.tenantId(headers);
     Future<Void> result = tenantAttributes.getPurge() != null && tenantAttributes.getPurge()
-      ? new KafkaAdminClientService(context.owner()).deleteKafkaTopics(CirculationStorageKafkaTopic.values(), tenantId)
+      ? new KafkaService(context.owner()).deleteCirculationStorageTopics(tenantId)
       : Future.succeededFuture();
     result.onComplete(x -> super.postTenant(tenantAttributes, headers, handler, context));
   }
