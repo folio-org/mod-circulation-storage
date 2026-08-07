@@ -9,10 +9,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.support.exception.LogEventType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,9 +19,6 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 
 class EventPublisherServiceTest {
-
-  private static final String TENANT_ID = "test_tenant";
-  private static final Map<String, String> HEADERS = Map.of(XOkapiHeaders.TENANT, TENANT_ID);
 
   private PubSubPublishingService pubSubPublishingService;
   private EventPublisherService service;
