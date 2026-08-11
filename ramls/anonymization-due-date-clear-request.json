@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Remove due-date rows so the affected loans are re-evaluated by the next sweep. Exactly one of loanIds, all must be provided",
+  "type": "object",
+  "properties": {
+    "loanIds": {
+      "description": "Clear the stamp on these loans (fee/fine closure)",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "all": {
+      "description": "Clear every stamp in the tenant, in batches (loan_history policy change). Potentially long-running on large tenants",
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

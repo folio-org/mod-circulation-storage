@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Result of a stamp or clear operation",
+  "type": "object",
+  "properties": {
+    "updated": {
+      "description": "Number of loan records actually updated",
+      "type": "integer"
+    }
+  },
+  "required": ["updated"],
+  "additionalProperties": false
+}

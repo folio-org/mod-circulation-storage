@@ -640,6 +640,10 @@
     },
     {
       "run": "after",
+      "snippetPath": "create_loan_anonymization_due.sql"
+    },
+    {
+      "run": "after",
       "snippetPath": "add_staff_slips_hold_transit.sql",
       "fromModuleVersion": "12.3.0"
     },
