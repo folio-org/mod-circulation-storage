@@ -27,11 +27,7 @@ import org.folio.support.UUIDValidation;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Promise;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
 import jakarta.validation.constraints.NotNull;
 
 public class AnonymizeStorageRequestsAPI implements AnonymizeStorageRequests {
