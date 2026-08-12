@@ -6,6 +6,7 @@ import static org.folio.support.ModuleConstants.MODULE_NAME;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.core.Response;
@@ -28,6 +29,7 @@ import org.folio.support.UUIDValidation;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
+import io.vertx.sqlclient.Tuple;
 import jakarta.validation.constraints.NotNull;
 
 public class AnonymizeStorageRequestsAPI implements AnonymizeStorageRequests {
@@ -71,14 +73,25 @@ public class AnonymizeStorageRequestsAPI implements AnonymizeStorageRequests {
 
     log.info("postAnonymizeStorageRequests:: Anonymizing requests: {}", validIds.size());
 
-    final String tenantId = TenantTool.tenantId(okapiHeaders);
     final PostgresClient postgresClient = PgUtil.postgresClient(vertxContext,
         okapiHeaders);
 
-    final String combinedAnonymizationSql = createAnonymizationSQL(validIds,
-        tenantId);
+    final Tuple idParam = Tuple.of(
+        validIds.stream()
+            .map(UUID::fromString)
+            .toArray(UUID[]::new));
+    final String combinedAnonymizationSql = """
+        UPDATE %s.request
+        SET jsonb = jsonb - ARRAY['requesterId', 'proxyUserId', 'requester', 'proxy']
+        WHERE request.id = ANY($1)
+          AND request.jsonb->>'status' LIKE 'Closed - %%'
+          AND (request.jsonb->>'requesterId' is NOT null
+            OR request.jsonb->>'proxyUserId' is NOT null
+            OR request.jsonb->>'requester' is NOT null
+            OR request.jsonb->>'proxy' is NOT null)
+        """.formatted(postgresClient.getSchemaName());
 
-    postgresClient.execute(combinedAnonymizationSql).map(
+    postgresClient.execute(combinedAnonymizationSql, idParam).map(
         updateResult -> PostAnonymizeStorageRequestsResponse.respond200WithApplicationJson(
             response.withAnonymizedRequests(validIds)))
         .map(Response.class::cast)
@@ -93,24 +106,5 @@ public class AnonymizeStorageRequestsAPI implements AnonymizeStorageRequests {
     List<NotAnonymizedRequest> notAnonymizedRequests = response.getNotAnonymizedRequests();
     notAnonymizedRequests.add(
         new NotAnonymizedRequest().withReason(reason).withRequestIds(ids));
-  }
-
-  private String createAnonymizationSQL(@NotNull Collection<String> requestIdList,
-      String tenantId) {
-
-    String requestIds = requestIdList.stream()
-        .map(s -> "\'" + s + "\'")
-        .collect(Collectors.joining(",", "(", ")"));
-
-    return """
-        UPDATE %s_%s.request
-        SET jsonb = jsonb - ARRAY['requesterId', 'proxyUserId', 'requester', 'proxy']
-        WHERE request.id in %s
-          AND request.jsonb->>'status' LIKE 'Closed - %%'
-          AND (request.jsonb->>'requesterId' is NOT null
-            OR request.jsonb->>'proxyUserId' is NOT null
-            OR request.jsonb->>'requester' is NOT null
-            OR request.jsonb->>'proxy' is NOT null)
-        """.formatted(tenantId, MODULE_NAME, requestIds);
   }
 }
