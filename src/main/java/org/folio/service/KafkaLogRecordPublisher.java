@@ -9,7 +9,6 @@ import org.folio.kafka.KafkaConfig;
 import org.folio.kafka.KafkaProducerManager;
 import org.folio.kafka.SimpleKafkaProducerManager;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
-import org.folio.kafka.services.KafkaProducerRecordBuilder;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.support.kafka.topic.AuditKafkaTopic;
 
@@ -60,13 +59,11 @@ public class KafkaLogRecordPublisher {
   public Future<Void> publish(String key, JsonObject payload, Map<String, String> okapiHeaders) {
     log.info("publish:: key={}, topic={}", key, kafkaTopic);
 
+    // Use payload.encode() to get correct JSON string; KafkaProducerRecordBuilder.value(JsonObject)
+    // would serialize via Jackson which wraps Vert.x JsonObject as {"map":{...}} instead of the
+    // intended flat JSON structure.
     KafkaProducerRecord<String, String> producerRecord =
-        new KafkaProducerRecordBuilder<String, JsonObject>(TenantTool.tenantId(okapiHeaders))
-            .key(key)
-            .value(payload)
-            .topic(kafkaTopic)
-            .propagateOkapiHeaders(okapiHeaders)
-            .build();
+        KafkaProducerRecord.create(kafkaTopic, key, payload.encode());
 
     KafkaProducer<String, String> producer = null;
     try {
