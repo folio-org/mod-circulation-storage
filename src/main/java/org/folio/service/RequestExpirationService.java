@@ -14,6 +14,8 @@ import static org.folio.rest.jaxrs.model.Request.Status.OPEN_NOT_YET_FILLED;
 import static org.folio.service.event.EntityChangedEventPublisherFactory.requestEventPublisher;
 import static org.folio.support.DbUtil.rowSetToStream;
 import static org.folio.support.LogEventPayloadField.ORIGINAL;
+import static org.folio.support.LogEventPayloadField.LOG_EVENT_TYPE;
+import static org.folio.support.LogEventPayloadField.PAYLOAD;
 import static org.folio.support.LogEventPayloadField.REQUESTS;
 import static org.folio.support.LogEventPayloadField.UPDATED;
 import static org.folio.support.ModuleConstants.REQUEST_TABLE;
@@ -52,25 +54,25 @@ public class RequestExpirationService {
   private final String requestClassifierProperty;
   private final Function<Request, String> requestClassifier;
   private final PostgresClient pgClient;
-  private final EventPublisherService eventPublisherService;
+  private final KafkaLogRecordPublisher kafkaLogRecordPublisher;
   private final EntityChangedEventPublisher<String, Request> eventPublisher;
 
   public RequestExpirationService(Map<String, String> okapiHeaders, Vertx vertx,
     String requestClassifierProperty, Function<Request, String> requestClassifier) {
     this(requestClassifierProperty, requestClassifier,
       PostgresClient.getInstance(vertx, okapiHeaders.get(TENANT_HEADER)),
-      new EventPublisherService(vertx, okapiHeaders),
+      new KafkaLogRecordPublisher(vertx.getOrCreateContext(), okapiHeaders),
       requestEventPublisher(vertx.getOrCreateContext(), okapiHeaders));
   }
 
   RequestExpirationService(String requestClassifierProperty,
     Function<Request, String> requestClassifier,
-    PostgresClient postgresClient, EventPublisherService eventPublisherService,
+    PostgresClient postgresClient, KafkaLogRecordPublisher kafkaLogRecordPublisher,
     EntityChangedEventPublisher<String, Request> eventPublisher) {
     this.requestClassifierProperty = requestClassifierProperty;
     this.requestClassifier = requestClassifier;
     this.pgClient = postgresClient;
-    this.eventPublisherService = eventPublisherService;
+    this.kafkaLogRecordPublisher = kafkaLogRecordPublisher;
     this.eventPublisher = eventPublisher;
   }
 
@@ -81,7 +83,7 @@ public class RequestExpirationService {
         .compose(expiredRequests -> closeRequests(conn, expiredRequests, context))
         .compose(associatedIds -> getOpenRequestsByIdFields(conn, associatedIds))
         .compose(openRequests -> reorderRequests(conn, openRequests))
-        .onSuccess(x -> publishPubSubLogEvents(context)))
+        .onSuccess(x -> publishKafkaLogRecordEvents(context)))
         .compose(x -> publishExpiredRequestsEvents(context))
         .onFailure(e -> log.error("Error in request processing", e));
   }
@@ -255,13 +257,16 @@ public class RequestExpirationService {
     return conn.update(REQUEST_TABLE, request, request.getId()).mapEmpty();
   }
 
-  private void publishPubSubLogEvents(List<ExpiredRequestWrapper> context) {
+  private void publishKafkaLogRecordEvents(List<ExpiredRequestWrapper> context) {
     context.forEach(requestWrapper -> {
       var payload = new JsonObject()
-        .put(REQUESTS.value(), new JsonObject()
-          .put(ORIGINAL.value(), requestWrapper.originalValue())
-          .put(UPDATED.value(), requestWrapper.updatedValue()));
-      eventPublisherService.publishLogRecord(payload, REQUEST_EXPIRED);
+        .put(LOG_EVENT_TYPE.value(), REQUEST_EXPIRED.value())
+        .put(PAYLOAD.value(), new JsonObject()
+          .put(REQUESTS.value(), new JsonObject()
+            .put(ORIGINAL.value(), requestWrapper.originalValue())
+            .put(UPDATED.value(), requestWrapper.updatedValue())));
+      kafkaLogRecordPublisher.publish(
+        requestWrapper.updatedValue().getString("id"), payload, Map.of());
     });
   }
 
