@@ -15,7 +15,6 @@ import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET
 import static org.folio.rest.support.http.InterfaceUrls.requestExpirationUrl;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLogRecordEvents;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getRequestEvents;
-import static org.folio.support.LogEventPayloadField.LOG_EVENT_TYPE;
 import static org.folio.support.LogEventPayloadField.ORIGINAL;
 import static org.folio.support.LogEventPayloadField.PAYLOAD;
 import static org.folio.support.LogEventPayloadField.REQUESTS;
