@@ -1,3 +1,6 @@
+## 17.4.6 2026-09-02
+* Review logs and add DB indexes (CIRCSTORE-673)
+
 ## 17.4.5 2026-07-28
 * Fix intermittent issue with closed requests cannot be viewed (CIRCSTORE-660)
 
