@@ -1,4 +1,4 @@
-package org.folio.service;
+package org.folio.service.event;
 
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -28,6 +28,7 @@ class KafkaLogRecordPublisherTest {
   private final KafkaProducerManager producerManager = mock(KafkaProducerManager.class);
 
   private KafkaLogRecordPublisher publisher;
+  private Map<String, String> headers;
 
   @BeforeEach
   @SuppressWarnings("unchecked")
@@ -36,8 +37,8 @@ class KafkaLogRecordPublisherTest {
     when(producer.send(any())).thenReturn(Future.succeededFuture());
     when(producer.flush()).thenReturn(Future.succeededFuture());
     when(producer.close()).thenReturn(Future.succeededFuture());
-    var headers = Map.of(TENANT, "test_tenant", "x-okapi-url", "http://okapi:9130");
-    publisher = new KafkaLogRecordPublisher("folio.test_tenant.audit.LOG_RECORD", producerManager, headers);
+    headers = Map.of(TENANT, "test_tenant", "x-okapi-url", "http://okapi:9130");
+    publisher = new KafkaLogRecordPublisher("folio.test_tenant.audit.LOG_RECORD", producerManager);
   }
 
   @Test
@@ -46,7 +47,7 @@ class KafkaLogRecordPublisherTest {
         .put("logEventType", "REQUEST_EXPIRED_EVENT")
         .put("payload", new JsonObject().put("requests", new JsonObject()));
 
-    Future<Void> result = publisher.publish("request-id-1", payload);
+    Future<Void> result = publisher.publish("request-id-1", payload, headers);
 
     assertThat(result.succeeded(), is(true));
     verify(producer, times(1)).send(any(KafkaProducerRecord.class));
@@ -56,7 +57,7 @@ class KafkaLogRecordPublisherTest {
   void publishAlwaysReturnsSucceededFutureEvenWhenKafkaSendFails() {
     when(producer.send(any())).thenReturn(Future.failedFuture("broker down"));
 
-    Future<Void> result = publisher.publish("request-id-2", new JsonObject());
+    Future<Void> result = publisher.publish("request-id-2", new JsonObject(), headers);
 
     assertThat(result.succeeded(), is(true));
   }

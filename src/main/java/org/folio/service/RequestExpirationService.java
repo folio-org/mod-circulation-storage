@@ -41,6 +41,7 @@ import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.service.event.EntityChangedEventPublisher;
+import org.folio.service.event.KafkaLogRecordPublisher;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -56,24 +57,28 @@ public class RequestExpirationService {
   private final PostgresClient pgClient;
   private final KafkaLogRecordPublisher kafkaLogRecordPublisher;
   private final EntityChangedEventPublisher<String, Request> eventPublisher;
+  private final Map<String, String> okapiHeaders;
 
   public RequestExpirationService(Map<String, String> okapiHeaders, Vertx vertx,
     String requestClassifierProperty, Function<Request, String> requestClassifier) {
     this(requestClassifierProperty, requestClassifier,
       PostgresClient.getInstance(vertx, okapiHeaders.get(TENANT_HEADER)),
       new KafkaLogRecordPublisher(vertx.getOrCreateContext(), okapiHeaders),
-      requestEventPublisher(vertx.getOrCreateContext(), okapiHeaders));
+      requestEventPublisher(vertx.getOrCreateContext(), okapiHeaders),
+      okapiHeaders);
   }
 
   RequestExpirationService(String requestClassifierProperty,
     Function<Request, String> requestClassifier,
     PostgresClient postgresClient, KafkaLogRecordPublisher kafkaLogRecordPublisher,
-    EntityChangedEventPublisher<String, Request> eventPublisher) {
+    EntityChangedEventPublisher<String, Request> eventPublisher,
+    Map<String, String> okapiHeaders) {
     this.requestClassifierProperty = requestClassifierProperty;
     this.requestClassifier = requestClassifier;
     this.pgClient = postgresClient;
     this.kafkaLogRecordPublisher = kafkaLogRecordPublisher;
     this.eventPublisher = eventPublisher;
+    this.okapiHeaders = okapiHeaders;
   }
 
   public Future<Void> doRequestExpiration() {
@@ -265,7 +270,7 @@ public class RequestExpirationService {
           .put(REQUESTS.value(), new JsonObject()
             .put(ORIGINAL.value(), requestWrapper.originalValue())
             .put(UPDATED.value(), requestWrapper.updatedValue())));
-      kafkaLogRecordPublisher.publish(requestWrapper.updatedValue().getString("id"), payload);
+      kafkaLogRecordPublisher.publish(requestWrapper.updatedValue().getString("id"), payload, okapiHeaders);
     });
   }
 
