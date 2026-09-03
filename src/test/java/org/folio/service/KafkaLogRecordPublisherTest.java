@@ -1,5 +1,6 @@
 package org.folio.service;
 
+import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
@@ -7,6 +8,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.util.Map;
 
 import org.folio.kafka.KafkaProducerManager;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +36,8 @@ class KafkaLogRecordPublisherTest {
     when(producer.send(any())).thenReturn(Future.succeededFuture());
     when(producer.flush()).thenReturn(Future.succeededFuture());
     when(producer.close()).thenReturn(Future.succeededFuture());
-    publisher = new KafkaLogRecordPublisher("folio.test_tenant.audit.LOG_RECORD", producerManager, "test_tenant");
+    var headers = Map.of(TENANT, "test_tenant", "x-okapi-url", "http://okapi:9130");
+    publisher = new KafkaLogRecordPublisher("folio.test_tenant.audit.LOG_RECORD", producerManager, headers);
   }
 
   @Test

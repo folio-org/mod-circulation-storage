@@ -1,6 +1,8 @@
 package org.folio.service;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
+import static org.folio.support.kafka.topic.AuditKafkaTopic.LOG_RECORD;
 
 import java.util.Map;
 
@@ -9,9 +11,7 @@ import org.folio.kafka.KafkaConfig;
 import org.folio.kafka.KafkaProducerManager;
 import org.folio.kafka.SimpleKafkaProducerManager;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
-import org.folio.okapi.common.XOkapiHeaders;
-import org.folio.rest.tools.utils.TenantTool;
-import org.folio.support.kafka.topic.AuditKafkaTopic;
+import org.folio.kafka.services.KafkaProducerRecordBuilder;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -32,24 +32,25 @@ public class KafkaLogRecordPublisher {
 
   private final String kafkaTopic;
   private final KafkaProducerManager producerManager;
-  private final String tenantId;
+  private final Map<String, String> headers;
 
   /** Package-private constructor for testing. */
-  KafkaLogRecordPublisher(String kafkaTopic, KafkaProducerManager producerManager, String okapiTenantId) {
+  KafkaLogRecordPublisher(String kafkaTopic, KafkaProducerManager producerManager,
+                          Map<String, String> okapiHeaders) {
     this.kafkaTopic = kafkaTopic;
     this.producerManager = producerManager;
-    this.tenantId = okapiTenantId;
+    this.headers = okapiHeaders;
   }
 
   /** Production constructor. */
   public KafkaLogRecordPublisher(Context vertxContext, Map<String, String> okapiHeaders) {
-    this.tenantId = TenantTool.tenantId(okapiHeaders);
-    this.kafkaTopic = AuditKafkaTopic.LOG_RECORD.fullTopicName(tenantId);
+    this.kafkaTopic = LOG_RECORD.fullTopicName(tenantId(okapiHeaders));
     this.producerManager = new SimpleKafkaProducerManager(vertxContext.owner(),
         KafkaConfig.builder()
             .kafkaPort(KafkaEnvironmentProperties.port())
             .kafkaHost(KafkaEnvironmentProperties.host())
             .build());
+    this.headers = okapiHeaders;
   }
 
   /**
@@ -62,20 +63,20 @@ public class KafkaLogRecordPublisher {
   public Future<Void> publish(String key, JsonObject payload) {
     log.info("publish:: key={}, topic={}", key, kafkaTopic);
 
-    // Use payload.encode() to get correct JSON string; KafkaProducerRecordBuilder.value(JsonObject)
-    // would serialize via Jackson which wraps Vert.x JsonObject as {"map":{...}} instead of the
-    // intended flat JSON structure.
     KafkaProducerRecord<String, String> producerRecord =
-        KafkaProducerRecord.create(kafkaTopic, key, payload.encode());
-    producerRecord.addHeader(XOkapiHeaders.TENANT, tenantId);
+      new KafkaProducerRecordBuilder<String, Object>(tenantId(headers))
+        .key(key)
+        .value(payload.mapTo(Map.class))
+        .topic(kafkaTopic)
+        .propagateOkapiHeaders(headers)
+        .build();
 
     KafkaProducer<String, String> producer = null;
     try {
       producer = producerManager.createShared(kafkaTopic);
       producer.send(producerRecord)
           .onSuccess(r -> log.info("publish:: Succeeded sending LOG_RECORD event with key [{}]", key))
-          .onFailure(cause -> log.error("publish:: Failed to send LOG_RECORD event with key [{}]",
-              key, cause))
+          .onFailure(cause -> log.error("publish:: Failed to send LOG_RECORD event with key [{}]", key, cause))
           .eventually(producer::flush)
           .eventually(producer::close);
     } catch (Exception e) {
