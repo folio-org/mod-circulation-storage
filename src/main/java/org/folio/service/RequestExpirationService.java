@@ -265,8 +265,7 @@ public class RequestExpirationService {
           .put(REQUESTS.value(), new JsonObject()
             .put(ORIGINAL.value(), requestWrapper.originalValue())
             .put(UPDATED.value(), requestWrapper.updatedValue())));
-      kafkaLogRecordPublisher.publish(
-        requestWrapper.updatedValue().getString("id"), payload, Map.of());
+      kafkaLogRecordPublisher.publish(requestWrapper.updatedValue().getString("id"), payload);
     });
   }
 

@@ -9,6 +9,7 @@ import org.folio.kafka.KafkaConfig;
 import org.folio.kafka.KafkaProducerManager;
 import org.folio.kafka.SimpleKafkaProducerManager;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
+import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.support.kafka.topic.AuditKafkaTopic;
 
@@ -31,16 +32,19 @@ public class KafkaLogRecordPublisher {
 
   private final String kafkaTopic;
   private final KafkaProducerManager producerManager;
+  private final String tenantId;
 
   /** Package-private constructor for testing. */
-  KafkaLogRecordPublisher(String kafkaTopic, KafkaProducerManager producerManager) {
+  KafkaLogRecordPublisher(String kafkaTopic, KafkaProducerManager producerManager, String okapiTenantId) {
     this.kafkaTopic = kafkaTopic;
     this.producerManager = producerManager;
+    this.tenantId = okapiTenantId;
   }
 
   /** Production constructor. */
   public KafkaLogRecordPublisher(Context vertxContext, Map<String, String> okapiHeaders) {
-    this.kafkaTopic = AuditKafkaTopic.LOG_RECORD.fullTopicName(TenantTool.tenantId(okapiHeaders));
+    this.tenantId = TenantTool.tenantId(okapiHeaders);
+    this.kafkaTopic = AuditKafkaTopic.LOG_RECORD.fullTopicName(tenantId);
     this.producerManager = new SimpleKafkaProducerManager(vertxContext.owner(),
         KafkaConfig.builder()
             .kafkaPort(KafkaEnvironmentProperties.port())
@@ -53,10 +57,9 @@ public class KafkaLogRecordPublisher {
    *
    * @param key          Kafka record key (typically the request ID)
    * @param payload      the raw log event JSON: {@code { "logEventType": "...", "payload": {...} }}
-   * @param okapiHeaders Okapi headers propagated as Kafka record headers
    * @return always-succeeded {@code Future<Void>}; send errors are logged but not propagated
    */
-  public Future<Void> publish(String key, JsonObject payload, Map<String, String> okapiHeaders) {
+  public Future<Void> publish(String key, JsonObject payload) {
     log.info("publish:: key={}, topic={}", key, kafkaTopic);
 
     // Use payload.encode() to get correct JSON string; KafkaProducerRecordBuilder.value(JsonObject)
@@ -64,6 +67,7 @@ public class KafkaLogRecordPublisher {
     // intended flat JSON structure.
     KafkaProducerRecord<String, String> producerRecord =
         KafkaProducerRecord.create(kafkaTopic, key, payload.encode());
+    producerRecord.addHeader(XOkapiHeaders.TENANT, tenantId);
 
     KafkaProducer<String, String> producer = null;
     try {

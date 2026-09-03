@@ -37,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.Response;
@@ -1167,6 +1168,11 @@ class RequestExpirationApiTest extends ApiTests {
       Request original = requests.getJsonObject(ORIGINAL.value()).mapTo(Request.class);
       Request updated = requests.getJsonObject(UPDATED.value()).mapTo(Request.class);
       assertThat(original.getStatus(), not(equalTo(updated.getStatus())));
+
+      var tenantIdHeader = events.iterator().next().headers().stream()
+        .filter(header -> header.key().equalsIgnoreCase(XOkapiHeaders.TENANT)).findFirst();
+      assertThat(tenantIdHeader.isPresent(), is(true));
+      assertThat(tenantIdHeader.get().value().toString(), equalTo(TENANT_ID));
     });
   }
 
