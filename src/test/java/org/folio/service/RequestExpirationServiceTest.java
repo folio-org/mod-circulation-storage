@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -18,6 +19,7 @@ import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.helpers.LocalRowSet;
 import org.folio.service.event.EntityChangedEventPublisher;
+import org.folio.service.event.KafkaLogRecordPublisher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,7 +37,7 @@ import io.vertx.sqlclient.Row;
 import org.junit.jupiter.api.Assertions;
 
 @ExtendWith({VertxExtension.class})
-public class RequestExpirationServiceTest {
+class RequestExpirationServiceTest {
 
   private static final String TENANT_ID = "test_tenant";
 
@@ -43,14 +45,14 @@ public class RequestExpirationServiceTest {
 
   @Mock private Conn conn;
   @Mock private PostgresClient postgresClient;
-  @Mock private EventPublisherService eventPublisherService;
+  @Mock private KafkaLogRecordPublisher kafkaLogRecordPublisher;
   @Mock private EntityChangedEventPublisher<String, Request> eventPublisher;
 
   @BeforeEach
   void setUp() {
     MockitoAnnotations.openMocks(this);
     service = new RequestExpirationService("itemId", Request::getItemId,
-      postgresClient, eventPublisherService, eventPublisher);
+      postgresClient, kafkaLogRecordPublisher, eventPublisher, Map.of());
   }
 
   @Test
@@ -65,7 +67,7 @@ public class RequestExpirationServiceTest {
         getRequestRowSetMock(id1), getRequestRowSetMock(id2), getRequestRowSetMock(id3)));
     when(conn.execute(anyString())).thenReturn(succeededFuture(expiredRequestsRowSet));
     when(conn.update(anyString(), any(), any())).thenReturn(succeededFuture(new LocalRowSet(0)));
-    when(eventPublisherService.publishLogRecord(any(), any())).thenReturn(succeededFuture());
+    when(kafkaLogRecordPublisher.publish(any(), any(), any())).thenReturn(succeededFuture());
     when(eventPublisher.publishUpdated(eq(id1), any(), any())).thenReturn(succeededFuture());
     when(eventPublisher.publishUpdated(eq(id2), any(), any())).thenReturn(
       failedFuture(new NoStackTraceThrowable("Event publishing failed: " + id2)));

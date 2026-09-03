@@ -13,7 +13,9 @@ import static org.folio.rest.jaxrs.model.Request.Status.OPEN_IN_TRANSIT;
 import static org.folio.rest.jaxrs.model.Request.Status.OPEN_NOT_YET_FILLED;
 import static org.folio.service.event.EntityChangedEventPublisherFactory.requestEventPublisher;
 import static org.folio.support.DbUtil.rowSetToStream;
+import static org.folio.support.LogEventPayloadField.LOG_EVENT_TYPE;
 import static org.folio.support.LogEventPayloadField.ORIGINAL;
+import static org.folio.support.LogEventPayloadField.PAYLOAD;
 import static org.folio.support.LogEventPayloadField.REQUESTS;
 import static org.folio.support.LogEventPayloadField.UPDATED;
 import static org.folio.support.ModuleConstants.REQUEST_TABLE;
@@ -39,6 +41,7 @@ import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.service.event.EntityChangedEventPublisher;
+import org.folio.service.event.KafkaLogRecordPublisher;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -52,26 +55,30 @@ public class RequestExpirationService {
   private final String requestClassifierProperty;
   private final Function<Request, String> requestClassifier;
   private final PostgresClient pgClient;
-  private final EventPublisherService eventPublisherService;
+  private final KafkaLogRecordPublisher kafkaLogRecordPublisher;
   private final EntityChangedEventPublisher<String, Request> eventPublisher;
+  private final Map<String, String> okapiHeaders;
 
   public RequestExpirationService(Map<String, String> okapiHeaders, Vertx vertx,
     String requestClassifierProperty, Function<Request, String> requestClassifier) {
     this(requestClassifierProperty, requestClassifier,
       PostgresClient.getInstance(vertx, okapiHeaders.get(TENANT_HEADER)),
-      new EventPublisherService(vertx, okapiHeaders),
-      requestEventPublisher(vertx.getOrCreateContext(), okapiHeaders));
+      new KafkaLogRecordPublisher(vertx.getOrCreateContext(), okapiHeaders),
+      requestEventPublisher(vertx.getOrCreateContext(), okapiHeaders),
+      okapiHeaders);
   }
 
   RequestExpirationService(String requestClassifierProperty,
     Function<Request, String> requestClassifier,
-    PostgresClient postgresClient, EventPublisherService eventPublisherService,
-    EntityChangedEventPublisher<String, Request> eventPublisher) {
+    PostgresClient postgresClient, KafkaLogRecordPublisher kafkaLogRecordPublisher,
+    EntityChangedEventPublisher<String, Request> eventPublisher,
+    Map<String, String> okapiHeaders) {
     this.requestClassifierProperty = requestClassifierProperty;
     this.requestClassifier = requestClassifier;
     this.pgClient = postgresClient;
-    this.eventPublisherService = eventPublisherService;
+    this.kafkaLogRecordPublisher = kafkaLogRecordPublisher;
     this.eventPublisher = eventPublisher;
+    this.okapiHeaders = okapiHeaders;
   }
 
   public Future<Void> doRequestExpiration() {
@@ -81,7 +88,7 @@ public class RequestExpirationService {
         .compose(expiredRequests -> closeRequests(conn, expiredRequests, context))
         .compose(associatedIds -> getOpenRequestsByIdFields(conn, associatedIds))
         .compose(openRequests -> reorderRequests(conn, openRequests))
-        .onSuccess(x -> publishPubSubLogEvents(context)))
+        .onSuccess(x -> publishKafkaLogRecordEvents(context)))
         .compose(x -> publishExpiredRequestsEvents(context))
         .onFailure(e -> log.error("Error in request processing", e));
   }
@@ -255,13 +262,15 @@ public class RequestExpirationService {
     return conn.update(REQUEST_TABLE, request, request.getId()).mapEmpty();
   }
 
-  private void publishPubSubLogEvents(List<ExpiredRequestWrapper> context) {
+  private void publishKafkaLogRecordEvents(List<ExpiredRequestWrapper> context) {
     context.forEach(requestWrapper -> {
       var payload = new JsonObject()
-        .put(REQUESTS.value(), new JsonObject()
-          .put(ORIGINAL.value(), requestWrapper.originalValue())
-          .put(UPDATED.value(), requestWrapper.updatedValue()));
-      eventPublisherService.publishLogRecord(payload, REQUEST_EXPIRED);
+        .put(LOG_EVENT_TYPE.value(), REQUEST_EXPIRED.value())
+        .put(PAYLOAD.value(), new JsonObject()
+          .put(REQUESTS.value(), new JsonObject()
+            .put(ORIGINAL.value(), requestWrapper.originalValue())
+            .put(UPDATED.value(), requestWrapper.updatedValue())));
+      kafkaLogRecordPublisher.publish(requestWrapper.updatedValue().getString("id"), payload, okapiHeaders);
     });
   }
 
