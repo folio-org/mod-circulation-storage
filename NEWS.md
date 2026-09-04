@@ -27,6 +27,7 @@
 * Implement DELETE `/loan-storage/loans` by CQL query (CIRCSTORE-591)
 * Set queue level based on TLR feature status (CIRCSTORE-589)
 * Add `isRawHtml` to staff-slip schema and bump `staff-slips-storage` to 1.1 (CIRCSTORE-585)
+* Allow anonymization of a list of requests (CIRCSTORE-647)
 
 ## 17.4.0 2025-03-12
 * Upgrade to Java v21 (CIRCSTORE-576)

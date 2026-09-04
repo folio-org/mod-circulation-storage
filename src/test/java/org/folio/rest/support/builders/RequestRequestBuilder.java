@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @With
-public class RequestRequestBuilder extends JsonBuilder {
+public class RequestRequestBuilder extends JsonBuilder implements Builder {
   public static final String OPEN_NOT_YET_FILLED = "Open - Not yet filled";
   public static final String OPEN_AWAITING_PICKUP = "Open - Awaiting pickup";
   public static final String OPEN_IN_TRANSIT = "Open - In transit";
@@ -82,6 +82,121 @@ public class RequestRequestBuilder extends JsonBuilder {
       null,
       null,
       null);
+  }
+
+  public static RequestRequestBuilder from(JsonObject example) {
+    final UUID id = example.containsKey("id")
+        ? UUID.fromString(example.getString("id"))
+        : null;
+
+    final UUID holdingsRecordId = example.containsKey("holdingsRecordId")
+        ? UUID.fromString(example.getString("holdingsRecordId"))
+        : null;
+
+    final DateTime requestDate = example.containsKey("requestDate")
+        ? DateTime.parse(example.getString("requestDate"))
+        : null;
+
+    final UUID itemId = example.containsKey("itemId")
+        ? UUID.fromString(example.getString("itemId"))
+        : null;
+
+    final UUID instanceId = example.containsKey("instanceId")
+        ? UUID.fromString(example.getString("instanceId"))
+        : null;
+
+    final UUID requesterId = example.containsKey("requesterId")
+        ? UUID.fromString(example.getString("requesterId"))
+        : null;
+    PatronSummary requesterSummary = null;
+
+    if (example.containsKey("requester")) {
+      JsonObject requester = example.getJsonObject("requester");
+
+      requesterSummary = new PatronSummary(
+          requester.getString("lastName"),
+          requester.getString("firstName"),
+          requester.getString("middleName"),
+          requester.getString("barcode"));
+    }
+
+    final UUID proxyId = example.containsKey("proxyUserId")
+        ? UUID.fromString(example.getString("proxyUserId"))
+        : null;
+
+    PatronSummary proxySummary = null;
+
+    if (example.containsKey("proxy")) {
+      JsonObject proxy = example.getJsonObject("proxy");
+
+      proxySummary = new PatronSummary(
+          proxy.getString("lastName"),
+          proxy.getString("firstName"),
+          proxy.getString("middleName"),
+          proxy.getString("barcode"));
+    }
+
+    final UUID deliveryAddressTypeId = example.containsKey("deliveryAddressTypeId")
+        ? UUID.fromString(example.getString("deliveryAddressTypeId"))
+        : null;
+
+    final DateTime requestExpirationDate = example.containsKey("requestExpirationDate")
+        ? DateTime.parse(example.getString("requestExpirationDate"))
+        : null;
+
+    final DateTime holdShelfExpirationDate = example.containsKey("holdShelfExpirationDate")
+        ? DateTime.parse(example.getString("holdShelfExpirationDate"))
+        : null;
+
+    final UUID cancellationReasonId = example.containsKey("cancellationReasonId")
+        ? UUID.fromString(example.getString("cancellationReasonId"))
+        : null;
+
+    final UUID cancelledByUserId = example.containsKey("cancelledByUserId")
+        ? UUID.fromString(example.getString("cancelledByUserId"))
+        : null;
+
+    final DateTime cancelledDate = example.containsKey("cancelledDate")
+        ? DateTime.parse(example.getString("cancelledDate"))
+        : null;
+
+    final UUID pickupServicePointId = example.containsKey("pickupServicePointId")
+        ? UUID.fromString(example.getString("pickupServicePointId"))
+        : null;
+
+    SearchIndex searchIndex = example.containsKey("searchIndex")
+        ? example.getJsonObject("searchIndex").mapTo(SearchIndex.class)
+        : null;
+
+    return new RequestRequestBuilder(
+        id,
+        example.getString("requestType"),
+        example.getString("requestLevel"),
+        requestDate,
+        itemId,
+        instanceId,
+        requesterId,
+        proxyId,
+        example.getString("fulfillmentPreference"),
+        deliveryAddressTypeId,
+        requestExpirationDate,
+        holdShelfExpirationDate,
+        null,
+        requesterSummary,
+        proxySummary,
+        example.getString("status"),
+        cancellationReasonId,
+        cancelledByUserId,
+        example.getString("cancellationAdditionalInformation"),
+        cancelledDate,
+        example.getInteger("position"),
+        pickupServicePointId,
+        null,
+        example.getString("patronComments"),
+        holdingsRecordId,
+        searchIndex,
+        example.getString("itemLocationCode"),
+        example.getString("ecsRequestPhase"));
   }
 
   public JsonObject create() {
@@ -187,6 +302,14 @@ public class RequestRequestBuilder extends JsonBuilder {
 
   public RequestRequestBuilder page() {
     return withRequestType("Page");
+  }
+
+  public RequestRequestBuilder closed(String reason) {
+    return withStatus(reason);
+  }
+
+  public RequestRequestBuilder closed() {
+    return closed(CLOSED_FILLED);
   }
 
   public RequestRequestBuilder withNoId() {
@@ -378,7 +501,7 @@ public class RequestRequestBuilder extends JsonBuilder {
     return withPosition(null);
   }
 
-  private class PatronSummary {
+  private static class PatronSummary {
     final String lastName;
     final String firstName;
     final String middleName;
