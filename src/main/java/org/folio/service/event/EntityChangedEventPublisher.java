@@ -47,7 +47,7 @@ public class EntityChangedEventPublisher<K, T> {
     return response -> {
       if (!isCreateSuccessResponse(response)) {
         log.warn("Record create failed, skipping event publishing");
-        
+
         return succeededFuture(response);
       }
 

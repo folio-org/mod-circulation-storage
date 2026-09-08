@@ -71,7 +71,8 @@ class KafkaServiceTest {
     var mock = mock(Vertx.class);
     when(context.owner()).thenReturn(mock);
 
-    var publisher = kafkaService.createPublisher(CirculationStorageKafkaTopic.LOAN, context, TENANT_ID);
+    var publisher = new DomainEventPublisher<>(CirculationStorageKafkaTopic.LOAN,
+      TENANT_ID, context);
 
     assertThat(publisher, notNullValue());
     assertThat(publisher, instanceOf(DomainEventPublisher.class));

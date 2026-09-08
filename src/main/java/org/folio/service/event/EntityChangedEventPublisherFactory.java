@@ -1,6 +1,5 @@
 package org.folio.service.event;
 
-import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.folio.support.kafka.topic.CirculationStorageKafkaTopic.CHECK_IN;
 import static org.folio.support.kafka.topic.CirculationStorageKafkaTopic.CIRCULATION_SETTINGS;
 import static org.folio.support.kafka.topic.CirculationStorageKafkaTopic.LOAN;
@@ -38,9 +37,7 @@ public class EntityChangedEventPublisherFactory {
 
     return new EntityChangedEventPublisher<>(okapiHeaders, Loan::getId, NULL_ID,
         new EntityChangedEventFactory<>(),
-        new DomainEventPublisher<>(vertxContext,
-            LOAN.fullTopicName(tenantId(okapiHeaders)),
-            FailureHandler.noOperation()),
+        new DomainEventPublisher<>(LOAN, okapiHeaders, vertxContext),
         new LoanRepository(vertxContext, okapiHeaders));
   }
 
@@ -49,9 +46,7 @@ public class EntityChangedEventPublisherFactory {
 
     return new EntityChangedEventPublisher<>(okapiHeaders, Request::getId, NULL_ID,
         new EntityChangedEventFactory<>(),
-        new DomainEventPublisher<>(vertxContext,
-            REQUEST.fullTopicName(tenantId(okapiHeaders)),
-            FailureHandler.noOperation()),
+        new DomainEventPublisher<>(REQUEST, okapiHeaders, vertxContext),
         new RequestRepository(vertxContext, okapiHeaders));
   }
 
@@ -59,9 +54,8 @@ public class EntityChangedEventPublisherFactory {
   requestBatchEventPublisher(Context vertxContext, Map<String, String> okapiHeaders) {
 
     return new EntityChangedEventPublisher<>(okapiHeaders, RequestQueueReordering::getInstanceId,
-      NULL_ID, new EntityChangedEventFactory<>(), new DomainEventPublisher<>(vertxContext,
-      REQUEST_QUEUE_REORDERING.fullTopicName(tenantId(okapiHeaders)),
-      FailureHandler.noOperation()), null);
+      NULL_ID, new EntityChangedEventFactory<>(), new DomainEventPublisher<>(
+        REQUEST_QUEUE_REORDERING, okapiHeaders, vertxContext), null);
   }
 
   public static EntityChangedEventPublisher<String, CheckIn> checkInEventPublisher(
@@ -69,9 +63,7 @@ public class EntityChangedEventPublisherFactory {
 
     return new EntityChangedEventPublisher<>(okapiHeaders, CheckIn::getId, NULL_ID,
         new EntityChangedEventFactory<>(),
-        new DomainEventPublisher<>(vertxContext,
-            CHECK_IN.fullTopicName(tenantId(okapiHeaders)),
-            FailureHandler.noOperation()),
+        new DomainEventPublisher<>(CHECK_IN, okapiHeaders, vertxContext),
         new CheckInRepository(vertxContext, okapiHeaders));
   }
 
@@ -82,9 +74,7 @@ public class EntityChangedEventPublisherFactory {
 
     return new EntityChangedEventPublisher<>(okapiHeaders, CirculationRules::getId, NULL_ID,
       new EntityChangedEventFactory<>(),
-      new DomainEventPublisher<>(vertxContext,
-        RULES.fullTopicName(tenantId(okapiHeaders)),
-        FailureHandler.noOperation()),
+      new DomainEventPublisher<>(RULES, okapiHeaders, vertxContext),
       new CirculationRulesRepository(vertxContext, okapiHeaders));
   }
 
@@ -93,9 +83,7 @@ public class EntityChangedEventPublisherFactory {
 
     return new EntityChangedEventPublisher<>(okapiHeaders, CirculationSetting::getId, NULL_ID,
       new EntityChangedEventFactory<>(),
-      new DomainEventPublisher<>(vertxContext,
-        CIRCULATION_SETTINGS.fullTopicName(tenantId(okapiHeaders)),
-        FailureHandler.noOperation()),
+      new DomainEventPublisher<>(CIRCULATION_SETTINGS, okapiHeaders, vertxContext),
       new CirculationSettingsRepository(vertxContext, okapiHeaders));
   }
 
