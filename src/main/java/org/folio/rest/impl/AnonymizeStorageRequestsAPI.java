@@ -1,9 +1,7 @@
 package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
-import static org.folio.support.ModuleConstants.MODULE_NAME;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -22,7 +20,6 @@ import org.folio.rest.jaxrs.model.NotAnonymizedRequest;
 import org.folio.rest.jaxrs.resource.AnonymizeStorageRequests;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
 import org.folio.support.UUIDValidation;
 
@@ -30,7 +27,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import io.vertx.sqlclient.Tuple;
-import jakarta.validation.constraints.NotNull;
 
 public class AnonymizeStorageRequestsAPI implements AnonymizeStorageRequests {
   private static final Logger log = LogManager.getLogger();
