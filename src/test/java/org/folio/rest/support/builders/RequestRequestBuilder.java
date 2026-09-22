@@ -389,6 +389,10 @@ public class RequestRequestBuilder extends JsonBuilder implements Builder {
       this.itemLocationCode);
   }
 
+  public RequestRequestBuilder withNoRequesterId() {
+    return withRequesterId(null);
+  }
+
   public RequestRequestBuilder withRequester(
     String lastName,
     String firstName,
