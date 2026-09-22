@@ -333,7 +333,7 @@ class RequestsApiTest extends ApiTests {
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Should not create request: %s", response.getBody()),
-      response.getStatusCode(), is(422));
+      response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
   }
 
   @Test
@@ -359,7 +359,7 @@ class RequestsApiTest extends ApiTests {
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Should not create request: %s", response.getBody()),
-      response.getStatusCode(), is(422));
+      response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
   }
 
   @Test

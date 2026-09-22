@@ -7,7 +7,6 @@ import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.jaxrs.model.Request.RequestLevel;
-import org.folio.support.UUIDValidation;
 
 /**
  * Utility methods for Requests resource.
@@ -57,15 +56,6 @@ public class RequestsApiUtil {
         "Title level request must have both itemId and holdingsRecordId or neither"));
     }
 
-    if (isOpenAndHasNoRequesterId(request)) {
-      errorList.add(createError(
-          "Open request must have a requester ID"));
-    }
-    if (request.getRequesterId() != null &&
-        !UUIDValidation.isValidUUID(request.getRequesterId())) {
-      errorList.add(createError( "Invalid requester ID, should be a UUID"));
-    }
-
     return new Errors().withErrors(errorList);
   }
 
@@ -73,11 +63,6 @@ public class RequestsApiUtil {
     boolean isHoldingsRecordIdAbsent) {
 
     return isItemIdAbsent ^ isHoldingsRecordIdAbsent;
-  }
-
-  private static boolean isOpenAndHasNoRequesterId(Request request) {
-    return request.getStatus().value().startsWith("Open -")
-        && request.getRequesterId() == null;
   }
 
   private static Error createError(String message){
