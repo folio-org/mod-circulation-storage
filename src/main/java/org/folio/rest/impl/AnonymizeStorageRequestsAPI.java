@@ -40,7 +40,7 @@ public class AnonymizeStorageRequestsAPI implements AnonymizeStorageRequests {
     AnonymizeStorageRequestsResponse response = new AnonymizeStorageRequestsResponse();
     List<String> requestIds = request.getRequestIds();
 
-    if (requestIds == null || CollectionUtils.isEmpty(requestIds)) {
+    if (CollectionUtils.isEmpty(requestIds)) {
       log.warn("postAnonymizeStorageRequests:: No request UUIDs provided");
       final Errors errors = ValidationHelper.createValidationErrorMessage(
           "requestIds", "null", "Please provide valid requestIds");
