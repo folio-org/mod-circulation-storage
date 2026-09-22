@@ -295,6 +295,74 @@ class RequestsApiTest extends ApiTests {
   }
 
   @Test
+  void canCreateAClosedRequestWithoutRequester()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    JsonObject representation = createEntity(
+      new RequestRequestBuilder()
+      .withStatus(CLOSED_FILLED)
+      .withNoRequesterId()
+      .create(),
+      requestStorageUrl()).getJson();
+
+    assertThat(representation.getString("status"), is(CLOSED_FILLED));
+
+    assertCreateEventForRequest(representation);
+  }
+
+  @Test
+  void cannotCreateAnOpenRequestWithoutRequester()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    JsonObject requestRequest = new RequestRequestBuilder()
+      .withNoRequesterId()
+      .create();
+
+    client.post(requestStorageUrl(),
+      requestRequest, TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Should not create request: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+  }
+
+  @Test
+  void cannotCreateAnOpenRequestWithoutRequesterViaPut()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    final UUID requestId = UUID.randomUUID();
+
+    JsonObject requestRequest = new RequestRequestBuilder()
+      .withId(requestId)
+      .withNoRequesterId()
+      .create();
+
+    client.put(requestStorageUrl(String.format("/%s", requestId.toString())),
+      requestRequest, TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Should not create request: %s", response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+  }
+
+  @Test
   void canCreateARequestToBeFulfilledByDeliveryToAnAddress()
     throws InterruptedException,
     MalformedURLException,

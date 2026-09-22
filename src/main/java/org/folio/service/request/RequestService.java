@@ -80,6 +80,12 @@ public class RequestService {
           .respond422WithApplicationJson(errors));
     }
 
+    if (isOpenAndHasNoRequesterId(request)) {
+      return succeededFuture(RequestStorage.PutRequestStorageRequestsByRequestIdResponse
+          .respond400WithTextPlain(
+            new Error().withMessage("Open request must have a requester ID")));
+    }
+
     Promise<Response> createResult = Promise.promise();
 
     PgUtil.post(REQUEST_TABLE, request, okapiHeaders, vertxContext,
@@ -116,7 +122,18 @@ public class RequestService {
         });
     }
 
+    if (isOpenAndHasNoRequesterId(request)) {
+      return succeededFuture(RequestStorage.PutRequestStorageRequestsByRequestIdResponse
+          .respond400WithTextPlain(
+            new Error().withMessage("Open request must have a requester ID")));
+    }
+
     return upsertRequest(requestId, request);
+  }
+
+  private static boolean isOpenAndHasNoRequesterId(Request request) {
+    return request.getStatus().value().startsWith("Open -")
+        && request.getRequesterId() == null;
   }
 
   private Future<Response> upsertRequest(String requestId, Request request) {

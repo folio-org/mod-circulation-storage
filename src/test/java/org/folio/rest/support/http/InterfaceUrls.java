@@ -18,6 +18,16 @@ public class InterfaceUrls {
     return storageUrl("/loan-storage/loans" + subPath);
   }
 
+  public static URL requestStorageUrl() throws MalformedURLException {
+    return requestStorageUrl("");
+  }
+
+  public static URL requestStorageUrl(String subPath)
+    throws MalformedURLException {
+
+    return storageUrl("/request-storage/requests" + subPath);
+  }
+
   public static URL actualCostRecord(String subPath) throws MalformedURLException {
     return storageUrl("/actual-cost-record-storage/actual-cost-records" + subPath);
   }
@@ -34,6 +44,10 @@ public class InterfaceUrls {
 
   public static URL anonymizeLoansURL() throws MalformedURLException {
     return storageUrl("/anonymize-storage-loans");
+  }
+
+  public static URL anonymizeRequestsURL() throws MalformedURLException {
+    return storageUrl("/anonymize-storage-requests");
   }
 
   public static URL checkInsStorageUrl(String subPath) throws MalformedURLException {
