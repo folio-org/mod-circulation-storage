@@ -652,6 +652,22 @@
       ]
     },
     {
+      "id": "request-queue-lock-storage",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["POST"],
+          "pathPattern": "/request-queue-lock-storage",
+          "permissionsRequired": ["request-queue-lock-storage.request-queue-locks.item.post"]
+        },
+        {
+          "methods": ["DELETE"],
+          "pathPattern": "/request-queue-lock-storage/{lockId}",
+          "permissionsRequired": ["request-queue-lock-storage.request-queue-locks.item.delete"]
+        }
+      ]
+    },
+    {
       "id": "print-events-storage",
       "version": "1.0",
       "handlers": [
@@ -1168,6 +1184,8 @@
         "checkout-lock-storage.checkout-locks.item.delete",
         "checkout-lock-storage.checkout-locks.item.get",
         "checkout-lock-storage.checkout-locks.collection.get",
+        "request-queue-lock-storage.request-queue-locks.item.post",
+        "request-queue-lock-storage.request-queue-locks.item.delete",
         "circulation-storage.circulation-settings.collection.get",
         "circulation-storage.circulation-settings.item.get",
         "circulation-storage.circulation-settings.item.post",
@@ -1276,6 +1294,16 @@
       "permissionName": "checkout-lock-storage.checkout-locks.collection.get",
       "displayName": "Circulation storage - get locks",
       "description": "get locks"
+    },
+    {
+      "permissionName": "request-queue-lock-storage.request-queue-locks.item.post",
+      "displayName": "Circulation storage - create request queue lock",
+      "description": "Create a lock for an item or instance request queue"
+    },
+    {
+      "permissionName": "request-queue-lock-storage.request-queue-locks.item.delete",
+      "displayName": "Circulation storage - delete request queue lock",
+      "description": "Delete a request queue lock"
     }
   ],
   "launchDescriptor": {

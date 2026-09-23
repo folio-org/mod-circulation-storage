@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "description": "A request queue lock",
+  "additionalProperties": false,
+  "required": ["id", "queueType", "queueId", "createdAt", "expiresAt"],
+  "properties": {
+    "id": {
+      "description": "ID of the lock",
+      "$ref": "raml-util/schemas/uuid.schema"
+    },
+    "queueType": {
+      "description": "The kind of request queue protected by the lock",
+      "type": "string",
+      "enum": ["INSTANCE", "ITEM"]
+    },
+    "queueId": {
+      "description": "Instance or item ID identifying the queue",
+      "$ref": "raml-util/schemas/uuid.schema"
+    },
+    "createdAt": {
+      "description": "Date and time when the lock was acquired",
+      "type": "string",
+      "format": "date-time"
+    },
+    "expiresAt": {
+      "description": "Date and time when the lock becomes reclaimable",
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

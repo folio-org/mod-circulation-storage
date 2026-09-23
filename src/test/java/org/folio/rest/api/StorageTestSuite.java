@@ -82,6 +82,7 @@ import lombok.SneakyThrows;
   ActualCostRecordAPITest.class,
   EventConsumerVerticleTest.class,
   CheckOutLockAPITest.class,
+  RequestQueueLockAPITest.class,
   CirculationSettingsAPITest.class,
   PrintEventsAPITest.class
 })
