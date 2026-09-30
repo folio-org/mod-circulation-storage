@@ -3,8 +3,6 @@ package org.folio.rest.api;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.any;
 import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
@@ -21,7 +19,9 @@ import java.util.concurrent.TimeoutException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.kafka.services.KafkaAdminClientService;
 import org.folio.postgres.testing.PostgresTesterContainer;
+import org.folio.support.kafka.topic.AuditKafkaTopic;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.api.loans.LoansAnonymizationApiTest;
 import org.folio.rest.api.migration.CirculationSettingsMigrationScriptTest;
@@ -34,7 +34,6 @@ import org.folio.rest.support.OkapiHttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.tools.utils.NetworkUtils;
-import org.folio.support.MockServer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.platform.suite.api.SelectClasses;
@@ -94,9 +93,7 @@ public class StorageTestSuite {
   private static Vertx vertx;
   private static String restVerticleId;
   public static final int PROXY_PORT = NetworkUtils.nextFreePort();
-  public static final int OKAPI_MOCK_PORT = NetworkUtils.nextFreePort();
   private static boolean initialised = false;
-  private static MockServer mockServer;
   private static final WireMockServer wireMockServer = new WireMockServer(PROXY_PORT);
 
   private static final KafkaContainer kafkaContainer = new KafkaContainer(DockerImageName.parse("apache/kafka-native:4.2.0"))
@@ -165,20 +162,18 @@ public class StorageTestSuite {
     options.setConfig(new JsonObject().put("http.port", verticlePort));
     startVerticle(options);
 
-    mockServer = new MockServer(OKAPI_MOCK_PORT, vertx);
-    mockServer.start();
-
     wireMockServer.start();
-
-    wireMockServer.stubFor(post(urlMatching("/pubsub/.*"))
-      .atPriority(1)
-      .willReturn(aResponse().proxiedFrom("http://localhost:" + OKAPI_MOCK_PORT)));
 
     wireMockServer.stubFor(any(anyUrl())
       .atPriority(10)
       .willReturn(aResponse().proxiedFrom("http://localhost:" + verticlePort)));
 
     prepareTenant(TENANT_ID, true);
+
+    new KafkaAdminClientService(vertx)
+      .createKafkaTopics(AuditKafkaTopic.values(), TENANT_ID)
+      .toCompletionStage().toCompletableFuture()
+      .get(60, TimeUnit.SECONDS);
 
     initialised = true;
   }
@@ -207,12 +202,6 @@ public class StorageTestSuite {
       kafkaContainer.stop();
     } catch (Throwable e) {
       log.warn("after:: kafkaContainer.stop() failed (ignored): {}", e.getMessage());
-    }
-
-    try {
-      mockServer.close();
-    } catch (Throwable e) {
-      log.warn("after:: mockServer.close() failed (ignored): {}", e.getMessage());
     }
 
     CompletableFuture<String> undeploymentComplete = new CompletableFuture<>();
