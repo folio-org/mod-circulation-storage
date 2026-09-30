@@ -106,6 +106,18 @@ public class RequestBatchResourceService {
       requests == null ? 0 : requests.size(),
       tlrSettings.isTitleLevelRequestsFeatureEnabled());
 
+    // MCBFF-211 diagnostics: dump every request in this batch (id, itemId, instanceId,
+    // requestLevel, requestType, position) so we can see exactly what is being
+    // batch-updated/resequenced and what will be summarized into a single
+    // RequestQueueReordering event below.
+    if (requests != null) {
+      requests.forEach(r -> log.info(
+        "MCBFF-211 mapRequestsToPayload:: batch request -> id: {}, itemId: {}, " +
+          "instanceId: {}, requestLevel: {}, requestType: {}, position: {}, status: {}",
+        r.getId(), r.getItemId(), r.getInstanceId(), r.getRequestLevel(), r.getRequestType(),
+        r.getPosition(), r.getStatus()));
+    }
+
     var firstRequest = requests.get(0);
     var queueLevel = tlrSettings.isTitleLevelRequestsFeatureEnabled()
       ? RequestQueueReordering.RequestLevel.TITLE
@@ -122,6 +134,14 @@ public class RequestBatchResourceService {
     log.info("mapRequestsToPayload:: instanceId: {}, itemId: {}, requestLevel: {}, " +
         "requests: {}", payload.getInstanceId(), payload.getItemId(), payload.getRequestLevel(),
       payload.getRequestIds());
+
+    // MCBFF-211 diagnostics: this is the actual event payload that will be published to the
+    // `circulation.request-queue-reordering` Kafka topic. Note it only carries ONE requestLevel
+    // for the whole batch (derived from tenant-wide TLR setting, not per-request), and only
+    // ONE instanceId/itemId (taken from firstRequest) even though the batch may contain
+    // requests for multiple items/levels when TLR unified queue is in play.
+    log.info("MCBFF-211 mapRequestsToPayload:: PUBLISHING RequestQueueReordering event -> {}",
+      payload);
 
     return payload;
   }
