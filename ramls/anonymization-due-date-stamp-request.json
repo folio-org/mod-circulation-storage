@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Upsert the due-date for closed loans into the loan_anonymization_due table. Written only by the scheduled anonymization job",
+  "type": "object",
+  "properties": {
+    "entries": {
+      "description": "Loans to stamp",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "loanId": {
+            "description": "Loan id (UUID)",
+            "type": "string"
+          },
+          "dueAt": {
+            "description": "ISO-8601 instant at which the loan becomes eligible. Omit the property to record the 'retain under current policy' (never) state",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loanId"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "entries"
+  ],
+  "additionalProperties": false
+}

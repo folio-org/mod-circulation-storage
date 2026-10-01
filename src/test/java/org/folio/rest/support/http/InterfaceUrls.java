@@ -36,6 +36,22 @@ public class InterfaceUrls {
     return storageUrl("/anonymize-storage-loans");
   }
 
+  public static URL anonymizationDueDateStampURL() throws MalformedURLException {
+    return storageUrl("/anonymization-due-date-storage/stamp");
+  }
+
+  public static URL anonymizationDueDateClearURL() throws MalformedURLException {
+    return storageUrl("/anonymization-due-date-storage/clear");
+  }
+
+  public static URL anonymizationDueDateDueURL(String query) throws MalformedURLException {
+    return storageUrl("/anonymization-due-date-storage/due" + query);
+  }
+
+  public static URL anonymizationDueDateUnevaluatedURL(String query) throws MalformedURLException {
+    return storageUrl("/anonymization-due-date-storage/unevaluated" + query);
+  }
+
   public static URL checkInsStorageUrl(String subPath) throws MalformedURLException {
     return storageUrl("/check-in-storage/check-ins" + subPath);
   }
