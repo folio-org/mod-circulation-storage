@@ -195,7 +195,7 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
-      <version>5.16.0</version>
+      <version>5.24.0</version>
       <scope>test</scope>
     </dependency>
     <!-- JUnit 5 API and engine -->
@@ -533,11 +533,23 @@
           </execution>
         </executions>
       </plugin>
+     <plugin>
+       <groupId>org.apache.maven.plugins</groupId>
+       <artifactId>maven-dependency-plugin</artifactId>
+       <executions>
+         <execution>
+           <goals>
+             <goal>properties</goal>
+           </goals>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.2.5</version>
         <configuration>
+          <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar}</argLine>
           <useSystemClassLoader>false</useSystemClassLoader>
           <excludes>
             <exclude>org/folio/rest/api/**/*Test.java</exclude>
