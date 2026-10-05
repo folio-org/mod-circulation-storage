@@ -1,6 +1,7 @@
 ## 17.6.0 2026-XX-XX
 * PubSub deprecation: add Kafka support (CIRCSTORE-417)
 * PubSub deprecation: Implement Kafka LOG_RECORD event publishing, remove PubSub infrastructure (CIRCSTORE-419)
+* Upgrade from Java 21 to Java 25 (CIRCSTORE-676)
 
 ## 17.5.0 2026-04-14
 * Update FQM translations (MODFQMMGR-1095)
