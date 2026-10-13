@@ -13,7 +13,7 @@ import org.folio.rest.jaxrs.model.RenewalsPolicy;
 /**
  * Validates the cross-field rules of the automatic renewal settings in the
  * {@code renewalsPolicy} of a loan policy. Value ranges of the timing fields
- * are enforced by the JSON schema.
+ * are enforced by Bean Validation on the model generated from the JSON schema.
  */
 public class LoanPolicyAutomaticRenewalValidator {
   private static final String KEY_PREFIX = "renewalsPolicy.";
