@@ -59,6 +59,7 @@ public class RequestExpirationServiceTest {
     var id2 = UUID.randomUUID().toString();
     var id3 = UUID.randomUUID().toString();
     when(postgresClient.getTenantId()).thenReturn(TENANT_ID);
+    when(postgresClient.withConn(any())).then(this::withTransHandler);
     when(postgresClient.withTrans(any())).then(this::withTransHandler);
 
     var expiredRequestsRowSet = new LocalRowSet(3).withRows(List.of(

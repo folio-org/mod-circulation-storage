@@ -54,54 +54,106 @@ public class RequestExpirationService {
   private final PostgresClient pgClient;
   private final EventPublisherService eventPublisherService;
   private final EntityChangedEventPublisher<String, Request> eventPublisher;
+  private final RequestQueueLockService requestQueueLockService;
+  private final String queueType;
 
   public RequestExpirationService(Map<String, String> okapiHeaders, Vertx vertx,
     String requestClassifierProperty, Function<Request, String> requestClassifier) {
-    this(requestClassifierProperty, requestClassifier,
-      PostgresClient.getInstance(vertx, okapiHeaders.get(TENANT_HEADER)),
-      new EventPublisherService(vertx, okapiHeaders),
-      requestEventPublisher(vertx.getOrCreateContext(), okapiHeaders));
+    this.requestClassifierProperty = requestClassifierProperty;
+    this.requestClassifier = requestClassifier;
+    this.pgClient = PostgresClient.getInstance(vertx, okapiHeaders.get(TENANT_HEADER));
+    this.eventPublisherService = new EventPublisherService(vertx, okapiHeaders);
+    this.eventPublisher = requestEventPublisher(vertx.getOrCreateContext(), okapiHeaders);
+    this.requestQueueLockService = new RequestQueueLockService(pgClient, vertx);
+    this.queueType = "instanceId".equals(requestClassifierProperty)
+      ? RequestQueueLockService.INSTANCE
+      : RequestQueueLockService.ITEM;
   }
 
   RequestExpirationService(String requestClassifierProperty,
     Function<Request, String> requestClassifier,
     PostgresClient postgresClient, EventPublisherService eventPublisherService,
     EntityChangedEventPublisher<String, Request> eventPublisher) {
+    this(requestClassifierProperty, requestClassifier, postgresClient, eventPublisherService,
+      eventPublisher, null);
+  }
+
+  RequestExpirationService(String requestClassifierProperty,
+    Function<Request, String> requestClassifier,
+    PostgresClient postgresClient, EventPublisherService eventPublisherService,
+    EntityChangedEventPublisher<String, Request> eventPublisher,
+    RequestQueueLockService requestQueueLockService) {
     this.requestClassifierProperty = requestClassifierProperty;
     this.requestClassifier = requestClassifier;
     this.pgClient = postgresClient;
     this.eventPublisherService = eventPublisherService;
     this.eventPublisher = eventPublisher;
+    this.requestQueueLockService = requestQueueLockService;
+    this.queueType = "instanceId".equals(requestClassifierProperty)
+      ? RequestQueueLockService.INSTANCE
+      : RequestQueueLockService.ITEM;
   }
 
   public Future<Void> doRequestExpiration() {
-    List<ExpiredRequestWrapper> context = new ArrayList<>();
-
-    return pgClient.withTrans(conn -> getExpiredRequests(conn)
-        .compose(expiredRequests -> closeRequests(conn, expiredRequests, context))
-        .compose(associatedIds -> getOpenRequestsByIdFields(conn, associatedIds))
-        .compose(openRequests -> reorderRequests(conn, openRequests))
-        .onSuccess(x -> publishPubSubLogEvents(context)))
-        .compose(x -> publishExpiredRequestsEvents(context))
+    return pgClient.withConn(this::getExpiredRequests)
+        .compose(this::expireRequestsByQueue)
         .onFailure(e -> log.error("Error in request processing", e));
   }
 
+  private Future<Void> expireRequestsByQueue(List<Request> expiredRequests) {
+
+    Map<String, List<Request>> requestsByQueue = expiredRequests.stream()
+      .collect(Collectors.groupingBy(requestClassifier));
+
+    Future<Void> future = succeededFuture();
+    for (Map.Entry<String, List<Request>> entry : requestsByQueue.entrySet()) {
+      future = future.compose(v -> {
+        List<ExpiredRequestWrapper> queueContext = new ArrayList<>();
+        return executeWithQueueLock(entry.getKey(), () ->
+          pgClient.withTrans(conn -> getExpiredRequests(conn, entry.getKey())
+            .compose(requests -> closeRequests(conn, requests, queueContext))
+            .compose(associatedIds -> getOpenRequestsByIdFields(conn, associatedIds))
+            .compose(openRequests -> reorderRequests(conn, openRequests))))
+          // Publishing is deliberately outside the queue lock. At this point the queue
+          // transaction is committed and other position writers can proceed.
+          .onSuccess(x -> publishPubSubLogEvents(queueContext))
+          .compose(x -> publishExpiredRequestsEvents(queueContext));
+      });
+    }
+    return future;
+  }
+
+  private Future<Void> executeWithQueueLock(String queueId,
+    java.util.function.Supplier<Future<Void>> criticalSection) {
+
+    return requestQueueLockService == null
+      ? criticalSection.get()
+      : requestQueueLockService.execute(queueType, queueId, criticalSection);
+  }
+
   private Future<List<Request>> getExpiredRequests(Conn conn) {
+    return getExpiredRequests(conn, null);
+  }
+
+  private Future<List<Request>> getExpiredRequests(Conn conn, String queueId) {
     SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
     df.setTimeZone(TimeZone.getTimeZone(ZoneOffset.UTC));
 
     String where = format("WHERE " +
-        "(jsonb->>'status' = '%1$s' AND jsonb->>'requestExpirationDate' < '%5$s') OR " +
+        "((jsonb->>'status' = '%1$s' AND jsonb->>'requestExpirationDate' < '%5$s') OR " +
         "(jsonb->>'status' = '%2$s' AND jsonb->>'requestExpirationDate' < '%5$s') OR " +
         "(jsonb->>'status' = '%3$s' AND jsonb->>'requestExpirationDate' < '%5$s') OR " +
-        "(jsonb->>'status' = '%4$s' AND jsonb->>'holdShelfExpirationDate' < '%5$s') " +
-        "LIMIT 150",
-
+        "(jsonb->>'status' = '%4$s' AND jsonb->>'holdShelfExpirationDate' < '%5$s')) ",
       OPEN_NOT_YET_FILLED.value(),
       OPEN_AWAITING_DELIVERY.value(),
       OPEN_IN_TRANSIT.value(),
       OPEN_AWAITING_PICKUP.value(),
       df.format(new Date()));
+
+    if (queueId != null) {
+      where += format("AND jsonb->>'%s' = '%s' ", requestClassifierProperty, queueId);
+    }
+    where += "LIMIT 150";
 
     String fullTableName = format("%s.%s", PostgresClient.convertToPsqlStandard(
       pgClient.getTenantId()), REQUEST_TABLE);

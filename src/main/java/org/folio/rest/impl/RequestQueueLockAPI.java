@@ -2,7 +2,6 @@ package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.persist.PgUtil.postgresClient;
-import static org.folio.rest.persist.PostgresClient.convertToPsqlStandard;
 
 import java.lang.invoke.MethodHandles;
 import java.util.Date;
@@ -18,21 +17,18 @@ import org.folio.rest.jaxrs.model.RequestQueueLock;
 import org.folio.rest.jaxrs.model.RequestQueueLockRequest;
 import org.folio.rest.jaxrs.resource.RequestQueueLockStorage;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.service.RequestQueueLockService;
 import org.folio.util.UuidUtil;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.Tuple;
 
 /**
  * Stores short-lived, queue-scoped locks used while assigning request positions.
  */
 public class RequestQueueLockAPI implements RequestQueueLockStorage {
   private static final Logger log = LogManager.getLogger(MethodHandles.lookup().lookupClass());
-  private static final String TABLE_NAME = "request_queue_lock";
-
   @Override
   public void postRequestQueueLockStorage(RequestQueueLockRequest entity,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
@@ -45,13 +41,12 @@ public class RequestQueueLockAPI implements RequestQueueLockStorage {
       return;
     }
 
-    String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
     PostgresClient client = postgresClient(vertxContext, okapiHeaders);
-    UUID lockId = UUID.randomUUID();
-    Tuple parameters = Tuple.of(lockId, entity.getQueueType().value(),
-      UUID.fromString(entity.getQueueId()), entity.getTtlMs());
+    RequestQueueLockService lockService = new RequestQueueLockService(client,
+      vertxContext.owner());
 
-    client.execute(acquireSql(tenantId), parameters, result -> {
+    lockService.tryAcquire(entity.getQueueType().value(), entity.getQueueId(),
+      entity.getTtlMs()).onComplete(result -> {
       if (result.failed()) {
         log.error("Failed to acquire request queue lock for {}:{}",
           entity.getQueueType(), entity.getQueueId(), result.cause());
@@ -61,7 +56,7 @@ public class RequestQueueLockAPI implements RequestQueueLockStorage {
         return;
       }
 
-      if (result.result().size() == 0) {
+      if (result.result().isEmpty()) {
         asyncResultHandler.handle(succeededFuture(
           PostRequestQueueLockStorageResponse.respond409WithTextPlain(
             "Request queue is already locked")));
@@ -70,7 +65,7 @@ public class RequestQueueLockAPI implements RequestQueueLockStorage {
 
       asyncResultHandler.handle(succeededFuture(
         PostRequestQueueLockStorageResponse.respond201WithApplicationJson(
-          mapLock(result.result().iterator().next()))));
+          mapLock(result.result().get()))));
     });
   }
 
@@ -86,9 +81,10 @@ public class RequestQueueLockAPI implements RequestQueueLockStorage {
       return;
     }
 
-    String tenantId = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
     PostgresClient client = postgresClient(vertxContext, okapiHeaders);
-    client.execute(deleteSql(tenantId), Tuple.of(UUID.fromString(lockId)), result -> {
+    RequestQueueLockService lockService = new RequestQueueLockService(client,
+      vertxContext.owner());
+    lockService.release(UUID.fromString(lockId)).onComplete(result -> {
       if (result.failed()) {
         log.error("Failed to release request queue lock {}", lockId, result.cause());
         asyncResultHandler.handle(succeededFuture(
@@ -108,28 +104,12 @@ public class RequestQueueLockAPI implements RequestQueueLockStorage {
       && entity.getTtlMs() != null && entity.getTtlMs() > 0;
   }
 
-  private RequestQueueLock mapLock(Row row) {
+  private RequestQueueLock mapLock(RequestQueueLockService.Lock lock) {
     return new RequestQueueLock()
-      .withId(row.getUUID("id").toString())
-      .withQueueType(RequestQueueLock.QueueType.fromValue(row.getString("queue_type")))
-      .withQueueId(row.getUUID("queue_id").toString())
-      .withCreatedAt(Date.from(row.getOffsetDateTime("created_at").toInstant()))
-      .withExpiresAt(Date.from(row.getOffsetDateTime("expires_at").toInstant()));
-  }
-
-  private String acquireSql(String tenantId) {
-    String table = convertToPsqlStandard(tenantId) + "." + TABLE_NAME;
-    return "INSERT INTO " + table + " (id, queue_type, queue_id, created_at, expires_at) "
-      + "VALUES ($1, $2, $3, CURRENT_TIMESTAMP, "
-      + "CURRENT_TIMESTAMP + ($4::bigint * INTERVAL '1 millisecond')) "
-      + "ON CONFLICT (queue_type, queue_id) DO UPDATE SET "
-      + "id = EXCLUDED.id, created_at = EXCLUDED.created_at, expires_at = EXCLUDED.expires_at "
-      + "WHERE " + TABLE_NAME + ".expires_at <= CURRENT_TIMESTAMP "
-      + "RETURNING id, queue_type, queue_id, created_at, expires_at";
-  }
-
-  private String deleteSql(String tenantId) {
-    return "DELETE FROM " + convertToPsqlStandard(tenantId) + "." + TABLE_NAME
-      + " WHERE id = $1";
+      .withId(lock.id().toString())
+      .withQueueType(RequestQueueLock.QueueType.fromValue(lock.queueType()))
+      .withQueueId(lock.queueId().toString())
+      .withCreatedAt(Date.from(lock.createdAt().toInstant()))
+      .withExpiresAt(Date.from(lock.expiresAt().toInstant()));
   }
 }
