@@ -91,8 +91,9 @@ Integration in `LoanPoliciesAPI`:
   the previously stored values. No code change needed; this is covered by
   tests.
 - **CQL (requirement 15):** without an index, CQL2PgJSON compares the JSONB
-  text value (`jsonb->'renewalsPolicy'->>'automaticRenewal'`). An absent field
-  is SQL NULL and matches neither `==true` nor `==false`. Covered by tests.
+  text value of `renewalsPolicy.automaticRenewal`. An absent field yields SQL
+  NULL, so it matches neither `==true` nor `==false`. The API tests for
+  Scenario 13 verify this; if they show otherwise, the fix is decided then.
 - **No migration:** reference data (`reference-data/loan-policy-storage/...`)
   and existing records are not touched (requirement 18).
 
