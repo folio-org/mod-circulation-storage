@@ -1,6 +1,7 @@
 ## 17.6.0 2026-XX-XX
 * PubSub deprecation: add Kafka support (CIRCSTORE-417)
 * PubSub deprecation: Implement Kafka LOG_RECORD event publishing, remove PubSub infrastructure (CIRCSTORE-419)
+* Add automatic renewal settings to loan policy, bump `loan-policy-storage` to 2.5 (CIRCSTORE-680)
 
 ## 17.5.0 2026-04-14
 * Update FQM translations (MODFQMMGR-1095)
