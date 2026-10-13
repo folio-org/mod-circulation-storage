@@ -8,18 +8,18 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.kafka.clients.producer.ProducerConfig.ACKS_CONFIG;
 import static org.apache.kafka.clients.producer.ProducerConfig.BOOTSTRAP_SERVERS_CONFIG;
 import static org.awaitility.Awaitility.waitAtMost;
+import static org.folio.okapi.common.XOkapiHeaders.TENANT;
+import static org.folio.okapi.common.XOkapiHeaders.TOKEN;
+import static org.folio.okapi.common.XOkapiHeaders.URL;
 import static org.folio.kafka.services.KafkaEnvironmentProperties.environment;
 import static org.folio.kafka.services.KafkaEnvironmentProperties.host;
 import static org.folio.kafka.services.KafkaEnvironmentProperties.port;
-import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
 import static org.folio.rest.api.StorageTestSuite.PROXY_PORT;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.getVertx;
 import static org.folio.rest.support.builders.RequestRequestBuilder.OPEN_NOT_YET_FILLED;
 import static org.folio.rest.tools.utils.ModuleName.getModuleName;
 import static org.folio.rest.tools.utils.ModuleName.getModuleVersion;
-import static org.folio.rest.util.OkapiConnectionParams.OKAPI_TENANT_HEADER;
-import static org.folio.rest.util.OkapiConnectionParams.OKAPI_URL_HEADER;
 import static org.folio.service.event.InventoryEventType.INVENTORY_ITEM_UPDATED;
 import static org.folio.service.event.InventoryEventType.INVENTORY_LOCATION_UPDATED;
 import static org.folio.service.event.InventoryEventType.INVENTORY_SERVICE_POINT_DELETED;
@@ -739,9 +739,9 @@ class EventConsumerVerticleTest extends ApiTests {
 
   private void publishEvent(String topic, JsonObject eventPayload) {
     var record = KafkaProducerRecord.create(topic, "test-key", eventPayload);
-    record.addHeader(OKAPI_TENANT_HEADER, TENANT_ID);
-    record.addHeader(OKAPI_URL_HEADER, "http://localhost:" + PROXY_PORT);
-    record.addHeader(OKAPI_HEADER_TOKEN, "RANDOM_TOKEN");
+    record.addHeader(TENANT, TENANT_ID);
+    record.addHeader(URL, "http://localhost:" + PROXY_PORT);
+    record.addHeader(TOKEN, "RANDOM_TOKEN");
     waitFor(producer.write(record));
   }
 

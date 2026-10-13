@@ -13,7 +13,9 @@ import static org.folio.rest.jaxrs.model.Request.Status.OPEN_IN_TRANSIT;
 import static org.folio.rest.jaxrs.model.Request.Status.OPEN_NOT_YET_FILLED;
 import static org.folio.service.event.EntityChangedEventPublisherFactory.requestEventPublisher;
 import static org.folio.support.DbUtil.rowSetToStream;
+import static org.folio.support.LogEventPayloadField.LOG_EVENT_TYPE;
 import static org.folio.support.LogEventPayloadField.ORIGINAL;
+import static org.folio.support.LogEventPayloadField.PAYLOAD;
 import static org.folio.support.LogEventPayloadField.REQUESTS;
 import static org.folio.support.LogEventPayloadField.UPDATED;
 import static org.folio.support.ModuleConstants.REQUEST_TABLE;
@@ -39,6 +41,7 @@ import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.service.event.EntityChangedEventPublisher;
+import org.folio.service.event.KafkaLogRecordPublisher;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -52,8 +55,9 @@ public class RequestExpirationService {
   private final String requestClassifierProperty;
   private final Function<Request, String> requestClassifier;
   private final PostgresClient pgClient;
-  private final EventPublisherService eventPublisherService;
+  private final KafkaLogRecordPublisher kafkaLogRecordPublisher;
   private final EntityChangedEventPublisher<String, Request> eventPublisher;
+  private final Map<String, String> okapiHeaders;
   private final RequestQueueLockService requestQueueLockService;
   private final String queueType;
 
@@ -62,8 +66,10 @@ public class RequestExpirationService {
     this.requestClassifierProperty = requestClassifierProperty;
     this.requestClassifier = requestClassifier;
     this.pgClient = PostgresClient.getInstance(vertx, okapiHeaders.get(TENANT_HEADER));
-    this.eventPublisherService = new EventPublisherService(vertx, okapiHeaders);
+    this.kafkaLogRecordPublisher = new KafkaLogRecordPublisher(vertx.getOrCreateContext(),
+      okapiHeaders);
     this.eventPublisher = requestEventPublisher(vertx.getOrCreateContext(), okapiHeaders);
+    this.okapiHeaders = okapiHeaders;
     this.requestQueueLockService = new RequestQueueLockService(pgClient, vertx);
     this.queueType = "instanceId".equals(requestClassifierProperty)
       ? RequestQueueLockService.INSTANCE
@@ -72,22 +78,24 @@ public class RequestExpirationService {
 
   RequestExpirationService(String requestClassifierProperty,
     Function<Request, String> requestClassifier,
-    PostgresClient postgresClient, EventPublisherService eventPublisherService,
-    EntityChangedEventPublisher<String, Request> eventPublisher) {
-    this(requestClassifierProperty, requestClassifier, postgresClient, eventPublisherService,
-      eventPublisher, null);
+    PostgresClient postgresClient, KafkaLogRecordPublisher kafkaLogRecordPublisher,
+    EntityChangedEventPublisher<String, Request> eventPublisher,
+    Map<String, String> okapiHeaders) {
+    this(requestClassifierProperty, requestClassifier, postgresClient, kafkaLogRecordPublisher,
+      eventPublisher, okapiHeaders, null);
   }
 
   RequestExpirationService(String requestClassifierProperty,
     Function<Request, String> requestClassifier,
-    PostgresClient postgresClient, EventPublisherService eventPublisherService,
+    PostgresClient postgresClient, KafkaLogRecordPublisher kafkaLogRecordPublisher,
     EntityChangedEventPublisher<String, Request> eventPublisher,
-    RequestQueueLockService requestQueueLockService) {
+    Map<String, String> okapiHeaders, RequestQueueLockService requestQueueLockService) {
     this.requestClassifierProperty = requestClassifierProperty;
     this.requestClassifier = requestClassifier;
     this.pgClient = postgresClient;
-    this.eventPublisherService = eventPublisherService;
+    this.kafkaLogRecordPublisher = kafkaLogRecordPublisher;
     this.eventPublisher = eventPublisher;
+    this.okapiHeaders = okapiHeaders;
     this.requestQueueLockService = requestQueueLockService;
     this.queueType = "instanceId".equals(requestClassifierProperty)
       ? RequestQueueLockService.INSTANCE
@@ -116,7 +124,7 @@ public class RequestExpirationService {
             .compose(openRequests -> reorderRequests(conn, openRequests))))
           // Publishing is deliberately outside the queue lock. At this point the queue
           // transaction is committed and other position writers can proceed.
-          .onSuccess(x -> publishPubSubLogEvents(queueContext))
+          .onSuccess(x -> publishKafkaLogRecordEvents(queueContext))
           .compose(x -> publishExpiredRequestsEvents(queueContext));
       });
     }
@@ -307,13 +315,15 @@ public class RequestExpirationService {
     return conn.update(REQUEST_TABLE, request, request.getId()).mapEmpty();
   }
 
-  private void publishPubSubLogEvents(List<ExpiredRequestWrapper> context) {
+  private void publishKafkaLogRecordEvents(List<ExpiredRequestWrapper> context) {
     context.forEach(requestWrapper -> {
       var payload = new JsonObject()
-        .put(REQUESTS.value(), new JsonObject()
-          .put(ORIGINAL.value(), requestWrapper.originalValue())
-          .put(UPDATED.value(), requestWrapper.updatedValue()));
-      eventPublisherService.publishLogRecord(payload, REQUEST_EXPIRED);
+        .put(LOG_EVENT_TYPE.value(), REQUEST_EXPIRED.value())
+        .put(PAYLOAD.value(), new JsonObject()
+          .put(REQUESTS.value(), new JsonObject()
+            .put(ORIGINAL.value(), requestWrapper.originalValue())
+            .put(UPDATED.value(), requestWrapper.updatedValue())));
+      kafkaLogRecordPublisher.publish(requestWrapper.updatedValue().getString("id"), payload, okapiHeaders);
     });
   }
 

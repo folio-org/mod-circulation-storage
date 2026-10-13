@@ -11,7 +11,6 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.tools.utils.TenantLoading;
 import org.folio.rest.tools.utils.TenantTool;
-import org.folio.service.PubSubRegistrationService;
 import org.folio.service.event.KafkaService;
 import org.folio.service.migration.TlrDataMigrationService;
 import org.folio.service.migration.RequestSearchFieldsMigrationService;
@@ -22,17 +21,6 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 
 public class TenantRefAPI extends TenantAPI {
-
-  // For testing purposes, remove once mod-pubsub deprecation is complete
-  private static boolean ENABLE_NATIVE_KAFKA_INTEGRATION = false;
-
-  public static void enableNativeKafkaIntegration() {
-    ENABLE_NATIVE_KAFKA_INTEGRATION = true;
-  }
-
-  public static void disableNativeKafkaIntegration() {
-    ENABLE_NATIVE_KAFKA_INTEGRATION = false;
-  }
 
   private static final Logger log = LogManager.getLogger();
   public static final String REFERENCE_KEY = "loadReference";
@@ -49,17 +37,12 @@ public class TenantRefAPI extends TenantAPI {
       .compose(f -> new RequestSearchFieldsMigrationService(attributes, vertxContext, headers).migrate())
       .compose(r -> super.loadData(attributes, tenantId, headers, vertxContext))
       .compose(r -> loadData(attributes, headers, vertxContext))
-      .compose(r -> createKafkaTopicsOrRegisterPubSub(tenantId, headers, vertxContext))
+      .compose(r -> createKafkaTopics(tenantId, vertxContext))
       .mapEmpty();
   }
 
-  Future<Void> createKafkaTopicsOrRegisterPubSub(String tenantId,
-      Map<String, String> headers, Context vertxContext) {
-
-    return new KafkaService(vertxContext.owner()).createCirculationStorageTopics(tenantId)
-      .compose(v -> ENABLE_NATIVE_KAFKA_INTEGRATION
-        ? Future.succeededFuture()
-        : registerModuleInPubSub(headers, vertxContext).mapEmpty());
+  Future<Void> createKafkaTopics(String tenantId, Context vertxContext) {
+    return new KafkaService(vertxContext.owner()).createCirculationStorageTopics(tenantId);
   }
 
   private Future<Integer> loadData(TenantAttributes attributes, Map<String, String> headers,
@@ -113,11 +96,6 @@ public class TenantRefAPI extends TenantAPI {
     var result = since.isNewForThisInstall(attributes.getModuleFrom());
     log.info("isNew:: {}", result);
     return result;
-  }
-
-  private Future<Boolean> registerModuleInPubSub(Map<String, String> headers, Context vertxContext) {
-    var vertx = vertxContext.owner();
-    return Future.fromCompletionStage(PubSubRegistrationService.registerModule(headers, vertx));
   }
 
   @Validate

@@ -3,12 +3,9 @@ package org.folio.rest.api;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.any;
 import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
-import static com.github.tomakehurst.wiremock.client.WireMock.created;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.ok;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.serverError;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static java.lang.String.format;
 import static java.util.function.Function.identity;
@@ -627,15 +624,6 @@ class TenantRefApiTests {
       .encodePrettily();
 
     wireMock.resetAll();
-
-    wireMock.stubFor(post(urlEqualTo("/pubsub/event-types"))
-      .willReturn(created()));
-
-    wireMock.stubFor(post(urlEqualTo("/pubsub/event-types?"))
-      .willReturn(created()));
-
-    wireMock.stubFor(post(urlMatching("/pubsub/event-types/declare/(publisher|subscriber)"))
-      .willReturn(created()));
 
     itemStorageStub = wireMock.stubFor(
       get(urlMatching(ITEM_STORAGE_URL + ANY_URL_PARAMS_REGEX_TEMPLATE))
