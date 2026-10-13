@@ -170,6 +170,91 @@ class LoanPoliciesAutomaticRenewalApiTest extends ApiTests {
       field + " is not allowed when automaticRenewal is false");
   }
 
+  @Test
+  void legacyPolicyStaysWithoutAutomaticRenewalFields() {
+    UUID id = UUID.randomUUID();
+    JsonObject policy = defaultRollingPolicy().withId(id).create();
+
+    assertNoAutomaticRenewalFields(create(policy));
+    assertNoAutomaticRenewalFields(get(id).getJson());
+    assertNoAutomaticRenewalFields(getFromCollection(id));
+
+    JsonResponse putResponse = put(id, policy.put("description", "updated"));
+    assertThat(putResponse.getBody(), putResponse, matchesNoContent());
+
+    JsonObject updated = get(id).getJson();
+    assertThat(updated.getString("description"), is("updated"));
+    assertNoAutomaticRenewalFields(updated);
+    assertNoAutomaticRenewalFields(getFromCollection(id));
+  }
+
+  @Test
+  void disablingAutomaticRenewalRemovesTimingValues() {
+    UUID id = UUID.randomUUID();
+    create(enabledPolicy(id, 3, 1));
+
+    JsonObject disabled = enabledPolicy(id, 3, 1);
+    JsonObject disabledRenewalsPolicy = renewalsPolicy(disabled);
+    disabledRenewalsPolicy.put(AUTOMATIC_RENEWAL, false);
+    disabledRenewalsPolicy.remove(FIRST_ATTEMPT);
+    disabledRenewalsPolicy.remove(RETRY_PERIOD);
+
+    JsonResponse putResponse = put(id, disabled);
+    assertThat(putResponse.getBody(), putResponse, matchesNoContent());
+
+    for (JsonObject stored : List.of(get(id).getJson(), getFromCollection(id))) {
+      JsonObject renewalsPolicy = renewalsPolicy(stored);
+      assertThat(stored.encodePrettily(), renewalsPolicy.getBoolean(AUTOMATIC_RENEWAL), is(false));
+      assertThat(stored.encodePrettily(), renewalsPolicy.containsKey(FIRST_ATTEMPT), is(false));
+      assertThat(stored.encodePrettily(), renewalsPolicy.containsKey(RETRY_PERIOD), is(false));
+    }
+  }
+
+  @Test
+  void disablingRenewalsRemovesAutomaticRenewalConfiguration() {
+    UUID id = UUID.randomUUID();
+    create(enabledPolicy(id, 3, 1));
+
+    JsonObject notRenewable = defaultRollingPolicy().withId(id).create()
+      .put("renewable", false);
+
+    JsonResponse putResponse = put(id, notRenewable);
+    assertThat(putResponse.getBody(), putResponse, matchesNoContent());
+
+    for (JsonObject stored : List.of(get(id).getJson(), getFromCollection(id))) {
+      assertThat(stored.encodePrettily(), stored.getBoolean("renewable"), is(false));
+      assertNoAutomaticRenewalFields(stored);
+    }
+  }
+
+  @Test
+  void canQueryByAutomaticRenewal() {
+    UUID enabledId = UUID.randomUUID();
+    UUID disabledId = UUID.randomUUID();
+    UUID absentId = UUID.randomUUID();
+
+    create(enabledPolicy(enabledId, 3, 1));
+    JsonObject disabled = defaultRollingPolicy().withId(disabledId).create();
+    renewalsPolicy(disabled).put(AUTOMATIC_RENEWAL, false);
+    create(disabled);
+    create(defaultRollingPolicy().withId(absentId).create());
+
+    assertThat(queryIds("renewalsPolicy.automaticRenewal==true"),
+      contains(enabledId.toString()));
+    assertThat(queryIds("renewalsPolicy.automaticRenewal==false"),
+      contains(disabledId.toString()));
+  }
+
+  private static void assertNoAutomaticRenewalFields(JsonObject policy) {
+    JsonObject renewalsPolicy = renewalsPolicy(policy);
+    if (renewalsPolicy == null) {
+      return;
+    }
+    assertThat(policy.encodePrettily(), renewalsPolicy.containsKey(AUTOMATIC_RENEWAL), is(false));
+    assertThat(policy.encodePrettily(), renewalsPolicy.containsKey(FIRST_ATTEMPT), is(false));
+    assertThat(policy.encodePrettily(), renewalsPolicy.containsKey(RETRY_PERIOD), is(false));
+  }
+
   private static JsonObject enabledPolicy(UUID id, int firstAttempt, int retryPeriod) {
     JsonObject policy = defaultRollingPolicy().withId(id).create();
     renewalsPolicy(policy)
