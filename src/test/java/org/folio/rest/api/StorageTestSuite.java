@@ -59,6 +59,7 @@ import lombok.SneakyThrows;
   CirculationRulesApiTest.class,
   FixedDueDateApiTest.class,
   LoanPoliciesApiTest.class,
+  LoanPoliciesAutomaticRenewalApiTest.class,
   RequestPreferencesApiTest.class,
   RequestsApiTest.class,
   LoansApiHistoryTest.class,
