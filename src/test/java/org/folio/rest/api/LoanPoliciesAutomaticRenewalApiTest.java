@@ -92,6 +92,84 @@ class LoanPoliciesAutomaticRenewalApiTest extends ApiTests {
       String.valueOf(value), message);
   }
 
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "firstAutomaticRenewalAttemptDaysBeforeDueDate",
+    "automaticRenewalRetryPeriodInDays"
+  })
+  void missingTimingValueIsRejectedWhenEnabled(String field) {
+    JsonObject policy = enabledPolicy(UUID.randomUUID(), 3, 1);
+    renewalsPolicy(policy).remove(field);
+
+    assertRejectedOnPostAndPut(policy, "renewalsPolicy." + field, "null",
+      field + " is required when automaticRenewal is true");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "firstAutomaticRenewalAttemptDaysBeforeDueDate",
+    "automaticRenewalRetryPeriodInDays"
+  })
+  void nullTimingValueIsRejectedWhenEnabled(String field) {
+    JsonObject policy = enabledPolicy(UUID.randomUUID(), 3, 1);
+    renewalsPolicy(policy).putNull(field);
+
+    assertRejectedOnPostAndPut(policy, "renewalsPolicy." + field, "null",
+      field + " is required when automaticRenewal is true");
+  }
+
+  @Test
+  void automaticRenewalIsRejectedWhenNotRenewable() {
+    JsonObject policy = enabledPolicy(UUID.randomUUID(), 3, 1).put("renewable", false);
+
+    assertRejectedOnPostAndPut(policy, "renewalsPolicy.automaticRenewal", "true",
+      "Automatic renewal settings are not allowed when renewable is false");
+  }
+
+  @Test
+  void disabledToggleIsRejectedWhenNotRenewable() {
+    JsonObject policy = defaultRollingPolicy().create().put("renewable", false);
+    renewalsPolicy(policy).put(AUTOMATIC_RENEWAL, false);
+
+    assertRejectedOnPostAndPut(policy, "renewalsPolicy.automaticRenewal", "false",
+      "Automatic renewal settings are not allowed when renewable is false");
+  }
+
+  @Test
+  void timingValueIsRejectedWhenNotRenewable() {
+    JsonObject policy = defaultRollingPolicy().create().put("renewable", false);
+    renewalsPolicy(policy).put(RETRY_PERIOD, 0);
+
+    assertRejectedOnPostAndPut(policy, "renewalsPolicy." + RETRY_PERIOD, "0",
+      "Automatic renewal settings are not allowed when renewable is false");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "firstAutomaticRenewalAttemptDaysBeforeDueDate",
+    "automaticRenewalRetryPeriodInDays"
+  })
+  void orphanedTimingValueIsRejectedWhenToggleIsAbsent(String field) {
+    JsonObject policy = defaultRollingPolicy().create();
+    renewalsPolicy(policy).put(field, 2);
+
+    assertRejectedOnPostAndPut(policy, "renewalsPolicy." + field, "2",
+      field + " is not allowed when automaticRenewal is not set");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "firstAutomaticRenewalAttemptDaysBeforeDueDate",
+    "automaticRenewalRetryPeriodInDays"
+  })
+  void orphanedTimingValueIsRejectedWhenToggleIsFalse(String field) {
+    JsonObject policy = defaultRollingPolicy().create();
+    renewalsPolicy(policy).put(AUTOMATIC_RENEWAL, false).put(field, 2);
+
+    assertRejectedOnPostAndPut(policy, "renewalsPolicy." + field, "2",
+      field + " is not allowed when automaticRenewal is false");
+  }
+
   private static JsonObject enabledPolicy(UUID id, int firstAttempt, int retryPeriod) {
     JsonObject policy = defaultRollingPolicy().withId(id).create();
     renewalsPolicy(policy)
