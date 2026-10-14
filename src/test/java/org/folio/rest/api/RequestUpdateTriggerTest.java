@@ -42,7 +42,7 @@ class RequestUpdateTriggerTest {
   private static PostgresClient pgClient;
 
   @BeforeAll
-  static void beforeAll() throws InterruptedException, ExecutionException, TimeoutException {
+  static void beforeAll() {
     pgClient = PostgresClient.getInstance(StorageTestSuite.getVertx(), StorageTestSuite.TENANT_ID);
   }
 

@@ -47,7 +47,7 @@ public class ApiTests {
   private static final String CONFIGURATIONS_ENTRIES_URL_PATTERN = "/configurations/entries.*";
 
   @BeforeAll
-  public static void before() throws Exception {
+  public static void before() {
     StorageTestSuite.resetWireMock();
     pgClient = PostgresClient.getInstance(getVertx(), TENANT_ID);
     circulationSettingsHelper = new CirculationSettingsHelper(pgClient);

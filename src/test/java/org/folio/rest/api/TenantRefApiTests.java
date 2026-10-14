@@ -133,7 +133,7 @@ class TenantRefApiTests {
     .build();
 
   @BeforeAll
-  public static void beforeAll(VertxTestContext context) throws Exception {
+  public static void beforeAll(VertxTestContext context) {
 
     vertx = Vertx.vertx();
     tenantClient = new TenantClient("http://localhost:" + wireMock.getPort(), TENANT, TOKEN,
@@ -166,7 +166,7 @@ class TenantRefApiTests {
   }
 
   @AfterAll
-  public static void afterAll(VertxTestContext context) throws Exception {
+  public static void afterAll(VertxTestContext context) {
     deleteTenant(tenantClient);
     vertx.close()
       .onFailure(context::failNow)

@@ -4,7 +4,6 @@ import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
-import static org.folio.rest.support.ApiTests.getCurrentDatabaseTime;
 import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_CANCELLED;
 import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_FILLED;
 import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_PICKUP_EXPIRED;
