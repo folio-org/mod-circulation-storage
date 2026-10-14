@@ -8,7 +8,8 @@
       "itemLocationId": "99ea6fc9-ed59-45b7-9ae8-1f851ea20208",
       "requestQueueSize": 0,
       "servicePointId": "b0c3c66c-6738-4a61-a51e-8ef354d43e3d",
-      "performedByUserId": "f9246eac-ef6f-4043-885b-0325a1e3a9eb"
+      "performedByUserId": "f9246eac-ef6f-4043-885b-0325a1e3a9eb",
+      "inHouseUse": false
     }
   ],
   "totalRecords": 1
