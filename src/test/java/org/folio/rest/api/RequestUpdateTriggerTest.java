@@ -3,6 +3,7 @@ package org.folio.rest.api;
 
 import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
 import static org.folio.rest.jaxrs.model.Request.Status.fromValue;
+import static org.folio.rest.support.ApiTests.getCurrentDatabaseTime;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
@@ -90,7 +91,7 @@ class RequestUpdateTriggerTest {
     Request request = new Request()
       .withStatus(fromValue(oldStatus));
 
-    DateTime requestUpdatedDate = DateTime.now();
+    DateTime requestUpdatedDate = getCurrentDatabaseTime(pgClient);
 
     saveRequest(id, request)
       .compose(v -> updateRequest(id, request.withStatus(fromValue(newStatus))))

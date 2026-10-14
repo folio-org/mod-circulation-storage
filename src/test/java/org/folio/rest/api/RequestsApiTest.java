@@ -4,6 +4,7 @@ import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.support.ApiTests.getCurrentDatabaseTime;
 import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_CANCELLED;
 import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_FILLED;
 import static org.folio.rest.support.builders.RequestRequestBuilder.CLOSED_PICKUP_EXPIRED;
@@ -1857,7 +1858,7 @@ class RequestsApiTest extends ApiTests {
     String requestId = createEntity(request, requestStorageUrl()).getJson().getString("id");
     request.put("status", CLOSED_PICKUP_EXPIRED);
 
-    DateTime requestUpdatedDate = DateTime.now();
+    DateTime requestUpdatedDate = getCurrentDatabaseTime(pgClient);
     CompletableFuture<Response> putCompleted = new CompletableFuture<>();
     client.put(requestStorageUrl("/" + requestId), request, TENANT_ID, ResponseHandler.empty(putCompleted));
     putCompleted.get(5, TimeUnit.SECONDS);
@@ -1880,7 +1881,7 @@ class RequestsApiTest extends ApiTests {
     String requestId = createEntity(request, requestStorageUrl()).getJson().getString("id");
     request.put("status", CLOSED_CANCELLED);
 
-    DateTime requestUpdatedDate = DateTime.now();
+    DateTime requestUpdatedDate = getCurrentDatabaseTime(pgClient);
     CompletableFuture<Response> putCompleted = new CompletableFuture<>();
     client.put(requestStorageUrl("/" + requestId), request, TENANT_ID, ResponseHandler.empty(putCompleted));
     putCompleted.get(5, TimeUnit.SECONDS);

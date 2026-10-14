@@ -26,6 +26,8 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.core.Is;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -149,6 +151,14 @@ public class ApiTests {
     return future.toCompletionStage()
       .toCompletableFuture()
       .get(timeoutSeconds, TimeUnit.SECONDS);
+  }
+
+  public static DateTime getCurrentDatabaseTime(PostgresClient postgresClient) {
+    var databaseTime = waitFor(postgresClient.selectSingle(
+      "SELECT current_timestamp AS current_time"))
+      .getOffsetDateTime("current_time");
+
+    return new DateTime(databaseTime.toInstant().toEpochMilli(), DateTimeZone.UTC);
   }
 
   /**
