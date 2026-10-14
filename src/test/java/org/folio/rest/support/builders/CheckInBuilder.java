@@ -75,6 +75,12 @@ public class CheckInBuilder implements Builder {
     return this;
   }
 
+  public CheckInBuilder withInHouseUse(Boolean inHouseUse) {
+    delegate.withInHouseUse(inHouseUse);
+
+    return this;
+  }
+
   @Override
   public JsonObject create() {
     try {

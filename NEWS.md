@@ -1,4 +1,5 @@
 ## 17.6.0 2026-XX-XX
+* Add `inHouseUse` field to check-in entity (CIRCSTORE-679)
 * PubSub deprecation: add Kafka support (CIRCSTORE-417)
 * PubSub deprecation: Implement Kafka LOG_RECORD event publishing, remove PubSub infrastructure (CIRCSTORE-419)
 
