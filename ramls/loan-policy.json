@@ -102,19 +102,19 @@
         },
         "automaticRenewal": {
           "type": "boolean",
-          "description": "Whether automatic renewal is enabled; absent means disabled. Requires renewable to be true"
+          "description": "Whether automatic renewal is enabled. Absent means disabled. Requires renewable to be true."
         },
         "firstAutomaticRenewalAttemptDaysBeforeDueDate": {
           "type": "integer",
           "minimum": 0,
           "maximum": 100,
-          "description": "Number of days before the due date when the first automatic renewal attempt occurs; 0 means on the due date. Required if and only if automaticRenewal is true"
+          "description": "Number of days before the due date when the first automatic renewal attempt occurs. Zero means on the due date. Required if and only if automaticRenewal is true."
         },
         "automaticRenewalRetryPeriodInDays": {
           "type": "integer",
           "minimum": 0,
           "maximum": 100,
-          "description": "Retry period in days for automatic renewal attempts. Required if and only if automaticRenewal is true"
+          "description": "Retry period in days for automatic renewal attempts. Required if and only if automaticRenewal is true."
         }
       }
     },

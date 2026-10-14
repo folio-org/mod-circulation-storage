@@ -1,7 +1,10 @@
 package org.folio.service.policy;
 
+import static java.lang.Boolean.TRUE;
+import static java.util.function.Predicate.not;
 import static org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -30,35 +33,38 @@ public class LoanPolicyAutomaticRenewalValidator {
       return Optional.empty();
     }
 
-    Setting automaticRenewal = new Setting(AUTOMATIC_RENEWAL,
-      renewalsPolicy.getAutomaticRenewal());
+    Setting automaticRenewal = new Setting(AUTOMATIC_RENEWAL, renewalsPolicy.getAutomaticRenewal());
     List<Setting> timings = List.of(
       new Setting(FIRST_ATTEMPT, renewalsPolicy.getFirstAutomaticRenewalAttemptDaysBeforeDueDate()),
       new Setting(RETRY_PERIOD, renewalsPolicy.getAutomaticRenewalRetryPeriodInDays()));
 
-    if (!Boolean.TRUE.equals(loanPolicy.getRenewable())) {
+    if (!TRUE.equals(loanPolicy.getRenewable())) {
       return firstPresent(Stream.concat(Stream.of(automaticRenewal), timings.stream()))
         .map(setting -> error(setting,
           "Automatic renewal settings are not allowed when renewable is false"));
     }
 
     if (!automaticRenewal.isPresent()) {
-      return firstPresent(timings.stream())
+      return firstPresent(timings)
         .map(setting -> error(setting,
           setting.name() + " is not allowed when automaticRenewal is not set"));
     }
 
     if (Boolean.FALSE.equals(automaticRenewal.value())) {
-      return firstPresent(timings.stream())
+      return firstPresent(timings)
         .map(setting -> error(setting,
           setting.name() + " is not allowed when automaticRenewal is false"));
     }
 
     return timings.stream()
-      .filter(setting -> !setting.isPresent())
+      .filter(not(Setting::isPresent))
       .findFirst()
       .map(setting -> error(setting,
         setting.name() + " is required when automaticRenewal is true"));
+  }
+
+  private static Optional<Setting> firstPresent(Collection<Setting> settings) {
+    return firstPresent(settings.stream());
   }
 
   private static Optional<Setting> firstPresent(Stream<Setting> settings) {
