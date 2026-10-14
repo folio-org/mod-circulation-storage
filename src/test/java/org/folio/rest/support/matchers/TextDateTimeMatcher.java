@@ -44,4 +44,22 @@ public class TextDateTimeMatcher {
         }
       };
   }
+
+  public static Matcher<String> withinSecondsOf(Seconds seconds, DateTime expected) {
+    return new TypeSafeMatcher<String>() {
+      @Override
+      public void describeTo(Description description) {
+        description.appendText(String.format(
+          "a date time within %s seconds of %s", seconds.getSeconds(), expected));
+      }
+
+      @Override
+      protected boolean matchesSafely(String textRepresentation) {
+        DateTime actual = DateTime.parse(textRepresentation);
+
+        return Math.abs(actual.getMillis() - expected.getMillis())
+          < seconds.toStandardDuration().getMillis();
+      }
+    };
+  }
 }

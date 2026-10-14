@@ -35,7 +35,6 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import org.apache.commons.io.IOUtils;
-import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
 import org.folio.rest.jaxrs.model.Parameter;
@@ -43,6 +42,7 @@ import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.jaxrs.model.TenantJob;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.support.StorageTestEnvironmentExtension;
 import org.folio.rest.tools.utils.ModuleName;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.junit.jupiter.api.AfterAll;
@@ -69,7 +69,7 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
 
-@ExtendWith(VertxExtension.class)
+@ExtendWith({VertxExtension.class, StorageTestEnvironmentExtension.class})
 class TenantRefApiTests {
   protected static final String TLR_MIGRATION_OLD_MODULE_VERSION = "13.0.0";
   protected static final String TLR_MIGRATION_PREV_MODULE_VERSION = "13.1.0";
@@ -85,7 +85,7 @@ class TenantRefApiTests {
   protected static final String MODULE_NAME = "mod_circulation_storage";
   protected static final int PORT = NetworkUtils.nextFreePort();
   protected static final String URL = "http://localhost:" + PORT;
-  protected static final String TENANT = "test_tenant";
+  protected static final String TENANT = "tenant_ref_test";
   protected static final String REQUEST_TABLE_NAME = "request";
   protected static final String REQUEST_TABLE =
     format("%s_%s.%s", TENANT, MODULE_NAME, REQUEST_TABLE_NAME);
@@ -139,10 +139,6 @@ class TenantRefApiTests {
     tenantClient = new TenantClient("http://localhost:" + wireMock.getPort(), TENANT, TOKEN,
       WebClient.create(vertx));
 
-    PostgresClient.setPostgresTester(new PostgresTesterContainer());
-
-    StorageTestSuite.before();
-
     DeploymentOptions deploymentOptions = new DeploymentOptions()
       .setConfig(new JsonObject().put("http.port", PORT));
 
@@ -172,13 +168,9 @@ class TenantRefApiTests {
   @AfterAll
   public static void afterAll(VertxTestContext context) throws Exception {
     deleteTenant(tenantClient);
-    StorageTestSuite.after();
     vertx.close()
       .onFailure(context::failNow)
-      .onSuccess(ignored -> {
-        PostgresClient.stopPostgresTester();
-        context.completeNow();
-      });
+      .onSuccess(ignored -> context.completeNow());
   }
 
   @Test
@@ -531,7 +523,8 @@ class TenantRefApiTests {
   protected static Future<RowSet<Row>> loadRequests() throws Exception {
     InputStream tableInput = TenantRefApiTests.class.getClassLoader().getResourceAsStream(
       "mocks/TlrDataMigrationTestData.sql");
-    String sqlFile = IOUtils.toString(Objects.requireNonNull(tableInput), StandardCharsets.UTF_8);
+    String sqlFile = IOUtils.toString(Objects.requireNonNull(tableInput), StandardCharsets.UTF_8)
+      .replace("test_tenant_mod_circulation_storage", TENANT + "_mod_circulation_storage");
     return postgresClient.execute(sqlFile);
   }
 
@@ -745,4 +738,3 @@ class TenantRefApiTests {
     return jsonObject.getString("id");
   }
 }
-
