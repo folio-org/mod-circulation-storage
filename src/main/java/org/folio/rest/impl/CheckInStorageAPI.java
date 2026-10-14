@@ -11,7 +11,6 @@ import org.folio.service.checkin.CheckInService;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
 
 public class CheckInStorageAPI implements CheckInStorageCheckIns {
@@ -21,19 +20,6 @@ public class CheckInStorageAPI implements CheckInStorageCheckIns {
   public void getCheckInStorageCheckIns(String totalRecords, int offset, int limit, String query,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
-
-    if (offset < 0) {
-      asyncResultHandler.handle(Future.succeededFuture(
-        GetCheckInStorageCheckInsResponse.respond400WithTextPlain(
-          "'offset' parameter must be greater than or equal to 0")));
-      return;
-    }
-    if (limit < 0) {
-      asyncResultHandler.handle(Future.succeededFuture(
-        GetCheckInStorageCheckInsResponse.respond400WithTextPlain(
-          "'limit' parameter must be greater than or equal to 0")));
-      return;
-    }
 
     new CheckInService(vertxContext, okapiHeaders).findByQuery(query, offset, limit)
         .onComplete(asyncResultHandler);

@@ -22,7 +22,6 @@ import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdate
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.removeAllEvents;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.equivalentTo;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
-import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsOf;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasCode;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasErrorWith;
 import static org.folio.rest.support.matchers.ValidationErrorMatchers.hasMessage;
@@ -1867,7 +1866,7 @@ class RequestsApiTest extends ApiTests {
 
     assertThat(updatedRequest.getString("awaitingPickupRequestClosedDate"), is(notNullValue()));
     assertThat(updatedRequest.getString("awaitingPickupRequestClosedDate"),
-      is(withinSecondsOf(Seconds.seconds(2), requestUpdatedDate)));
+      is(withinSecondsAfter(Seconds.seconds(2), requestUpdatedDate)));
   }
 
   @Test
@@ -1890,7 +1889,7 @@ class RequestsApiTest extends ApiTests {
 
     assertThat(updatedRequest.getString("awaitingPickupRequestClosedDate"), is(notNullValue()));
     assertThat(updatedRequest.getString("awaitingPickupRequestClosedDate"),
-      is(withinSecondsOf(Seconds.seconds(2), requestUpdatedDate)));
+      is(withinSecondsAfter(Seconds.seconds(2), requestUpdatedDate)));
   }
 
   @Test

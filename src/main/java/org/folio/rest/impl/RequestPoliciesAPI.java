@@ -40,19 +40,6 @@ public class RequestPoliciesAPI implements RequestPolicyStorage {
     String query, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-    if (offset < 0) {
-      asyncResultHandler.handle(succeededFuture(
-        GetRequestPolicyStorageRequestPoliciesResponse.respond400WithTextPlain(
-          "'offset' parameter must be greater than or equal to 0")));
-      return;
-    }
-    if (limit < 0) {
-      asyncResultHandler.handle(succeededFuture(
-        GetRequestPolicyStorageRequestPoliciesResponse.respond400WithTextPlain(
-          "'limit' parameter must be greater than or equal to 0")));
-      return;
-    }
-
     PgUtil.get(REQUEST_POLICY_TABLE, REQUEST_POLICY_CLASS, RequestPolicies.class,
         query, offset, limit, okapiHeaders, vertxContext,
         GetRequestPolicyStorageRequestPoliciesResponse.class, asyncResultHandler);

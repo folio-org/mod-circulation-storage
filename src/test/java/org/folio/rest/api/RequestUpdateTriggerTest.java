@@ -3,7 +3,7 @@ package org.folio.rest.api;
 
 import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
 import static org.folio.rest.jaxrs.model.Request.Status.fromValue;
-import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsOf;
+import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.Is.is;
@@ -103,7 +103,7 @@ class RequestUpdateTriggerTest {
       is(notNullValue()));
 
     assertThat(updatedRequest.getString("awaitingPickupRequestClosedDate"),
-      is(withinSecondsOf(Seconds.seconds(2), requestUpdatedDate)));
+      is(withinSecondsAfter(Seconds.seconds(2), requestUpdatedDate)));
   }
 
   @ParameterizedTest
