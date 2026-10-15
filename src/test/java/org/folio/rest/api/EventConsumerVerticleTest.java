@@ -28,6 +28,7 @@ import static org.folio.service.event.handler.processor.ItemUpdateProcessorForRe
 import static org.folio.service.event.handler.processor.ItemUpdateProcessorForRequest.ITEM_EFFECTIVE_LOCATION_NAME;
 import static org.folio.service.event.handler.processor.ItemUpdateProcessorForRequest.RETRIEVAL_SERVICE_POINT_ID;
 import static org.folio.service.event.handler.processor.ItemUpdateProcessorForRequest.RETRIEVAL_SERVICE_POINT_NAME;
+import static org.folio.support.kafka.topic.UsersKafkaTopic.USERS;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.hasItems;
@@ -66,6 +67,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 
@@ -76,6 +79,9 @@ import io.vertx.kafka.client.common.TopicPartition;
 import io.vertx.kafka.client.consumer.OffsetAndMetadata;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
+import io.vertx.sqlclient.Tuple;
 import lombok.SneakyThrows;
 
 class EventConsumerVerticleTest extends ApiTests {
@@ -97,6 +103,8 @@ class EventConsumerVerticleTest extends ApiTests {
     "%s.%s.inventory.service-point", environment(), TENANT_ID);
   private static final String INVENTORY_LOCATION_TOPIC = format(
           "%s.%s.inventory.location", environment(), TENANT_ID);
+  private static final String USERS_TOPIC = format("%s.%s.users.users", environment(), TENANT_ID);
+  private static final String USER_ID = "6b0a1cc5-2c47-4b5e-9a6f-0a2b4c6d8e10";
 
   private static KafkaProducer<String, JsonObject> producer;
   private static KafkaAdminClient adminClient;
@@ -117,7 +125,7 @@ class EventConsumerVerticleTest extends ApiTests {
 
   @AfterEach
   void afterEach() {
-    truncateTables("request, request_policy");
+    truncateTables("request, request_policy, user_loan_anonymization_preference");
   }
 
   @ParameterizedTest
@@ -707,6 +715,99 @@ class EventConsumerVerticleTest extends ApiTests {
     return getById(requestPolicyStorageUrl("/" + requestPolicyId));
   }
 
+  @ParameterizedTest
+  @CsvSource(value = {
+    "CREATED,              , never",
+    "UPDATED,              , never",
+    "UPDATED, libraryPolicy, asEarlyAsPossible",
+    "UPDATED, never        , asEarlyAsPossible",
+  })
+  void preferenceIsStoredWhenItDeviatesFromLibraryPolicy(String eventType, String oldPreference,
+    String newPreference) {
+
+    publishUserEventAndWait(eventType, buildUser(oldPreference), buildUser(newPreference));
+
+    assertThat(getStoredPreference(), is(newPreference));
+  }
+
+  @ParameterizedTest
+  @NullSource
+  @ValueSource(strings = "libraryPolicy")
+  void preferenceIsRemovedWhenUserFollowsLibraryPolicyAgain(String newPreference) {
+    storePreference("never");
+
+    publishUserEventAndWait("UPDATED", buildUser("never"), buildUser(newPreference));
+
+    assertThat(getStoredPreference(), nullValue());
+  }
+
+  @Test
+  void preferenceIsRemovedWhenUserIsDeleted() {
+    storePreference("never");
+
+    publishUserEventAndWait("DELETED", buildUser("never"), null);
+
+    assertThat(getStoredPreference(), nullValue());
+  }
+
+  @Test
+  void deletionOfUserWithoutStoredPreferenceIsIgnored() {
+    publishUserEventAndWait("DELETED", buildUser("libraryPolicy"), null);
+
+    assertThat(getStoredPreference(), nullValue());
+  }
+
+  @Test
+  void unknownPreferenceKeepsStoredPreference() {
+    storePreference("never");
+
+    publishUserEventAndWait("UPDATED", buildUser("never"), buildUser("sometimes"));
+
+    assertThat(getStoredPreference(), is("never"));
+  }
+
+  @Test
+  void eventWithUnchangedPreferenceIsIgnored() {
+    publishUserEventAndWait("UPDATED", buildUser("never"), buildUser("never").put("barcode", "1"));
+
+    assertThat(getStoredPreference(), nullValue());
+  }
+
+  @Test
+  void noRowIsStoredForUserFollowingLibraryPolicy() {
+    publishUserEventAndWait("CREATED", null, buildUser("libraryPolicy"));
+
+    assertThat(getStoredPreference(), nullValue());
+  }
+
+  @Test
+  void eventsOfUserAreAppliedInTheirOrder() {
+    int initialOffset = getOffsetForUserEvents();
+    publishEvent(USERS_TOPIC, buildUserEvent("CREATED", null, buildUser("asEarlyAsPossible")));
+    publishEvent(USERS_TOPIC, buildUserEvent("DELETED", buildUser("asEarlyAsPossible"), null));
+    publishEvent(USERS_TOPIC, buildUserEvent("CREATED", null, buildUser("libraryPolicy")));
+    publishEvent(USERS_TOPIC, buildUserEvent("UPDATED", buildUser(null), buildUser("never")));
+    int offsetBeforeLastEvent = initialOffset + 3;
+    waitUntilValueIsIncreased(offsetBeforeLastEvent,
+      EventConsumerVerticleTest::getOffsetForUserEvents);
+
+    assertThat(getStoredPreference(), is("never"));
+  }
+
+  @Test
+  void failedEventsDoNotBlockLaterEvents() {
+    JsonObject userWithInvalidId = buildUser("never").put("id", "not-a-uuid");
+    // a failed event that never completed would leave the consumer paused at its load limit
+    int moreFailuresThanTheLoadLimit = 6; // EventConsumerVerticle.DEFAULT_LOAD_LIMIT + 1
+    for (int i = 0; i < moreFailuresThanTheLoadLimit; i++) {
+      publishUserEventAndWait("UPDATED", null, userWithInvalidId);
+    }
+
+    publishUserEventAndWait("UPDATED", null, buildUser("never"));
+
+    assertThat(getStoredPreference(), is("never"));
+  }
+
   private static KafkaProducer<String, JsonObject> createProducer() {
     Properties config = new Properties();
     config.put(BOOTSTRAP_SERVERS_CONFIG, KAFKA_SERVER_URL);
@@ -743,6 +844,46 @@ class EventConsumerVerticleTest extends ApiTests {
     record.addHeader(URL, "http://localhost:" + PROXY_PORT);
     record.addHeader(TOKEN, "RANDOM_TOKEN");
     waitFor(producer.write(record));
+  }
+
+  private void publishUserEventAndWait(String eventType, JsonObject oldUser, JsonObject newUser) {
+    int initialOffset = getOffsetForUserEvents();
+    publishEvent(USERS_TOPIC, buildUserEvent(eventType, oldUser, newUser));
+    waitUntilValueIsIncreased(initialOffset, EventConsumerVerticleTest::getOffsetForUserEvents);
+  }
+
+  private static JsonObject buildUserEvent(String eventType, JsonObject oldUser,
+    JsonObject newUser) {
+
+    return new JsonObject()
+      .put("id", randomId())
+      .put("type", eventType)
+      .put("tenant", TENANT_ID)
+      .put("timestamp", System.currentTimeMillis())
+      .put("data", new JsonObject().put("old", oldUser).put("new", newUser));
+  }
+
+  private static JsonObject buildUser(String loanAnonymizationPreference) {
+    return new JsonObject()
+      .put("id", USER_ID)
+      .put("loanAnonymizationPreference", loanAnonymizationPreference);
+  }
+
+  private static void storePreference(String preference) {
+    waitFor(pgClient.execute(
+      format("INSERT INTO %s.user_loan_anonymization_preference (id, jsonb) VALUES ($1, $2)",
+        pgClient.getSchemaName()),
+      Tuple.of(UUID.fromString(USER_ID),
+        new JsonObject().put("id", USER_ID).put("preference", preference))));
+  }
+
+  private static String getStoredPreference() {
+    RowSet<Row> rows = waitFor(pgClient.execute(
+      format("SELECT jsonb->>'preference' FROM %s.user_loan_anonymization_preference WHERE id = $1",
+        pgClient.getSchemaName()),
+      Tuple.of(UUID.fromString(USER_ID))));
+
+    return rows.size() == 0 ? null : rows.iterator().next().getString(0);
   }
 
   private static JsonObject buildUpdateEvent(JsonObject oldVersion, JsonObject newVersion) {
@@ -904,6 +1045,10 @@ class EventConsumerVerticleTest extends ApiTests {
       .withPickupServicePointId(UUID.fromString(pickupServicePointId))
       .withSearchIndex(searchIndex)
       .create();
+  }
+
+  private static Integer getOffsetForUserEvents() {
+    return getOffset(USERS_TOPIC, buildConsumerGroupId(USERS.name()));
   }
 
   private static Integer getOffsetForItemUpdateEvents() {
