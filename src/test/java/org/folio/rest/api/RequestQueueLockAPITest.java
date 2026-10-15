@@ -1,10 +1,12 @@
 package org.folio.rest.api;
 
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,7 +34,7 @@ class RequestQueueLockAPITest extends ApiTests {
     InterfaceUrls::requestQueueLockStorageUrl, "requestQueueLock");
 
   @BeforeEach
-  void cleanUp() throws Exception {
+  void cleanUp() {
     StorageTestSuite.cleanUpTable(TABLE_NAME);
   }
 
@@ -114,9 +116,10 @@ class RequestQueueLockAPITest extends ApiTests {
       is(HttpStatus.SC_CREATED));
     assertThat(client.attemptCreate(lock("ITEM", queueId, 1)).getStatusCode(),
       is(HttpStatus.SC_CONFLICT));
-    Thread.sleep(25);
-    assertThat(client.attemptCreate(lock("ITEM", queueId, 10_000)).getStatusCode(),
-      is(HttpStatus.SC_CONFLICT));
+    await().pollDelay(Duration.ofMillis(25)).atMost(Duration.ofSeconds(1))
+      .untilAsserted(() -> assertThat(
+        client.attemptCreate(lock("ITEM", queueId, 10_000)).getStatusCode(),
+        is(HttpStatus.SC_CONFLICT)));
   }
 
   @Test
@@ -155,9 +158,9 @@ class RequestQueueLockAPITest extends ApiTests {
     JsonResponse first = client.attemptCreate(lock("INSTANCE", queueId, 1));
     String firstLockId = first.getJson().getString("id");
 
-    Thread.sleep(25);
-    JsonResponse replacement = client.attemptCreate(lock("INSTANCE", queueId, 10_000));
-    assertThat(replacement.getStatusCode(), is(HttpStatus.SC_CREATED));
+    await().atMost(Duration.ofSeconds(1)).untilAsserted(() -> assertThat(
+      client.attemptCreate(lock("INSTANCE", queueId, 10_000)).getStatusCode(),
+      is(HttpStatus.SC_CREATED)));
 
     assertThat(client.attemptDeleteById(firstLockId).getStatusCode(),
       is(HttpStatus.SC_NO_CONTENT));

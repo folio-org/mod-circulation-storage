@@ -4,7 +4,6 @@ import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 
@@ -12,7 +11,6 @@ import javax.ws.rs.core.Response;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.RequestQueueLock;
 import org.folio.rest.jaxrs.model.RequestQueueLockRequest;
 import org.folio.rest.jaxrs.resource.RequestQueueLockStorage;
@@ -104,12 +102,13 @@ public class RequestQueueLockAPI implements RequestQueueLockStorage {
       && entity.getTtlMs() != null && entity.getTtlMs() > 0;
   }
 
+  @SuppressWarnings("java:S2143") // RMB models still expose date-time fields as java.util.Date.
   private RequestQueueLock mapLock(RequestQueueLockService.Lock lock) {
     return new RequestQueueLock()
       .withId(lock.id().toString())
       .withQueueType(RequestQueueLock.QueueType.fromValue(lock.queueType()))
       .withQueueId(lock.queueId().toString())
-      .withCreatedAt(Date.from(lock.createdAt().toInstant()))
-      .withExpiresAt(Date.from(lock.expiresAt().toInstant()));
+      .withCreatedAt(java.util.Date.from(lock.createdAt().toInstant()))
+      .withExpiresAt(java.util.Date.from(lock.expiresAt().toInstant()));
   }
 }
