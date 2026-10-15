@@ -468,7 +468,7 @@ class TenantRefApiTests {
     return postgresClient.execute(
         "UPDATE rmb_internal " +
           "SET jsonb = jsonb || jsonb_build_object('moduleVersion', $1)",
-        Tuple.of(format("%s-%s", MODULE_NAME, fromVersion)))
+        Tuple.of(MODULE_NAME + "-" + fromVersion))
       .mapEmpty();
   }
 
@@ -479,9 +479,9 @@ class TenantRefApiTests {
   private static Future<Void> assertThatNumberOfRequestsWithProperty(
     String field, int expectedCount) {
 
-    return selectRead(format("SELECT COUNT(*) " +
-        "FROM " + REQUEST_TABLE + " " +
-        "WHERE jsonb->>'%s' IS NOT null", field))
+    return selectRead(format(
+        "SELECT COUNT(*) FROM %s WHERE jsonb->>'%s' IS NOT null",
+        REQUEST_TABLE, field))
       .map(rowSet -> {
         assertThat(getCount(rowSet), is(expectedCount));
         return null;
