@@ -15,7 +15,6 @@ import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_CANCELLED;
 import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_FILLED;
 import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_PICKUP_EXPIRED;
 import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_UNFILLED;
-import static org.folio.rest.support.ApiTests.waitFor;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
@@ -154,7 +153,6 @@ class TenantRefApiTests {
 
   @BeforeEach
   void beforeEach(VertxTestContext context) throws Exception {
-    waitFor(postgresClient.execute("TRUNCATE rmb_internal"));
     loadRequests()
       .compose(r -> getAllRequestsAsJson())
       .onComplete(context.succeeding(requests -> {
@@ -176,10 +174,8 @@ class TenantRefApiTests {
   @Test
   void tlrMigrationShouldBeSkippedWhenUpgradingToLowerVersion(VertxTestContext context) {
     postTenant(TLR_MIGRATION_OLD_MODULE_VERSION, TLR_MIGRATION_PREV_MODULE_VERSION)
-      .onComplete(context.succeeding(job -> {
-        assertThatNoRequestsWereUpdatedByMigration(context, "requestLevel");
-        context.completeNow();
-      }));
+      .compose(job -> assertThatNoRequestsWereUpdatedByMigration("requestLevel"))
+      .onComplete(context.succeedingThenComplete());
   }
 
   @Test
@@ -187,10 +183,8 @@ class TenantRefApiTests {
     VertxTestContext context) {
 
     postTenant(TLR_MIGRATION_MODULE_VERSION, TLR_MIGRATION_NEXT_MODULE_VERSION)
-      .onComplete(context.succeeding(job -> {
-        assertThatNoRequestsWereUpdatedByMigration(context, "requestLevel");
-        context.completeNow();
-      }));
+      .compose(job -> assertThatNoRequestsWereUpdatedByMigration("requestLevel"))
+      .onComplete(context.succeedingThenComplete());
   }
 
   @Test
@@ -206,10 +200,8 @@ class TenantRefApiTests {
   @Test
   void requestSearchMigrationShouldBeSkippedWhenUpgradingToLowerVersion(VertxTestContext context) {
     postTenant(REQ_SEARCH_MIGRATION_OLD_MOD_VER, REQ_SEARCH_MIGRATION_PREV_MOD_VER)
-      .onComplete(context.succeeding(job -> {
-        assertThatNoRequestsWereUpdatedByMigration(context, "searchIndex");
-        context.completeNow();
-      }));
+      .compose(job -> assertThatNoRequestsWereUpdatedByMigration("searchIndex"))
+      .onComplete(context.succeedingThenComplete());
   }
 
   @Test
@@ -217,10 +209,8 @@ class TenantRefApiTests {
     VertxTestContext context) {
 
     postTenant(REQ_SEARCH_MIGRATION_MOD_VER, REQ_SEARCH_MIGRATION_NEXT_MOD_VER)
-      .onComplete(context.succeeding(job -> {
-        assertThatNoRequestsWereUpdatedByMigration(context, "searchIndex");
-        context.completeNow();
-      }));
+      .compose(job -> assertThatNoRequestsWereUpdatedByMigration("searchIndex"))
+      .onComplete(context.succeedingThenComplete());
   }
 
   @Test
@@ -262,14 +252,14 @@ class TenantRefApiTests {
 
   private void tlrMigrationFailsWhenRemoteCallFails(VertxTestContext context) {
     postTenant(TLR_MIGRATION_PREV_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION)
-      .onComplete(context.succeeding(job -> {
+      .compose(job -> {
         context.verify(() -> {
           assertThat(job.getError().contains("Request failed: GET"), is(true));
           assertThat(job.getError().contains("Response: [404]"), is(true));
         });
-        assertThatNoRequestsWereUpdatedByMigration(context, "requestLevel");
-        context.completeNow();
-      }));
+        return assertThatNoRequestsWereUpdatedByMigration("requestLevel");
+      })
+      .onComplete(context.succeedingThenComplete());
   }
 
   @Test
@@ -286,14 +276,14 @@ class TenantRefApiTests {
 
   private void requestSearchMigrationFailsWhenRemoteCallFails(VertxTestContext context) {
     postTenant(REQ_SEARCH_MIGRATION_PREV_MOD_VER, REQ_SEARCH_MIGRATION_MOD_VER)
-      .onComplete(context.succeeding(job -> {
+      .compose(job -> {
         context.verify(() -> {
           assertThat(job.getError().contains("Request failed: GET"), is(true));
           assertThat(job.getError().contains("Response: [404]"), is(true));
         });
-        assertThatNoRequestsWereUpdatedByMigration(context, "searchIndex");
-        context.completeNow();
-      }));
+        return assertThatNoRequestsWereUpdatedByMigration("searchIndex");
+      })
+      .onComplete(context.succeedingThenComplete());
   }
 
   @Test
@@ -338,11 +328,11 @@ class TenantRefApiTests {
       .willReturn(serverError()));
 
     postTenant(TLR_MIGRATION_PREV_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION)
-      .onComplete(context.succeeding(job -> {
+      .compose(job -> {
         context.verify(() -> assertThat(job.getError().isEmpty(), is(false)));
-        assertThatNoRequestsWereUpdatedByMigration(context, "requestLevel");
-        context.completeNow();
-      }));
+        return assertThatNoRequestsWereUpdatedByMigration("requestLevel");
+      })
+      .onComplete(context.succeedingThenComplete());
   }
 
   @Test
@@ -355,7 +345,7 @@ class TenantRefApiTests {
     randomRequest.put("requestLevel", "item");
 
     jobFailsWhenRequestValidationFails(context, randomRequest,
-      "request already contains TLR fields: " + getId(randomRequest));
+      "request already contains TLR fields: " + getId(randomRequest), 1);
   }
 
   @Test
@@ -368,7 +358,7 @@ class TenantRefApiTests {
     randomRequest.remove("itemId");
 
     jobFailsWhenRequestValidationFails(context, randomRequest,
-      "request does not contain required ILR fields: " + getId(randomRequest));
+      "request does not contain required ILR fields: " + getId(randomRequest), 0);
   }
 
   @Test
@@ -418,10 +408,8 @@ class TenantRefApiTests {
 
     postTenant(REQ_FULFILLMENT_PREFERENCE_SPELLING_VER,
       REQ_FULFILLMENT_PREFERENCE_SPELLING_NEXT_VER)
-      .onComplete(context.succeeding(job -> {
-        assertThatNoRequestsWereUpdatedByMigration(context, "fulfillmentPreference");
-        context.completeNow();
-      }));
+      .compose(job -> assertThatNoRequestsWereUpdatedByMigration("fulfillmentPreference"))
+      .onComplete(context.succeedingThenComplete());
   }
 
   @Test
@@ -430,10 +418,8 @@ class TenantRefApiTests {
 
     postTenant(REQ_FULFILLMENT_PREFERENCE_SPELLING_VER,
       REQ_FULFILLMENT_PREFERENCE_SPELLING_PREV_VER)
-      .onComplete(context.succeeding(job -> {
-        assertThatNoRequestsWereUpdatedByMigration(context, "fulfillmentPreference");
-        context.completeNow();
-      }));
+      .compose(job -> assertThatNoRequestsWereUpdatedByMigration("fulfillmentPreference"))
+      .onComplete(context.succeedingThenComplete());
   }
 
   @Test
@@ -448,21 +434,23 @@ class TenantRefApiTests {
   }
 
   private void jobFailsWhenRequestValidationFails(VertxTestContext context,
-    JsonObject request, String expectedErrorMessage) {
+    JsonObject request, String expectedErrorMessage, int expectedRequestLevelCount) {
 
     postgresClient.update(REQUEST_TABLE_NAME, request, getId(request))
       .compose(r -> postTenant(TLR_MIGRATION_PREV_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION))
-      .onComplete(context.succeeding(job -> {
+      .compose(job -> {
         context.verify(() -> {
           assertThat(job.getError().contains(expectedErrorMessage), is(true));
         });
-        assertThatNoRequestsWereUpdatedByMigration(context, "requestLevel");
-        context.completeNow();
-      }));
+        return assertThatNumberOfRequestsWithProperty(
+          "requestLevel", expectedRequestLevelCount);
+      })
+      .onComplete(context.succeedingThenComplete());
   }
 
   private static Future<TenantJob> postTenant(String fromVersion, String toVersion) {
-    return tenantClient.postTenant(getTenantAttributes(fromVersion, toVersion))
+    return setStoredModuleVersion(fromVersion)
+      .compose(ignored -> tenantClient.postTenant(getTenantAttributes(fromVersion, toVersion)))
       .map(response -> response.bodyAsJson(TenantJob.class))
       .compose(job -> tenantClient.getTenantByOperationId(job.getId(), GET_TENANT_TIMEOUT_MS))
       .map(response -> {
@@ -472,16 +460,32 @@ class TenantRefApiTests {
       });
   }
 
-  private static void assertThatNoRequestsWereUpdatedByMigration(VertxTestContext context,
-    String field) {
+  private static Future<Void> setStoredModuleVersion(String fromVersion) {
+    if (postgresClient == null) {
+      return Future.succeededFuture();
+    }
 
-    selectRead(format("SELECT COUNT(*) " +
-      "FROM " + REQUEST_TABLE + " " +
-      "WHERE jsonb->>'%s' IS NOT null", field))
-      .onComplete(context.succeeding(rowSet -> {
-        context.verify(() -> assertThat(getCount(rowSet), is(0)));
-        context.completeNow();
-      }));
+    return postgresClient.execute(
+        "UPDATE rmb_internal " +
+          "SET jsonb = jsonb || jsonb_build_object('moduleVersion', $1)",
+        Tuple.of(format("%s-%s", MODULE_NAME, fromVersion)))
+      .mapEmpty();
+  }
+
+  private static Future<Void> assertThatNoRequestsWereUpdatedByMigration(String field) {
+    return assertThatNumberOfRequestsWithProperty(field, 0);
+  }
+
+  private static Future<Void> assertThatNumberOfRequestsWithProperty(
+    String field, int expectedCount) {
+
+    return selectRead(format("SELECT COUNT(*) " +
+        "FROM " + REQUEST_TABLE + " " +
+        "WHERE jsonb->>'%s' IS NOT null", field))
+      .map(rowSet -> {
+        assertThat(getCount(rowSet), is(expectedCount));
+        return null;
+      });
   }
 
   private static Future<List<JsonObject>> getAllRequestsAsJson() {
