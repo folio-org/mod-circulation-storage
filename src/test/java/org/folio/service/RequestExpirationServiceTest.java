@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.persist.Conn;
@@ -47,12 +48,19 @@ class RequestExpirationServiceTest {
   @Mock private PostgresClient postgresClient;
   @Mock private KafkaLogRecordPublisher kafkaLogRecordPublisher;
   @Mock private EntityChangedEventPublisher<String, Request> eventPublisher;
+  @Mock private RequestQueueLockService requestQueueLockService;
 
   @BeforeEach
   void setUp() {
     MockitoAnnotations.openMocks(this);
     service = new RequestExpirationService("itemId", Request::getItemId,
-      postgresClient, kafkaLogRecordPublisher, eventPublisher, Map.of());
+      postgresClient, kafkaLogRecordPublisher, eventPublisher, Map.of(),
+      requestQueueLockService);
+    when(requestQueueLockService.execute(anyString(), anyString(), any()))
+      .thenAnswer(invocation -> {
+        Supplier<Future<Object>> criticalSection = invocation.getArgument(2);
+        return criticalSection.get();
+      });
   }
 
   @Test
@@ -61,6 +69,7 @@ class RequestExpirationServiceTest {
     var id2 = UUID.randomUUID().toString();
     var id3 = UUID.randomUUID().toString();
     when(postgresClient.getTenantId()).thenReturn(TENANT_ID);
+    when(postgresClient.withConn(any())).then(this::withTransHandler);
     when(postgresClient.withTrans(any())).then(this::withTransHandler);
 
     var expiredRequestsRowSet = new LocalRowSet(3).withRows(List.of(
@@ -76,6 +85,9 @@ class RequestExpirationServiceTest {
     service.doRequestExpiration().onComplete(ar -> {
       context.verify(() -> {
         Assertions.assertNull(ar.result());
+        verify(requestQueueLockService).execute(eq(RequestQueueLockService.ITEM),
+          eq("2baee507-b0c3-4dc9-b571-cd29d2c9e9e6"), any());
+        verify(conn, times(4)).execute(anyString());
         verify(eventPublisher, times(3)).publishUpdated(any(), any(), any());
       });
       context.completeNow();
