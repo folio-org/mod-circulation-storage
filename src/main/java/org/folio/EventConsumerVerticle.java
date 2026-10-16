@@ -15,6 +15,7 @@ import static org.folio.support.kafka.KafkaConfigConstants.KAFKA_MAX_REQUEST_SIZ
 import static org.folio.support.kafka.KafkaConfigConstants.KAFKA_PORT;
 import static org.folio.support.kafka.KafkaConfigConstants.KAFKA_REPLICATION_FACTOR;
 import static org.folio.support.kafka.KafkaConfigConstants.OKAPI_URL;
+import static org.folio.support.kafka.topic.UsersKafkaTopic.USERS;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +34,7 @@ import org.folio.service.event.handler.LocationDeleteEventHandler;
 import org.folio.service.event.handler.LocationUpdateEventHandler;
 import org.folio.service.event.handler.ServicePointDeleteEventHandler;
 import org.folio.service.event.handler.ServicePointUpdateEventHandler;
+import org.folio.service.event.handler.UserEventHandler;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
@@ -94,6 +96,7 @@ public class EventConsumerVerticle extends AbstractVerticle {
         locationDeleteHandler))
       .compose(r -> createInventoryEventConsumer(INVENTORY_LOCATION_DELETED_ALL, config,
         locationDeleteHandler))
+      .compose(r -> createUserEventConsumer(config))
       .mapEmpty();
   }
 
@@ -107,6 +110,17 @@ public class EventConsumerVerticle extends AbstractVerticle {
       .build();
 
     return createConsumer(kafkaConfig, subscriptionDefinition, handler);
+  }
+
+  private Future<KafkaConsumerWrapper<String, String>> createUserEventConsumer(
+    KafkaConfig kafkaConfig) {
+
+    SubscriptionDefinition subscriptionDefinition = SubscriptionDefinition.builder()
+      .eventType(USERS.name())
+      .subscriptionPattern(buildSubscriptionPattern(USERS, kafkaConfig))
+      .build();
+
+    return createConsumer(kafkaConfig, subscriptionDefinition, new UserEventHandler(context));
   }
 
   private Future<KafkaConsumerWrapper<String, String>> createConsumer(KafkaConfig kafkaConfig,
