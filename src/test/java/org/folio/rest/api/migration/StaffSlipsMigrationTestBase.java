@@ -5,9 +5,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.folio.rest.api.StorageTestSuite;
+import org.junit.jupiter.api.AfterAll;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -19,6 +22,18 @@ public class StaffSlipsMigrationTestBase extends MigrationTestBase {
   private static final String ACTIVE_KEY = "active";
   private static final String TEMPLATE_KEY = "template";
   private static final String STORAGE_URL = "/staff-slips-storage/staff-slips";
+
+  @AfterAll
+  static void restoreStaffSlipReferenceData()
+    throws InterruptedException, ExecutionException, TimeoutException {
+
+    executeMultipleSqlStatements(String.join(System.lineSeparator(),
+      loadScript("add_staff_slips.sql"),
+      loadScript("add_staff_slips_hold_transit.sql"),
+      loadScript("add_search_slips.sql"),
+      loadScript("add_staff_slips_transit_mediated_requests.sql"),
+      loadScript("add_due_date_slips.sql")));
+  }
 
   JsonObject getRecordById(JsonArray collection, String id) {
     return collection.stream()

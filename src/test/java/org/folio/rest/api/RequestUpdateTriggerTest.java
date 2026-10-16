@@ -3,6 +3,7 @@ package org.folio.rest.api;
 
 import static org.folio.rest.api.RequestsApiTest.requestStorageUrl;
 import static org.folio.rest.jaxrs.model.Request.Status.fromValue;
+import static org.folio.rest.support.ApiTests.getCurrentDatabaseTime;
 import static org.folio.rest.support.matchers.TextDateTimeMatcher.withinSecondsAfter;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
@@ -17,11 +18,13 @@ import java.util.concurrent.TimeoutException;
 
 import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.support.StorageTestEnvironmentExtension;
 import org.joda.time.DateTime;
 import org.joda.time.Seconds;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
@@ -32,16 +35,14 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import lombok.SneakyThrows;
 
+@ExtendWith(StorageTestEnvironmentExtension.class)
 class RequestUpdateTriggerTest {
 
   private static final String REQUEST_TABLE = "request";
   private static PostgresClient pgClient;
 
   @BeforeAll
-  static void beforeAll() throws InterruptedException, ExecutionException, TimeoutException {
-    if (StorageTestSuite.isNotInitialised()) {
-      StorageTestSuite.before();
-    }
+  static void beforeAll() {
     pgClient = PostgresClient.getInstance(StorageTestSuite.getVertx(), StorageTestSuite.TENANT_ID);
   }
 
@@ -90,7 +91,7 @@ class RequestUpdateTriggerTest {
     Request request = new Request()
       .withStatus(fromValue(oldStatus));
 
-    DateTime requestUpdatedDate = DateTime.now();
+    DateTime requestUpdatedDate = getCurrentDatabaseTime(pgClient);
 
     saveRequest(id, request)
       .compose(v -> updateRequest(id, request.withStatus(fromValue(newStatus))))
