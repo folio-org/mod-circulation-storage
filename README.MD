@@ -1,6 +1,6 @@
 # mod-circulation-storage
 
-Copyright (C) 2017-2025 The Open Library Foundation
+Copyright (C) 2017-2026 The Open Library Foundation
 
 This software is distributed under the terms of the Apache License,
 Version 2.0. See the file "[LICENSE](LICENSE)" for more information.
@@ -67,14 +67,14 @@ The `userId` parameter is checked to take the form of a UUID to try to reduce th
 
 ## Required
 
-- Java 11 JDK
-- Maven 3.3.9
+- Java 25 JDK
+- Maven 3.9
 - Docker ([minimum requirements](https://www.testcontainers.org/supported_docker_environment/))
-- PostgreSQL 9.6.1 (running and listening on the default port, logged in user must have admin rights), with the following extensions
+- PostgreSQL 16 (running and listening on the default port, logged in user must have admin rights), with the following extensions
   - pgcrypto
   - unaccent
   - pg_trgm
-- Kafka 2.6 (running and listening on localhost:9092)
+- Kafka 4 (running and listening on localhost:9092)
 
 ### Optional
 
