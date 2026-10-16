@@ -1,6 +1,6 @@
 #%RAML 1.0
 title: Loan Storage
-version: v7.4
+version: v7.5
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost:9130
 
@@ -108,3 +108,62 @@ resourceTypes:
         searchable: {description: "using CQL",
                         example: "loan.status.name==Closed"}
         ]
+  /loans-to-anonymize:
+    displayName: Loans to anonymize
+    description: |
+      Closed loans that still have a user and might be due for scheduled anonymization,
+      taking the user's loan anonymization preference into account. This is a prefilter:
+      the caller makes the final decision per loan. Loans of users who chose "never" are
+      not returned. Loans without a system return date always pass the date filter.
+      The result is not sorted.
+    get:
+      queryParameters:
+        libraryPolicyReturnedBefore:
+          description: |
+            Only return loans of users following the library policy that were returned before
+            this date (ISO 8601 date-time with offset). Omit to not filter these loans by date,
+            e.g. for "immediately" or when fees/fines are treated differently.
+          type: string
+          required: false
+          example: "2026-01-31T10:00:00.000Z"
+        asEarlyAsPossibleReturnedBefore:
+          description: |
+            Only return loans of users who chose "as early as possible" that were returned
+            before this date (ISO 8601 date-time with offset). Omit to not filter these loans
+            by date.
+          type: string
+          required: false
+          example: "2026-03-01T10:00:00.000Z"
+        excludeLibraryPolicy:
+          description: |
+            Do not return loans of users following the library policy, e.g. when the library
+            policy is "never" and fees/fines are not treated differently
+          type: boolean
+          required: false
+          default: false
+        limit:
+          description: Maximum number of loans to return
+          type: integer
+          required: false
+          minimum: 0
+          maximum: 2147483647
+          default: 10
+      responses:
+        200:
+          description: |
+            Loans to check for anonymization. totalRecords is the number of returned loans,
+            not the number of all matching loans.
+          body:
+            application/json:
+              type: loans
+              example: !include examples/loans.json
+        400:
+          description: "Bad request, e.g. malformed date"
+          body:
+            text/plain:
+              example: "libraryPolicyReturnedBefore is not a valid date-time: 2026-13-01"
+        500:
+          description: "Internal server error, e.g. due to misconfiguration"
+          body:
+            text/plain:
+              example: "Internal server error, see log"

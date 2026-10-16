@@ -93,4 +93,16 @@ public class LoansAPI implements LoanStorage {
         .onComplete(asyncResultHandler);
   }
 
+  @Validate
+  @Override
+  public void getLoanStorageLoansToAnonymize(String libraryPolicyReturnedBefore,
+    String asEarlyAsPossibleReturnedBefore, boolean excludeLibraryPolicy, int limit,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+    new LoanService(vertxContext, okapiHeaders).findLoansToAnonymize(libraryPolicyReturnedBefore,
+        asEarlyAsPossibleReturnedBefore, excludeLibraryPolicy, limit)
+        .onComplete(asyncResultHandler);
+  }
+
 }

@@ -621,6 +621,11 @@
           "sqlExpressionQuery": "$"
         }
       ]
+    },
+    {
+      "tableName": "user_loan_anonymization_preference",
+      "withMetadata": false,
+      "withAuditing": false
     }
   ],
   "scripts": [

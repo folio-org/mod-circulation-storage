@@ -24,6 +24,7 @@ import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.support.kafka.topic.AuditKafkaTopic;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.api.loans.LoansAnonymizationApiTest;
+import org.folio.rest.api.loans.LoansToAnonymizeApiTest;
 import org.folio.rest.api.migration.CirculationSettingsMigrationScriptTest;
 import org.folio.rest.api.migration.StaffSlipsHoldTransitMigrationScriptTest;
 import org.folio.rest.api.migration.StaffSlipsPickRequestMigrationScriptTest;
@@ -56,6 +57,7 @@ import lombok.SneakyThrows;
   AnonymizeLoansApiTest.class,
   LoansApiTest.class,
   LoansAnonymizationApiTest.class,
+  LoansToAnonymizeApiTest.class,
   CirculationRulesApiTest.class,
   FixedDueDateApiTest.class,
   LoanPoliciesApiTest.class,
