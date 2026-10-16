@@ -3,6 +3,7 @@ package org.folio.service.tlr;
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static java.util.stream.Collectors.toList;
+import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.jaxrs.model.Request.Status.OPEN_AWAITING_DELIVERY;
 import static org.folio.rest.jaxrs.model.Request.Status.OPEN_AWAITING_PICKUP;
 import static org.folio.rest.jaxrs.model.Request.Status.OPEN_IN_TRANSIT;
@@ -14,11 +15,11 @@ import static org.folio.support.ModuleConstants.REQUEST_STATUS_FIELD;
 import static org.folio.support.ModuleConstants.TLR_FEATURE_TOGGLE_JOB_STATUS_FIELD;
 
 import java.lang.invoke.MethodHandles;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
@@ -33,6 +34,7 @@ import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.GroupedCriterias;
 import org.folio.rest.persist.Criteria.Order;
 import org.folio.service.CirculationSettingsService;
+import org.folio.service.RequestQueueLockService;
 import org.folio.support.exception.TlrFeatureToggleJobAlreadyRunningException;
 
 import io.vertx.core.Context;
@@ -48,12 +50,15 @@ public class TlrFeatureToggleService {
   private final TlrFeatureToggleJobRepository tlrFeatureToggleJobRepository;
   private final RequestRepository requestRepository;
   private final CirculationSettingsService circulationSettingsService;
+  private final RequestQueueLockService requestQueueLockService;
 
   public TlrFeatureToggleService(Map<String, String> okapiHeaders, Context vertxContext) {
     this.tlrFeatureToggleJobRepository = new TlrFeatureToggleJobRepository(vertxContext,
       okapiHeaders);
     this.requestRepository = new RequestRepository(vertxContext, okapiHeaders);
     this.circulationSettingsService = new CirculationSettingsService(vertxContext, okapiHeaders);
+    this.requestQueueLockService = new RequestQueueLockService(
+      postgresClient(vertxContext, okapiHeaders), vertxContext.owner());
   }
 
   public Future<Void> handle() {
@@ -76,9 +81,8 @@ public class TlrFeatureToggleService {
     return succeededFuture(job)
       .compose(j -> updateJobStatus(job, IN_PROGRESS))
       .compose(r -> circulationSettingsService.getTlrSettingsOrThrow())
-      .compose(this::fetchAndGroupOpenRequests)
-      .map(groupedRequests -> updatePosition(groupedRequests, job))
-      .compose(requestRepository::update)
+      .compose(settings -> fetchAndGroupOpenRequests(settings)
+        .compose(groupedRequests -> updatePositions(groupedRequests.keySet(), settings, job)))
       .compose(r -> updateJobStatus(job, DONE))
       .recover(throwable -> updateJobAsFailed(job, throwable))
       .mapEmpty();
@@ -123,21 +127,48 @@ public class TlrFeatureToggleService {
     return groupedCriterias;
   }
 
-  private List<Request> updatePosition(Map<String, List<Request>> groupedRequests,
+  private Future<Void> updatePositions(Set<String> queueIds, TlrSettings tlrSettings,
     TlrFeatureToggleJob job) {
 
-    List<Request> updatedRequests = new ArrayList<>();
-    for (var requests : groupedRequests.values()) {
-      requests.sort(Comparator.comparingInt(Request::getPosition));
-      int position = 1;
-      for (var request : requests) {
-        request.setPosition(position++);
-      }
-      updatedRequests.addAll(requests);
-    }
-    job.setNumberOfUpdatedRequests(updatedRequests.size());
+    String queueType = tlrSettings.isTitleLevelRequestsFeatureEnabled()
+      ? RequestQueueLockService.INSTANCE
+      : RequestQueueLockService.ITEM;
+    String queueIdField = tlrSettings.isTitleLevelRequestsFeatureEnabled()
+      ? "instanceId"
+      : "itemId";
+    int[] updatedRequestCount = {0};
+    Future<Void> future = succeededFuture();
 
-    return updatedRequests;
+    for (String queueId : queueIds) {
+      future = future.compose(v -> requestQueueLockService.execute(queueType, queueId,
+        () -> fetchOpenRequests(queueIdField, queueId)
+          .compose(requests -> {
+            updatedRequestCount[0] += requests.size();
+            return requests.isEmpty()
+              ? succeededFuture()
+              : requestRepository.update(updatePositions(requests)).mapEmpty();
+          })));
+    }
+
+    return future.onSuccess(v -> job.setNumberOfUpdatedRequests(updatedRequestCount[0]));
+  }
+
+  private List<Request> updatePositions(List<Request> requests) {
+    requests.sort(Comparator.comparingInt(Request::getPosition));
+    int position = 1;
+    for (Request request : requests) {
+      request.setPosition(position++);
+    }
+    return requests;
+  }
+
+  private Future<List<Request>> fetchOpenRequests(String queueIdField, String queueId) {
+    return requestRepository.get(new Criterion()
+      .addGroupOfCriterias(buildGroupedCriterias(getStatusCriterias()))
+      .addCriterion(new Criteria()
+        .addField("'" + queueIdField + "'")
+        .setOperation("=")
+        .setVal(queueId)));
   }
 
   private Future<List<TlrFeatureToggleJob>> findJobsByStatus(String status) {
