@@ -26,6 +26,10 @@ public class InterfaceUrls {
     return storageUrl("/loan-storage/loan-history" + subPath);
   }
 
+  public static URL loansToAnonymizeUrl(String queryString) throws MalformedURLException {
+    return storageUrl("/loan-storage/loans-to-anonymize" + queryString);
+  }
+
   public static URL patronActionSessionStorageUrl(String subPath)
     throws MalformedURLException {
 
