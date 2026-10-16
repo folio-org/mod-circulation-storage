@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
 
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
@@ -50,9 +51,10 @@ public final class FakeKafkaConsumer {
     REQUEST_QUEUE_REORDERING_TOPIC_NAME, requestQueueReorderingEvents,
     LOG_RECORD_TOPIC_NAME, logRecordEvents
   );
+  private KafkaConsumer<String, JsonObject> consumer;
 
   public FakeKafkaConsumer consume(Vertx vertx) {
-    final KafkaConsumer<String, JsonObject> consumer = create(vertx, consumerProperties());
+    consumer = create(vertx, consumerProperties());
 
     consumer.subscribe(Set.of(LOAN_TOPIC_NAME, REQUEST_TOPIC_NAME, CHECKIN_TOPIC_NAME,
       CIRCULATION_RULES_TOPIC_NAME, REQUEST_QUEUE_REORDERING_TOPIC_NAME, LOG_RECORD_TOPIC_NAME));
@@ -69,6 +71,10 @@ public final class FakeKafkaConsumer {
     });
 
     return this;
+  }
+
+  public Future<Void> close() {
+    return consumer == null ? Future.succeededFuture() : consumer.close();
   }
 
   public static void removeAllEvents() {
