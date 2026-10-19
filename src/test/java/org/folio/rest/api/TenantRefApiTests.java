@@ -15,7 +15,6 @@ import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_CANCELLED;
 import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_FILLED;
 import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_PICKUP_EXPIRED;
 import static org.folio.rest.jaxrs.model.Request.Status.CLOSED_UNFILLED;
-import static org.folio.rest.support.ApiTests.waitFor;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
@@ -35,7 +34,6 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import org.apache.commons.io.IOUtils;
-import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
 import org.folio.rest.jaxrs.model.Parameter;
@@ -43,6 +41,7 @@ import org.folio.rest.jaxrs.model.Request;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.jaxrs.model.TenantJob;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.support.StorageTestEnvironmentExtension;
 import org.folio.rest.tools.utils.ModuleName;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.junit.jupiter.api.AfterAll;
@@ -69,7 +68,7 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
 
-@ExtendWith(VertxExtension.class)
+@ExtendWith({VertxExtension.class, StorageTestEnvironmentExtension.class})
 class TenantRefApiTests {
   protected static final String TLR_MIGRATION_OLD_MODULE_VERSION = "13.0.0";
   protected static final String TLR_MIGRATION_PREV_MODULE_VERSION = "13.1.0";
@@ -85,7 +84,7 @@ class TenantRefApiTests {
   protected static final String MODULE_NAME = "mod_circulation_storage";
   protected static final int PORT = NetworkUtils.nextFreePort();
   protected static final String URL = "http://localhost:" + PORT;
-  protected static final String TENANT = "test_tenant";
+  protected static final String TENANT = "tenant_ref_test";
   protected static final String REQUEST_TABLE_NAME = "request";
   protected static final String REQUEST_TABLE =
     format("%s_%s.%s", TENANT, MODULE_NAME, REQUEST_TABLE_NAME);
@@ -133,15 +132,11 @@ class TenantRefApiTests {
     .build();
 
   @BeforeAll
-  public static void beforeAll(VertxTestContext context) throws Exception {
+  public static void beforeAll(VertxTestContext context) {
 
     vertx = Vertx.vertx();
     tenantClient = new TenantClient("http://localhost:" + wireMock.getPort(), TENANT, TOKEN,
       WebClient.create(vertx));
-
-    PostgresClient.setPostgresTester(new PostgresTesterContainer());
-
-    StorageTestSuite.before();
 
     DeploymentOptions deploymentOptions = new DeploymentOptions()
       .setConfig(new JsonObject().put("http.port", PORT));
@@ -158,7 +153,6 @@ class TenantRefApiTests {
 
   @BeforeEach
   void beforeEach(VertxTestContext context) throws Exception {
-    waitFor(postgresClient.execute("TRUNCATE rmb_internal"));
     loadRequests()
       .compose(r -> getAllRequestsAsJson())
       .onComplete(context.succeeding(requests -> {
@@ -170,24 +164,18 @@ class TenantRefApiTests {
   }
 
   @AfterAll
-  public static void afterAll(VertxTestContext context) throws Exception {
+  public static void afterAll(VertxTestContext context) {
     deleteTenant(tenantClient);
-    StorageTestSuite.after();
     vertx.close()
       .onFailure(context::failNow)
-      .onSuccess(ignored -> {
-        PostgresClient.stopPostgresTester();
-        context.completeNow();
-      });
+      .onSuccess(ignored -> context.completeNow());
   }
 
   @Test
   void tlrMigrationShouldBeSkippedWhenUpgradingToLowerVersion(VertxTestContext context) {
     postTenant(TLR_MIGRATION_OLD_MODULE_VERSION, TLR_MIGRATION_PREV_MODULE_VERSION)
-      .onComplete(context.succeeding(job -> {
-        assertThatNoRequestsWereUpdatedByMigration(context, "requestLevel");
-        context.completeNow();
-      }));
+      .compose(job -> assertThatNoRequestsWereUpdatedByMigration("requestLevel"))
+      .onComplete(context.succeedingThenComplete());
   }
 
   @Test
@@ -195,10 +183,8 @@ class TenantRefApiTests {
     VertxTestContext context) {
 
     postTenant(TLR_MIGRATION_MODULE_VERSION, TLR_MIGRATION_NEXT_MODULE_VERSION)
-      .onComplete(context.succeeding(job -> {
-        assertThatNoRequestsWereUpdatedByMigration(context, "requestLevel");
-        context.completeNow();
-      }));
+      .compose(job -> assertThatNoRequestsWereUpdatedByMigration("requestLevel"))
+      .onComplete(context.succeedingThenComplete());
   }
 
   @Test
@@ -214,10 +200,8 @@ class TenantRefApiTests {
   @Test
   void requestSearchMigrationShouldBeSkippedWhenUpgradingToLowerVersion(VertxTestContext context) {
     postTenant(REQ_SEARCH_MIGRATION_OLD_MOD_VER, REQ_SEARCH_MIGRATION_PREV_MOD_VER)
-      .onComplete(context.succeeding(job -> {
-        assertThatNoRequestsWereUpdatedByMigration(context, "searchIndex");
-        context.completeNow();
-      }));
+      .compose(job -> assertThatNoRequestsWereUpdatedByMigration("searchIndex"))
+      .onComplete(context.succeedingThenComplete());
   }
 
   @Test
@@ -225,10 +209,8 @@ class TenantRefApiTests {
     VertxTestContext context) {
 
     postTenant(REQ_SEARCH_MIGRATION_MOD_VER, REQ_SEARCH_MIGRATION_NEXT_MOD_VER)
-      .onComplete(context.succeeding(job -> {
-        assertThatNoRequestsWereUpdatedByMigration(context, "searchIndex");
-        context.completeNow();
-      }));
+      .compose(job -> assertThatNoRequestsWereUpdatedByMigration("searchIndex"))
+      .onComplete(context.succeedingThenComplete());
   }
 
   @Test
@@ -270,14 +252,14 @@ class TenantRefApiTests {
 
   private void tlrMigrationFailsWhenRemoteCallFails(VertxTestContext context) {
     postTenant(TLR_MIGRATION_PREV_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION)
-      .onComplete(context.succeeding(job -> {
+      .compose(job -> {
         context.verify(() -> {
           assertThat(job.getError().contains("Request failed: GET"), is(true));
           assertThat(job.getError().contains("Response: [404]"), is(true));
         });
-        assertThatNoRequestsWereUpdatedByMigration(context, "requestLevel");
-        context.completeNow();
-      }));
+        return assertThatNoRequestsWereUpdatedByMigration("requestLevel");
+      })
+      .onComplete(context.succeedingThenComplete());
   }
 
   @Test
@@ -294,14 +276,14 @@ class TenantRefApiTests {
 
   private void requestSearchMigrationFailsWhenRemoteCallFails(VertxTestContext context) {
     postTenant(REQ_SEARCH_MIGRATION_PREV_MOD_VER, REQ_SEARCH_MIGRATION_MOD_VER)
-      .onComplete(context.succeeding(job -> {
+      .compose(job -> {
         context.verify(() -> {
           assertThat(job.getError().contains("Request failed: GET"), is(true));
           assertThat(job.getError().contains("Response: [404]"), is(true));
         });
-        assertThatNoRequestsWereUpdatedByMigration(context, "searchIndex");
-        context.completeNow();
-      }));
+        return assertThatNoRequestsWereUpdatedByMigration("searchIndex");
+      })
+      .onComplete(context.succeedingThenComplete());
   }
 
   @Test
@@ -346,11 +328,11 @@ class TenantRefApiTests {
       .willReturn(serverError()));
 
     postTenant(TLR_MIGRATION_PREV_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION)
-      .onComplete(context.succeeding(job -> {
+      .compose(job -> {
         context.verify(() -> assertThat(job.getError().isEmpty(), is(false)));
-        assertThatNoRequestsWereUpdatedByMigration(context, "requestLevel");
-        context.completeNow();
-      }));
+        return assertThatNoRequestsWereUpdatedByMigration("requestLevel");
+      })
+      .onComplete(context.succeedingThenComplete());
   }
 
   @Test
@@ -363,7 +345,7 @@ class TenantRefApiTests {
     randomRequest.put("requestLevel", "item");
 
     jobFailsWhenRequestValidationFails(context, randomRequest,
-      "request already contains TLR fields: " + getId(randomRequest));
+      "request already contains TLR fields: " + getId(randomRequest), 1);
   }
 
   @Test
@@ -376,7 +358,7 @@ class TenantRefApiTests {
     randomRequest.remove("itemId");
 
     jobFailsWhenRequestValidationFails(context, randomRequest,
-      "request does not contain required ILR fields: " + getId(randomRequest));
+      "request does not contain required ILR fields: " + getId(randomRequest), 0);
   }
 
   @Test
@@ -426,10 +408,8 @@ class TenantRefApiTests {
 
     postTenant(REQ_FULFILLMENT_PREFERENCE_SPELLING_VER,
       REQ_FULFILLMENT_PREFERENCE_SPELLING_NEXT_VER)
-      .onComplete(context.succeeding(job -> {
-        assertThatNoRequestsWereUpdatedByMigration(context, "fulfillmentPreference");
-        context.completeNow();
-      }));
+      .compose(job -> assertThatNoRequestsWereUpdatedByMigration("fulfillmentPreference"))
+      .onComplete(context.succeedingThenComplete());
   }
 
   @Test
@@ -438,10 +418,8 @@ class TenantRefApiTests {
 
     postTenant(REQ_FULFILLMENT_PREFERENCE_SPELLING_VER,
       REQ_FULFILLMENT_PREFERENCE_SPELLING_PREV_VER)
-      .onComplete(context.succeeding(job -> {
-        assertThatNoRequestsWereUpdatedByMigration(context, "fulfillmentPreference");
-        context.completeNow();
-      }));
+      .compose(job -> assertThatNoRequestsWereUpdatedByMigration("fulfillmentPreference"))
+      .onComplete(context.succeedingThenComplete());
   }
 
   @Test
@@ -456,21 +434,23 @@ class TenantRefApiTests {
   }
 
   private void jobFailsWhenRequestValidationFails(VertxTestContext context,
-    JsonObject request, String expectedErrorMessage) {
+    JsonObject request, String expectedErrorMessage, int expectedRequestLevelCount) {
 
     postgresClient.update(REQUEST_TABLE_NAME, request, getId(request))
       .compose(r -> postTenant(TLR_MIGRATION_PREV_MODULE_VERSION, TLR_MIGRATION_MODULE_VERSION))
-      .onComplete(context.succeeding(job -> {
+      .compose(job -> {
         context.verify(() -> {
           assertThat(job.getError().contains(expectedErrorMessage), is(true));
         });
-        assertThatNoRequestsWereUpdatedByMigration(context, "requestLevel");
-        context.completeNow();
-      }));
+        return assertThatNumberOfRequestsWithProperty(
+          "requestLevel", expectedRequestLevelCount);
+      })
+      .onComplete(context.succeedingThenComplete());
   }
 
   private static Future<TenantJob> postTenant(String fromVersion, String toVersion) {
-    return tenantClient.postTenant(getTenantAttributes(fromVersion, toVersion))
+    return setStoredModuleVersion(fromVersion)
+      .compose(ignored -> tenantClient.postTenant(getTenantAttributes(fromVersion, toVersion)))
       .map(response -> response.bodyAsJson(TenantJob.class))
       .compose(job -> tenantClient.getTenantByOperationId(job.getId(), GET_TENANT_TIMEOUT_MS))
       .map(response -> {
@@ -480,16 +460,32 @@ class TenantRefApiTests {
       });
   }
 
-  private static void assertThatNoRequestsWereUpdatedByMigration(VertxTestContext context,
-    String field) {
+  private static Future<Void> setStoredModuleVersion(String fromVersion) {
+    if (postgresClient == null) {
+      return Future.succeededFuture();
+    }
 
-    selectRead(format("SELECT COUNT(*) " +
-      "FROM " + REQUEST_TABLE + " " +
-      "WHERE jsonb->>'%s' IS NOT null", field))
-      .onComplete(context.succeeding(rowSet -> {
-        context.verify(() -> assertThat(getCount(rowSet), is(0)));
-        context.completeNow();
-      }));
+    return postgresClient.execute(
+        "UPDATE rmb_internal " +
+          "SET jsonb = jsonb || jsonb_build_object('moduleVersion', $1)",
+        Tuple.of(MODULE_NAME + "-" + fromVersion))
+      .mapEmpty();
+  }
+
+  private static Future<Void> assertThatNoRequestsWereUpdatedByMigration(String field) {
+    return assertThatNumberOfRequestsWithProperty(field, 0);
+  }
+
+  private static Future<Void> assertThatNumberOfRequestsWithProperty(
+    String field, int expectedCount) {
+
+    return selectRead(format(
+        "SELECT COUNT(*) FROM %s WHERE jsonb->>'%s' IS NOT null",
+        REQUEST_TABLE, field))
+      .map(rowSet -> {
+        assertThat(getCount(rowSet), is(expectedCount));
+        return null;
+      });
   }
 
   private static Future<List<JsonObject>> getAllRequestsAsJson() {
@@ -531,7 +527,8 @@ class TenantRefApiTests {
   protected static Future<RowSet<Row>> loadRequests() throws Exception {
     InputStream tableInput = TenantRefApiTests.class.getClassLoader().getResourceAsStream(
       "mocks/TlrDataMigrationTestData.sql");
-    String sqlFile = IOUtils.toString(Objects.requireNonNull(tableInput), StandardCharsets.UTF_8);
+    String sqlFile = IOUtils.toString(Objects.requireNonNull(tableInput), StandardCharsets.UTF_8)
+      .replace("test_tenant_mod_circulation_storage", TENANT + "_mod_circulation_storage");
     return postgresClient.execute(sqlFile);
   }
 
@@ -745,4 +742,3 @@ class TenantRefApiTests {
     return jsonObject.getString("id");
   }
 }
-

@@ -1857,7 +1857,7 @@ class RequestsApiTest extends ApiTests {
     String requestId = createEntity(request, requestStorageUrl()).getJson().getString("id");
     request.put("status", CLOSED_PICKUP_EXPIRED);
 
-    DateTime requestUpdatedDate = DateTime.now();
+    DateTime requestUpdatedDate = getCurrentDatabaseTime(pgClient);
     CompletableFuture<Response> putCompleted = new CompletableFuture<>();
     client.put(requestStorageUrl("/" + requestId), request, TENANT_ID, ResponseHandler.empty(putCompleted));
     putCompleted.get(5, TimeUnit.SECONDS);
@@ -1880,7 +1880,7 @@ class RequestsApiTest extends ApiTests {
     String requestId = createEntity(request, requestStorageUrl()).getJson().getString("id");
     request.put("status", CLOSED_CANCELLED);
 
-    DateTime requestUpdatedDate = DateTime.now();
+    DateTime requestUpdatedDate = getCurrentDatabaseTime(pgClient);
     CompletableFuture<Response> putCompleted = new CompletableFuture<>();
     client.put(requestStorageUrl("/" + requestId), request, TENANT_ID, ResponseHandler.empty(putCompleted));
     putCompleted.get(5, TimeUnit.SECONDS);

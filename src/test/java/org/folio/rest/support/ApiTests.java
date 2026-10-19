@@ -26,8 +26,11 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.core.Is;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 
@@ -35,9 +38,8 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import lombok.SneakyThrows;
 
+@ExtendWith(StorageTestEnvironmentExtension.class)
 public class ApiTests {
-  private static boolean runningOnOwn;
-
   protected static PostgresClient pgClient;
   protected final OkapiHttpClient client = new OkapiHttpClient(getVertx());
   protected static FakeKafkaConsumer kafkaConsumer;
@@ -45,15 +47,8 @@ public class ApiTests {
   private static final String CONFIGURATIONS_ENTRIES_URL_PATTERN = "/configurations/entries.*";
 
   @BeforeAll
-  public static void before() throws Exception {
-    if(StorageTestSuite.isNotInitialised()) {
-      System.out.println("Running test on own, initialising suite manually");
-      runningOnOwn = true;
-      StorageTestSuite.before();
-    } else {
-      runningOnOwn = false;
-    }
-
+  public static void before() {
+    StorageTestSuite.resetWireMock();
     pgClient = PostgresClient.getInstance(getVertx(), TENANT_ID);
     circulationSettingsHelper = new CirculationSettingsHelper(pgClient);
     kafkaConsumer = new FakeKafkaConsumer().consume(getVertx());
@@ -61,14 +56,10 @@ public class ApiTests {
   }
 
   @AfterAll
-  public static void after()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
-    if(runningOnOwn) {
-      System.out.println("Running test on own, un-initialising suite manually");
-      StorageTestSuite.after();
+  public static void after() {
+    if (kafkaConsumer != null) {
+      waitFor(kafkaConsumer.close());
+      kafkaConsumer = null;
     }
   }
 
@@ -160,6 +151,14 @@ public class ApiTests {
     return future.toCompletionStage()
       .toCompletableFuture()
       .get(timeoutSeconds, TimeUnit.SECONDS);
+  }
+
+  public static DateTime getCurrentDatabaseTime(PostgresClient postgresClient) {
+    var databaseTime = waitFor(postgresClient.selectSingle(
+      "SELECT current_timestamp AS current_time"))
+      .getOffsetDateTime("current_time");
+
+    return new DateTime(databaseTime.toInstant().toEpochMilli(), DateTimeZone.UTC);
   }
 
   /**
