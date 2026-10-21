@@ -5,6 +5,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static io.vertx.core.json.JsonObject.mapFrom;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Objects.requireNonNullElse;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.kafka.clients.producer.ProducerConfig.ACKS_CONFIG;
 import static org.apache.kafka.clients.producer.ProducerConfig.BOOTSTRAP_SERVERS_CONFIG;
@@ -114,6 +115,7 @@ class EventConsumerVerticleTest extends ApiTests {
           "%s.%s.inventory.location", environment(), TENANT_ID);
   private static final String USERS_TOPIC = format("%s.%s.users.users", environment(), TENANT_ID);
   private static final String USER_ID = "6b0a1cc5-2c47-4b5e-9a6f-0a2b4c6d8e10";
+  private static final String OTHER_USER_ID = "0f3e5d7c-9b1a-4c2e-8d4f-6a8b0c2e4f61";
 
   private static KafkaProducer<String, JsonObject> producer;
   private static KafkaAdminClient adminClient;
@@ -840,6 +842,33 @@ class EventConsumerVerticleTest extends ApiTests {
     }
   }
 
+  @Test
+  void blockedEventOfOneUserDoesNotDelayEventsOfOtherUsers() {
+    storePreference("asEarlyAsPossible");
+    UserEventHandler handler = new UserEventHandler(getVertx().getOrCreateContext());
+    PgConnection lockingConnection = waitFor(pgClient.getConnection());
+    try {
+      Transaction transaction = waitFor(lockingConnection.begin());
+      waitFor(lockingConnection.query(format(
+        "SELECT * FROM %s.user_loan_anonymization_preference FOR UPDATE",
+        pgClient.getSchemaName())).execute());
+
+      Future<String> blockedEvent = handler.handle(buildUserEventRecord("UPDATED",
+        buildUser("asEarlyAsPossible"), buildUser("never")));
+      waitFor(handler.handle(buildUserEventRecord("UPDATED",
+        buildUser(OTHER_USER_ID, null), buildUser(OTHER_USER_ID, "never"))));
+
+      assertThat(getStoredPreference(OTHER_USER_ID), is("never"));
+      assertThat(blockedEvent.isComplete(), is(false));
+
+      waitFor(transaction.rollback());
+      waitFor(blockedEvent);
+      assertThat(getStoredPreference(), is("never"));
+    } finally {
+      waitFor(lockingConnection.close());
+    }
+  }
+
   private static KafkaProducer<String, JsonObject> createProducer() {
     Properties config = new Properties();
     config.put(BOOTSTRAP_SERVERS_CONFIG, KAFKA_SERVER_URL);
@@ -898,16 +927,21 @@ class EventConsumerVerticleTest extends ApiTests {
   private static KafkaConsumerRecord<String, String> buildUserEventRecord(String eventType,
     JsonObject oldUser, JsonObject newUser) {
 
+    String userId = requireNonNullElse(newUser, oldUser).getString("id");
     ConsumerRecord<String, String> consumerRecord = new ConsumerRecord<>(USERS_TOPIC, 0, 0,
-      USER_ID, buildUserEvent(eventType, oldUser, newUser).encode());
+      userId, buildUserEvent(eventType, oldUser, newUser).encode());
     consumerRecord.headers().add(TENANT, TENANT_ID.getBytes(UTF_8));
 
     return new KafkaConsumerRecordImpl<>(consumerRecord);
   }
 
   private static JsonObject buildUser(String loanAnonymizationPreference) {
+    return buildUser(USER_ID, loanAnonymizationPreference);
+  }
+
+  private static JsonObject buildUser(String userId, String loanAnonymizationPreference) {
     return new JsonObject()
-      .put("id", USER_ID)
+      .put("id", userId)
       .put("loanAnonymizationPreference", loanAnonymizationPreference);
   }
 
@@ -920,10 +954,14 @@ class EventConsumerVerticleTest extends ApiTests {
   }
 
   private static String getStoredPreference() {
+    return getStoredPreference(USER_ID);
+  }
+
+  private static String getStoredPreference(String userId) {
     RowSet<Row> rows = waitFor(pgClient.execute(
       format("SELECT jsonb->>'preference' FROM %s.user_loan_anonymization_preference WHERE id = $1",
         pgClient.getSchemaName()),
-      Tuple.of(UUID.fromString(USER_ID))));
+      Tuple.of(UUID.fromString(userId))));
 
     return rows.size() == 0 ? null : rows.iterator().next().getString(0);
   }

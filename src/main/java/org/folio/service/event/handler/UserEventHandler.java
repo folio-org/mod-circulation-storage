@@ -5,7 +5,9 @@ import static java.util.Objects.requireNonNullElse;
 import static org.folio.kafka.KafkaHeaderUtils.kafkaHeadersToMap;
 import static org.folio.support.LoanAnonymizationPreference.LIBRARY_POLICY;
 
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.commons.lang3.EnumUtils;
@@ -31,7 +33,7 @@ public class UserEventHandler implements AsyncRecordHandler<String, String> {
 
   private final Context context;
   private final int queryTimeoutMillis;
-  private Future<Void> lastQueuedEvent = succeededFuture();
+  private final Map<String, Future<Void>> lastQueuedEventByKey = new ConcurrentHashMap<>();
 
   public UserEventHandler(Context context) {
     this(context, QUERY_TIMEOUT_MILLIS);
@@ -47,9 +49,13 @@ public class UserEventHandler implements AsyncRecordHandler<String, String> {
     // KafkaConsumerWrapper calls handle() for the next record before the future returned for the
     // previous record has completed (up to its load limit of records at a time). Without this
     // queue, two events of the same user could be processed concurrently and the older one could
-    // be stored last.
-    Future<Void> event = lastQueuedEvent.transform(previous -> handleEvent(kafkaConsumerRecord));
-    lastQueuedEvent = event;
+    // be stored last. The order only matters per user, so there is one queue per tenant topic and
+    // record key (the user id); a queue is removed when its last event has completed.
+    String queueKey = kafkaConsumerRecord.topic() + "/" + kafkaConsumerRecord.key();
+    Future<Void> event = lastQueuedEventByKey.compute(queueKey, (key, previous) ->
+      requireNonNullElse(previous, succeededFuture())
+        .transform(ignored -> handleEvent(kafkaConsumerRecord)));
+    event.onComplete(ignored -> lastQueuedEventByKey.remove(queueKey, event));
     return event.map(kafkaConsumerRecord.key());
   }
 
