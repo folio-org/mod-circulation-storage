@@ -10,21 +10,27 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.folio.rest.api.StorageTestSuite;
+import org.folio.rest.jaxrs.model.LoanStorageLoansToAnonymizeGetPreference;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.LoanRequestBuilder;
 import org.folio.rest.support.http.AssertingRecordClient;
 import org.folio.rest.support.http.InterfaceUrls;
+import org.folio.service.loan.LoanService;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,9 +43,10 @@ import io.vertx.sqlclient.Tuple;
 import lombok.SneakyThrows;
 
 public class LoansToAnonymizeApiTest extends ApiTests {
-  private static final DateTime NOW = DateTime.now(DateTimeZone.UTC);
-  private static final DateTime LIBRARY_POLICY_CUTOFF = NOW.minusDays(30);
-  private static final DateTime AS_EARLY_AS_POSSIBLE_CUTOFF = NOW.minusDays(7);
+  private static final String EARLY = "asEarlyAsPossible";
+  private static final String LIBRARY = "libraryPolicy";
+  private static final DateTime NOW = DateTime.now(DateTimeZone.UTC).withMillisOfSecond(0);
+  private static final DateTime CUTOFF = NOW.minusDays(30);
 
   private final AssertingRecordClient loansClient = new AssertingRecordClient(
     client, StorageTestSuite.TENANT_ID, InterfaceUrls::loanStorageUrl, "loans");
@@ -50,119 +57,104 @@ public class LoansToAnonymizeApiTest extends ApiTests {
   }
 
   @Test
-  void returnsClosedLoansWithUserWithoutDateFilter() {
-    String closedLoan = createClosedLoan(randomUserId(), NOW);
-    createLoan(new LoanRequestBuilder().open().withUserId(UUID.randomUUID()));
-    createLoan(new LoanRequestBuilder().closed().withNoUserId());
-
-    assertThat(getLoansToAnonymize(""), containsInAnyOrder(closedLoan));
-  }
-
-  @Test
-  void excludesLoansOfNeverUsers() {
-    String neverUser = randomUserId();
-    storePreference(neverUser, "never");
-    createClosedLoan(neverUser, NOW.minusYears(5));
-    createClosedLoan(neverUser, null);
-
-    assertThat(getLoansToAnonymize(""), empty());
-    assertThat(getLoansToAnonymize(allCutoffs()), empty());
-  }
-
-  @Test
-  void filtersLoansOfLibraryPolicyUsersByLibraryPolicyCutoff() {
-    String user = randomUserId();
-    String due = createClosedLoan(user, LIBRARY_POLICY_CUTOFF.minusMinutes(1));
-    createClosedLoan(user, LIBRARY_POLICY_CUTOFF.plusMinutes(1));
-
-    assertThat(getLoansToAnonymize(allCutoffs()), containsInAnyOrder(due));
-  }
-
-  @Test
-  void filtersLoansOfAsEarlyAsPossibleUsersByAsEarlyAsPossibleCutoff() {
-    String earlyUser = randomUserId();
-    String libraryUser = randomUserId();
-    storePreference(earlyUser, "asEarlyAsPossible");
-    DateTime betweenCutoffs = LIBRARY_POLICY_CUTOFF.plusDays(1);
-    String earlyUsersLoan = createClosedLoan(earlyUser, betweenCutoffs);
-    createClosedLoan(libraryUser, betweenCutoffs);
-    createClosedLoan(earlyUser, AS_EARLY_AS_POSSIBLE_CUTOFF.plusMinutes(1));
-
-    assertThat(getLoansToAnonymize(allCutoffs()), containsInAnyOrder(earlyUsersLoan));
-  }
-
-  @Test
-  void asEarlyAsPossibleCutoffDoesNotApplyToLibraryPolicyUsers() {
-    String earlyUser = randomUserId();
-    storePreference(earlyUser, "asEarlyAsPossible");
+  void eachGroupOnlyReturnsItsOwnUsers() {
+    String earlyUser = storedUser(EARLY);
+    String neverUser = storedUser("never");
     String earlyUsersLoan = createClosedLoan(earlyUser, NOW);
     String libraryUsersLoan = createClosedLoan(randomUserId(), NOW);
+    createClosedLoan(neverUser, NOW.minusYears(5));
 
-    assertThat(getLoansToAnonymize("?libraryPolicyReturnedBefore=" + encode(LIBRARY_POLICY_CUTOFF)),
-      containsInAnyOrder(earlyUsersLoan));
-    assertThat(getLoansToAnonymize("?asEarlyAsPossibleReturnedBefore="
-      + encode(AS_EARLY_AS_POSSIBLE_CUTOFF)), containsInAnyOrder(libraryUsersLoan));
-  }
-
-  @Test
-  void excludeLibraryPolicyKeepsLoansOfAsEarlyAsPossibleUsers() {
-    String earlyUser = randomUserId();
-    storePreference(earlyUser, "asEarlyAsPossible");
-    String earlyUsersLoan = createClosedLoan(earlyUser, NOW.minusYears(1));
-    createClosedLoan(randomUserId(), NOW.minusYears(1));
-
-    assertThat(getLoansToAnonymize("?excludeLibraryPolicy=true"),
-      containsInAnyOrder(earlyUsersLoan));
-  }
-
-  @Test
-  void excludeLibraryPolicyStillExcludesNeverUsers() {
-    String neverUser = randomUserId();
-    storePreference(neverUser, "never");
-    createClosedLoan(neverUser, NOW.minusYears(1));
-
-    assertThat(getLoansToAnonymize("?excludeLibraryPolicy=true"), empty());
-  }
-
-  @Test
-  void loansWithoutSystemReturnDatePassTheDateFilter() {
-    String earlyUser = randomUserId();
-    storePreference(earlyUser, "asEarlyAsPossible");
-    String libraryUsersLoan = createClosedLoan(randomUserId(), null);
-    String earlyUsersLoan = createClosedLoan(earlyUser, null);
-
-    assertThat(getLoansToAnonymize(allCutoffs()),
-      containsInAnyOrder(libraryUsersLoan, earlyUsersLoan));
+    assertThat(getLoansToAnonymize(EARLY, null), containsInAnyOrder(earlyUsersLoan));
+    assertThat(getLoansToAnonymize(LIBRARY, null), containsInAnyOrder(libraryUsersLoan));
   }
 
   @ParameterizedTest
-  @ValueSource(strings = { "libraryPolicy", "unknownValue" })
-  void otherPreferenceValuesFollowTheLibraryPolicy(String preference) {
+  @ValueSource(strings = { EARLY, LIBRARY })
+  void openAndAnonymizedLoansAreNeverReturned(String preference) {
+    String user = userOfGroup(preference);
+    String closedLoan = createClosedLoan(user, NOW);
+    createLoan(new LoanRequestBuilder().open().withUserId(UUID.fromString(user)));
+    createLoan(new LoanRequestBuilder().closed().withNoUserId());
+
+    assertThat(getLoansToAnonymize(preference, null), containsInAnyOrder(closedLoan));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = { LIBRARY, "unknownValue" })
+  void explicitLibraryPolicyAndUnknownValuesBelongToLibraryPolicy(String storedPreference) {
+    String loan = createClosedLoan(storedUser(storedPreference), NOW);
+
+    assertThat(getLoansToAnonymize(LIBRARY, null), containsInAnyOrder(loan));
+    assertThat(getLoansToAnonymize(EARLY, null), empty());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = { EARLY, LIBRARY })
+  void returnedBeforeIsStrict(String preference) {
+    String user = userOfGroup(preference);
+    String before = createClosedLoan(user, CUTOFF.minusSeconds(1));
+    createClosedLoan(user, CUTOFF);
+    createClosedLoan(user, CUTOFF.plusSeconds(1));
+
+    assertThat(getLoansToAnonymize(preference, CUTOFF), containsInAnyOrder(before));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = { EARLY, LIBRARY })
+  void loanWithoutSystemReturnDateOnlyPassesWithoutDate(String preference) {
+    String loan = createClosedLoan(userOfGroup(preference), null);
+
+    assertThat(getLoansToAnonymize(preference, null), containsInAnyOrder(loan));
+    assertThat(getLoansToAnonymize(preference, CUTOFF), empty());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = { "", "2021-02-30T10:00:00.000Z", "not a date" })
+  void invalidStoredSystemReturnDateDoesNotFailTheRequest(String invalidDate) {
+    String earlyLoan = createClosedLoan(storedUser(EARLY), CUTOFF.minusYears(1));
+    String libraryLoan = createClosedLoan(randomUserId(), CUTOFF.minusYears(1));
+    setSystemReturnDate(earlyLoan, invalidDate);
+    setSystemReturnDate(libraryLoan, invalidDate);
+
+    assertThat(getLoansToAnonymize(EARLY, CUTOFF), empty());
+    assertThat(getLoansToAnonymize(LIBRARY, CUTOFF), empty());
+    assertThat(getLoansToAnonymize(EARLY, null), containsInAnyOrder(earlyLoan));
+    assertThat(getLoansToAnonymize(LIBRARY, null), containsInAnyOrder(libraryLoan));
+  }
+
+  @Test
+  void uppercaseUserIdIsMatched() {
+    String earlyUser = storedUser(EARLY);
+    String neverUser = storedUser("never");
+    String earlyLoan = createLoan(closedLoanBuilder(NOW), earlyUser.toUpperCase());
+    createLoan(closedLoanBuilder(NOW), neverUser.toUpperCase());
+
+    assertThat(getLoansToAnonymize(EARLY, null), containsInAnyOrder(earlyLoan));
+    assertThat(getLoansToAnonymize(LIBRARY, null), empty());
+  }
+
+  @Test
+  void invalidUserIdDoesNotBreakTheQuery() {
+    String loan = createLoan(closedLoanBuilder(NOW), "not-a-uuid");
+
+    assertThat(getLoansToAnonymize(LIBRARY, null), containsInAnyOrder(loan));
+    assertThat(getLoansToAnonymize(EARLY, null), empty());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = { "Z", "+02:00", "+0200" })
+  void returnedBeforeAcceptsOffsetFormats(String offset) {
     String user = randomUserId();
-    storePreference(user, preference);
-    String due = createClosedLoan(user, LIBRARY_POLICY_CUTOFF.minusMinutes(1));
-    createClosedLoan(user, AS_EARLY_AS_POSSIBLE_CUTOFF.minusMinutes(1));
+    String before = createClosedLoan(user, CUTOFF.minusSeconds(1));
+    createClosedLoan(user, CUTOFF.plusSeconds(1));
 
-    assertThat(getLoansToAnonymize(allCutoffs()), containsInAnyOrder(due));
-  }
+    ZoneOffset zoneOffset = "Z".equals(offset) ? ZoneOffset.UTC : ZoneOffset.ofHours(2);
+    String formatted = OffsetDateTime.parse(CUTOFF.toString())
+      .withOffsetSameInstant(zoneOffset)
+      .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")) + offset;
 
-  @Test
-  void loanWithMalformedUserIdDoesNotBreakTheQuery() {
-    String malformedUsersLoan = createLoan(new LoanRequestBuilder().closed()
-      .withSystemReturnDate(NOW.minusYears(1)), "not-a-uuid");
-
-    assertThat(getLoansToAnonymize(allCutoffs()), containsInAnyOrder(malformedUsersLoan));
-  }
-
-  @Test
-  void userIdIsMatchedCaseInsensitively() {
-    String neverUser = randomUserId();
-    storePreference(neverUser, "never");
-    createLoan(new LoanRequestBuilder().closed()
-      .withUserId(UUID.fromString(neverUser))
-      .withSystemReturnDate(NOW.minusYears(1)), neverUser.toUpperCase());
-
-    assertThat(getLoansToAnonymize(""), empty());
+    assertThat(getLoansToAnonymize("?preference=" + LIBRARY + "&limit=10&returnedBefore="
+      + encode(formatted)), containsInAnyOrder(before));
   }
 
   @Test
@@ -171,40 +163,84 @@ public class LoansToAnonymizeApiTest extends ApiTests {
       createClosedLoan(randomUserId(), NOW);
     }
 
-    assertThat(getLoansToAnonymize("?limit=0"), empty());
-    assertThat(getLoansToAnonymize("?limit=2"), hasSize(2));
-    assertThat(getLoansToAnonymize("?limit=50000"), hasSize(3));
+    assertThat(getLoansToAnonymize("?preference=" + LIBRARY + "&limit=2"), hasSize(2));
+    assertThat(getLoansToAnonymize("?preference=" + LIBRARY + "&limit=50000"), hasSize(3));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "?preference=libraryPolicy&limit=10&returnedBefore=2026-13-01T00:00:00Z",
+    "?preference=libraryPolicy&limit=10&returnedBefore=2026-02-30T00:00:00Z",
+    "?preference=libraryPolicy&limit=10&returnedBefore=2026-01-01T00:00:00",
+    "?preference=libraryPolicy&limit=10&returnedBefore=2026-01-01",
+    "?preference=libraryPolicy",
+    "?preference=libraryPolicy&limit=0",
+    "?preference=libraryPolicy&limit=50001",
+    "?preference=never&limit=10",
+    "?limit=10",
+  })
+  void invalidRequestIsRejected(String queryString) {
+    assertThat(get(queryString), isBadRequest());
   }
 
   @Test
-  void malformedCutoffIsRejected() {
-    JsonResponse response = get("?libraryPolicyReturnedBefore=2026-13-01");
+  void malformedReturnedBeforeIsNamedInTheError() {
+    JsonResponse response = get("?preference=libraryPolicy&limit=10&returnedBefore=2026-13-01");
 
     assertThat(response, isBadRequest());
-    assertThat(response.getBody(), containsString("libraryPolicyReturnedBefore"));
+    assertThat(response.getBody(), containsString("returnedBefore"));
   }
 
-  private static String allCutoffs() {
-    return "?libraryPolicyReturnedBefore=" + encode(LIBRARY_POLICY_CUTOFF)
-      + "&asEarlyAsPossibleReturnedBefore=" + encode(AS_EARLY_AS_POSSIBLE_CUTOFF);
+  @Test
+  void asEarlyAsPossibleQueryUsesTheUserIdIndex() {
+    String sql = LoanService.loansToAnonymizeSql(pgClient.getSchemaName(),
+      LoanStorageLoansToAnonymizeGetPreference.ASEARLYASPOSSIBLE);
+    Tuple params = Tuple.tuple().addOffsetDateTime(null).addInteger(10).addString(EARLY);
+
+    // Few test rows: without this, a sequential scan is always cheaper
+    var planRows = waitFor(pgClient.withTrans(conn -> conn.execute("SET LOCAL enable_seqscan = off")
+      .compose(x -> conn.execute("EXPLAIN " + sql, params))));
+    var plan = new StringBuilder();
+    planRows.forEach(row -> plan.append(row.getString(0)).append('\n'));
+
+    assertThat(plan.toString(), containsString("loan_userid_idx"));
+    assertThat(plan.toString(), not(containsString("Seq Scan on loan ")));
   }
 
-  private static String encode(DateTime dateTime) {
-    return URLEncoder.encode(dateTime.toString(), StandardCharsets.UTF_8);
+  private String userOfGroup(String preference) {
+    return EARLY.equals(preference) ? storedUser(EARLY) : randomUserId();
+  }
+
+  private static String storedUser(String preference) {
+    String userId = randomUserId();
+    waitFor(pgClient.execute(
+      format("INSERT INTO %s.user_loan_anonymization_preference (id, jsonb) VALUES ($1, $2)",
+        pgClient.getSchemaName()),
+      Tuple.of(UUID.fromString(userId),
+        new JsonObject().put("id", userId).put("preference", preference))));
+    return userId;
+  }
+
+  private static void setSystemReturnDate(String loanId, String value) {
+    waitFor(pgClient.execute(
+      format("UPDATE %s.loan SET jsonb = jsonb_set(jsonb, '{systemReturnDate}', to_jsonb($1::text))"
+        + " WHERE id = $2", pgClient.getSchemaName()),
+      Tuple.of(value, UUID.fromString(loanId))));
   }
 
   private static String randomUserId() {
     return UUID.randomUUID().toString();
   }
 
-  /**
-   * @param systemReturnDate null creates a closed loan without system return date
-   */
+  private static LoanRequestBuilder closedLoanBuilder(DateTime systemReturnDate) {
+    return new LoanRequestBuilder().closed().withSystemReturnDate(systemReturnDate);
+  }
+
+  /** systemReturnDate null: loan without systemReturnDate */
   @SneakyThrows
   private String createClosedLoan(String userId, DateTime systemReturnDate) {
-    JsonObject loan = new LoanRequestBuilder().closed()
+    JsonObject loan = closedLoanBuilder(systemReturnDate)
       .withUserId(UUID.fromString(userId))
-      .withSystemReturnDate(systemReturnDate)
       .create();
     if (systemReturnDate == null) {
       loan.remove("systemReturnDate");
@@ -222,12 +258,16 @@ public class LoansToAnonymizeApiTest extends ApiTests {
     return loansClient.create(builder.create().put("userId", userId)).getId();
   }
 
-  private static void storePreference(String userId, String preference) {
-    waitFor(pgClient.execute(
-      format("INSERT INTO %s.user_loan_anonymization_preference (id, jsonb) VALUES ($1, $2)",
-        pgClient.getSchemaName()),
-      Tuple.of(UUID.fromString(userId),
-        new JsonObject().put("id", userId).put("preference", preference))));
+  private static String encode(String value) {
+    return URLEncoder.encode(value, StandardCharsets.UTF_8);
+  }
+
+  private List<String> getLoansToAnonymize(String preference, DateTime returnedBefore) {
+    String queryString = "?preference=" + preference + "&limit=50000";
+    if (returnedBefore != null) {
+      queryString += "&returnedBefore=" + encode(returnedBefore.toString());
+    }
+    return getLoansToAnonymize(queryString);
   }
 
   private List<String> getLoansToAnonymize(String queryString) {

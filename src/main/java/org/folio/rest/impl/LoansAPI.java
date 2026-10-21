@@ -6,6 +6,7 @@ import javax.ws.rs.core.Response;
 
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Loan;
+import org.folio.rest.jaxrs.model.LoanStorageLoansToAnonymizeGetPreference;
 import org.folio.rest.jaxrs.resource.LoanStorage;
 import org.folio.service.loan.LoanService;
 
@@ -95,14 +96,12 @@ public class LoansAPI implements LoanStorage {
 
   @Validate
   @Override
-  public void getLoanStorageLoansToAnonymize(String libraryPolicyReturnedBefore,
-    String asEarlyAsPossibleReturnedBefore, boolean excludeLibraryPolicy, int limit,
-    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void getLoanStorageLoansToAnonymize(LoanStorageLoansToAnonymizeGetPreference preference,
+    String returnedBefore, int limit, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-    new LoanService(vertxContext, okapiHeaders).findLoansToAnonymize(libraryPolicyReturnedBefore,
-        asEarlyAsPossibleReturnedBefore, excludeLibraryPolicy, limit)
+    new LoanService(vertxContext, okapiHeaders)
+        .findLoansToAnonymize(preference, returnedBefore, limit)
         .onComplete(asyncResultHandler);
   }
-
 }

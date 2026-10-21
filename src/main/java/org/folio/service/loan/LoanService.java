@@ -2,11 +2,14 @@ package org.folio.service.loan;
 
 import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.Promise.promise;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.folio.service.event.EntityChangedEventPublisherFactory.loanEventPublisher;
+import static org.folio.support.LoanAnonymizationPreference.AS_EARLY_AS_POSSIBLE;
+import static org.folio.support.LoanAnonymizationPreference.NEVER;
 import static org.folio.support.ModuleConstants.LOAN_CLASS;
 import static org.folio.support.ModuleConstants.LOAN_HISTORY_TABLE;
 import static org.folio.support.ModuleConstants.LOAN_TABLE;
@@ -15,9 +18,11 @@ import static org.folio.support.ModuleConstants.OPEN_LOAN_STATUS;
 import static org.folio.support.ModuleConstants.USER_LOAN_ANONYMIZATION_PREFERENCE_TABLE;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
+import java.time.DateTimeException;
 import java.time.OffsetDateTime;
-import java.time.format.DateTimeParseException;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.ResolverStyle;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
@@ -36,6 +41,7 @@ import org.folio.rest.impl.util.OkapiResponseUtil;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Loan;
+import org.folio.rest.jaxrs.model.LoanStorageLoansToAnonymizeGetPreference;
 import org.folio.rest.jaxrs.model.Loans;
 import org.folio.rest.jaxrs.model.LoansHistoryItem;
 import org.folio.rest.jaxrs.model.LoansHistoryItems;
@@ -47,7 +53,6 @@ import org.folio.rest.persist.cql.CQLQueryValidationException;
 import org.folio.rest.tools.utils.ValidationHelper;
 import org.folio.service.event.EntityChangedEventPublisher;
 import org.folio.support.CqlQuery;
-import org.folio.support.LoanAnonymizationPreference;
 import org.folio.support.ResponseUtil;
 import org.folio.support.ResultHandlerFactory;
 import org.folio.support.ServerErrorResponder;
@@ -62,8 +67,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
 import jakarta.validation.constraints.NotNull;
 
@@ -71,6 +74,24 @@ public class LoanService {
 
   private static final Logger log = LogManager.getLogger(LoanService.class);
   private static final ObjectMapper MAPPER = ObjectMapperTool.getMapper();
+  // ISO 8601 date-time with offset Z, +HH:MM or +HHMM
+  private static final DateTimeFormatter RETURNED_BEFORE_FORMAT = new DateTimeFormatterBuilder()
+    .append(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+    .optionalStart().appendOffset("+HH:MM", "Z").optionalEnd()
+    .optionalStart().appendOffset("+HHMM", "Z").optionalEnd()
+    .toFormatter()
+    .withResolverStyle(ResolverStyle.STRICT);  // rejects 2026-02-30
+
+  /**
+   * Without $1: no date filter. With $1: only loans with a readable systemReturnDate before $1.
+   * The CASE makes sure invalid dates (e.g. "", 2021-02-30) are skipped, not cast.
+   */
+  private static final String RETURNED_BEFORE_FILTER = """
+    ($1::timestamptz IS NULL OR
+        CASE WHEN pg_input_is_valid(loan.jsonb->>'systemReturnDate', 'timestamptz')
+          THEN (loan.jsonb->>'systemReturnDate')::timestamptz < $1::timestamptz
+          ELSE false
+        END)""";
 
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
@@ -234,36 +255,35 @@ public class LoanService {
   }
 
   /**
-   * Prefilter for the scheduled loan anonymization when user-specific preferences are enabled.
-   * The caller (mod-circulation) makes the final decision per loan, so this must never be stricter
-   * than its checkers, otherwise loans silently never get anonymized.
+   * Loans of one preference group for the scheduled anonymization.
+   * A prefilter: must never be stricter than the checkers in mod-circulation.
    */
-  public Future<Response> findLoansToAnonymize(String libraryPolicyReturnedBefore,
-    String asEarlyAsPossibleReturnedBefore, boolean excludeLibraryPolicy, int limit) {
+  public Future<Response> findLoansToAnonymize(LoanStorageLoansToAnonymizeGetPreference preference,
+    String returnedBefore, int limit) {
 
-    final OffsetDateTime libraryPolicyCutoff;
-    final OffsetDateTime asEarlyAsPossibleCutoff;
+    // RMB checks limit (@Min/@Max); a missing or unknown enum value arrives as null
+    if (preference == null) {
+      return succeededFuture(LoanStorage.GetLoanStorageLoansToAnonymizeResponse
+        .respond400WithTextPlain("preference must be asEarlyAsPossible or libraryPolicy"));
+    }
+
+    final OffsetDateTime cutoff;
     try {
-      libraryPolicyCutoff = parseDateTime("libraryPolicyReturnedBefore",
-        libraryPolicyReturnedBefore);
-      asEarlyAsPossibleCutoff = parseDateTime("asEarlyAsPossibleReturnedBefore",
-        asEarlyAsPossibleReturnedBefore);
+      cutoff = parseReturnedBefore(returnedBefore);
     } catch (IllegalArgumentException e) {
       return succeededFuture(LoanStorage.GetLoanStorageLoansToAnonymizeResponse
         .respond400WithTextPlain(e.getMessage()));
     }
 
-    Tuple params = Tuple.tuple()
-      .addOffsetDateTime(libraryPolicyCutoff)
-      .addOffsetDateTime(asEarlyAsPossibleCutoff)
-      .addBoolean(excludeLibraryPolicy)
-      .addString(LoanAnonymizationPreference.NEVER.value())
-      .addString(LoanAnonymizationPreference.AS_EARLY_AS_POSSIBLE.value())
-      .addInteger(limit);
+    Tuple params = Tuple.tuple().addOffsetDateTime(cutoff).addInteger(limit)
+      .addString(AS_EARLY_AS_POSSIBLE.value());
+    if (preference == LoanStorageLoansToAnonymizeGetPreference.LIBRARYPOLICY) {
+      params.addString(NEVER.value());
+    }
 
-    return postgresClient.execute(createLoansToAnonymizeSql(postgresClient.getSchemaName()), params)
-      .map(LoanService::toLoans)
-      .<Response>map(LoanStorage.GetLoanStorageLoansToAnonymizeResponse::respond200WithApplicationJson)
+    return postgresClient.execute(loansToAnonymizeSql(postgresClient.getSchemaName(), preference),
+        params)
+      .map(rows -> Response.ok(rows.iterator().next().getString(0), APPLICATION_JSON).build())
       .otherwise(e -> {
         log.error("findLoansToAnonymize:: {}", e.getMessage(), e);
         return LoanStorage.GetLoanStorageLoansToAnonymizeResponse
@@ -271,60 +291,69 @@ public class LoanService {
       });
   }
 
-  private static OffsetDateTime parseDateTime(String parameterName, String value) {
+  private static OffsetDateTime parseReturnedBefore(String value) {
     if (isBlank(value)) {
       return null;
     }
     try {
-      return OffsetDateTime.parse(value);
-    } catch (DateTimeParseException e) {
-      throw new IllegalArgumentException(
-        parameterName + " is not a valid date-time: " + value, e);
+      return OffsetDateTime.parse(value, RETURNED_BEFORE_FORMAT);
+    } catch (DateTimeException e) {
+      throw new IllegalArgumentException("returnedBefore is not a valid date-time: " + value, e);
     }
-  }
-
-  private static Loans toLoans(RowSet<Row> rows) {
-    var loans = new ArrayList<Loan>(rows.size());
-    for (Row row : rows) {
-      try {
-        loans.add(MAPPER.readValue(row.getString(0), Loan.class));
-      } catch (IOException e) {
-        throw new UncheckedIOException(e);
-      }
-    }
-    return new Loans().withLoans(loans).withTotalRecords(loans.size());
   }
 
   /**
-   * Must never be stricter than the checkers in mod-circulation.
-   * No ORDER BY, same as the CQL query used before; a sort by return date would keep loans held
-   * back by fees/fines at the top for good. Known limitation, also as before: unsorted rows
-   * usually come in physical order, so if the first limit rows are all rejected by
-   * mod-circulation, every run gets the same batch.
-   * Loans without systemReturnDate pass the date filter.
-   * userId is compared as text, so a malformed id can't break the query.
+   * $1 returnedBefore, $2 limit, $3 "asEarlyAsPossible", $4 "never".
+   * Builds the JSON in SQL, so a malformed loan field can't fail the request.
+   * No ORDER BY, as before: rejected loans can take the same slots on every run.
    */
-  private static String createLoansToAnonymizeSql(String schemaName) {
+  public static String loansToAnonymizeSql(String schemaName,
+    LoanStorageLoansToAnonymizeGetPreference preference) {
+
     return """
-      SELECT loan.jsonb::text
+      SELECT jsonb_build_object(
+        'loans', COALESCE(jsonb_agg(selected.jsonb), '[]'::jsonb),
+        'totalRecords', count(*))::text
+      FROM (%s) selected
+      """.formatted(selectLoansToAnonymizeSql(schemaName, preference));
+  }
+
+  private static String selectLoansToAnonymizeSql(String schemaName,
+    LoanStorageLoansToAnonymizeGetPreference preference) {
+
+    // Index lookup per user: must match the userId index of the loan table exactly.
+    // LATERAL with LIMIT stops the planner from scanning the whole loan table, it misjudges the jsonb filters.
+    if (preference == LoanStorageLoansToAnonymizeGetPreference.ASEARLYASPOSSIBLE) {
+      return """
+        SELECT loan.jsonb
+        FROM %1$s.%3$s preference
+        CROSS JOIN LATERAL (
+          SELECT loan.jsonb
+          FROM %1$s.%2$s loan
+          WHERE left(lower(%1$s.f_unaccent(loan.jsonb->>'userId')), 600) = preference.id::text
+            AND loan.jsonb->'status'->>'name' = 'Closed'
+            AND %4$s
+          LIMIT $2) loan
+        WHERE preference.jsonb->>'preference' = $3
+        LIMIT $2
+        """.formatted(schemaName, LOAN_TABLE, USER_LOAN_ANONYMIZATION_PREFERENCE_TABLE,
+          RETURNED_BEFORE_FILTER);
+    }
+
+    // Text comparison, so a malformed userId can't break the query
+    return """
+      SELECT loan.jsonb
       FROM %1$s.%2$s loan
-      LEFT JOIN %1$s.%3$s preference
-        ON preference.id::text = lower(loan.jsonb->>'userId')
       WHERE loan.jsonb->'status'->>'name' = 'Closed'
         AND loan.jsonb->>'userId' IS NOT NULL
-        AND preference.jsonb->>'preference' IS DISTINCT FROM $4
-        AND CASE WHEN preference.jsonb->>'preference' = $5
-          THEN $2::timestamptz IS NULL
-            OR loan.jsonb->>'systemReturnDate' IS NULL
-            OR (loan.jsonb->>'systemReturnDate')::timestamptz < $2::timestamptz
-          ELSE NOT $3::boolean AND (
-            $1::timestamptz IS NULL
-            OR loan.jsonb->>'systemReturnDate' IS NULL
-            OR (loan.jsonb->>'systemReturnDate')::timestamptz < $1::timestamptz)
-          END
-      LIMIT $6
-      """.formatted(schemaName, LOAN_TABLE,
-        USER_LOAN_ANONYMIZATION_PREFERENCE_TABLE);
+        AND NOT EXISTS (
+          SELECT 1 FROM %1$s.%3$s preference
+          WHERE preference.id::text = lower(loan.jsonb->>'userId')
+            AND preference.jsonb->>'preference' IN ($3, $4))
+        AND %4$s
+      LIMIT $2
+      """.formatted(schemaName, LOAN_TABLE, USER_LOAN_ANONYMIZATION_PREFERENCE_TABLE,
+        RETURNED_BEFORE_FILTER);
   }
 
   public Future<Response> anonymizeByUserId(String userId) {
