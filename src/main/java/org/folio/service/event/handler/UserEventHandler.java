@@ -50,8 +50,10 @@ public class UserEventHandler implements AsyncRecordHandler<String, String> {
   }
 
   private Future<Void> handleEvent(KafkaConsumerRecord<String, String> kafkaConsumerRecord) {
-    var headers = new CaseInsensitiveMap<>(kafkaHeadersToMap(kafkaConsumerRecord.headers()));
-    var repository = new UserLoanAnonymizationPreferenceRepository(context, headers);
+    CaseInsensitiveMap<String, String> headers =
+      new CaseInsensitiveMap<>(kafkaHeadersToMap(kafkaConsumerRecord.headers()));
+    UserLoanAnonymizationPreferenceRepository repository =
+      new UserLoanAnonymizationPreferenceRepository(context, headers);
     JsonObject event = new JsonObject(kafkaConsumerRecord.value());
     JsonObject data = event.getJsonObject("data", new JsonObject());
 
