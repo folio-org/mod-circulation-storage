@@ -4,6 +4,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static io.vertx.core.json.JsonObject.mapFrom;
 import static java.lang.String.format;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.kafka.clients.producer.ProducerConfig.ACKS_CONFIG;
 import static org.apache.kafka.clients.producer.ProducerConfig.BOOTSTRAP_SERVERS_CONFIG;
@@ -29,6 +30,7 @@ import static org.folio.service.event.handler.processor.ItemUpdateProcessorForRe
 import static org.folio.service.event.handler.processor.ItemUpdateProcessorForRequest.RETRIEVAL_SERVICE_POINT_ID;
 import static org.folio.service.event.handler.processor.ItemUpdateProcessorForRequest.RETRIEVAL_SERVICE_POINT_NAME;
 import static org.folio.support.kafka.topic.UsersKafkaTopic.USERS;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.hasItems;
@@ -59,6 +61,8 @@ import org.folio.rest.support.builders.RequestItemSummary;
 import org.folio.rest.support.builders.RequestPolicyBuilder;
 import org.folio.rest.support.builders.RequestRequestBuilder;
 import org.folio.rest.support.builders.ServicePointBuilder;
+import org.folio.service.event.handler.UserEventHandler;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.jupiter.api.AfterAll;
@@ -72,15 +76,20 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.admin.KafkaAdminClient;
 import io.vertx.kafka.client.common.TopicPartition;
+import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.consumer.OffsetAndMetadata;
+import io.vertx.kafka.client.consumer.impl.KafkaConsumerRecordImpl;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
+import io.vertx.pgclient.PgConnection;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import io.vertx.sqlclient.Transaction;
 import io.vertx.sqlclient.Tuple;
 import lombok.SneakyThrows;
 
@@ -808,6 +817,29 @@ class EventConsumerVerticleTest extends ApiTests {
     assertThat(getStoredPreference(), is("never"));
   }
 
+  @Test
+  void eventIsCancelledInTheDatabaseWhenItTimesOut() {
+    storePreference("asEarlyAsPossible");
+    UserEventHandler handler = new UserEventHandler(getVertx().getOrCreateContext(), 1000);
+    PgConnection lockingConnection = waitFor(pgClient.getConnection());
+    try {
+      Transaction transaction = waitFor(lockingConnection.begin());
+      waitFor(lockingConnection.query(format(
+        "SELECT * FROM %s.user_loan_anonymization_preference FOR UPDATE",
+        pgClient.getSchemaName())).execute());
+
+      Future<String> blockedEvent = handler.handle(buildUserEventRecord("UPDATED",
+        buildUser("asEarlyAsPossible"), buildUser("never")));
+      waitAtMost(10, SECONDS).until(blockedEvent::isComplete);
+      waitFor(transaction.rollback());
+
+      assertThat(blockedEvent.cause().getMessage(), containsString("canceling statement"));
+      assertThat(getStoredPreference(), is("asEarlyAsPossible"));
+    } finally {
+      waitFor(lockingConnection.close());
+    }
+  }
+
   private static KafkaProducer<String, JsonObject> createProducer() {
     Properties config = new Properties();
     config.put(BOOTSTRAP_SERVERS_CONFIG, KAFKA_SERVER_URL);
@@ -861,6 +893,16 @@ class EventConsumerVerticleTest extends ApiTests {
       .put("tenant", TENANT_ID)
       .put("timestamp", System.currentTimeMillis())
       .put("data", new JsonObject().put("old", oldUser).put("new", newUser));
+  }
+
+  private static KafkaConsumerRecord<String, String> buildUserEventRecord(String eventType,
+    JsonObject oldUser, JsonObject newUser) {
+
+    ConsumerRecord<String, String> consumerRecord = new ConsumerRecord<>(USERS_TOPIC, 0, 0,
+      USER_ID, buildUserEvent(eventType, oldUser, newUser).encode());
+    consumerRecord.headers().add(TENANT, TENANT_ID.getBytes(UTF_8));
+
+    return new KafkaConsumerRecordImpl<>(consumerRecord);
   }
 
   private static JsonObject buildUser(String loanAnonymizationPreference) {
