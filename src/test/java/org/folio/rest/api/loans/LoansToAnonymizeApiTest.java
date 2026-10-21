@@ -195,7 +195,7 @@ public class LoansToAnonymizeApiTest extends ApiTests {
   void asEarlyAsPossibleQueryUsesTheUserIdIndex() {
     String sql = LoanService.loansToAnonymizeSql(pgClient.getSchemaName(),
       LoanStorageLoansToAnonymizeGetPreference.ASEARLYASPOSSIBLE);
-    Tuple params = Tuple.tuple().addOffsetDateTime(null).addInteger(10).addString(EARLY);
+    Tuple params = Tuple.tuple().addOffsetDateTime(null).addInteger(10);
 
     // Few test rows: without this, a sequential scan is always cheaper
     var planRows = waitFor(pgClient.withTrans(conn -> conn.execute("SET LOCAL enable_seqscan = off")

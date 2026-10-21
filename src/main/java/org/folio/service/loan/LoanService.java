@@ -275,14 +275,8 @@ public class LoanService {
         .respond400WithTextPlain(e.getMessage()));
     }
 
-    Tuple params = Tuple.tuple().addOffsetDateTime(cutoff).addInteger(limit)
-      .addString(AS_EARLY_AS_POSSIBLE.value());
-    if (preference == LoanStorageLoansToAnonymizeGetPreference.LIBRARYPOLICY) {
-      params.addString(NEVER.value());
-    }
-
     return postgresClient.execute(loansToAnonymizeSql(postgresClient.getSchemaName(), preference),
-        params)
+        Tuple.of(cutoff, limit))
       .map(rows -> Response.ok(rows.iterator().next().getString(0), APPLICATION_JSON).build())
       .otherwise(e -> {
         log.error("findLoansToAnonymize:: {}", e.getMessage(), e);
@@ -303,7 +297,7 @@ public class LoanService {
   }
 
   /**
-   * $1 returnedBefore, $2 limit, $3 "asEarlyAsPossible", $4 "never".
+   * $1 returnedBefore, $2 limit. Public for the EXPLAIN test in LoansToAnonymizeApiTest.
    * Builds the JSON in SQL, so a malformed loan field can't fail the request.
    * No ORDER BY, as before: rejected loans can take the same slots on every run.
    */
@@ -334,10 +328,10 @@ public class LoanService {
             AND loan.jsonb->'status'->>'name' = 'Closed'
             AND %4$s
           LIMIT $2) loan
-        WHERE preference.jsonb->>'preference' = $3
+        WHERE preference.jsonb->>'preference' = '%5$s'
         LIMIT $2
         """.formatted(schemaName, LOAN_TABLE, USER_LOAN_ANONYMIZATION_PREFERENCE_TABLE,
-          RETURNED_BEFORE_FILTER);
+          RETURNED_BEFORE_FILTER, AS_EARLY_AS_POSSIBLE.value());
     }
 
     // Text comparison, so a malformed userId can't break the query
@@ -349,11 +343,11 @@ public class LoanService {
         AND NOT EXISTS (
           SELECT 1 FROM %1$s.%3$s preference
           WHERE preference.id::text = lower(loan.jsonb->>'userId')
-            AND preference.jsonb->>'preference' IN ($3, $4))
+            AND preference.jsonb->>'preference' IN ('%5$s', '%6$s'))
         AND %4$s
       LIMIT $2
       """.formatted(schemaName, LOAN_TABLE, USER_LOAN_ANONYMIZATION_PREFERENCE_TABLE,
-        RETURNED_BEFORE_FILTER);
+        RETURNED_BEFORE_FILTER, AS_EARLY_AS_POSSIBLE.value(), NEVER.value());
   }
 
   public Future<Response> anonymizeByUserId(String userId) {
