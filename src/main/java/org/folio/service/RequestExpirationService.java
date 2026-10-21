@@ -33,6 +33,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
@@ -132,7 +133,7 @@ public class RequestExpirationService {
   }
 
   private Future<Void> executeWithQueueLock(String queueId,
-    java.util.function.Supplier<Future<Void>> criticalSection) {
+    Supplier<Future<Void>> criticalSection) {
 
     return requestQueueLockService == null
       ? criticalSection.get()
