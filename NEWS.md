@@ -2,7 +2,7 @@
 * Add `inHouseUse` field to check-in entity (CIRCSTORE-679)
 * PubSub deprecation: add Kafka support (CIRCSTORE-417)
 * PubSub deprecation: Implement Kafka LOG_RECORD event publishing, remove PubSub infrastructure (CIRCSTORE-419)
-* Keep users' loan anonymization preferences in sync with mod-users events (CIRCSTORE-682)
+* Keep users' loan anonymization preferences in sync via mod-users events (CIRCSTORE-682)
 * Add `GET /loan-storage/loans-to-anonymize` that selects closed loans by the users' loan anonymization preference (CIRCSTORE-683)
 
 ## 17.5.0 2026-04-14
