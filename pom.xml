@@ -532,11 +532,12 @@
         <configuration>
           <useSystemClassLoader>false</useSystemClassLoader>
           <excludes>
-            <exclude>org/folio/rest/api/**/*Test.java</exclude>
+            <exclude>org/folio/rest/api/StorageTestSuite.java</exclude>
+            <exclude>org/folio/rest/api/migration/DueDateSlipsMigrationScriptTest.java</exclude>
+            <exclude>org/folio/rest/api/migration/SearchSlipsMigrationScriptTest.java</exclude>
+            <exclude>org/folio/rest/api/migration/StaffSlipsTransitMediatedRequestsMigrationScriptTest.java</exclude>
           </excludes>
           <includes>
-            <include>org/folio/rest/api/StorageTestSuite.java</include>
-            <include>org/folio/rest/api/TenantRefApiTests.java</include>
             <include>org/folio/**</include>
           </includes>
         </configuration>
