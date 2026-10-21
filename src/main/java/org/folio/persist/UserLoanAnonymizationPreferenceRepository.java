@@ -18,11 +18,13 @@ import io.vertx.core.json.JsonObject;
 public class UserLoanAnonymizationPreferenceRepository {
 
   private final PostgresClient postgresClient;
+  private final int queryTimeoutMillis;
 
   public UserLoanAnonymizationPreferenceRepository(Context context,
-    Map<String, String> okapiHeaders) {
+    Map<String, String> okapiHeaders, int queryTimeoutMillis) {
 
     postgresClient = postgresClient(context, okapiHeaders);
+    this.queryTimeoutMillis = queryTimeoutMillis;
   }
 
   public Future<Void> save(String userId, LoanAnonymizationPreference preference) {
@@ -30,12 +32,14 @@ public class UserLoanAnonymizationPreferenceRepository {
       .put("id", userId)
       .put("preference", preference.value());
 
-    return postgresClient.upsert(USER_LOAN_ANONYMIZATION_PREFERENCE_TABLE, userId, row)
+    return postgresClient.withConn(queryTimeoutMillis,
+        conn -> conn.upsert(USER_LOAN_ANONYMIZATION_PREFERENCE_TABLE, userId, row))
       .mapEmpty();
   }
 
   public Future<Void> delete(String userId) {
-    return postgresClient.delete(USER_LOAN_ANONYMIZATION_PREFERENCE_TABLE, userId)
+    return postgresClient.withConn(queryTimeoutMillis,
+        conn -> conn.delete(USER_LOAN_ANONYMIZATION_PREFERENCE_TABLE, userId))
       .mapEmpty();
   }
 }
