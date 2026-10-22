@@ -39,8 +39,7 @@ public class RequestRepository extends AbstractRepository<Request> {
       .map(UUID::fromString)
       .map(id -> "'" + id + "'")
       .collect(Collectors.joining(","));
-    String table = format("%s.%s", convertToPsqlStandard(postgresClient.getTenantId()),
-      REQUEST_TABLE);
+    String table = convertToPsqlStandard(postgresClient.getTenantId()) + "." + REQUEST_TABLE;
 
     return conn.execute(format(
       "UPDATE %s SET jsonb = jsonb - 'position' WHERE id::text IN (%s)",

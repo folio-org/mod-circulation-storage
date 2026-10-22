@@ -139,10 +139,6 @@ class RequestExpirationServiceTest {
     return handler.apply(conn);
   }
 
-  private static JsonObject getRequestJson(String id) {
-    return getRequestJson(id, "2baee507-b0c3-4dc9-b571-cd29d2c9e9e6");
-  }
-
   private static JsonObject getRequestJson(String id, String itemId) {
     return new JsonObject()
       .put("id", id)
