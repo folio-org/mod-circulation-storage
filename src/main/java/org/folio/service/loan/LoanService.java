@@ -38,7 +38,7 @@ import org.folio.rest.impl.util.OkapiResponseUtil;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Loan;
-import org.folio.rest.jaxrs.model.LoanStorageLoansToAnonymizeGetPreference;
+import org.folio.rest.jaxrs.model.LoanStorageAnonymizationCandidatesGetPreference;
 import org.folio.rest.jaxrs.model.Loans;
 import org.folio.rest.jaxrs.model.LoansHistoryItem;
 import org.folio.rest.jaxrs.model.LoansHistoryItems;
@@ -247,12 +247,12 @@ public class LoanService {
    * Loans of one preference group for the scheduled anonymization.
    * A prefilter: must never be stricter than the checkers in mod-circulation.
    */
-  public Future<Response> findLoansToAnonymize(LoanStorageLoansToAnonymizeGetPreference preference,
+  public Future<Response> findAnonymizationCandidates(LoanStorageAnonymizationCandidatesGetPreference preference,
     String returnedBefore, int limit) {
 
     // RMB checks limit (@Min/@Max); a missing or unknown enum value arrives as null
     if (preference == null) {
-      return succeededFuture(LoanStorage.GetLoanStorageLoansToAnonymizeResponse
+      return succeededFuture(LoanStorage.GetLoanStorageAnonymizationCandidatesResponse
         .respond400WithTextPlain("preference must be asEarlyAsPossible or libraryPolicy"));
     }
 
@@ -260,16 +260,16 @@ public class LoanService {
     try {
       cutoff = parseReturnedBefore(returnedBefore);
     } catch (IllegalArgumentException e) {
-      return succeededFuture(LoanStorage.GetLoanStorageLoansToAnonymizeResponse
+      return succeededFuture(LoanStorage.GetLoanStorageAnonymizationCandidatesResponse
         .respond400WithTextPlain(e.getMessage()));
     }
 
-    return postgresClient.execute(loansToAnonymizeSql(postgresClient.getSchemaName(), preference),
+    return postgresClient.execute(anonymizationCandidatesSql(postgresClient.getSchemaName(), preference),
         Tuple.of(cutoff, limit))
       .map(rows -> Response.ok(rows.iterator().next().getString(0), APPLICATION_JSON).build())
       .otherwise(e -> {
-        log.error("findLoansToAnonymize:: {}", e.getMessage(), e);
-        return LoanStorage.GetLoanStorageLoansToAnonymizeResponse
+        log.error("findAnonymizationCandidates:: {}", e.getMessage(), e);
+        return LoanStorage.GetLoanStorageAnonymizationCandidatesResponse
           .respond500WithTextPlain("Internal server error, see log");
       });
   }
@@ -286,27 +286,27 @@ public class LoanService {
   }
 
   /**
-   * $1 returnedBefore, $2 limit. Public for the EXPLAIN test in LoansToAnonymizeApiTest.
+   * $1 returnedBefore, $2 limit. Public for the EXPLAIN test in AnonymizationCandidatesApiTest.
    * Builds the JSON in SQL, so a malformed loan field can't fail the request.
    * No ORDER BY, as before: rejected loans can take the same slots on every run.
    */
-  public static String loansToAnonymizeSql(String schemaName,
-    LoanStorageLoansToAnonymizeGetPreference preference) {
+  public static String anonymizationCandidatesSql(String schemaName,
+    LoanStorageAnonymizationCandidatesGetPreference preference) {
 
     return """
       SELECT jsonb_build_object(
         'loans', COALESCE(jsonb_agg(selected.jsonb), '[]'::jsonb),
         'totalRecords', count(*))::text
       FROM (%s) selected
-      """.formatted(selectLoansToAnonymizeSql(schemaName, preference));
+      """.formatted(selectAnonymizationCandidatesSql(schemaName, preference));
   }
 
-  private static String selectLoansToAnonymizeSql(String schemaName,
-    LoanStorageLoansToAnonymizeGetPreference preference) {
+  private static String selectAnonymizationCandidatesSql(String schemaName,
+    LoanStorageAnonymizationCandidatesGetPreference preference) {
 
     // Index lookup per user: must match the userId index of the loan table exactly.
     // LATERAL with LIMIT stops the planner from scanning the whole loan table, it misjudges the jsonb filters.
-    if (preference == LoanStorageLoansToAnonymizeGetPreference.ASEARLYASPOSSIBLE) {
+    if (preference == LoanStorageAnonymizationCandidatesGetPreference.ASEARLYASPOSSIBLE) {
       return """
         SELECT loan.jsonb
         FROM %1$s.%3$s preference

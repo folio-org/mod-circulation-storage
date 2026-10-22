@@ -3,7 +3,7 @@
 * PubSub deprecation: add Kafka support (CIRCSTORE-417)
 * PubSub deprecation: Implement Kafka LOG_RECORD event publishing, remove PubSub infrastructure (CIRCSTORE-419)
 * Keep users' loan anonymization preferences in sync via mod-users events (CIRCSTORE-682)
-* Add `GET /loan-storage/loans-to-anonymize` that selects closed loans by the users' loan anonymization preference (CIRCSTORE-683)
+* Add `GET /loan-storage/anonymization-candidates` that selects closed loans by the users' loan anonymization preference, bump interface `loan-storage` to 7.5 (CIRCSTORE-683)
 
 ## 17.5.0 2026-04-14
 * Update FQM translations (MODFQMMGR-1095)

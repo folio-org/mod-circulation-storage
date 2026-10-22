@@ -1,7 +1,7 @@
 package org.folio.rest.api.loans;
 
 import static java.lang.String.format;
-import static org.folio.rest.support.http.InterfaceUrls.loansToAnonymizeUrl;
+import static org.folio.rest.support.http.InterfaceUrls.anonymizationCandidatesUrl;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isBadRequest;
 import static org.folio.rest.support.matchers.HttpResponseStatusCodeMatchers.isOk;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -23,7 +23,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.folio.rest.api.StorageTestSuite;
-import org.folio.rest.jaxrs.model.LoanStorageLoansToAnonymizeGetPreference;
+import org.folio.rest.jaxrs.model.LoanStorageAnonymizationCandidatesGetPreference;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
@@ -42,7 +42,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Tuple;
 import lombok.SneakyThrows;
 
-public class LoansToAnonymizeApiTest extends ApiTests {
+public class AnonymizationCandidatesApiTest extends ApiTests {
   private static final String EARLY = "asEarlyAsPossible";
   private static final String LIBRARY = "libraryPolicy";
   private static final DateTime NOW = DateTime.now(DateTimeZone.UTC).withMillisOfSecond(0);
@@ -64,8 +64,8 @@ public class LoansToAnonymizeApiTest extends ApiTests {
     String libraryUsersLoan = createClosedLoan(randomUserId(), NOW);
     createClosedLoan(neverUser, NOW.minusYears(5));
 
-    assertThat(getLoansToAnonymize(EARLY, null), containsInAnyOrder(earlyUsersLoan));
-    assertThat(getLoansToAnonymize(LIBRARY, null), containsInAnyOrder(libraryUsersLoan));
+    assertThat(getAnonymizationCandidates(EARLY, null), containsInAnyOrder(earlyUsersLoan));
+    assertThat(getAnonymizationCandidates(LIBRARY, null), containsInAnyOrder(libraryUsersLoan));
   }
 
   @ParameterizedTest
@@ -76,7 +76,7 @@ public class LoansToAnonymizeApiTest extends ApiTests {
     createLoan(new LoanRequestBuilder().open().withUserId(UUID.fromString(user)));
     createLoan(new LoanRequestBuilder().closed().withNoUserId());
 
-    assertThat(getLoansToAnonymize(preference, null), containsInAnyOrder(closedLoan));
+    assertThat(getAnonymizationCandidates(preference, null), containsInAnyOrder(closedLoan));
   }
 
   @ParameterizedTest
@@ -84,8 +84,8 @@ public class LoansToAnonymizeApiTest extends ApiTests {
   void explicitLibraryPolicyAndUnknownValuesBelongToLibraryPolicy(String storedPreference) {
     String loan = createClosedLoan(storedUser(storedPreference), NOW);
 
-    assertThat(getLoansToAnonymize(LIBRARY, null), containsInAnyOrder(loan));
-    assertThat(getLoansToAnonymize(EARLY, null), empty());
+    assertThat(getAnonymizationCandidates(LIBRARY, null), containsInAnyOrder(loan));
+    assertThat(getAnonymizationCandidates(EARLY, null), empty());
   }
 
   @ParameterizedTest
@@ -96,7 +96,7 @@ public class LoansToAnonymizeApiTest extends ApiTests {
     createClosedLoan(user, CUTOFF);
     createClosedLoan(user, CUTOFF.plusSeconds(1));
 
-    assertThat(getLoansToAnonymize(preference, CUTOFF), containsInAnyOrder(before));
+    assertThat(getAnonymizationCandidates(preference, CUTOFF), containsInAnyOrder(before));
   }
 
   @ParameterizedTest
@@ -104,8 +104,8 @@ public class LoansToAnonymizeApiTest extends ApiTests {
   void loanWithoutSystemReturnDateOnlyPassesWithoutDate(String preference) {
     String loan = createClosedLoan(userOfGroup(preference), null);
 
-    assertThat(getLoansToAnonymize(preference, null), containsInAnyOrder(loan));
-    assertThat(getLoansToAnonymize(preference, CUTOFF), empty());
+    assertThat(getAnonymizationCandidates(preference, null), containsInAnyOrder(loan));
+    assertThat(getAnonymizationCandidates(preference, CUTOFF), empty());
   }
 
   @ParameterizedTest
@@ -116,10 +116,10 @@ public class LoansToAnonymizeApiTest extends ApiTests {
     setSystemReturnDate(earlyLoan, invalidDate);
     setSystemReturnDate(libraryLoan, invalidDate);
 
-    assertThat(getLoansToAnonymize(EARLY, CUTOFF), empty());
-    assertThat(getLoansToAnonymize(LIBRARY, CUTOFF), empty());
-    assertThat(getLoansToAnonymize(EARLY, null), containsInAnyOrder(earlyLoan));
-    assertThat(getLoansToAnonymize(LIBRARY, null), containsInAnyOrder(libraryLoan));
+    assertThat(getAnonymizationCandidates(EARLY, CUTOFF), empty());
+    assertThat(getAnonymizationCandidates(LIBRARY, CUTOFF), empty());
+    assertThat(getAnonymizationCandidates(EARLY, null), containsInAnyOrder(earlyLoan));
+    assertThat(getAnonymizationCandidates(LIBRARY, null), containsInAnyOrder(libraryLoan));
   }
 
   @Test
@@ -129,16 +129,16 @@ public class LoansToAnonymizeApiTest extends ApiTests {
     String earlyLoan = createLoan(closedLoanBuilder(NOW), earlyUser.toUpperCase());
     createLoan(closedLoanBuilder(NOW), neverUser.toUpperCase());
 
-    assertThat(getLoansToAnonymize(EARLY, null), containsInAnyOrder(earlyLoan));
-    assertThat(getLoansToAnonymize(LIBRARY, null), empty());
+    assertThat(getAnonymizationCandidates(EARLY, null), containsInAnyOrder(earlyLoan));
+    assertThat(getAnonymizationCandidates(LIBRARY, null), empty());
   }
 
   @Test
   void invalidUserIdDoesNotBreakTheQuery() {
     String loan = createLoan(closedLoanBuilder(NOW), "not-a-uuid");
 
-    assertThat(getLoansToAnonymize(LIBRARY, null), containsInAnyOrder(loan));
-    assertThat(getLoansToAnonymize(EARLY, null), empty());
+    assertThat(getAnonymizationCandidates(LIBRARY, null), containsInAnyOrder(loan));
+    assertThat(getAnonymizationCandidates(EARLY, null), empty());
   }
 
   @ParameterizedTest
@@ -153,7 +153,7 @@ public class LoansToAnonymizeApiTest extends ApiTests {
       .withOffsetSameInstant(zoneOffset)
       .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")) + offset;
 
-    assertThat(getLoansToAnonymize("?preference=" + LIBRARY + "&limit=10&returnedBefore="
+    assertThat(getAnonymizationCandidates("?preference=" + LIBRARY + "&limit=10&returnedBefore="
       + encode(formatted)), containsInAnyOrder(before));
   }
 
@@ -163,8 +163,9 @@ public class LoansToAnonymizeApiTest extends ApiTests {
       createClosedLoan(randomUserId(), NOW);
     }
 
-    assertThat(getLoansToAnonymize("?preference=" + LIBRARY + "&limit=2"), hasSize(2));
-    assertThat(getLoansToAnonymize("?preference=" + LIBRARY + "&limit=50000"), hasSize(3));
+    assertThat(getAnonymizationCandidates("?preference=" + LIBRARY + "&limit=2"), hasSize(2));
+    assertThat(getAnonymizationCandidates("?preference=" + LIBRARY + "&limit=50000"), hasSize(3));
+    assertThat(getAnonymizationCandidates("?preference=" + LIBRARY), hasSize(3));
   }
 
   @ParameterizedTest
@@ -174,7 +175,6 @@ public class LoansToAnonymizeApiTest extends ApiTests {
     "?preference=libraryPolicy&limit=10&returnedBefore=2026-01-01T00:00:00",
     "?preference=libraryPolicy&limit=10&returnedBefore=2026-01-01T00:00:00%2B0200",
     "?preference=libraryPolicy&limit=10&returnedBefore=2026-01-01",
-    "?preference=libraryPolicy",
     "?preference=libraryPolicy&limit=0",
     "?preference=libraryPolicy&limit=50001",
     "?preference=never&limit=10",
@@ -194,8 +194,8 @@ public class LoansToAnonymizeApiTest extends ApiTests {
 
   @Test
   void asEarlyAsPossibleQueryUsesTheUserIdIndex() {
-    String sql = LoanService.loansToAnonymizeSql(pgClient.getSchemaName(),
-      LoanStorageLoansToAnonymizeGetPreference.ASEARLYASPOSSIBLE);
+    String sql = LoanService.anonymizationCandidatesSql(pgClient.getSchemaName(),
+      LoanStorageAnonymizationCandidatesGetPreference.ASEARLYASPOSSIBLE);
     Tuple params = Tuple.tuple().addOffsetDateTime(null).addInteger(10);
 
     // Few test rows: without this, a sequential scan is always cheaper
@@ -263,15 +263,15 @@ public class LoansToAnonymizeApiTest extends ApiTests {
     return URLEncoder.encode(value, StandardCharsets.UTF_8);
   }
 
-  private List<String> getLoansToAnonymize(String preference, DateTime returnedBefore) {
+  private List<String> getAnonymizationCandidates(String preference, DateTime returnedBefore) {
     String queryString = "?preference=" + preference + "&limit=50000";
     if (returnedBefore != null) {
       queryString += "&returnedBefore=" + encode(returnedBefore.toString());
     }
-    return getLoansToAnonymize(queryString);
+    return getAnonymizationCandidates(queryString);
   }
 
-  private List<String> getLoansToAnonymize(String queryString) {
+  private List<String> getAnonymizationCandidates(String queryString) {
     JsonResponse response = get(queryString);
     assertThat(response, isOk());
 
@@ -287,7 +287,7 @@ public class LoansToAnonymizeApiTest extends ApiTests {
   @SneakyThrows
   private JsonResponse get(String queryString) {
     CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
-    client.get(loansToAnonymizeUrl(queryString), StorageTestSuite.TENANT_ID,
+    client.get(anonymizationCandidatesUrl(queryString), StorageTestSuite.TENANT_ID,
       ResponseHandler.json(getCompleted));
     return getCompleted.get(5, TimeUnit.SECONDS);
   }

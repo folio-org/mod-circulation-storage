@@ -71,8 +71,8 @@
           "permissionsRequired": ["circulation-storage.loans.anonymize.execute"]
         }, {
           "methods": ["GET"],
-          "pathPattern": "/loan-storage/loans-to-anonymize",
-          "permissionsRequired": ["circulation-storage.loans-to-anonymize.collection.get"]
+          "pathPattern": "/loan-storage/anonymization-candidates",
+          "permissionsRequired": ["circulation-storage.anonymization-candidates.collection.get"]
         }
       ]
     },
@@ -799,8 +799,8 @@
       "description": "Get loan history collection from storage"
     },
     {
-      "permissionName": "circulation-storage.loans-to-anonymize.collection.get",
-      "displayName": "Circulation storage - get loans to anonymize",
+      "permissionName": "circulation-storage.anonymization-candidates.collection.get",
+      "displayName": "Circulation storage - get anonymization candidates",
       "description": "Get closed loans to check for scheduled anonymization from storage"
     },
     {
@@ -1076,7 +1076,7 @@
         "circulation-storage.loans.collection.delete",
         "circulation-storage.loans.anonymize.execute",
         "circulation-storage.loans-history.collection.get",
-        "circulation-storage.loans-to-anonymize.collection.get",
+        "circulation-storage.anonymization-candidates.collection.get",
         "circulation-storage.circulation-rules.get",
         "circulation-storage.circulation-rules.put",
         "circulation-storage.loan-policies.collection.get",
