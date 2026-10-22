@@ -148,7 +148,7 @@ resourceTypes:
               type: loans
               example: !include examples/loans.json
         400:
-          description: "Bad request, e.g. malformed date, unknown preference or missing limit"
+          description: "Bad request, e.g. malformed date, unknown preference or limit out of range"
           body:
             text/plain:
               example: "returnedBefore is not a valid date-time: 2026-01-31"
