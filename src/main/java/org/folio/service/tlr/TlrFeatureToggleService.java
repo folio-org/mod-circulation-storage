@@ -146,7 +146,7 @@ public class TlrFeatureToggleService {
             updatedRequestCount[0] += requests.size();
             return requests.isEmpty()
               ? succeededFuture()
-              : requestRepository.update(updatePositions(requests)).mapEmpty();
+              : requestRepository.updatePositions(updatePositions(requests));
           })));
     }
 
@@ -154,7 +154,8 @@ public class TlrFeatureToggleService {
   }
 
   private List<Request> updatePositions(List<Request> requests) {
-    requests.sort(Comparator.comparingInt(Request::getPosition));
+    requests.sort(Comparator.comparing(Request::getPosition,
+      Comparator.nullsLast(Integer::compareTo)));
     int position = 1;
     for (Request request : requests) {
       request.setPosition(position++);

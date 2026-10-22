@@ -11,6 +11,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.RequestQueueLock;
 import org.folio.rest.jaxrs.model.RequestQueueLockRequest;
 import org.folio.rest.jaxrs.resource.RequestQueueLockStorage;
@@ -27,6 +28,8 @@ import io.vertx.core.Handler;
  */
 public class RequestQueueLockAPI implements RequestQueueLockStorage {
   private static final Logger log = LogManager.getLogger(MethodHandles.lookup().lookupClass());
+
+  @Validate
   @Override
   public void postRequestQueueLockStorage(RequestQueueLockRequest entity,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
@@ -67,6 +70,7 @@ public class RequestQueueLockAPI implements RequestQueueLockStorage {
     });
   }
 
+  @Validate
   @Override
   public void deleteRequestQueueLockStorageByLockId(String lockId,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,

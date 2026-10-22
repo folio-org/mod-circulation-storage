@@ -1,5 +1,6 @@
 package org.folio.service;
 
+import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
@@ -31,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -115,6 +117,7 @@ public class RequestExpirationService {
       .collect(Collectors.groupingBy(requestClassifier));
 
     Future<Void> future = succeededFuture();
+    List<Throwable> failures = new ArrayList<>();
     for (Map.Entry<String, List<Request>> entry : requestsByQueue.entrySet()) {
       future = future.compose(v -> {
         List<ExpiredRequestWrapper> queueContext = new ArrayList<>();
@@ -126,10 +129,18 @@ public class RequestExpirationService {
           // Publishing is deliberately outside the queue lock. At this point the queue
           // transaction is committed and other position writers can proceed.
           .onSuccess(x -> publishKafkaLogRecordEvents(queueContext))
-          .compose(x -> publishExpiredRequestsEvents(queueContext));
+          .compose(x -> publishExpiredRequestsEvents(queueContext))
+          .recover(throwable -> {
+            log.error("expireRequestsByQueue:: Failed to process queue {}:{}",
+              queueType, entry.getKey(), throwable);
+            failures.add(throwable);
+            return succeededFuture();
+          });
       });
     }
-    return future;
+    return future.compose(v -> failures.isEmpty()
+      ? succeededFuture()
+      : failedFuture(failures.get(0)));
   }
 
   private Future<Void> executeWithQueueLock(String queueId,
@@ -160,7 +171,9 @@ public class RequestExpirationService {
       df.format(new Date()));
 
     if (queueId != null) {
-      where += format("AND jsonb->>'%s' = '%s' ", requestClassifierProperty, queueId);
+      String normalizedQueueId = UUID.fromString(queueId).toString();
+      where += format("AND jsonb->>'%s' = '%s' ", requestClassifierProperty,
+        normalizedQueueId);
     }
     where += "LIMIT 150";
 
