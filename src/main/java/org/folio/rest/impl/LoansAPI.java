@@ -101,7 +101,7 @@ public class LoansAPI implements LoanStorage {
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     new LoanService(vertxContext, okapiHeaders)
-        .findAnonymizationCandidates(preference, returnedBefore, limit)
+        .findLoanAnonymizationCandidates(preference, returnedBefore, limit)
         .onComplete(asyncResultHandler);
   }
 }

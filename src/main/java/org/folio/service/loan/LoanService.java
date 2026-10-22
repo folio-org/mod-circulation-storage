@@ -64,6 +64,8 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Tuple;
 import jakarta.validation.constraints.NotNull;
 
@@ -243,14 +245,13 @@ public class LoanService {
         okapiHeaders, vertxContext, LoanStorage.GetLoanStorageLoanHistoryResponse.class);
   }
 
-  /**
-   * Loans of one preference group for the scheduled anonymization.
-   * A prefilter: must never be stricter than the checkers in mod-circulation.
-   */
-  public Future<Response> findAnonymizationCandidates(LoanStorageAnonymizationCandidatesGetPreference preference,
-    String returnedBefore, int limit) {
+  // Prefilter: must never be stricter than the checkers in mod-circulation
+  public Future<Response> findLoanAnonymizationCandidates(
+    LoanStorageAnonymizationCandidatesGetPreference preference, String returnedBefore, int limit) {
 
-    // RMB checks limit (@Min/@Max); a missing or unknown enum value arrives as null
+    log.debug("findLoanAnonymizationCandidates:: preference: {}, returnedBefore: {}, limit: {}",
+      preference, returnedBefore, limit);
+
     if (preference == null) {
       return succeededFuture(LoanStorage.GetLoanStorageAnonymizationCandidatesResponse
         .respond400WithTextPlain("preference must be asEarlyAsPossible or libraryPolicy"));
@@ -266,9 +267,16 @@ public class LoanService {
 
     return postgresClient.execute(anonymizationCandidatesSql(postgresClient.getSchemaName(), preference),
         Tuple.of(cutoff, limit))
-      .map(rows -> Response.ok(rows.iterator().next().getString(0), APPLICATION_JSON).build())
+      .map(rows -> {
+        JsonArray loans = new JsonArray();
+        rows.forEach(row -> loans.add(row.getJsonObject(0)));
+        log.info("findLoanAnonymizationCandidates:: preference: {}, returned loans: {}",
+          preference, loans.size());
+        return Response.ok(new JsonObject().put("loans", loans).put("totalRecords", loans.size())
+          .encode(), APPLICATION_JSON).build();
+      })
       .otherwise(e -> {
-        log.error("findAnonymizationCandidates:: {}", e.getMessage(), e);
+        log.error("findLoanAnonymizationCandidates:: {}", e.getMessage(), e);
         return LoanStorage.GetLoanStorageAnonymizationCandidatesResponse
           .respond500WithTextPlain("Internal server error, see log");
       });
@@ -287,21 +295,9 @@ public class LoanService {
 
   /**
    * $1 returnedBefore, $2 limit. Public for the EXPLAIN test in AnonymizationCandidatesApiTest.
-   * Builds the JSON in SQL, so a malformed loan field can't fail the request.
    * No ORDER BY, as before: rejected loans can take the same slots on every run.
    */
   public static String anonymizationCandidatesSql(String schemaName,
-    LoanStorageAnonymizationCandidatesGetPreference preference) {
-
-    return """
-      SELECT jsonb_build_object(
-        'loans', COALESCE(jsonb_agg(selected.jsonb), '[]'::jsonb),
-        'totalRecords', count(*))::text
-      FROM (%s) selected
-      """.formatted(selectAnonymizationCandidatesSql(schemaName, preference));
-  }
-
-  private static String selectAnonymizationCandidatesSql(String schemaName,
     LoanStorageAnonymizationCandidatesGetPreference preference) {
 
     // Index lookup per user: must match the userId index of the loan table exactly.
