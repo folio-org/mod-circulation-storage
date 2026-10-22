@@ -2,18 +2,24 @@ package org.folio.service.loan;
 
 import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.Promise.promise;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.folio.service.event.EntityChangedEventPublisherFactory.loanEventPublisher;
+import static org.folio.support.LoanAnonymizationPreference.AS_EARLY_AS_POSSIBLE;
+import static org.folio.support.LoanAnonymizationPreference.NEVER;
 import static org.folio.support.ModuleConstants.LOAN_CLASS;
 import static org.folio.support.ModuleConstants.LOAN_HISTORY_TABLE;
 import static org.folio.support.ModuleConstants.LOAN_TABLE;
 import static org.folio.support.ModuleConstants.MODULE_NAME;
 import static org.folio.support.ModuleConstants.OPEN_LOAN_STATUS;
+import static org.folio.support.ModuleConstants.USER_LOAN_ANONYMIZATION_PREFERENCE_TABLE;
 
 import java.io.IOException;
+import java.time.DateTimeException;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
@@ -32,6 +38,7 @@ import org.folio.rest.impl.util.OkapiResponseUtil;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Loan;
+import org.folio.rest.jaxrs.model.LoanStorageAnonymizationCandidatesGetPreference;
 import org.folio.rest.jaxrs.model.Loans;
 import org.folio.rest.jaxrs.model.LoansHistoryItem;
 import org.folio.rest.jaxrs.model.LoansHistoryItems;
@@ -57,12 +64,19 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.sqlclient.Tuple;
 import jakarta.validation.constraints.NotNull;
 
 public class LoanService {
 
   private static final Logger log = LogManager.getLogger(LoanService.class);
   private static final ObjectMapper MAPPER = ObjectMapperTool.getMapper();
+  // Without $1: no date filter. With $1: only loans with a systemReturnDate before $1.
+  private static final String RETURNED_BEFORE_FILTER = """
+    ($1::timestamptz IS NULL OR
+        (loan.jsonb->>'systemReturnDate')::timestamptz < $1::timestamptz)""";
 
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
@@ -223,6 +237,99 @@ public class LoanService {
 
     return PgUtil.get(LOAN_HISTORY_TABLE, LoansHistoryItem.class, LoansHistoryItems.class, cql, offset, limit,
         okapiHeaders, vertxContext, LoanStorage.GetLoanStorageLoanHistoryResponse.class);
+  }
+
+  // Prefilter: must never be stricter than the checkers in mod-circulation
+  public Future<Response> findLoanAnonymizationCandidates(
+    LoanStorageAnonymizationCandidatesGetPreference preference, String returnedBefore, int limit) {
+
+    log.debug("findLoanAnonymizationCandidates:: preference: {}, returnedBefore: {}, limit: {}",
+      preference, returnedBefore, limit);
+
+    if (preference == null) {
+      return succeededFuture(LoanStorage.GetLoanStorageAnonymizationCandidatesResponse
+        .respond400WithTextPlain("preference must be asEarlyAsPossible or libraryPolicy"));
+    }
+
+    final OffsetDateTime cutoff;
+    try {
+      cutoff = parseReturnedBefore(returnedBefore);
+    } catch (IllegalArgumentException e) {
+      return succeededFuture(LoanStorage.GetLoanStorageAnonymizationCandidatesResponse
+        .respond400WithTextPlain(e.getMessage()));
+    }
+
+    return postgresClient.execute(anonymizationCandidatesSql(postgresClient.getSchemaName(), preference),
+        Tuple.of(cutoff, limit))
+      .map(rows -> {
+        JsonArray loans = new JsonArray();
+        rows.forEach(row -> loans.add(row.getJsonObject(0)));
+        log.info("findLoanAnonymizationCandidates:: preference: {}, returned loans: {}",
+          preference, loans.size());
+        return Response.ok(new JsonObject().put("loans", loans).put("totalRecords", loans.size())
+          .encode(), APPLICATION_JSON).build();
+      })
+      .otherwise(e -> {
+        log.error("findLoanAnonymizationCandidates:: {}", e.getMessage(), e);
+        return LoanStorage.GetLoanStorageAnonymizationCandidatesResponse
+          .respond500WithTextPlain("Internal server error, see log");
+      });
+  }
+
+  private static OffsetDateTime parseReturnedBefore(String value) {
+    if (isBlank(value)) {
+      return null;
+    }
+    try {
+      return OffsetDateTime.parse(value);
+    } catch (DateTimeException e) {
+      throw new IllegalArgumentException("returnedBefore is not a valid date-time: " + value, e);
+    }
+  }
+
+  /**
+   * $1 returnedBefore, $2 limit. Public for the EXPLAIN test in AnonymizationCandidatesApiTest.
+   * No ORDER BY, as before: rejected loans can take the same slots on every run.
+   */
+  public static String anonymizationCandidatesSql(String schemaName,
+    LoanStorageAnonymizationCandidatesGetPreference preference) {
+
+    String loanTable = schemaName + "." + LOAN_TABLE;
+    String preferenceTable = schemaName + "." + USER_LOAN_ANONYMIZATION_PREFERENCE_TABLE;
+
+    // Index lookup per user: must match the userId index of the loan table exactly.
+    // LATERAL with LIMIT stops the planner from scanning the whole loan table, it misjudges the jsonb filters.
+    if (preference == LoanStorageAnonymizationCandidatesGetPreference.ASEARLYASPOSSIBLE) {
+      return """
+        SELECT loan.jsonb
+        FROM %s preference
+        CROSS JOIN LATERAL (
+          SELECT loan.jsonb
+          FROM %s loan
+          WHERE left(lower(%s.f_unaccent(loan.jsonb->>'userId')), 600) = preference.id::text
+            AND loan.jsonb->'status'->>'name' = 'Closed'
+            AND %s
+          LIMIT $2) loan
+        WHERE preference.jsonb->>'preference' = '%s'
+        LIMIT $2
+        """.formatted(preferenceTable, loanTable, schemaName, RETURNED_BEFORE_FILTER,
+          AS_EARLY_AS_POSSIBLE.value());
+    }
+
+    // Text comparison, so a malformed userId can't break the query
+    return """
+      SELECT loan.jsonb
+      FROM %s loan
+      WHERE loan.jsonb->'status'->>'name' = 'Closed'
+        AND loan.jsonb->>'userId' IS NOT NULL
+        AND NOT EXISTS (
+          SELECT 1 FROM %s preference
+          WHERE preference.id::text = lower(loan.jsonb->>'userId')
+            AND preference.jsonb->>'preference' IN ('%s', '%s'))
+        AND %s
+      LIMIT $2
+      """.formatted(loanTable, preferenceTable, AS_EARLY_AS_POSSIBLE.value(), NEVER.value(),
+        RETURNED_BEFORE_FILTER);
   }
 
   public Future<Response> anonymizeByUserId(String userId) {
