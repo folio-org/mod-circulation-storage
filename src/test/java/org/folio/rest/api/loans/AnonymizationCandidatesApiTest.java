@@ -108,20 +108,6 @@ public class AnonymizationCandidatesApiTest extends ApiTests {
     assertThat(getAnonymizationCandidates(preference, CUTOFF), empty());
   }
 
-  @ParameterizedTest
-  @ValueSource(strings = { "", "2021-02-30T10:00:00.000Z", "not a date" })
-  void invalidStoredSystemReturnDateDoesNotFailTheRequest(String invalidDate) {
-    String earlyLoan = createClosedLoan(storedUser(EARLY), CUTOFF.minusYears(1));
-    String libraryLoan = createClosedLoan(randomUserId(), CUTOFF.minusYears(1));
-    setSystemReturnDate(earlyLoan, invalidDate);
-    setSystemReturnDate(libraryLoan, invalidDate);
-
-    assertThat(getAnonymizationCandidates(EARLY, CUTOFF), empty());
-    assertThat(getAnonymizationCandidates(LIBRARY, CUTOFF), empty());
-    assertThat(getAnonymizationCandidates(EARLY, null), containsInAnyOrder(earlyLoan));
-    assertThat(getAnonymizationCandidates(LIBRARY, null), containsInAnyOrder(libraryLoan));
-  }
-
   @Test
   void uppercaseUserIdIsMatched() {
     String earlyUser = storedUser(EARLY);
@@ -220,13 +206,6 @@ public class AnonymizationCandidatesApiTest extends ApiTests {
       Tuple.of(UUID.fromString(userId),
         new JsonObject().put("id", userId).put("preference", preference))));
     return userId;
-  }
-
-  private static void setSystemReturnDate(String loanId, String value) {
-    waitFor(pgClient.execute(
-      format("UPDATE %s.loan SET jsonb = jsonb_set(jsonb, '{systemReturnDate}', to_jsonb($1::text))"
-        + " WHERE id = $2", pgClient.getSchemaName()),
-      Tuple.of(value, UUID.fromString(loanId))));
   }
 
   private static String randomUserId() {

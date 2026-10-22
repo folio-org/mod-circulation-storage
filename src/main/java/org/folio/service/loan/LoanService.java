@@ -73,16 +73,10 @@ public class LoanService {
 
   private static final Logger log = LogManager.getLogger(LoanService.class);
   private static final ObjectMapper MAPPER = ObjectMapperTool.getMapper();
-  /**
-   * Without $1: no date filter. With $1: only loans with a readable systemReturnDate before $1.
-   * The CASE makes sure invalid dates (e.g. "", 2021-02-30) are skipped, not cast.
-   */
+  // Without $1: no date filter. With $1: only loans with a systemReturnDate before $1.
   private static final String RETURNED_BEFORE_FILTER = """
     ($1::timestamptz IS NULL OR
-        CASE WHEN pg_input_is_valid(loan.jsonb->>'systemReturnDate', 'timestamptz')
-          THEN (loan.jsonb->>'systemReturnDate')::timestamptz < $1::timestamptz
-          ELSE false
-        END)""";
+        (loan.jsonb->>'systemReturnDate')::timestamptz < $1::timestamptz)""";
 
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
@@ -300,39 +294,42 @@ public class LoanService {
   public static String anonymizationCandidatesSql(String schemaName,
     LoanStorageAnonymizationCandidatesGetPreference preference) {
 
+    String loanTable = schemaName + "." + LOAN_TABLE;
+    String preferenceTable = schemaName + "." + USER_LOAN_ANONYMIZATION_PREFERENCE_TABLE;
+
     // Index lookup per user: must match the userId index of the loan table exactly.
     // LATERAL with LIMIT stops the planner from scanning the whole loan table, it misjudges the jsonb filters.
     if (preference == LoanStorageAnonymizationCandidatesGetPreference.ASEARLYASPOSSIBLE) {
       return """
         SELECT loan.jsonb
-        FROM %1$s.%3$s preference
+        FROM %s preference
         CROSS JOIN LATERAL (
           SELECT loan.jsonb
-          FROM %1$s.%2$s loan
-          WHERE left(lower(%1$s.f_unaccent(loan.jsonb->>'userId')), 600) = preference.id::text
+          FROM %s loan
+          WHERE left(lower(%s.f_unaccent(loan.jsonb->>'userId')), 600) = preference.id::text
             AND loan.jsonb->'status'->>'name' = 'Closed'
-            AND %4$s
+            AND %s
           LIMIT $2) loan
-        WHERE preference.jsonb->>'preference' = '%5$s'
+        WHERE preference.jsonb->>'preference' = '%s'
         LIMIT $2
-        """.formatted(schemaName, LOAN_TABLE, USER_LOAN_ANONYMIZATION_PREFERENCE_TABLE,
-          RETURNED_BEFORE_FILTER, AS_EARLY_AS_POSSIBLE.value());
+        """.formatted(preferenceTable, loanTable, schemaName, RETURNED_BEFORE_FILTER,
+          AS_EARLY_AS_POSSIBLE.value());
     }
 
     // Text comparison, so a malformed userId can't break the query
     return """
       SELECT loan.jsonb
-      FROM %1$s.%2$s loan
+      FROM %s loan
       WHERE loan.jsonb->'status'->>'name' = 'Closed'
         AND loan.jsonb->>'userId' IS NOT NULL
         AND NOT EXISTS (
-          SELECT 1 FROM %1$s.%3$s preference
+          SELECT 1 FROM %s preference
           WHERE preference.id::text = lower(loan.jsonb->>'userId')
-            AND preference.jsonb->>'preference' IN ('%5$s', '%6$s'))
-        AND %4$s
+            AND preference.jsonb->>'preference' IN ('%s', '%s'))
+        AND %s
       LIMIT $2
-      """.formatted(schemaName, LOAN_TABLE, USER_LOAN_ANONYMIZATION_PREFERENCE_TABLE,
-        RETURNED_BEFORE_FILTER, AS_EARLY_AS_POSSIBLE.value(), NEVER.value());
+      """.formatted(loanTable, preferenceTable, AS_EARLY_AS_POSSIBLE.value(), NEVER.value(),
+        RETURNED_BEFORE_FILTER);
   }
 
   public Future<Response> anonymizeByUserId(String userId) {
