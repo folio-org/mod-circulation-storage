@@ -20,9 +20,6 @@ import static org.folio.support.ModuleConstants.USER_LOAN_ANONYMIZATION_PREFEREN
 import java.io.IOException;
 import java.time.DateTimeException;
 import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.time.format.ResolverStyle;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
@@ -74,14 +71,6 @@ public class LoanService {
 
   private static final Logger log = LogManager.getLogger(LoanService.class);
   private static final ObjectMapper MAPPER = ObjectMapperTool.getMapper();
-  // ISO 8601 date-time with offset Z, +HH:MM or +HHMM
-  private static final DateTimeFormatter RETURNED_BEFORE_FORMAT = new DateTimeFormatterBuilder()
-    .append(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-    .optionalStart().appendOffset("+HH:MM", "Z").optionalEnd()
-    .optionalStart().appendOffset("+HHMM", "Z").optionalEnd()
-    .toFormatter()
-    .withResolverStyle(ResolverStyle.STRICT);  // rejects 2026-02-30
-
   /**
    * Without $1: no date filter. With $1: only loans with a readable systemReturnDate before $1.
    * The CASE makes sure invalid dates (e.g. "", 2021-02-30) are skipped, not cast.
@@ -290,7 +279,7 @@ public class LoanService {
       return null;
     }
     try {
-      return OffsetDateTime.parse(value, RETURNED_BEFORE_FORMAT);
+      return OffsetDateTime.parse(value);
     } catch (DateTimeException e) {
       throw new IllegalArgumentException("returnedBefore is not a valid date-time: " + value, e);
     }

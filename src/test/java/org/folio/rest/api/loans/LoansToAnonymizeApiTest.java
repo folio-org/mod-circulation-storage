@@ -142,7 +142,7 @@ public class LoansToAnonymizeApiTest extends ApiTests {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = { "Z", "+02:00", "+0200" })
+  @ValueSource(strings = { "Z", "+02:00" })
   void returnedBeforeAcceptsOffsetFormats(String offset) {
     String user = randomUserId();
     String before = createClosedLoan(user, CUTOFF.minusSeconds(1));
@@ -172,6 +172,7 @@ public class LoansToAnonymizeApiTest extends ApiTests {
     "?preference=libraryPolicy&limit=10&returnedBefore=2026-13-01T00:00:00Z",
     "?preference=libraryPolicy&limit=10&returnedBefore=2026-02-30T00:00:00Z",
     "?preference=libraryPolicy&limit=10&returnedBefore=2026-01-01T00:00:00",
+    "?preference=libraryPolicy&limit=10&returnedBefore=2026-01-01T00:00:00%2B0200",
     "?preference=libraryPolicy&limit=10&returnedBefore=2026-01-01",
     "?preference=libraryPolicy",
     "?preference=libraryPolicy&limit=0",
