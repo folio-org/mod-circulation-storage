@@ -17,6 +17,7 @@ import static org.folio.support.ModuleConstants.OPEN_LOAN_STATUS;
 import static org.folio.support.ModuleConstants.USER_LOAN_ANONYMIZATION_PREFERENCE_TABLE;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.time.DateTimeException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -249,19 +250,21 @@ public class LoanService {
         .respond400WithTextPlain("preference must be asEarlyAsPossible or libraryPolicy"));
     }
 
-    final OffsetDateTime cutoff;
-    try {
-      cutoff = parseReturnedBefore(returnedBefore);
-    } catch (IllegalArgumentException e) {
-      return succeededFuture(LoanStorage.GetLoanStorageAnonymizationCandidatesResponse
-        .respond400WithTextPlain(e.getMessage()));
+    OffsetDateTime cutoff = null;
+    if (!isBlank(returnedBefore)) {
+      try {
+        cutoff = OffsetDateTime.parse(returnedBefore);
+      } catch (DateTimeException e) {
+        return succeededFuture(LoanStorage.GetLoanStorageAnonymizationCandidatesResponse
+          .respond400WithTextPlain("returnedBefore is not a valid date-time: " + returnedBefore));
+      }
     }
 
     return postgresClient.execute(anonymizationCandidatesSql(postgresClient.getSchemaName(), preference),
         Tuple.of(cutoff, limit))
       .<Response>map(rows -> {
         List<Loan> loans = new ArrayList<>();
-        rows.forEach(row -> loans.add(row.getJsonObject(0).mapTo(Loan.class)));
+        rows.forEach(row -> loans.add(toLoan(row.getString(0))));
         log.info("findLoanAnonymizationCandidates:: preference: {}, returned loans: {}",
           preference, loans.size());
         return LoanStorage.GetLoanStorageAnonymizationCandidatesResponse
@@ -274,14 +277,11 @@ public class LoanService {
       });
   }
 
-  private static OffsetDateTime parseReturnedBefore(String value) {
-    if (isBlank(value)) {
-      return null;
-    }
+  private static Loan toLoan(String json) {
     try {
-      return OffsetDateTime.parse(value);
-    } catch (DateTimeException e) {
-      throw new IllegalArgumentException("returnedBefore is not a valid date-time: " + value, e);
+      return MAPPER.readValue(json, Loan.class);
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
     }
   }
 
@@ -295,11 +295,10 @@ public class LoanService {
     String loanTable = schemaName + "." + LOAN_TABLE;
     String preferenceTable = schemaName + "." + USER_LOAN_ANONYMIZATION_PREFERENCE_TABLE;
 
-    // Index lookup per user: must match the userId index of the loan table exactly.
     // LATERAL with LIMIT stops the planner from scanning the whole loan table, it misjudges the jsonb filters.
     if (preference == LoanStorageAnonymizationCandidatesGetPreference.ASEARLYASPOSSIBLE) {
       return """
-        SELECT loan.jsonb
+        SELECT loan.jsonb::text
         FROM %s preference
         CROSS JOIN LATERAL (
           SELECT loan.jsonb
@@ -314,9 +313,8 @@ public class LoanService {
           AS_EARLY_AS_POSSIBLE.value());
     }
 
-    // Text comparison, so a malformed userId can't break the query
     return """
-      SELECT loan.jsonb
+      SELECT loan.jsonb::text
       FROM %s loan
       WHERE loan.jsonb->'status'->>'name' = 'Closed'
         AND loan.jsonb->>'userId' IS NOT NULL
