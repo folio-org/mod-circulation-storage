@@ -14,8 +14,10 @@ import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
+import org.folio.service.policy.LoanPolicyAutomaticRenewalValidator;
 import javax.ws.rs.core.Response;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import static org.folio.rest.impl.Headers.TENANT_HEADER;
@@ -23,6 +25,8 @@ import static org.folio.rest.impl.Headers.TENANT_HEADER;
 public class LoanPoliciesAPI implements LoanPolicyStorage {
   private static final String LOAN_POLICY_TABLE = "loan_policy";
   private static final Class<LoanPolicy> LOAN_POLICY_CLASS = LoanPolicy.class;
+  private static final LoanPolicyAutomaticRenewalValidator AUTOMATIC_RENEWAL_VALIDATOR =
+    new LoanPolicyAutomaticRenewalValidator();
 
   @Override
   @Validate
@@ -195,6 +199,12 @@ public class LoanPoliciesAPI implements LoanPolicyStorage {
           "period",
           loanPolicy.getRenewalsPolicy().getPeriod().toString(),
           message));
+      return;
+    }
+
+    Optional<Errors> automaticRenewalErrors = AUTOMATIC_RENEWAL_VALIDATOR.validate(loanPolicy);
+    if (automaticRenewalErrors.isPresent()) {
+      runIfInvalid.accept(automaticRenewalErrors.get());
       return;
     }
 
