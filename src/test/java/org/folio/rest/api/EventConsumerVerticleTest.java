@@ -4,6 +4,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static io.vertx.core.json.JsonObject.mapFrom;
 import static java.lang.String.format;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Objects.requireNonNullElse;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.kafka.clients.producer.ProducerConfig.ACKS_CONFIG;
 import static org.apache.kafka.clients.producer.ProducerConfig.BOOTSTRAP_SERVERS_CONFIG;
@@ -28,6 +30,8 @@ import static org.folio.service.event.handler.processor.ItemUpdateProcessorForRe
 import static org.folio.service.event.handler.processor.ItemUpdateProcessorForRequest.ITEM_EFFECTIVE_LOCATION_NAME;
 import static org.folio.service.event.handler.processor.ItemUpdateProcessorForRequest.RETRIEVAL_SERVICE_POINT_ID;
 import static org.folio.service.event.handler.processor.ItemUpdateProcessorForRequest.RETRIEVAL_SERVICE_POINT_NAME;
+import static org.folio.support.kafka.topic.UsersKafkaTopic.USERS;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.hasItems;
@@ -58,6 +62,8 @@ import org.folio.rest.support.builders.RequestItemSummary;
 import org.folio.rest.support.builders.RequestPolicyBuilder;
 import org.folio.rest.support.builders.RequestRequestBuilder;
 import org.folio.rest.support.builders.ServicePointBuilder;
+import org.folio.service.event.handler.UserEventHandler;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.jupiter.api.AfterAll;
@@ -66,16 +72,26 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.admin.KafkaAdminClient;
 import io.vertx.kafka.client.common.TopicPartition;
+import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.consumer.OffsetAndMetadata;
+import io.vertx.kafka.client.consumer.impl.KafkaConsumerRecordImpl;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
+import io.vertx.pgclient.PgConnection;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
+import io.vertx.sqlclient.Transaction;
+import io.vertx.sqlclient.Tuple;
 import lombok.SneakyThrows;
 
 class EventConsumerVerticleTest extends ApiTests {
@@ -97,6 +113,9 @@ class EventConsumerVerticleTest extends ApiTests {
     "%s.%s.inventory.service-point", environment(), TENANT_ID);
   private static final String INVENTORY_LOCATION_TOPIC = format(
           "%s.%s.inventory.location", environment(), TENANT_ID);
+  private static final String USERS_TOPIC = format("%s.%s.users.users", environment(), TENANT_ID);
+  private static final String USER_ID = "6b0a1cc5-2c47-4b5e-9a6f-0a2b4c6d8e10";
+  private static final String OTHER_USER_ID = "0f3e5d7c-9b1a-4c2e-8d4f-6a8b0c2e4f61";
 
   private static KafkaProducer<String, JsonObject> producer;
   private static KafkaAdminClient adminClient;
@@ -117,7 +136,7 @@ class EventConsumerVerticleTest extends ApiTests {
 
   @AfterEach
   void afterEach() {
-    truncateTables("request, request_policy");
+    truncateTables("request, request_policy, user_loan_anonymization_preference");
   }
 
   @ParameterizedTest
@@ -707,6 +726,149 @@ class EventConsumerVerticleTest extends ApiTests {
     return getById(requestPolicyStorageUrl("/" + requestPolicyId));
   }
 
+  @ParameterizedTest
+  @CsvSource(value = {
+    "CREATED,              , never",
+    "UPDATED,              , never",
+    "UPDATED, libraryPolicy, asEarlyAsPossible",
+    "UPDATED, never        , asEarlyAsPossible",
+  })
+  void preferenceIsStoredWhenItDeviatesFromLibraryPolicy(String eventType, String oldPreference,
+    String newPreference) {
+
+    publishUserEventAndWait(eventType, buildUser(oldPreference), buildUser(newPreference));
+
+    assertThat(getStoredPreference(), is(newPreference));
+  }
+
+  @ParameterizedTest
+  @NullSource
+  @ValueSource(strings = "libraryPolicy")
+  void preferenceIsRemovedWhenUserFollowsLibraryPolicyAgain(String newPreference) {
+    storePreference("never");
+
+    publishUserEventAndWait("UPDATED", buildUser("never"), buildUser(newPreference));
+
+    assertThat(getStoredPreference(), nullValue());
+  }
+
+  @Test
+  void preferenceIsRemovedWhenUserIsDeleted() {
+    storePreference("never");
+
+    publishUserEventAndWait("DELETED", buildUser("never"), null);
+
+    assertThat(getStoredPreference(), nullValue());
+  }
+
+  @Test
+  void deletionOfUserWithoutStoredPreferenceIsIgnored() {
+    publishUserEventAndWait("DELETED", buildUser("libraryPolicy"), null);
+
+    assertThat(getStoredPreference(), nullValue());
+  }
+
+  @Test
+  void unknownPreferenceKeepsStoredPreference() {
+    storePreference("never");
+
+    publishUserEventAndWait("UPDATED", buildUser("never"), buildUser("sometimes"));
+
+    assertThat(getStoredPreference(), is("never"));
+  }
+
+  @Test
+  void eventWithUnchangedPreferenceIsIgnored() {
+    publishUserEventAndWait("UPDATED", buildUser("never"), buildUser("never").put("barcode", "1"));
+
+    assertThat(getStoredPreference(), nullValue());
+  }
+
+  @Test
+  void noRowIsStoredForUserFollowingLibraryPolicy() {
+    publishUserEventAndWait("CREATED", null, buildUser("libraryPolicy"));
+
+    assertThat(getStoredPreference(), nullValue());
+  }
+
+  @Test
+  void eventsOfUserAreAppliedInTheirOrder() {
+    int initialOffset = getOffsetForUserEvents();
+    publishEvent(USERS_TOPIC, buildUserEvent("CREATED", null, buildUser("asEarlyAsPossible")));
+    publishEvent(USERS_TOPIC, buildUserEvent("DELETED", buildUser("asEarlyAsPossible"), null));
+    publishEvent(USERS_TOPIC, buildUserEvent("CREATED", null, buildUser("libraryPolicy")));
+    publishEvent(USERS_TOPIC, buildUserEvent("UPDATED", buildUser(null), buildUser("never")));
+    int offsetBeforeLastEvent = initialOffset + 3;
+    waitUntilValueIsIncreased(offsetBeforeLastEvent,
+      EventConsumerVerticleTest::getOffsetForUserEvents);
+
+    assertThat(getStoredPreference(), is("never"));
+  }
+
+  @Test
+  void failedEventsDoNotBlockLaterEvents() {
+    JsonObject userWithInvalidId = buildUser("never").put("id", "not-a-uuid");
+    // a failed event that never completed would leave the consumer paused at its load limit
+    int moreFailuresThanTheLoadLimit = 6; // EventConsumerVerticle.DEFAULT_LOAD_LIMIT + 1
+    for (int i = 0; i < moreFailuresThanTheLoadLimit; i++) {
+      publishUserEventAndWait("UPDATED", null, userWithInvalidId);
+    }
+
+    publishUserEventAndWait("UPDATED", null, buildUser("never"));
+
+    assertThat(getStoredPreference(), is("never"));
+  }
+
+  @Test
+  void eventIsCancelledInTheDatabaseWhenItTimesOut() {
+    storePreference("asEarlyAsPossible");
+    UserEventHandler handler = new UserEventHandler(getVertx().getOrCreateContext(), 1000);
+    PgConnection lockingConnection = waitFor(pgClient.getConnection());
+    try {
+      Transaction transaction = waitFor(lockingConnection.begin());
+      waitFor(lockingConnection.query(format(
+        "SELECT * FROM %s.user_loan_anonymization_preference FOR UPDATE",
+        pgClient.getSchemaName())).execute());
+
+      Future<String> blockedEvent = handler.handle(buildUserEventRecord("UPDATED",
+        buildUser("asEarlyAsPossible"), buildUser("never")));
+      waitAtMost(10, SECONDS).until(blockedEvent::isComplete);
+      waitFor(transaction.rollback());
+
+      assertThat(blockedEvent.cause().getMessage(), containsString("canceling statement"));
+      assertThat(getStoredPreference(), is("asEarlyAsPossible"));
+    } finally {
+      waitFor(lockingConnection.close());
+    }
+  }
+
+  @Test
+  void blockedEventOfOneUserDoesNotDelayEventsOfOtherUsers() {
+    storePreference("asEarlyAsPossible");
+    UserEventHandler handler = new UserEventHandler(getVertx().getOrCreateContext());
+    PgConnection lockingConnection = waitFor(pgClient.getConnection());
+    try {
+      Transaction transaction = waitFor(lockingConnection.begin());
+      waitFor(lockingConnection.query(format(
+        "SELECT * FROM %s.user_loan_anonymization_preference FOR UPDATE",
+        pgClient.getSchemaName())).execute());
+
+      Future<String> blockedEvent = handler.handle(buildUserEventRecord("UPDATED",
+        buildUser("asEarlyAsPossible"), buildUser("never")));
+      waitFor(handler.handle(buildUserEventRecord("UPDATED",
+        buildUser(OTHER_USER_ID, null), buildUser(OTHER_USER_ID, "never"))));
+
+      assertThat(getStoredPreference(OTHER_USER_ID), is("never"));
+      assertThat(blockedEvent.isComplete(), is(false));
+
+      waitFor(transaction.rollback());
+      waitFor(blockedEvent);
+      assertThat(getStoredPreference(), is("never"));
+    } finally {
+      waitFor(lockingConnection.close());
+    }
+  }
+
   private static KafkaProducer<String, JsonObject> createProducer() {
     Properties config = new Properties();
     config.put(BOOTSTRAP_SERVERS_CONFIG, KAFKA_SERVER_URL);
@@ -743,6 +905,65 @@ class EventConsumerVerticleTest extends ApiTests {
     record.addHeader(URL, "http://localhost:" + PROXY_PORT);
     record.addHeader(TOKEN, "RANDOM_TOKEN");
     waitFor(producer.write(record));
+  }
+
+  private void publishUserEventAndWait(String eventType, JsonObject oldUser, JsonObject newUser) {
+    int initialOffset = getOffsetForUserEvents();
+    publishEvent(USERS_TOPIC, buildUserEvent(eventType, oldUser, newUser));
+    waitUntilValueIsIncreased(initialOffset, EventConsumerVerticleTest::getOffsetForUserEvents);
+  }
+
+  private static JsonObject buildUserEvent(String eventType, JsonObject oldUser,
+    JsonObject newUser) {
+
+    return new JsonObject()
+      .put("id", randomId())
+      .put("type", eventType)
+      .put("tenant", TENANT_ID)
+      .put("timestamp", System.currentTimeMillis())
+      .put("data", new JsonObject().put("old", oldUser).put("new", newUser));
+  }
+
+  private static KafkaConsumerRecord<String, String> buildUserEventRecord(String eventType,
+    JsonObject oldUser, JsonObject newUser) {
+
+    String userId = requireNonNullElse(newUser, oldUser).getString("id");
+    ConsumerRecord<String, String> consumerRecord = new ConsumerRecord<>(USERS_TOPIC, 0, 0,
+      userId, buildUserEvent(eventType, oldUser, newUser).encode());
+    consumerRecord.headers().add(TENANT, TENANT_ID.getBytes(UTF_8));
+
+    return new KafkaConsumerRecordImpl<>(consumerRecord);
+  }
+
+  private static JsonObject buildUser(String loanAnonymizationPreference) {
+    return buildUser(USER_ID, loanAnonymizationPreference);
+  }
+
+  private static JsonObject buildUser(String userId, String loanAnonymizationPreference) {
+    return new JsonObject()
+      .put("id", userId)
+      .put("loanAnonymizationPreference", loanAnonymizationPreference);
+  }
+
+  private static void storePreference(String preference) {
+    waitFor(pgClient.execute(
+      format("INSERT INTO %s.user_loan_anonymization_preference (id, jsonb) VALUES ($1, $2)",
+        pgClient.getSchemaName()),
+      Tuple.of(UUID.fromString(USER_ID),
+        new JsonObject().put("id", USER_ID).put("preference", preference))));
+  }
+
+  private static String getStoredPreference() {
+    return getStoredPreference(USER_ID);
+  }
+
+  private static String getStoredPreference(String userId) {
+    RowSet<Row> rows = waitFor(pgClient.execute(
+      format("SELECT jsonb->>'preference' FROM %s.user_loan_anonymization_preference WHERE id = $1",
+        pgClient.getSchemaName()),
+      Tuple.of(UUID.fromString(userId))));
+
+    return rows.size() == 0 ? null : rows.iterator().next().getString(0);
   }
 
   private static JsonObject buildUpdateEvent(JsonObject oldVersion, JsonObject newVersion) {
@@ -904,6 +1125,10 @@ class EventConsumerVerticleTest extends ApiTests {
       .withPickupServicePointId(UUID.fromString(pickupServicePointId))
       .withSearchIndex(searchIndex)
       .create();
+  }
+
+  private static Integer getOffsetForUserEvents() {
+    return getOffset(USERS_TOPIC, buildConsumerGroupId(USERS.name()));
   }
 
   private static Integer getOffsetForItemUpdateEvents() {

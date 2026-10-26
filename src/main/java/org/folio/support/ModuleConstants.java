@@ -30,6 +30,8 @@ public class ModuleConstants {
   public static final String REQUEST_POLICY_TABLE = "request_policy";
   public static final Class<RequestPolicy> REQUEST_POLICY_CLASS = RequestPolicy.class;
   public static final String PRINT_EVENTS_TABLE = "print_events";
+  public static final String USER_LOAN_ANONYMIZATION_PREFERENCE_TABLE =
+    "user_loan_anonymization_preference";
 
   private ModuleConstants(){
   }
