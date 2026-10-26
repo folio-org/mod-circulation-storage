@@ -2,7 +2,6 @@ package org.folio.service.loan;
 
 import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.Promise.promise;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
 import static org.folio.rest.persist.PgUtil.postgresClient;
@@ -21,6 +20,7 @@ import java.io.IOException;
 import java.time.DateTimeException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.StringJoiner;
@@ -64,8 +64,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Tuple;
 import jakarta.validation.constraints.NotNull;
 
@@ -261,13 +259,13 @@ public class LoanService {
 
     return postgresClient.execute(anonymizationCandidatesSql(postgresClient.getSchemaName(), preference),
         Tuple.of(cutoff, limit))
-      .map(rows -> {
-        JsonArray loans = new JsonArray();
-        rows.forEach(row -> loans.add(row.getJsonObject(0)));
+      .<Response>map(rows -> {
+        List<Loan> loans = new ArrayList<>();
+        rows.forEach(row -> loans.add(row.getJsonObject(0).mapTo(Loan.class)));
         log.info("findLoanAnonymizationCandidates:: preference: {}, returned loans: {}",
           preference, loans.size());
-        return Response.ok(new JsonObject().put("loans", loans).put("totalRecords", loans.size())
-          .encode(), APPLICATION_JSON).build();
+        return LoanStorage.GetLoanStorageAnonymizationCandidatesResponse
+          .respond200WithApplicationJson(new Loans().withLoans(loans).withTotalRecords(loans.size()));
       })
       .otherwise(e -> {
         log.error("findLoanAnonymizationCandidates:: {}", e.getMessage(), e);
