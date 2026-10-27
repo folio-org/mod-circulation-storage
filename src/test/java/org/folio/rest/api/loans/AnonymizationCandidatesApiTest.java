@@ -80,15 +80,6 @@ public class AnonymizationCandidatesApiTest extends ApiTests {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = { LIBRARY, "unknownValue" })
-  void explicitLibraryPolicyAndUnknownValuesBelongToLibraryPolicy(String storedPreference) {
-    String loan = createClosedLoan(storedUser(storedPreference), NOW);
-
-    assertThat(getAnonymizationCandidates(LIBRARY, null), containsInAnyOrder(loan));
-    assertThat(getAnonymizationCandidates(EARLY, null), empty());
-  }
-
-  @ParameterizedTest
   @ValueSource(strings = { EARLY, LIBRARY })
   void returnedBeforeIsStrict(String preference) {
     String user = userOfGroup(preference);

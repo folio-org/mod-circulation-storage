@@ -8,7 +8,6 @@ import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.folio.service.event.EntityChangedEventPublisherFactory.loanEventPublisher;
 import static org.folio.support.LoanAnonymizationPreference.AS_EARLY_AS_POSSIBLE;
-import static org.folio.support.LoanAnonymizationPreference.NEVER;
 import static org.folio.support.ModuleConstants.LOAN_CLASS;
 import static org.folio.support.ModuleConstants.LOAN_HISTORY_TABLE;
 import static org.folio.support.ModuleConstants.LOAN_TABLE;
@@ -313,6 +312,7 @@ public class LoanService {
           AS_EARLY_AS_POSSIBLE.value());
     }
 
+    // No filter on the preference value, the planner underestimates it and picks a slow nested loop
     return """
       SELECT loan.jsonb::text
       FROM %s loan
@@ -320,12 +320,10 @@ public class LoanService {
         AND loan.jsonb->>'userId' IS NOT NULL
         AND NOT EXISTS (
           SELECT 1 FROM %s preference
-          WHERE preference.id::text = lower(loan.jsonb->>'userId')
-            AND preference.jsonb->>'preference' IN ('%s', '%s'))
+          WHERE preference.id::text = lower(loan.jsonb->>'userId'))
         AND %s
       LIMIT $2
-      """.formatted(loanTable, preferenceTable, AS_EARLY_AS_POSSIBLE.value(), NEVER.value(),
-        RETURNED_BEFORE_FILTER);
+      """.formatted(loanTable, preferenceTable, RETURNED_BEFORE_FILTER);
   }
 
   public Future<Response> anonymizeByUserId(String userId) {

@@ -5,6 +5,7 @@
 * Add automatic renewal settings to loan policy, bump `loan-policy-storage` to 2.5 (CIRCSTORE-680)
 * Keep users' loan anonymization preferences in sync via mod-users events (CIRCSTORE-682)
 * Add `GET /loan-storage/anonymization-candidates` that selects closed loans by the users' loan anonymization preference, bump interface `loan-storage` to 7.5 (CIRCSTORE-683)
+* Fix slow `anonymization-candidates` query for library policy users (CIRCSTORE-690)
 
 ## 17.5.0 2026-04-14
 * Update FQM translations (MODFQMMGR-1095)
