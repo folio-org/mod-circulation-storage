@@ -312,7 +312,6 @@ public class LoanService {
           AS_EARLY_AS_POSSIBLE.value());
     }
 
-    // No filter on the preference value, the planner underestimates it and picks a slow nested loop
     return """
       SELECT loan.jsonb::text
       FROM %s loan
