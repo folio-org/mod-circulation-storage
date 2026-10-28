@@ -88,6 +88,17 @@
       ]
     },
     {
+      "id": "loan-anonymization-preference-storage",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["PUT"],
+          "pathPattern": "/loan-anonymization-preference-storage/loan-anonymization-preferences",
+          "permissionsRequired": ["circulation-storage.loan-anonymization-preferences.collection.put"]
+        }
+      ]
+    },
+    {
       "id": "circulation-rules-storage",
       "version": "1.0",
       "handlers": [
@@ -820,6 +831,11 @@
       "description": "Get closed loans to check for scheduled anonymization from storage"
     },
     {
+      "permissionName": "circulation-storage.loan-anonymization-preferences.collection.put",
+      "displayName": "Circulation storage - replace loan anonymization preferences",
+      "description": "Replace the stored loan anonymization preferences of all users"
+    },
+    {
       "permissionName": "circulation-storage.requests.collection.get",
       "displayName": "Circulation storage - get request collection",
       "description": "Get request collection from storage"
@@ -1093,6 +1109,7 @@
         "circulation-storage.loans.anonymize.execute",
         "circulation-storage.loans-history.collection.get",
         "circulation-storage.anonymization-candidates.collection.get",
+        "circulation-storage.loan-anonymization-preferences.collection.put",
         "circulation-storage.circulation-rules.get",
         "circulation-storage.circulation-rules.put",
         "circulation-storage.loan-policies.collection.get",
