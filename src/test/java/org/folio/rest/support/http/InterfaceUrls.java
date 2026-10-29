@@ -40,6 +40,10 @@ public class InterfaceUrls {
     return storageUrl("/anonymize-storage-loans");
   }
 
+  public static URL userLoanAnonymizationPreferencesUrl() throws MalformedURLException {
+    return storageUrl("/loan-anonymization-preference-storage/loan-anonymization-preferences");
+  }
+
   public static URL checkInsStorageUrl(String subPath) throws MalformedURLException {
     return storageUrl("/check-in-storage/check-ins" + subPath);
   }
