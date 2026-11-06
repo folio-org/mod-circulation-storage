@@ -1,3 +1,6 @@
+## 17.5.3 2026-11-06
+* Add database-backed request queue locking (CIRCSTORE-692)
+
 ## 17.5.2 2026-09-04
 * Review logs and add DB indexes (CIRCSTORE-674)
 
