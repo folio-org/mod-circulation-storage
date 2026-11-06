@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "description": "A request to acquire a request queue lock",
+  "additionalProperties": false,
+  "required": ["queueType", "queueId", "ttlMs"],
+  "properties": {
+    "queueType": {
+      "description": "The kind of request queue protected by the lock",
+      "type": "string",
+      "enum": ["INSTANCE", "ITEM"]
+    },
+    "queueId": {
+      "description": "Instance or item ID identifying the queue",
+      "$ref": "raml-util/schemas/uuid.schema"
+    },
+    "ttlMs": {
+      "description": "Time to live for the lock in milliseconds",
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

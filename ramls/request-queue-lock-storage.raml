@@ -1,0 +1,60 @@
+#%RAML 1.0
+title: Request Queue Lock Storage
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost:9130
+
+documentation:
+  - title: Request Queue Lock API
+    content: <b>Storage for request queue locks</b>
+
+types:
+  request-queue-lock: !include request-queue-lock.json
+  request-queue-lock-request: !include request-queue-lock-request.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  validate: !include raml-util/traits/validation.raml
+
+/request-queue-lock-storage:
+  displayName: Request queue lock storage
+  post:
+    is: [validate]
+    description: Create a lock for an item or instance request queue
+    body:
+      application/json:
+        type: request-queue-lock-request
+        example: !include examples/request-queue-lock-request.json
+    responses:
+      201:
+        description: Request queue lock created
+        body:
+          application/json:
+            type: request-queue-lock
+            example: !include examples/request-queue-lock.json
+      400:
+        description: Invalid request
+        body:
+          text/plain:
+      409:
+        description: The request queue is already locked
+        body:
+          text/plain:
+      500:
+        description: Internal server error
+        body:
+          text/plain:
+  /{lockId}:
+    delete:
+      description: Delete a request queue lock
+      responses:
+        204:
+          description: Request queue lock deleted
+        400:
+          description: Invalid lock ID
+          body:
+            text/plain:
+        500:
+          description: Internal server error
+          body:
+            text/plain:

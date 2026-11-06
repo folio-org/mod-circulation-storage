@@ -47,13 +47,27 @@ given item.
 HTTP Requests (either POST or PUT) which could result in two loans with the
 same `itemId` and the `status` of `Open` should be rejected with a error (422) response
 
-### Unique Position in per-item Request Queue
+### Request Queue Position Invariants
 
-This implementation introduces the constraint that only one open (e.g. `Open - Not yet filled`) request
-for a given item can be at a particular position in the request queue for that item.
+When TLR is disabled, each item has its own request queue. A database constraint rejects
+POST or PUT requests that would place two open requests at the same `itemId` and `position`
+with a 422 response.
 
-HTTP Requests (either POST or PUT) which could result two open requests with the
-same `itemId` and `position` should be rejected with a error (422) response
+When TLR is enabled, requests for an instance form a unified queue with consecutive
+instance-level positions. The per-item database constraint alone does not enforce this
+instance-level invariant.
+
+### Request Queue Locking
+
+The request queue lock is tenant-scoped and identified by a queue type (`ITEM` or
+`INSTANCE`) and queue ID. A lock is acquired with
+`POST /request-queue-lock-storage`; a 409 response means the queue is already locked. It is
+released with `DELETE /request-queue-lock-storage/{lockId}`. Locks are leases and can be
+reclaimed after they expire.
+
+Request expiration and TLR feature-toggle processing use this lock when updating request
+queue positions. The lock does not calculate or validate positions. See the
+[request queue lock RAML](ramls/request-queue-lock-storage.raml) for the API contract.
 
 ### Known Limitations
 
