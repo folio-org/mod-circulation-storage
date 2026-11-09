@@ -1,0 +1,33 @@
+#%RAML 1.0
+title: Loan anonymization preference storage
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost:9130
+
+documentation:
+  - title: Loan anonymization preference storage API
+    content: <b>Replace the stored loan anonymization preferences of the users who deviate from the library policy</b>
+
+types:
+  errors: !include raml-util/schemas/errors.schema
+  user-loan-anonymization-preferences: !include user-loan-anonymization-preferences.json
+
+traits:
+  validate: !include raml-util/traits/validation.raml
+
+/loan-anonymization-preference-storage:
+  /loan-anonymization-preferences:
+    put:
+      description: "Replace all stored preferences: add or update the given users, remove all others"
+      is: [validate]
+      body:
+        application/json:
+          type: user-loan-anonymization-preferences
+      responses:
+        204:
+          description: "Preferences replaced"
+        500:
+          description: "Internal server error, e.g. due to misconfiguration"
+          body:
+            text/plain:
+              example: "Internal server error, contact administrator"

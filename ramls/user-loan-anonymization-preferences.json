@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "All users whose loan anonymization preference deviates from the library policy",
+  "type": "object",
+  "properties": {
+    "preferences": {
+      "description": "One entry per user, users who follow the library policy are not listed",
+      "type": "array",
+      "items": {
+        "description": "Loan anonymization preference of one user",
+        "type": "object",
+        "javaType": "org.folio.rest.jaxrs.model.UserLoanAnonymizationPreference",
+        "properties": {
+          "userId": {
+            "description": "ID of the user",
+            "$ref": "raml-util/schemas/uuid.schema"
+          },
+          "preference": {
+            "description": "The user's loan anonymization preference",
+            "type": "string",
+            "enum": ["asEarlyAsPossible", "never"]
+          }
+        },
+        "additionalProperties": false,
+        "required": ["userId", "preference"]
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": ["preferences"]
+}

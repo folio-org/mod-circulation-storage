@@ -6,6 +6,8 @@
 * Keep users' loan anonymization preferences in sync via mod-users events (CIRCSTORE-682)
 * Add `GET /loan-storage/anonymization-candidates` that selects closed loans by the users' loan anonymization preference, bump interface `loan-storage` to 7.5 (CIRCSTORE-683)
 * Fix slow `anonymization-candidates` query for library policy users (CIRCSTORE-690)
+* Add interface `loan-anonymization-preference-storage` 1.0 to replace the stored loan anonymization preferences, used by the nightly resync of mod-circulation (CIRC-2699)
+
 
 ## 17.5.0 2026-04-14
 * Update FQM translations (MODFQMMGR-1095)
