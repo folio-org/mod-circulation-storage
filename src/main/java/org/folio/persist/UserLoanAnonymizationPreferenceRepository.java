@@ -18,6 +18,8 @@ import io.vertx.sqlclient.Tuple;
 
 /**
  * Users whose loan anonymization preference deviates from the library policy.
+ * Only asEarlyAsPossible and never are stored, users following the library policy have no row:
+ * LoanService.anonymizationCandidatesSql relies on it.
  */
 public class UserLoanAnonymizationPreferenceRepository {
 
