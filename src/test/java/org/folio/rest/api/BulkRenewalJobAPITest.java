@@ -18,6 +18,7 @@ import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
+import org.eclipse.jetty.http.HttpMethod;
 import org.folio.rest.support.ApiTests;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.MultipleRecords;
@@ -322,21 +323,21 @@ class BulkRenewalJobAPITest extends ApiTests {
     try {
       assertThat(ids(getCollection(StorageTestSuite.TENANT_ID)), contains(idA));
       assertThat(ids(getCollection(OTHER_TENANT)), contains(idB));
-      assertThat(requestAs(OTHER_TENANT, "GET", idA, null).getStatusCode(), is(404));
+      assertThat(requestAs(OTHER_TENANT, HttpMethod.GET, idA, null).getStatusCode(), is(404));
 
       JsonObject updateOfA = bulkRenewalJobClient.getById(idA).getJson().put("processedLoans", 4);
-      assertThat(requestAs(OTHER_TENANT, "PUT", idA, updateOfA).getStatusCode(), is(404));
+      assertThat(requestAs(OTHER_TENANT, HttpMethod.PUT, idA, updateOfA).getStatusCode(), is(404));
       assertThat(bulkRenewalJobClient.getById(idA).getJson().getInteger("processedLoans"), is(0));
 
-      assertThat(requestAs(OTHER_TENANT, "DELETE", idA, null).getStatusCode(), is(404));
+      assertThat(requestAs(OTHER_TENANT, HttpMethod.DELETE, idA, null).getStatusCode(), is(404));
       assertThat(bulkRenewalJobClient.attemptGetById(idA).getStatusCode(), is(200));
 
-      assertThat(requestAs(OTHER_TENANT, "DELETE", idB, null).getStatusCode(), is(204));
+      assertThat(requestAs(OTHER_TENANT, HttpMethod.DELETE, idB, null).getStatusCode(), is(204));
       assertThat(bulkRenewalJobClient.attemptGetById(idA).getStatusCode(), is(200));
       assertThat(ids(getCollection(OTHER_TENANT)), is(List.of()));
     } finally {
       // keep the second tenant clean even if an assertion above failed
-      requestAs(OTHER_TENANT, "DELETE", idB, null);
+      requestAs(OTHER_TENANT, HttpMethod.DELETE, idB, null);
     }
   }
 
@@ -352,14 +353,14 @@ class BulkRenewalJobAPITest extends ApiTests {
   }
 
   @SneakyThrows
-  private JsonResponse requestAs(String tenantId, String method, String id, JsonObject body) {
+  private JsonResponse requestAs(String tenantId, HttpMethod method, String id, JsonObject body) {
     CompletableFuture<JsonResponse> completed = new CompletableFuture<>();
     URL url = InterfaceUrls.bulkRenewalJobsUrl("/" + id);
     switch (method) {
-      case "GET" -> client.get(url, tenantId, ResponseHandler.json(completed));
-      case "PUT" -> client.put(url, body, tenantId, ResponseHandler.json(completed));
-      case "DELETE" -> client.delete(url, tenantId, ResponseHandler.json(completed));
-      default -> throw new IllegalArgumentException(method);
+      case HttpMethod.GET -> client.get(url, tenantId, ResponseHandler.json(completed));
+      case HttpMethod.PUT -> client.put(url, body, tenantId, ResponseHandler.json(completed));
+      case HttpMethod.DELETE -> client.delete(url, tenantId, ResponseHandler.json(completed));
+      default -> throw new IllegalArgumentException("Unsupported HTTP method: " + method);
     }
     return completed.get(5, TimeUnit.SECONDS);
   }
@@ -378,4 +379,5 @@ class BulkRenewalJobAPITest extends ApiTests {
       .put("successfulRenewals", 0)
       .put("failedRenewals", 0);
   }
+
 }
