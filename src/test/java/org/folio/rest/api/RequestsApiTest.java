@@ -314,6 +314,29 @@ class RequestsApiTest extends ApiTests {
   }
 
   @Test
+  void cannotCreateAnOpenRequestWithoutValidRequester()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+
+    JsonObject requestRequest = new RequestRequestBuilder()
+      .create();
+    requestRequest = requestRequest.put("requesterId", "not a valid uuid");
+
+    client.post(requestStorageUrl(),
+      requestRequest, TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Should not create request: %s", response.getBody()),
+      response.getStatusCode(), is(422));
+  }
+
+  @Test
   void cannotCreateAnOpenRequestWithoutRequester()
     throws InterruptedException,
     MalformedURLException,
