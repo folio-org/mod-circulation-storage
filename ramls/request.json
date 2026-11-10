@@ -33,7 +33,7 @@
       "type": "string"
     },
     "requesterId": {
-      "description": "ID of the requesting patron (user)",
+      "description": "ID of the requesting patron (user). Required for open requests, not required for closed requested (for anonymization).",
       "type": "string",
       "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
     },
@@ -291,7 +291,6 @@
   "additionalProperties": false,
   "required": [
     "instanceId",
-    "requesterId",
     "requestType",
     "requestLevel",
     "requestDate",
