@@ -154,6 +154,7 @@
     {
       "tableName": "bulk_renewal_job",
       "withMetadata": true,
+      "withOptimisticLocking": "failOnConflict",
       "withAuditing": false,
       "index": [
         {

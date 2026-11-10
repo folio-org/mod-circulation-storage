@@ -78,6 +78,70 @@ class BulkRenewalJobAPITest extends ApiTests {
     assertThat(bulkRenewalJobClient.getAll().getTotalRecords(), is(1));
   }
 
+  @Test
+  @SneakyThrows
+  void updateAdvancesVersion() {
+    JsonObject created = bulkRenewalJobClient.create(validJob()).getJson();
+    String id = created.getString("id");
+    JsonObject stored = bulkRenewalJobClient.getById(id).getJson();
+    int version = stored.getInteger("_version");
+
+    JsonObject update = stored.copy()
+      .put("status", "COMPLETED")
+      .put("endedDate", "2026-01-01T11:00:00.000Z")
+      .put("processedLoans", 5)
+      .put("reason", "done");
+
+    assertThat(bulkRenewalJobClient.attemptPutById(update).getStatusCode(), is(204));
+
+    JsonObject updated = bulkRenewalJobClient.getById(id).getJson();
+    assertThat(updated.getString("status"), is("COMPLETED"));
+    assertThat(updated.getInteger("processedLoans"), is(5));
+    assertThat(updated.getString("reason"), is("done"));
+    assertThat(updated.getString("endedDate"), is(notNullValue()));
+    assertThat(updated.getInteger("_version"), is(version + 1));
+  }
+
+  @Test
+  @SneakyThrows
+  void staleVersionIsRejected() {
+    String id = bulkRenewalJobClient.create(validJob()).getId().toString();
+    JsonObject stored = bulkRenewalJobClient.getById(id).getJson();
+
+    JsonObject firstUpdate = stored.copy().put("processedLoans", 3);
+    JsonObject secondUpdate = stored.copy().put("processedLoans", 7);
+
+    assertThat(bulkRenewalJobClient.attemptPutById(firstUpdate).getStatusCode(), is(204));
+    assertThat(bulkRenewalJobClient.attemptPutById(secondUpdate).getStatusCode(), is(409));
+
+    assertThat(bulkRenewalJobClient.getById(id).getJson().getInteger("processedLoans"), is(3));
+  }
+
+  @Test
+  @SneakyThrows
+  void putWithoutVersionOnExistingRecordDoesNotOverwrite() {
+    String id = bulkRenewalJobClient.create(validJob()).getId().toString();
+    JsonObject stored = bulkRenewalJobClient.getById(id).getJson();
+
+    JsonObject withoutVersion = stored.copy().put("processedLoans", 9);
+    withoutVersion.remove("_version");
+
+    int status = bulkRenewalJobClient.attemptPutById(withoutVersion).getStatusCode();
+
+    assertThat(status, is(409));
+    assertThat(bulkRenewalJobClient.getById(id).getJson().getInteger("processedLoans"), is(0));
+  }
+
+  @Test
+  @SneakyThrows
+  void clientSuppliedVersionOnCreateIsNotTrusted() {
+    JsonObject job = validJob().put("_version", 99);
+
+    String id = bulkRenewalJobClient.create(job).getId().toString();
+
+    assertThat(bulkRenewalJobClient.getById(id).getJson().getInteger("_version"), is(1));
+  }
+
   private static JsonObject validJob() {
     return validJob(UUID.randomUUID().toString());
   }
