@@ -77,6 +77,14 @@ by the client is ignored) and incremented on every update. A PUT must carry the 
 the record the client last read. If the stored record has been changed since, or `_version` is
 missing, the update is rejected with a 409 response and the stored record is left unchanged.
 The module only stores jobs; it does not enforce status transitions or prevent overlapping jobs.
+
+Notes for clients:
+* The statistics (`totalEligibleLoans`, `processedLoans`, `successfulRenewals`, `failedRenewals`)
+  must be sent as integers. RMB coerces non-integer numbers (for example `1.5`) to an integer
+  before validation, so such values are truncated rather than rejected.
+* `startedDate` and `endedDate` are stored with a `+00:00` offset. When querying them with CQL,
+  use a `+00:00` offset or a plain date (`startedDate>=2026-01-03`); a `Z` suffix compares
+  incorrectly at the exact boundary instant because CQL compares the values as strings.
 See the [bulk renewal job RAML](ramls/bulk-renewal-job-storage.raml) for the API contract.
 
 ### Known Limitations

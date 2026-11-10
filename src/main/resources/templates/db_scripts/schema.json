@@ -159,11 +159,13 @@
       "index": [
         {
           "fieldName": "status",
-          "tOps": "ADD"
+          "tOps": "ADD",
+          "removeAccents": false
         },
         {
           "fieldName": "startedDate",
-          "tOps": "ADD"
+          "tOps": "ADD",
+          "removeAccents": false
         }
       ]
     },

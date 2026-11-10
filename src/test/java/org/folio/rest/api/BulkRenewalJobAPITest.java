@@ -211,6 +211,26 @@ class BulkRenewalJobAPITest extends ApiTests {
     assertThat(created.getInteger("failedRenewals"), is(0));
   }
 
+  // Characterisation test: RMB's Jackson mapper coerces non-integer numbers to int before bean
+  // validation runs, so the module cannot reject them. Clients must send integers.
+  @Test
+  @SneakyThrows
+  void fractionalStatisticIsTruncatedByRmb() {
+    JsonObject created = bulkRenewalJobClient.create(validJob().put("processedLoans", 1.5))
+      .getJson();
+
+    assertThat(created.getInteger("processedLoans"), is(1));
+  }
+
+  @Test
+  @SneakyThrows
+  void nonUuidIdIsRejectedOnCreate() {
+    JsonObject invalid = validJob().put("id", "not-a-uuid");
+
+    assertThat(bulkRenewalJobClient.attemptCreate(invalid).getStatusCode(), is(422));
+    assertThat(bulkRenewalJobClient.getAll().getTotalRecords(), is(0));
+  }
+
   @ParameterizedTest(name = "{0}")
   @MethodSource("invalidJobs")
   @SneakyThrows
@@ -299,20 +319,25 @@ class BulkRenewalJobAPITest extends ApiTests {
     bulkRenewalJobClient.create(jobA);
     createEntity(jobB, InterfaceUrls.bulkRenewalJobsUrl(""), OTHER_TENANT);
 
-    assertThat(ids(getCollection(StorageTestSuite.TENANT_ID)), contains(idA));
-    assertThat(ids(getCollection(OTHER_TENANT)), contains(idB));
-    assertThat(requestAs(OTHER_TENANT, "GET", idA, null).getStatusCode(), is(404));
+    try {
+      assertThat(ids(getCollection(StorageTestSuite.TENANT_ID)), contains(idA));
+      assertThat(ids(getCollection(OTHER_TENANT)), contains(idB));
+      assertThat(requestAs(OTHER_TENANT, "GET", idA, null).getStatusCode(), is(404));
 
-    JsonObject updateOfA = bulkRenewalJobClient.getById(idA).getJson().put("processedLoans", 4);
-    assertThat(requestAs(OTHER_TENANT, "PUT", idA, updateOfA).getStatusCode(), is(404));
-    assertThat(bulkRenewalJobClient.getById(idA).getJson().getInteger("processedLoans"), is(0));
+      JsonObject updateOfA = bulkRenewalJobClient.getById(idA).getJson().put("processedLoans", 4);
+      assertThat(requestAs(OTHER_TENANT, "PUT", idA, updateOfA).getStatusCode(), is(404));
+      assertThat(bulkRenewalJobClient.getById(idA).getJson().getInteger("processedLoans"), is(0));
 
-    assertThat(requestAs(OTHER_TENANT, "DELETE", idA, null).getStatusCode(), is(404));
-    assertThat(bulkRenewalJobClient.attemptGetById(idA).getStatusCode(), is(200));
+      assertThat(requestAs(OTHER_TENANT, "DELETE", idA, null).getStatusCode(), is(404));
+      assertThat(bulkRenewalJobClient.attemptGetById(idA).getStatusCode(), is(200));
 
-    assertThat(requestAs(OTHER_TENANT, "DELETE", idB, null).getStatusCode(), is(204));
-    assertThat(bulkRenewalJobClient.attemptGetById(idA).getStatusCode(), is(200));
-    assertThat(ids(getCollection(OTHER_TENANT)), is(List.of()));
+      assertThat(requestAs(OTHER_TENANT, "DELETE", idB, null).getStatusCode(), is(204));
+      assertThat(bulkRenewalJobClient.attemptGetById(idA).getStatusCode(), is(200));
+      assertThat(ids(getCollection(OTHER_TENANT)), is(List.of()));
+    } finally {
+      // keep the second tenant clean even if an assertion above failed
+      requestAs(OTHER_TENANT, "DELETE", idB, null);
+    }
   }
 
   @SneakyThrows

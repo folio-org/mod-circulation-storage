@@ -1253,12 +1253,12 @@
         "circulation-storage.circulation-settings.item.put",
         "circulation-storage.circulation-settings.item.delete",
         "print-events-storage.print-events-entry.item.post",
+        "print-events-storage.print-events-status.item.post",
         "bulk-renewal-job-storage.bulk-renewal-jobs.collection.get",
         "bulk-renewal-job-storage.bulk-renewal-jobs.item.get",
         "bulk-renewal-job-storage.bulk-renewal-jobs.item.post",
         "bulk-renewal-job-storage.bulk-renewal-jobs.item.put",
-        "bulk-renewal-job-storage.bulk-renewal-jobs.item.delete",
-        "print-events-storage.print-events-status.item.post"
+        "bulk-renewal-job-storage.bulk-renewal-jobs.item.delete"
       ]
     },
     {
