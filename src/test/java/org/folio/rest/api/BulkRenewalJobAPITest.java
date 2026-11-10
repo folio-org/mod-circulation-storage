@@ -123,7 +123,7 @@ class BulkRenewalJobAPITest extends ApiTests {
   @Test
   @SneakyThrows
   void staleVersionIsRejected() {
-    String id = bulkRenewalJobClient.create(validJob()).getId().toString();
+    String id = bulkRenewalJobClient.create(validJob()).getId();
     JsonObject stored = bulkRenewalJobClient.getById(id).getJson();
 
     JsonObject firstUpdate = stored.copy().put("processedLoans", 3);
@@ -138,7 +138,7 @@ class BulkRenewalJobAPITest extends ApiTests {
   @Test
   @SneakyThrows
   void putWithoutVersionOnExistingRecordDoesNotOverwrite() {
-    String id = bulkRenewalJobClient.create(validJob()).getId().toString();
+    String id = bulkRenewalJobClient.create(validJob()).getId();
     JsonObject stored = bulkRenewalJobClient.getById(id).getJson();
 
     JsonObject withoutVersion = stored.copy().put("processedLoans", 9);
@@ -155,7 +155,7 @@ class BulkRenewalJobAPITest extends ApiTests {
   void clientSuppliedVersionOnCreateIsNotTrusted() {
     JsonObject job = validJob().put("_version", 99);
 
-    String id = bulkRenewalJobClient.create(job).getId().toString();
+    String id = bulkRenewalJobClient.create(job).getId();
 
     assertThat(bulkRenewalJobClient.getById(id).getJson().getInteger("_version"), is(1));
   }
@@ -248,7 +248,7 @@ class BulkRenewalJobAPITest extends ApiTests {
   @SneakyThrows
   void invalidJobIsRejectedOnUpdate(String description, int expectedStatus,
     UnaryOperator<JsonObject> breakJob) {
-    String id = bulkRenewalJobClient.create(validJob()).getId().toString();
+    String id = bulkRenewalJobClient.create(validJob()).getId();
     JsonObject stored = bulkRenewalJobClient.getById(id).getJson();
 
     int status = bulkRenewalJobClient.attemptPutById(breakJob.apply(stored.copy()))
