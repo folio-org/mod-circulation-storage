@@ -236,8 +236,8 @@ removing positions for these request, so we will do:
 # Domain event pattern
 
 The pattern means that every time when a domain entity is created/updated/removed
-a message is posted to kafka topic. Currently domain events are supported for _loans_, _requests_, _check-in_ entities.
-The events are posted into the following topics:
+a message is posted to kafka topic. Currently domain events are supported for _loans_, _requests_, _check-in_ entities. 
+The events are posted into the following topics: 
 * `circulation.loan` - for loans;
 * `circulation.request` - for requests;
 * `circulation.check-in` - for check-in records.
@@ -248,10 +248,10 @@ The event payload has following structure:
   "id": "12bb13f6-d0fa-41b5-b0ad-d6561975121b",  // event UUID
   "type": "CREATED|UPDATED|DELETED|ALL_DELETED", // type of the event
   "tenant": "diku",                              // tenant name
-  "timestamp": 1642707670092,                    // event creation timestamp in Unix Epoch time
+  "timestamp": 1642707670092,                    // event creation timestamp in Unix Epoch time 
   "data": {
     "old": {...},                                // the entity before update or delete
-    "new": {...},                                // the entity after update or create
+    "new": {...},                                // the entity after update or create  
   }
 }
 ```
