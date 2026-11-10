@@ -56,6 +56,11 @@ public class RequestsApiUtil {
         "Title level request must have both itemId and holdingsRecordId or neither"));
     }
 
+    if (request.getStatus().value().startsWith("Open -") && request.getRequesterId() == null) {
+      errorList.add(createError( "Open request must have a requester ID"));
+    }
+
+
     return new Errors().withErrors(errorList);
   }
 
