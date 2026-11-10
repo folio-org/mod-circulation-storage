@@ -179,6 +179,33 @@ class TlrFeatureToggleJobAPITest extends ApiTests {
   }
 
   @Test
+  void processingShouldClearExistingPositionsBeforeMergingItemQueues()
+    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
+
+    circulationSettingsHelper.changeTlrSettings(true);
+    UUID instanceId = UUID.randomUUID();
+    UUID firstItemId = UUID.randomUUID();
+    UUID secondItemId = UUID.randomUUID();
+    createRequest(instanceId, firstItemId, 1, "Item", OPEN_NOT_YET_FILLED);
+    createRequest(instanceId, firstItemId, 2, "Item", OPEN_AWAITING_PICKUP);
+    createRequest(instanceId, secondItemId, 1, "Item", OPEN_IN_TRANSIT);
+    createRequest(instanceId, secondItemId, 2, "Item", OPEN_AWAITING_DELIVERY);
+
+    JsonResponse postResponse = postTlrFeatureToggleJob(createTlrFeatureToggleJob());
+    restAssuredClient.post(TLR_TOGGLE_JOB_START_URL, new JsonObject());
+    String jobId = postResponse.getJson().getString("id");
+    await().until(() -> getTlrFeatureToggleJobById(jobId)
+      .getJson().getString("status"), is(DONE.toString()));
+
+    List<Integer> positions = JsonArrayHelper.toList(getRequests().getJson()
+        .getJsonArray("requests")).stream()
+      .map(request -> request.getInteger("position"))
+      .sorted()
+      .toList();
+    assertThat(positions, is(List.of(1, 2, 3, 4)));
+  }
+
+  @Test
   void processingShouldRecalculatePositionsForItemLevelRequests()
     throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 

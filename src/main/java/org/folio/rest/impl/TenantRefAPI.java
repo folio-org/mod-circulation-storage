@@ -6,14 +6,12 @@ import javax.ws.rs.core.Response;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.support.kafka.topic.CirculationStorageKafkaTopic;
 import org.folio.dbschema.Versioned;
-import org.folio.kafka.services.KafkaAdminClientService;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.tools.utils.TenantLoading;
 import org.folio.rest.tools.utils.TenantTool;
-import org.folio.service.PubSubRegistrationService;
+import org.folio.service.event.KafkaService;
 import org.folio.service.migration.TlrDataMigrationService;
 import org.folio.service.migration.RequestSearchFieldsMigrationService;
 
@@ -37,12 +35,14 @@ public class TenantRefAPI extends TenantAPI {
 
     return (new TlrDataMigrationService(attributes, vertxContext, headers).migrate())
       .compose(f -> new RequestSearchFieldsMigrationService(attributes, vertxContext, headers).migrate())
-      .compose(r -> new KafkaAdminClientService(vertxContext.owner())
-        .createKafkaTopics(CirculationStorageKafkaTopic.values(), tenantId))
       .compose(r -> super.loadData(attributes, tenantId, headers, vertxContext))
       .compose(r -> loadData(attributes, headers, vertxContext))
-      .compose(r -> registerModuleInPubSub(headers, vertxContext))
+      .compose(r -> createKafkaTopics(tenantId, vertxContext))
       .mapEmpty();
+  }
+
+  Future<Void> createKafkaTopics(String tenantId, Context vertxContext) {
+    return new KafkaService(vertxContext.owner()).createCirculationStorageTopics(tenantId);
   }
 
   private Future<Integer> loadData(TenantAttributes attributes, Map<String, String> headers,
@@ -98,11 +98,6 @@ public class TenantRefAPI extends TenantAPI {
     return result;
   }
 
-  private Future<Boolean> registerModuleInPubSub(Map<String, String> headers, Context vertxContext) {
-    var vertx = vertxContext.owner();
-    return Future.fromCompletionStage(PubSubRegistrationService.registerModule(headers, vertx));
-  }
-
   @Validate
   @Override
   public void postTenant(TenantAttributes tenantAttributes, Map<String, String> headers,
@@ -110,7 +105,7 @@ public class TenantRefAPI extends TenantAPI {
     // delete Kafka topics if tenant purged
     var tenantId = TenantTool.tenantId(headers);
     Future<Void> result = tenantAttributes.getPurge() != null && tenantAttributes.getPurge()
-      ? new KafkaAdminClientService(context.owner()).deleteKafkaTopics(CirculationStorageKafkaTopic.values(), tenantId)
+      ? new KafkaService(context.owner()).deleteCirculationStorageTopics(tenantId)
       : Future.succeededFuture();
     result.onComplete(x -> super.postTenant(tenantAttributes, headers, handler, context));
   }

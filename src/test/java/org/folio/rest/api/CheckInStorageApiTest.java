@@ -218,6 +218,52 @@ class CheckInStorageApiTest extends ApiTests {
     assertNoCheckInEvent(checkInToCreate.getString("id"));
   }
 
+  @Test
+  void canCreateCheckInWithInHouseUseTrue() throws InterruptedException,
+    ExecutionException, TimeoutException, MalformedURLException {
+
+    JsonObject checkInToCreate = createSampleCheckIn()
+      .withInHouseUse(true)
+      .create();
+
+    IndividualResource createResult = checkInClient.create(checkInToCreate);
+
+    assertThat(createResult.getJson(), is(checkInToCreate));
+    assertThat(createResult.getJson().getBoolean("inHouseUse"), is(true));
+
+    IndividualResource checkInById = checkInClient.getById(createResult.getId());
+    assertThat(checkInById.getJson().getBoolean("inHouseUse"), is(true));
+  }
+
+  @Test
+  void canCreateCheckInWithInHouseUseFalse() throws InterruptedException,
+    ExecutionException, TimeoutException, MalformedURLException {
+
+    JsonObject checkInToCreate = createSampleCheckIn()
+      .withInHouseUse(false)
+      .create();
+
+    IndividualResource createResult = checkInClient.create(checkInToCreate);
+
+    assertThat(createResult.getJson(), is(checkInToCreate));
+    assertThat(createResult.getJson().getBoolean("inHouseUse"), is(false));
+  }
+
+  @Test
+  void inHouseUseDefaultsToFalseWhenOmittedFromRequest() throws InterruptedException,
+    ExecutionException, TimeoutException, MalformedURLException {
+
+    JsonObject checkInToCreate = createSampleCheckIn().create();
+    checkInToCreate.remove("inHouseUse");
+
+    IndividualResource createResult = checkInClient.create(checkInToCreate);
+
+    assertThat(createResult.getJson().getBoolean("inHouseUse"), is(false));
+
+    IndividualResource checkInById = checkInClient.getById(createResult.getId());
+    assertThat(checkInById.getJson().getBoolean("inHouseUse"), is(false));
+  }
+
   private CheckInBuilder createSampleCheckIn() {
     return new CheckInBuilder()
       .withId(UUID.randomUUID())

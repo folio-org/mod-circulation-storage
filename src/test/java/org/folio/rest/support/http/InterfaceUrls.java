@@ -36,6 +36,10 @@ public class InterfaceUrls {
     return storageUrl("/loan-storage/loan-history" + subPath);
   }
 
+  public static URL anonymizationCandidatesUrl(String queryString) throws MalformedURLException {
+    return storageUrl("/loan-storage/anonymization-candidates" + queryString);
+  }
+
   public static URL patronActionSessionStorageUrl(String subPath)
     throws MalformedURLException {
 
@@ -50,6 +54,10 @@ public class InterfaceUrls {
     return storageUrl("/anonymize-storage-requests");
   }
 
+  public static URL userLoanAnonymizationPreferencesUrl() throws MalformedURLException {
+    return storageUrl("/loan-anonymization-preference-storage/loan-anonymization-preferences");
+  }
+
   public static URL checkInsStorageUrl(String subPath) throws MalformedURLException {
     return storageUrl("/check-in-storage/check-ins" + subPath);
   }
@@ -60,6 +68,10 @@ public class InterfaceUrls {
 
   public static URL checkOutStorageUrl(String subPath) throws MalformedURLException {
     return storageUrl("/check-out-lock-storage" + subPath);
+  }
+
+  public static URL requestQueueLockStorageUrl(String subPath) throws MalformedURLException {
+    return storageUrl("/request-queue-lock-storage" + subPath);
   }
   public static URL printEventsUrl(String subPath) throws MalformedURLException {
     return storageUrl("/print-events-storage" + subPath);

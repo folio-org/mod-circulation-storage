@@ -31,7 +31,10 @@
       "duration": 30,
       "intervalId": "Days"
     },
-    "alternateFixedDueDateScheduleId": ""
+    "alternateFixedDueDateScheduleId": "",
+    "automaticRenewal": true,
+    "firstAutomaticRenewalAttemptDaysBeforeDueDate": 3,
+    "automaticRenewalRetryPeriodInDays": 1
   },
   "requestManagement": {
     "recalls": {

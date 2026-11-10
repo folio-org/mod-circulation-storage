@@ -3,8 +3,6 @@ package org.folio.rest.api;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.any;
 import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
@@ -21,12 +19,10 @@ import java.util.concurrent.TimeoutException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.kafka.services.KafkaAdminClientService;
 import org.folio.postgres.testing.PostgresTesterContainer;
+import org.folio.support.kafka.topic.AuditKafkaTopic;
 import org.folio.rest.RestVerticle;
-import org.folio.rest.api.loans.LoansAnonymizationApiTest;
-import org.folio.rest.api.migration.CirculationSettingsMigrationScriptTest;
-import org.folio.rest.api.migration.StaffSlipsHoldTransitMigrationScriptTest;
-import org.folio.rest.api.migration.StaffSlipsPickRequestMigrationScriptTest;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.JsonResponse;
@@ -34,11 +30,6 @@ import org.folio.rest.support.OkapiHttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.tools.utils.NetworkUtils;
-import org.folio.support.MockServer;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.platform.suite.api.SelectClasses;
-import org.junit.platform.suite.api.Suite;
 import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -52,40 +43,6 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import lombok.SneakyThrows;
 
-@Suite
-@SelectClasses({
-  AnonymizeLoansApiTest.class,
-  AnonymizeRequestsApiTest.class,
-  LoansApiTest.class,
-  LoansAnonymizationApiTest.class,
-  CirculationRulesApiTest.class,
-  FixedDueDateApiTest.class,
-  LoanPoliciesApiTest.class,
-  RequestPreferencesApiTest.class,
-  RequestsApiTest.class,
-  LoansApiHistoryTest.class,
-  StaffSlipsApiTest.class,
-  CancellationReasonsApiTest.class,
-  PatronNoticePoliciesApiTest.class,
-  RequestPoliciesApiTest.class,
-  RequestExpirationApiTest.class,
-  ScheduledNoticesAPITest.class,
-  PatronActionSessionAPITest.class,
-  RequestBatchAPITest.class,
-  CheckInStorageApiTest.class,
-  StaffSlipsPickRequestMigrationScriptTest.class,
-  StaffSlipsHoldTransitMigrationScriptTest.class,
-  CirculationSettingsMigrationScriptTest.class,
-  RequestUpdateTriggerTest.class,
-  JsonPropertyWriterTest.class,
-  IsbnNormalizationTest.class,
-  TlrFeatureToggleJobAPITest.class,
-  ActualCostRecordAPITest.class,
-  EventConsumerVerticleTest.class,
-  CheckOutLockAPITest.class,
-  CirculationSettingsAPITest.class,
-  PrintEventsAPITest.class
-})
 public class StorageTestSuite {
 
   private static final Logger log = LogManager.getLogger();
@@ -94,10 +51,9 @@ public class StorageTestSuite {
 
   private static Vertx vertx;
   private static String restVerticleId;
+  private static int verticlePort;
   public static final int PROXY_PORT = NetworkUtils.nextFreePort();
-  public static final int OKAPI_MOCK_PORT = NetworkUtils.nextFreePort();
   private static boolean initialised = false;
-  private static MockServer mockServer;
   private static final WireMockServer wireMockServer = new WireMockServer(PROXY_PORT);
 
   private static final KafkaContainer kafkaContainer = new KafkaContainer(DockerImageName.parse("apache/kafka-native:4.2.0"))
@@ -140,7 +96,6 @@ public class StorageTestSuite {
     return wireMockServer;
   }
 
-  @BeforeAll
   public static void before() throws InterruptedException,
     ExecutionException, TimeoutException {
 
@@ -160,31 +115,25 @@ public class StorageTestSuite {
     System.setProperty("kafka-port", port);
     System.setProperty("kafka-host", host);
 
-    final int verticlePort = NetworkUtils.nextFreePort();
+    verticlePort = NetworkUtils.nextFreePort();
 
     DeploymentOptions options = new DeploymentOptions();
     options.setConfig(new JsonObject().put("http.port", verticlePort));
     startVerticle(options);
 
-    mockServer = new MockServer(OKAPI_MOCK_PORT, vertx);
-    mockServer.start();
-
     wireMockServer.start();
-
-    wireMockServer.stubFor(post(urlMatching("/pubsub/.*"))
-      .atPriority(1)
-      .willReturn(aResponse().proxiedFrom("http://localhost:" + OKAPI_MOCK_PORT)));
-
-    wireMockServer.stubFor(any(anyUrl())
-      .atPriority(10)
-      .willReturn(aResponse().proxiedFrom("http://localhost:" + verticlePort)));
+    resetWireMock();
 
     prepareTenant(TENANT_ID, true);
+
+    new KafkaAdminClientService(vertx)
+      .createKafkaTopics(AuditKafkaTopic.values(), TENANT_ID)
+      .toCompletionStage().toCompletableFuture()
+      .get(60, TimeUnit.SECONDS);
 
     initialised = true;
   }
 
-  @AfterAll
   public static void after()
     throws InterruptedException,
     ExecutionException,
@@ -210,12 +159,6 @@ public class StorageTestSuite {
       log.warn("after:: kafkaContainer.stop() failed (ignored): {}", e.getMessage());
     }
 
-    try {
-      mockServer.close();
-    } catch (Throwable e) {
-      log.warn("after:: mockServer.close() failed (ignored): {}", e.getMessage());
-    }
-
     CompletableFuture<String> undeploymentComplete = new CompletableFuture<>();
 
     vertx.close()
@@ -225,8 +168,11 @@ public class StorageTestSuite {
     undeploymentComplete.get(20, TimeUnit.SECONDS);
   }
 
-  public static boolean isNotInitialised() {
-    return !initialised;
+  public static void resetWireMock() {
+    wireMockServer.resetAll();
+    wireMockServer.stubFor(any(anyUrl())
+      .atPriority(10)
+      .willReturn(aResponse().proxiedFrom("http://localhost:" + verticlePort)));
   }
 
   public static void deleteAll(URL rootUrl) {

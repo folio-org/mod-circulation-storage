@@ -11,22 +11,6 @@
       "version": "1.3 2.0 3.0 4.0 5.0 6.0 7.0 8.0"
     },
     {
-      "id": "pubsub-event-types",
-      "version": "0.1"
-    },
-    {
-      "id": "pubsub-publishers",
-      "version": "0.1"
-    },
-    {
-      "id": "pubsub-subscribers",
-      "version": "0.1"
-    },
-    {
-      "id": "pubsub-publish",
-      "version": "0.1"
-    },
-    {
       "id": "locations",
       "version": "3.1"
     },
@@ -51,7 +35,7 @@
     },
     {
       "id": "loan-storage",
-      "version": "7.4",
+      "version": "7.5",
       "handlers": [
         {
           "methods": ["GET"],
@@ -85,6 +69,10 @@
           "methods": ["POST"],
           "pathPattern": "/loan-storage/loans/anonymize/{userId}",
           "permissionsRequired": ["circulation-storage.loans.anonymize.execute"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/loan-storage/anonymization-candidates",
+          "permissionsRequired": ["circulation-storage.anonymization-candidates.collection.get"]
         }
       ]
     },
@@ -96,6 +84,17 @@
           "methods": ["POST"],
           "pathPattern": "/anonymize-storage-loans",
           "permissionsRequired": ["anonymize-storage-loans.post"]
+        }
+      ]
+    },
+    {
+      "id": "loan-anonymization-preference-storage",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["PUT"],
+          "pathPattern": "/loan-anonymization-preference-storage/loan-anonymization-preferences",
+          "permissionsRequired": ["circulation-storage.loan-anonymization-preferences.collection.put"]
         }
       ]
     },
@@ -154,7 +153,7 @@
     },
     {
       "id": "loan-policy-storage",
-      "version": "2.4",
+      "version": "2.5",
       "handlers": [
         {
           "methods": ["GET"],
@@ -545,9 +544,6 @@
           "methods": ["POST"],
           "pathPattern": "/_/tenant",
           "modulePermissions": [
-            "pubsub.event-types.post",
-            "pubsub.publishers.post",
-            "pubsub.subscribers.post",
             "inventory-storage.holdings.item.get",
             "inventory-storage.holdings.collection.get",
             "inventory-storage.items.item.get",
@@ -594,7 +590,7 @@
     },
     {
       "id": "check-in-storage",
-      "version": "0.2",
+      "version": "0.3",
       "handlers": [
         {
           "methods": [
@@ -652,6 +648,22 @@
       ]
     },
     {
+      "id": "request-queue-lock-storage",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["POST"],
+          "pathPattern": "/request-queue-lock-storage",
+          "permissionsRequired": ["request-queue-lock-storage.request-queue-locks.item.post"]
+        },
+        {
+          "methods": ["DELETE"],
+          "pathPattern": "/request-queue-lock-storage/{lockId}",
+          "permissionsRequired": ["request-queue-lock-storage.request-queue-locks.item.delete"]
+        }
+      ]
+    },
+    {
       "id": "print-events-storage",
       "version": "1.0",
       "handlers": [
@@ -685,9 +697,6 @@
             "POST"
           ],
           "pathPattern": "/scheduled-request-expiration",
-          "modulePermissions": [
-            "pubsub.publish.post"
-          ],
           "unit": "minute",
           "delay": "2"
         },
@@ -815,6 +824,16 @@
       "permissionName": "circulation-storage.loans-history.collection.get",
       "displayName": "Circulation storage - get loan history collection",
       "description": "Get loan history collection from storage"
+    },
+    {
+      "permissionName": "circulation-storage.anonymization-candidates.collection.get",
+      "displayName": "Circulation storage - get anonymization candidates",
+      "description": "Get closed loans to check for scheduled anonymization from storage"
+    },
+    {
+      "permissionName": "circulation-storage.loan-anonymization-preferences.collection.put",
+      "displayName": "Circulation storage - replace loan anonymization preferences",
+      "description": "Replace the stored loan anonymization preferences of all users"
     },
     {
       "permissionName": "circulation-storage.requests.collection.get",
@@ -1089,6 +1108,8 @@
         "circulation-storage.loans.collection.delete",
         "circulation-storage.loans.anonymize.execute",
         "circulation-storage.loans-history.collection.get",
+        "circulation-storage.anonymization-candidates.collection.get",
+        "circulation-storage.loan-anonymization-preferences.collection.put",
         "circulation-storage.circulation-rules.get",
         "circulation-storage.circulation-rules.put",
         "circulation-storage.loan-policies.collection.get",
@@ -1168,6 +1189,8 @@
         "checkout-lock-storage.checkout-locks.item.delete",
         "checkout-lock-storage.checkout-locks.item.get",
         "checkout-lock-storage.checkout-locks.collection.get",
+        "request-queue-lock-storage.request-queue-locks.item.post",
+        "request-queue-lock-storage.request-queue-locks.item.delete",
         "circulation-storage.circulation-settings.collection.get",
         "circulation-storage.circulation-settings.item.get",
         "circulation-storage.circulation-settings.item.post",
@@ -1276,6 +1299,16 @@
       "permissionName": "checkout-lock-storage.checkout-locks.collection.get",
       "displayName": "Circulation storage - get locks",
       "description": "get locks"
+    },
+    {
+      "permissionName": "request-queue-lock-storage.request-queue-locks.item.post",
+      "displayName": "Circulation storage - create request queue lock",
+      "description": "Create a lock for an item or instance request queue"
+    },
+    {
+      "permissionName": "request-queue-lock-storage.request-queue-locks.item.delete",
+      "displayName": "Circulation storage - delete request queue lock",
+      "description": "Delete a request queue lock"
     }
   ],
   "launchDescriptor": {

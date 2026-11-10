@@ -266,6 +266,18 @@
           "fieldName": "itemIsbn",
           "sqlExpression" : "normalize_isbns(jsonb->'instance'->'identifiers')",
           "sqlExpressionQuery": "normalize_digits($)"
+        },
+        {
+          "fieldName": "instanceId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "instance.title",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
         }
       ],
       "index": [
@@ -312,6 +324,12 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": false
+        },
+        {
+          "fieldName": "requestDate",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
         },
         {
           "fieldName": "instanceId",
@@ -603,6 +621,11 @@
           "sqlExpressionQuery": "$"
         }
       ]
+    },
+    {
+      "tableName": "user_loan_anonymization_preference",
+      "withMetadata": false,
+      "withAuditing": false
     }
   ],
   "scripts": [
@@ -643,6 +666,10 @@
     {
       "run": "after",
       "snippetPath": "create_checkout_lock_table.sql"
+    },
+    {
+      "run": "after",
+      "snippetPath": "create_request_queue_lock_table.sql"
     },
     {
       "run": "after",

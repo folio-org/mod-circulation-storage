@@ -1,6 +1,6 @@
 #%RAML 1.0
 title: Loan Storage
-version: v7.4
+version: v7.5
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost:9130
 
@@ -108,3 +108,52 @@ resourceTypes:
         searchable: {description: "using CQL",
                         example: "loan.status.name==Closed"}
         ]
+  /anonymization-candidates:
+    displayName: Anonymization candidates
+    description: |
+      Closed loans with a user for the scheduled anonymization, one preference group per call.
+      A prefilter: the caller runs the group's checkers on each loan. The order is not defined.
+    get:
+      queryParameters:
+        preference:
+          description: |
+            asEarlyAsPossible: users who chose "as early as possible".
+            libraryPolicy: all other users except "never". Don't call it if the library policy
+            can't anonymize any loan.
+            Loans of "never" users are never returned.
+          enum: [asEarlyAsPossible, libraryPolicy]
+          required: true
+        returnedBefore:
+          description: |
+            Only loans with a system return date before this date. If omitted, no date filter.
+            Omit it if the group's rule is "immediately", or if fees/fines are treated differently
+            with a fee/fine rule "immediately" or interval. Compute it with a margin of 1 day
+            (month intervals).
+            ISO 8601 date-time with offset (Z or +HH:MM), URL-encoded (+ as %2B).
+          type: string
+          required: false
+          example: "2026-01-31T10:00:00.000Z"
+        limit:
+          description: Maximum number of loans to return, 1 to 50000
+          type: integer
+          required: false
+          default: 50000
+          minimum: 1
+          maximum: 50000
+      responses:
+        200:
+          description: "Loans of the group. totalRecords is the number of returned loans."
+          body:
+            application/json:
+              type: loans
+              example: !include examples/loans.json
+        400:
+          description: "Bad request, e.g. malformed date, unknown preference or limit out of range"
+          body:
+            text/plain:
+              example: "returnedBefore is not a valid date-time: 2026-01-31"
+        500:
+          description: "Internal server error, e.g. due to misconfiguration"
+          body:
+            text/plain:
+              example: "Internal server error, see log"
