@@ -69,6 +69,16 @@ Request expiration and TLR feature-toggle processing use this lock when updating
 queue positions. The lock does not calculate or validate positions. See the
 [request queue lock RAML](ramls/request-queue-lock-storage.raml) for the API contract.
 
+### Bulk Renewal Job Optimistic Locking
+
+Bulk renewal jobs (`/bulk-renewal-job-storage/bulk-renewal-jobs`) use optimistic locking.
+The server owns the `_version` property: it is set when a job is created (any value supplied
+by the client is ignored) and incremented on every update. A PUT must carry the `_version` of
+the record the client last read. If the stored record has been changed since, or `_version` is
+missing, the update is rejected with a 409 response and the stored record is left unchanged.
+The module only stores jobs; it does not enforce status transitions or prevent overlapping jobs.
+See the [bulk renewal job RAML](ramls/bulk-renewal-job-storage.raml) for the API contract.
+
 ### Known Limitations
 
 #### Anonymization SQL
