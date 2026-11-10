@@ -152,6 +152,37 @@
       ]
     },
     {
+      "id": "bulk-renewal-job-storage",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/bulk-renewal-job-storage/bulk-renewal-jobs",
+          "permissionsRequired": ["bulk-renewal-job-storage.bulk-renewal-jobs.collection.get"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/bulk-renewal-job-storage/bulk-renewal-jobs/{id}",
+          "permissionsRequired": ["bulk-renewal-job-storage.bulk-renewal-jobs.item.get"]
+        },
+        {
+          "methods": ["PUT"],
+          "pathPattern": "/bulk-renewal-job-storage/bulk-renewal-jobs/{id}",
+          "permissionsRequired": ["bulk-renewal-job-storage.bulk-renewal-jobs.item.put"]
+        },
+        {
+          "methods": ["POST"],
+          "pathPattern": "/bulk-renewal-job-storage/bulk-renewal-jobs",
+          "permissionsRequired": ["bulk-renewal-job-storage.bulk-renewal-jobs.item.post"]
+        },
+        {
+          "methods": ["DELETE"],
+          "pathPattern": "/bulk-renewal-job-storage/bulk-renewal-jobs/{id}",
+          "permissionsRequired": ["bulk-renewal-job-storage.bulk-renewal-jobs.item.delete"]
+        }
+      ]
+    },
+    {
       "id": "loan-policy-storage",
       "version": "2.5",
       "handlers": [
@@ -1096,6 +1127,31 @@
       "description": "Delete circulation setting by id"
     },
     {
+      "permissionName": "bulk-renewal-job-storage.bulk-renewal-jobs.collection.get",
+      "displayName": "Circulation storage - get bulk renewal jobs collection",
+      "description": "Get bulk renewal jobs collection from storage"
+    },
+    {
+      "permissionName": "bulk-renewal-job-storage.bulk-renewal-jobs.item.get",
+      "displayName": "Circulation storage - get bulk renewal job by id",
+      "description": "Get bulk renewal job by id from storage"
+    },
+    {
+      "permissionName": "bulk-renewal-job-storage.bulk-renewal-jobs.item.post",
+      "displayName": "Circulation storage - create bulk renewal job",
+      "description": "Create bulk renewal job in storage"
+    },
+    {
+      "permissionName": "bulk-renewal-job-storage.bulk-renewal-jobs.item.put",
+      "displayName": "Circulation storage - update bulk renewal job by id",
+      "description": "Update bulk renewal job by id"
+    },
+    {
+      "permissionName": "bulk-renewal-job-storage.bulk-renewal-jobs.item.delete",
+      "displayName": "Circulation storage - delete bulk renewal job by id",
+      "description": "Delete bulk renewal job by id"
+    },
+    {
       "permissionName": "circulation-storage.all",
       "displayName": "Circulation storage module - all permissions",
       "description": "Entire set of permissions needed to use the circulation storage module",
@@ -1197,6 +1253,11 @@
         "circulation-storage.circulation-settings.item.put",
         "circulation-storage.circulation-settings.item.delete",
         "print-events-storage.print-events-entry.item.post",
+        "bulk-renewal-job-storage.bulk-renewal-jobs.collection.get",
+        "bulk-renewal-job-storage.bulk-renewal-jobs.item.get",
+        "bulk-renewal-job-storage.bulk-renewal-jobs.item.post",
+        "bulk-renewal-job-storage.bulk-renewal-jobs.item.put",
+        "bulk-renewal-job-storage.bulk-renewal-jobs.item.delete",
         "print-events-storage.print-events-status.item.post"
       ]
     },

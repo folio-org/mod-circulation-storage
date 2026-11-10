@@ -1,0 +1,46 @@
+#%RAML 1.0
+title: Bulk Renewal Job Storage
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost:9130
+
+documentation:
+  - title: Bulk Renewal Job Storage API
+    content: <b>Storage for bulk renewal jobs</b>. Updates use optimistic locking - a PUT with a stale _version is rejected with 409.
+
+traits:
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  validate: !include raml-util/traits/validation.raml
+
+types:
+  bulk-renewal-job: !include bulk-renewal-job.json
+  bulk-renewal-jobs: !include bulk-renewal-jobs.json
+  errors: !include raml-util/schemas/errors.schema
+  parameters: !include raml-util/schemas/parameters.schema
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+
+/bulk-renewal-job-storage:
+  /bulk-renewal-jobs:
+    type:
+      collection:
+        exampleCollection: !include examples/bulk-renewal-jobs.json
+        exampleItem:       !include examples/bulk-renewal-job.json
+        schemaCollection: bulk-renewal-jobs
+        schemaItem: bulk-renewal-job
+    get:
+      is: [validate, pageable, searchable: { description: "with valid searchable fields", example: "status==RUNNING" }]
+      description: Get bulk renewal jobs
+    post:
+      is: [validate]
+      description: Create a bulk renewal job
+    /{bulkRenewalJobId}:
+      type:
+        collection-item:
+          exampleItem: !include examples/bulk-renewal-job.json
+          schema: bulk-renewal-job
+      put:
+        is: [validate]

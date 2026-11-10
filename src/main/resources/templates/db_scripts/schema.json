@@ -152,6 +152,21 @@
       ]
     },
     {
+      "tableName": "bulk_renewal_job",
+      "withMetadata": true,
+      "withAuditing": false,
+      "index": [
+        {
+          "fieldName": "status",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "startedDate",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
       "tableName": "circulation_settings",
       "withMetadata": true,
       "withAuditing": false,

@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Bulk Renewal Job Schema",
+  "description": "Record of a bulk renewal job, its lifecycle state and processing statistics",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "ID of the bulk renewal job",
+      "type": "string",
+      "$ref": "raml-util/schemas/uuid.schema"
+    },
+    "status": {
+      "description": "Lifecycle status of the bulk renewal job",
+      "type": "string",
+      "enum": [
+        "RUNNING",
+        "STOPPING",
+        "COMPLETED",
+        "STOPPED",
+        "FAILED"
+      ]
+    },
+    "startedDate": {
+      "description": "Date and time when the job started",
+      "type": "string",
+      "format": "date-time"
+    },
+    "endedDate": {
+      "description": "Date and time when the job ended",
+      "type": "string",
+      "format": "date-time"
+    },
+    "totalEligibleLoans": {
+      "description": "Total number of loans eligible for renewal",
+      "type": "integer",
+      "minimum": 0
+    },
+    "processedLoans": {
+      "description": "Number of loans processed so far",
+      "type": "integer",
+      "minimum": 0
+    },
+    "successfulRenewals": {
+      "description": "Number of loans renewed successfully",
+      "type": "integer",
+      "minimum": 0
+    },
+    "failedRenewals": {
+      "description": "Number of loans for which renewal failed",
+      "type": "integer",
+      "minimum": 0
+    },
+    "reason": {
+      "description": "Reason the job was stopped or failed",
+      "type": "string"
+    },
+    "metadata": {
+      "description": "Metadata about creation and changes, provided by the server (client should not provide)",
+      "type": "object",
+      "$ref": "raml-util/schemas/metadata.schema"
+    },
+    "_version": {
+      "description": "Record version used for optimistic locking, provided by the server",
+      "type": "integer"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "status",
+    "startedDate",
+    "totalEligibleLoans",
+    "processedLoans",
+    "successfulRenewals",
+    "failedRenewals"
+  ]
+}
