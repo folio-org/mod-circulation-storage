@@ -1,21 +1,27 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.api.StorageTestSuite.prepareTenant;
 import static org.hamcrest.CoreMatchers.everyItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
+import java.net.URL;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 import org.folio.rest.support.ApiTests;
+import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.MultipleRecords;
+import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.http.AssertingRecordClient;
 import org.folio.rest.support.http.InterfaceUrls;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +34,7 @@ import io.vertx.core.json.JsonObject;
 import lombok.SneakyThrows;
 
 class BulkRenewalJobAPITest extends ApiTests {
+  private static final String OTHER_TENANT = "bulkrenewaltenant";
   private static final String TABLE_NAME = "bulk_renewal_job";
   private static final String COLLECTION_PROPERTY = "bulkRenewalJobs";
   private static final String STARTED_DATE = "2026-01-01T10:00:00.000Z";
@@ -279,6 +286,57 @@ class BulkRenewalJobAPITest extends ApiTests {
     return records.getRecords().stream()
       .map(job -> OffsetDateTime.parse(job.getString("startedDate")).toInstant())
       .toList();
+  }
+
+  @Test
+  @SneakyThrows
+  void tenantsAreIsolated() {
+    prepareTenant(OTHER_TENANT, false);
+    JsonObject jobA = validJob();
+    JsonObject jobB = validJob();
+    String idA = jobA.getString("id");
+    String idB = jobB.getString("id");
+    bulkRenewalJobClient.create(jobA);
+    createEntity(jobB, InterfaceUrls.bulkRenewalJobsUrl(""), OTHER_TENANT);
+
+    assertThat(ids(getCollection(StorageTestSuite.TENANT_ID)), contains(idA));
+    assertThat(ids(getCollection(OTHER_TENANT)), contains(idB));
+    assertThat(requestAs(OTHER_TENANT, "GET", idA, null).getStatusCode(), is(404));
+
+    JsonObject updateOfA = bulkRenewalJobClient.getById(idA).getJson().put("processedLoans", 4);
+    assertThat(requestAs(OTHER_TENANT, "PUT", idA, updateOfA).getStatusCode(), is(404));
+    assertThat(bulkRenewalJobClient.getById(idA).getJson().getInteger("processedLoans"), is(0));
+
+    assertThat(requestAs(OTHER_TENANT, "DELETE", idA, null).getStatusCode(), is(404));
+    assertThat(bulkRenewalJobClient.attemptGetById(idA).getStatusCode(), is(200));
+
+    assertThat(requestAs(OTHER_TENANT, "DELETE", idB, null).getStatusCode(), is(204));
+    assertThat(bulkRenewalJobClient.attemptGetById(idA).getStatusCode(), is(200));
+    assertThat(ids(getCollection(OTHER_TENANT)), is(List.of()));
+  }
+
+  @SneakyThrows
+  private JsonObject getCollection(String tenantId) {
+    return getById(InterfaceUrls.bulkRenewalJobsUrl(""), tenantId);
+  }
+
+  private static List<String> ids(JsonObject collection) {
+    return collection.getJsonArray(COLLECTION_PROPERTY).stream()
+      .map(job -> ((JsonObject) job).getString("id"))
+      .toList();
+  }
+
+  @SneakyThrows
+  private JsonResponse requestAs(String tenantId, String method, String id, JsonObject body) {
+    CompletableFuture<JsonResponse> completed = new CompletableFuture<>();
+    URL url = InterfaceUrls.bulkRenewalJobsUrl("/" + id);
+    switch (method) {
+      case "GET" -> client.get(url, tenantId, ResponseHandler.json(completed));
+      case "PUT" -> client.put(url, body, tenantId, ResponseHandler.json(completed));
+      case "DELETE" -> client.delete(url, tenantId, ResponseHandler.json(completed));
+      default -> throw new IllegalArgumentException(method);
+    }
+    return completed.get(5, TimeUnit.SECONDS);
   }
 
   private static JsonObject validJob() {
