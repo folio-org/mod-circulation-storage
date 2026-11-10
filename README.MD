@@ -69,24 +69,6 @@ Request expiration and TLR feature-toggle processing use this lock when updating
 queue positions. The lock does not calculate or validate positions. See the
 [request queue lock RAML](ramls/request-queue-lock-storage.raml) for the API contract.
 
-### Bulk Renewal Job Optimistic Locking
-
-Bulk renewal jobs (`/bulk-renewal-job-storage/bulk-renewal-jobs`) use optimistic locking.
-The server owns the `_version` property: it is set when a job is created (any value supplied
-by the client is ignored) and incremented on every update. A PUT must carry the `_version` of
-the record the client last read. If the stored record has been changed since, or `_version` is
-missing, the update is rejected with a 409 response and the stored record is left unchanged.
-The module only stores jobs; it does not enforce status transitions or prevent overlapping jobs.
-
-Notes for clients:
-* The statistics (`totalEligibleLoans`, `processedLoans`, `successfulRenewals`, `failedRenewals`)
-  must be sent as integers. RMB coerces non-integer numbers (for example `1.5`) to an integer
-  before validation, so such values are truncated rather than rejected.
-* `startedDate` and `endedDate` are stored with a `+00:00` offset. When querying them with CQL,
-  use a `+00:00` offset or a plain date (`startedDate>=2026-01-03`); a `Z` suffix compares
-  incorrectly at the exact boundary instant because CQL compares the values as strings.
-See the [bulk renewal job RAML](ramls/bulk-renewal-job-storage.raml) for the API contract.
-
 ### Known Limitations
 
 #### Anonymization SQL
@@ -254,8 +236,8 @@ removing positions for these request, so we will do:
 # Domain event pattern
 
 The pattern means that every time when a domain entity is created/updated/removed
-a message is posted to kafka topic. Currently domain events are supported for _loans_, _requests_, _check-in_ entities. 
-The events are posted into the following topics: 
+a message is posted to kafka topic. Currently domain events are supported for _loans_, _requests_, _check-in_ entities.
+The events are posted into the following topics:
 * `circulation.loan` - for loans;
 * `circulation.request` - for requests;
 * `circulation.check-in` - for check-in records.
@@ -266,10 +248,10 @@ The event payload has following structure:
   "id": "12bb13f6-d0fa-41b5-b0ad-d6561975121b",  // event UUID
   "type": "CREATED|UPDATED|DELETED|ALL_DELETED", // type of the event
   "tenant": "diku",                              // tenant name
-  "timestamp": 1642707670092,                    // event creation timestamp in Unix Epoch time 
+  "timestamp": 1642707670092,                    // event creation timestamp in Unix Epoch time
   "data": {
     "old": {...},                                // the entity before update or delete
-    "new": {...},                                // the entity after update or create  
+    "new": {...},                                // the entity after update or create
   }
 }
 ```
