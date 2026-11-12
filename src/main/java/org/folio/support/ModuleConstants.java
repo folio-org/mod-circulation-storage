@@ -17,6 +17,7 @@ public class ModuleConstants {
   public static final String REQUEST_TABLE = "request";
   public static final String CIRCULATION_SETTINGS_TABLE =
     "circulation_settings";
+  public static final String BULK_RENEWAL_JOB_TABLE = "bulk_renewal_job";
   public static final Class<Request> REQUEST_CLASS = Request.class;
   public static final String CHECKIN_TABLE = "check_in";
   public static final Class<CheckIn> CHECKIN_CLASS = CheckIn.class;

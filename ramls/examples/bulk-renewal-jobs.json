@@ -1,0 +1,28 @@
+{
+  "bulkRenewalJobs": [
+    {
+      "id": "5c0e3a6b-8e5a-4d7e-9a3b-2f1d6c8b7a10",
+      "status": "COMPLETED",
+      "startedDate": "2026-01-01T10:00:00.000Z",
+      "endedDate": "2026-01-01T10:30:00.000Z",
+      "totalEligibleLoans": 120,
+      "processedLoans": 120,
+      "successfulRenewals": 115,
+      "failedRenewals": 5,
+      "_version": 3
+    },
+    {
+      "id": "9b7d1f20-3c4e-4a5b-8c6d-7e8f9a0b1c2d",
+      "status": "FAILED",
+      "startedDate": "2026-01-02T10:00:00.000Z",
+      "endedDate": "2026-01-02T10:05:00.000Z",
+      "totalEligibleLoans": 40,
+      "processedLoans": 10,
+      "successfulRenewals": 8,
+      "failedRenewals": 2,
+      "reason": "Unexpected error while processing loans",
+      "_version": 2
+    }
+  ],
+  "totalRecords": 2
+}

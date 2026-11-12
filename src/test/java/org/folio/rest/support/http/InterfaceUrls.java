@@ -81,4 +81,8 @@ public class InterfaceUrls {
     return storageUrl("/circulation-settings-storage/circulation-settings" + subPath);
   }
 
+  public static URL bulkRenewalJobsUrl(String subPath) throws MalformedURLException {
+    return storageUrl("/bulk-renewal-job-storage/bulk-renewal-jobs" + subPath);
+  }
+
 }

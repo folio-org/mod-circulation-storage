@@ -7,6 +7,7 @@
 * Add `GET /loan-storage/anonymization-candidates` that selects closed loans by the users' loan anonymization preference, bump interface `loan-storage` to 7.5 (CIRCSTORE-683)
 * Fix slow `anonymization-candidates` query for library policy users (CIRCSTORE-690)
 * Add interface `loan-anonymization-preference-storage` 1.0 to replace the stored loan anonymization preferences, used by the nightly resync of mod-circulation (CIRC-2699)
+* Add interface `bulk-renewal-job-storage` 1.0 with the bulk renewal job entity, supporting CRUD, CQL queries and optimistic locking (CIRCSTORE-678)
 
 
 ## 17.5.0 2026-04-14
