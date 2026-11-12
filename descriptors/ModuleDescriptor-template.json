@@ -99,6 +99,17 @@
       ]
     },
     {
+      "id": "anonymize-storage-requests",
+      "version": "0.1",
+      "handlers": [
+        {
+          "methods": ["POST"],
+          "pathPattern": "/anonymize-storage-requests",
+          "permissionsRequired": ["anonymize-storage-requests.post"]
+        }
+      ]
+    },
+    {
       "id": "circulation-rules-storage",
       "version": "1.0",
       "handlers": [
@@ -812,6 +823,11 @@
       "description": "anonymize a list of loans"
     },
     {
+      "permissionName": "anonymize-storage-requests.post",
+      "displayName": "circulation - anonymize requests",
+      "description": "anonymize a list of requests"
+    },
+    {
       "permissionName": "circulation-storage.circulation-rules.get",
       "displayName": "Circulation storage - get circulation rules",
       "description": "Get circulation rules from storage"
@@ -1222,6 +1238,7 @@
         "scheduled-notice-storage.scheduled-notices.item.delete",
         "scheduled-notice-storage.scheduled-notices.collection.delete",
         "anonymize-storage-loans.post",
+        "anonymize-storage-requests.post",
         "patron-action-session-storage.patron-action-sessions.collection.get",
         "patron-action-session-storage.patron-action-sessions.item.get",
         "patron-action-session-storage.patron-action-sessions.item.post",
