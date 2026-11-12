@@ -152,24 +152,6 @@
       ]
     },
     {
-      "tableName": "bulk_renewal_job",
-      "withMetadata": true,
-      "withOptimisticLocking": "failOnConflict",
-      "withAuditing": false,
-      "index": [
-        {
-          "fieldName": "status",
-          "tOps": "ADD",
-          "removeAccents": false
-        },
-        {
-          "fieldName": "startedDate",
-          "tOps": "ADD",
-          "removeAccents": false
-        }
-      ]
-    },
-    {
       "tableName": "circulation_settings",
       "withMetadata": true,
       "withAuditing": false,
