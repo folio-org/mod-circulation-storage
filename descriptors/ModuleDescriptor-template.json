@@ -100,7 +100,7 @@
     },
     {
       "id": "anonymize-storage-requests",
-      "version": "0.1",
+      "version": "1.0",
       "handlers": [
         {
           "methods": ["POST"],
