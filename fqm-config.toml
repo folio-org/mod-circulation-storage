@@ -68,7 +68,7 @@ schema = "./ramls/request.json"
 sort = ["id", "ASC"]
 permissions = ["circulation-storage.requests.collection.get"]
 # no raw JSONB field, so the excluded deprecated fields cannot be queried indirectly
-includeJsonbField = false
+includeJsonbField = true
 # deprecated patron-group snapshots (requester.patronGroup / proxy.patronGroup)
 fieldExclusions = ["requester_patron_group", "proxy_patron_group"]
 
@@ -123,7 +123,7 @@ source = "cancellation_reason"
 schema = "./ramls/cancellation-reason.json"
 sort = ["id", "ASC"]
 permissions = ["circulation-storage.cancellation-reasons.collection.get"]
-includeJsonbField = false
+includeJsonbField = true
 
 [entityTypes.fieldOverrides.id]
 x-fqm-essential = true
