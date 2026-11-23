@@ -122,6 +122,7 @@
   "fqm.entityType.request.search_index_pickup_service_point_name": "Pickup service point name",
   "fqm.entityType.request.item_location_code": "Item location code",
   "fqm.entityType.request.is_dcb_re_request_cancellation": "DCB re-request cancellation",
+  "fqm.entityType.request.jsonb": "JSONB",
   "fqm.entityType.cancellation_reason": "Request cancellation reason",
   "fqm.entityType.cancellation_reason._description": "Reasons that can be selected when cancelling a request",
   "fqm.entityType.cancellation_reason.id": "UUID",
@@ -135,5 +136,6 @@
   "fqm.entityType.cancellation_reason.metadata_created_by_username": "Created by username",
   "fqm.entityType.cancellation_reason.metadata_updated_date": "Updated at",
   "fqm.entityType.cancellation_reason.metadata_updated_by_user_id": "Updated by user UUID",
-  "fqm.entityType.cancellation_reason.metadata_updated_by_username": "Updated by username"
+  "fqm.entityType.cancellation_reason.metadata_updated_by_username": "Updated by username",
+  "fqm.entityType.cancellation_reason.jsonb": "JSONB"
 }
