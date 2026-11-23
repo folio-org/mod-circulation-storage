@@ -72,46 +72,8 @@ includeJsonbField = true
 # deprecated patron-group snapshots (requester.patronGroup / proxy.patronGroup)
 fieldExclusions = ["requester_patron_group", "proxy_patron_group"]
 
-[entityTypes.fieldOverrides.id]
-x-fqm-visible-by-default = true
-
-# Essential join keys. Requester is optional on closed (anonymized) requests, holdings is optional on
-# title-level requests, and item is optional, so those joins are left joins.
-[entityTypes.fieldOverrides.requester_id]
-x-fqm-essential = true
-# bb058933... = simple_user_details
-x-fqm-joins-to-raw = [
-  { targetId = "bb058933-cd06-4539-bd3a-6f248ff98ee2", targetField = "id", direction = "left", type = "equality-cast-uuid" },
-]
-
-[entityTypes.fieldOverrides.instance_id]
-x-fqm-essential = true
-# 8fc4a9d2... = simple_instance
-x-fqm-joins-to-raw = [
-  { targetId = "8fc4a9d2-7ccf-4233-afb8-796911839862", targetField = "id", direction = "left", type = "equality-cast-uuid" },
-]
-
-[entityTypes.fieldOverrides.holdings_record_id]
-x-fqm-essential = true
-# 30a5cfad... = simple_holdings_record
-x-fqm-joins-to-raw = [
-  { targetId = "30a5cfad-1868-4f46-86b9-a6ef67e2d9bf", targetField = "id", direction = "left", type = "equality-cast-uuid" },
-]
-
-[entityTypes.fieldOverrides.item_id]
-x-fqm-essential = true
-# 372e025a... = simple_item
-x-fqm-joins-to-raw = [
-  { targetId = "372e025a-9444-473a-9ffd-fa0f63db1674", targetField = "id", direction = "left", type = "equality-cast-uuid" },
-]
-
-# Cancellation reason UUID: support/join field; readable name comes from the cancellation_reason entity
-[entityTypes.fieldOverrides.cancellation_reason_id]
-x-fqm-essential = true
-x-fqm-visible-by-default = false
-x-fqm-joins-to = [
-  { targetModule = "mod-circulation-storage", targetEntity = "cancellation_reason", targetField = "id", direction = "left", type = "equality-cast-uuid" },
-]
+# Essential flags and joins for this module's own top-level fields (requesterId, instanceId, holdingsRecordId,
+# itemId, cancellationReasonId) are annotated directly in ramls/request.json via x-fqm-* properties.
 
 # ---------------------------------------------------------------------------
 # Cancellation reason (private / supporting) — joined from Request
@@ -124,9 +86,4 @@ schema = "./ramls/cancellation-reason.json"
 sort = ["id", "ASC"]
 permissions = ["circulation-storage.cancellation-reasons.collection.get"]
 includeJsonbField = true
-
-[entityTypes.fieldOverrides.id]
-x-fqm-essential = true
-
-[entityTypes.fieldOverrides.name]
-x-fqm-essential = true
+# essential fields (id, name) are annotated in ramls/cancellation-reason.json
