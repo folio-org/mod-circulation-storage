@@ -4,11 +4,14 @@
   "type": "object",
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-fqm-data-type": "rangedUUIDType",
+      "x-fqm-essential": true
     },
     "name": {
       "description": "Reason name",
-      "type": "string"
+      "type": "string",
+      "x-fqm-essential": true
     },
     "description" : {
       "description": "Internal reason description",

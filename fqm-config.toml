@@ -11,6 +11,10 @@ table = "request"
 name = "actual_cost_record"
 table = "actual_cost_record"
 
+[[sources]]
+name = "cancellation_reason"
+table = "cancellation_reason"
+
 [[entityTypes]]
 name = "actual_cost_record"
 private = true
@@ -53,3 +57,32 @@ x-fqm-joins-to-raw = [
   { targetId = "bb058933-cd06-4539-bd3a-6f248ff98ee2", targetField = "id", direction = "left", type = "equality-cast-uuid" },
   { targetId = "f2615ea6-450b-425d-804d-6a495afd9308", targetField = "id", direction = "left", type = "equality-cast-uuid" },
 ]
+
+# ---------------------------------------------------------------------------
+# Request (public) — MODFQMMGR-1091 / CIRCSTORE-687
+# ---------------------------------------------------------------------------
+[[entityTypes]]
+name = "request"
+source = "request"
+schema = "./ramls/request.json"
+sort = ["id", "ASC"]
+permissions = ["circulation-storage.requests.collection.get"]
+includeJsonbField = true
+# deprecated patron-group snapshots (requester.patronGroup / proxy.patronGroup)
+fieldExclusions = ["requester_patron_group", "proxy_patron_group"]
+
+# Essential flags and joins for this module's own top-level fields (requesterId, instanceId, holdingsRecordId,
+# itemId, cancellationReasonId) are annotated directly in ramls/request.json via x-fqm-* properties.
+
+# ---------------------------------------------------------------------------
+# Cancellation reason (private / supporting) — joined from Request
+# ---------------------------------------------------------------------------
+[[entityTypes]]
+name = "cancellation_reason"
+private = true
+source = "cancellation_reason"
+schema = "./ramls/cancellation-reason.json"
+sort = ["id", "ASC"]
+permissions = ["circulation-storage.cancellation-reasons.collection.get"]
+includeJsonbField = true
+# essential fields (id, name) are annotated in ramls/cancellation-reason.json

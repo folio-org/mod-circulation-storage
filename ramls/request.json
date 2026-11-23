@@ -6,7 +6,8 @@
     "id": {
       "description": "UUID of the request",
       "type": "string",
-      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+      "x-fqm-visible-by-default": true
     },
     "requestLevel": {
       "description": "Level of the request - Item or Title",
@@ -35,7 +36,11 @@
     "requesterId": {
       "description": "ID of the requesting patron (user). Required for open requests, not required for closed requested (for anonymization).",
       "type": "string",
-      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+      "x-fqm-essential": true,
+      "x-fqm-joins-to-raw": [
+        { "targetId": "bb058933-cd06-4539-bd3a-6f248ff98ee2", "targetField": "id", "direction": "left", "type": "equality-cast-uuid" }
+      ]
     },
     "proxyUserId": {
       "description": "ID of the user representing a proxy for the patron",
@@ -45,17 +50,29 @@
     "instanceId": {
       "description": "ID of the instance being requested",
       "type": "string",
-      "$ref": "raml-util/schemas/uuid.schema"
+      "$ref": "raml-util/schemas/uuid.schema",
+      "x-fqm-essential": true,
+      "x-fqm-joins-to-raw": [
+        { "targetId": "8fc4a9d2-7ccf-4233-afb8-796911839862", "targetField": "id", "direction": "left", "type": "equality-cast-uuid" }
+      ]
     },
     "holdingsRecordId": {
       "description": "ID of the holdings record being requested",
       "type": "string",
-      "$ref": "raml-util/schemas/uuid.schema"
+      "$ref": "raml-util/schemas/uuid.schema",
+      "x-fqm-essential": true,
+      "x-fqm-joins-to-raw": [
+        { "targetId": "30a5cfad-1868-4f46-86b9-a6ef67e2d9bf", "targetField": "id", "direction": "left", "type": "equality-cast-uuid" }
+      ]
     },
     "itemId": {
       "description": "ID of the item being requested",
       "type": "string",
-      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+      "x-fqm-essential": true,
+      "x-fqm-joins-to-raw": [
+        { "targetId": "372e025a-9444-473a-9ffd-fa0f63db1674", "targetField": "id", "direction": "left", "type": "equality-cast-uuid" }
+      ]
     },
     "status": {
       "description": "Status of the request",
@@ -73,11 +90,17 @@
     },
     "cancellationReasonId": {
       "description": "The id of the relevant request reason",
-      "type": "string"
+      "type": "string",
+      "x-fqm-data-type": "rangedUUIDType",
+      "x-fqm-essential": true,
+      "x-fqm-joins-to": [
+        { "targetModule": "mod-circulation-storage", "targetEntity": "cancellation_reason", "targetField": "id", "direction": "left", "type": "equality-cast-uuid" }
+      ]
     },
     "cancelledByUserId": {
       "description": "The id of the user that cancelled the request",
-      "type": "string"
+      "type": "string",
+      "x-fqm-data-type": "rangedUUIDType"
     },
     "cancellationAdditionalInformation": {
       "description": "Potential relevant information regarding a cancellation",
@@ -254,7 +277,8 @@
         },
         "requesterId": {
           "type": "string",
-          "description": "UUID of print slip requester."
+          "description": "UUID of print slip requester.",
+          "x-fqm-data-type": "rangedUUIDType"
         },
         "isPrinted": {
           "type": "boolean",
